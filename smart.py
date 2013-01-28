@@ -80,5 +80,11 @@ def load_system_args(filename, lf):
             'coordinates': coordinates, 'numbers': numbers, 'obasis': obasis,
             'wfn': wfn, 'signs': signs,
         }
+    elif filename.endswith('.cube'):
+        from horton.io.cube import load_cube
+        coordinates, numbers, props = load_cube(filename)
+        return {
+            'coordinates': coordinates, 'numbers': numbers, 'props': props,
+        }
     else:
         raise ValueError('Unknown file format: %s' % filename)
