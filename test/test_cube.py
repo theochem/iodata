@@ -34,9 +34,13 @@ def test_load_aelta():
     assert abs(sys.coordinates[-2,2] - 26.460812) < 1e-5
     ui_grid = sys.props['ui_grid']
     assert (ui_grid.nrep == 12).all()
+    assert sys.cell.nvec == 3
+    rvecs = sys.cell.rvecs
+    my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)*12
+    assert abs(rvecs - my_rvecs).max() < 1e-5
     assert ui_grid.cell.nvec == 3
     rvecs = ui_grid.cell.rvecs
-    my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)*12
+    my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)
     assert abs(rvecs - my_rvecs).max() < 1e-5
     assert abs(ui_grid.origin - np.array([0.0, 1.2, 0.0])).max() < 1e-10
     data = sys.props['cube_data']

@@ -52,7 +52,7 @@ def read_cube_header(f):
     axes = np.array([axis0, axis1, axis2])
 
     cell = Cell(axes*nrep.reshape(-1,1))
-    ui_grid = UniformIntGrid(origin, cell, nrep)
+    ui_grid = UniformIntGrid(origin, Cell(axes), nrep)
 
     def read_coordinate_line(line):
         """Read an atom number and coordinate from the cube file"""
@@ -69,7 +69,7 @@ def read_cube_header(f):
     for i in xrange(natom):
         numbers[i], nuclear_charges[i], coordinates[i] = read_coordinate_line(f.readline())
 
-    return coordinates, numbers, ui_grid, nuclear_charges
+    return coordinates, numbers, cell, ui_grid, nuclear_charges
 
 
 def read_cube_data(f, ui_grid):
@@ -89,11 +89,11 @@ def read_cube_data(f, ui_grid):
 
 def load_cube(filename):
     with open(filename) as f:
-        coordinates, numbers, ui_grid, nuclear_charges = read_cube_header(f)
+        coordinates, numbers, cell, ui_grid, nuclear_charges = read_cube_header(f)
         data = read_cube_data(f, ui_grid)
         props = {
             'ui_grid': ui_grid,
             'nuclear_charges': nuclear_charges,
             'cube_data': data,
         }
-        return coordinates, numbers, props
+        return coordinates, numbers, cell, props
