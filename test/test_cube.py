@@ -33,7 +33,7 @@ def test_load_aelta():
     assert abs(sys.coordinates[5,0] - 27.275511) < 1e-5
     assert abs(sys.coordinates[-2,2] - 26.460812) < 1e-5
     ui_grid = sys.props['ui_grid']
-    assert (ui_grid.nrep == 12).all()
+    assert (ui_grid.shape == 12).all()
     assert sys.cell.nvec == 3
     rvecs = sys.cell.rvecs
     my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)*12

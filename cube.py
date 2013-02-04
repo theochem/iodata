@@ -45,14 +45,14 @@ def read_cube_header(f):
     # number of atoms and origin of the grid
     natom, origin = read_grid_line(f.readline())
     # numer of grid points in A direction and step vector A, and so on
-    nrep0, axis0 = read_grid_line(f.readline())
-    nrep1, axis1 = read_grid_line(f.readline())
-    nrep2, axis2 = read_grid_line(f.readline())
-    nrep = np.array([nrep0, nrep1, nrep2], int)
+    shape0, axis0 = read_grid_line(f.readline())
+    shape1, axis1 = read_grid_line(f.readline())
+    shape2, axis2 = read_grid_line(f.readline())
+    shape = np.array([shape0, shape1, shape2], int)
     axes = np.array([axis0, axis1, axis2])
 
-    cell = Cell(axes*nrep.reshape(-1,1))
-    ui_grid = UniformIntGrid(origin, Cell(axes), nrep)
+    cell = Cell(axes*shape.reshape(-1,1))
+    ui_grid = UniformIntGrid(origin, Cell(axes), shape)
 
     def read_coordinate_line(line):
         """Read an atom number and coordinate from the cube file"""
@@ -73,7 +73,7 @@ def read_cube_header(f):
 
 
 def read_cube_data(f, ui_grid):
-    data = np.zeros(tuple(ui_grid.nrep), float)
+    data = np.zeros(tuple(ui_grid.shape), float)
     tmp = data.ravel()
     counter = 0
     while True:
