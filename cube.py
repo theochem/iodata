@@ -25,10 +25,10 @@ from horton.cext import Cell
 from horton.grid.uniform import UniformIntGrid
 
 
-__all__ = ['load_cube']
+__all__ = ['load_cube', 'dump_cube']
 
 
-def read_cube_header(f):
+def _read_cube_header(f):
     # skip the first two lines
     f.readline()
     f.readline()
@@ -72,7 +72,7 @@ def read_cube_header(f):
     return coordinates, numbers, cell, ui_grid, nuclear_charges
 
 
-def read_cube_data(f, ui_grid):
+def _read_cube_data(f, ui_grid):
     data = np.zeros(tuple(ui_grid.shape), float)
     tmp = data.ravel()
     counter = 0
@@ -89,11 +89,51 @@ def read_cube_data(f, ui_grid):
 
 def load_cube(filename):
     with open(filename) as f:
-        coordinates, numbers, cell, ui_grid, nuclear_charges = read_cube_header(f)
-        data = read_cube_data(f, ui_grid)
+        coordinates, numbers, cell, ui_grid, nuclear_charges = _read_cube_header(f)
+        data = _read_cube_data(f, ui_grid)
         props = {
             'ui_grid': ui_grid,
             'nuclear_charges': nuclear_charges,
             'cube_data': data,
         }
         return coordinates, numbers, cell, props
+
+
+def _write_cube_header(f, coordinates, numbers, ui_grid, nuclear_charges):
+    print >> f, 'Cube file created with Horton'
+    print >> f, 'OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z'
+    natom = len(numbers)
+    x, y, z = ui_grid.origin
+    print >> f, '%5i % 11.6f % 11.6f % 11.6f' % (natom, x, y, z)
+    rvecs = ui_grid.grid_cell.rvecs
+    for i in xrange(3):
+        x, y, z = rvecs[i]
+        print >> f, '%5i % 11.6f % 11.6f % 11.6f' % (ui_grid.shape[i], x, y, z)
+    for i in xrange(natom):
+        q = nuclear_charges[i]
+        x, y, z = coordinates[i]
+        print >> f, '%5i % 11.6f % 11.6f % 11.6f % 11.6f' % (numbers[i], q, x, y, z)
+
+
+def _write_cube_data(f, cube_data):
+    counter = 0
+    for value in cube_data.flat:
+        f.write(' % 12.5E' % value)
+        if counter%6 == 5:
+            f.write('\n')
+        counter += 1
+
+
+def dump_cube(filename, system):
+    with open(filename, 'w') as f:
+        ui_grid = system.props.get('ui_grid')
+        if ui_grid is None:
+            raise ValueError('A uniform integration grid must be defined in the system properties (ui_grid).')
+        cube_data = system.props.get('cube_data')
+        if cube_data is None:
+            raise ValueError('A cube data array must be defined in the system properties (cube_data).')
+        nuclear_charges = system.props.get('nuclear_charges')
+        if nuclear_charges is None:
+            nuclear_charges = np.zeros(system.natom)
+        _write_cube_header(f, system.coordinates, system.numbers, ui_grid, nuclear_charges)
+        _write_cube_data(f, cube_data)

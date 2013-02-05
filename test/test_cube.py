@@ -20,7 +20,7 @@
 #--
 
 
-import numpy as np
+import numpy as np, shutil, tempfile
 from horton import *
 
 
@@ -51,3 +51,27 @@ def test_load_aelta():
     assert abs(nc[1] - 0.1) < 1e-10
     assert abs(nc[-2] - 0.2) < 1e-10
     assert abs(nc[-1]) < 1e-10
+
+
+def test_load_dump_load_aelta():
+    lf = DenseLinalgFactory()
+    fn_cube1 = context.get_fn('test/aelta.cube')
+    sys1 = System.from_file(fn_cube1)
+
+    dn = tempfile.mkdtemp('test_load_dump_load_aelta', 'horton.io.test.test_cube')
+    try:
+        fn_cube2 = '%s/%s' % (dn, 'aelta.cube')
+        sys1.to_file(fn_cube2)
+        sys2 = System.from_file(fn_cube2)
+
+        assert sys1.natom == sys2.natom
+        assert abs(sys1.coordinates - sys2.coordinates).max() < 1e-4
+        assert (sys1.numbers == sys2.numbers).all()
+        ui_grid1 = sys1.props['ui_grid']
+        ui_grid2 = sys2.props['ui_grid']
+        assert abs(ui_grid1.grid_cell.rvecs - ui_grid2.grid_cell.rvecs).max() < 1e-4
+        assert (ui_grid1.shape == ui_grid2.shape).all()
+        assert abs(sys1.props['cube_data'] - sys2.props['cube_data']).max() < 1e-4
+        assert abs(sys1.props['nuclear_charges'] - sys2.props['nuclear_charges']).max() < 1e-4
+    finally:
+        shutil.rmtree(dn)

@@ -23,7 +23,7 @@
 import h5py as h5
 
 
-__all__ = ['load_system_args']
+__all__ = ['load_system_args', 'dump_system']
 
 
 def load_system_args(filename, lf):
@@ -88,4 +88,12 @@ def load_system_args(filename, lf):
             'props': props,
         }
     else:
-        raise ValueError('Unknown file format: %s' % filename)
+        raise ValueError('Unknown file format for reading: %s' % filename)
+
+
+def dump_system(filename, system):
+    if filename.endswith('.cube'):
+        from horton.io.cube import dump_cube
+        dump_cube(filename, system)
+    else:
+        raise ValueError('Unknown file format for writing: %s' % filename)
