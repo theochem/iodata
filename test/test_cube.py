@@ -38,8 +38,8 @@ def test_load_aelta():
     rvecs = sys.cell.rvecs
     my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)*12
     assert abs(rvecs - my_rvecs).max() < 1e-5
-    assert ui_grid.cell.nvec == 3
-    rvecs = ui_grid.cell.rvecs
+    assert ui_grid.grid_cell.nvec == 3
+    rvecs = ui_grid.grid_cell.rvecs
     my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)
     assert abs(rvecs - my_rvecs).max() < 1e-5
     assert abs(ui_grid.origin - np.array([0.0, 1.2, 0.0])).max() < 1e-10
