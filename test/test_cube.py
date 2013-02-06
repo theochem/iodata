@@ -25,7 +25,6 @@ from horton import *
 
 
 def test_load_aelta():
-    lf = DenseLinalgFactory()
     fn_cube = context.get_fn('test/aelta.cube')
     sys = System.from_file(fn_cube)
 
@@ -54,7 +53,6 @@ def test_load_aelta():
 
 
 def test_load_dump_load_aelta():
-    lf = DenseLinalgFactory()
     fn_cube1 = context.get_fn('test/aelta.cube')
     sys1 = System.from_file(fn_cube1)
 
