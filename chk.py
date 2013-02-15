@@ -45,8 +45,8 @@ def load_checkpoint(filename, lf):
     else:
         chk = filename
         do_close = False
-    from horton.checkpoint import register
-    for field in register.itervalues():
+    from horton.checkpoint import attribute_register
+    for field in attribute_register.itervalues():
         att = field.read(chk, lf)
         d = result
         name = field.att_name
