@@ -26,6 +26,8 @@ import h5py as h5, os
 __all__ = ['load_system_args', 'dump_system']
 
 
+# TODO: let all load functions return a dictionary
+
 def load_system_args(filename, lf):
     '''Load a molecular data from a file.
 
@@ -94,6 +96,9 @@ def load_system_args(filename, lf):
             'coordinates': coordinates, 'numbers': numbers, 'cell': cell,
             'props': props,
         }
+    elif filename.endswith('.cp2k.out'):
+        from horton.io.cp2k import load_atom_cp2k
+        return load_atom_cp2k(filename, lf)
     else:
         raise ValueError('Unknown file format for reading: %s' % filename)
 
