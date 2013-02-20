@@ -61,9 +61,10 @@ def _helper_exp(exp, oe, coeffs, shell_types, restricted):
     # Find the offsets for each angular momentum
     offset = 0
     offsets = []
-    for l in sorted(set(shell_types)):
+    ls = abs(shell_types)
+    for l in sorted(set(ls)):
         offsets.append(offset)
-        offset += (2*l+1)*(l == shell_types).sum()
+        offset += (2*l+1)*(l == ls).sum()
     del offset
 
     # Fill in the coefficients
@@ -115,7 +116,7 @@ def load_atom_cp2k(filename, lf):
             if line.startswith(' *******************'):
                 break
             elif line[3:12] == 'Functions':
-                shell_type = str_to_shell_types(line[1:2])[0]
+                shell_type = str_to_shell_types(line[1:2], pure=True)[0]
                 a = []
                 c = []
                 basis_desc.append((shell_type, a, c))
@@ -133,7 +134,7 @@ def load_atom_cp2k(filename, lf):
 
         for shell_type, a, c in basis_desc:
             # get correction to contraction coefficients.
-            corrections = _get_cp2k_norm_corrections(shell_type, a)
+            corrections = _get_cp2k_norm_corrections(abs(shell_type), a)
             c = np.array(c)/corrections.reshape(-1,1)
             # fill in arrays
             for col in c.T:

@@ -37,6 +37,7 @@ def test_atom_si_uks():
     assert abs(sys.wfn.exp_alpha.energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
     assert abs(sys.wfn.exp_beta.energies - [-0.334567, -0.092237, -0.092237, -0.092237]).max() < 1e-4
     assert abs(sys.props['energy'] - -3.761587698067) < 1e-10
+    assert (sys.obasis.shell_types == [0, 0, 1, 1, -2]).all()
 
     olp = sys.get_overlap()._array
     ca = sys.wfn.exp_alpha.coeffs
@@ -57,6 +58,7 @@ def test_atom_ne_rks():
     assert (sys.wfn.exp_alpha.occupations == [1, 1, 1, 1]).all()
     assert abs(sys.wfn.exp_alpha.energies - [-1.982465, -1.139699, -1.139699, -1.139699]).max() < 1e-4
     assert abs(sys.props['energy'] - -34.922571977172) < 1e-10
+    assert (sys.obasis.shell_types == [0, 1]).all()
 
     olp = sys.get_overlap()._array
     ca = sys.wfn.exp_alpha.coeffs

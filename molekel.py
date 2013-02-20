@@ -94,10 +94,8 @@ def load_mkl(filename, lf):
                     if nprim is not None:
                         nprims.append(nprim)
                     shell_map.append(center_counter)
-                    shell_type = str_to_shell_types(words[1])[0]
-                    if shell_type >= 2:
-                        # always assume pure basis functions
-                        shell_type *= -1
+                    # always assume pure basis functions
+                    shell_type = str_to_shell_types(words[1], pure=True)[0]
                     shell_types.append(shell_type)
                     in_shell = True
                     nprim = 0

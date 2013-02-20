@@ -88,10 +88,8 @@ def load_molden(filename, lf):
             elif len(words) == 3:
                 in_shell = True
                 shell_map.append(icenter)
-                shell_type = str_to_shell_types(words[0])[0]
-                if shell_type >= 2:
-                    # always assume pure basis functions
-                    shell_type *= -1
+                # always assume pure basis functions
+                shell_type = str_to_shell_types(words[0], True)[0]
                 shell_types.append(shell_type)
                 nprims.append(int(words[1]))
             elif len(words) == 2 and in_atom:
