@@ -84,11 +84,7 @@ def load_system_args(filename, lf):
         }
     elif filename.endswith('.cube'):
         from horton.io.cube import load_cube
-        coordinates, numbers, cell, props = load_cube(filename)
-        return {
-            'coordinates': coordinates, 'numbers': numbers, 'cell': cell,
-            'props': props,
-        }
+        return load_cube(filename)
     elif os.path.basename(filename)[:6] in ['CHGCAR', 'AECCAR']:
         from horton.io.vasp import load_chgcar
         coordinates, numbers, cell, props = load_chgcar(filename)

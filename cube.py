@@ -93,10 +93,15 @@ def load_cube(filename):
         data = _read_cube_data(f, ui_grid)
         props = {
             'ui_grid': ui_grid,
-            'pseudo_numbers': pseudo_numbers,
             'cube_data': data,
         }
-        return coordinates, numbers, cell, props
+        return {
+            'coordinates': coordinates,
+            'numbers': numbers,
+            'cell': cell,
+            'props': props,
+            'pseudo_numbers': pseudo_numbers,
+        }
 
 
 def _write_cube_header(f, coordinates, numbers, ui_grid, pseudo_numbers):
@@ -132,8 +137,5 @@ def dump_cube(filename, system):
         cube_data = system.props.get('cube_data')
         if cube_data is None:
             raise ValueError('A cube data array must be defined in the system properties (cube_data).')
-        pseudo_numbers = system.props.get('pseudo_numbers')
-        if pseudo_numbers is None:
-            pseudo_numbers = np.zeros(system.natom)
-        _write_cube_header(f, system.coordinates, system.numbers, ui_grid, pseudo_numbers)
+        _write_cube_header(f, system.coordinates, system.numbers, ui_grid, system.pseudo_numbers)
         _write_cube_data(f, cube_data)

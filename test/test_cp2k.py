@@ -31,7 +31,7 @@ def test_atom_si_uks():
 
     assert sys.natom == 1
     assert sys.numbers[0] == 14
-    assert (sys.props['pseudo_numbers'] == [4]).all()
+    assert (sys.pseudo_numbers == [4]).all()
     assert (sys.wfn.exp_alpha.occupations == [1, 1, 1, 0]).all()
     assert (sys.wfn.exp_beta.occupations == [1, 0, 0, 0]).all()
     assert abs(sys.wfn.exp_alpha.energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
@@ -39,6 +39,7 @@ def test_atom_si_uks():
     assert abs(sys.props['energy'] - -3.761587698067) < 1e-10
     assert (sys.obasis.shell_types == [0, 0, 1, 1, -2]).all()
     assert isinstance(sys.wfn, OpenShellWFN)
+    assert sys.charge == 0
 
     olp = sys.get_overlap()._array
     ca = sys.wfn.exp_alpha.coeffs
@@ -55,12 +56,13 @@ def test_atom_o_rks():
 
     assert sys.natom == 1
     assert sys.numbers[0] == 8
-    assert (sys.props['pseudo_numbers'] == [6]).all()
+    assert (sys.pseudo_numbers == [6]).all()
     assert (sys.wfn.exp_alpha.occupations == [1, 1, 1, 1]).all()
     assert abs(sys.wfn.exp_alpha.energies - [0.102709, 0.606458, 0.606458, 0.606458]).max() < 1e-4
     assert abs(sys.props['energy'] - -15.464982778766) < 1e-10
     assert (sys.obasis.shell_types == [0, 0, 1, 1, -2]).all()
     assert isinstance(sys.wfn, ClosedShellWFN)
+    assert sys.charge == -2
 
     olp = sys.get_overlap()._array
     ca = sys.wfn.exp_alpha.coeffs
