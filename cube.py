@@ -64,12 +64,12 @@ def _read_cube_header(f):
         )
 
     numbers = np.zeros(natom, int)
-    nuclear_charges = np.zeros(natom, float)
+    pseudo_numbers = np.zeros(natom, float)
     coordinates = np.zeros((natom, 3), float)
     for i in xrange(natom):
-        numbers[i], nuclear_charges[i], coordinates[i] = read_coordinate_line(f.readline())
+        numbers[i], pseudo_numbers[i], coordinates[i] = read_coordinate_line(f.readline())
 
-    return coordinates, numbers, cell, ui_grid, nuclear_charges
+    return coordinates, numbers, cell, ui_grid, pseudo_numbers
 
 
 def _read_cube_data(f, ui_grid):
@@ -89,17 +89,17 @@ def _read_cube_data(f, ui_grid):
 
 def load_cube(filename):
     with open(filename) as f:
-        coordinates, numbers, cell, ui_grid, nuclear_charges = _read_cube_header(f)
+        coordinates, numbers, cell, ui_grid, pseudo_numbers = _read_cube_header(f)
         data = _read_cube_data(f, ui_grid)
         props = {
             'ui_grid': ui_grid,
-            'nuclear_charges': nuclear_charges,
+            'pseudo_numbers': pseudo_numbers,
             'cube_data': data,
         }
         return coordinates, numbers, cell, props
 
 
-def _write_cube_header(f, coordinates, numbers, ui_grid, nuclear_charges):
+def _write_cube_header(f, coordinates, numbers, ui_grid, pseudo_numbers):
     print >> f, 'Cube file created with Horton'
     print >> f, 'OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z'
     natom = len(numbers)
@@ -110,7 +110,7 @@ def _write_cube_header(f, coordinates, numbers, ui_grid, nuclear_charges):
         x, y, z = rvecs[i]
         print >> f, '%5i % 11.6f % 11.6f % 11.6f' % (ui_grid.shape[i], x, y, z)
     for i in xrange(natom):
-        q = nuclear_charges[i]
+        q = pseudo_numbers[i]
         x, y, z = coordinates[i]
         print >> f, '%5i % 11.6f % 11.6f % 11.6f % 11.6f' % (numbers[i], q, x, y, z)
 
@@ -132,8 +132,8 @@ def dump_cube(filename, system):
         cube_data = system.props.get('cube_data')
         if cube_data is None:
             raise ValueError('A cube data array must be defined in the system properties (cube_data).')
-        nuclear_charges = system.props.get('nuclear_charges')
-        if nuclear_charges is None:
-            nuclear_charges = np.zeros(system.natom)
-        _write_cube_header(f, system.coordinates, system.numbers, ui_grid, nuclear_charges)
+        pseudo_numbers = system.props.get('pseudo_numbers')
+        if pseudo_numbers is None:
+            pseudo_numbers = np.zeros(system.natom)
+        _write_cube_header(f, system.coordinates, system.numbers, ui_grid, pseudo_numbers)
         _write_cube_data(f, cube_data)

@@ -45,7 +45,7 @@ def test_load_aelta():
     data = sys.props['cube_data']
     assert abs(data[0,0,0] - 9.49232e-06) < 1e-12
     assert abs(data[-1,-1,-1] - 2.09856e-04) < 1e-10
-    nc = sys.props['nuclear_charges']
+    nc = sys.props['pseudo_numbers']
     assert abs(nc[0] - 1.0) < 1e-10
     assert abs(nc[1] - 0.1) < 1e-10
     assert abs(nc[-2] - 0.2) < 1e-10
@@ -70,6 +70,6 @@ def test_load_dump_load_aelta():
         assert abs(ui_grid1.grid_cell.rvecs - ui_grid2.grid_cell.rvecs).max() < 1e-4
         assert (ui_grid1.shape == ui_grid2.shape).all()
         assert abs(sys1.props['cube_data'] - sys2.props['cube_data']).max() < 1e-4
-        assert abs(sys1.props['nuclear_charges'] - sys2.props['nuclear_charges']).max() < 1e-4
+        assert abs(sys1.props['pseudo_numbers'] - sys2.props['pseudo_numbers']).max() < 1e-4
     finally:
         shutil.rmtree(dn)

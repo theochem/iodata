@@ -26,18 +26,19 @@ from horton import *
 
 
 def test_atom_si_uks():
-    lf = DenseLinalgFactory()
     fn_out = context.get_fn('test/atom_si.cp2k.out')
     sys = System.from_file(fn_out)
 
     assert sys.natom == 1
     assert sys.numbers[0] == 14
+    assert (sys.props['pseudo_numbers'] == [4]).all()
     assert (sys.wfn.exp_alpha.occupations == [1, 1, 1, 0]).all()
     assert (sys.wfn.exp_beta.occupations == [1, 0, 0, 0]).all()
     assert abs(sys.wfn.exp_alpha.energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
     assert abs(sys.wfn.exp_beta.energies - [-0.334567, -0.092237, -0.092237, -0.092237]).max() < 1e-4
     assert abs(sys.props['energy'] - -3.761587698067) < 1e-10
     assert (sys.obasis.shell_types == [0, 0, 1, 1, -2]).all()
+    assert isinstance(sys.wfn, OpenShellWFN)
 
     olp = sys.get_overlap()._array
     ca = sys.wfn.exp_alpha.coeffs
@@ -48,17 +49,18 @@ def test_atom_si_uks():
 
 
 
-def test_atom_ne_rks():
-    lf = DenseLinalgFactory()
-    fn_out = context.get_fn('test/atom_ne.cp2k.out')
+def test_atom_o_rks():
+    fn_out = context.get_fn('test/atom_om2.cp2k.out')
     sys = System.from_file(fn_out)
 
     assert sys.natom == 1
-    assert sys.numbers[0] == 10
+    assert sys.numbers[0] == 8
+    assert (sys.props['pseudo_numbers'] == [6]).all()
     assert (sys.wfn.exp_alpha.occupations == [1, 1, 1, 1]).all()
-    assert abs(sys.wfn.exp_alpha.energies - [-1.982465, -1.139699, -1.139699, -1.139699]).max() < 1e-4
-    assert abs(sys.props['energy'] - -34.922571977172) < 1e-10
-    assert (sys.obasis.shell_types == [0, 1]).all()
+    assert abs(sys.wfn.exp_alpha.energies - [0.102709, 0.606458, 0.606458, 0.606458]).max() < 1e-4
+    assert abs(sys.props['energy'] - -15.464982778766) < 1e-10
+    assert (sys.obasis.shell_types == [0, 0, 1, 1, -2]).all()
+    assert isinstance(sys.wfn, ClosedShellWFN)
 
     olp = sys.get_overlap()._array
     ca = sys.wfn.exp_alpha.coeffs

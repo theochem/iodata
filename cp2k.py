@@ -164,6 +164,14 @@ def load_atom_cp2k(filename, lf):
                     restricted = True
                     break
 
+        # Search for the core charge (pseudo number)
+        for line in f:
+            if line.startswith('          Core Charge'):
+                pseudo_number = float(line[70:])
+                assert pseudo_number == int(pseudo_number)
+                pseudo_number = int(pseudo_number)
+                break
+
         # Search for energy
         for line in f:
             if line.startswith(' Energy components [Hartree]           Total Energy ::'):
@@ -233,5 +241,5 @@ def load_atom_cp2k(filename, lf):
         'wfn': wfn,
         'coordinates': coordinates,
         'numbers': np.array([number]),
-        'props': {'energy': energy},
+        'props': {'energy': energy, 'pseudo_numbers': np.array([pseudo_number])},
     }
