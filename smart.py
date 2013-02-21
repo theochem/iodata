@@ -52,9 +52,7 @@ def load_system_args(filename, lf):
         return {'coordinates': coordinates, 'numbers': numbers}
     elif filename.endswith('.fchk'):
         from horton.io.gaussian import load_fchk
-        coordinates, numbers, obasis, wfn, permutation, props, operators = load_fchk(filename, lf)
-        return {'coordinates': coordinates, 'numbers': numbers, 'obasis': obasis,
-                'wfn': wfn, 'permutation': permutation, 'props': props, 'operators': operators}
+        return load_fchk(filename, lf)
     elif filename.endswith('.log'):
         from horton.io.gaussian import load_operators_g09
         overlap, kinetic, nuclear_attraction, electronic_repulsion = load_operators_g09(filename, lf)

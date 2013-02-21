@@ -269,7 +269,7 @@ def load_fchk(filename, lf):
         "Contraction coefficients", "P(S=P) Contraction coefficients",
         "Alpha Orbital Energies", "Alpha MO coefficients",
         "Beta Orbital Energies", "Beta MO coefficients",
-        "Total Energy",
+        "Total Energy", "Nuclear charges",
         'Total SCF Density', 'Spin SCF Density',
         'Total CC Density', 'Spin CC Density',
     ])
@@ -277,6 +277,7 @@ def load_fchk(filename, lf):
     # A) Load the geometry
     numbers = fchk.fields["Atomic numbers"]
     coordinates = fchk.fields["Current cartesian coordinates"].reshape(-1,3)
+    pseudo_numbers = fchk.fields["Nuclear charges"]
 
     # B) Load the orbital basis set
     shell_types = fchk.fields["Shell types"]
@@ -409,4 +410,13 @@ def load_fchk(filename, lf):
     load_dm('cc_full', 'Total CC Density')
     load_dm('cc_spin', 'Spin CC Density')
 
-    return coordinates, numbers, obasis, wfn, permutation, props, operators
+    return {
+        'coordinates': coordinates,
+        'numbers': numbers,
+        'obasis': obasis,
+        'wfn': wfn,
+        'permutation': permutation,
+        'props': props,
+        'operators': operators,
+        'pseudo_numbers': pseudo_numbers,
+    }

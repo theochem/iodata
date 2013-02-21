@@ -101,7 +101,12 @@ def test_load_fchk_nonexistent():
 
 def test_load_fchk_hf_sto3g_num():
     lf = DenseLinalgFactory()
-    coordinates, numbers, obasis, wfn, permutation, props, dms = load_fchk(context.get_fn('test/hf_sto3g.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/hf_sto3g.fchk'), lf)
+    obasis = fields['obasis']
+    coordinates = fields['coordinates']
+    numbers = fields['numbers']
+    props = fields['props']
+    operators = fields['operators']
     assert obasis.nshell == 4
     assert obasis.nbasis == 6
     assert (obasis.nprims == 3).all()
@@ -110,12 +115,17 @@ def test_load_fchk_hf_sto3g_num():
     assert len(numbers) == 2
     assert 'energy' in props
     assert props['energy'] == -9.856961609951867E+01
-    dms['scf_full'].check_symmetry()
+    operators['scf_full'].check_symmetry()
 
 
 def test_load_fchk_h_sto3g_num():
     lf = DenseLinalgFactory()
-    coordinates, numbers, obasis, wfn, permutation, props, dms = load_fchk(context.get_fn('test/h_sto3g.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/h_sto3g.fchk'), lf)
+    obasis = fields['obasis']
+    coordinates = fields['coordinates']
+    numbers = fields['numbers']
+    props = fields['props']
+    operators = fields['operators']
     assert obasis.nshell == 1
     assert obasis.nbasis == 1
     assert (obasis.nprims == 3).all()
@@ -124,13 +134,18 @@ def test_load_fchk_h_sto3g_num():
     assert len(numbers) == 1
     assert 'energy' in props
     assert props['energy'] == -4.665818503844346E-01
-    dms['scf_full'].check_symmetry()
-    dms['scf_spin'].check_symmetry()
+    operators['scf_full'].check_symmetry()
+    operators['scf_spin'].check_symmetry()
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
     lf = DenseLinalgFactory()
-    coordinates, numbers, obasis, wfn, permutation, props, dms = load_fchk(context.get_fn('test/o2_cc_pvtz_pure.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/o2_cc_pvtz_pure.fchk'), lf)
+    obasis = fields['obasis']
+    coordinates = fields['coordinates']
+    numbers = fields['numbers']
+    props = fields['props']
+    operators = fields['operators']
     assert obasis.nshell == 20
     assert obasis.nbasis == 60
     assert len(coordinates) == len(numbers)
@@ -138,12 +153,17 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     assert len(numbers) == 2
     assert 'energy' in props
     assert props['energy'] == -1.495944878699246E+02
-    dms['scf_full'].check_symmetry()
+    operators['scf_full'].check_symmetry()
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
     lf = DenseLinalgFactory()
-    coordinates, numbers, obasis, wfn, permutation, props, dms = load_fchk(context.get_fn('test/o2_cc_pvtz_cart.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/o2_cc_pvtz_cart.fchk'), lf)
+    obasis = fields['obasis']
+    coordinates = fields['coordinates']
+    numbers = fields['numbers']
+    props = fields['props']
+    operators = fields['operators']
     assert obasis.nshell == 20
     assert obasis.nbasis == 70
     assert len(coordinates) == len(numbers)
@@ -151,12 +171,18 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     assert len(numbers) == 2
     assert 'energy' in props
     assert props['energy'] == -1.495953594545721E+02
-    dms['scf_full'].check_symmetry()
+    operators['scf_full'].check_symmetry()
 
 
 def test_load_fchk_water_sto3g_hf():
     lf = DenseLinalgFactory()
-    coordinates, numbers, obasis, wfn, permutation, props, dms = load_fchk(context.get_fn('test/water_sto3g_hf_g03.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/water_sto3g_hf_g03.fchk'), lf)
+    obasis = fields['obasis']
+    coordinates = fields['coordinates']
+    numbers = fields['numbers']
+    props = fields['props']
+    wfn = fields['wfn']
+    operators = fields['operators']
     assert obasis.nshell == 5
     assert obasis.nbasis == 7
     assert len(coordinates) == len(numbers)
@@ -174,13 +200,19 @@ def test_load_fchk_water_sto3g_hf():
     assert abs(wfn.exp_alpha.coeffs[4,-1] - (-0.82381)) < 1e-4
     assert 'energy' in props
     assert props['energy'] == -7.495929232844363E+01
-    dms['scf_full'].check_symmetry()
+    operators['scf_full'].check_symmetry()
 
 
 def test_load_fchk_lih_321g_hf():
     lf = DenseLinalgFactory()
     fn_fchk = context.get_fn('test/li_h_3-21G_hf_g09.fchk')
-    coordinates, numbers, obasis, wfn, permutation, props, dms = load_fchk(fn_fchk, lf)
+    fields = load_fchk(fn_fchk, lf)
+    obasis = fields['obasis']
+    coordinates = fields['coordinates']
+    numbers = fields['numbers']
+    props = fields['props']
+    wfn = fields['wfn']
+    operators = fields['operators']
     assert obasis.nshell == 7
     assert obasis.nbasis == 11
     assert len(coordinates) == len(numbers)
@@ -203,13 +235,13 @@ def test_load_fchk_lih_321g_hf():
     assert abs(wfn.exp_beta.coeffs[3,2]) < 1e-4
     assert abs(wfn.exp_beta.coeffs[-1,9] - 0.80875) < 1e-4
     assert abs(wfn.exp_beta.coeffs[4,-1] - (-0.15503)) < 1e-4
-    dms['scf_full'].check_symmetry()
-    dms['scf_spin'].check_symmetry()
+    operators['scf_full'].check_symmetry()
+    operators['scf_spin'].check_symmetry()
 
     assert abs(wfn.dm_full._array - (wfn.dm_alpha._array + wfn.dm_beta._array)).max() < 1e-10
     assert abs(wfn.dm_spin._array - (wfn.dm_alpha._array - wfn.dm_beta._array)).max() < 1e-10
 
-    assert abs(wfn.dm_full._array - dms['scf_full']._array).max() < 1e-7
-    assert abs(wfn.dm_spin._array - dms['scf_spin']._array).max() < 1e-7
+    assert abs(wfn.dm_full._array - operators['scf_full']._array).max() < 1e-7
+    assert abs(wfn.dm_spin._array - operators['scf_spin']._array).max() < 1e-7
     assert 'energy' in props
     assert props['energy'] == -7.687331212191968E+00
