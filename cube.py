@@ -52,7 +52,7 @@ def _read_cube_header(f):
     axes = np.array([axis0, axis1, axis2])
 
     cell = Cell(axes*shape.reshape(-1,1))
-    ui_grid = UniformIntGrid(origin, Cell(axes), shape)
+    ui_grid = UniformIntGrid(origin, axes, shape, np.ones(3, int))
 
     def read_coordinate_line(line):
         """Read an atom number and coordinate from the cube file"""

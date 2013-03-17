@@ -83,6 +83,6 @@ def load_chgcar(filename):
         cube_data = cube_data.transpose(2,1,0)/cell.volume
 
     props = {
-        'ui_grid': UniformIntGrid(np.zeros(3), Cell(rvecs/shape.reshape(-1,1)), shape),
+        'ui_grid': UniformIntGrid(np.zeros(3), rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
         'cube_data': cube_data}
     return coordinates, numbers, cell, props
