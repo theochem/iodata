@@ -36,4 +36,5 @@ from horton.io.gaussian import *
 from horton.io.molden import *
 from horton.io.molekel import *
 from horton.io.smart import *
+from horton.io.vasp import *
 from horton.io.xyz import *

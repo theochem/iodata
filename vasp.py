@@ -23,7 +23,7 @@ import numpy as np
 from horton.units import angstrom
 from horton.periodic import periodic
 from horton.cext import Cell
-from horton.grid.uniform import UniformIntGrid
+from horton.grid.cext import UniformIntGrid
 
 
 __all__ = ['load_chgcar']
