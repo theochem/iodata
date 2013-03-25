@@ -83,10 +83,13 @@ def load_system_args(filename, lf):
     elif filename.endswith('.cube'):
         from horton.io.cube import load_cube
         return load_cube(filename)
+    elif os.path.basename(filename).startswith('POSCAR'):
+        from horton.io.vasp import load_poscar
+        return load_poscar(filename)
     elif os.path.basename(filename)[:6] in ['CHGCAR', 'AECCAR']:
         from horton.io.vasp import load_chgcar
         return load_chgcar(filename)
-    elif os.path.basename(filename)[:6] == 'LOCPOT':
+    elif os.path.basename(filename).startswith('LOCPOT'):
         from horton.io.vasp import load_locpot
         return load_locpot(filename)
     elif filename.endswith('.cp2k.out'):

@@ -83,3 +83,12 @@ def test_load_locpot_oxygen():
     assert abs(d[0, 1, 0]/electronvolt - 0.213732132354E+01) < 1e-10
     assert abs(d[0, 2, 0]/electronvolt - -.65465465497E+01) < 1e-10
     assert abs(d[0, 2, 1]/electronvolt - -.546876467887E+01) < 1e-10
+
+
+def test_load_poscar_water():
+    fn = context.get_fn('test/POSCAR.water')
+    sys = System.from_file(fn)
+    assert sys.natom == 3
+    assert (sys.numbers == np.array([8, 1, 1])).all()
+    assert abs(sys.coordinates[1] - np.array([0.074983,  0.903122,  0.000000])*15*angstrom).max() < 1e-10
+    assert abs(sys.cell.volume - (15*angstrom)**3) < 1e-10

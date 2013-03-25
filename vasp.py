@@ -27,7 +27,7 @@ from horton.cext import Cell
 from horton.grid.cext import UniformIntGrid
 
 
-__all__ = ['load_chgcar', 'load_locpot']
+__all__ = ['load_chgcar', 'load_locpot', 'load_poscar']
 
 
 def unravel_counter(counter, shape):
@@ -38,39 +38,58 @@ def unravel_counter(counter, shape):
     return result
 
 
+def _load_vasp_header(f, nskip):
+    '''Load the cell and atoms from a VASP file
+
+       **Arguments:**
+
+       f
+            An open file object
+
+       nskip
+            The number of lines to skip after the line with elements
+    '''
+    # skip first two lines
+    f.next()
+    f.next()
+
+    # read cell parameters in angstrom
+    rvecs = []
+    for i in xrange(3):
+        rvecs.append([float(w) for w in f.next().split()])
+    rvecs = np.array(rvecs)*angstrom
+
+    # Convert to cell object
+    cell = Cell(rvecs)
+
+    vasp_numbers = [periodic[w].number for w in f.next().split()]
+    vasp_counts = [int(w) for w in f.next().split()]
+    numbers = []
+    for n, c in zip(vasp_numbers, vasp_counts):
+        numbers.extend([n]*c)
+    numbers = np.array(numbers)
+
+    # skip some lines
+    for i in xrange(nskip):
+        f.next()
+    assert f.next().startswith('Direct')
+
+    # read the fractional coordinates and convert to Cartesian
+    coordinates = []
+    for line in f:
+        if len(line.strip()) == 0:
+            break
+        coordinates.append([float(w) for w in line.split()[:3]])
+    coordinates = np.dot(np.array(coordinates), rvecs.T)
+
+    return cell, numbers, coordinates
+
+
 def load_vasp_grid(filename):
     '''Load a grid data file from VASP 5'''
     with open(filename) as f:
-        # skip first two lines
-        f.next()
-        f.next()
-
-        # read cell parameters in angstrom
-        rvecs = []
-        for i in xrange(3):
-            rvecs.append([float(w) for w in f.next().split()])
-        rvecs = np.array(rvecs)*angstrom
-
-        # compute volume
-        cell = Cell(rvecs)
-
-        vasp_numbers = [periodic[w].number for w in f.next().split()]
-        vasp_counts = [int(w) for w in f.next().split()]
-        numbers = []
-        for n, c in zip(vasp_numbers, vasp_counts):
-            numbers.extend([n]*c)
-        numbers = np.array(numbers)
-
-        # skip one line
-        assert f.next().startswith('Direct')
-
-        # read the fractional coordinates and convert to Cartesian
-        coordinates = []
-        for line in f:
-            if len(line.strip()) == 0:
-                break
-            coordinates.append([float(w) for w in line.split()])
-        coordinates = np.dot(np.array(coordinates), rvecs.T)
+        # Load header
+        cell, numbers, coordinates = _load_vasp_header(f, 0)
 
         # read the shape of the data
         shape = np.array([int(w) for w in f.next().split()])
@@ -94,7 +113,7 @@ def load_vasp_grid(filename):
         'numbers': numbers,
         'cell': cell,
         'props': {
-            'ui_grid': UniformIntGrid(np.zeros(3), rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
+            'ui_grid': UniformIntGrid(np.zeros(3), cell.rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
             'cube_data': cube_data
         },
     }
@@ -114,3 +133,14 @@ def load_locpot(filename):
     # convert locpot to atomic units
     result['props']['cube_data'] *= electronvolt
     return result
+
+
+def load_poscar(filename):
+    with open(filename) as f:
+        # Load header
+        cell, numbers, coordinates = _load_vasp_header(f, 1)
+        return {
+            'coordinates': coordinates,
+            'numbers': numbers,
+            'cell': cell,
+        }
