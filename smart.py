@@ -85,11 +85,10 @@ def load_system_args(filename, lf):
         return load_cube(filename)
     elif os.path.basename(filename)[:6] in ['CHGCAR', 'AECCAR']:
         from horton.io.vasp import load_chgcar
-        coordinates, numbers, cell, props = load_chgcar(filename)
-        return {
-            'coordinates': coordinates, 'numbers': numbers, 'cell': cell,
-            'props': props,
-        }
+        return load_chgcar(filename)
+    elif os.path.basename(filename)[:6] == 'LOCPOT':
+        from horton.io.vasp import load_locpot
+        return load_locpot(filename)
     elif filename.endswith('.cp2k.out'):
         from horton.io.cp2k import load_atom_cp2k
         return load_atom_cp2k(filename, lf)

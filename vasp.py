@@ -19,19 +19,27 @@
 #
 #--
 
+
 import numpy as np
-from horton.units import angstrom
+from horton.units import angstrom, electronvolt
 from horton.periodic import periodic
 from horton.cext import Cell
 from horton.grid.cext import UniformIntGrid
 
 
-__all__ = ['load_chgcar']
+__all__ = ['load_chgcar', 'load_locpot']
 
 
+def unravel_counter(counter, shape):
+    result = []
+    for i in xrange(0, len(shape)):
+        result.append(counter % shape[i])
+        counter /= shape[i]
+    return result
 
-def load_chgcar(filename):
-    '''Reads a vasp 5 chgcar file. Not tested extensively yet!'''
+
+def load_vasp_grid(filename):
+    '''Load a grid data file from VASP 5'''
     with open(filename) as f:
         # skip first two lines
         f.next()
@@ -54,9 +62,9 @@ def load_chgcar(filename):
         numbers = np.array(numbers)
 
         # skip one line
-        f.next()
+        assert f.next().startswith('Direct')
 
-        # read the coordinates
+        # read the fractional coordinates and convert to Cartesian
         coordinates = []
         for line in f:
             if len(line.strip()) == 0:
@@ -69,20 +77,40 @@ def load_chgcar(filename):
 
         # read data
         cube_data = np.zeros(shape, float)
-        tmp = cube_data.ravel()
         counter = 0
         for line in f:
-            if line.startswith('augment'):
+            if counter >= cube_data.size:
                 break
             for w in line.split():
-                tmp[counter] = float(w)
+                i0, i1, i2 = unravel_counter(counter, shape)
+                # Fill in the data with transposed indexes. In horton, X is
+                # the slowest index while Z is the fastest.
+                cube_data[i0, i1, i2] = float(w)
                 counter += 1
-        assert counter == tmp.size
+        assert counter == cube_data.size
 
-        # transpose the cube to make z fastest and x slowest index.
-        cube_data = cube_data.transpose(2,1,0)/cell.volume
+    return {
+        'coordinates': coordinates,
+        'numbers': numbers,
+        'cell': cell,
+        'props': {
+            'ui_grid': UniformIntGrid(np.zeros(3), rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
+            'cube_data': cube_data
+        },
+    }
 
-    props = {
-        'ui_grid': UniformIntGrid(np.zeros(3), rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
-        'cube_data': cube_data}
-    return coordinates, numbers, cell, props
+
+def load_chgcar(filename):
+    '''Reads a vasp 5 chgcar file.'''
+    result = load_vasp_grid(filename)
+    # renormalize electron density
+    result['props']['cube_data'] /= result['cell'].volume
+    return result
+
+
+def load_locpot(filename):
+    '''Reads a vasp 5 locpot file.'''
+    result = load_vasp_grid(filename)
+    # convert locpot to atomic units
+    result['props']['cube_data'] *= electronvolt
+    return result
