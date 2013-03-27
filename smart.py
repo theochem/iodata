@@ -103,5 +103,8 @@ def dump_system(filename, system):
     if filename.endswith('.cube'):
         from horton.io.cube import dump_cube
         dump_cube(filename, system)
+    elif filename.endswith('.cif'):
+        from horton.io.cif import dump_cif
+        dump_cif(filename, system)
     else:
         raise ValueError('Unknown file format for writing: %s' % filename)
