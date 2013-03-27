@@ -80,7 +80,7 @@ def _load_vasp_header(f, nskip):
         if len(line.strip()) == 0:
             break
         coordinates.append([float(w) for w in line.split()[:3]])
-    coordinates = np.dot(np.array(coordinates), rvecs.T)
+    coordinates = np.dot(np.array(coordinates), rvecs)
 
     return cell, numbers, coordinates
 

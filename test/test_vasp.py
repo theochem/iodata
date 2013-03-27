@@ -59,7 +59,7 @@ def test_load_chgcar_water():
     sys = System.from_file(fn)
     assert sys.natom == 3
     assert (sys.numbers == np.array([8, 1, 1])).all()
-    assert abs(sys.coordinates[1] - np.array([0.074983,  0.903122,  0.000000])*15*angstrom).max() < 1e-10
+    assert abs(sys.coordinates[1] - np.array([0.074983*15+0.903122*1,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
     assert abs(sys.cell.volume - (15*angstrom)**3) < 1e-10
     ui_grid = sys.props['ui_grid']
     assert len(ui_grid.shape) == 3
@@ -90,5 +90,5 @@ def test_load_poscar_water():
     sys = System.from_file(fn)
     assert sys.natom == 3
     assert (sys.numbers == np.array([8, 1, 1])).all()
-    assert abs(sys.coordinates[1] - np.array([0.074983,  0.903122,  0.000000])*15*angstrom).max() < 1e-10
+    assert abs(sys.coordinates[1] - np.array([0.074983*15,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
     assert abs(sys.cell.volume - (15*angstrom)**3) < 1e-10
