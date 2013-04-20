@@ -22,6 +22,8 @@
 
 import h5py as h5
 
+from horton.checkpoint import attribute_register
+
 
 __all__ = ['load_checkpoint']
 
@@ -33,7 +35,7 @@ def load_checkpoint(filename, lf):
 
        filename
             This is the file name of an HDF5 Horton checkpoint file. It may also
-            be an open h5.File object.
+            be an open h5.Group object.
 
        lf
             A LinalgFactory instance.
@@ -45,7 +47,7 @@ def load_checkpoint(filename, lf):
     else:
         chk = filename
         do_close = False
-    from horton.checkpoint import attribute_register
+
     for field in attribute_register.itervalues():
         att = field.read(chk, lf)
         d = result
@@ -55,7 +57,34 @@ def load_checkpoint(filename, lf):
             name = field.key
         if att is not None:
             d[name] = att
+
     if do_close:
         chk.close()
     result['chk'] = filename
     return result
+
+
+def dump_checkpoint(filename, system):
+    '''Dump the system in a Horton checkpoint file.
+
+       **Arguments:**
+
+       filename
+            This is the file name of an HDF5 Horton checkpoint file. It may also
+            be an open h5.Group object.
+
+       system
+            A System instance.
+    '''
+    if isinstance(filename, basestring):
+        chk = h5.File(filename, 'w')
+        do_close = True
+    else:
+        chk = filename
+        do_close = False
+
+    for field_name, field in attribute_register.iteritems():
+        field.write(chk, system)
+
+    if do_close:
+        chk.close()

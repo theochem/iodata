@@ -43,7 +43,7 @@ def load_system_args(filename, lf):
        format. It returns a dictionary with constructor arguments for the System
        class.
     '''
-    if isinstance(filename, h5.File) or filename.endswith('.h5'):
+    if isinstance(filename, h5.Group) or filename.endswith('.h5'):
         from horton.io.chk import load_checkpoint
         return load_checkpoint(filename, lf)
     if filename.endswith('.xyz'):
@@ -100,7 +100,10 @@ def load_system_args(filename, lf):
 
 
 def dump_system(filename, system):
-    if filename.endswith('.cube'):
+    if isinstance(filename, h5.Group) or filename.endswith('.h5'):
+        from horton.io.chk import dump_checkpoint
+        dump_checkpoint(filename, system)
+    elif filename.endswith('.cube'):
         from horton.io.cube import dump_cube
         dump_cube(filename, system)
     elif filename.endswith('.cif'):
