@@ -360,6 +360,8 @@ def load_fchk(filename, lf):
         from horton.wfn import AufbauOccModel, OpenShellWFN
         nalpha = fchk.fields['Number of alpha electrons']
         nbeta = fchk.fields['Number of beta electrons']
+        if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
+            raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
         occ_model = AufbauOccModel(nalpha, nbeta)
         wfn = OpenShellWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
         exp_alpha = wfn.init_exp('alpha')
@@ -372,6 +374,8 @@ def load_fchk(filename, lf):
     else:
         from horton.wfn import AufbauOccModel, ClosedShellWFN
         nelec = fchk.fields["Number of electrons"]
+        if nelec <= 0:
+            raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
         assert nelec % 2 == 0
         occ_model = AufbauOccModel(nelec/2)
         wfn = ClosedShellWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
