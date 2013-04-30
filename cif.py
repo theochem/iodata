@@ -20,7 +20,16 @@
 #--
 
 
+
+import shlex, numpy as np
+
 from horton import angstrom, deg, periodic
+
+
+__all__ = ['dump_cif']
+
+
+# TODO (long term): dump_cif should also write out symmetry info if that is present
 
 
 def dump_cif(filename, system):
@@ -53,3 +62,136 @@ def dump_cif(filename, system):
             symbol = periodic[system.numbers[i]].symbol
             label = symbol+str(i+1)
             print >> f, '%10s %3s % 12.6f % 12.6f % 12.6f' % (label, symbol, fx, fy, fz)
+
+
+class IterRelevantCIFLines(object):
+    '''A wrapper that reads lines from the CIF file.
+
+       Irrelevant lines are ignored and a rewind method is present such that
+       one can easily 'undo' a line read.
+    '''
+    def __init__(self, f):
+        self.f = f
+        self.cache = []
+
+    def iter(self):
+        return self
+
+    def rewind(self, line):
+        self.cache.append(line)
+
+    def next(self):
+        if len(self.cache) == 0:
+            while True:
+                line = self.f.next()
+                line = line[:line.find('#')].strip()
+                if len(line) > 0:
+                    return line
+        else:
+            return self.cache.pop(-1)
+
+
+def _interpret_cif_value(value_str):
+    if value_str[0] == '\'':
+        assert value_str[-1] == '\''
+        return value_str[1:-1]
+
+    try:
+        return int(value_str)
+    except ValueError:
+        pass
+
+    try:
+        return float(value_str)
+    except ValueError:
+        pass
+
+    try:
+        return float(value_str[:value_str.find('(')])
+    except ValueError:
+        pass
+
+    return value_str
+
+
+def _load_cif_table(irl):
+    # first read headings
+    headings = []
+    while True:
+        line = irl.next()
+        if line.startswith('_'):
+            headings.append(line[1:])
+        else:
+            irl.rewind(line)
+            break
+
+    # Read in the data
+    rows = []
+    while True:
+        try:
+            line = irl.next()
+        except StopIteration:
+            break
+        if line.startswith('_') or line.startswith('loop_'):
+            irl.rewind(line)
+            break
+        else:
+            words = shlex.split(line)
+            rows.append([_interpret_cif_value(word) for word in words])
+
+    return headings, rows
+
+
+
+def _load_cif_low(fn_cif):
+    '''Read the title and all the field arrays from the CIF file.
+
+       **Arguments:**
+
+       filename
+            The name of the CIF file.
+
+       **Returns:**
+
+       title
+            The title of the CIF file.
+
+       fields
+            A dictionary with all the data from the CIF file. Tables are cut
+            into columns with each one having a corresponding item in the
+            dictionary. The data as kept in the same units as in the original
+            CIF file.
+    '''
+    title = None
+    fields = {}
+    tables = []
+    with open(fn_cif) as f:
+        irl = IterRelevantCIFLines(f)
+        title = irl.next()
+        assert title.startswith('data_')
+        title = title[5:]
+        while True:
+            try:
+                line = irl.next()
+            except StopIteration:
+                break
+
+            if len(line) == 0:
+                continue
+            elif line.startswith('_'):
+                words = shlex.split(line)
+                key = words[0][1:]
+                value = _interpret_cif_value(words[1])
+                fields[key] =  value
+            elif line.startswith('loop_'):
+                tables.append(_load_cif_table(irl))
+            else:
+                raise NotImplementedError
+
+    # convert tables to extra fields
+    for header, rows in tables:
+        for index, key in enumerate(header):
+            data = np.array([row[index] for row in rows])
+            fields[key] = data
+
+    return title, fields
