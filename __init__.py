@@ -29,6 +29,7 @@
 '''
 
 
+from horton.io.cif import *
 from horton.io.cp2k import *
 from horton.io.common import *
 from horton.io.cube import *

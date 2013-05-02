@@ -23,10 +23,8 @@
 
 import shlex, numpy as np
 
-from horton import angstrom, deg, periodic
 
-
-__all__ = ['dump_cif']
+__all__ = ['dump_cif', 'iter_equiv_pos_terms', 'equiv_pos_to_generator', 'load_cif']
 
 
 # TODO (long term): dump_cif should also write out symmetry info if that is present
@@ -195,3 +193,64 @@ def _load_cif_low(fn_cif):
             fields[key] = data
 
     return title, fields
+
+
+def iter_equiv_pos_terms(comp):
+    while len(comp) > 0:
+        sign = 1-2*(comp[0]=='-')
+        if comp[0] in '+-':
+            comp = comp[1:]
+        pos_p = comp.find('+')
+        pos_m = comp.find('-')
+        if pos_p < 0: pos_p += len(comp)+1
+        if pos_m < 0: pos_m += len(comp)+1
+        end = min(pos_p, pos_m)
+        yield sign, comp[:end]
+        comp = comp[end:]
+
+
+def equiv_pos_to_generator(s):
+    '''Convert a equiv_pos_as_xyz string to a generator matrix'''
+    g = np.zeros((3, 4), float)
+    for index, comp in enumerate(s.split(',')):
+        for sign, term in iter_equiv_pos_terms(comp):
+            if term in 'xyz':
+                g[index,'xyz'.find(term)] = sign
+            else:
+                nom, denom = term.split('/')
+                g[index,3] = sign*float(nom)/float(denom)
+
+    return g
+
+
+def load_cif(filename, lf):
+    from horton import angstrom, deg, periodic, Cell, Symmetry
+    title, fields = _load_cif_low(filename)
+
+    name = fields.get('symmetry_Int_Tables_number', 'None')
+
+    generators = [equiv_pos_to_generator(s) for s in fields['symmetry_equiv_pos_as_xyz']]
+
+    x = fields['atom_site_fract_x'].reshape(-1, 1)
+    y = fields['atom_site_fract_y'].reshape(-1, 1)
+    z = fields['atom_site_fract_z'].reshape(-1, 1)
+    prim_fracs = np.hstack((x, y, z))
+
+    prim_numbers = np.array([periodic[symbol].number for symbol in fields['atom_site_type_symbol']])
+
+    lengths = np.array([fields['cell_length_a'], fields['cell_length_b'], fields['cell_length_c']])*angstrom
+    angles = np.array([fields['cell_angle_alpha'], fields['cell_angle_beta'], fields['cell_angle_gamma']])*deg
+    cell = Cell.from_parameters(lengths, angles)
+
+    prim_labels = fields['atom_site_label']
+
+    symmetry = Symmetry(name, generators, prim_fracs, prim_numbers, cell, prim_labels)
+
+    coordinates, numbers, links = symmetry.generate()
+
+    return {
+        'coordinates': coordinates,
+        'numbers': numbers,
+        'props': {'symmetry': symmetry, 'links': links},
+        'cell': cell,
+    }

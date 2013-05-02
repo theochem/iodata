@@ -115,3 +115,37 @@ def test_load_cif_low_lta_iza():
     assert (fields['atom_site_fract_y'] == [0.2122, 0.1103, 0.2967, 0.1823]).all()
     assert (fields['atom_site_fract_z'] == [0.5, 0.3384, 0.2967, 0.3684]).all()
     assert len(fields) == 15
+
+
+def test_iter_equiv_pos_terms():
+    assert list(iter_equiv_pos_terms('x+1/2')) == [(+1,'x'),(+1,'1/2')]
+    assert list(iter_equiv_pos_terms('-x+1/2')) == [(-1,'x'),(+1,'1/2')]
+    assert list(iter_equiv_pos_terms('y-1/2')) == [(+1,'y'),(-1,'1/2')]
+    assert list(iter_equiv_pos_terms('z')) == [(+1,'z')]
+
+
+def test_equiv_pos_to_generator():
+    assert abs(equiv_pos_to_generator('x,y,z') - np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0]])).max() < 1e-10
+    assert abs(equiv_pos_to_generator('y,x,z') - np.array([[0,1,0,0],[1,0,0,0],[0,0,1,0]])).max() < 1e-10
+    assert abs(equiv_pos_to_generator('y,z,x') - np.array([[0,1,0,0],[0,0,1,0],[1,0,0,0]])).max() < 1e-10
+    assert abs(equiv_pos_to_generator('x,-y,-z') - np.array([[1,0,0,0],[0,-1,0,0],[0,0,-1,0]])).max() < 1e-10
+    assert abs(equiv_pos_to_generator('-y,z,x') - np.array([[0,-1,0,0],[0,0,1,0],[1,0,0,0]])).max() < 1e-10
+    assert abs(equiv_pos_to_generator('x+1/2,y,z') - np.array([[1,0,0,0.5],[0,1,0,0],[0,0,1,0]])).max() < 1e-10
+    assert abs(equiv_pos_to_generator('x,y-3/4,z') - np.array([[1,0,0,0],[0,1,0,-0.75],[0,0,1,0]])).max() < 1e-10
+
+
+def check_lta_sys(sys):
+    assert (sys.numbers == 14).sum() == 24
+    assert (sys.numbers == 8).sum() == 48
+    assert sys.props['symmetry'].name == '221'
+    assert len(sys.props['links']) == 72
+
+
+def test_load_cif_lta_gulp():
+    sys = System.from_file(context.get_fn('test/lta_gulp.cif'))
+    check_lta_sys(sys)
+
+
+def test_load_cif_lta_iza():
+    sys = System.from_file(context.get_fn('test/lta_iza.cif'))
+    check_lta_sys(sys)

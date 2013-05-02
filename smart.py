@@ -74,6 +74,9 @@ def load_system_args(filename, lf):
     elif filename.endswith('.cp2k.out'):
         from horton.io.cp2k import load_atom_cp2k
         return load_atom_cp2k(filename, lf)
+    elif filename.endswith('.cif'):
+        from horton.io.cif import load_cif
+        return load_cif(filename, lf)
     else:
         raise ValueError('Unknown file format for reading: %s' % filename)
 
