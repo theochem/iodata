@@ -20,8 +20,12 @@
 #--
 
 
+import h5py as h5
+
 from horton import *
 from horton.io.cif import _load_cif_low
+
+from horton.test.common import compare_symmetries
 
 
 lta_sep = np.array([
@@ -149,3 +153,13 @@ def test_load_cif_lta_gulp():
 def test_load_cif_lta_iza():
     sys = System.from_file(context.get_fn('test/lta_iza.cif'))
     check_lta_sys(sys)
+
+
+def test_checkpoint():
+    with h5.File('horton.io.test.test_cif.test_checkpoint', driver='core', backing_store=False) as f:
+        sys0 = System.from_file(context.get_fn('test/lta_iza.cif'))
+        sys0.to_file(f)
+        sys1 = System.from_file(f)
+        s0 = sys0.props['symmetry']
+        s1 = sys1.props['symmetry']
+        compare_symmetries(s0, s1)
