@@ -271,7 +271,8 @@ def load_fchk(filename, lf):
         "Beta Orbital Energies", "Beta MO coefficients",
         "Total Energy", "Nuclear charges",
         'Total SCF Density', 'Spin SCF Density',
-        'Total CC Density', 'Spin CC Density',
+        'Total CC Density', 'Spin CC Density', 'Mulliken Charges',
+        'ESP Charges','NPA Charges',
     ])
 
     # A) Load the geometry
@@ -388,6 +389,12 @@ def load_fchk(filename, lf):
     props = {
         'energy': fchk.fields['Total Energy'],
     }
+    if 'Mulliken Charges' in fchk.fields:
+        props['mulliken_charges'] = fchk.fields['Mulliken Charges']
+    if 'ESP Charges' in fchk.fields:
+        props['esp_charges'] = fchk.fields['ESP Charges']
+    if 'NPA Charges' in fchk.fields:
+        props['npa_charges'] = fchk.fields['NPA Charges']
 
     # E) Load density matrices
     def load_dm(key, label):
