@@ -29,12 +29,17 @@ def test_load_operators_water_sto3g_hf_g03():
     lf = DenseLinalgFactory()
     eps = 1e-5
     fn = context.get_fn('test/water_sto3g_hf_g03.log')
-    overlap, kinetic, nuclear_attraction, electronic_repulsion = load_operators_g09(fn, lf)
+    result = load_operators_g09(fn, lf)
 
-    for op in overlap, kinetic, nuclear_attraction, electronic_repulsion:
+    for op in result['operators'].values():
         assert op is not None
         assert op.nbasis == 7
         op.check_symmetry()
+
+    overlap = result['operators']['olp']
+    kinetic = result['operators']['kin']
+    nuclear_attraction = result['operators']['na']
+    electronic_repulsion = result['operators']['er']
 
     assert abs(overlap.get_element(0,0) - 1.0) < eps
     assert abs(overlap.get_element(0,1) - 0.236704) < eps
@@ -61,7 +66,12 @@ def test_load_operators_water_ccpvdz_pure_hf_g03():
     lf = DenseLinalgFactory()
     eps = 1e-5
     fn = context.get_fn('test/water_ccpvdz_pure_hf_g03.log')
-    overlap, kinetic, nuclear_attraction, electronic_repulsion = load_operators_g09(fn, lf)
+    result = load_operators_g09(fn, lf)
+
+    overlap = result['operators']['olp']
+    kinetic = result['operators']['kin']
+    nuclear_attraction = result['operators']['na']
+    electronic_repulsion = result['operators']['er']
 
     for op in overlap, kinetic, nuclear_attraction, electronic_repulsion:
         assert op is not None

@@ -26,8 +26,6 @@ import h5py as h5, os
 __all__ = ['load_system_args', 'dump_system']
 
 
-# TODO: let all load functions return a dictionary
-
 def load_system_args(filename, lf):
     '''Load a molecular data from a file.
 
@@ -48,38 +46,19 @@ def load_system_args(filename, lf):
         return load_checkpoint(filename, lf)
     if filename.endswith('.xyz'):
         from horton.io.xyz import load_geom_xyz
-        coordinates, numbers = load_geom_xyz(filename)
-        return {'coordinates': coordinates, 'numbers': numbers}
+        return load_geom_xyz(filename)
     elif filename.endswith('.fchk'):
         from horton.io.gaussian import load_fchk
         return load_fchk(filename, lf)
     elif filename.endswith('.log'):
         from horton.io.gaussian import load_operators_g09
-        overlap, kinetic, nuclear_attraction, electronic_repulsion = load_operators_g09(filename, lf)
-        operators = {}
-        if overlap is not None:
-            operators['olp'] = overlap
-        if kinetic is not None:
-            operators['kin'] = kinetic
-        if nuclear_attraction is not None:
-            operators['na'] = nuclear_attraction
-        if electronic_repulsion is not None:
-            operators['er'] = electronic_repulsion
-        return {'operators': operators}
+        return load_operators_g09(filename, lf)
     elif filename.endswith('.mkl'):
         from horton.io.molekel import load_mkl
-        coordinates, numbers, obasis, wfn, signs = load_mkl(filename, lf)
-        return {
-            'coordinates': coordinates, 'numbers': numbers, 'obasis': obasis,
-            'wfn': wfn, 'signs': signs,
-        }
+        return load_mkl(filename, lf)
     elif filename.endswith('.molden.input'):
         from horton.io.molden import load_molden
-        coordinates, numbers, obasis, wfn, signs = load_molden(filename, lf)
-        return {
-            'coordinates': coordinates, 'numbers': numbers, 'obasis': obasis,
-            'wfn': wfn, 'signs': signs,
-        }
+        return load_molden(filename, lf)
     elif filename.endswith('.cube'):
         from horton.io.cube import load_cube
         return load_cube(filename)

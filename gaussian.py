@@ -71,7 +71,16 @@ def load_operators_g09(fn, lf):
             elif line.startswith(' *** Dumping Two-Electron integrals ***'):
                 electronic_repulsion = _load_twobody_g09(f, nbasis, lf)
 
-        return overlap, kinetic, nuclear_attraction, electronic_repulsion
+        operators = {}
+        if overlap is not None:
+            operators['olp'] = overlap
+        if kinetic is not None:
+           operators['kin'] = kinetic
+        if nuclear_attraction is not None:
+            operators['na'] = nuclear_attraction
+        if electronic_repulsion is not None:
+            operators['er'] = electronic_repulsion
+        return {'operators': operators}
 
 
 def _load_onebody_g09(f, nbasis, lf):

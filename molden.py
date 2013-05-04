@@ -239,4 +239,10 @@ def load_molden(filename, lf):
 
     signs = get_orca_signs(obasis)
 
-    return coordinates, numbers, obasis, wfn, signs
+    return {
+            'coordinates': coordinates,
+            'numbers': numbers,
+            'obasis': obasis,
+            'wfn': wfn,
+            'signs': signs,
+    }

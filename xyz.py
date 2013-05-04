@@ -52,4 +52,7 @@ def load_geom_xyz(filename):
         coordinates[i,1] = float(words[2])*angstrom
         coordinates[i,2] = float(words[3])*angstrom
     f.close()
-    return coordinates, numbers
+    return {
+        'coordinates': coordinates,
+        'numbers': numbers
+    }
