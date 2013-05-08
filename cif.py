@@ -31,6 +31,16 @@ __all__ = ['dump_cif', 'iter_equiv_pos_terms', 'equiv_pos_to_generator', 'load_c
 
 
 def dump_cif(filename, system):
+    '''Write a Horton system to a CIF file
+
+       **Arguments:**
+
+       filename
+            The name of the new CIF file.
+
+       system
+            The system to be written to the CIF file.
+    '''
     if system.cell is None or system.cell.nvec != 3:
         raise ValueError('The CIF format only supports 3D periodic systems.')
     with open(filename, 'w') as f:
@@ -73,12 +83,22 @@ class IterRelevantCIFLines(object):
         self.cache = []
 
     def iter(self):
+        '''Return an iterator'''
         return self
 
     def rewind(self, line):
+        '''Undo the last line read (can be repeated)
+
+           **Arguments:**
+
+           line
+                The line that was last read.
+        '''
+
         self.cache.append(line)
 
     def next(self):
+        '''Get the next line from the file (or from the undo stack).'''
         if len(self.cache) == 0:
             while True:
                 line = self.f.next()
@@ -90,6 +110,7 @@ class IterRelevantCIFLines(object):
 
 
 def _interpret_cif_value(value_str):
+    '''Parse a string from a CIF file'''
     if value_str[0] == '\'':
         assert value_str[-1] == '\''
         return value_str[1:-1]
@@ -113,6 +134,13 @@ def _interpret_cif_value(value_str):
 
 
 def _load_cif_table(irl):
+    '''Load an entire table from a CIF file
+
+       **Arguments:**
+
+       irl
+            An instance of IterRelevantCIFLines
+    '''
     # first read headings
     headings = []
     while True:
@@ -196,6 +224,16 @@ def _load_cif_low(fn_cif):
 
 
 def iter_equiv_pos_terms(comp):
+    '''Iterate over the terms in a component from the equiv_pos_as_xyz table
+
+       **Arguments:**
+
+       comp
+            A string with one or more terms, e.g. 'x', '-y', 'y+1/2', ...
+
+       **Yields:** 2-tuples of the form (sign, sybol). For example, the input
+       'y-1/2' will yield to 2-tuples: (+1, 'y'), (-1, '1/2')
+    '''
     while len(comp) > 0:
         sign = 1-2*(comp[0]=='-')
         if comp[0] in '+-':
@@ -210,7 +248,16 @@ def iter_equiv_pos_terms(comp):
 
 
 def equiv_pos_to_generator(s):
-    '''Convert a equiv_pos_as_xyz string to a generator matrix'''
+    '''Convert a equiv_pos_as_xyz string to a generator matrix
+
+       **Arguments:**
+
+       s
+            A single line from the equiv_pos_as_xyz table
+
+       **Returns:** a (3,4) array where the first three columns contain the
+       rotation matrix and the last column is the translation vector.
+    '''
     g = np.zeros((3, 4), float)
     for index, comp in enumerate(s.split(',')):
         for sign, term in iter_equiv_pos_terms(comp):
@@ -224,6 +271,18 @@ def equiv_pos_to_generator(s):
 
 
 def load_cif(filename, lf):
+    '''Load a CIF file
+
+       **Arguments:**
+
+       filename
+            The name of an existing CIF file
+
+       lf
+            An instance of the LinalgFactory class. (Ignored here)
+
+       **Returns:** a dictionary with constructor arguments
+    '''
     from horton import angstrom, deg, periodic, Cell, Symmetry
     title, fields = _load_cif_low(filename)
 
