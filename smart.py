@@ -40,6 +40,13 @@ def load_system_args(filename, lf):
        This routine uses the extension of the filename to determine the file
        format. It returns a dictionary with constructor arguments for the System
        class.
+
+       For each filename extension, there is a specialized load_xxx function
+       that returns a dictionary with arguments for the constructor of the
+       ``System`` class, except for the ``chk`` and ``lf`` arguments. Two
+       additional variables may be added in the returned dictionary:
+       ``permutation`` and ``signs``. These will be used to reorder and change
+       the signs of all matrix elements related to the basis functions.
     '''
     if isinstance(filename, h5.Group) or filename.endswith('.h5'):
         from horton.io.chk import load_checkpoint
