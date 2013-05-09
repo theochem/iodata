@@ -24,7 +24,7 @@ import numpy as np
 from horton.units import angstrom, electronvolt
 from horton.periodic import periodic
 from horton.cext import Cell
-from horton.grid.cext import UniformIntGrid
+from horton.grid.cext import UniformGrid
 
 
 __all__ = ['load_chgcar', 'load_locpot', 'load_poscar']
@@ -113,7 +113,7 @@ def load_vasp_grid(filename):
         'numbers': numbers,
         'cell': cell,
         'props': {
-            'ui_grid': UniformIntGrid(np.zeros(3), cell.rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
+            'ugrid': UniformGrid(np.zeros(3), cell.rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
             'cube_data': cube_data
         },
     }

@@ -22,7 +22,7 @@
 
 import numpy as np
 from horton.cext import Cell
-from horton.grid.cext import UniformIntGrid
+from horton.grid.cext import UniformGrid
 
 
 __all__ = ['load_cube', 'dump_cube']
@@ -52,7 +52,7 @@ def _read_cube_header(f):
     axes = np.array([axis0, axis1, axis2])
 
     cell = Cell(axes*shape.reshape(-1,1))
-    ui_grid = UniformIntGrid(origin, axes, shape, np.ones(3, int))
+    ugrid = UniformGrid(origin, axes, shape, np.ones(3, int))
 
     def read_coordinate_line(line):
         """Read an atom number and coordinate from the cube file"""
@@ -69,11 +69,11 @@ def _read_cube_header(f):
     for i in xrange(natom):
         numbers[i], pseudo_numbers[i], coordinates[i] = read_coordinate_line(f.readline())
 
-    return coordinates, numbers, cell, ui_grid, pseudo_numbers
+    return coordinates, numbers, cell, ugrid, pseudo_numbers
 
 
-def _read_cube_data(f, ui_grid):
-    data = np.zeros(tuple(ui_grid.shape), float)
+def _read_cube_data(f, ugrid):
+    data = np.zeros(tuple(ugrid.shape), float)
     tmp = data.ravel()
     counter = 0
     while True:
@@ -89,10 +89,10 @@ def _read_cube_data(f, ui_grid):
 
 def load_cube(filename):
     with open(filename) as f:
-        coordinates, numbers, cell, ui_grid, pseudo_numbers = _read_cube_header(f)
-        data = _read_cube_data(f, ui_grid)
+        coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(f)
+        data = _read_cube_data(f, ugrid)
         props = {
-            'ui_grid': ui_grid,
+            'ugrid': ugrid,
             'cube_data': data,
         }
         return {
@@ -104,16 +104,16 @@ def load_cube(filename):
         }
 
 
-def _write_cube_header(f, coordinates, numbers, ui_grid, pseudo_numbers):
+def _write_cube_header(f, coordinates, numbers, ugrid, pseudo_numbers):
     print >> f, 'Cube file created with Horton'
     print >> f, 'OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z'
     natom = len(numbers)
-    x, y, z = ui_grid.origin
+    x, y, z = ugrid.origin
     print >> f, '%5i % 11.6f % 11.6f % 11.6f' % (natom, x, y, z)
-    rvecs = ui_grid.grid_cell.rvecs
+    rvecs = ugrid.grid_cell.rvecs
     for i in xrange(3):
         x, y, z = rvecs[i]
-        print >> f, '%5i % 11.6f % 11.6f % 11.6f' % (ui_grid.shape[i], x, y, z)
+        print >> f, '%5i % 11.6f % 11.6f % 11.6f' % (ugrid.shape[i], x, y, z)
     for i in xrange(natom):
         q = pseudo_numbers[i]
         x, y, z = coordinates[i]
@@ -131,11 +131,11 @@ def _write_cube_data(f, cube_data):
 
 def dump_cube(filename, system):
     with open(filename, 'w') as f:
-        ui_grid = system.props.get('ui_grid')
-        if ui_grid is None:
-            raise ValueError('A uniform integration grid must be defined in the system properties (ui_grid).')
+        ugrid = system.props.get('ugrid')
+        if ugrid is None:
+            raise ValueError('A uniform integration grid must be defined in the system properties (ugrid).')
         cube_data = system.props.get('cube_data')
         if cube_data is None:
             raise ValueError('A cube data array must be defined in the system properties (cube_data).')
-        _write_cube_header(f, system.coordinates, system.numbers, ui_grid, system.pseudo_numbers)
+        _write_cube_header(f, system.coordinates, system.numbers, ugrid, system.pseudo_numbers)
         _write_cube_data(f, cube_data)
