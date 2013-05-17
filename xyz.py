@@ -56,3 +56,24 @@ def load_geom_xyz(filename):
         'coordinates': coordinates,
         'numbers': numbers
     }
+
+
+def dump_xyz(filename, system):
+    '''Write a system to a .xyz file.
+
+       **Arguments:**
+
+       filename
+            The name of the file to be written. This usually the extension
+            ".xyz".
+
+       system
+            An instance of the System class.
+    '''
+    with open(filename, 'w') as f:
+        print >> f, system.natom
+        print >> f, 'File generated with Horton'
+        for i in xrange(system.natom):
+            n = periodic[system.numbers[i]].symbol
+            x, y, z = system.coordinates[i]/angstrom
+            print >> f, '%2s %15.10f %15.10f %15.10f' % (n, x, y, z)

@@ -92,6 +92,9 @@ def dump_system(filename, system):
     if isinstance(filename, h5.Group) or filename.endswith('.h5'):
         from horton.io.chk import dump_checkpoint
         dump_checkpoint(filename, system)
+    elif filename.endswith('.xyz'):
+        from horton.io.xyz import dump_xyz
+        dump_xyz(filename, system)
     elif filename.endswith('.cube'):
         from horton.io.cube import dump_cube
         dump_cube(filename, system)
