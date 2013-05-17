@@ -98,5 +98,8 @@ def dump_system(filename, system):
     elif filename.endswith('.cif'):
         from horton.io.cif import dump_cif
         dump_cif(filename, system)
+    elif os.path.basename(filename).startswith('POSCAR'):
+        from horton.io.vasp import dump_poscar
+        return dump_poscar(filename, system)
     else:
         raise ValueError('Unknown file format for writing: %s' % filename)

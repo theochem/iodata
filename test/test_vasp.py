@@ -20,8 +20,10 @@
 #--
 
 
-import numpy as np
+import numpy as np, shutil, tempfile
+
 from horton import *
+from horton.test.common import get_random_cell
 
 
 def test_unravel_counter():
@@ -92,3 +94,21 @@ def test_load_poscar_water():
     assert (sys.numbers == np.array([8, 1, 1])).all()
     assert abs(sys.coordinates[1] - np.array([0.074983*15,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
     assert abs(sys.cell.volume - (15*angstrom)**3) < 1e-10
+
+
+def test_load_dump_consistency():
+    sys0 = System.from_file(context.get_fn('test/water_element.xyz'))
+    sys0._cell = get_random_cell(5.0, 3)
+
+    dn = tempfile.mkdtemp('test_load_dump_consistency', 'horton.io.test.test_vasp')
+    try:
+        sys0.to_file('%s/POSCAR' % dn)
+        sys1 = System.from_file('%s/POSCAR' % dn)
+    finally:
+        shutil.rmtree(dn)
+
+    assert (sys1.numbers == [8, 1, 1]).all()
+    assert abs(sys0.coordinates[1] - sys1.coordinates[0]).max() < 1e-10
+    assert abs(sys0.coordinates[0] - sys1.coordinates[1]).max() < 1e-10
+    assert abs(sys0.coordinates[2] - sys1.coordinates[2]).max() < 1e-10
+    assert abs(sys0.cell.rvecs - sys1.cell.rvecs).max() < 1e-10
