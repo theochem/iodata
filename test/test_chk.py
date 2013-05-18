@@ -43,10 +43,10 @@ def test_consistency_file():
 
 
 def test_consistency_core():
-    chk = h5.File('horton.io.test.test_chk.test_consistency_core', driver='core', backing_store=False)
-    fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
-    fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
-    sys1 = System.from_file(fn_fchk, fn_log, chk=None)
-    sys1.to_file(chk)
-    sys2 = System.from_file(chk, chk=None)
-    compare_systems(sys1, sys2)
+    with h5.File('horton.io.test.test_chk.test_consistency_core', driver='core', backing_store=False) as chk:
+        fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
+        fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
+        sys1 = System.from_file(fn_fchk, fn_log, chk=None)
+        sys1.to_file(chk)
+        sys2 = System.from_file(chk, chk=None)
+        compare_systems(sys1, sys2)
