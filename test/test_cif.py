@@ -20,7 +20,7 @@
 #--
 
 
-import h5py as h5
+import h5py as h5, tempfile, shutil
 
 from horton import *
 from horton.io.cif import _load_cif_low
@@ -163,3 +163,24 @@ def test_checkpoint():
         s0 = sys0.props['symmetry']
         s1 = sys1.props['symmetry']
         compare_symmetries(s0, s1)
+
+
+def test_dump_load_consistency():
+    sys0 = System.from_file(context.get_fn('test/aelta.cube'))
+    tmpdir = tempfile.mkdtemp('horton.io.test.test_cif.test_dump_load_consistency')
+    fn_cif = '%s/test.cif' % tmpdir
+    try:
+        sys0.to_file(fn_cif)
+        sys1 = System.from_file(fn_cif)
+    finally:
+        shutil.rmtree(tmpdir)
+
+    assert sys0.cell.nvec == sys1.cell.nvec
+    lengths0, angles0 = sys0.cell.parameters
+    lengths1, angles1 = sys1.cell.parameters
+    assert abs(lengths0 - lengths1).max() < 1e-6
+    assert abs(angles0 - angles1).max() < 1e-6
+    assert (sys0.numbers == sys1.numbers).all()
+    frac0 = np.array([sys0.cell.to_frac(row) for row in sys0.coordinates])
+    frac1 = np.array([sys1.cell.to_frac(row) for row in sys1.coordinates])
+    assert abs(frac0 - frac1).max() < 1e-6

@@ -23,6 +23,9 @@
 
 import shlex, numpy as np
 
+from horton.units import angstrom, deg
+from horton.periodic import periodic
+
 
 __all__ = ['dump_cif', 'iter_equiv_pos_terms', 'equiv_pos_to_generator', 'load_cif']
 
