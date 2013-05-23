@@ -21,7 +21,9 @@
 
 
 import numpy as np
+
 from horton.io.common import renorm_helper, get_orca_signs
+from horton.meanfield.wfn import AufbauOccModel, ClosedShellWFN, OpenShellWFN
 
 
 __all__ = ['load_molden']
@@ -211,7 +213,6 @@ def load_molden(filename, lf):
         raise IOError('Alpha orbitals not found in mkl file.')
 
     if coeff_beta is None:
-        from horton.meanfield.wfn import AufbauOccModel, ClosedShellWFN
         nalpha = int(np.round(occ_alpha.sum()))/2
         occ_model = AufbauOccModel(nalpha)
         wfn = ClosedShellWFN(occ_model, lf, obasis.nbasis, norb=coeff_alpha.shape[1])
@@ -220,7 +221,6 @@ def load_molden(filename, lf):
         exp_alpha.energies[:] = ener_alpha
         exp_alpha.occupations[:] = occ_alpha/2
     else:
-        from horton.meanfield.wfn import AufbauOccModel, OpenShellWFN
         nalpha = int(np.round(occ_alpha.sum()))
         nbeta = int(np.round(occ_beta.sum()))
         assert coeff_alpha.shape == coeff_beta.shape

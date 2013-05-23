@@ -21,8 +21,10 @@
 
 
 import numpy as np
+
 from horton.units import angstrom
 from horton.io.common import renorm_helper, get_orca_signs
+from horton.meanfield.wfn import AufbauOccModel, ClosedShellWFN, OpenShellWFN
 
 
 __all__ = ['load_mkl']
@@ -208,7 +210,6 @@ def load_mkl(filename, lf):
 
     nelec = numbers.sum() - charge
     if coeff_beta is None:
-        from horton.meanfield.wfn import AufbauOccModel, ClosedShellWFN
         assert nelec % 2 == 0
         assert abs(occ_alpha.sum() - nelec) < 1e-7
         occ_model = AufbauOccModel(nelec/2)
@@ -220,7 +221,6 @@ def load_mkl(filename, lf):
     else:
         if occ_beta is None:
             raise IOError('Beta occupation numbers not found in mkl file while beta orbitals were present.')
-        from horton.meanfield.wfn import AufbauOccModel, OpenShellWFN
         nalpha = int(np.round(occ_alpha.sum()))
         nbeta = int(np.round(occ_beta.sum()))
         assert nelec == nalpha+nbeta
