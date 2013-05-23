@@ -24,28 +24,10 @@ import numpy as np
 from horton import *
 
 
-__all__ = ['compute_mulliken']
+__all__ = ['compute_mulliken_charges']
 
 
-def compute_mulliken(sys):
-    basis_count = np.zeros(sys.natom, int)
-    for ishell in xrange(sys.obasis.nshell):
-        basis_count[sys.obasis.shell_map[ishell]] += get_shell_nbasis(sys.obasis.shell_types[ishell])
-
-    begin = 0
-    dm = sys.wfn.dm_full
-    pops = []
-    for i in xrange(sys.natom):
-        end = begin + basis_count[i]
-        pop = sys.get_overlap().copy()
-        pop._array[:begin,:begin] = 0.0
-        pop._array[:begin,end:] = 0.0
-        pop._array[end:,:begin] = 0.0
-        pop._array[end:,end:] = 0.0
-        pop._array[begin:end,:begin] *= 0.5
-        pop._array[begin:end,end:] *= 0.5
-        pop._array[end:,begin:end] *= 0.5
-        pop._array[:begin,begin:end] *= 0.5
-        pops.append(pop.expectation_value(dm))
-        begin = end
-    return sys.numbers - np.array(pops)
+def compute_mulliken_charges(sys):
+    operators = get_mulliken_operators(sys)
+    populations = np.array([operator.expectation_value(sys.wfn.dm_full) for operator in operators])
+    return sys.numbers - np.array(populations)

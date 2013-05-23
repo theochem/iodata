@@ -23,7 +23,7 @@
 import numpy as np
 
 from horton import *
-from horton.io.test.common import compute_mulliken
+from horton.io.test.common import compute_mulliken_charges
 
 
 def test_load_molden_li2():
@@ -35,7 +35,7 @@ def test_load_molden_li2():
     sys.wfn.exp_beta.check_normalization(sys.get_overlap(), 1e-5)
 
     # Check charges
-    charges = compute_mulliken(sys)
+    charges = compute_mulliken_charges(sys)
     expected_charges = np.array([0.5, 0.5])
     assert abs(charges - expected_charges).max() < 1e-5
 
@@ -48,6 +48,6 @@ def test_load_molden_h2o():
     sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5)
 
     # Check charges
-    charges = compute_mulliken(sys)
+    charges = compute_mulliken_charges(sys)
     expected_charges = np.array([-0.816308, 0.408154, 0.408154])
     assert abs(charges - expected_charges).max() < 1e-5
