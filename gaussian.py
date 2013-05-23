@@ -376,7 +376,7 @@ def load_fchk(filename, lf):
     if nbasis_indep is None:
         nbasis_indep = obasis.nbasis
     if 'Beta Orbital Energies' in fchk.fields:
-        from horton.wfn import AufbauOccModel, OpenShellWFN
+        from horton.meanfield.wfn import AufbauOccModel, OpenShellWFN
         nalpha = fchk.fields['Number of alpha electrons']
         nbeta = fchk.fields['Number of beta electrons']
         if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
@@ -391,7 +391,7 @@ def load_fchk(filename, lf):
         exp_beta.energies[:] = fchk.fields['Beta Orbital Energies']
         occ_model.assign(exp_alpha, exp_beta)
     else:
-        from horton.wfn import AufbauOccModel, ClosedShellWFN
+        from horton.meanfield.wfn import AufbauOccModel, ClosedShellWFN
         nelec = fchk.fields["Number of electrons"]
         if nelec <= 0:
             raise ValueError('The file %s does not contain a positive number of electrons.' % filename)

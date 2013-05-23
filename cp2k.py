@@ -23,7 +23,7 @@ import numpy as np
 
 from horton.gbasis.io import str_to_shell_types
 from horton.gbasis.cext import GOBasis
-from horton.wfn import AufbauOccModel, ClosedShellWFN, OpenShellWFN
+from horton.meanfield.wfn import AufbauOccModel, ClosedShellWFN, OpenShellWFN
 
 
 __all__ = ['load_atom_cp2k']
