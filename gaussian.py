@@ -270,7 +270,8 @@ def load_fchk(filename, lf):
     from horton.gbasis import GOBasis
 
     fchk = FCHKFile(filename, [
-        "Number of electrons", "Number of independent functions",
+        "Number of electrons", "Number of independant functions",
+        "Number of independent functions",
         "Number of alpha electrons", "Number of beta electrons",
         "Atomic numbers", "Current cartesian coordinates",
         "Shell types", "Shell to atom map", "Shell to atom map",
@@ -363,7 +364,15 @@ def load_fchk(filename, lf):
     permutation = np.array(permutation, dtype=int)
 
     # C) Load the wavefunction
-    nbasis_indep = fchk.fields.get("Number of independent functions")
+    # Handle small difference in fchk files from g03 and g09
+    nbasis_indep = None
+    nbasis_indep_g03 = fchk.fields.get("Number of independant functions")
+    if nbasis_indep_g03 is not None:
+        nbasis_indep = nbasis_indep_g03
+    nbasis_indep_g09 = fchk.fields.get("Number of independent functions")
+    if nbasis_indep_g09 is not None:
+        nbasis_indep = nbasis_indep_g09
+
     if nbasis_indep is None:
         nbasis_indep = obasis.nbasis
     if 'Beta Orbital Energies' in fchk.fields:
