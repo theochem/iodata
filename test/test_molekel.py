@@ -75,7 +75,7 @@ def test_load_mkl_ethanol():
     assert abs(charges - expected_charges).max() < 1e-5
 
     # Compute HF energy
-    ham = Hamiltonian(sys, [HartreeFock()])
+    ham = Hamiltonian(sys, [HartreeFockExchange()])
     energy = ham.compute_energy()
     assert abs(energy - -154.01322894) < 1e-4
 
@@ -100,6 +100,6 @@ def test_load_mkl_h2():
     sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5)
 
     # Compute HF energy
-    ham = Hamiltonian(sys, [HartreeFock()])
+    ham = Hamiltonian(sys, [HartreeFockExchange()])
     energy = ham.compute_energy()
     assert abs(energy - -1.11750589) < 1e-4
