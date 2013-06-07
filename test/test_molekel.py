@@ -76,7 +76,7 @@ def test_load_mkl_ethanol():
 
     # Compute HF energy
     ham = Hamiltonian(sys, [HartreeFockExchange()])
-    energy = ham.compute_energy()
+    energy = ham.compute()
     assert abs(energy - -154.01322894) < 1e-4
 
 
@@ -101,5 +101,5 @@ def test_load_mkl_h2():
 
     # Compute HF energy
     ham = Hamiltonian(sys, [HartreeFockExchange()])
-    energy = ham.compute_energy()
+    energy = ham.compute()
     assert abs(energy - -1.11750589) < 1e-4
