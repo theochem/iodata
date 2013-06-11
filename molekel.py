@@ -24,7 +24,7 @@ import numpy as np
 
 from horton.units import angstrom
 from horton.io.common import renorm_helper, get_orca_signs
-from horton.meanfield.wfn import AufbauOccModel, ClosedShellWFN, OpenShellWFN
+from horton.meanfield.wfn import AufbauOccModel, RestrictedWFN, UnrestrictedWFN
 
 
 __all__ = ['load_mkl']
@@ -213,7 +213,7 @@ def load_mkl(filename, lf):
         assert nelec % 2 == 0
         assert abs(occ_alpha.sum() - nelec) < 1e-7
         occ_model = AufbauOccModel(nelec/2)
-        wfn = ClosedShellWFN(occ_model, lf, obasis.nbasis, norb=coeff_alpha.shape[1])
+        wfn = RestrictedWFN(occ_model, lf, obasis.nbasis, norb=coeff_alpha.shape[1])
         exp_alpha = wfn.init_exp('alpha')
         exp_alpha.coeffs[:] = coeff_alpha
         exp_alpha.energies[:] = ener_alpha
@@ -228,7 +228,7 @@ def load_mkl(filename, lf):
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
         occ_model = AufbauOccModel(nalpha, nbeta)
-        wfn = OpenShellWFN(occ_model, lf, obasis.nbasis, norb=coeff_alpha.shape[1])
+        wfn = UnrestrictedWFN(occ_model, lf, obasis.nbasis, norb=coeff_alpha.shape[1])
         exp_alpha = wfn.init_exp('alpha')
         exp_alpha.coeffs[:] = coeff_alpha
         exp_alpha.energies[:] = ener_alpha

@@ -22,7 +22,7 @@
 
 import numpy as np
 
-from horton.meanfield.wfn import AufbauOccModel, ClosedShellWFN, OpenShellWFN
+from horton.meanfield.wfn import AufbauOccModel, RestrictedWFN, UnrestrictedWFN
 
 
 __all__ = ['load_operators_g09', 'FCHKFile', 'load_fchk']
@@ -383,7 +383,7 @@ def load_fchk(filename, lf):
         if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
             raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
         occ_model = AufbauOccModel(nalpha, nbeta)
-        wfn = OpenShellWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
+        wfn = UnrestrictedWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
         exp_alpha = wfn.init_exp('alpha')
         exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
         exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
@@ -397,7 +397,7 @@ def load_fchk(filename, lf):
             raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
         assert nelec % 2 == 0
         occ_model = AufbauOccModel(nelec/2)
-        wfn = ClosedShellWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
+        wfn = RestrictedWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
         exp_alpha = wfn.init_exp('alpha')
         exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
         exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
