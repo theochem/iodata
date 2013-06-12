@@ -45,12 +45,12 @@ def test_load_chgcar_oxygen():
     assert sys.natom == 1
     assert (sys.numbers == 8).all()
     assert abs(sys.cell.volume - (10*angstrom)**3) < 1e-10
-    ugrid = sys.props['ugrid']
+    ugrid = sys.extra['ugrid']
     assert len(ugrid.shape) == 3
     assert (ugrid.shape == 2).all()
     assert abs(ugrid.grid_cell.rvecs - sys.cell.rvecs/2).max() < 1e-10
     assert abs(ugrid.origin).max() < 1e-10
-    d = sys.props['cube_data']
+    d = sys.extra['cube_data']
     assert abs(d[0,0,0] - 0.78406017013E+04/sys.cell.volume) < 1e-10
     assert abs(d[-1,-1,-1] - 0.10024522914E+04/sys.cell.volume) < 1e-10
     assert abs(d[1,0,0] - 0.76183317989E+04/sys.cell.volume) < 1e-10
@@ -63,7 +63,7 @@ def test_load_chgcar_water():
     assert (sys.numbers == np.array([8, 1, 1])).all()
     assert abs(sys.coordinates[1] - np.array([0.074983*15+0.903122*1,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
     assert abs(sys.cell.volume - (15*angstrom)**3) < 1e-10
-    ugrid = sys.props['ugrid']
+    ugrid = sys.extra['ugrid']
     assert len(ugrid.shape) == 3
     assert (ugrid.shape == 3).all()
     assert abs(ugrid.grid_cell.rvecs - sys.cell.rvecs/3).max() < 1e-10
@@ -76,11 +76,11 @@ def test_load_locpot_oxygen():
     assert sys.natom == 1
     assert sys.numbers[0] == 8
     assert abs(sys.cell.volume - (10*angstrom)**3) < 1e-10
-    ugrid = sys.props['ugrid']
+    ugrid = sys.extra['ugrid']
     assert len(ugrid.shape) == 3
     assert (ugrid.shape == [1, 4, 2]).all()
     assert abs(ugrid.origin).max() < 1e-10
-    d = sys.props['cube_data']
+    d = sys.extra['cube_data']
     assert abs(d[0, 0, 0]/electronvolt - 0.35046350435E+01) < 1e-10
     assert abs(d[0, 1, 0]/electronvolt - 0.213732132354E+01) < 1e-10
     assert abs(d[0, 2, 0]/electronvolt - -.65465465497E+01) < 1e-10

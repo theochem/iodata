@@ -31,7 +31,7 @@ def test_load_aelta():
     assert sys.natom == 72
     assert abs(sys.coordinates[5,0] - 27.275511) < 1e-5
     assert abs(sys.coordinates[-2,2] - 26.460812) < 1e-5
-    ugrid = sys.props['ugrid']
+    ugrid = sys.extra['ugrid']
     assert (ugrid.shape == 12).all()
     assert sys.cell.nvec == 3
     rvecs = sys.cell.rvecs
@@ -42,7 +42,7 @@ def test_load_aelta():
     my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)
     assert abs(rvecs - my_rvecs).max() < 1e-5
     assert abs(ugrid.origin - np.array([0.0, 1.2, 0.0])).max() < 1e-10
-    data = sys.props['cube_data']
+    data = sys.extra['cube_data']
     assert abs(data[0,0,0] - 9.49232e-06) < 1e-12
     assert abs(data[-1,-1,-1] - 2.09856e-04) < 1e-10
     pn = sys.pseudo_numbers
@@ -65,11 +65,11 @@ def test_load_dump_load_aelta():
         assert sys1.natom == sys2.natom
         assert abs(sys1.coordinates - sys2.coordinates).max() < 1e-4
         assert (sys1.numbers == sys2.numbers).all()
-        ugrid1 = sys1.props['ugrid']
-        ugrid2 = sys2.props['ugrid']
+        ugrid1 = sys1.extra['ugrid']
+        ugrid2 = sys2.extra['ugrid']
         assert abs(ugrid1.grid_cell.rvecs - ugrid2.grid_cell.rvecs).max() < 1e-4
         assert (ugrid1.shape == ugrid2.shape).all()
-        assert abs(sys1.props['cube_data'] - sys2.props['cube_data']).max() < 1e-4
+        assert abs(sys1.extra['cube_data'] - sys2.extra['cube_data']).max() < 1e-4
         assert abs(sys1.pseudo_numbers - sys2.pseudo_numbers).max() < 1e-4
     finally:
         shutil.rmtree(dn)

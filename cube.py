@@ -91,7 +91,7 @@ def load_cube(filename):
     with open(filename) as f:
         coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(f)
         data = _read_cube_data(f, ugrid)
-        props = {
+        extra = {
             'ugrid': ugrid,
             'cube_data': data,
         }
@@ -99,7 +99,7 @@ def load_cube(filename):
             'coordinates': coordinates,
             'numbers': numbers,
             'cell': cell,
-            'props': props,
+            'extra': extra,
             'pseudo_numbers': pseudo_numbers,
         }
 
@@ -131,10 +131,10 @@ def _write_cube_data(f, cube_data):
 
 def dump_cube(filename, system):
     with open(filename, 'w') as f:
-        ugrid = system.props.get('ugrid')
+        ugrid = system.extra.get('ugrid')
         if ugrid is None:
             raise ValueError('A uniform integration grid must be defined in the system properties (ugrid).')
-        cube_data = system.props.get('cube_data')
+        cube_data = system.extra.get('cube_data')
         if cube_data is None:
             raise ValueError('A cube data array must be defined in the system properties (cube_data).')
         _write_cube_header(f, system.coordinates, system.numbers, ugrid, system.pseudo_numbers)

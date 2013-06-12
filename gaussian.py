@@ -58,31 +58,19 @@ def load_operators_g09(fn, lf):
         # Then load the one- and two-body operators. This part is written such
         # that it does not make any assumptions about the order in which these
         # operators are printed.
-        overlap = None
-        kinetic = None
-        nuclear_attraction = None
-        electronic_repulsion = None
 
+        cache = {}
         for line in f:
             if line.startswith(' *** Overlap ***'):
-                overlap = _load_onebody_g09(f, nbasis, lf)
+                cache['olp'] = _load_onebody_g09(f, nbasis, lf)
             elif line.startswith(' *** Kinetic Energy ***'):
-                kinetic = _load_onebody_g09(f, nbasis, lf)
+                cache['kin'] = _load_onebody_g09(f, nbasis, lf)
             elif line.startswith(' ***** Potential Energy *****'):
-                nuclear_attraction = _load_onebody_g09(f, nbasis, lf)
+                cache['na'] = _load_onebody_g09(f, nbasis, lf)
             elif line.startswith(' *** Dumping Two-Electron integrals ***'):
-                electronic_repulsion = _load_twobody_g09(f, nbasis, lf)
+                cache['er'] = _load_twobody_g09(f, nbasis, lf)
 
-        operators = {}
-        if overlap is not None:
-            operators['olp'] = overlap
-        if kinetic is not None:
-           operators['kin'] = kinetic
-        if nuclear_attraction is not None:
-            operators['na'] = nuclear_attraction
-        if electronic_repulsion is not None:
-            operators['er'] = electronic_repulsion
-        return {'operators': operators}
+        return {'cache': cache}
 
 
 def _load_onebody_g09(f, nbasis, lf):
@@ -404,15 +392,15 @@ def load_fchk(filename, lf):
         occ_model.assign(exp_alpha)
 
     # D) Load properties
-    props = {
+    extra = {
         'energy': fchk.fields['Total Energy'],
     }
     if 'Mulliken Charges' in fchk.fields:
-        props['mulliken_charges'] = fchk.fields['Mulliken Charges']
+        extra['mulliken_charges'] = fchk.fields['Mulliken Charges']
     if 'ESP Charges' in fchk.fields:
-        props['esp_charges'] = fchk.fields['ESP Charges']
+        extra['esp_charges'] = fchk.fields['ESP Charges']
     if 'NPA Charges' in fchk.fields:
-        props['npa_charges'] = fchk.fields['NPA Charges']
+        extra['npa_charges'] = fchk.fields['NPA Charges']
 
     # E) Load density matrices
     def load_dm(key, label):
@@ -424,13 +412,13 @@ def load_fchk(filename, lf):
                 dm._array[i,:i+1] = fchk.fields[label][start:stop]
                 dm._array[:i+1,i] = fchk.fields[label][start:stop]
                 start = stop
-            operators[key] = dm
+            cache[key] = dm
 
     # Note that the density matrices are not directly loaded into the
     # wavefunction objects. It is up to the user to decide which
     # density matrix will be used in the wavefunction, by making a few manual
     # assignments.
-    operators = {}
+    cache = {}
     # TODO add more
     load_dm('scf_full', 'Total SCF Density')
     load_dm('scf_spin', 'Spin SCF Density')
@@ -445,7 +433,7 @@ def load_fchk(filename, lf):
         'obasis': obasis,
         'wfn': wfn,
         'permutation': permutation,
-        'props': props,
-        'operators': operators,
+        'extra': extra,
+        'cache': cache,
         'pseudo_numbers': pseudo_numbers,
     }

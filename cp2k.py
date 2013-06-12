@@ -241,6 +241,6 @@ def load_atom_cp2k(filename, lf):
         'wfn': wfn,
         'coordinates': coordinates,
         'numbers': np.array([number]),
-        'props': {'energy': energy},
+        'extra': {'energy': energy},
         'pseudo_numbers': np.array([pseudo_number]),
     }

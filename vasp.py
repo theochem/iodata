@@ -112,7 +112,7 @@ def load_vasp_grid(filename):
         'coordinates': coordinates,
         'numbers': numbers,
         'cell': cell,
-        'props': {
+        'extra': {
             'ugrid': UniformGrid(np.zeros(3), cell.rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
             'cube_data': cube_data
         },
@@ -123,7 +123,7 @@ def load_chgcar(filename):
     '''Reads a vasp 5 chgcar file.'''
     result = load_vasp_grid(filename)
     # renormalize electron density
-    result['props']['cube_data'] /= result['cell'].volume
+    result['extra']['cube_data'] /= result['cell'].volume
     return result
 
 
@@ -131,7 +131,7 @@ def load_locpot(filename):
     '''Reads a vasp 5 locpot file.'''
     result = load_vasp_grid(filename)
     # convert locpot to atomic units
-    result['props']['cube_data'] *= electronvolt
+    result['extra']['cube_data'] *= electronvolt
     return result
 
 

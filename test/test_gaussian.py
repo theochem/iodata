@@ -30,16 +30,17 @@ def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
     fn = context.get_fn('test/water_sto3g_hf_g03.log')
     result = load_operators_g09(fn, lf)
+    cache = result['cache']
 
-    for op in result['operators'].values():
+    for op in cache.itervalues():
         assert op is not None
         assert op.nbasis == 7
         op.check_symmetry()
 
-    overlap = result['operators']['olp']
-    kinetic = result['operators']['kin']
-    nuclear_attraction = result['operators']['na']
-    electronic_repulsion = result['operators']['er']
+    overlap = cache['olp']
+    kinetic = cache['kin']
+    nuclear_attraction = cache['na']
+    electronic_repulsion = cache['er']
 
     assert abs(overlap.get_element(0,0) - 1.0) < eps
     assert abs(overlap.get_element(0,1) - 0.236704) < eps
@@ -67,11 +68,12 @@ def test_load_operators_water_ccpvdz_pure_hf_g03():
     eps = 1e-5
     fn = context.get_fn('test/water_ccpvdz_pure_hf_g03.log')
     result = load_operators_g09(fn, lf)
+    cache = result['cache']
 
-    overlap = result['operators']['olp']
-    kinetic = result['operators']['kin']
-    nuclear_attraction = result['operators']['na']
-    electronic_repulsion = result['operators']['er']
+    overlap = cache['olp']
+    kinetic = cache['kin']
+    nuclear_attraction = cache['na']
+    electronic_repulsion = cache['er']
 
     for op in overlap, kinetic, nuclear_attraction, electronic_repulsion:
         assert op is not None
@@ -115,23 +117,23 @@ def test_load_fchk_hf_sto3g_num():
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
-    props = fields['props']
-    operators = fields['operators']
+    extra = fields['extra']
+    cache = fields['cache']
     assert obasis.nshell == 4
     assert obasis.nbasis == 6
     assert (obasis.nprims == 3).all()
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
-    assert 'energy' in props
-    assert 'esp_charges' in props
-    assert 'npa_charges' in props
-    assert 'mulliken_charges' in props
-    assert props['energy'] == -9.856961609951867E+01
-    assert (props['mulliken_charges'] == [0.45000000E+00 , 4.22300000E+00, -4.73896291E-01]).all()
-    assert (props['npa_charges']== [3.50000000E+00,  1.32000000E+00, -4.73896291E-01]).all()
-    assert (props['esp_charges']==[ 0.77700000E+00,  0.66600000E+00 ,-4.73896291E-01]).all()
-    operators['scf_full'].check_symmetry()
+    assert 'energy' in extra
+    assert 'esp_charges' in extra
+    assert 'npa_charges' in extra
+    assert 'mulliken_charges' in extra
+    assert extra['energy'] == -9.856961609951867E+01
+    assert (extra['mulliken_charges'] == [0.45000000E+00 , 4.22300000E+00, -4.73896291E-01]).all()
+    assert (extra['npa_charges']== [3.50000000E+00,  1.32000000E+00, -4.73896291E-01]).all()
+    assert (extra['esp_charges']==[ 0.77700000E+00,  0.66600000E+00 ,-4.73896291E-01]).all()
+    cache['scf_full'].check_symmetry()
 
 
 def test_load_fchk_h_sto3g_num():
@@ -140,18 +142,18 @@ def test_load_fchk_h_sto3g_num():
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
-    props = fields['props']
-    operators = fields['operators']
+    extra = fields['extra']
+    cache = fields['cache']
     assert obasis.nshell == 1
     assert obasis.nbasis == 1
     assert (obasis.nprims == 3).all()
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 1
-    assert 'energy' in props
-    assert props['energy'] == -4.665818503844346E-01
-    operators['scf_full'].check_symmetry()
-    operators['scf_spin'].check_symmetry()
+    assert 'energy' in extra
+    assert extra['energy'] == -4.665818503844346E-01
+    cache['scf_full'].check_symmetry()
+    cache['scf_spin'].check_symmetry()
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
@@ -160,16 +162,16 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
-    props = fields['props']
-    operators = fields['operators']
+    extra = fields['extra']
+    cache = fields['cache']
     assert obasis.nshell == 20
     assert obasis.nbasis == 60
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
-    assert 'energy' in props
-    assert props['energy'] == -1.495944878699246E+02
-    operators['scf_full'].check_symmetry()
+    assert 'energy' in extra
+    assert extra['energy'] == -1.495944878699246E+02
+    cache['scf_full'].check_symmetry()
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
@@ -178,16 +180,16 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
-    props = fields['props']
-    operators = fields['operators']
+    extra = fields['extra']
+    cache = fields['cache']
     assert obasis.nshell == 20
     assert obasis.nbasis == 70
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
-    assert 'energy' in props
-    assert props['energy'] == -1.495953594545721E+02
-    operators['scf_full'].check_symmetry()
+    assert 'energy' in extra
+    assert extra['energy'] == -1.495953594545721E+02
+    cache['scf_full'].check_symmetry()
 
 
 def test_load_fchk_water_sto3g_hf():
@@ -196,9 +198,9 @@ def test_load_fchk_water_sto3g_hf():
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
-    props = fields['props']
+    extra = fields['extra']
     wfn = fields['wfn']
-    operators = fields['operators']
+    cache = fields['cache']
     assert obasis.nshell == 5
     assert obasis.nbasis == 7
     assert len(coordinates) == len(numbers)
@@ -214,9 +216,9 @@ def test_load_fchk_water_sto3g_hf():
     assert abs(wfn.exp_alpha.coeffs[-1,2] - (-0.44154)) < 1e-4
     assert abs(wfn.exp_alpha.coeffs[3,-1]) < 1e-4
     assert abs(wfn.exp_alpha.coeffs[4,-1] - (-0.82381)) < 1e-4
-    assert 'energy' in props
-    assert props['energy'] == -7.495929232844363E+01
-    operators['scf_full'].check_symmetry()
+    assert 'energy' in extra
+    assert extra['energy'] == -7.495929232844363E+01
+    cache['scf_full'].check_symmetry()
 
 
 def test_load_fchk_lih_321g_hf():
@@ -226,9 +228,9 @@ def test_load_fchk_lih_321g_hf():
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
-    props = fields['props']
+    extra = fields['extra']
     wfn = fields['wfn']
-    operators = fields['operators']
+    cache = fields['cache']
     assert obasis.nshell == 7
     assert obasis.nbasis == 11
     assert len(coordinates) == len(numbers)
@@ -251,13 +253,13 @@ def test_load_fchk_lih_321g_hf():
     assert abs(wfn.exp_beta.coeffs[3,2]) < 1e-4
     assert abs(wfn.exp_beta.coeffs[-1,9] - 0.80875) < 1e-4
     assert abs(wfn.exp_beta.coeffs[4,-1] - (-0.15503)) < 1e-4
-    operators['scf_full'].check_symmetry()
-    operators['scf_spin'].check_symmetry()
+    cache['scf_full'].check_symmetry()
+    cache['scf_spin'].check_symmetry()
 
     assert abs(wfn.dm_full._array - (wfn.dm_alpha._array + wfn.dm_beta._array)).max() < 1e-10
     assert abs(wfn.dm_spin._array - (wfn.dm_alpha._array - wfn.dm_beta._array)).max() < 1e-10
 
-    assert abs(wfn.dm_full._array - operators['scf_full']._array).max() < 1e-7
-    assert abs(wfn.dm_spin._array - operators['scf_spin']._array).max() < 1e-7
-    assert 'energy' in props
-    assert props['energy'] == -7.687331212191968E+00
+    assert abs(wfn.dm_full._array - cache['scf_full']._array).max() < 1e-7
+    assert abs(wfn.dm_spin._array - cache['scf_spin']._array).max() < 1e-7
+    assert 'energy' in extra
+    assert extra['energy'] == -7.687331212191968E+00

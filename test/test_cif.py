@@ -141,8 +141,8 @@ def test_equiv_pos_to_generator():
 def check_lta_sys(sys):
     assert (sys.numbers == 14).sum() == 24
     assert (sys.numbers == 8).sum() == 48
-    assert sys.props['symmetry'].name == '221'
-    assert len(sys.props['links']) == 72
+    assert sys.extra['symmetry'].name == '221'
+    assert len(sys.extra['links']) == 72
 
 
 def test_load_cif_lta_gulp():
@@ -160,8 +160,8 @@ def test_checkpoint():
         sys0 = System.from_file(context.get_fn('test/lta_iza.cif'))
         sys0.to_file(f)
         sys1 = System.from_file(f)
-        s0 = sys0.props['symmetry']
-        s1 = sys1.props['symmetry']
+        s0 = sys0.extra['symmetry']
+        s1 = sys1.extra['symmetry']
         compare_symmetries(s0, s1)
 
 

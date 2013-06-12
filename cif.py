@@ -313,6 +313,6 @@ def load_cif(filename, lf):
     return {
         'coordinates': coordinates,
         'numbers': numbers,
-        'props': {'symmetry': symmetry, 'links': links},
+        'extra': {'symmetry': symmetry, 'links': links},
         'cell': cell,
     }

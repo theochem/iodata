@@ -46,7 +46,9 @@ def load_system_args(filename, lf):
        ``System`` class, except for the ``chk`` and ``lf`` arguments. Two
        additional variables may be added in the returned dictionary:
        ``permutation`` and ``signs``. These will be used to reorder and change
-       the signs of all matrix elements related to the basis functions.
+       the signs of all matrix elements related to the basis functions. The
+       cache argument always has to be a dictionary (and not yet a Cache
+       instance).
     '''
     if isinstance(filename, h5.Group) or filename.endswith('.h5'):
         from horton.io.chk import load_checkpoint

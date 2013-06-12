@@ -36,7 +36,7 @@ def test_atom_si_uks():
     assert (sys.wfn.exp_beta.occupations == [1, 0, 0, 0]).all()
     assert abs(sys.wfn.exp_alpha.energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
     assert abs(sys.wfn.exp_beta.energies - [-0.334567, -0.092237, -0.092237, -0.092237]).max() < 1e-4
-    assert abs(sys.props['energy'] - -3.761587698067) < 1e-10
+    assert abs(sys.extra['energy'] - -3.761587698067) < 1e-10
     assert (sys.obasis.shell_types == [0, 0, 1, 1, -2]).all()
     assert isinstance(sys.wfn, UnrestrictedWFN)
     assert sys.charge == 0
@@ -59,7 +59,7 @@ def test_atom_o_rks():
     assert (sys.pseudo_numbers == [6]).all()
     assert (sys.wfn.exp_alpha.occupations == [1, 1, 1, 1]).all()
     assert abs(sys.wfn.exp_alpha.energies - [0.102709, 0.606458, 0.606458, 0.606458]).max() < 1e-4
-    assert abs(sys.props['energy'] - -15.464982778766) < 1e-10
+    assert abs(sys.extra['energy'] - -15.464982778766) < 1e-10
     assert (sys.obasis.shell_types == [0, 0, 1, 1, -2]).all()
     assert isinstance(sys.wfn, RestrictedWFN)
     assert sys.charge == -2
