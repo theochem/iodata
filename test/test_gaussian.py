@@ -21,6 +21,7 @@
 
 
 import numpy as np
+from nose.tools import assert_raises
 
 from horton import *
 
@@ -104,11 +105,8 @@ def test_load_operators_water_ccpvdz_pure_hf_g03():
 
 def test_load_fchk_nonexistent():
     lf = DenseLinalgFactory()
-    try:
+    with assert_raises(IOError):
         load_fchk(context.get_fn('test/fubar_crap.fchk'), lf)
-        assert False
-    except IOError:
-        pass
 
 
 def test_load_fchk_hf_sto3g_num():
