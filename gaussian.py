@@ -62,13 +62,13 @@ def load_operators_g09(fn, lf):
         cache = {}
         for line in f:
             if line.startswith(' *** Overlap ***'):
-                cache['olp'] = _load_onebody_g09(f, nbasis, lf), 'co' # 'co' is a list of tags. See System.__init__ for more details.
+                cache['olp'] = _load_onebody_g09(f, nbasis, lf), 'o' # 'o' is a list of tags. See System.__init__ for more details.
             elif line.startswith(' *** Kinetic Energy ***'):
-                cache['kin'] = _load_onebody_g09(f, nbasis, lf), 'co'
+                cache['kin'] = _load_onebody_g09(f, nbasis, lf), 'o'
             elif line.startswith(' ***** Potential Energy *****'):
-                cache['na'] = _load_onebody_g09(f, nbasis, lf), 'co'
+                cache['na'] = _load_onebody_g09(f, nbasis, lf), 'o'
             elif line.startswith(' *** Dumping Two-Electron integrals ***'):
-                cache['er'] = _load_twobody_g09(f, nbasis, lf), 'co'
+                cache['er'] = _load_twobody_g09(f, nbasis, lf), 'o'
 
         return {'cache': cache}
 
@@ -412,7 +412,7 @@ def load_fchk(filename, lf):
                 dm._array[i,:i+1] = fchk.fields[label][start:stop]
                 dm._array[:i+1,i] = fchk.fields[label][start:stop]
                 start = stop
-            cache[key] = dm, 'co' # 'co' is a list of tags. See System.__init__ for more details.
+            cache[key] = dm, 'o' # 'o' is a list of tags. See System.__init__ for more details.
 
     # Note that the density matrices are not directly loaded into the
     # wavefunction objects. It is up to the user to decide which
