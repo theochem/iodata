@@ -35,13 +35,13 @@ def test_load_operators_water_sto3g_hf_g03():
 
     for op in cache.itervalues():
         assert op is not None
-        assert op.nbasis == 7
-        op.check_symmetry()
+        assert op[0].nbasis == 7
+        op[0].check_symmetry()
 
-    overlap = cache['olp']
-    kinetic = cache['kin']
-    nuclear_attraction = cache['na']
-    electronic_repulsion = cache['er']
+    overlap = cache['olp'][0]
+    kinetic = cache['kin'][0]
+    nuclear_attraction = cache['na'][0]
+    electronic_repulsion = cache['er'][0]
 
     assert abs(overlap.get_element(0,0) - 1.0) < eps
     assert abs(overlap.get_element(0,1) - 0.236704) < eps
@@ -71,10 +71,10 @@ def test_load_operators_water_ccpvdz_pure_hf_g03():
     result = load_operators_g09(fn, lf)
     cache = result['cache']
 
-    overlap = cache['olp']
-    kinetic = cache['kin']
-    nuclear_attraction = cache['na']
-    electronic_repulsion = cache['er']
+    overlap = cache['olp'][0]
+    kinetic = cache['kin'][0]
+    nuclear_attraction = cache['na'][0]
+    electronic_repulsion = cache['er'][0]
 
     for op in overlap, kinetic, nuclear_attraction, electronic_repulsion:
         assert op is not None
@@ -131,7 +131,7 @@ def test_load_fchk_hf_sto3g_num():
     assert (extra['mulliken_charges'] == [0.45000000E+00 , 4.22300000E+00, -4.73896291E-01]).all()
     assert (extra['npa_charges']== [3.50000000E+00,  1.32000000E+00, -4.73896291E-01]).all()
     assert (extra['esp_charges']==[ 0.77700000E+00,  0.66600000E+00 ,-4.73896291E-01]).all()
-    cache['scf_full'].check_symmetry()
+    cache['scf_full'][0].check_symmetry()
 
 
 def test_load_fchk_h_sto3g_num():
@@ -150,8 +150,8 @@ def test_load_fchk_h_sto3g_num():
     assert len(numbers) == 1
     assert 'energy' in extra
     assert extra['energy'] == -4.665818503844346E-01
-    cache['scf_full'].check_symmetry()
-    cache['scf_spin'].check_symmetry()
+    cache['scf_full'][0].check_symmetry()
+    cache['scf_spin'][0].check_symmetry()
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
@@ -169,7 +169,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     assert len(numbers) == 2
     assert 'energy' in extra
     assert extra['energy'] == -1.495944878699246E+02
-    cache['scf_full'].check_symmetry()
+    cache['scf_full'][0].check_symmetry()
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
@@ -187,7 +187,7 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     assert len(numbers) == 2
     assert 'energy' in extra
     assert extra['energy'] == -1.495953594545721E+02
-    cache['scf_full'].check_symmetry()
+    cache['scf_full'][0].check_symmetry()
 
 
 def test_load_fchk_water_sto3g_hf():
@@ -216,7 +216,7 @@ def test_load_fchk_water_sto3g_hf():
     assert abs(wfn.exp_alpha.coeffs[4,-1] - (-0.82381)) < 1e-4
     assert 'energy' in extra
     assert extra['energy'] == -7.495929232844363E+01
-    cache['scf_full'].check_symmetry()
+    cache['scf_full'][0].check_symmetry()
 
 
 def test_load_fchk_lih_321g_hf():
@@ -251,13 +251,13 @@ def test_load_fchk_lih_321g_hf():
     assert abs(wfn.exp_beta.coeffs[3,2]) < 1e-4
     assert abs(wfn.exp_beta.coeffs[-1,9] - 0.80875) < 1e-4
     assert abs(wfn.exp_beta.coeffs[4,-1] - (-0.15503)) < 1e-4
-    cache['scf_full'].check_symmetry()
-    cache['scf_spin'].check_symmetry()
+    cache['scf_full'][0].check_symmetry()
+    cache['scf_spin'][0].check_symmetry()
 
     assert abs(wfn.dm_full._array - (wfn.dm_alpha._array + wfn.dm_beta._array)).max() < 1e-10
     assert abs(wfn.dm_spin._array - (wfn.dm_alpha._array - wfn.dm_beta._array)).max() < 1e-10
 
-    assert abs(wfn.dm_full._array - cache['scf_full']._array).max() < 1e-7
-    assert abs(wfn.dm_spin._array - cache['scf_spin']._array).max() < 1e-7
+    assert abs(wfn.dm_full._array - cache['scf_full'][0]._array).max() < 1e-7
+    assert abs(wfn.dm_spin._array - cache['scf_spin'][0]._array).max() < 1e-7
     assert 'energy' in extra
     assert extra['energy'] == -7.687331212191968E+00
