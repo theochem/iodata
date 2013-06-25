@@ -112,8 +112,8 @@ def load_vasp_grid(filename):
         'coordinates': coordinates,
         'numbers': numbers,
         'cell': cell,
+        'grid': UniformGrid(np.zeros(3), cell.rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
         'extra': {
-            'ugrid': UniformGrid(np.zeros(3), cell.rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
             'cube_data': cube_data
         },
     }

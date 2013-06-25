@@ -31,7 +31,7 @@ def test_load_aelta():
     assert sys.natom == 72
     assert abs(sys.coordinates[5,0] - 27.275511) < 1e-5
     assert abs(sys.coordinates[-2,2] - 26.460812) < 1e-5
-    ugrid = sys.extra['ugrid']
+    ugrid = sys.grid
     assert (ugrid.shape == 12).all()
     assert sys.cell.nvec == 3
     rvecs = sys.cell.rvecs
@@ -65,8 +65,8 @@ def test_load_dump_load_aelta():
         assert sys1.natom == sys2.natom
         assert abs(sys1.coordinates - sys2.coordinates).max() < 1e-4
         assert (sys1.numbers == sys2.numbers).all()
-        ugrid1 = sys1.extra['ugrid']
-        ugrid2 = sys2.extra['ugrid']
+        ugrid1 = sys1.grid
+        ugrid2 = sys2.grid
         assert abs(ugrid1.grid_cell.rvecs - ugrid2.grid_cell.rvecs).max() < 1e-4
         assert (ugrid1.shape == ugrid2.shape).all()
         assert abs(sys1.extra['cube_data'] - sys2.extra['cube_data']).max() < 1e-4
