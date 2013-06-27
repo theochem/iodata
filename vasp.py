@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
+'''VASP POSCAR, CHGCAR and POTCAR File Formats'''
 
 
 import numpy as np

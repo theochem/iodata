@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
+'''CP2K atomic wavefunctions'''
 
 import numpy as np
 

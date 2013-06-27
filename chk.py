@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
+'''Horton Checkpoint File Format'''
 
 
 import h5py as h5

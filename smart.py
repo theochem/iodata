@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
+'''Detection of file formats'''
 
 
 import h5py as h5, os

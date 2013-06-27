@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''Input and output routines.
+'''Input and output routines
 
    All input routines begin with ``load_``. All output routines begin with
    ``dump_``.
