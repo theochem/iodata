@@ -272,8 +272,11 @@ def load_fchk(filename, lf):
         "Beta Orbital Energies", "Beta MO coefficients",
         "Total Energy", "Nuclear charges",
         'Total SCF Density', 'Spin SCF Density',
-        'Total CC Density', 'Spin CC Density', 'Mulliken Charges',
-        'ESP Charges','NPA Charges',
+        'Total MP2 Density', 'Spin MP2 Density',
+        'Total MP3 Density', 'Spin MP3 Density',
+        'Total CC Density', 'Spin CC Density',
+        'Total CI Density', 'Spin CI Density',
+        'Mulliken Charges', 'ESP Charges','NPA Charges',
     ])
 
     # A) Load the geometry
@@ -354,18 +357,44 @@ def load_fchk(filename, lf):
         permutation.extend(permutation_rules[shell_type]+len(permutation))
     permutation = np.array(permutation, dtype=int)
 
-    # C) Load the wavefunction
-    # Handle small difference in fchk files from g03 and g09
-    nbasis_indep = None
-    nbasis_indep_g03 = fchk.fields.get("Number of independant functions")
-    if nbasis_indep_g03 is not None:
-        nbasis_indep = nbasis_indep_g03
-    nbasis_indep_g09 = fchk.fields.get("Number of independent functions")
-    if nbasis_indep_g09 is not None:
-        nbasis_indep = nbasis_indep_g09
+    # C) Load density matrices
+    def load_dm(label):
+        if label in fchk.fields:
+            dm = lf.create_one_body(obasis.nbasis)
+            start = 0
+            for i in xrange(obasis.nbasis):
+                stop = start+i+1
+                dm._array[i,:i+1] = fchk.fields[label][start:stop]
+                dm._array[:i+1,i] = fchk.fields[label][start:stop]
+                start = stop
+            return dm
 
+    # First try to load the post-hf density matrices.
+    load_orbitals = True
+    for key in 'MP2', 'MP3', 'CC', 'CI':
+        dm_full = load_dm('Total %s Density' % key)
+        dm_spin = load_dm('Spin %s Density' % key)
+        if dm_full is not None:
+            load_orbitals = False
+            break
+
+    # SCF density matrices (for double checking things) are stored in the cache.
+    cache = {}
+    dm_scf_full = load_dm('Total SCF Density')
+    if dm_scf_full is not None:
+        cache['dm_scf_full'] = dm_scf_full, 'o'
+    dm_scf_spin = load_dm('Spin SCF Density')
+    if dm_scf_spin is not None:
+        cache['dm_scf_spin'] = dm_scf_spin, 'o'
+
+    # D) Load the wavefunction
+    # Handle small difference in fchk files from g03 and g09
+    nbasis_indep = fchk.fields.get("Number of independant functions") or \
+                   fchk.fields.get("Number of independent functions")
     if nbasis_indep is None:
         nbasis_indep = obasis.nbasis
+
+    # Create wfn object
     if 'Beta Orbital Energies' in fchk.fields:
         nalpha = fchk.fields['Number of alpha electrons']
         nbeta = fchk.fields['Number of beta electrons']
@@ -373,13 +402,14 @@ def load_fchk(filename, lf):
             raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
         occ_model = AufbauOccModel(nalpha, nbeta)
         wfn = UnrestrictedWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
-        exp_alpha = wfn.init_exp('alpha')
-        exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-        exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
-        exp_beta = wfn.init_exp('beta')
-        exp_beta.coeffs[:] = fchk.fields['Beta MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-        exp_beta.energies[:] = fchk.fields['Beta Orbital Energies']
-        occ_model.assign(exp_alpha, exp_beta)
+        if load_orbitals:
+            exp_alpha = wfn.init_exp('alpha')
+            exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+            exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
+            exp_beta = wfn.init_exp('beta')
+            exp_beta.coeffs[:] = fchk.fields['Beta MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+            exp_beta.energies[:] = fchk.fields['Beta Orbital Energies']
+            occ_model.assign(exp_alpha, exp_beta)
     else:
         nelec = fchk.fields["Number of electrons"]
         if nelec <= 0:
@@ -387,12 +417,19 @@ def load_fchk(filename, lf):
         assert nelec % 2 == 0
         occ_model = AufbauOccModel(nelec/2)
         wfn = RestrictedWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
-        exp_alpha = wfn.init_exp('alpha')
-        exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-        exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
-        occ_model.assign(exp_alpha)
+        if load_orbitals:
+            exp_alpha = wfn.init_exp('alpha')
+            exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+            exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
+            occ_model.assign(exp_alpha)
 
-    # D) Load properties
+    # Store the density matrices
+    if dm_full is not None:
+        wfn.update_dm('full', dm_full)
+    if dm_spin is not None:
+        wfn.update_dm('spin', dm_spin)
+
+    # E) Load properties
     extra = {
         'energy': fchk.fields['Total Energy'],
     }
@@ -403,38 +440,13 @@ def load_fchk(filename, lf):
     if 'NPA Charges' in fchk.fields:
         extra['npa_charges'] = fchk.fields['NPA Charges']
 
-    # E) Load density matrices
-    def load_dm(key, label):
-        if label in fchk.fields:
-            dm = lf.create_one_body(obasis.nbasis)
-            start = 0
-            for i in xrange(obasis.nbasis):
-                stop = start+i+1
-                dm._array[i,:i+1] = fchk.fields[label][start:stop]
-                dm._array[:i+1,i] = fchk.fields[label][start:stop]
-                start = stop
-            cache[key] = dm, 'o' # 'o' is a list of tags. See System.__init__ for more details.
-
-    # Note that the density matrices are not directly loaded into the
-    # wavefunction objects. It is up to the user to decide which
-    # density matrix will be used in the wavefunction, by making a few manual
-    # assignments.
-    cache = {}
-    # TODO add more
-    load_dm('scf_full', 'Total SCF Density')
-    load_dm('scf_spin', 'Spin SCF Density')
-    load_dm('mp2_full', 'Total MP2 Density')
-    load_dm('mp2_spin', 'Spin MP2 Density')
-    load_dm('cc_full', 'Total CC Density')
-    load_dm('cc_spin', 'Spin CC Density')
-
     return {
         'coordinates': coordinates,
         'numbers': numbers,
         'obasis': obasis,
         'wfn': wfn,
         'permutation': permutation,
-        'extra': extra,
         'cache': cache,
+        'extra': extra,
         'pseudo_numbers': pseudo_numbers,
     }
