@@ -20,26 +20,21 @@
 #--
 
 
-import tempfile, os, h5py as h5
+import os, h5py as h5
 
 from horton import *
-from horton.test.common import compare_systems
+from horton.test.common import compare_systems, tmpdir
 
 
 def test_consistency_file():
-    tmpdir = tempfile.mkdtemp('horton.io.test.test_chk.test_consistency_file')
-    try:
-        fn_chk = '%s/chk.h5' % tmpdir
+    with tmpdir('horton.io.test.test_chk.test_consistency_file') as dn:
+        fn_chk = '%s/chk.h5' % dn
         fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
         fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
         sys1 = System.from_file(fn_fchk, fn_log, chk=None)
         sys1.to_file(fn_chk)
         sys2 = System.from_file(fn_chk, chk=None)
         compare_systems(sys1, sys2)
-    finally:
-        if os.path.isfile(fn_chk):
-            os.remove(fn_chk)
-        os.rmdir(tmpdir)
 
 
 def test_consistency_core():

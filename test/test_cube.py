@@ -20,8 +20,10 @@
 #--
 
 
-import numpy as np, shutil, tempfile
+import numpy as np
+
 from horton import *
+from horton.test.common import tmpdir
 
 
 def test_load_aelta():
@@ -56,8 +58,7 @@ def test_load_dump_load_aelta():
     fn_cube1 = context.get_fn('test/aelta.cube')
     sys1 = System.from_file(fn_cube1)
 
-    dn = tempfile.mkdtemp('test_load_dump_load_aelta', 'horton.io.test.test_cube')
-    try:
+    with tmpdir('horton.io.test.test_cube.test_load_dump_load_aelta') as dn:
         fn_cube2 = '%s/%s' % (dn, 'aelta.cube')
         sys1.to_file(fn_cube2)
         sys2 = System.from_file(fn_cube2)
@@ -71,5 +72,3 @@ def test_load_dump_load_aelta():
         assert (ugrid1.shape == ugrid2.shape).all()
         assert abs(sys1.extra['cube_data'] - sys2.extra['cube_data']).max() < 1e-4
         assert abs(sys1.pseudo_numbers - sys2.pseudo_numbers).max() < 1e-4
-    finally:
-        shutil.rmtree(dn)

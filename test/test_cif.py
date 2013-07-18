@@ -20,12 +20,12 @@
 #--
 
 
-import h5py as h5, tempfile, shutil
+import h5py as h5
 
 from horton import *
 from horton.io.cif import _load_cif_low
 
-from horton.test.common import compare_symmetries
+from horton.test.common import compare_symmetries, tmpdir
 
 
 lta_sep = np.array([
@@ -167,13 +167,10 @@ def test_checkpoint():
 
 def test_dump_load_consistency():
     sys0 = System.from_file(context.get_fn('test/aelta.cube'))
-    tmpdir = tempfile.mkdtemp('horton.io.test.test_cif.test_dump_load_consistency')
-    fn_cif = '%s/test.cif' % tmpdir
-    try:
+    with tmpdir('horton.io.test.test_cif.test_dump_load_consistency') as dn:
+        fn_cif = '%s/test.cif' % dn
         sys0.to_file(fn_cif)
         sys1 = System.from_file(fn_cif)
-    finally:
-        shutil.rmtree(tmpdir)
 
     assert sys0.cell.nvec == sys1.cell.nvec
     lengths0, angles0 = sys0.cell.parameters

@@ -20,10 +20,11 @@
 #--
 
 
-import numpy as np, shutil, tempfile
+import numpy as np
 
 from horton import *
-from horton.test.common import get_random_cell
+from horton.test.common import get_random_cell, tmpdir
+
 
 
 def test_unravel_counter():
@@ -100,12 +101,9 @@ def test_load_dump_consistency():
     sys0 = System.from_file(context.get_fn('test/water_element.xyz'))
     sys0._cell = get_random_cell(5.0, 3)
 
-    dn = tempfile.mkdtemp('test_load_dump_consistency', 'horton.io.test.test_vasp')
-    try:
+    with tmpdir('horton.io.test.test_vasp.test_load_dump_consistency') as dn:
         sys0.to_file('%s/POSCAR' % dn)
         sys1 = System.from_file('%s/POSCAR' % dn)
-    finally:
-        shutil.rmtree(dn)
 
     assert (sys1.numbers == [8, 1, 1]).all()
     assert abs(sys0.coordinates[1] - sys1.coordinates[0]).max() < 1e-10

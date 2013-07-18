@@ -20,9 +20,10 @@
 #--
 
 
-import numpy as np, tempfile, shutil
+import numpy as np
 
 from horton import *
+from horton.test.common import tmpdir
 
 
 def test_load_water_number():
@@ -48,12 +49,9 @@ def check_water(system):
 def test_load_dump_consistency():
     sys0 = System.from_file(context.get_fn('test/ch3_hf_sto3g.fchk'))
 
-    dn = tempfile.mkdtemp('test_load_dump_consistency', 'horton.io.test.test_xyz')
-    try:
+    with tmpdir('horton.io.test.test_xyz.test_load_dump_consistency') as dn:
         sys0.to_file('%s/test.xyz' % dn)
         sys1 = System.from_file('%s/test.xyz' % dn)
-    finally:
-        shutil.rmtree(dn)
 
     assert sys0.natom == sys1.natom
     assert (sys0.numbers == sys1.numbers).all()
