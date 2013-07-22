@@ -20,7 +20,7 @@
 #--
 
 
-import os, h5py as h5
+import h5py as h5
 
 from horton import *
 from horton.test.common import compare_systems, tmpdir

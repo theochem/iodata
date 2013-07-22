@@ -216,11 +216,7 @@ class FCHKFile(object):
                             try:
                                 value[counter] = datatype(word)
                             except (ValueError, OverflowError), e:
-                                print 'WARNING: could not interpret word while reading %s: %s' % (word, self.filename)
-                                if self.ignore_errors:
-                                    value[counter] = unreadable
-                                else:
-                                    raise
+                                raise IOError('Could not interpret word while reading %s: %s' % (word, filename))
                             counter += 1
                 except ValueError:
                     return True
