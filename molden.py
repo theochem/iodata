@@ -24,7 +24,7 @@
 import numpy as np
 
 from horton.io.common import renorm_helper, get_orca_signs
-from horton.meanfield.wfn import AufbauOccModel, RestrictedWFN, UnrestrictedWFN
+from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
 
 
 __all__ = ['load_molden']
@@ -215,8 +215,7 @@ def load_molden(filename, lf):
 
     if coeff_beta is None:
         nalpha = int(np.round(occ_alpha.sum()))/2
-        occ_model = AufbauOccModel(nalpha)
-        wfn = RestrictedWFN(occ_model, lf, obasis.nbasis, norb=coeff_alpha.shape[1])
+        wfn = RestrictedWFN(lf, obasis.nbasis, norb=coeff_alpha.shape[1])
         exp_alpha = wfn.init_exp('alpha')
         exp_alpha.coeffs[:] = coeff_alpha
         exp_alpha.energies[:] = ener_alpha
@@ -227,8 +226,7 @@ def load_molden(filename, lf):
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
-        occ_model = AufbauOccModel(nalpha, nbeta)
-        wfn = UnrestrictedWFN(occ_model, lf, obasis.nbasis, norb=coeff_alpha.shape[1])
+        wfn = UnrestrictedWFN(lf, obasis.nbasis, norb=coeff_alpha.shape[1])
         exp_alpha = wfn.init_exp('alpha')
         exp_alpha.coeffs[:] = coeff_alpha
         exp_alpha.energies[:] = ener_alpha

@@ -24,7 +24,7 @@ import numpy as np
 
 from horton.gbasis.io import str_to_shell_types
 from horton.gbasis.cext import GOBasis
-from horton.meanfield.wfn import AufbauOccModel, RestrictedWFN, UnrestrictedWFN
+from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
 
 
 __all__ = ['load_atom_cp2k']
@@ -222,16 +222,14 @@ def load_atom_cp2k(filename, lf):
         if restricted:
             norb, nel = _helper_norb(oe_alpha)
             assert nel%2 == 0
-            occ_model = AufbauOccModel(nel/2)
-            wfn = RestrictedWFN(occ_model, lf, obasis.nbasis, norb=norb)
+            wfn = RestrictedWFN(lf, obasis.nbasis, norb=norb)
             exp_alpha = wfn.init_exp('alpha')
             _helper_exp(exp_alpha, oe_alpha, coeffs_alpha, shell_types, restricted)
         else:
             norb_alpha, nalpha = _helper_norb(oe_alpha)
             norb_beta, nbeta = _helper_norb(oe_beta)
-            occ_model = AufbauOccModel(nalpha, nbeta)
             assert norb_alpha == norb_beta
-            wfn = UnrestrictedWFN(occ_model, lf, obasis.nbasis, norb=norb_alpha)
+            wfn = UnrestrictedWFN(lf, obasis.nbasis, norb=norb_alpha)
             exp_alpha = wfn.init_exp('alpha')
             exp_beta = wfn.init_exp('beta')
             _helper_exp(exp_alpha, oe_alpha, coeffs_alpha, shell_types, restricted)

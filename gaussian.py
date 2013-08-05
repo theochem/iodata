@@ -396,8 +396,8 @@ def load_fchk(filename, lf):
         nbeta = fchk.fields['Number of beta electrons']
         if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
             raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
-        occ_model = AufbauOccModel(nalpha, nbeta)
-        wfn = UnrestrictedWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
+        occ_model = AufbauOccModel(nalpha, nbeta) if load_orbitals else None
+        wfn = UnrestrictedWFN(lf, obasis.nbasis, occ_model, norb=nbasis_indep)
         if load_orbitals:
             exp_alpha = wfn.init_exp('alpha')
             exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
@@ -411,8 +411,8 @@ def load_fchk(filename, lf):
         if nelec <= 0:
             raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
         assert nelec % 2 == 0
-        occ_model = AufbauOccModel(nelec/2)
-        wfn = RestrictedWFN(occ_model, lf, obasis.nbasis, norb=nbasis_indep)
+        occ_model = AufbauOccModel(nelec/2) if load_orbitals else None
+        wfn = RestrictedWFN(lf, obasis.nbasis, occ_model, norb=nbasis_indep)
         if load_orbitals:
             exp_alpha = wfn.init_exp('alpha')
             exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
