@@ -87,7 +87,7 @@ def dump_checkpoint(filename, system):
         chk = filename
         do_close = False
 
-    for field_name, field in attribute_register.iteritems():
+    for field in attribute_register.itervalues():
         field.write(chk, system)
 
     if do_close:

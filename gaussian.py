@@ -191,10 +191,8 @@ class FCHKFile(object):
 
                 if words[0] == 'I':
                     datatype = int
-                    unreadable = 0
                 elif words[0] == 'R':
                     datatype = float
-                    unreadable = np.nan
 
             if len(words) == 2:
                 try:
@@ -347,7 +345,6 @@ def load_fchk(filename, lf):
        8: np.arange(45)[::-1],
        9: np.arange(55)[::-1],
     }
-    offset = 0
     permutation = []
     for shell_type in my_shell_types:
         permutation.extend(permutation_rules[shell_type]+len(permutation))
