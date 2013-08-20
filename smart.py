@@ -72,6 +72,9 @@ def load_system_args(filename, lf):
     elif filename.endswith('.cube'):
         from horton.io.cube import load_cube
         return load_cube(filename)
+    elif filename.endswith('.wfn'):
+        from horton.io.wfn import load_wfn
+        return load_wfn(filename, lf)
     elif os.path.basename(filename).startswith('POSCAR'):
         from horton.io.vasp import load_poscar
         return load_poscar(filename)
