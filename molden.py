@@ -23,11 +23,14 @@
 
 import numpy as np
 
+from horton.periodic import periodic
+from horton.gbasis.io import str_to_shell_types, shell_type_to_str
+from horton.gbasis.gobasis import GOBasis
 from horton.io.common import renorm_helper, get_orca_signs
 from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
 
 
-__all__ = ['load_molden']
+__all__ = ['load_molden', 'dump_molden']
 
 
 def load_molden(filename, lf):
@@ -66,8 +69,6 @@ def load_molden(filename, lf):
 
     def helper_obasis(f, coordinates):
         '''Load the orbital basis'''
-        from horton.gbasis.io import str_to_shell_types
-        from horton.gbasis.gobasis import GOBasis
         shell_types = []
         shell_map = []
         nprims = []
@@ -248,3 +249,94 @@ def load_molden(filename, lf):
             'wfn': wfn,
             'signs': signs,
     }
+
+
+def dump_molden(filename, system):
+    '''Write the current system to a file in the molden input format.
+
+       **Arguments:**
+
+       filename
+            The filename of the molden input file, which is an output file for
+            this routine.
+
+       system
+            The system that needs to be written.
+    '''
+    with open(filename, 'w') as f:
+        # Print the header
+        print >> f, '[Molden Format]'
+        print >> f, '[Title]'
+        print >> f, ' File created with Horton'
+        print >> f
+
+        # Print the elements numbers and the coordinates
+        print >> f, '[Atoms] AU'
+        for i in xrange(system.natom):
+            number = system.numbers[i]
+            x, y, z = system.coordinates[i]
+            print >> f, '%2s %3i %3i  %20.10f %20.10f %20.10f' % (
+                periodic[number].symbol.ljust(2), i+1, number, x, y, z
+            )
+
+        # Print the basis set
+        if isinstance(system.obasis, GOBasis):
+            obasis = system.obasis
+            if obasis.shell_types.max() > 1:
+                raise ValueError('Only pure Gaussian basis functions are supported in dump_molden.')
+            # first convert it to a format that is amenable for printing.
+            centers = [list() for i in xrange(obasis.ncenter)]
+            begin_prim = 0
+            for ishell in xrange(obasis.nshell):
+                icenter = obasis.shell_map[ishell]
+                shell_type = obasis.shell_types[ishell]
+                sts = shell_type_to_str(shell_type)
+                end_prim = begin_prim + obasis.nprims[ishell]
+                prims = []
+                for iprim in xrange(begin_prim, end_prim):
+                    alpha = obasis.alphas[iprim]
+                    con_coeff = renorm_helper(obasis.con_coeffs[iprim], alpha, shell_type, reverse=True)
+                    prims.append((alpha, con_coeff))
+                centers[icenter].append((sts, prims))
+                begin_prim = end_prim
+
+            print >> f, '[GTO]'
+            for icenter in xrange(obasis.ncenter):
+                print >> f, '%3i 0' % (icenter+1)
+                for sts, prims in centers[icenter]:
+                    print >> f, '%1s %3i 1.0' % (sts, len(prims))
+                    for alpha, con_coeff in prims:
+                        print >> f, '%20.10f %20.10f' % (alpha, con_coeff)
+                print >> f
+
+            # For now, only pure basis functions are supported.
+            print >> f, '[5D]'
+            print >> f, '[9G]'
+
+            # The sign conventions...
+            signs = get_orca_signs(obasis)
+        else:
+            raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
+
+        def helper_exp(spin, occ_scale=1.0):
+            if not 'exp_%s' % spin in system.wfn.cache:
+                raise TypeError('The restricted WFN does not have an expansion of the %s orbitals.' % spin)
+            exp = system.wfn.get_exp(spin)
+            for ifn in xrange(exp.nfn):
+                print >> f, ' Sym=     1a'
+                print >> f, ' Ene= %20.14E' % exp.energies[ifn]
+                print >> f, ' Spin= %s' % spin.capitalize()
+                print >> f, ' Occup= %8.6f' % (exp.occupations[ifn]*occ_scale)
+                for ibasis in xrange(exp.nbasis):
+                    print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[ibasis,ifn]*signs[ibasis])
+
+        # Print the mean-field orbitals
+        if isinstance(system.wfn, RestrictedWFN):
+            print >> f, '[MO]'
+            helper_exp('alpha', 2.0)
+        elif isinstance(system.wfn, UnrestrictedWFN):
+            print >> f, '[MO]'
+            helper_exp('alpha')
+            helper_exp('beta')
+        else:
+            raise NotImplementedError

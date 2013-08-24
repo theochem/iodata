@@ -20,10 +20,11 @@
 #--
 
 
-import numpy as np
+import numpy as np, os
 
 from horton import *
 from horton.io.test.common import compute_mulliken_charges
+from horton.test.common import tmpdir, compare_systems
 
 
 def test_load_molden_li2():
@@ -51,3 +52,20 @@ def test_load_molden_h2o():
     charges = compute_mulliken_charges(sys)
     expected_charges = np.array([-0.816308, 0.408154, 0.408154])
     assert abs(charges - expected_charges).max() < 1e-5
+
+
+def check_load_dump_consistency(fn):
+    sys1 = System.from_file(context.get_fn(os.path.join('test', fn)))
+    with tmpdir('horton.io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
+        fn_tmp = os.path.join(dn, 'foo.molden.input')
+        sys1.to_file(fn_tmp)
+        sys2 = System.from_file(fn_tmp)
+    compare_systems(sys1, sys2)
+
+
+def test_load_dump_consistency_h2o():
+    check_load_dump_consistency('h2o.molden.input')
+
+
+def test_load_dump_consistency_li2():
+    check_load_dump_consistency('li2.molden.input')

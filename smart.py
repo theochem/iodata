@@ -104,6 +104,9 @@ def dump_system(filename, system):
     elif filename.endswith('.cif'):
         from horton.io.cif import dump_cif
         dump_cif(filename, system)
+    elif filename.endswith('.molden.input'):
+        from horton.io.molden import dump_molden
+        dump_molden(filename, system)
     elif os.path.basename(filename).startswith('POSCAR'):
         from horton.io.vasp import dump_poscar
         return dump_poscar(filename, system)
