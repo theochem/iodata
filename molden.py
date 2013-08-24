@@ -43,6 +43,7 @@ def load_molden(filename, lf):
     '''
 
     def helper_coordinates(f):
+        '''Load element numbers and coordinates'''
         numbers = []
         coordinates = []
         while True:
@@ -64,6 +65,7 @@ def load_molden(filename, lf):
 
 
     def helper_obasis(f, coordinates):
+        '''Load the orbital basis'''
         from horton.gbasis.io import str_to_shell_types
         from horton.gbasis.gobasis import GOBasis
         shell_types = []
@@ -115,6 +117,7 @@ def load_molden(filename, lf):
 
 
     def helper_coeffs(f, nbasis):
+        '''Load the orbital coefficients'''
         coeff_alpha = []
         ener_alpha = []
         occ_alpha = []
@@ -207,11 +210,11 @@ def load_molden(filename, lf):
                 coeff_beta, ener_beta, occ_beta = data_beta
 
     if coordinates is None:
-        raise IOError('Coordinates not found in mkl file.')
+        raise IOError('Coordinates not found in molden input file.')
     if obasis is None:
-        raise IOError('Orbital basis not found in mkl file.')
+        raise IOError('Orbital basis not found in molden input file.')
     if coeff_alpha is None:
-        raise IOError('Alpha orbitals not found in mkl file.')
+        raise IOError('Alpha orbitals not found in molden input file.')
 
     if coeff_beta is None:
         nalpha = int(np.round(occ_alpha.sum()))/2
