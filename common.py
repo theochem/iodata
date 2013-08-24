@@ -22,31 +22,60 @@
 
 
 import numpy as np
+from horton.gbasis.cext import gob_cart_normalization
 
 
 __all__ = ['renorm_helper', 'get_orca_signs']
 
 
-def renorm_helper(con_coeff, alpha, shell_type):
-    '''Fix an unnormalized contraction coefficient'''
-    from horton.gbasis.cext import gob_cart_normalization
-    if shell_type == 0:
-        return con_coeff/gob_cart_normalization(alpha, np.array([0,0,0]))
-    elif shell_type == 1:
-        return con_coeff/gob_cart_normalization(alpha, np.array([1,0,0]))
-    elif shell_type == -2:
-        return con_coeff/gob_cart_normalization(alpha, np.array([1,1,0]))
-    elif shell_type == -3:
-        return con_coeff/gob_cart_normalization(alpha, np.array([1,1,1]))
-    elif shell_type == -4:
-        return con_coeff/gob_cart_normalization(alpha, np.array([2,1,1]))
-    else:
-        raise NotImplementedError('MKL Normalization conventions beyond G are not know. Please notify Toon.Verstraelen@UGent.be.')
+def renorm_helper(con_coeff, alpha, shell_type, reverse=False):
+    '''Fix an unnormalized contraction coefficient from the molden/orca file.
 
+       **Arguments:**
+
+       con_coeff
+            The original contraction coefficient
+
+       alpha
+            The Gaussian exponent
+
+       shell_type
+            The shell_type as an integer. Must be one of the following: 0=s,
+            1=p, -2=d, -3=f, -4=g.
+
+       **Optional arguments:**
+
+       reverse
+            By default, the conversion is good for reading molden or orca wfn
+            files. The opposite conversion can be done by setting this option to
+            True. This is useful for writing molden or orca wfn files.
+    '''
+    if shell_type == 0:
+        scale = gob_cart_normalization(alpha, np.array([0,0,0]))
+    elif shell_type == 1:
+        scale = gob_cart_normalization(alpha, np.array([1,0,0]))
+    elif shell_type == -2:
+        scale = gob_cart_normalization(alpha, np.array([1,1,0]))
+    elif shell_type == -3:
+        scale = gob_cart_normalization(alpha, np.array([1,1,1]))
+    elif shell_type == -4:
+        scale = gob_cart_normalization(alpha, np.array([2,1,1]))
+    else:
+        raise NotImplementedError('MKL Normalization conventions beyond G are not known. Please notify Toon.Verstraelen@UGent.be.')
+    if reverse:
+        return con_coeff*scale
+    else:
+        return con_coeff/scale
 
 
 def get_orca_signs(obasis):
-    '''Correct for different sign conventions used in ORCA.'''
+    '''Correct for different sign conventions for Gaussian basis functions used in ORCA.
+
+       **Arguments:**
+
+       obasis
+            An instance GOBasis.
+    '''
     sign_rules = {
       -4: np.array([1,1,1,1,1,-1,-1,-1,-1]),
       -3: np.array([1,1,1,1,1,-1,-1]),
