@@ -182,3 +182,8 @@ def test_dump_load_consistency():
     frac0 = np.array([sys0.cell.to_frac(row) for row in sys0.coordinates])
     frac1 = np.array([sys1.cell.to_frac(row) for row in sys1.coordinates])
     assert abs(frac0 - frac1).max() < 1e-6
+
+
+def test_load_cage():
+    sys = System.from_file(context.get_fn('test/cage.cif'))
+    assert (sys.coordinates != 0).all()

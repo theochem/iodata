@@ -85,6 +85,7 @@ class IterRelevantCIFLines(object):
     def __init__(self, f):
         self.f = f
         self.cache = []
+        self.in_comment = False
 
     def iter(self):
         '''Return an iterator'''
@@ -107,8 +108,14 @@ class IterRelevantCIFLines(object):
             while True:
                 line = self.f.next()
                 line = line[:line.find('#')].strip()
-                if len(line) > 0:
-                    return line
+                if self.in_comment:
+                    if line == ';':
+                        self.in_comment = False
+                else:
+                    if line == ';':
+                        self.in_comment = True
+                    elif len(line) > 0:
+                        return line
         else:
             return self.cache.pop(-1)
 
@@ -210,13 +217,16 @@ def _load_cif_low(fn_cif):
                 continue
             elif line.startswith('_'):
                 words = shlex.split(line)
-                key = words[0][1:]
-                value = _interpret_cif_value(words[1])
-                fields[key] =  value
+                if len(words) == 2:
+                    value = _interpret_cif_value(words[1])
+                    key = words[0][1:]
+                    fields[key] = value
             elif line.startswith('loop_'):
                 tables.append(_load_cif_table(irl))
-            else:
-                raise NotImplementedError
+            # Just ignore lines that are not fit
+            #else:
+            #    print line
+            #    raise NotImplementedError
 
     # convert tables to extra fields
     for header, rows in tables:
@@ -238,6 +248,8 @@ def iter_equiv_pos_terms(comp):
        **Yields:** 2-tuples of the form (sign, sybol). For example, the input
        'y-1/2' will yield to 2-tuples: (+1, 'y'), (-1, '1/2')
     '''
+    # remove all white space first:
+    comp = comp.replace(' ','')
     while len(comp) > 0:
         sign = 1-2*(comp[0]=='-')
         if comp[0] in '+-':
