@@ -128,9 +128,9 @@ def test_load_fchk_hf_sto3g_num():
     assert 'npa_charges' in extra
     assert 'mulliken_charges' in extra
     assert extra['energy'] == -9.856961609951867E+01
-    assert (extra['mulliken_charges'] == [0.45000000E+00 , 4.22300000E+00, -4.73896291E-01]).all()
-    assert (extra['npa_charges']== [3.50000000E+00,  1.32000000E+00, -4.73896291E-01]).all()
-    assert (extra['esp_charges']==[ 0.77700000E+00,  0.66600000E+00 ,-4.73896291E-01]).all()
+    assert (extra['mulliken_charges'] == [0.45000000E+00 , 4.22300000E+00]).all()
+    assert (extra['npa_charges']== [3.50000000E+00,  1.32000000E+00]).all()
+    assert (extra['esp_charges']==[ 0.77700000E+00,  0.66600000E+00]).all()
     cache['dm_scf_full'][0].check_symmetry()
 
 
