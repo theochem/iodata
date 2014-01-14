@@ -263,6 +263,24 @@ def test_load_fchk_lih_321g_hf():
     assert extra['energy'] == -7.687331212191968E+00
 
 
+def test_load_fchk_ghost_atoms():
+    # Load fchk file with ghost atoms
+    lf = DenseLinalgFactory()
+    fn_fchk = context.get_fn('test/water_dimer_ghost.fchk')
+    fields = load_fchk(fn_fchk, lf)
+    numbers = fields['numbers']
+    coordinates = fields['coordinates']
+    mulliken_charges = fields['extra']['mulliken_charges']
+    obasis = fields['obasis']
+    # There should be 3 real atoms and 3 ghost atoms
+    natom = 3
+    nghost = 3
+    assert numbers.shape[0] == natom
+    assert coordinates.shape[0] == natom
+    assert mulliken_charges.shape[0] == natom
+    assert obasis.centers.shape[0] == ( natom + nghost )
+
+
 def check_load_azirine(key, numbers):
     lf = DenseLinalgFactory()
     fn_fchk = context.get_fn('test/2h-azirine-%s.fchk' % key)

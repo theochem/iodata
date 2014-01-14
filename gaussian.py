@@ -277,6 +277,12 @@ def load_fchk(filename, lf):
     numbers = fchk.fields["Atomic numbers"]
     coordinates = fchk.fields["Current cartesian coordinates"].reshape(-1,3)
     pseudo_numbers = fchk.fields["Nuclear charges"]
+    # Mask out ghost atoms
+    mask = pseudo_numbers != 0.0
+    numbers = numbers[mask]
+    # Do not overwrite coordinates array, because it is needed to specify basis
+    system_coordinates = coordinates[mask]
+    pseudo_numbers = pseudo_numbers[mask]
 
     # B) Load the orbital basis set
     shell_types = fchk.fields["Shell types"]
@@ -426,15 +432,16 @@ def load_fchk(filename, lf):
     extra = {
         'energy': fchk.fields['Total Energy'],
     }
+    # Mask out ghost atoms
     if 'Mulliken Charges' in fchk.fields:
-        extra['mulliken_charges'] = fchk.fields['Mulliken Charges']
+        extra['mulliken_charges'] = fchk.fields['Mulliken Charges'][mask]
     if 'ESP Charges' in fchk.fields:
-        extra['esp_charges'] = fchk.fields['ESP Charges']
+        extra['esp_charges'] = fchk.fields['ESP Charges'][mask]
     if 'NPA Charges' in fchk.fields:
-        extra['npa_charges'] = fchk.fields['NPA Charges']
+        extra['npa_charges'] = fchk.fields['NPA Charges'][mask]
 
     return {
-        'coordinates': coordinates,
+        'coordinates': system_coordinates,
         'numbers': numbers,
         'obasis': obasis,
         'wfn': wfn,
