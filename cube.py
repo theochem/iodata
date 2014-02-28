@@ -111,7 +111,7 @@ def _write_cube_header(f, coordinates, numbers, ugrid, pseudo_numbers):
     natom = len(numbers)
     x, y, z = ugrid.origin
     print >> f, '%5i % 11.6f % 11.6f % 11.6f' % (natom, x, y, z)
-    rvecs = ugrid.grid_cell.rvecs
+    rvecs = ugrid.grid_rvecs
     for i in xrange(3):
         x, y, z = rvecs[i]
         print >> f, '%5i % 11.6f % 11.6f % 11.6f' % (ugrid.shape[i], x, y, z)

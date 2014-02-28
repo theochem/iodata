@@ -40,8 +40,7 @@ def test_load_aelta():
     rvecs = sys.cell.rvecs
     my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)*12
     assert abs(rvecs - my_rvecs).max() < 1e-5
-    assert ugrid.grid_cell.nvec == 3
-    rvecs = ugrid.grid_cell.rvecs
+    rvecs = ugrid.grid_rvecs
     my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)
     assert abs(rvecs - my_rvecs).max() < 1e-5
     assert abs(ugrid.origin - np.array([0.0, 1.2, 0.0])).max() < 1e-10
@@ -69,7 +68,7 @@ def test_load_dump_load_aelta():
         assert (sys1.numbers == sys2.numbers).all()
         ugrid1 = sys1.grid
         ugrid2 = sys2.grid
-        assert abs(ugrid1.grid_cell.rvecs - ugrid2.grid_cell.rvecs).max() < 1e-4
+        assert abs(ugrid1.grid_rvecs - ugrid2.grid_rvecs).max() < 1e-4
         assert (ugrid1.shape == ugrid2.shape).all()
         assert abs(sys1.extra['cube_data'] - sys2.extra['cube_data']).max() < 1e-4
         assert abs(sys1.pseudo_numbers - sys2.pseudo_numbers).max() < 1e-4

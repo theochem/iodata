@@ -50,7 +50,7 @@ def test_load_chgcar_oxygen():
     ugrid = sys.grid
     assert len(ugrid.shape) == 3
     assert (ugrid.shape == 2).all()
-    assert abs(ugrid.grid_cell.rvecs - sys.cell.rvecs/2).max() < 1e-10
+    assert abs(ugrid.grid_rvecs - sys.cell.rvecs/2).max() < 1e-10
     assert abs(ugrid.origin).max() < 1e-10
     d = sys.extra['cube_data']
     assert abs(d[0,0,0] - 0.78406017013E+04/sys.cell.volume) < 1e-10
@@ -68,7 +68,7 @@ def test_load_chgcar_water():
     ugrid = sys.grid
     assert len(ugrid.shape) == 3
     assert (ugrid.shape == 3).all()
-    assert abs(ugrid.grid_cell.rvecs - sys.cell.rvecs/3).max() < 1e-10
+    assert abs(ugrid.grid_rvecs - sys.cell.rvecs/3).max() < 1e-10
     assert abs(ugrid.origin).max() < 1e-10
 
 
