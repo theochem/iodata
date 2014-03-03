@@ -51,7 +51,7 @@ def test_load_aelta():
     assert abs(pn[0] - 1.0) < 1e-10
     assert abs(pn[1] - 0.1) < 1e-10
     assert abs(pn[-2] - 0.2) < 1e-10
-    assert abs(pn[-1]) < 1e-10
+    assert abs(pn[-1] - sys.numbers[-1]) < 1e-10
 
 
 def test_load_dump_load_aelta():

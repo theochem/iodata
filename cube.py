@@ -69,6 +69,10 @@ def _read_cube_header(f):
     coordinates = np.zeros((natom, 3), float)
     for i in xrange(natom):
         numbers[i], pseudo_numbers[i], coordinates[i] = read_coordinate_line(f.readline())
+        # If the pseudo_number field is zero, we assume that no effective core
+        # potentials were used.
+        if pseudo_numbers[i] == 0.0:
+            pseudo_numbers[i] = numbers[i]
 
     return coordinates, numbers, cell, ugrid, pseudo_numbers
 
