@@ -34,6 +34,7 @@ from horton.io.cp2k import *
 from horton.io.common import *
 from horton.io.cube import *
 from horton.io.gaussian import *
+from horton.io.lockedh5 import *
 from horton.io.molden import *
 from horton.io.molekel import *
 from horton.io.smart import *

@@ -21,8 +21,7 @@
 '''Horton Checkpoint File Format'''
 
 
-import h5py as h5
-
+from horton.io.lockedh5 import LockedH5File
 from horton.checkpoint import attribute_register
 
 
@@ -43,27 +42,28 @@ def load_checkpoint(filename, lf):
     """
     result = {}
     if isinstance(filename, basestring):
-        chk = h5.File(filename,'r')
+        chk = LockedH5File(filename,'r')
         do_close = True
     else:
         chk = filename
         do_close = False
 
-    for field in attribute_register.itervalues():
-        att = field.read(chk, lf)
-        d = result
-        name = field.att_name
-        if field.key is not None:
-            d = result.setdefault(field.att_name, {})
-            name = field.key
-        if att is not None:
-            if field.tags is None:
-                d[name] = att
-            else:
-                d[name] = att, field.tags
-
-    if do_close:
-        chk.close()
+    try:
+        for field in attribute_register.itervalues():
+            att = field.read(chk, lf)
+            d = result
+            name = field.att_name
+            if field.key is not None:
+                d = result.setdefault(field.att_name, {})
+                name = field.key
+            if att is not None:
+                if field.tags is None:
+                    d[name] = att
+                else:
+                    d[name] = att, field.tags
+    finally:
+        if do_close:
+            chk.close()
     result['chk'] = filename
     return result
 
@@ -81,14 +81,15 @@ def dump_checkpoint(filename, system):
             A System instance.
     '''
     if isinstance(filename, basestring):
-        chk = h5.File(filename, 'w')
+        chk = LockedH5File(filename, 'w')
         do_close = True
     else:
         chk = filename
         do_close = False
 
-    for field in attribute_register.itervalues():
-        field.write(chk, system)
-
-    if do_close:
-        chk.close()
+    try:
+        for field in attribute_register.itervalues():
+            field.write(chk, system)
+    finally:
+        if do_close:
+            chk.close()
