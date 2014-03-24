@@ -29,6 +29,7 @@ from horton.meanfield.builtin import HartreeFockExchange
 from horton.matrix import DenseOneBody, DenseTwoBody
 from horton.part.mulliken import get_mulliken_operators
 from horton.test.common import compare_wfns
+from horton import Cache
 
 __all__ = ['compute_mulliken_charges', 'compare_data']
 
@@ -80,5 +81,7 @@ def compute_hf_energy(data):
         data['coordinates'], data['numbers'], data['obasis'], wfn=data['wfn'],
         lf=data['lf']
     )
-    ham = Hamiltonian(sys, [HartreeFockExchange()])
+    scf_cache = Cache()
+    ham = Hamiltonian(sys, scf_cache, [HartreeFockExchange(scf_cache, sys.lf,sys.wfn,
+                                           sys.get_electron_repulsion())])
     return ham.compute()
