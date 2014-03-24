@@ -28,43 +28,43 @@ from horton import *
 
 def test_atom_si_uks():
     fn_out = context.get_fn('test/atom_si.cp2k.out')
-    sys = System.from_file(fn_out)
+    data = load_smart(fn_out)
 
-    assert sys.natom == 1
-    assert sys.numbers[0] == 14
-    assert (sys.pseudo_numbers == [4]).all()
-    assert (sys.wfn.exp_alpha.occupations == [1, 1, 1, 0]).all()
-    assert (sys.wfn.exp_beta.occupations == [1, 0, 0, 0]).all()
-    assert abs(sys.wfn.exp_alpha.energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
-    assert abs(sys.wfn.exp_beta.energies - [-0.334567, -0.092237, -0.092237, -0.092237]).max() < 1e-4
-    assert abs(sys.extra['energy'] - -3.761587698067) < 1e-10
-    assert (sys.obasis.shell_types == [0, 0, 1, 1, -2]).all()
-    assert isinstance(sys.wfn, UnrestrictedWFN)
-    assert sys.charge == 0
+    assert (data['numbers'] == [14]).all()
+    assert (data['pseudo_numbers'] == [4]).all()
+    assert (data['wfn'].exp_alpha.occupations == [1, 1, 1, 0]).all()
+    assert (data['wfn'].exp_beta.occupations == [1, 0, 0, 0]).all()
+    assert abs(data['wfn'].exp_alpha.energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
+    assert abs(data['wfn'].exp_beta.energies - [-0.334567, -0.092237, -0.092237, -0.092237]).max() < 1e-4
+    assert abs(data['energy'] - -3.761587698067) < 1e-10
+    assert (data['obasis'].shell_types == [0, 0, 1, 1, -2]).all()
+    assert isinstance(data['wfn'], UnrestrictedWFN)
+    assert data['wfn'].nel == 4
 
-    olp = sys.get_overlap()._array
-    ca = sys.wfn.exp_alpha.coeffs
-    cb = sys.wfn.exp_beta.coeffs
-    assert abs(np.diag(olp[:2,:2]) - np.array([0.42921199338707744, 0.32067871530183140])).max() < 1e-5
-    assert abs(np.dot(ca.T, np.dot(olp, ca)) - np.identity(4)).max() < 1e-5
-    assert abs(np.dot(cb.T, np.dot(olp, cb)) - np.identity(4)).max() < 1e-5
+    olp = data['lf'].create_one_body()
+    data['obasis'].compute_overlap(olp)
+    ca = data['wfn'].exp_alpha.coeffs
+    cb = data['wfn'].exp_beta.coeffs
+    assert abs(np.diag(olp._array[:2,:2]) - np.array([0.42921199338707744, 0.32067871530183140])).max() < 1e-5
+    assert abs(np.dot(ca.T, np.dot(olp._array, ca)) - np.identity(4)).max() < 1e-5
+    assert abs(np.dot(cb.T, np.dot(olp._array, cb)) - np.identity(4)).max() < 1e-5
 
 
 
 def test_atom_o_rks():
     fn_out = context.get_fn('test/atom_om2.cp2k.out')
-    sys = System.from_file(fn_out)
+    data = load_smart(fn_out)
 
-    assert sys.natom == 1
-    assert sys.numbers[0] == 8
-    assert (sys.pseudo_numbers == [6]).all()
-    assert (sys.wfn.exp_alpha.occupations == [1, 1, 1, 1]).all()
-    assert abs(sys.wfn.exp_alpha.energies - [0.102709, 0.606458, 0.606458, 0.606458]).max() < 1e-4
-    assert abs(sys.extra['energy'] - -15.464982778766) < 1e-10
-    assert (sys.obasis.shell_types == [0, 0, 1, 1, -2]).all()
-    assert isinstance(sys.wfn, RestrictedWFN)
-    assert sys.charge == -2
+    assert (data['numbers'] == [8]).all()
+    assert (data['pseudo_numbers'] == [6]).all()
+    assert (data['wfn'].exp_alpha.occupations == [1, 1, 1, 1]).all()
+    assert abs(data['wfn'].exp_alpha.energies - [0.102709, 0.606458, 0.606458, 0.606458]).max() < 1e-4
+    assert abs(data['energy'] - -15.464982778766) < 1e-10
+    assert (data['obasis'].shell_types == [0, 0, 1, 1, -2]).all()
+    assert isinstance(data['wfn'], RestrictedWFN)
+    assert data['wfn'].nel == 8
 
-    olp = sys.get_overlap()._array
-    ca = sys.wfn.exp_alpha.coeffs
-    assert abs(np.dot(ca.T, np.dot(olp, ca)) - np.identity(4)).max() < 1e-5
+    olp = data['lf'].create_one_body()
+    data['obasis'].compute_overlap(olp)
+    ca = data['wfn'].exp_alpha.coeffs
+    assert abs(np.dot(ca.T, np.dot(olp._array, ca)) - np.identity(4)).max() < 1e-5

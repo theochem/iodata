@@ -24,44 +24,56 @@
 import numpy as np, os
 
 from horton import *
-from horton.io.test.common import compute_mulliken_charges
-from horton.test.common import tmpdir, compare_systems
+from horton.io.test.common import compute_mulliken_charges, compare_data
+from horton.test.common import tmpdir
 
 
 def test_load_molden_li2():
     fn_mkl = context.get_fn('test/li2.molden.input')
-    sys = System.from_file(fn_mkl)
+    data = load_smart(fn_mkl)
+    obasis = data['obasis']
+    wfn = data['wfn']
+    lf = data['lf']
+    numbers = data['numbers']
 
     # Check normalization
-    sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5)
-    sys.wfn.exp_beta.check_normalization(sys.get_overlap(), 1e-5)
+    olp = lf.create_one_body()
+    obasis.compute_overlap(olp)
+    wfn.exp_alpha.check_normalization(olp, 1e-5)
+    wfn.exp_beta.check_normalization(olp, 1e-5)
 
     # Check charges
-    charges = compute_mulliken_charges(sys)
+    charges = compute_mulliken_charges(obasis, lf, numbers, wfn)
     expected_charges = np.array([0.5, 0.5])
     assert abs(charges - expected_charges).max() < 1e-5
 
 
 def test_load_molden_h2o():
     fn_mkl = context.get_fn('test/h2o.molden.input')
-    sys = System.from_file(fn_mkl)
+    data = load_smart(fn_mkl)
+    obasis = data['obasis']
+    wfn = data['wfn']
+    lf = data['lf']
+    numbers = data['numbers']
 
     # Check normalization
-    sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5)
+    olp = lf.create_one_body()
+    obasis.compute_overlap(olp)
+    wfn.exp_alpha.check_normalization(olp, 1e-5)
 
     # Check charges
-    charges = compute_mulliken_charges(sys)
+    charges = compute_mulliken_charges(obasis, lf, numbers, wfn)
     expected_charges = np.array([-0.816308, 0.408154, 0.408154])
     assert abs(charges - expected_charges).max() < 1e-5
 
 
 def check_load_dump_consistency(fn):
-    sys1 = System.from_file(context.get_fn(os.path.join('test', fn)))
+    data1 = load_smart(context.get_fn(os.path.join('test', fn)))
     with tmpdir('horton.io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
         fn_tmp = os.path.join(dn, 'foo.molden.input')
-        sys1.to_file(fn_tmp)
-        sys2 = System.from_file(fn_tmp)
-    compare_systems(sys1, sys2)
+        dump_smart(fn_tmp, data1)
+        data2 = load_smart(fn_tmp)
+    compare_data(data1, data2)
 
 
 def test_load_dump_consistency_h2o():

@@ -220,6 +220,7 @@ def load_molden(filename, lf):
     if coeff_alpha is None:
         raise IOError('Alpha orbitals not found in molden input file.')
 
+    lf.set_default_nbasis(obasis.nbasis)
     if coeff_beta is None:
         nalpha = int(np.round(occ_alpha.sum()))/2
         wfn = RestrictedWFN(lf, obasis.nbasis, norb=coeff_alpha.shape[1])

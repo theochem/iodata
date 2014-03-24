@@ -130,6 +130,7 @@ def load_smart(*filenames, **kwargs):
         lf = DenseLinalgFactory()
     if len(kwargs) > 0:
         raise TypeError('Keyword argument(s) not supported: %s' % lf.keys())
+    result['lf'] = lf
 
     for filename in filenames:
         if isinstance(filename, h5.Group) or filename.endswith('.h5'):
@@ -208,6 +209,9 @@ def dump_smart(filename, data):
     '''
     if isinstance(filename, h5.Group) or filename.endswith('.h5'):
         from horton.io.internal import dump_h5
+        if 'lf' in data:
+            data = data.copy()
+            data.pop('lf')
         dump_h5(filename, data)
     elif filename.endswith('.xyz'):
         from horton.io.xyz import dump_xyz

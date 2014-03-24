@@ -139,48 +139,48 @@ def test_equiv_pos_to_generator():
     assert abs(equiv_pos_to_generator('x,y-3/4,z') - np.array([[1,0,0,0],[0,1,0,-0.75],[0,0,1,0]])).max() < 1e-10
 
 
-def check_lta_sys(sys):
-    assert (sys.numbers == 14).sum() == 24
-    assert (sys.numbers == 8).sum() == 48
-    assert sys.extra['symmetry'].name == '221'
-    assert len(sys.extra['links']) == 72
+def check_lta_data(data):
+    assert (data['numbers'] == 14).sum() == 24
+    assert (data['numbers'] == 8).sum() == 48
+    assert data['symmetry'].name == '221'
+    assert len(data['links']) == 72
 
 
 def test_load_cif_lta_gulp():
-    sys = System.from_file(context.get_fn('test/lta_gulp.cif'))
-    check_lta_sys(sys)
+    data = load_smart(context.get_fn('test/lta_gulp.cif'))
+    check_lta_data(data)
 
 
 def test_load_cif_lta_iza():
-    sys = System.from_file(context.get_fn('test/lta_iza.cif'))
-    check_lta_sys(sys)
+    data = load_smart(context.get_fn('test/lta_iza.cif'))
+    check_lta_data(data)
 
 
 def test_checkpoint():
     with h5.File('horton.io.test.test_cif.test_checkpoint', driver='core', backing_store=False) as f:
-        sys0 = System.from_file(context.get_fn('test/lta_iza.cif'))
-        sys0.to_file(f)
-        sys1 = System.from_file(f)
-        s0 = sys0.extra['symmetry']
-        s1 = sys1.extra['symmetry']
+        data0 = load_smart(context.get_fn('test/lta_iza.cif'))
+        dump_smart(f, data0)
+        data1 = load_smart(f)
+        s0 = data0['symmetry']
+        s1 = data1['symmetry']
         compare_symmetries(s0, s1)
 
 
 def test_dump_load_consistency():
-    sys0 = System.from_file(context.get_fn('test/aelta.cube'))
+    data0 = load_smart(context.get_fn('test/aelta.cube'))
     with tmpdir('horton.io.test.test_cif.test_dump_load_consistency') as dn:
         fn_cif = '%s/test.cif' % dn
-        sys0.to_file(fn_cif)
-        sys1 = System.from_file(fn_cif)
+        dump_smart(fn_cif, data0)
+        data1 = load_smart(fn_cif)
 
-    assert sys0.cell.nvec == sys1.cell.nvec
-    lengths0, angles0 = sys0.cell.parameters
-    lengths1, angles1 = sys1.cell.parameters
+    assert data0['cell'].nvec == data1['cell'].nvec
+    lengths0, angles0 = data0['cell'].parameters
+    lengths1, angles1 = data1['cell'].parameters
     assert abs(lengths0 - lengths1).max() < 1e-6
     assert abs(angles0 - angles1).max() < 1e-6
-    assert (sys0.numbers == sys1.numbers).all()
-    frac0 = np.array([sys0.cell.to_frac(row) for row in sys0.coordinates])
-    frac1 = np.array([sys1.cell.to_frac(row) for row in sys1.coordinates])
+    assert (data0['numbers'] == data1['numbers']).all()
+    frac0 = np.array([data0['cell'].to_frac(row) for row in data0['coordinates']])
+    frac1 = np.array([data1['cell'].to_frac(row) for row in data1['coordinates']])
     assert abs(frac0 - frac1).max() < 1e-6
 
 

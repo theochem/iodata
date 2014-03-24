@@ -163,6 +163,7 @@ def load_atom_cp2k(filename, lf):
         alphas = np.array(alphas)
         con_coeffs = np.array(con_coeffs)
         obasis = GOBasis(coordinates, shell_map, nprims, shell_types, alphas, con_coeffs)
+        lf.set_default_nbasis(obasis.nbasis)
 
         # Search for (un)restricted
         restricted = None

@@ -212,6 +212,7 @@ def load_mkl(filename, lf):
     if occ_alpha is None:
         raise IOError('Alpha occupation numbers not found in mkl file.')
 
+    lf.set_default_nbasis(obasis.nbasis)
     nelec = numbers.sum() - charge
     if coeff_beta is None:
         assert nelec % 2 == 0

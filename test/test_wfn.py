@@ -25,7 +25,7 @@ import numpy as np
 import os
 from horton import *
 from horton.io.wfn import *
-from horton.io.test.common import compute_mulliken_charges
+from horton.io.test.common import compute_mulliken_charges, compute_hf_energy
 
 
 def test_load_wfn_low_he_s():
@@ -135,270 +135,257 @@ def test_setup_mask():
 
 
 def check_load_wfn(name):
-    #system out of *.wfn file
+    # system out of *.wfn file
     fn_wfn = context.get_fn('test/%s.wfn' % name)
-    sys1 = System.from_file(fn_wfn)
-    ham1= Hamiltonian(sys1, [HartreeFockExchange()])
-    energy1 = ham1.compute()
-    #system out of *.log and *.fchk files
-    sys2 = System.from_file(context.get_fn('test/%s.fchk' % name))
-    ham2 = Hamiltonian(sys2, [HartreeFockExchange()])
-    energy2 = ham2.compute()
-    #System check:
-    assert sys1.natom == sys2.natom
-    assert (abs(sys1.coordinates - sys2.coordinates) < 1e-6).all()
-    assert (sys1.numbers == sys2.numbers).all()
-    #Basis Set check:
-    assert sys1.obasis.nbasis == sys2.obasis.nbasis
-    assert (sys1.obasis.shell_map == sys2.obasis.shell_map).all()
-    assert (sys1.obasis.shell_types == sys2.obasis.shell_types).all()
-    assert (sys1.obasis.nprims == sys2.obasis.nprims).all()
-    assert (abs(sys1.obasis.alphas - sys2.obasis.alphas) < 1.e-4).all()
-    #Comparing MOs (*.wfn might not contain virtual orbitals):
-    n_mo = sys1.wfn.exp_alpha.nfn
-    assert (abs(sys1.wfn.exp_alpha.energies - sys2.wfn.exp_alpha.energies[:n_mo]) < 1.e-5).all()
-    assert (sys1.wfn.exp_alpha.occupations == sys2.wfn.exp_alpha.occupations[:n_mo]).all()
-    assert (abs(sys1.wfn.exp_alpha.coeffs   - sys2.wfn.exp_alpha.coeffs[:,:n_mo]) < 1.e-7).all()
-    assert (abs(sys1.get_overlap()._array[:] - sys2.get_overlap()._array[:]) < 1e-6).all()
+    data1 = load_smart(fn_wfn)
+    # system out of *.fchk file
+    data2 = load_smart(context.get_fn('test/%s.fchk' % name))
+    # Coordinates check:
+    assert (abs(data1['coordinates'] - data2['coordinates']) < 1e-6).all()
+    # Numbers check
+    numbers1 = data1['numbers']
+    numbers2 = data2['numbers']
+    assert (numbers1 == numbers2).all()
+    # Basis Set check:
+    obasis1 = data1['obasis']
+    obasis2 = data2['obasis']
+    assert obasis1.nbasis == obasis2.nbasis
+    assert (obasis1.shell_map == obasis2.shell_map).all()
+    assert (obasis1.shell_types == obasis2.shell_types).all()
+    assert (obasis1.nprims == obasis2.nprims).all()
+    assert (abs(obasis1.alphas - obasis2.alphas) < 1.e-4).all()
+    # Comparing MOs (*.wfn might not contain virtual orbitals):
+    wfn1 = data1['wfn']
+    wfn2 = data2['wfn']
+    n_mo = wfn1.exp_alpha.nfn
+    assert (abs(wfn1.exp_alpha.energies - wfn2.exp_alpha.energies[:n_mo]) < 1.e-5).all()
+    assert (wfn1.exp_alpha.occupations == wfn2.exp_alpha.occupations[:n_mo]).all()
+    assert (abs(wfn1.exp_alpha.coeffs   - wfn2.exp_alpha.coeffs[:,:n_mo]) < 1.e-7).all()
+    # Check overlap
+    lf1 = data1['lf']
+    olp1 = lf1.create_one_body()
+    obasis1.compute_overlap(olp1)
+    lf2 = data2['lf']
+    olp2 = lf2.create_one_body()
+    obasis2.compute_overlap(olp2)
+    assert (abs(olp1._array[:] - olp2._array[:]) < 1e-6).all()
+    # Check energy
+    energy1 = compute_hf_energy(data1)
+    energy2 = compute_hf_energy(data2)
     assert abs(energy1 - energy2) < 1e-5
     # Check normalization
-    sys1.wfn.exp_alpha.check_normalization(sys1.get_overlap(), 1e-5)
-    return sys1, energy1
+    wfn1.exp_alpha.check_normalization(olp1, 1e-5)
+    # Check charges
+    charges1 = compute_mulliken_charges(obasis1, lf1, numbers1, wfn1)
+    charges2 = compute_mulliken_charges(obasis2, lf2, numbers2, wfn2)
+    return wfn1, energy1, charges1
 
 
 def test_load_wfn_he_s_virtual():
-    sys, energy = check_load_wfn('he_s_virtual')
-    assert isinstance(sys.wfn, RestrictedWFN)
+    wfn, energy, charges = check_load_wfn('he_s_virtual')
+    assert isinstance(wfn, RestrictedWFN)
     assert abs(energy - (-2.855160426155)) < 1.e-6     #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)                     #Check charges
-    expected_charge = np.array([0.0])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    assert (abs(charges - [0.0]) < 1e-5).all()
 
 
 def test_load_wfn_he_s():
-    sys, energy = check_load_wfn('he_s_orbital')
-    assert isinstance(sys.wfn, RestrictedWFN)
+    wfn, energy, charges = check_load_wfn('he_s_orbital')
+    assert isinstance(wfn, RestrictedWFN)
     assert abs(energy - (-2.855160426155)) < 1.e-6     #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)                    #Check charges
-    expected_charge = np.array([0.0])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    assert (abs(charges - [0.0]) < 1e-5).all()
 
 
 def test_load_wfn_he_sp():
-    sys, energy = check_load_wfn('he_sp_orbital')
-    assert isinstance(sys.wfn, RestrictedWFN)
+    wfn, energy, charges = check_load_wfn('he_sp_orbital')
+    assert isinstance(wfn, RestrictedWFN)
     assert abs(energy - (-2.859895424589)) < 1.e-6     #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)                    #Check charges
-    expected_charge = np.array([0.0])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    assert (abs(charges - [0.0]) < 1e-5).all()
 
 
 def test_load_wfn_he_spd():
-    sys, energy = check_load_wfn('he_spd_orbital')
-    assert isinstance(sys.wfn, RestrictedWFN)
+    wfn, energy, charges = check_load_wfn('he_spd_orbital')
+    assert isinstance(wfn, RestrictedWFN)
     assert abs(energy - (-2.855319016184)) < 1.e-6     #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)                    #Check charges
-    expected_charge = np.array([0.0])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    assert (abs(charges - [0.0]) < 1e-5).all()
 
 
 def test_load_wfn_he_spdf():
-    sys, energy = check_load_wfn('he_spdf_orbital')
-    assert isinstance(sys.wfn, RestrictedWFN)
+    wfn, energy, charges = check_load_wfn('he_spdf_orbital')
+    assert isinstance(wfn, RestrictedWFN)
     assert abs(energy - (-1.100269433080)) < 1.e-6   #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)                  #Check charges
-    expected_charge = np.array([0.0])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    assert (abs(charges - [0.0]) < 1e-5).all()
 
 
 def test_load_wfn_he_spdfgh():
-    sys, energy = check_load_wfn('he_spdfgh_orbital')
-    assert isinstance(sys.wfn, RestrictedWFN)
+    wfn, energy, charges = check_load_wfn('he_spdfgh_orbital')
+    assert isinstance(wfn, RestrictedWFN)
     assert abs(energy - (-1.048675168346)) < 1.e-6   #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)                  #Check charges
-    expected_charge = np.array([0.0])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    assert (abs(charges - [0.0]) < 1e-5).all()
 
 
 def test_load_wfn_he_spdfgh_virtual():
-    sys, energy = check_load_wfn('he_spdfgh_virtual')
-    assert isinstance(sys.wfn, RestrictedWFN)
+    wfn, energy, charges = check_load_wfn('he_spdfgh_virtual')
+    assert isinstance(wfn, RestrictedWFN)
     assert abs(energy - (-1.048675168346)) < 1.e-6   #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)                  #Check charges
-    expected_charge = np.array([0.0])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    assert (abs(charges - [0.0]) < 1e-5).all()
+
+
+def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
+    fn_wfn = context.get_fn(fn_wfn)
+    data = load_smart(fn_wfn)
+    numbers = data['numbers']
+    coordinates = data['coordinates']
+    wfn = data['wfn']
+    obasis = data['obasis']
+    lf = data['lf']
+    assert obasis.nbasis == nbasis
+    olp = lf.create_one_body()
+    obasis.compute_overlap(olp)
+    if restricted:
+        assert isinstance(wfn, RestrictedWFN)
+        wfn.exp_alpha.check_normalization(olp, 1e-5)
+    else:
+        assert isinstance(wfn, UnrestrictedWFN)
+        wfn.exp_alpha.check_normalization(olp, 1e-5)
+        wfn.exp_beta.check_normalization(olp, 1e-5)
+    if energy is not None:
+        myenergy = compute_hf_energy(data)
+        assert abs(energy - myenergy) < 1e-5
+    mycharges = compute_mulliken_charges(obasis, lf, numbers, wfn)
+    assert (abs(charges - mycharges) < 1e-5).all()
+    return obasis, wfn, lf, coordinates, numbers
 
 
 def test_load_wfn_h2o_sto3g_decontracted():
-    fn_wfn = context.get_fn('test/h2o_sto3g_decontracted.wfn')
-    sys = System.from_file(fn_wfn)
-    assert isinstance(sys.wfn, RestrictedWFN)
-    assert sys.obasis.nbasis == 21
-    sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5)  #Chech normalization
-    ham = Hamiltonian(sys, [HartreeFockExchange()])  #Compare to the energy printed in wfn file
-    energy = ham.compute()
-    assert abs(energy - (-75.162231674351)) < 1.e-5
-    charges = compute_mulliken_charges(sys)                  #Check charges
-    expected_charge = np.array([-0.546656, 0.273328, 0.273328])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    check_wfn(
+        'test/h2o_sto3g_decontracted.wfn',
+        True, 21, -75.162231674351,
+        np.array([-0.546656, 0.273328, 0.273328]),
+    )
 
 
 def test_load_wfn_h2_ccpvqz_virtual():
-    fn_wfn = context.get_fn('test/h2_ccpvqz.wfn')
-    sys = System.from_file(fn_wfn)
-    assert isinstance(sys.wfn, RestrictedWFN)
-    assert sys.obasis.nbasis == 74
-    sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5)  #Chech normalization
-    assert (abs(sys.obasis.alphas[:5] - [82.64000, 12.41000, 2.824000, 0.7977000, 0.2581000]) < 1.e-5).all()
-    assert (sys.wfn.exp_alpha.energies[:5] == [-0.596838, 0.144565, 0.209605, 0.460401, 0.460401]).all()
-    assert (sys.wfn.exp_alpha.energies[-5:] == [12.859067, 13.017471, 16.405834, 25.824716, 26.100443]).all()
-    assert (sys.wfn.exp_alpha.occupations[:5] == [1.0, 0.0, 0.0, 0.0, 0.0] ).all()
-    assert abs(sys.wfn.exp_alpha.occupations.sum() - 1.0) < 1.e-6
-    ham = Hamiltonian(sys, [HartreeFockExchange()])
-    energy = ham.compute()
-    assert abs(energy - (-1.133504568400)) < 1.e-5   #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)     #Check charges
-    expected_charge = np.array([0.0, 0.0])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    obasis, wfn, lf, coordinates, numbers = check_wfn(
+        'test/h2_ccpvqz.wfn',
+        True, 74, -1.133504568400,
+        np.array([0.0, 0.0]),
+    )
+    assert (abs(obasis.alphas[:5] - [82.64000, 12.41000, 2.824000, 0.7977000, 0.2581000]) < 1.e-5).all()
+    assert (wfn.exp_alpha.energies[:5] == [-0.596838, 0.144565, 0.209605, 0.460401, 0.460401]).all()
+    assert (wfn.exp_alpha.energies[-5:] == [12.859067, 13.017471, 16.405834, 25.824716, 26.100443]).all()
+    assert (wfn.exp_alpha.occupations[:5] == [1.0, 0.0, 0.0, 0.0, 0.0] ).all()
+    assert abs(wfn.exp_alpha.occupations.sum() - 1.0) < 1.e-6
 
 
 def test_load_wfn_h2o_sto3g():
-    fn_wfn = context.get_fn('test/h2o_sto3g.wfn')
-    sys = System.from_file(fn_wfn)
-    assert isinstance(sys.wfn, RestrictedWFN)
-    sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5) #Check normalization
-    ham = Hamiltonian(sys, [HartreeFockExchange()])
-    energy = ham.compute()
-    assert abs(energy - (-74.965901217080)) < 1.e-5   #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)   #Check charges
-    expected_charge = np.array([-0.330532, 0.165266, 0.165266])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    check_wfn(
+        'test/h2o_sto3g.wfn',
+        True, 21, -74.965901217080,
+        np.array([-0.330532, 0.165266, 0.165266])
+    )
 
 
 def test_load_wfn_li_sp_virtual():
-    fn_wfn = context.get_fn('test/li_sp_virtual.wfn')
-    sys = System.from_file(fn_wfn)
-    assert isinstance(sys.wfn, UnrestrictedWFN)
-    assert sys.obasis.nbasis == 8
-    sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5) #Check normalization
-    sys.wfn.exp_beta.check_normalization(sys.get_overlap(), 1e-5)  #Check normalization
-    assert abs(sys.wfn.exp_alpha.occupations.sum() - 2.0) < 1.e-6
-    assert abs(sys.wfn.exp_beta.occupations.sum()  - 1.0) < 1.e-6
-    assert (sys.wfn.exp_alpha.occupations == [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).all()
-    assert (sys.wfn.exp_beta.occupations  == [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).all()
-    assert (abs(sys.wfn.exp_alpha.energies - [-0.087492, -0.080310, 0.158784, 0.158784, 1.078773, 1.090891, 1.090891, 49.643670]) < 1.e-6).all()
-    assert (abs(sys.wfn.exp_beta.energies  - [-0.079905, 0.176681, 0.176681, 0.212494, 1.096631, 1.096631, 1.122821, 49.643827]) < 1.e-6).all()
-    assert sys.wfn.exp_alpha.coeffs.shape == (8, 8)
-    assert sys.wfn.exp_beta.coeffs.shape  == (8, 8)
-    ham = Hamiltonian(sys, [HartreeFockExchange()])
-    energy = ham.compute()
-    assert abs(energy - (-3.712905542719)) < 1.e-6   #Compare to the energy printed in wfn file
-    charges = compute_mulliken_charges(sys)   #Check charges
-    expected_charge = np.array([0.0, 0.0])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    obasis, wfn, lf, coordinates, numbers = check_wfn(
+        'test/li_sp_virtual.wfn',
+        False, 8, -3.712905542719,
+        np.array([0.0, 0.0])
+    )
+    assert abs(wfn.exp_alpha.occupations.sum() - 2.0) < 1.e-6
+    assert abs(wfn.exp_beta.occupations.sum()  - 1.0) < 1.e-6
+    assert (wfn.exp_alpha.occupations == [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).all()
+    assert (wfn.exp_beta.occupations  == [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).all()
+    assert (abs(wfn.exp_alpha.energies - [-0.087492, -0.080310, 0.158784, 0.158784, 1.078773, 1.090891, 1.090891, 49.643670]) < 1.e-6).all()
+    assert (abs(wfn.exp_beta.energies  - [-0.079905, 0.176681, 0.176681, 0.212494, 1.096631, 1.096631, 1.122821, 49.643827]) < 1.e-6).all()
+    assert wfn.exp_alpha.coeffs.shape == (8, 8)
+    assert wfn.exp_beta.coeffs.shape  == (8, 8)
 
 
 def test_load_wfn_li_sp():
     fn_wfn = context.get_fn('test/li_sp_orbital.wfn')
-    sys = System.from_file(fn_wfn)
-    assert isinstance(sys.wfn, UnrestrictedWFN)
-    assert sys.wfn.exp_alpha.nfn == 2
-    assert sys.wfn.exp_beta.nfn == 1
+    data = load_smart(fn_wfn)
+    wfn = data['wfn']
+    assert isinstance(wfn, UnrestrictedWFN)
+    assert wfn.exp_alpha.nfn == 2
+    assert wfn.exp_beta.nfn == 1
 
 
 def test_load_wfn_o2():
-    fn_wfn = context.get_fn('test/o2_uhf.wfn')
-    sys = System.from_file(fn_wfn)
-    assert isinstance(sys.wfn, UnrestrictedWFN)
-    assert sys.wfn.exp_alpha.nfn == 9
-    assert sys.wfn.exp_beta.nfn == 7
-    ham = Hamiltonian(sys, [HartreeFockExchange()])
-    energy = ham.compute()
-    assert abs(energy - (-149.664140769678)) < 1.e-6   #Compare to the energy printed in wfn file
+    obasis, wfn, lf, coordinates, numbers = check_wfn(
+        'test/o2_uhf.wfn',
+        False, 72, -149.664140769678,
+        np.array([0.0, 0.0]),
+    )
+    assert wfn.exp_alpha.nfn == 9
+    assert wfn.exp_beta.nfn == 7
 
 
 def test_load_wfn_o2_virtual():
-    fn_wfn = context.get_fn('test/o2_uhf_virtual.wfn')
-    sys = System.from_file(fn_wfn)
-    assert sys.natom == 2
-    assert sys.obasis.nbasis == 72
-    assert isinstance(sys.wfn, UnrestrictedWFN)
-    sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5) #Check normalization
-    sys.wfn.exp_beta.check_normalization(sys.get_overlap(), 1e-5)  #Check normalization
-    assert abs(sys.wfn.exp_alpha.occupations.sum() - 9.0) < 1.e-6
-    assert abs(sys.wfn.exp_beta.occupations.sum()  - 7.0) < 1.e-6
-    assert sys.wfn.exp_alpha.occupations.shape == (44,)
-    assert sys.wfn.exp_beta.occupations.shape  == (44,)
-    assert (sys.wfn.exp_alpha.occupations[:9] == np.ones(9)).all()
-    assert (sys.wfn.exp_beta.occupations[:7]  == np.ones(7)).all()
-    assert (sys.wfn.exp_alpha.occupations[9:] == np.zeros(35)).all()
-    assert (sys.wfn.exp_beta.occupations[7:]  == np.zeros(37)).all()
-    assert sys.wfn.exp_alpha.energies.shape == (44,)
-    assert sys.wfn.exp_beta.energies.shape  == (44,)
-    assert sys.wfn.exp_alpha.energies[0]  == -20.752000
-    assert sys.wfn.exp_alpha.energies[10] == 0.179578
-    assert sys.wfn.exp_alpha.energies[-1] ==  51.503193
-    assert sys.wfn.exp_beta.energies[0]  == -20.697027
-    assert sys.wfn.exp_beta.energies[15] ==  0.322590
-    assert sys.wfn.exp_beta.energies[-1] ==  51.535258
-    assert sys.wfn.exp_alpha.coeffs.shape == (72, 44)
-    assert sys.wfn.exp_beta.coeffs.shape  == (72, 44)
-    ham = Hamiltonian(sys, [HartreeFockExchange()])
-    energy = ham.compute()
-    assert abs(energy - (-149.664140769678)) < 1.e-6   #Compare to the energy printed in wfn file
+    obasis, wfn, lf, coordinates, numbers = check_wfn(
+        'test/o2_uhf_virtual.wfn',
+        False, 72, -149.664140769678,
+        np.array([0.0, 0.0]),
+    )
+    assert abs(wfn.exp_alpha.occupations.sum() - 9.0) < 1.e-6
+    assert abs(wfn.exp_beta.occupations.sum()  - 7.0) < 1.e-6
+    assert wfn.exp_alpha.occupations.shape == (44,)
+    assert wfn.exp_beta.occupations.shape  == (44,)
+    assert (wfn.exp_alpha.occupations[:9] == np.ones(9)).all()
+    assert (wfn.exp_beta.occupations[:7]  == np.ones(7)).all()
+    assert (wfn.exp_alpha.occupations[9:] == np.zeros(35)).all()
+    assert (wfn.exp_beta.occupations[7:]  == np.zeros(37)).all()
+    assert wfn.exp_alpha.energies.shape == (44,)
+    assert wfn.exp_beta.energies.shape  == (44,)
+    assert wfn.exp_alpha.energies[0]  == -20.752000
+    assert wfn.exp_alpha.energies[10] == 0.179578
+    assert wfn.exp_alpha.energies[-1] ==  51.503193
+    assert wfn.exp_beta.energies[0]  == -20.697027
+    assert wfn.exp_beta.energies[15] ==  0.322590
+    assert wfn.exp_beta.energies[-1] ==  51.535258
+    assert wfn.exp_alpha.coeffs.shape == (72, 44)
+    assert wfn.exp_beta.coeffs.shape  == (72, 44)
 
 
 def test_load_wfn_lif_fci():
-    fn_wfn = context.get_fn('test/lif_fci.wfn')
-    sys = System.from_file(fn_wfn)
-    assert isinstance(sys.wfn, RestrictedWFN)
-    assert sys.natom == 2
-    assert sys.obasis.nbasis == 44
-    sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5) #Check normalization
-    assert sys.wfn.exp_alpha.occupations.shape == (18,)
-    assert abs(sys.wfn.exp_alpha.occupations.sum() - 6.0) < 1.e-6
-    assert sys.wfn.exp_alpha.occupations[0] == 2.00000000/2
-    assert sys.wfn.exp_alpha.occupations[10] == 0.00128021/2
-    assert sys.wfn.exp_alpha.occupations[-1] == 0.00000054/2
-    assert sys.wfn.exp_alpha.energies.shape == (18,)
-    assert sys.wfn.exp_alpha.energies[0] == -26.09321253
-    assert sys.wfn.exp_alpha.energies[15] == 1.70096290
-    assert sys.wfn.exp_alpha.energies[-1] == 2.17434072
-    assert sys.wfn.exp_alpha.coeffs.shape == (44, 18)
-    ham = Hamiltonian(sys, [HartreeFockExchange()])
-    energy = ham.compute() #cannot be compared!
-    kin = sys.extra['energy_kin']
-    nn = sys.extra['energy_nn']
+    obasis, wfn, lf, coordinates, numbers = check_wfn(
+        'test/lif_fci.wfn',
+        True, 44, None,
+        np.array([-0.645282, 0.645282]),
+    )
+    assert wfn.exp_alpha.occupations.shape == (18,)
+    assert abs(wfn.exp_alpha.occupations.sum() - 6.0) < 1.e-6
+    assert wfn.exp_alpha.occupations[0] == 2.00000000/2
+    assert wfn.exp_alpha.occupations[10] == 0.00128021/2
+    assert wfn.exp_alpha.occupations[-1] == 0.00000054/2
+    assert wfn.exp_alpha.energies.shape == (18,)
+    assert wfn.exp_alpha.energies[0] == -26.09321253
+    assert wfn.exp_alpha.energies[15] == 1.70096290
+    assert wfn.exp_alpha.energies[-1] == 2.17434072
+    assert wfn.exp_alpha.coeffs.shape == (44, 18)
+    kin = lf.create_one_body()
+    obasis.compute_kinetic(kin)
     expected_kin = 106.9326884815  #FCI kinetic energy
     expected_nn = 9.1130265227
-    assert (kin - expected_kin) < 1.e-6
-    assert (nn - expected_nn) < 1.e-6
-    charges = compute_mulliken_charges(sys)   #Check charges
-    expected_charge = np.array([-0.645282, 0.645282])
-    assert (abs(charges - expected_charge) < 1e-5).all()
+    assert (kin.expectation_value(wfn.dm_full) - expected_kin) < 1.e-6
+    assert (compute_nucnuc(coordinates, numbers) - expected_nn) < 1.e-6
     points = np.array([[0.0, 0.0,-0.17008], [0.0, 0.0, 0.0], [0.0, 0.0, 0.03779]])
-    density = sys.compute_grid_density(points)
+    density = np.zeros(3)
+    obasis.compute_grid_density_dm(wfn.dm_full, points, density)
     assert (abs(density - [0.492787, 0.784545, 0.867723]) < 1.e-4).all()
 
 
 def test_load_wfn_lih_cation_fci():
-    fn_wfn = context.get_fn('test/lih_cation_fci.wfn')
-    sys = System.from_file(fn_wfn)
-    assert sys.natom == 2
-    assert sys.obasis.nbasis == 26
-    assert (sys.numbers == [3, 1]).all()
-    sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5) #Check normalization
-    ham = Hamiltonian(sys, [HartreeFockExchange()])
-    energy = ham.compute() #cannot be compared!
-    kin = sys.extra['energy_kin']
-    nn = sys.extra['energy_nn']
+    obasis, wfn, lf, coordinates, numbers = check_wfn(
+        'test/lih_cation_fci.wfn',
+        True, 26, None,
+        np.array([0.913206, 0.086794]),
+    )
+    assert (numbers == [3, 1]).all()
     expected_kin = 7.7989675958  #FCI kinetic energy
     expected_nn = 0.9766607347
-    assert (kin - expected_kin) < 1.e-6
-    assert (nn - expected_nn) < 1.e-6
-    assert sys.wfn.exp_alpha.occupations.shape == (11,)
-    assert abs(sys.wfn.exp_alpha.occupations.sum() - 1.5) < 1.e-6
-    charges = compute_mulliken_charges(sys)   #Check charges
-    expected_charge = np.array([0.913206, 0.086794])
-    assert (abs(charges - expected_charge) < 1e-5).all()
-    point = np.array([])
+    kin = lf.create_one_body()
+    obasis.compute_kinetic(kin)
+    assert (kin.expectation_value(wfn.dm_full) - expected_kin) < 1.e-6
+    assert (compute_nucnuc(coordinates, numbers) - expected_nn) < 1.e-6
+    assert wfn.exp_alpha.occupations.shape == (11,)
+    assert abs(wfn.exp_alpha.occupations.sum() - 1.5) < 1.e-6

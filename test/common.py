@@ -23,6 +23,9 @@
 
 import numpy as np
 
+from horton.system import System
+from horton.meanfield.hamiltonian import Hamiltonian
+from horton.meanfield.builtin import HartreeFockExchange
 from horton.matrix import DenseOneBody, DenseTwoBody
 from horton.part.mulliken import get_mulliken_operators
 from horton.test.common import compare_wfns
@@ -30,10 +33,10 @@ from horton.test.common import compare_wfns
 __all__ = ['compute_mulliken_charges', 'compare_data']
 
 
-def compute_mulliken_charges(sys):
-    operators = get_mulliken_operators(sys)
-    populations = np.array([operator.expectation_value(sys.wfn.dm_full) for operator in operators])
-    return sys.numbers - np.array(populations)
+def compute_mulliken_charges(obasis, lf, numbers, wfn):
+    operators = get_mulliken_operators(obasis, lf)
+    populations = np.array([operator.expectation_value(wfn.dm_full) for operator in operators])
+    return numbers - np.array(populations)
 
 
 def compare_data(data1, data2):
@@ -68,3 +71,14 @@ def compare_operator(op1, op2):
         assert (op1._array == op2._array).all()
     else:
         raise NotImplementedError
+
+
+def compute_hf_energy(data):
+    # TODO: this has to be updated after rewrite of Hamiltonian class without
+    # System class
+    sys = System(
+        data['coordinates'], data['numbers'], data['obasis'], wfn=data['wfn'],
+        lf=data['lf']
+    )
+    ham = Hamiltonian(sys, [HartreeFockExchange()])
+    return ham.compute()

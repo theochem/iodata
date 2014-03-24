@@ -29,31 +29,32 @@ from horton.test.common import tmpdir
 
 def test_load_water_number():
     fn = context.get_fn('test/water_number.xyz')
-    system = System.from_file(fn)
-    check_water(system)
+    data = load_smart(fn)
+    check_water(data)
 
 
 def test_load_water_element():
     fn = context.get_fn('test/water_element.xyz')
-    system = System.from_file(fn)
-    check_water(system)
+    data = load_smart(fn)
+    check_water(data)
 
 
-def check_water(system):
-    assert system.numbers[0] == 1
-    assert system.numbers[1] == 8
-    assert system.numbers[2] == 1
-    assert abs(np.linalg.norm(system.coordinates[0] - system.coordinates[1])/angstrom - 0.96) < 1e-5
-    assert abs(np.linalg.norm(system.coordinates[2] - system.coordinates[1])/angstrom - 0.96) < 1e-5
+def check_water(data):
+    numbers = data['numbers']
+    assert numbers[0] == 1
+    assert numbers[1] == 8
+    assert numbers[2] == 1
+    coordinates = data['coordinates']
+    assert abs(np.linalg.norm(coordinates[0] - coordinates[1])/angstrom - 0.96) < 1e-5
+    assert abs(np.linalg.norm(coordinates[2] - coordinates[1])/angstrom - 0.96) < 1e-5
 
 
 def test_load_dump_consistency():
-    sys0 = System.from_file(context.get_fn('test/ch3_hf_sto3g.fchk'))
+    data0 = load_smart(context.get_fn('test/ch3_hf_sto3g.fchk'))
 
     with tmpdir('horton.io.test.test_xyz.test_load_dump_consistency') as dn:
-        sys0.to_file('%s/test.xyz' % dn)
-        sys1 = System.from_file('%s/test.xyz' % dn)
+        dump_smart('%s/test.xyz' % dn, data0)
+        data1 = load_smart('%s/test.xyz' % dn)
 
-    assert sys0.natom == sys1.natom
-    assert (sys0.numbers == sys1.numbers).all()
-    assert abs(sys0.coordinates - sys1.coordinates).max() < 1e-5
+    assert (data0['numbers'] == data1['numbers']).all()
+    assert abs(data0['coordinates'] - data1['coordinates']).max() < 1e-5

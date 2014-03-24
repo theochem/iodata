@@ -334,6 +334,7 @@ def load_fchk(filename, lf):
     del alphas
 
     obasis = GOBasis(coordinates, my_shell_map, my_nprims, my_shell_types, my_alphas, con_coeffs)
+    lf.set_default_nbasis(obasis.nbasis)
 
     # permutation of the orbital basis functions
     permutation_rules = {

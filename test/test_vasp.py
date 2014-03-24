@@ -59,29 +59,27 @@ def test_load_chgcar_oxygen():
 
 def test_load_chgcar_water():
     fn = context.get_fn('test/CHGCAR.water')
-    sys = System.from_file(fn)
-    assert sys.natom == 3
-    assert (sys.numbers == np.array([8, 1, 1])).all()
-    assert abs(sys.coordinates[1] - np.array([0.074983*15+0.903122*1,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
-    assert abs(sys.cell.volume - (15*angstrom)**3) < 1e-10
-    ugrid = sys.grid
+    data = load_smart(fn)
+    assert (data['numbers'] == [8, 1, 1]).all()
+    assert abs(data['coordinates'][1] - np.array([0.074983*15+0.903122*1,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
+    assert abs(data['cell'].volume - (15*angstrom)**3) < 1e-10
+    ugrid = data['grid']
     assert len(ugrid.shape) == 3
     assert (ugrid.shape == 3).all()
-    assert abs(ugrid.grid_rvecs - sys.cell.rvecs/3).max() < 1e-10
+    assert abs(ugrid.grid_rvecs - data['cell'].rvecs/3).max() < 1e-10
     assert abs(ugrid.origin).max() < 1e-10
 
 
 def test_load_locpot_oxygen():
     fn = context.get_fn('test/LOCPOT.oxygen')
-    sys = System.from_file(fn)
-    assert sys.natom == 1
-    assert sys.numbers[0] == 8
-    assert abs(sys.cell.volume - (10*angstrom)**3) < 1e-10
-    ugrid = sys.grid
+    data = load_smart(fn)
+    assert (data['numbers'][0] == [8]).all()
+    assert abs(data['cell'].volume - (10*angstrom)**3) < 1e-10
+    ugrid = data['grid']
     assert len(ugrid.shape) == 3
     assert (ugrid.shape == [1, 4, 2]).all()
     assert abs(ugrid.origin).max() < 1e-10
-    d = sys.extra['cube_data']
+    d = data['cube_data']
     assert abs(d[0, 0, 0]/electronvolt - 0.35046350435E+01) < 1e-10
     assert abs(d[0, 1, 0]/electronvolt - 0.213732132354E+01) < 1e-10
     assert abs(d[0, 2, 0]/electronvolt - -.65465465497E+01) < 1e-10
@@ -90,23 +88,22 @@ def test_load_locpot_oxygen():
 
 def test_load_poscar_water():
     fn = context.get_fn('test/POSCAR.water')
-    sys = System.from_file(fn)
-    assert sys.natom == 3
-    assert (sys.numbers == np.array([8, 1, 1])).all()
-    assert abs(sys.coordinates[1] - np.array([0.074983*15,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
-    assert abs(sys.cell.volume - (15*angstrom)**3) < 1e-10
+    data = load_smart(fn)
+    assert (data['numbers'] == [8, 1, 1]).all()
+    assert abs(data['coordinates'][1] - np.array([0.074983*15,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
+    assert abs(data['cell'].volume - (15*angstrom)**3) < 1e-10
 
 
 def test_load_dump_consistency():
-    sys0 = System.from_file(context.get_fn('test/water_element.xyz'))
-    sys0._cell = get_random_cell(5.0, 3)
+    data0 = load_smart(context.get_fn('test/water_element.xyz'))
+    data0['cell'] = get_random_cell(5.0, 3)
 
     with tmpdir('horton.io.test.test_vasp.test_load_dump_consistency') as dn:
-        sys0.to_file('%s/POSCAR' % dn)
-        sys1 = System.from_file('%s/POSCAR' % dn)
+        dump_smart('%s/POSCAR' % dn, data0)
+        data1 = load_smart('%s/POSCAR' % dn)
 
-    assert (sys1.numbers == [8, 1, 1]).all()
-    assert abs(sys0.coordinates[1] - sys1.coordinates[0]).max() < 1e-10
-    assert abs(sys0.coordinates[0] - sys1.coordinates[1]).max() < 1e-10
-    assert abs(sys0.coordinates[2] - sys1.coordinates[2]).max() < 1e-10
-    assert abs(sys0.cell.rvecs - sys1.cell.rvecs).max() < 1e-10
+    assert (data1['numbers'] == [8, 1, 1]).all()
+    assert abs(data0['coordinates'][1] - data1['coordinates'][0]).max() < 1e-10
+    assert abs(data0['coordinates'][0] - data1['coordinates'][1]).max() < 1e-10
+    assert abs(data0['coordinates'][2] - data1['coordinates'][2]).max() < 1e-10
+    assert abs(data0['cell'].rvecs - data1['cell'].rvecs).max() < 1e-10
