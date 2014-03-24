@@ -180,6 +180,9 @@ def load_wfn(filename, lf):
        lf
             An instance of LinalgFactory, used to initialize the wavefunction
             expansions.
+
+       **Returns:** a dictionary with ``coordinates``, ``numbers``, ``obasis``
+       and ``wfn``.
     '''
     numbers, coordinates, centers, type_assignment, exponents, mo_count, mo_occ, mo_energy, coefficients = load_wfn_low(filename)
     permutation = setup_permutation2(type_assignment)

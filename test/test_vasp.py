@@ -43,19 +43,18 @@ def test_unravel_counter():
 
 def test_load_chgcar_oxygen():
     fn = context.get_fn('test/CHGCAR.oxygen')
-    sys = System.from_file(fn)
-    assert sys.natom == 1
-    assert (sys.numbers == 8).all()
-    assert abs(sys.cell.volume - (10*angstrom)**3) < 1e-10
-    ugrid = sys.grid
+    data = load_smart(fn)
+    assert (data['numbers'] == [8]).all()
+    assert abs(data['cell'].volume - (10*angstrom)**3) < 1e-10
+    ugrid = data['grid']
     assert len(ugrid.shape) == 3
     assert (ugrid.shape == 2).all()
-    assert abs(ugrid.grid_rvecs - sys.cell.rvecs/2).max() < 1e-10
+    assert abs(ugrid.grid_rvecs - data['cell'].rvecs/2).max() < 1e-10
     assert abs(ugrid.origin).max() < 1e-10
-    d = sys.extra['cube_data']
-    assert abs(d[0,0,0] - 0.78406017013E+04/sys.cell.volume) < 1e-10
-    assert abs(d[-1,-1,-1] - 0.10024522914E+04/sys.cell.volume) < 1e-10
-    assert abs(d[1,0,0] - 0.76183317989E+04/sys.cell.volume) < 1e-10
+    d = data['cube_data']
+    assert abs(d[0,0,0] - 0.78406017013E+04/data['cell'].volume) < 1e-10
+    assert abs(d[-1,-1,-1] - 0.10024522914E+04/data['cell'].volume) < 1e-10
+    assert abs(d[1,0,0] - 0.76183317989E+04/data['cell'].volume) < 1e-10
 
 
 def test_load_chgcar_water():

@@ -22,13 +22,49 @@
 
 
 import numpy as np
-from horton import *
 
+from horton.matrix import DenseOneBody, DenseTwoBody
+from horton.part.mulliken import get_mulliken_operators
+from horton.test.common import compare_wfns
 
-__all__ = ['compute_mulliken_charges']
+__all__ = ['compute_mulliken_charges', 'compare_data']
 
 
 def compute_mulliken_charges(sys):
     operators = get_mulliken_operators(sys)
     populations = np.array([operator.expectation_value(sys.wfn.dm_full) for operator in operators])
     return sys.numbers - np.array(populations)
+
+
+def compare_data(data1, data2):
+    assert (data1['numbers'] == data2['numbers']).all()
+    assert (data1['coordinates'] == data2['coordinates']).all()
+    # orbital basis
+    if data1['obasis'] is not None:
+        assert (data1['obasis'].centers == data2['obasis'].centers).all()
+        assert (data1['obasis'].shell_map == data2['obasis'].shell_map).all()
+        assert (data1['obasis'].nprims == data2['obasis'].nprims).all()
+        assert (data1['obasis'].shell_types == data2['obasis'].shell_types).all()
+        assert (data1['obasis'].alphas == data2['obasis'].alphas).all()
+        assert (data1['obasis'].con_coeffs == data2['obasis'].con_coeffs).all()
+    else:
+        assert data2['obasis'] is None
+    # wfn
+    compare_wfns(data1['wfn'], data2['wfn'])
+    # operators
+    for key in 'olp', 'kin', 'na', 'er':
+        if key in data1:
+            assert key in data2
+            compare_operator(data1[key], data2[key])
+        else:
+            assert key not in data2
+
+
+def compare_operator(op1, op2):
+    # TODO: move this to horton.test.common after System class is removed.
+    if isinstance(op1, DenseOneBody) or isinstance(op1, DenseTwoBody):
+        assert isinstance(op2, op1.__class__)
+        assert op1.nbasis == op2.nbasis
+        assert (op1._array == op2._array).all()
+    else:
+        raise NotImplementedError

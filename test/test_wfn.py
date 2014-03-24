@@ -141,7 +141,7 @@ def check_load_wfn(name):
     ham1= Hamiltonian(sys1, [HartreeFockExchange()])
     energy1 = ham1.compute()
     #system out of *.log and *.fchk files
-    sys2 = System.from_file(context.get_fn('test/%s.log' % name), context.get_fn('test/%s.fchk' % name))
+    sys2 = System.from_file(context.get_fn('test/%s.fchk' % name))
     ham2 = Hamiltonian(sys2, [HartreeFockExchange()])
     energy2 = ham2.compute()
     #System check:

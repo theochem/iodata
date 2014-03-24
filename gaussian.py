@@ -60,18 +60,18 @@ def load_operators_g09(fn, lf):
         # that it does not make any assumptions about the order in which these
         # operators are printed.
 
-        cache = {}
+        result = {}
         for line in f:
             if line.startswith(' *** Overlap ***'):
-                cache['olp'] = _load_onebody_g09(f, nbasis, lf), 'o' # 'o' is a list of tags. See System.__init__ for more details.
+                result['olp'] = _load_onebody_g09(f, nbasis, lf)
             elif line.startswith(' *** Kinetic Energy ***'):
-                cache['kin'] = _load_onebody_g09(f, nbasis, lf), 'o'
+                result['kin'] = _load_onebody_g09(f, nbasis, lf)
             elif line.startswith(' ***** Potential Energy *****'):
-                cache['na'] = _load_onebody_g09(f, nbasis, lf), 'o'
+                result['na'] = _load_onebody_g09(f, nbasis, lf)
             elif line.startswith(' *** Dumping Two-Electron integrals ***'):
-                cache['er'] = _load_twobody_g09(f, nbasis, lf), 'o'
+                result['er'] = _load_twobody_g09(f, nbasis, lf)
 
-        return {'cache': cache}
+        return result
 
 
 def _load_onebody_g09(f, nbasis, lf):
@@ -251,6 +251,11 @@ def load_fchk(filename, lf):
 
        lf
             A LinalgFactory instance.
+
+       **Returns** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
+       ``wfn``, ``permutation``, ``energy``, ``pseudo_numbers``,
+       ``mulliken_charges``. Optionally, the dictionary may also contain:
+       ``npa_charges`` and/or ``esp_charges``.
     '''
     from horton.gbasis import GOBasis
 
@@ -370,21 +375,12 @@ def load_fchk(filename, lf):
 
     # First try to load the post-hf density matrices.
     load_orbitals = True
-    for key in 'MP2', 'MP3', 'CC', 'CI':
+    for key in 'MP2', 'MP3', 'CC', 'CI', 'SCF':
         dm_full = load_dm('Total %s Density' % key)
         dm_spin = load_dm('Spin %s Density' % key)
-        if dm_full is not None:
+        if dm_full is not None and key != 'SCF':
             load_orbitals = False
             break
-
-    # SCF density matrices (for double checking things) are stored in the cache.
-    cache = {}
-    dm_scf_full = load_dm('Total SCF Density')
-    if dm_scf_full is not None:
-        cache['dm_scf_full'] = dm_scf_full, 'o'
-    dm_scf_spin = load_dm('Spin SCF Density')
-    if dm_scf_spin is not None:
-        cache['dm_scf_spin'] = dm_scf_spin, 'o'
 
     # D) Load the wavefunction
     # Handle small difference in fchk files from g03 and g09
@@ -429,24 +425,25 @@ def load_fchk(filename, lf):
         wfn.update_dm('spin', dm_spin)
 
     # E) Load properties
-    extra = {
-        'energy': fchk.fields['Total Energy'],
-    }
-    # Mask out ghost atoms
-    if 'Mulliken Charges' in fchk.fields:
-        extra['mulliken_charges'] = fchk.fields['Mulliken Charges'][mask]
-    if 'ESP Charges' in fchk.fields:
-        extra['esp_charges'] = fchk.fields['ESP Charges'][mask]
-    if 'NPA Charges' in fchk.fields:
-        extra['npa_charges'] = fchk.fields['NPA Charges'][mask]
+    energy = fchk.fields['Total Energy']
 
-    return {
+    result = {
         'coordinates': system_coordinates,
         'numbers': numbers,
         'obasis': obasis,
         'wfn': wfn,
         'permutation': permutation,
-        'cache': cache,
-        'extra': extra,
+        'energy': energy,
         'pseudo_numbers': pseudo_numbers,
     }
+
+    # F) Load optional properties
+    # Mask out ghost atoms from charges
+    if 'Mulliken Charges' in fchk.fields:
+        result['mulliken_charges'] = fchk.fields['Mulliken Charges'][mask]
+    if 'ESP Charges' in fchk.fields:
+        result['esp_charges'] = fchk.fields['ESP Charges'][mask]
+    if 'NPA Charges' in fchk.fields:
+        result['npa_charges'] = fchk.fields['NPA Charges'][mask]
+
+    return result

@@ -94,6 +94,16 @@ def _get_cp2k_norm_corrections(l, alphas):
 
 
 def load_atom_cp2k(filename, lf):
+    '''Load data from a CP2K ATOM computation
+
+       **Arguments:**
+
+       filename
+            The name of the cp2k out file
+
+       **Returns** a dictionary with ``obasis``, ``wfn``, ``coordinates``,
+       ``numbers``, ``energy``, ``pseudo_numbers``.
+    '''
     with open(filename) as f:
         # Find the element number
         for line in f:
@@ -240,6 +250,6 @@ def load_atom_cp2k(filename, lf):
         'wfn': wfn,
         'coordinates': coordinates,
         'numbers': np.array([number]),
-        'extra': {'energy': energy},
+        'energy': energy,
         'pseudo_numbers': np.array([pseudo_number]),
     }

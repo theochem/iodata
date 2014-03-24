@@ -87,7 +87,7 @@ def test_load_mkl_li2():
 
     # Check normalization
     sys.wfn.exp_alpha.check_normalization(sys.get_overlap(), 1e-5)
-    sys.wfn.exp_beta.check_normalization(sys.get_overlap(), 1e5)
+    sys.wfn.exp_beta.check_normalization(sys.get_overlap(), 1e-5)
 
     # Check charges
     charges = compute_mulliken_charges(sys)

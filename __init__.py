@@ -23,9 +23,9 @@
    All input routines begin with ``load_``. All output routines begin with
    ``dump_``.
 
-   This package also contains a smart routine, ``load_system_args``, which makes
-   it easier to load molecular data from various file formats. It uses to
-   extension of the filename to figure out what the file format is.
+   This package also contains a smart routine. It contains the functions
+   ``load_smart`` and ``dump_smart`` that automatically determine the file
+   format based on the prefix or extension of the filename.
 '''
 
 
@@ -34,6 +34,7 @@ from horton.io.cp2k import *
 from horton.io.common import *
 from horton.io.cube import *
 from horton.io.gaussian import *
+from horton.io.internal import *
 from horton.io.lockedh5 import *
 from horton.io.molden import *
 from horton.io.molekel import *

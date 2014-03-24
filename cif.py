@@ -26,6 +26,7 @@ import shlex, numpy as np
 
 from horton.units import angstrom, deg
 from horton.periodic import periodic
+from horton.io.common import typecheck_dump
 
 
 __all__ = ['dump_cif', 'iter_equiv_pos_terms', 'equiv_pos_to_generator', 'load_cif']
@@ -34,19 +35,21 @@ __all__ = ['dump_cif', 'iter_equiv_pos_terms', 'equiv_pos_to_generator', 'load_c
 # TODO (long term): dump_cif should also write out symmetry info if that is present
 
 
-def dump_cif(filename, system):
-    '''Write a Horton system to a CIF file
+def dump_cif(filename, data):
+    '''Write a molecule to a CIF file
 
        **Arguments:**
 
        filename
             The name of the new CIF file.
 
-       system
-            The system to be written to the CIF file.
+       data
+            A dictionary with molecule data to be written to the CIF file. Must
+            contain: ``cell``, ``coordinates``, ``numbers``.
     '''
-    if system.cell is None or system.cell.nvec != 3:
-        raise ValueError('The CIF format only supports 3D periodic systems.')
+    cell, coordinates, numbers = typecheck_dump(data, ['cell', 'coordinates', 'numbers'])
+    if cell.nvec != 3:
+        raise TypeError('The CIF format only supports 3D periodic systems.')
     with open(filename, 'w') as f:
         print >> f, 'data_foobar'
         print >> f, '_symmetry_space_group_name_H-M       \'P1\''
@@ -56,7 +59,7 @@ def dump_cif(filename, system):
         print >> f, 'loop_'
         print >> f, '_symmetry_equiv_pos_as_xyz'
         print >> f, '  x,y,z'
-        lengths, angles = system.cell.parameters
+        lengths, angles = cell.parameters
         print >> f, '_cell_length_a     %12.6f' % (lengths[0]/angstrom)
         print >> f, '_cell_length_b     %12.6f' % (lengths[1]/angstrom)
         print >> f, '_cell_length_c     %12.6f' % (lengths[2]/angstrom)
@@ -69,9 +72,9 @@ def dump_cif(filename, system):
         print >> f, '_atom_site_fract_x'
         print >> f, '_atom_site_fract_y'
         print >> f, '_atom_site_fract_z'
-        for i in xrange(system.natom):
-            fx, fy, fz = system.cell.to_frac(system.coordinates[i])
-            symbol = periodic[system.numbers[i]].symbol
+        for i in xrange(len(numbers)):
+            fx, fy, fz = cell.to_frac(coordinates[i])
+            symbol = periodic[numbers[i]].symbol
             label = symbol+str(i+1)
             print >> f, '%10s %3s % 12.6f % 12.6f % 12.6f' % (label, symbol, fx, fy, fz)
 
@@ -297,7 +300,8 @@ def load_cif(filename, lf):
        lf
             An instance of the LinalgFactory class. (Ignored here)
 
-       **Returns:** a dictionary with constructor arguments
+       **Returns** a dictionary with: ``coordinates``, ``numbers``,
+       ``symmetry``, ``links``, ``cell``.
     '''
     from horton import angstrom, deg, periodic, Cell, Symmetry
     title, fields = _load_cif_low(filename)
@@ -326,6 +330,7 @@ def load_cif(filename, lf):
     return {
         'coordinates': coordinates,
         'numbers': numbers,
-        'extra': {'symmetry': symmetry, 'links': links},
+        'symmetry': symmetry,
+        'links': links,
         'cell': cell,
     }

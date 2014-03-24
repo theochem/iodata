@@ -24,7 +24,7 @@
 import numpy as np
 
 from horton.units import angstrom
-from horton.io.common import renorm_helper, get_orca_signs
+from horton.io.common import renorm_helper, get_orca_signs, typecheck_dump
 from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
 
 
@@ -41,6 +41,9 @@ def load_mkl(filename, lf):
 
        lf
             A LinalgFactory instance.
+
+       **Returns** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
+       ``wfn``, ``signs``
     '''
 
     def helper_char_mult(f):

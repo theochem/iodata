@@ -26,7 +26,7 @@ import numpy as np
 from horton.periodic import periodic
 from horton.gbasis.io import str_to_shell_types, shell_type_to_str
 from horton.gbasis.gobasis import GOBasis
-from horton.io.common import renorm_helper, get_orca_signs
+from horton.io.common import renorm_helper, get_orca_signs, typecheck_dump
 from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
 
 
@@ -43,6 +43,9 @@ def load_molden(filename, lf):
 
        lf
             A LinalgFactory instance.
+
+       **Returns:** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
+       ``wfn``, ``signs``.
     '''
 
     def helper_coordinates(f):
@@ -243,16 +246,16 @@ def load_molden(filename, lf):
     signs = get_orca_signs(obasis)
 
     return {
-            'coordinates': coordinates,
-            'numbers': numbers,
-            'obasis': obasis,
-            'wfn': wfn,
-            'signs': signs,
+        'coordinates': coordinates,
+        'numbers': numbers,
+        'obasis': obasis,
+        'wfn': wfn,
+        'signs': signs,
     }
 
 
-def dump_molden(filename, system):
-    '''Write the current system to a file in the molden input format.
+def dump_molden(filename, data):
+    '''Write molecule data to a file in the molden input format.
 
        **Arguments:**
 
@@ -260,9 +263,12 @@ def dump_molden(filename, system):
             The filename of the molden input file, which is an output file for
             this routine.
 
-       system
-            The system that needs to be written.
+       data
+            A dictionary with molecule that needs to be written. Must contain
+            ``coordinates``, ``numbers``, ``obasis``, ``wfn``.
     '''
+    coordinates, numbers, obasis, wfn = typecheck_dump(data, ['coordinates', 'numbers', 'obasis', 'wfn'])
+    natom = len(numbers)
     with open(filename, 'w') as f:
         # Print the header
         print >> f, '[Molden Format]'
@@ -272,16 +278,15 @@ def dump_molden(filename, system):
 
         # Print the elements numbers and the coordinates
         print >> f, '[Atoms] AU'
-        for i in xrange(system.natom):
-            number = system.numbers[i]
-            x, y, z = system.coordinates[i]
+        for i in xrange(natom):
+            number = numbers[i]
+            x, y, z = coordinates[i]
             print >> f, '%2s %3i %3i  %20.10f %20.10f %20.10f' % (
                 periodic[number].symbol.ljust(2), i+1, number, x, y, z
             )
 
         # Print the basis set
-        if isinstance(system.obasis, GOBasis):
-            obasis = system.obasis
+        if isinstance(obasis, GOBasis):
             if obasis.shell_types.max() > 1:
                 raise ValueError('Only pure Gaussian basis functions are supported in dump_molden.')
             # first convert it to a format that is amenable for printing.
@@ -319,9 +324,9 @@ def dump_molden(filename, system):
             raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
 
         def helper_exp(spin, occ_scale=1.0):
-            if not 'exp_%s' % spin in system.wfn.cache:
+            if not 'exp_%s' % spin in wfn.cache:
                 raise TypeError('The restricted WFN does not have an expansion of the %s orbitals.' % spin)
-            exp = system.wfn.get_exp(spin)
+            exp = wfn.get_exp(spin)
             for ifn in xrange(exp.nfn):
                 print >> f, ' Sym=     1a'
                 print >> f, ' Ene= %20.14E' % exp.energies[ifn]
@@ -331,10 +336,10 @@ def dump_molden(filename, system):
                     print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[ibasis,ifn]*signs[ibasis])
 
         # Print the mean-field orbitals
-        if isinstance(system.wfn, RestrictedWFN):
+        if isinstance(wfn, RestrictedWFN):
             print >> f, '[MO]'
             helper_exp('alpha', 2.0)
-        elif isinstance(system.wfn, UnrestrictedWFN):
+        elif isinstance(wfn, UnrestrictedWFN):
             print >> f, '[MO]'
             helper_exp('alpha')
             helper_exp('beta')

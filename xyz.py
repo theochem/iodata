@@ -25,12 +25,13 @@ import numpy as np
 
 from horton.units import angstrom
 from horton.periodic import periodic
+from horton.io.common import typecheck_dump
 
 
-__all__ = ['load_geom_xyz']
+__all__ = ['load_xyz', 'dump_xyz']
 
 
-def load_geom_xyz(filename):
+def load_xyz(filename):
     '''Load a molecular geometry from a .xyz file.
 
        **Argument:**
@@ -38,8 +39,7 @@ def load_geom_xyz(filename):
        filename
             The file to load the geometry from
 
-       **Returns:** two arrays, coordinates and numbers that can be used as the
-       two first arguments of the System constructor.
+       **Returns:** dictionary with coordinates and numbers.
     '''
     f = file(filename)
     size = int(f.next())
@@ -59,8 +59,8 @@ def load_geom_xyz(filename):
     }
 
 
-def dump_xyz(filename, system):
-    '''Write a system to a .xyz file.
+def dump_xyz(filename, data):
+    '''Write a molecule to a .xyz file.
 
        **Arguments:**
 
@@ -68,13 +68,17 @@ def dump_xyz(filename, system):
             The name of the file to be written. This usually the extension
             ".xyz".
 
-       system
-            An instance of the System class.
+       data
+            A dictionary with molecule data. Must contain ``coordinates`` and
+            ``numbers``.
     '''
+    coordinates, numbers = typecheck_dump(data, ['coordinates', 'numbers'])
+    numbers = data['numbers']
+    natom = len(numbers)
     with open(filename, 'w') as f:
-        print >> f, system.natom
+        print >> f, natom
         print >> f, 'File generated with Horton'
-        for i in xrange(system.natom):
-            n = periodic[system.numbers[i]].symbol
-            x, y, z = system.coordinates[i]/angstrom
+        for i in xrange(natom):
+            n = periodic[numbers[i]].symbol
+            x, y, z = coordinates[i]/angstrom
             print >> f, '%2s %15.10f %15.10f %15.10f' % (n, x, y, z)

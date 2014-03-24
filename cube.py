@@ -24,6 +24,7 @@
 import numpy as np
 from horton.cext import Cell
 from horton.grid.cext import UniformGrid
+from horton.io.common import typecheck_dump
 
 
 __all__ = ['load_cube', 'dump_cube']
@@ -93,17 +94,24 @@ def _read_cube_data(f, ugrid):
 
 
 def load_cube(filename):
+    '''Load molecule data from a cube file
+
+       **Arguments:**
+
+       filename
+            The name of the cube file
+
+       **Returns** a dictionary with ``coordinates``, ``numbers``,
+       ``cube_data``, ``grid``, ``pseudo_numbers``.
+    '''
     with open(filename) as f:
         coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(f)
         data = _read_cube_data(f, ugrid)
-        extra = {
-            'cube_data': data,
-        }
         return {
             'coordinates': coordinates,
             'numbers': numbers,
             'cell': cell,
-            'extra': extra,
+            'cube_data': data,
             'grid': ugrid,
             'pseudo_numbers': pseudo_numbers,
         }
@@ -134,12 +142,25 @@ def _write_cube_data(f, cube_data):
         counter += 1
 
 
-def dump_cube(filename, system):
+def dump_cube(filename, data):
+    '''Write a molecule to a .cube file.
+
+       **Arguments:**
+
+       filename
+            The name of the file to be written. This usually the extension
+            ".cube".
+
+       data
+            A dictionary with molecule data. Must contain ``coordinates``,
+            ``numbers``, ``grid``, ``cube_data``. May contain
+            ``pseudo_numbers``.
+    '''
+    coordinates, numbers, grid, pseudo_numbers, cube_data = typecheck_dump(
+        data, ['coordinates', 'numbers', 'grid', 'pseudo_numbers', 'cube_data']
+    )
     with open(filename, 'w') as f:
-        if system.grid is None or not isinstance(system.grid, UniformGrid):
+        if not isinstance(grid, UniformGrid):
             raise ValueError('The system grid must be a UniformGrid instance.')
-        cube_data = system.extra.get('cube_data')
-        if cube_data is None:
-            raise ValueError('A cube data array must be defined in the system properties (cube_data).')
-        _write_cube_header(f, system.coordinates, system.numbers, system.grid, system.pseudo_numbers)
+        _write_cube_header(f, coordinates, numbers, grid, pseudo_numbers)
         _write_cube_data(f, cube_data)
