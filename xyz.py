@@ -25,7 +25,6 @@ import numpy as np
 
 from horton.units import angstrom
 from horton.periodic import periodic
-from horton.io.common import typecheck_dump
 
 
 __all__ = ['load_xyz', 'dump_xyz']
@@ -59,7 +58,7 @@ def load_xyz(filename):
     }
 
 
-def dump_xyz(filename, data):
+def dump_xyz(filename, mol):
     '''Write a molecule to a .xyz file.
 
        **Arguments:**
@@ -68,17 +67,13 @@ def dump_xyz(filename, data):
             The name of the file to be written. This usually the extension
             ".xyz".
 
-       data
-            A dictionary with molecule data. Must contain ``coordinates`` and
-            ``numbers``.
+       mol
+            A molecule instance. Must contain ``coordinates`` and ``numbers``.
     '''
-    coordinates, numbers = typecheck_dump(data, ['coordinates', 'numbers'])
-    numbers = data['numbers']
-    natom = len(numbers)
     with open(filename, 'w') as f:
-        print >> f, natom
+        print >> f, mol.natom
         print >> f, 'File generated with Horton'
-        for i in xrange(natom):
-            n = periodic[numbers[i]].symbol
-            x, y, z = coordinates[i]/angstrom
+        for i in xrange(mol.natom):
+            n = periodic[mol.numbers[i]].symbol
+            x, y, z = mol.coordinates[i]/angstrom
             print >> f, '%2s %15.10f %15.10f %15.10f' % (n, x, y, z)

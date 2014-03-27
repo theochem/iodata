@@ -26,7 +26,6 @@ import shlex, numpy as np
 
 from horton.units import angstrom, deg
 from horton.periodic import periodic
-from horton.io.common import typecheck_dump
 
 
 __all__ = ['dump_cif', 'iter_equiv_pos_terms', 'equiv_pos_to_generator', 'load_cif']
@@ -35,7 +34,7 @@ __all__ = ['dump_cif', 'iter_equiv_pos_terms', 'equiv_pos_to_generator', 'load_c
 # TODO (long term): dump_cif should also write out symmetry info if that is present
 
 
-def dump_cif(filename, data):
+def dump_cif(filename, mol):
     '''Write a molecule to a CIF file
 
        **Arguments:**
@@ -43,12 +42,12 @@ def dump_cif(filename, data):
        filename
             The name of the new CIF file.
 
-       data
-            A dictionary with molecule data to be written to the CIF file. Must
-            contain: ``cell``, ``coordinates``, ``numbers``.
+       mol
+            A molecule instance. Must contain: ``cell``, ``coordinates``,
+            ``numbers``.
+
     '''
-    cell, coordinates, numbers = typecheck_dump(data, ['cell', 'coordinates', 'numbers'])
-    if cell.nvec != 3:
+    if mol.cell.nvec != 3:
         raise TypeError('The CIF format only supports 3D periodic systems.')
     with open(filename, 'w') as f:
         print >> f, 'data_foobar'
@@ -59,7 +58,7 @@ def dump_cif(filename, data):
         print >> f, 'loop_'
         print >> f, '_symmetry_equiv_pos_as_xyz'
         print >> f, '  x,y,z'
-        lengths, angles = cell.parameters
+        lengths, angles = mol.cell.parameters
         print >> f, '_cell_length_a     %12.6f' % (lengths[0]/angstrom)
         print >> f, '_cell_length_b     %12.6f' % (lengths[1]/angstrom)
         print >> f, '_cell_length_c     %12.6f' % (lengths[2]/angstrom)
@@ -72,9 +71,9 @@ def dump_cif(filename, data):
         print >> f, '_atom_site_fract_x'
         print >> f, '_atom_site_fract_y'
         print >> f, '_atom_site_fract_z'
-        for i in xrange(len(numbers)):
-            fx, fy, fz = cell.to_frac(coordinates[i])
-            symbol = periodic[numbers[i]].symbol
+        for i in xrange(mol.natom):
+            fx, fy, fz = mol.cell.to_frac(mol.coordinates[i])
+            symbol = periodic[mol.numbers[i]].symbol
             label = symbol+str(i+1)
             print >> f, '%10s %3s % 12.6f % 12.6f % 12.6f' % (label, symbol, fx, fy, fz)
 

@@ -137,41 +137,41 @@ def test_setup_mask():
 def check_load_wfn(name):
     # system out of *.wfn file
     fn_wfn = context.get_fn('test/%s.wfn' % name)
-    data1 = load_smart(fn_wfn)
+    mol1 = Molecule.from_file(fn_wfn)
     # system out of *.fchk file
-    data2 = load_smart(context.get_fn('test/%s.fchk' % name))
+    mol2 = Molecule.from_file(context.get_fn('test/%s.fchk' % name))
     # Coordinates check:
-    assert (abs(data1['coordinates'] - data2['coordinates']) < 1e-6).all()
+    assert (abs(mol1.coordinates - mol2.coordinates) < 1e-6).all()
     # Numbers check
-    numbers1 = data1['numbers']
-    numbers2 = data2['numbers']
+    numbers1 = mol1.numbers
+    numbers2 = mol2.numbers
     assert (numbers1 == numbers2).all()
     # Basis Set check:
-    obasis1 = data1['obasis']
-    obasis2 = data2['obasis']
+    obasis1 = mol1.obasis
+    obasis2 = mol2.obasis
     assert obasis1.nbasis == obasis2.nbasis
     assert (obasis1.shell_map == obasis2.shell_map).all()
     assert (obasis1.shell_types == obasis2.shell_types).all()
     assert (obasis1.nprims == obasis2.nprims).all()
     assert (abs(obasis1.alphas - obasis2.alphas) < 1.e-4).all()
     # Comparing MOs (*.wfn might not contain virtual orbitals):
-    wfn1 = data1['wfn']
-    wfn2 = data2['wfn']
+    wfn1 = mol1.wfn
+    wfn2 = mol2.wfn
     n_mo = wfn1.exp_alpha.nfn
     assert (abs(wfn1.exp_alpha.energies - wfn2.exp_alpha.energies[:n_mo]) < 1.e-5).all()
     assert (wfn1.exp_alpha.occupations == wfn2.exp_alpha.occupations[:n_mo]).all()
     assert (abs(wfn1.exp_alpha.coeffs   - wfn2.exp_alpha.coeffs[:,:n_mo]) < 1.e-7).all()
     # Check overlap
-    lf1 = data1['lf']
+    lf1 = mol1.lf
     olp1 = lf1.create_one_body()
     obasis1.compute_overlap(olp1)
-    lf2 = data2['lf']
+    lf2 = mol2.lf
     olp2 = lf2.create_one_body()
     obasis2.compute_overlap(olp2)
     assert (abs(olp1._array[:] - olp2._array[:]) < 1e-6).all()
     # Check energy
-    energy1 = compute_hf_energy(data1)
-    energy2 = compute_hf_energy(data2)
+    energy1 = compute_hf_energy(mol1)
+    energy2 = compute_hf_energy(mol2)
     assert abs(energy1 - energy2) < 1e-5
     # Check normalization
     wfn1.exp_alpha.check_normalization(olp1, 1e-5)
@@ -232,28 +232,23 @@ def test_load_wfn_he_spdfgh_virtual():
 
 def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
     fn_wfn = context.get_fn(fn_wfn)
-    data = load_smart(fn_wfn)
-    numbers = data['numbers']
-    coordinates = data['coordinates']
-    wfn = data['wfn']
-    obasis = data['obasis']
-    lf = data['lf']
-    assert obasis.nbasis == nbasis
-    olp = lf.create_one_body()
-    obasis.compute_overlap(olp)
+    mol = Molecule.from_file(fn_wfn)
+    assert mol.obasis.nbasis == nbasis
+    olp = mol.lf.create_one_body()
+    mol.obasis.compute_overlap(olp)
     if restricted:
-        assert isinstance(wfn, RestrictedWFN)
-        wfn.exp_alpha.check_normalization(olp, 1e-5)
+        assert isinstance(mol.wfn, RestrictedWFN)
+        mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
     else:
-        assert isinstance(wfn, UnrestrictedWFN)
-        wfn.exp_alpha.check_normalization(olp, 1e-5)
-        wfn.exp_beta.check_normalization(olp, 1e-5)
+        assert isinstance(mol.wfn, UnrestrictedWFN)
+        mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
+        mol.wfn.exp_beta.check_normalization(olp, 1e-5)
     if energy is not None:
-        myenergy = compute_hf_energy(data)
+        myenergy = compute_hf_energy(mol)
         assert abs(energy - myenergy) < 1e-5
-    mycharges = compute_mulliken_charges(obasis, lf, numbers, wfn)
+    mycharges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, mol.wfn)
     assert (abs(charges - mycharges) < 1e-5).all()
-    return obasis, wfn, lf, coordinates, numbers
+    return mol.obasis, mol.wfn, mol.lf, mol.coordinates, mol.numbers
 
 
 def test_load_wfn_h2o_sto3g_decontracted():
@@ -303,11 +298,10 @@ def test_load_wfn_li_sp_virtual():
 
 def test_load_wfn_li_sp():
     fn_wfn = context.get_fn('test/li_sp_orbital.wfn')
-    data = load_smart(fn_wfn)
-    wfn = data['wfn']
-    assert isinstance(wfn, UnrestrictedWFN)
-    assert wfn.exp_alpha.nfn == 2
-    assert wfn.exp_beta.nfn == 1
+    mol = Molecule.from_file(fn_wfn)
+    assert isinstance(mol.wfn, UnrestrictedWFN)
+    assert mol.wfn.exp_alpha.nfn == 2
+    assert mol.wfn.exp_beta.nfn == 1
 
 
 def test_load_wfn_o2():

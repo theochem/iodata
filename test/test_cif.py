@@ -139,48 +139,48 @@ def test_equiv_pos_to_generator():
     assert abs(equiv_pos_to_generator('x,y-3/4,z') - np.array([[1,0,0,0],[0,1,0,-0.75],[0,0,1,0]])).max() < 1e-10
 
 
-def check_lta_data(data):
-    assert (data['numbers'] == 14).sum() == 24
-    assert (data['numbers'] == 8).sum() == 48
-    assert data['symmetry'].name == '221'
-    assert len(data['links']) == 72
+def check_lta_mol(mol):
+    assert (mol.numbers == 14).sum() == 24
+    assert (mol.numbers == 8).sum() == 48
+    assert mol.symmetry.name == '221'
+    assert len(mol.links) == 72
 
 
 def test_load_cif_lta_gulp():
-    data = load_smart(context.get_fn('test/lta_gulp.cif'))
-    check_lta_data(data)
+    mol = Molecule.from_file(context.get_fn('test/lta_gulp.cif'))
+    check_lta_mol(mol)
 
 
 def test_load_cif_lta_iza():
-    data = load_smart(context.get_fn('test/lta_iza.cif'))
-    check_lta_data(data)
+    mol = Molecule.from_file(context.get_fn('test/lta_iza.cif'))
+    check_lta_mol(mol)
 
 
 def test_checkpoint():
     with h5.File('horton.io.test.test_cif.test_checkpoint', driver='core', backing_store=False) as f:
-        data0 = load_smart(context.get_fn('test/lta_iza.cif'))
-        dump_smart(f, data0)
-        data1 = load_smart(f)
-        s0 = data0['symmetry']
-        s1 = data1['symmetry']
+        mol0 = Molecule.from_file(context.get_fn('test/lta_iza.cif'))
+        mol0.to_file(f)
+        mol1 = Molecule.from_file(f)
+        s0 = mol0.symmetry
+        s1 = mol1.symmetry
         compare_symmetries(s0, s1)
 
 
 def test_dump_load_consistency():
-    data0 = load_smart(context.get_fn('test/aelta.cube'))
+    mol0 = Molecule.from_file(context.get_fn('test/aelta.cube'))
     with tmpdir('horton.io.test.test_cif.test_dump_load_consistency') as dn:
         fn_cif = '%s/test.cif' % dn
-        dump_smart(fn_cif, data0)
-        data1 = load_smart(fn_cif)
+        mol0.to_file(fn_cif)
+        mol1 = Molecule.from_file(fn_cif)
 
-    assert data0['cell'].nvec == data1['cell'].nvec
-    lengths0, angles0 = data0['cell'].parameters
-    lengths1, angles1 = data1['cell'].parameters
+    assert mol0.cell.nvec == mol1.cell.nvec
+    lengths0, angles0 = mol0.cell.parameters
+    lengths1, angles1 = mol1.cell.parameters
     assert abs(lengths0 - lengths1).max() < 1e-6
     assert abs(angles0 - angles1).max() < 1e-6
-    assert (data0['numbers'] == data1['numbers']).all()
-    frac0 = np.array([data0['cell'].to_frac(row) for row in data0['coordinates']])
-    frac1 = np.array([data1['cell'].to_frac(row) for row in data1['coordinates']])
+    assert (mol0.numbers == mol1.numbers).all()
+    frac0 = np.array([mol0.cell.to_frac(row) for row in mol0.coordinates])
+    frac1 = np.array([mol1.cell.to_frac(row) for row in mol1.coordinates])
     assert abs(frac0 - frac1).max() < 1e-6
 
 

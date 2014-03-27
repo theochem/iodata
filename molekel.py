@@ -24,7 +24,7 @@
 import numpy as np
 
 from horton.units import angstrom
-from horton.io.common import renorm_helper, get_orca_signs, typecheck_dump
+from horton.io.common import renorm_helper, get_orca_signs
 from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
 
 

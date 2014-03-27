@@ -26,8 +26,8 @@ import numpy as np
 from horton.periodic import periodic
 from horton.gbasis.io import str_to_shell_types, shell_type_to_str
 from horton.gbasis.gobasis import GOBasis
-from horton.io.common import renorm_helper, get_orca_signs, typecheck_dump
 from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
+from horton.io.common import renorm_helper, get_orca_signs
 
 
 __all__ = ['load_molden', 'dump_molden']
@@ -255,7 +255,7 @@ def load_molden(filename, lf):
     }
 
 
-def dump_molden(filename, data):
+def dump_molden(filename, mol):
     '''Write molecule data to a file in the molden input format.
 
        **Arguments:**
@@ -264,12 +264,10 @@ def dump_molden(filename, data):
             The filename of the molden input file, which is an output file for
             this routine.
 
-       data
-            A dictionary with molecule that needs to be written. Must contain
-            ``coordinates``, ``numbers``, ``obasis``, ``wfn``.
+       mol
+            A molecule instance. Must contain ``coordinates``, ``numbers``,
+            ``obasis``, ``wfn``.
     '''
-    coordinates, numbers, obasis, wfn = typecheck_dump(data, ['coordinates', 'numbers', 'obasis', 'wfn'])
-    natom = len(numbers)
     with open(filename, 'w') as f:
         # Print the header
         print >> f, '[Molden Format]'
@@ -279,35 +277,35 @@ def dump_molden(filename, data):
 
         # Print the elements numbers and the coordinates
         print >> f, '[Atoms] AU'
-        for i in xrange(natom):
-            number = numbers[i]
-            x, y, z = coordinates[i]
+        for i in xrange(mol.natom):
+            number = mol.numbers[i]
+            x, y, z = mol.coordinates[i]
             print >> f, '%2s %3i %3i  %20.10f %20.10f %20.10f' % (
                 periodic[number].symbol.ljust(2), i+1, number, x, y, z
             )
 
         # Print the basis set
-        if isinstance(obasis, GOBasis):
-            if obasis.shell_types.max() > 1:
+        if isinstance(mol.obasis, GOBasis):
+            if mol.obasis.shell_types.max() > 1:
                 raise ValueError('Only pure Gaussian basis functions are supported in dump_molden.')
             # first convert it to a format that is amenable for printing.
-            centers = [list() for i in xrange(obasis.ncenter)]
+            centers = [list() for i in xrange(mol.obasis.ncenter)]
             begin_prim = 0
-            for ishell in xrange(obasis.nshell):
-                icenter = obasis.shell_map[ishell]
-                shell_type = obasis.shell_types[ishell]
+            for ishell in xrange(mol.obasis.nshell):
+                icenter = mol.obasis.shell_map[ishell]
+                shell_type = mol.obasis.shell_types[ishell]
                 sts = shell_type_to_str(shell_type)
-                end_prim = begin_prim + obasis.nprims[ishell]
+                end_prim = begin_prim + mol.obasis.nprims[ishell]
                 prims = []
                 for iprim in xrange(begin_prim, end_prim):
-                    alpha = obasis.alphas[iprim]
-                    con_coeff = renorm_helper(obasis.con_coeffs[iprim], alpha, shell_type, reverse=True)
+                    alpha = mol.obasis.alphas[iprim]
+                    con_coeff = renorm_helper(mol.obasis.con_coeffs[iprim], alpha, shell_type, reverse=True)
                     prims.append((alpha, con_coeff))
                 centers[icenter].append((sts, prims))
                 begin_prim = end_prim
 
             print >> f, '[GTO]'
-            for icenter in xrange(obasis.ncenter):
+            for icenter in xrange(mol.obasis.ncenter):
                 print >> f, '%3i 0' % (icenter+1)
                 for sts, prims in centers[icenter]:
                     print >> f, '%1s %3i 1.0' % (sts, len(prims))
@@ -320,14 +318,14 @@ def dump_molden(filename, data):
             print >> f, '[9G]'
 
             # The sign conventions...
-            signs = get_orca_signs(obasis)
+            signs = get_orca_signs(mol.obasis)
         else:
             raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
 
         def helper_exp(spin, occ_scale=1.0):
-            if not 'exp_%s' % spin in wfn.cache:
+            if not 'exp_%s' % spin in mol.wfn.cache:
                 raise TypeError('The restricted WFN does not have an expansion of the %s orbitals.' % spin)
-            exp = wfn.get_exp(spin)
+            exp = mol.wfn.get_exp(spin)
             for ifn in xrange(exp.nfn):
                 print >> f, ' Sym=     1a'
                 print >> f, ' Ene= %20.14E' % exp.energies[ifn]
@@ -337,10 +335,10 @@ def dump_molden(filename, data):
                     print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[ibasis,ifn]*signs[ibasis])
 
         # Print the mean-field orbitals
-        if isinstance(wfn, RestrictedWFN):
+        if isinstance(mol.wfn, RestrictedWFN):
             print >> f, '[MO]'
             helper_exp('alpha', 2.0)
-        elif isinstance(wfn, UnrestrictedWFN):
+        elif isinstance(mol.wfn, UnrestrictedWFN):
             print >> f, '[MO]'
             helper_exp('alpha')
             helper_exp('beta')

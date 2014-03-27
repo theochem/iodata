@@ -31,7 +31,7 @@ from horton.part.mulliken import get_mulliken_operators
 from horton.test.common import compare_wfns
 from horton import Cache
 
-__all__ = ['compute_mulliken_charges', 'compare_data']
+__all__ = ['compute_mulliken_charges', 'compare_mol']
 
 
 def compute_mulliken_charges(obasis, lf, numbers, wfn):
@@ -40,28 +40,28 @@ def compute_mulliken_charges(obasis, lf, numbers, wfn):
     return numbers - np.array(populations)
 
 
-def compare_data(data1, data2):
-    assert (data1['numbers'] == data2['numbers']).all()
-    assert (data1['coordinates'] == data2['coordinates']).all()
+def compare_mol(mol1, mol2):
+    assert (mol1.numbers == mol2.numbers).all()
+    assert (mol1.coordinates == mol2.coordinates).all()
     # orbital basis
-    if data1['obasis'] is not None:
-        assert (data1['obasis'].centers == data2['obasis'].centers).all()
-        assert (data1['obasis'].shell_map == data2['obasis'].shell_map).all()
-        assert (data1['obasis'].nprims == data2['obasis'].nprims).all()
-        assert (data1['obasis'].shell_types == data2['obasis'].shell_types).all()
-        assert (data1['obasis'].alphas == data2['obasis'].alphas).all()
-        assert (data1['obasis'].con_coeffs == data2['obasis'].con_coeffs).all()
+    if mol1.obasis is not None:
+        assert (mol1.obasis.centers == mol2.obasis.centers).all()
+        assert (mol1.obasis.shell_map == mol2.obasis.shell_map).all()
+        assert (mol1.obasis.nprims == mol2.obasis.nprims).all()
+        assert (mol1.obasis.shell_types == mol2.obasis.shell_types).all()
+        assert (mol1.obasis.alphas == mol2.obasis.alphas).all()
+        assert (mol1.obasis.con_coeffs == mol2.obasis.con_coeffs).all()
     else:
-        assert data2['obasis'] is None
+        assert mol2.obasis is None
     # wfn
-    compare_wfns(data1['wfn'], data2['wfn'])
+    compare_wfns(mol1.wfn, mol2.wfn)
     # operators
     for key in 'olp', 'kin', 'na', 'er':
-        if key in data1:
-            assert key in data2
-            compare_operator(data1[key], data2[key])
+        if hasattr(mol1, key):
+            assert hasattr(mol2, key)
+            compare_operator(getattr(mol1, key), getattr(mol2, key))
         else:
-            assert key not in data2
+            assert not hasattr(mol2, key)
 
 
 def compare_operator(op1, op2):
@@ -74,12 +74,12 @@ def compare_operator(op1, op2):
         raise NotImplementedError
 
 
-def compute_hf_energy(data):
+def compute_hf_energy(mol):
     # TODO: this has to be updated after rewrite of Hamiltonian class without
     # System class
     sys = System(
-        data['coordinates'], data['numbers'], data['obasis'], wfn=data['wfn'],
-        lf=data['lf']
+        mol.coordinates, mol.numbers, mol.obasis, wfn=mol.wfn,
+        lf=mol.lf
     )
     scf_cache = Cache()
     ham = Hamiltonian(sys, scf_cache, [HartreeFockExchange(scf_cache, sys.lf,sys.wfn,

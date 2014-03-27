@@ -24,56 +24,48 @@
 import numpy as np, os
 
 from horton import *
-from horton.io.test.common import compute_mulliken_charges, compare_data
+from horton.io.test.common import compute_mulliken_charges, compare_mol
 from horton.test.common import tmpdir
 
 
 def test_load_molden_li2():
     fn_mkl = context.get_fn('test/li2.molden.input')
-    data = load_smart(fn_mkl)
-    obasis = data['obasis']
-    wfn = data['wfn']
-    lf = data['lf']
-    numbers = data['numbers']
+    mol = Molecule.from_file(fn_mkl)
 
     # Check normalization
-    olp = lf.create_one_body()
-    obasis.compute_overlap(olp)
-    wfn.exp_alpha.check_normalization(olp, 1e-5)
-    wfn.exp_beta.check_normalization(olp, 1e-5)
+    olp = mol.lf.create_one_body()
+    mol.obasis.compute_overlap(olp)
+    mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
+    mol.wfn.exp_beta.check_normalization(olp, 1e-5)
 
     # Check charges
-    charges = compute_mulliken_charges(obasis, lf, numbers, wfn)
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, mol.wfn)
     expected_charges = np.array([0.5, 0.5])
     assert abs(charges - expected_charges).max() < 1e-5
 
 
 def test_load_molden_h2o():
     fn_mkl = context.get_fn('test/h2o.molden.input')
-    data = load_smart(fn_mkl)
-    obasis = data['obasis']
-    wfn = data['wfn']
-    lf = data['lf']
-    numbers = data['numbers']
+    mol = Molecule.from_file(fn_mkl)
 
     # Check normalization
-    olp = lf.create_one_body()
-    obasis.compute_overlap(olp)
-    wfn.exp_alpha.check_normalization(olp, 1e-5)
+    olp = mol.lf.create_one_body()
+    mol.obasis.compute_overlap(olp)
+    mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
 
     # Check charges
-    charges = compute_mulliken_charges(obasis, lf, numbers, wfn)
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, mol.wfn)
     expected_charges = np.array([-0.816308, 0.408154, 0.408154])
     assert abs(charges - expected_charges).max() < 1e-5
 
 
 def check_load_dump_consistency(fn):
-    data1 = load_smart(context.get_fn(os.path.join('test', fn)))
+    mol1 = Molecule.from_file(context.get_fn(os.path.join('test', fn)))
     with tmpdir('horton.io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
         fn_tmp = os.path.join(dn, 'foo.molden.input')
-        dump_smart(fn_tmp, data1)
-        data2 = load_smart(fn_tmp)
-    compare_data(data1, data2)
+        mol1.to_file(fn_tmp)
+        mol2 = Molecule.from_file(fn_tmp)
+    compare_mol(mol1, mol2)
 
 
 def test_load_dump_consistency_h2o():

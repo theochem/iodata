@@ -25,7 +25,7 @@ import numpy as np
 from horton.gbasis.cext import gob_cart_normalization
 
 
-__all__ = ['renorm_helper', 'get_orca_signs', 'typecheck_dump']
+__all__ = ['renorm_helper', 'get_orca_signs']
 
 
 def renorm_helper(con_coeff, alpha, shell_type, reverse=False):
@@ -87,42 +87,3 @@ def get_orca_signs(obasis):
     for shell_type in obasis.shell_types:
         signs.extend(sign_rules[shell_type])
     return np.array(signs, dtype=int)
-
-
-def typecheck_dump(data, keys):
-    '''Extract values from a dictionary with molecule data and typecheck
-
-       **Arguments:**
-
-       data
-            A dictionary with molecule data.
-
-       keys
-            The keys to be extracted from the data.
-    '''
-    result = []
-    for key in keys:
-        # get the value
-        value = data.get(key)
-        if value is None:
-            if key == 'pseudo_numbers':
-                value = data.get('numbers')
-        if value is None:
-            raise TypeError('Could not find key \'%s\' in data.' % key)
-
-        # type check
-        if key == 'numbers' or key == 'pseudo_numbers':
-            if len(value.shape) != 1:
-                raise TypeError('numbers must a vector of integers.')
-        elif key == 'coordinates':
-            if len(value.shape) != 2 or value.shape[1] != 3:
-                raise TypeError('coordinates must be a 2D array with three columns.')
-            if 'numbers' in data and len(data['numbers']) != len(value):
-                raise TypeError('numbers and coordinates must have compatible array shapes.')
-        elif key == 'cube_data':
-            if len(value.shape) != 3:
-                raise TypeError('cube_data must be a 3D array.')
-
-        # add to result list
-        result.append(value)
-    return result
