@@ -91,5 +91,5 @@ def compute_hf_energy(mol):
         HartreeFockExchange(sys.lf, sys.wfn, er),
         ExternalPotential(sys.obasis, sys.lf, sys.wfn, sys.numbers, sys.coordinates),
     ]
-    ham = Hamiltonian(sys, terms, None, external)
+    ham = Hamiltonian(sys, terms, external)
     return ham.compute()
