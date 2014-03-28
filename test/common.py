@@ -25,7 +25,8 @@ import numpy as np
 
 from horton.system import System
 from horton.meanfield.hamiltonian import Hamiltonian
-from horton.meanfield.builtin import HartreeFockExchange
+from horton.meanfield.core import KineticEnergy, ExternalPotential
+from horton.meanfield.builtin import Hartree, HartreeFockExchange
 from horton.matrix import DenseOneBody, DenseTwoBody
 from horton.part.mulliken import get_mulliken_operators
 from horton.test.common import compare_wfns
@@ -81,6 +82,12 @@ def compute_hf_energy(mol):
         mol.coordinates, mol.numbers, mol.obasis, wfn=mol.wfn,
         lf=mol.lf
     )
-    ham = Hamiltonian(sys, [HartreeFockExchange(sys.lf,sys.wfn,
-                            sys.get_electron_repulsion())])
+    er = sys.get_electron_repulsion()
+    terms = [
+        KineticEnergy(sys.obasis, sys.lf, sys.wfn),
+        Hartree(sys.lf, sys.wfn, er),
+        HartreeFockExchange(sys.lf, sys.wfn, er),
+        ExternalPotential(sys.obasis, sys.lf, sys.wfn, sys.numbers, sys.coordinates),
+    ]
+    ham = Hamiltonian(sys, terms)
     return ham.compute()
