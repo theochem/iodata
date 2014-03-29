@@ -26,8 +26,7 @@ import numpy as np
 from horton.system import System
 from horton.cext import compute_nucnuc
 from horton.meanfield.hamiltonian import Hamiltonian
-from horton.meanfield.core import KineticEnergy, ExternalPotential
-from horton.meanfield.builtin import Hartree, HartreeFockExchange
+from horton.meanfield.observable import OneBodyTerm, DirectTerm, ExchangeTerm
 from horton.matrix import DenseOneBody, DenseTwoBody
 from horton.part.mulliken import get_mulliken_operators
 from horton.test.common import compare_wfns
@@ -83,13 +82,15 @@ def compute_hf_energy(mol):
         mol.coordinates, mol.numbers, mol.obasis, wfn=mol.wfn,
         lf=mol.lf
     )
+    kin = sys.get_kinetic()
+    nai = sys.get_nuclear_attraction()
     er = sys.get_electron_repulsion()
     external = {'nn': compute_nucnuc(sys.coordinates, sys.numbers)}
     terms = [
-        KineticEnergy(sys.obasis, sys.lf, sys.wfn),
-        Hartree(sys.lf, sys.wfn, er),
-        HartreeFockExchange(sys.lf, sys.wfn, er),
-        ExternalPotential(sys.obasis, sys.lf, sys.wfn, sys.numbers, sys.coordinates),
+        OneBodyTerm(kin, sys.lf, sys.wfn, 'kin'),
+        DirectTerm(er, sys.lf, sys.wfn),
+        ExchangeTerm(er, sys.lf, sys.wfn),
+        OneBodyTerm(nai, sys.lf, sys.wfn, 'ne'),
     ]
     ham = Hamiltonian(sys, terms, external)
     return ham.compute()
