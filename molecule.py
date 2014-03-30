@@ -80,7 +80,7 @@ class ArrayTypeCheckDescriptor(object):
 
     def __get__(self, obj, type=None):
         if self._default is not None and not hasattr(obj, '_' + self._name):
-            return getattr(obj, '_' + self._default)
+            return getattr(obj, '_' + self._default).astype(self._dtype)
         return getattr(obj, '_' + self._name)
 
     def __set__(self, obj, value):
