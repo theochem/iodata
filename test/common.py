@@ -82,6 +82,7 @@ def compute_hf_energy(mol):
         mol.coordinates, mol.numbers, mol.obasis, wfn=mol.wfn,
         lf=mol.lf
     )
+    olp = sys.get_overlap()
     kin = sys.get_kinetic()
     nai = sys.get_nuclear_attraction()
     er = sys.get_electron_repulsion()
@@ -92,5 +93,5 @@ def compute_hf_energy(mol):
         ExchangeTerm(er, sys.lf, sys.wfn),
         OneBodyTerm(nai, sys.lf, sys.wfn, 'ne'),
     ]
-    ham = Hamiltonian(sys, terms, external)
+    ham = Hamiltonian(terms, external)
     return ham.compute()
