@@ -32,7 +32,7 @@ from horton.part.mulliken import get_mulliken_operators
 from horton.test.common import compare_wfns
 
 
-__all__ = ['compute_mulliken_charges', 'compare_mol']
+__all__ = ['compute_mulliken_charges', 'compare_mol', 'compare_operator']
 
 
 def compute_mulliken_charges(obasis, lf, numbers, wfn):
