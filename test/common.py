@@ -88,10 +88,10 @@ def compute_hf_energy(mol):
     er = sys.get_electron_repulsion()
     external = {'nn': compute_nucnuc(sys.coordinates, sys.numbers)}
     terms = [
-        OneBodyTerm(kin, sys.lf, sys.wfn, 'kin'),
-        DirectTerm(er, sys.lf, sys.wfn),
-        ExchangeTerm(er, sys.lf, sys.wfn),
-        OneBodyTerm(nai, sys.lf, sys.wfn, 'ne'),
+        OneBodyTerm(kin, sys.wfn, 'kin'),
+        DirectTerm(er, sys.wfn),
+        ExchangeTerm(er, sys.wfn),
+        OneBodyTerm(nai, sys.wfn, 'ne'),
     ]
     ham = Hamiltonian(terms, external)
     return ham.compute()
