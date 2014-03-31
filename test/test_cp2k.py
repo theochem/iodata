@@ -41,8 +41,7 @@ def test_atom_si_uks():
     assert isinstance(mol.wfn, UnrestrictedWFN)
     assert mol.wfn.nel == 4
 
-    olp = mol.lf.create_one_body()
-    mol.obasis.compute_overlap(olp)
+    olp = mol.obasis.compute_overlap(mol.lf)
     ca = mol.wfn.exp_alpha.coeffs
     cb = mol.wfn.exp_beta.coeffs
     assert abs(np.diag(olp._array[:2,:2]) - np.array([0.42921199338707744, 0.32067871530183140])).max() < 1e-5
@@ -64,7 +63,6 @@ def test_atom_o_rks():
     assert isinstance(mol.wfn, RestrictedWFN)
     assert mol.wfn.nel == 8
 
-    olp = mol.lf.create_one_body()
-    mol.obasis.compute_overlap(olp)
+    olp = mol.obasis.compute_overlap(mol.lf)
     ca = mol.wfn.exp_alpha.coeffs
     assert abs(np.dot(ca.T, np.dot(olp._array, ca)) - np.identity(4)).max() < 1e-5

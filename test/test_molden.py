@@ -33,8 +33,7 @@ def test_load_molden_li2():
     mol = Molecule.from_file(fn_mkl)
 
     # Check normalization
-    olp = mol.lf.create_one_body()
-    mol.obasis.compute_overlap(olp)
+    olp = mol.obasis.compute_overlap(mol.lf)
     mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
     mol.wfn.exp_beta.check_normalization(olp, 1e-5)
 
@@ -49,8 +48,7 @@ def test_load_molden_h2o():
     mol = Molecule.from_file(fn_mkl)
 
     # Check normalization
-    olp = mol.lf.create_one_body()
-    mol.obasis.compute_overlap(olp)
+    olp = mol.obasis.compute_overlap(mol.lf)
     mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
 
     # Check charges

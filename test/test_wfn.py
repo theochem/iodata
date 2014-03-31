@@ -162,11 +162,8 @@ def check_load_wfn(name):
     assert (wfn1.exp_alpha.occupations == wfn2.exp_alpha.occupations[:n_mo]).all()
     assert (abs(wfn1.exp_alpha.coeffs   - wfn2.exp_alpha.coeffs[:,:n_mo]) < 1.e-7).all()
     # Check overlap
-    lf1 = mol1.lf
-    olp1 = lf1.create_one_body()
-    obasis1.compute_overlap(olp1)
-    lf2 = mol2.lf
-    olp2 = lf2.create_one_body()
+    olp1 = obasis1.compute_overlap(mol1.lf)
+    olp2 = obasis2.compute_overlap(mol2.lf)
     obasis2.compute_overlap(olp2)
     assert (abs(olp1._array[:] - olp2._array[:]) < 1e-6).all()
     # Check energy
@@ -176,8 +173,8 @@ def check_load_wfn(name):
     # Check normalization
     wfn1.exp_alpha.check_normalization(olp1, 1e-5)
     # Check charges
-    charges1 = compute_mulliken_charges(obasis1, lf1, numbers1, wfn1)
-    charges2 = compute_mulliken_charges(obasis2, lf2, numbers2, wfn2)
+    charges1 = compute_mulliken_charges(obasis1, mol1.lf, numbers1, wfn1)
+    charges2 = compute_mulliken_charges(obasis2, mol2.lf, numbers2, wfn2)
     return wfn1, energy1, charges1
 
 
@@ -234,8 +231,7 @@ def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
     fn_wfn = context.get_fn(fn_wfn)
     mol = Molecule.from_file(fn_wfn)
     assert mol.obasis.nbasis == nbasis
-    olp = mol.lf.create_one_body()
-    mol.obasis.compute_overlap(olp)
+    olp = mol.obasis.compute_overlap(mol.lf)
     if restricted:
         assert isinstance(mol.wfn, RestrictedWFN)
         mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
@@ -356,8 +352,7 @@ def test_load_wfn_lif_fci():
     assert wfn.exp_alpha.energies[15] == 1.70096290
     assert wfn.exp_alpha.energies[-1] == 2.17434072
     assert wfn.exp_alpha.coeffs.shape == (44, 18)
-    kin = lf.create_one_body()
-    obasis.compute_kinetic(kin)
+    kin = obasis.compute_kinetic(lf)
     expected_kin = 106.9326884815  #FCI kinetic energy
     expected_nn = 9.1130265227
     assert (kin.expectation_value(wfn.dm_full) - expected_kin) < 1.e-6
@@ -377,8 +372,7 @@ def test_load_wfn_lih_cation_fci():
     assert (numbers == [3, 1]).all()
     expected_kin = 7.7989675958  #FCI kinetic energy
     expected_nn = 0.9766607347
-    kin = lf.create_one_body()
-    obasis.compute_kinetic(kin)
+    kin = obasis.compute_kinetic(lf)
     assert (kin.expectation_value(wfn.dm_full) - expected_kin) < 1.e-6
     assert (compute_nucnuc(coordinates, numbers) - expected_nn) < 1.e-6
     assert wfn.exp_alpha.occupations.shape == (11,)

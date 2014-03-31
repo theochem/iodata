@@ -65,8 +65,7 @@ def test_load_mkl_ethanol():
     assert abs(compute_nucnuc(mol.coordinates, mol.numbers) - 81.87080034) < 1e-5
 
     # Check normalization
-    olp = mol.lf.create_one_body()
-    mol.obasis.compute_overlap(olp)
+    olp = mol.obasis.compute_overlap(mol.lf)
     mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
 
     # Mulliken charges
@@ -86,8 +85,7 @@ def test_load_mkl_li2():
     mol = Molecule.from_file(fn_mkl)
 
     # Check normalization
-    olp = mol.lf.create_one_body()
-    mol.obasis.compute_overlap(olp)
+    olp = mol.obasis.compute_overlap(mol.lf)
     mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
     mol.wfn.exp_beta.check_normalization(olp, 1e-5)
 
@@ -100,8 +98,7 @@ def test_load_mkl_li2():
 def test_load_mkl_h2():
     fn_mkl = context.get_fn('test/h2_sto3g.mkl')
     mol = Molecule.from_file(fn_mkl)
-    olp = mol.lf.create_one_body()
-    mol.obasis.compute_overlap(olp)
+    olp = mol.obasis.compute_overlap(mol.lf)
     mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
 
     # Compute HF energy
