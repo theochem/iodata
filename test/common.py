@@ -82,8 +82,8 @@ def compute_hf_energy(mol):
     external = {'nn': compute_nucnuc(mol.coordinates, mol.pseudo_numbers)}
     terms = [
         OneBodyTerm(kin, mol.wfn, 'kin'),
-        DirectTerm(er, mol.wfn),
-        ExchangeTerm(er, mol.wfn),
+        DirectTerm(er, mol.wfn, 'hartree'),
+        ExchangeTerm(er, mol.wfn, 'x_hf'),
         OneBodyTerm(nai, mol.wfn, 'ne'),
     ]
     ham = Hamiltonian(terms, external)
