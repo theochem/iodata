@@ -23,7 +23,6 @@
 
 import numpy as np
 
-from horton.system import System
 from horton.cext import compute_nucnuc
 from horton.meanfield.hamiltonian import Hamiltonian
 from horton.meanfield.observable import OneBodyTerm, DirectTerm, ExchangeTerm
@@ -76,22 +75,16 @@ def compare_operator(op1, op2):
 
 
 def compute_hf_energy(mol):
-    # TODO: this has to be updated after rewrite of Hamiltonian class without
-    # System class
-    sys = System(
-        mol.coordinates, mol.numbers, mol.obasis, wfn=mol.wfn,
-        lf=mol.lf
-    )
-    olp = sys.get_overlap()
-    kin = sys.get_kinetic()
-    nai = sys.get_nuclear_attraction()
-    er = sys.get_electron_repulsion()
-    external = {'nn': compute_nucnuc(sys.coordinates, sys.numbers)}
+    olp = mol.obasis.compute_overlap(mol.lf)
+    kin = mol.obasis.compute_kinetic(mol.lf)
+    nai = mol.obasis.compute_nuclear_attraction(mol.pseudo_numbers, mol.coordinates, mol.lf)
+    er = mol.obasis.compute_electron_repulsion(mol.lf)
+    external = {'nn': compute_nucnuc(mol.coordinates, mol.numbers)}
     terms = [
-        OneBodyTerm(kin, sys.wfn, 'kin'),
-        DirectTerm(er, sys.wfn),
-        ExchangeTerm(er, sys.wfn),
-        OneBodyTerm(nai, sys.wfn, 'ne'),
+        OneBodyTerm(kin, mol.wfn, 'kin'),
+        DirectTerm(er, mol.wfn),
+        ExchangeTerm(er, mol.wfn),
+        OneBodyTerm(nai, mol.wfn, 'ne'),
     ]
     ham = Hamiltonian(terms, external)
     return ham.compute()

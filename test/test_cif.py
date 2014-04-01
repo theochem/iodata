@@ -185,5 +185,5 @@ def test_dump_load_consistency():
 
 
 def test_load_cage():
-    sys = System.from_file(context.get_fn('test/cage.cif'))
-    assert (sys.coordinates != 0).all()
+    mol = Molecule.from_file(context.get_fn('test/cage.cif'))
+    assert (mol.coordinates != 0).all()

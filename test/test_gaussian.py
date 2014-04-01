@@ -317,3 +317,33 @@ def test_load_nitrogen_mp2():
 
 def test_load_nitrogen_mp3():
     check_load_nitrogen('mp3', [2.08674302E+00, 4.91149023E-01], [7.06941101E-04, -1.96276763E-02])
+
+
+def check_normalization_dm_full_azirine(fn_fchk):
+    mol = Molecule.from_file(fn_fchk)
+    olp = mol.obasis.compute_overlap(mol.lf)
+    dm = mol.wfn.dm_full
+    check_dm(dm, olp, mol.lf, 'full', eps=1e-2, occ_max=2)
+    assert abs(olp.expectation_value(dm) - 22.0) < 1e-3
+
+
+def test_normalization_dm_full_azirine_ccd():
+    check_normalization_dm_full_azirine(context.get_fn('test/2h-azirine-ccd.fchk'))
+
+
+def test_normalization_dm_full_azirine_cis():
+    check_normalization_dm_full_azirine(context.get_fn('test/2h-azirine-cis.fchk'))
+
+
+def test_normalization_dm_full_azirine_mp2():
+    check_normalization_dm_full_azirine(context.get_fn('test/2h-azirine-mp2.fchk'))
+
+
+def test_normalization_dm_full_azirine_mp3():
+    check_normalization_dm_full_azirine(context.get_fn('test/2h-azirine-mp3.fchk'))
+
+
+def test_nucnuc():
+    fn_fchk = context.get_fn('test/hf_sto3g.fchk')
+    mol = Molecule.from_file(fn_fchk)
+    assert abs(compute_nucnuc(mol.coordinates, mol.numbers) - 4.7247965053) < 1e-5
