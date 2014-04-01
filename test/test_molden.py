@@ -24,8 +24,8 @@
 import numpy as np, os
 
 from horton import *
-from horton.io.test.common import compute_mulliken_charges, compare_mol
-from horton.test.common import tmpdir
+from horton.io.test.common import compute_mulliken_charges
+from horton.test.common import tmpdir, compare_mols
 
 
 def test_load_molden_li2():
@@ -63,7 +63,7 @@ def check_load_dump_consistency(fn):
         fn_tmp = os.path.join(dn, 'foo.molden.input')
         mol1.to_file(fn_tmp)
         mol2 = Molecule.from_file(fn_tmp)
-    compare_mol(mol1, mol2)
+    compare_mols(mol1, mol2)
 
 
 def test_load_dump_consistency_h2o():

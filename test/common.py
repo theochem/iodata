@@ -31,47 +31,13 @@ from horton.part.mulliken import get_mulliken_operators
 from horton.test.common import compare_wfns
 
 
-__all__ = ['compute_mulliken_charges', 'compare_mol', 'compare_operator']
+__all__ = ['compute_mulliken_charges']
 
 
 def compute_mulliken_charges(obasis, lf, numbers, wfn):
     operators = get_mulliken_operators(obasis, lf)
     populations = np.array([operator.expectation_value(wfn.dm_full) for operator in operators])
     return numbers - np.array(populations)
-
-
-def compare_mol(mol1, mol2):
-    assert (mol1.numbers == mol2.numbers).all()
-    assert (mol1.coordinates == mol2.coordinates).all()
-    # orbital basis
-    if mol1.obasis is not None:
-        assert (mol1.obasis.centers == mol2.obasis.centers).all()
-        assert (mol1.obasis.shell_map == mol2.obasis.shell_map).all()
-        assert (mol1.obasis.nprims == mol2.obasis.nprims).all()
-        assert (mol1.obasis.shell_types == mol2.obasis.shell_types).all()
-        assert (mol1.obasis.alphas == mol2.obasis.alphas).all()
-        assert (mol1.obasis.con_coeffs == mol2.obasis.con_coeffs).all()
-    else:
-        assert mol2.obasis is None
-    # wfn
-    compare_wfns(mol1.wfn, mol2.wfn)
-    # operators
-    for key in 'olp', 'kin', 'na', 'er':
-        if hasattr(mol1, key):
-            assert hasattr(mol2, key)
-            compare_operator(getattr(mol1, key), getattr(mol2, key))
-        else:
-            assert not hasattr(mol2, key)
-
-
-def compare_operator(op1, op2):
-    # TODO: move this to horton.test.common after System class is removed.
-    if isinstance(op1, DenseOneBody) or isinstance(op1, DenseTwoBody):
-        assert isinstance(op2, op1.__class__)
-        assert op1.nbasis == op2.nbasis
-        assert (op1._array == op2._array).all()
-    else:
-        raise NotImplementedError
 
 
 def compute_hf_energy(mol):

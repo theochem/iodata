@@ -25,7 +25,7 @@ import h5py as h5
 
 from horton import *
 from horton.test.common import tmpdir
-from horton.io.test.common import compare_mol
+from horton.test.common import compare_mols
 
 
 def test_consistency_file():
@@ -37,7 +37,7 @@ def test_consistency_file():
         mol1.wfn.clear_dm()
         mol1.to_file(fn_h5)
         mol2 = Molecule.from_file(fn_h5)
-        compare_mol(mol1, mol2)
+        compare_mols(mol1, mol2)
 
 
 def test_consistency_core():
@@ -48,4 +48,4 @@ def test_consistency_core():
         mol1.wfn.clear_dm()
         mol1.to_file(f)
         mol2 = Molecule.from_file(f)
-        compare_mol(mol1, mol2)
+        compare_mols(mol1, mol2)
