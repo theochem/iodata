@@ -62,7 +62,7 @@ def test_load_mkl_ethanol():
     # Comparison of derived properties with ORCA output file
 
     # nuclear-nuclear repulsion
-    assert abs(compute_nucnuc(mol.coordinates, mol.numbers) - 81.87080034) < 1e-5
+    assert abs(compute_nucnuc(mol.coordinates, mol.pseudo_numbers) - 81.87080034) < 1e-5
 
     # Check normalization
     olp = mol.obasis.compute_overlap(mol.lf)

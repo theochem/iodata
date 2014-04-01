@@ -346,4 +346,4 @@ def test_normalization_dm_full_azirine_mp3():
 def test_nucnuc():
     fn_fchk = context.get_fn('test/hf_sto3g.fchk')
     mol = Molecule.from_file(fn_fchk)
-    assert abs(compute_nucnuc(mol.coordinates, mol.numbers) - 4.7247965053) < 1e-5
+    assert abs(compute_nucnuc(mol.coordinates, mol.pseudo_numbers) - 4.7247965053) < 1e-5

@@ -356,7 +356,7 @@ def test_load_wfn_lif_fci():
     expected_kin = 106.9326884815  #FCI kinetic energy
     expected_nn = 9.1130265227
     assert (kin.expectation_value(wfn.dm_full) - expected_kin) < 1.e-6
-    assert (compute_nucnuc(coordinates, numbers) - expected_nn) < 1.e-6
+    assert (compute_nucnuc(coordinates, numbers.astype(float)) - expected_nn) < 1.e-6
     points = np.array([[0.0, 0.0,-0.17008], [0.0, 0.0, 0.0], [0.0, 0.0, 0.03779]])
     density = np.zeros(3)
     obasis.compute_grid_density_dm(wfn.dm_full, points, density)
@@ -374,6 +374,6 @@ def test_load_wfn_lih_cation_fci():
     expected_nn = 0.9766607347
     kin = obasis.compute_kinetic(lf)
     assert (kin.expectation_value(wfn.dm_full) - expected_kin) < 1.e-6
-    assert (compute_nucnuc(coordinates, numbers) - expected_nn) < 1.e-6
+    assert (compute_nucnuc(coordinates, numbers.astype(float)) - expected_nn) < 1.e-6
     assert wfn.exp_alpha.occupations.shape == (11,)
     assert abs(wfn.exp_alpha.occupations.sum() - 1.5) < 1.e-6
