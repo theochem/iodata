@@ -31,9 +31,6 @@ from horton.periodic import periodic
 __all__ = ['dump_cif', 'iter_equiv_pos_terms', 'equiv_pos_to_generator', 'load_cif']
 
 
-# TODO (long term): dump_cif should also write out symmetry info if that is present
-
-
 def dump_cif(filename, mol):
     '''Write a molecule to a CIF file
 

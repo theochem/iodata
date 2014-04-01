@@ -116,7 +116,6 @@ def load_atom_cp2k(filename, lf):
             if line.startswith(' Pseudopotential Basis'):
                 break
 
-        # TODO: add support for uncontracted and all-electron basis
         f.next() # empty line
         line = f.next() # Check for GTO
         assert line == ' ********************** Contracted Gaussian Type Orbitals **********************\n'
