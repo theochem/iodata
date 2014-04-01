@@ -252,7 +252,6 @@ class Molecule(object):
             lf = DenseLinalgFactory()
         if len(kwargs) > 0:
             raise TypeError('Keyword argument(s) not supported: %s' % lf.keys())
-        result['lf'] = lf
 
         for filename in filenames:
             if isinstance(filename, h5.Group) or filename.endswith('.h5'):

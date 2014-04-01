@@ -204,7 +204,9 @@ def load_wfn(filename, lf):
     #Building the basis set
     from horton.gbasis.gobasis import GOBasis
     obasis = GOBasis(coordinates, shell_map, nprims, shell_types, alphas, con_coeffs)
-    lf.set_default_nbasis(obasis.nbasis)
+    if lf.default_nbasis is not None and lf.default_nbasis != obasis.nbasis:
+        raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the wfn file.')
+    lf.default_nbasis = obasis.nbasis
     coefficients = coefficients[permutation]
     coefficients /= obasis.get_scales().reshape(-1,1)
     #Making the wavefunction:
@@ -234,6 +236,7 @@ def load_wfn(filename, lf):
 
     return {
         'coordinates': coordinates,
+        'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
         'wfn': wfn,

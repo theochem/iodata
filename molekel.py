@@ -212,7 +212,9 @@ def load_mkl(filename, lf):
     if occ_alpha is None:
         raise IOError('Alpha occupation numbers not found in mkl file.')
 
-    lf.set_default_nbasis(obasis.nbasis)
+    if lf.default_nbasis is not None and lf.default_nbasis != obasis.nbasis:
+        raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the mkl file.')
+    lf.default_nbasis = obasis.nbasis
     nelec = numbers.sum() - charge
     if coeff_beta is None:
         assert nelec % 2 == 0
@@ -247,6 +249,7 @@ def load_mkl(filename, lf):
 
     return {
         'coordinates': coordinates,
+        'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
         'wfn': wfn,

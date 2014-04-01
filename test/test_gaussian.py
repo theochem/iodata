@@ -34,8 +34,9 @@ def test_load_operators_water_sto3g_hf_g03():
 
     for op in result.itervalues():
         assert op is not None
-        assert op.nbasis == 7
-        op.check_symmetry()
+        if isinstance(op, LinalgObject):
+            assert op.nbasis == 7
+            op.check_symmetry()
 
     overlap = result['olp']
     kinetic = result['kin']
@@ -76,8 +77,9 @@ def test_load_operators_water_ccpvdz_pure_hf_g03():
 
     for op in overlap, kinetic, nuclear_attraction, electronic_repulsion:
         assert op is not None
-        assert op.nbasis == 24
-        op.check_symmetry()
+        if isinstance(op, LinalgObject):
+            assert op.nbasis == 24
+            op.check_symmetry()
 
     assert abs(overlap.get_element(0,0) - 1.0) < eps
     assert abs(overlap.get_element(0,1) - 0.214476) < eps

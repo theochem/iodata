@@ -55,12 +55,15 @@ def load_operators_g09(fn, lf):
             if line.startswith('    NBasis ='):
                 nbasis = int(line[12:18])
                 break
+        if lf.default_nbasis is not None and lf.default_nbasis != nbasis:
+            raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the log file.')
+        lf.default_nbasis = nbasis
 
         # Then load the one- and two-body operators. This part is written such
         # that it does not make any assumptions about the order in which these
         # operators are printed.
 
-        result = {}
+        result = {'lf': lf}
         for line in f:
             if line.startswith(' *** Overlap ***'):
                 result['olp'] = _load_onebody_g09(f, nbasis, lf)
@@ -334,7 +337,9 @@ def load_fchk(filename, lf):
     del alphas
 
     obasis = GOBasis(coordinates, my_shell_map, my_nprims, my_shell_types, my_alphas, con_coeffs)
-    lf.set_default_nbasis(obasis.nbasis)
+    if lf.default_nbasis is not None and lf.default_nbasis != obasis.nbasis:
+        raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the fchk file.')
+    lf.default_nbasis = obasis.nbasis
 
     # permutation of the orbital basis functions
     permutation_rules = {
@@ -430,6 +435,7 @@ def load_fchk(filename, lf):
 
     result = {
         'coordinates': system_coordinates,
+        'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
         'wfn': wfn,

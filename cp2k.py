@@ -163,7 +163,9 @@ def load_atom_cp2k(filename, lf):
         alphas = np.array(alphas)
         con_coeffs = np.array(con_coeffs)
         obasis = GOBasis(coordinates, shell_map, nprims, shell_types, alphas, con_coeffs)
-        lf.set_default_nbasis(obasis.nbasis)
+        if lf.default_nbasis is not None and lf.default_nbasis != obasis.nbasis:
+            raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the cp2k.out file.')
+        lf.default_nbasis = obasis.nbasis
 
         # Search for (un)restricted
         restricted = None
@@ -248,6 +250,7 @@ def load_atom_cp2k(filename, lf):
 
     return {
         'obasis': obasis,
+        'lf': lf,
         'wfn': wfn,
         'coordinates': coordinates,
         'numbers': np.array([number]),
