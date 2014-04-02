@@ -34,11 +34,12 @@ def test_load_molden_li2():
 
     # Check normalization
     olp = mol.obasis.compute_overlap(mol.lf)
-    mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
-    mol.wfn.exp_beta.check_normalization(olp, 1e-5)
+    mol.exp_alpha.check_normalization(olp, 1e-5)
+    mol.exp_beta.check_normalization(olp, 1e-5)
 
     # Check charges
-    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, mol.wfn)
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
     expected_charges = np.array([0.5, 0.5])
     assert abs(charges - expected_charges).max() < 1e-5
 
@@ -49,10 +50,11 @@ def test_load_molden_h2o():
 
     # Check normalization
     olp = mol.obasis.compute_overlap(mol.lf)
-    mol.wfn.exp_alpha.check_normalization(olp, 1e-5)
+    mol.exp_alpha.check_normalization(olp, 1e-5)
 
     # Check charges
-    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, mol.wfn)
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
     expected_charges = np.array([-0.816308, 0.408154, 0.408154])
     assert abs(charges - expected_charges).max() < 1e-5
 

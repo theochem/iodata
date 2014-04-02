@@ -23,8 +23,6 @@
 
 import numpy as np
 
-from horton.meanfield.wfn import AufbauOccModel, RestrictedWFN, UnrestrictedWFN
-
 
 __all__ = ['load_operators_g09', 'FCHKFile', 'load_fchk']
 
@@ -256,9 +254,12 @@ def load_fchk(filename, lf):
             A LinalgFactory instance.
 
        **Returns** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
-       ``wfn``, ``permutation``, ``energy``, ``pseudo_numbers``,
-       ``mulliken_charges``. Optionally, the dictionary may also contain:
-       ``npa_charges`` and/or ``esp_charges``.
+       ``exp_alpha``, ``permutation``, ``energy``, ``pseudo_numbers``,
+       ``mulliken_charges``.
+       . The dictionary may also contain: ``npa_charges``, ``esp_charges``,
+       ``exp_beta``, ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``,
+       ``dm_spin_mp3``, ``dm_full_cc``, ``dm_spin_cc``, ``dm_full_ci``,
+       ``dm_spin_ci``, ``dm_full_scf``, ``dm_spin_scf``.
     '''
     from horton.gbasis import GOBasis
 
@@ -367,6 +368,15 @@ def load_fchk(filename, lf):
         permutation.extend(permutation_rules[shell_type]+len(permutation))
     permutation = np.array(permutation, dtype=int)
 
+    result = {
+        'coordinates': system_coordinates,
+        'lf': lf,
+        'numbers': numbers,
+        'obasis': obasis,
+        'permutation': permutation,
+        'pseudo_numbers': pseudo_numbers,
+    }
+
     # C) Load density matrices
     def load_dm(label):
         if label in fchk.fields:
@@ -383,10 +393,11 @@ def load_fchk(filename, lf):
     load_orbitals = True
     for key in 'MP2', 'MP3', 'CC', 'CI', 'SCF':
         dm_full = load_dm('Total %s Density' % key)
+        if dm_full is not None:
+            result['dm_full_%s' % key.lower()] = dm_full
         dm_spin = load_dm('Spin %s Density' % key)
-        if dm_full is not None and key != 'SCF':
-            load_orbitals = False
-            break
+        if dm_spin is not None:
+            result['dm_spin_%s' % key.lower()] = dm_spin
 
     # D) Load the wavefunction
     # Handle small difference in fchk files from g03 and g09
@@ -395,54 +406,35 @@ def load_fchk(filename, lf):
     if nbasis_indep is None:
         nbasis_indep = obasis.nbasis
 
-    # Create wfn object
+    # Load orbitals
     if 'Beta Orbital Energies' in fchk.fields:
         nalpha = fchk.fields['Number of alpha electrons']
         nbeta = fchk.fields['Number of beta electrons']
         if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
             raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
-        occ_model = AufbauOccModel(nalpha, nbeta) if load_orbitals else None
-        wfn = UnrestrictedWFN(lf, obasis.nbasis, occ_model, norb=nbasis_indep)
-        if load_orbitals:
-            exp_alpha = wfn.init_exp('alpha')
-            exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-            exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
-            exp_beta = wfn.init_exp('beta')
-            exp_beta.coeffs[:] = fchk.fields['Beta MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-            exp_beta.energies[:] = fchk.fields['Beta Orbital Energies']
-            occ_model.assign(exp_alpha, exp_beta)
+        exp_alpha = lf.create_expansion(obasis.nbasis, nbasis_indep)
+        exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+        exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
+        exp_alpha.occupations[:nalpha] = 1.0
+        result['exp_alpha'] = exp_alpha
+        exp_beta = lf.create_expansion(obasis.nbasis, nbasis_indep)
+        exp_beta.coeffs[:] = fchk.fields['Beta MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+        exp_beta.energies[:] = fchk.fields['Beta Orbital Energies']
+        exp_beta.occupations[:nbeta] = 1.0
+        result['exp_beta'] = exp_beta
     else:
         nelec = fchk.fields["Number of electrons"]
         if nelec <= 0:
             raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
         assert nelec % 2 == 0
-        occ_model = AufbauOccModel(nelec/2) if load_orbitals else None
-        wfn = RestrictedWFN(lf, obasis.nbasis, occ_model, norb=nbasis_indep)
-        if load_orbitals:
-            exp_alpha = wfn.init_exp('alpha')
-            exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-            exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
-            occ_model.assign(exp_alpha)
-
-    # Store the density matrices
-    if dm_full is not None:
-        wfn.update_dm('full', dm_full)
-    if dm_spin is not None:
-        wfn.update_dm('spin', dm_spin)
+        exp_alpha = lf.create_expansion(obasis.nbasis, nbasis_indep)
+        exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+        exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
+        exp_alpha.occupations[:nelec/2] = 1.0
+        result['exp_alpha'] = exp_alpha
 
     # E) Load properties
-    energy = fchk.fields['Total Energy']
-
-    result = {
-        'coordinates': system_coordinates,
-        'lf': lf,
-        'numbers': numbers,
-        'obasis': obasis,
-        'wfn': wfn,
-        'permutation': permutation,
-        'energy': energy,
-        'pseudo_numbers': pseudo_numbers,
-    }
+    result['energy'] = fchk.fields['Total Energy']
 
     # F) Load optional properties
     # Mask out ghost atoms from charges

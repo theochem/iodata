@@ -26,7 +26,7 @@
 '''
 
 
-from horton.matrix import DenseLinalgFactory
+from horton.matrix import DenseLinalgFactory, LinalgObject
 import h5py as h5, os, numpy as np
 
 
@@ -155,8 +155,20 @@ class Molecule(object):
        er
             The electron repulsion two-body operator
 
+       exp_alpha
+            The alpha orbitals (coefficients, occupations and energies)
+
+       exp_beta
+            The beta orbitals (coefficients, occupations and energies)
+
        esp_charges
             Charges fitted to the electrostatic potential
+
+       dm_full (optionally with some prefix like _mp2, _mp3, _cc, _ci, _scf).
+            The spin-summed first-order density matrix
+
+       dm_spin (optionally with some prefix like _mp2, _mp3, _cc, _ci, _scf).
+            The spin-difference first-order density matrix
 
        grid
             An integration grid (usually a UniformGrid instance)
@@ -195,10 +207,6 @@ class Molecule(object):
        links
             A mapping between the atoms in the primitive unit and the
             crystallographic unit.
-
-       wfn
-            A WFN object.
-
     '''
     def __init__(self, **kwargs):
         for key, value in kwargs.iteritems():
@@ -296,16 +304,16 @@ class Molecule(object):
             else:
                 raise ValueError('Unknown file format for reading: %s' % filename)
 
-        # Apply changes in orbital permutation and sign conventions
+        # Apply changes in orbital order and sign conventions
         if 'permutation' in result:
-            for key in 'olp', 'kin', 'na', 'er', 'wfn':
-                if key in result:
-                    result[key].apply_basis_permutation(result['permutation'])
+            for key, value in result.iteritems():
+                if isinstance(value, LinalgObject):
+                    value.apply_basis_permutation(result['permutation'])
             del result['permutation']
         if 'signs' in result:
-            for key in 'olp', 'kin', 'na', 'er', 'wfn':
-                if key in result:
-                    result[key].apply_basis_signs(result['signs'])
+            for key, value in result.iteritems():
+                if isinstance(value, LinalgObject):
+                    value.apply_basis_signs(result['signs'])
             del result['signs']
 
         return cls(**result)
@@ -367,3 +375,49 @@ class Molecule(object):
                 kwargs[key[1:]] = kwargs[key]
                 del kwargs[key]
         return self.__class__(**kwargs)
+
+    def get_dm_full(self):
+        '''Return a spin-summed density matrix using availlable attributes'''
+        if hasattr(self, 'dm_full'):
+            return self.dm_full
+        if hasattr(self, 'dm_full_mp2'):
+            return self.dm_full_mp2
+        elif hasattr(self, 'dm_full_mp3'):
+            return self.dm_full_mp3
+        elif hasattr(self, 'dm_full_ci'):
+            return self.dm_full_ci
+        elif hasattr(self, 'dm_full_cc'):
+            return self.dm_full_cc
+        elif hasattr(self, 'exp_alpha'):
+            dm_full = self.lf.create_one_body()
+            dm_full = self.exp_alpha.to_dm()
+            if hasattr(self, 'exp_beta'):
+                self.exp_beta.to_dm(dm_full, 1.0)
+            else:
+                dm_full.iscale(2)
+            return dm_full
+        elif hasattr(self, 'dm_full_scf'):
+            return self.dm_full_scf
+        else:
+            raise NotImplementedError
+
+    def get_dm_spin(self):
+        '''Return a spin-difference density matrix using availlable attributes'''
+        if hasattr(self, 'dm_spin'):
+            return self.dm_spin
+        if hasattr(self, 'dm_spin_mp2'):
+            return self.dm_spin_mp2
+        elif hasattr(self, 'dm_spin_mp3'):
+            return self.dm_spin_mp3
+        elif hasattr(self, 'dm_spin_ci'):
+            return self.dm_spin_ci
+        elif hasattr(self, 'dm_spin_cc'):
+            return self.dm_spin_cc
+        elif hasattr(self, 'exp_alpha') and hasattr(self, 'exp_beta'):
+            dm_spin = self.exp_alpha.to_dm()
+            self.exp_beta.to_dm(dm_spin, -1.0)
+            return dm_spin
+        elif hasattr(self, 'dm_spin_scf'):
+            return self.dm_spin_scf
+        else:
+            raise NotImplementedError

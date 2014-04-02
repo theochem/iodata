@@ -26,7 +26,6 @@ import numpy as np
 from horton.periodic import periodic
 from horton.gbasis.io import str_to_shell_types, shell_type_to_str
 from horton.gbasis.gobasis import GOBasis
-from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
 from horton.io.common import renorm_helper, get_orca_signs
 
 
@@ -45,7 +44,7 @@ def load_molden(filename, lf):
             A LinalgFactory instance.
 
        **Returns:** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
-       ``wfn``, ``signs``.
+       ``exp_alpha``, ``signs``. It may also contain: ``exp_beta``.
     '''
 
     def helper_coordinates(f):
@@ -225,37 +224,39 @@ def load_molden(filename, lf):
     lf.default_nbasis = obasis.nbasis
     if coeff_beta is None:
         nalpha = int(np.round(occ_alpha.sum()))/2
-        wfn = RestrictedWFN(lf, obasis.nbasis, norb=coeff_alpha.shape[1])
-        exp_alpha = wfn.init_exp('alpha')
+        exp_alpha = lf.create_expansion(obasis.nbasis, coeff_alpha.shape[1])
         exp_alpha.coeffs[:] = coeff_alpha
         exp_alpha.energies[:] = ener_alpha
         exp_alpha.occupations[:] = occ_alpha/2
+        exp_beta = None
     else:
         nalpha = int(np.round(occ_alpha.sum()))
         nbeta = int(np.round(occ_beta.sum()))
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
-        wfn = UnrestrictedWFN(lf, obasis.nbasis, norb=coeff_alpha.shape[1])
-        exp_alpha = wfn.init_exp('alpha')
+        exp_alpha = lf.create_expansion(obasis.nbasis, coeff_alpha.shape[1])
         exp_alpha.coeffs[:] = coeff_alpha
         exp_alpha.energies[:] = ener_alpha
         exp_alpha.occupations[:] = occ_alpha
-        exp_beta = wfn.init_exp('beta')
+        exp_beta = lf.create_expansion(obasis.nbasis, coeff_beta.shape[1])
         exp_beta.coeffs[:] = coeff_beta
         exp_beta.energies[:] = ener_beta
         exp_beta.occupations[:] = occ_beta
 
     signs = get_orca_signs(obasis)
 
-    return {
+    result = {
         'coordinates': coordinates,
+        'exp_alpha': exp_alpha,
         'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
-        'wfn': wfn,
         'signs': signs,
     }
+    if exp_beta is not None:
+        result['exp_beta'] = exp_beta
+    return result
 
 
 def dump_molden(filename, mol):
@@ -269,7 +270,7 @@ def dump_molden(filename, mol):
 
        mol
             A molecule instance. Must contain ``coordinates``, ``numbers``,
-            ``obasis``, ``wfn``.
+            ``obasis``, ``exp_alpha``. May contain ``exp_beta``.
     '''
     with open(filename, 'w') as f:
         # Print the header
@@ -326,9 +327,7 @@ def dump_molden(filename, mol):
             raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
 
         def helper_exp(spin, occ_scale=1.0):
-            if not 'exp_%s' % spin in mol.wfn.cache:
-                raise TypeError('The restricted WFN does not have an expansion of the %s orbitals.' % spin)
-            exp = mol.wfn.get_exp(spin)
+            exp = getattr(mol, 'exp_%s' % spin)
             for ifn in xrange(exp.nfn):
                 print >> f, ' Sym=     1a'
                 print >> f, ' Ene= %20.14E' % exp.energies[ifn]
@@ -338,12 +337,10 @@ def dump_molden(filename, mol):
                     print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[ibasis,ifn]*signs[ibasis])
 
         # Print the mean-field orbitals
-        if isinstance(mol.wfn, RestrictedWFN):
-            print >> f, '[MO]'
-            helper_exp('alpha', 2.0)
-        elif isinstance(mol.wfn, UnrestrictedWFN):
+        if hasattr(mol, 'exp_beta'):
             print >> f, '[MO]'
             helper_exp('alpha')
             helper_exp('beta')
         else:
-            raise NotImplementedError
+            print >> f, '[MO]'
+            helper_exp('alpha', 2.0)

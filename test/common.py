@@ -29,38 +29,27 @@ from horton.meanfield.hamiltonian import RestrictedEffectiveHamiltonian, \
 from horton.meanfield.observable import RestrictedOneBodyTerm, \
     RestrictedDirectTerm, RestrictedExchangeTerm, UnrestrictedOneBodyTerm, \
     UnrestrictedDirectTerm, UnrestrictedExchangeTerm
-from horton.meanfield.wfn import RestrictedWFN
 from horton.matrix import DenseOneBody, DenseTwoBody
 from horton.part.mulliken import get_mulliken_operators
-from horton.test.common import compare_wfns
 
 
 __all__ = ['compute_mulliken_charges']
 
 
-def compute_mulliken_charges(obasis, lf, numbers, wfn):
+def compute_mulliken_charges(obasis, lf, numbers, dm):
     operators = get_mulliken_operators(obasis, lf)
-    populations = np.array([operator.expectation_value(wfn.dm_full) for operator in operators])
+    populations = np.array([operator.expectation_value(dm) for operator in operators])
     return numbers - np.array(populations)
 
 
 def compute_hf_energy(mol):
-    print mol.wfn
     olp = mol.obasis.compute_overlap(mol.lf)
     kin = mol.obasis.compute_kinetic(mol.lf)
     na = mol.obasis.compute_nuclear_attraction(mol.coordinates, mol.pseudo_numbers, mol.lf)
     er = mol.obasis.compute_electron_repulsion(mol.lf)
     external = {'nn': compute_nucnuc(mol.coordinates, mol.pseudo_numbers)}
-    if isinstance(mol.wfn, RestrictedWFN):
-        terms = [
-            RestrictedOneBodyTerm(kin, 'kin'),
-            RestrictedDirectTerm(er, 'hartree'),
-            RestrictedExchangeTerm(er, 'x_hf'),
-            RestrictedOneBodyTerm(na, 'ne'),
-        ]
-        ham = RestrictedEffectiveHamiltonian(terms, external)
-        ham.reset(mol.wfn.dm_alpha)
-    else:
+    if hasattr(mol, 'exp_beta'):
+        # assuming unrestricted
         terms = [
             UnrestrictedOneBodyTerm(kin, 'kin'),
             UnrestrictedDirectTerm(er, 'hartree'),
@@ -68,5 +57,18 @@ def compute_hf_energy(mol):
             UnrestrictedOneBodyTerm(na, 'ne'),
         ]
         ham = UnrestrictedEffectiveHamiltonian(terms, external)
-        ham.reset(mol.wfn.dm_alpha, mol.wfn.dm_beta)
+        dm_alpha = mol.exp_alpha.to_dm()
+        dm_beta = mol.exp_beta.to_dm()
+        ham.reset(dm_alpha, dm_beta)
+    else:
+        # assuming restricted
+        terms = [
+            RestrictedOneBodyTerm(kin, 'kin'),
+            RestrictedDirectTerm(er, 'hartree'),
+            RestrictedExchangeTerm(er, 'x_hf'),
+            RestrictedOneBodyTerm(na, 'ne'),
+        ]
+        ham = RestrictedEffectiveHamiltonian(terms, external)
+        dm_alpha = mol.exp_alpha.to_dm()
+        ham.reset(dm_alpha)
     return ham.compute()

@@ -23,7 +23,7 @@
 
 import numpy as np
 from horton.periodic import periodic
-from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
+
 
 __all__ = ['load_wfn_low', 'setup_permutation1', 'setup_permutation2', 'setup_mask', 'load_wfn']
 
@@ -213,31 +213,33 @@ def load_wfn(filename, lf):
     if mo_occ.max() > 1.0:
         #close shell system
         nelec = int(round(mo_occ.sum()))
-        wfn = RestrictedWFN(lf, obasis.nbasis, norb=coefficients.shape[1])
-        exp_alpha = wfn.init_exp('alpha')
+        exp_alpha = lf.create_expansion(obasis.nbasis, coefficients.shape[1])
         exp_alpha.coeffs[:] = coefficients
         exp_alpha.energies[:] = mo_energy
         exp_alpha.occupations[:] = mo_occ/2
+        exp_beta = None
     else:
         #open shell system
         #counting the number of alpha and beta orbitals
         index = 1
         while index < num_mo and mo_energy[index] >= mo_energy[index-1] and mo_count[index] == mo_count[index-1]+1:
             index += 1
-        wfn = UnrestrictedWFN(lf, obasis.nbasis)
-        exp_alpha = wfn.init_exp('alpha', norb=index)
+        exp_alpha = lf.create_expansion(obasis.nbasis, index)
         exp_alpha.coeffs[:] = coefficients[:,:index]
         exp_alpha.energies[:] = mo_energy[:index]
         exp_alpha.occupations[:] = mo_occ[:index]
-        exp_beta = wfn.init_exp('beta', norb=num_mo-index)
+        exp_beta = lf.create_expansion(obasis.nbasis, num_mo-index)
         exp_beta.coeffs[:] = coefficients[:,index:]
         exp_beta.energies[:] = mo_energy[index:]
         exp_beta.occupations[:] = mo_occ[index:]
 
-    return {
+    result = {
         'coordinates': coordinates,
+        'exp_alpha': exp_alpha,
         'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
-        'wfn': wfn,
     }
+    if exp_beta is not None:
+        result['exp_beta'] = exp_beta
+    return result

@@ -25,7 +25,6 @@ import numpy as np
 
 from horton.units import angstrom
 from horton.io.common import renorm_helper, get_orca_signs
-from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
 
 
 __all__ = ['load_mkl']
@@ -43,7 +42,7 @@ def load_mkl(filename, lf):
             A LinalgFactory instance.
 
        **Returns** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
-       ``wfn``, ``signs``
+       ``exp_alpha``, ``signs``. It may also contain: ``exp_beta``.
     '''
 
     def helper_char_mult(f):
@@ -219,11 +218,11 @@ def load_mkl(filename, lf):
     if coeff_beta is None:
         assert nelec % 2 == 0
         assert abs(occ_alpha.sum() - nelec) < 1e-7
-        wfn = RestrictedWFN(lf, obasis.nbasis, norb=coeff_alpha.shape[1])
-        exp_alpha = wfn.init_exp('alpha')
+        exp_alpha = lf.create_expansion(obasis.nbasis, coeff_alpha.shape[1])
         exp_alpha.coeffs[:] = coeff_alpha
         exp_alpha.energies[:] = ener_alpha
         exp_alpha.occupations[:] = occ_alpha/2
+        exp_beta = None
     else:
         if occ_beta is None:
             raise IOError('Beta occupation numbers not found in mkl file while beta orbitals were present.')
@@ -233,25 +232,25 @@ def load_mkl(filename, lf):
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
-        wfn = UnrestrictedWFN(lf, obasis.nbasis, norb=coeff_alpha.shape[1])
-        exp_alpha = wfn.init_exp('alpha')
+        exp_alpha = lf.create_expansion(obasis.nbasis, coeff_alpha.shape[1])
         exp_alpha.coeffs[:] = coeff_alpha
         exp_alpha.energies[:] = ener_alpha
         exp_alpha.occupations[:] = occ_alpha
-        exp_beta = wfn.init_exp('beta')
+        exp_beta = lf.create_expansion(obasis.nbasis, coeff_beta.shape[1])
         exp_beta.coeffs[:] = coeff_beta
         exp_beta.energies[:] = ener_beta
         exp_beta.occupations[:] = occ_beta
 
-        exp_beta.occupations[:] = occ_beta
-
     signs = get_orca_signs(obasis)
 
-    return {
+    result = {
         'coordinates': coordinates,
+        'exp_alpha': exp_alpha,
         'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
-        'wfn': wfn,
         'signs': signs,
     }
+    if exp_beta is not None:
+        result['exp_beta'] = exp_beta
+    return result

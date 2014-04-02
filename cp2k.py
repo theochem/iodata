@@ -24,7 +24,6 @@ import numpy as np
 
 from horton.gbasis.io import str_to_shell_types
 from horton.gbasis.cext import GOBasis
-from horton.meanfield.wfn import RestrictedWFN, UnrestrictedWFN
 
 
 __all__ = ['load_atom_cp2k']
@@ -101,8 +100,9 @@ def load_atom_cp2k(filename, lf):
        filename
             The name of the cp2k out file
 
-       **Returns** a dictionary with ``obasis``, ``wfn``, ``coordinates``,
-       ``numbers``, ``energy``, ``pseudo_numbers``.
+       **Returns** a dictionary with ``obasis``, ``exp_alpha``, ``coordinates``,
+       ``numbers``, ``energy``, ``pseudo_numbers``. The dictionary may also
+       contain: ``exp_beta``.
     '''
     with open(filename) as f:
         # Find the element number
@@ -230,29 +230,31 @@ def load_atom_cp2k(filename, lf):
             coeffs_beta = _read_coeffs_helper(f, oe_beta)
 
 
-        # Turn orbital data into a Horton wfn expansion
+        # Turn orbital data into a Horton orbital expansions
         if restricted:
             norb, nel = _helper_norb(oe_alpha)
             assert nel%2 == 0
-            wfn = RestrictedWFN(lf, obasis.nbasis, norb=norb)
-            exp_alpha = wfn.init_exp('alpha')
+            exp_alpha = lf.create_expansion(obasis.nbasis, norb)
+            exp_beta = None
             _helper_exp(exp_alpha, oe_alpha, coeffs_alpha, shell_types, restricted)
         else:
             norb_alpha, nalpha = _helper_norb(oe_alpha)
             norb_beta, nbeta = _helper_norb(oe_beta)
             assert norb_alpha == norb_beta
-            wfn = UnrestrictedWFN(lf, obasis.nbasis, norb=norb_alpha)
-            exp_alpha = wfn.init_exp('alpha')
-            exp_beta = wfn.init_exp('beta')
+            exp_alpha = lf.create_expansion(obasis.nbasis, norb_alpha)
+            exp_beta = lf.create_expansion(obasis.nbasis, norb_beta)
             _helper_exp(exp_alpha, oe_alpha, coeffs_alpha, shell_types, restricted)
             _helper_exp(exp_beta, oe_beta, coeffs_beta, shell_types, restricted)
 
-    return {
+    result = {
         'obasis': obasis,
         'lf': lf,
-        'wfn': wfn,
+        'exp_alpha': exp_alpha,
         'coordinates': coordinates,
         'numbers': np.array([number]),
         'energy': energy,
         'pseudo_numbers': np.array([pseudo_number]),
     }
+    if exp_beta is not None:
+        result['exp_beta'] = exp_beta
+    return result
