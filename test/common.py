@@ -24,8 +24,12 @@
 import numpy as np
 
 from horton.cext import compute_nucnuc
-from horton.meanfield.hamiltonian import Hamiltonian
-from horton.meanfield.observable import OneBodyTerm, DirectTerm, ExchangeTerm
+from horton.meanfield.hamiltonian import RestrictedEffectiveHamiltonian, \
+    UnrestrictedEffectiveHamiltonian
+from horton.meanfield.observable import RestrictedOneBodyTerm, \
+    RestrictedDirectTerm, RestrictedExchangeTerm, UnrestrictedOneBodyTerm, \
+    UnrestrictedDirectTerm, UnrestrictedExchangeTerm
+from horton.meanfield.wfn import RestrictedWFN
 from horton.matrix import DenseOneBody, DenseTwoBody
 from horton.part.mulliken import get_mulliken_operators
 from horton.test.common import compare_wfns
@@ -41,16 +45,28 @@ def compute_mulliken_charges(obasis, lf, numbers, wfn):
 
 
 def compute_hf_energy(mol):
+    print mol.wfn
     olp = mol.obasis.compute_overlap(mol.lf)
     kin = mol.obasis.compute_kinetic(mol.lf)
     na = mol.obasis.compute_nuclear_attraction(mol.coordinates, mol.pseudo_numbers, mol.lf)
     er = mol.obasis.compute_electron_repulsion(mol.lf)
     external = {'nn': compute_nucnuc(mol.coordinates, mol.pseudo_numbers)}
-    terms = [
-        OneBodyTerm(kin, mol.wfn, 'kin'),
-        DirectTerm(er, mol.wfn, 'hartree'),
-        ExchangeTerm(er, mol.wfn, 'x_hf'),
-        OneBodyTerm(na, mol.wfn, 'ne'),
-    ]
-    ham = Hamiltonian(terms, external)
+    if isinstance(mol.wfn, RestrictedWFN):
+        terms = [
+            RestrictedOneBodyTerm(kin, 'kin'),
+            RestrictedDirectTerm(er, 'hartree'),
+            RestrictedExchangeTerm(er, 'x_hf'),
+            RestrictedOneBodyTerm(na, 'ne'),
+        ]
+        ham = RestrictedEffectiveHamiltonian(terms, external)
+        ham.reset(mol.wfn.dm_alpha)
+    else:
+        terms = [
+            UnrestrictedOneBodyTerm(kin, 'kin'),
+            UnrestrictedDirectTerm(er, 'hartree'),
+            UnrestrictedExchangeTerm(er, 'x_hf'),
+            UnrestrictedOneBodyTerm(na, 'ne'),
+        ]
+        ham = UnrestrictedEffectiveHamiltonian(terms, external)
+        ham.reset(mol.wfn.dm_alpha, mol.wfn.dm_beta)
     return ham.compute()
