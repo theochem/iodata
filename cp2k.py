@@ -170,10 +170,10 @@ def load_atom_cp2k(filename, lf):
         restricted = None
         for line in f:
             if line.startswith(' METHOD    |'):
-                if 'Unrestricted' in line:
+                if 'U' in line:
                     restricted = False
                     break
-                elif 'Restricted' in line:
+                elif 'R' in line:
                     restricted = True
                     break
 

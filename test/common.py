@@ -24,11 +24,11 @@
 import numpy as np
 
 from horton.cext import compute_nucnuc
-from horton.meanfield.hamiltonian import RestrictedEffectiveHamiltonian, \
-    UnrestrictedEffectiveHamiltonian
-from horton.meanfield.observable import RestrictedOneBodyTerm, \
-    RestrictedDirectTerm, RestrictedExchangeTerm, UnrestrictedOneBodyTerm, \
-    UnrestrictedDirectTerm, UnrestrictedExchangeTerm
+from horton.meanfield.hamiltonian import REffHam, \
+    UEffHam
+from horton.meanfield.observable import ROneBodyTerm, \
+    RDirectTerm, RExchangeTerm, UOneBodyTerm, \
+    UDirectTerm, UExchangeTerm
 from horton.matrix import DenseOneBody, DenseTwoBody
 from horton.part.mulliken import get_mulliken_operators
 
@@ -51,24 +51,24 @@ def compute_hf_energy(mol):
     if hasattr(mol, 'exp_beta'):
         # assuming unrestricted
         terms = [
-            UnrestrictedOneBodyTerm(kin, 'kin'),
-            UnrestrictedDirectTerm(er, 'hartree'),
-            UnrestrictedExchangeTerm(er, 'x_hf'),
-            UnrestrictedOneBodyTerm(na, 'ne'),
+            UOneBodyTerm(kin, 'kin'),
+            UDirectTerm(er, 'hartree'),
+            UExchangeTerm(er, 'x_hf'),
+            UOneBodyTerm(na, 'ne'),
         ]
-        ham = UnrestrictedEffectiveHamiltonian(terms, external)
+        ham = UEffHam(terms, external)
         dm_alpha = mol.exp_alpha.to_dm()
         dm_beta = mol.exp_beta.to_dm()
         ham.reset(dm_alpha, dm_beta)
     else:
         # assuming restricted
         terms = [
-            RestrictedOneBodyTerm(kin, 'kin'),
-            RestrictedDirectTerm(er, 'hartree'),
-            RestrictedExchangeTerm(er, 'x_hf'),
-            RestrictedOneBodyTerm(na, 'ne'),
+            ROneBodyTerm(kin, 'kin'),
+            RDirectTerm(er, 'hartree'),
+            RExchangeTerm(er, 'x_hf'),
+            ROneBodyTerm(na, 'ne'),
         ]
-        ham = RestrictedEffectiveHamiltonian(terms, external)
+        ham = REffHam(terms, external)
         dm_alpha = mol.exp_alpha.to_dm()
         ham.reset(dm_alpha)
     return ham.compute()
