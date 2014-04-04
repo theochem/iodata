@@ -87,3 +87,14 @@ def test_dm_lih_sto3g_hf():
     assert abs(dm.get_element(0, 1) - -2.65370873E-03) < 1e-9
     assert abs(dm.get_element(1, 1) - 5.38701212E-03) < 1e-9
     assert abs(dm.get_element(10, 10) - 4.23889148E-01) < 1e-7
+
+
+def test_dm_ch3_rohf_g03():
+    fn_fchk = context.get_fn('test/ch3_rohf_sto3g_g03.fchk')
+    mol = Molecule.from_file(fn_fchk)
+
+    olp = mol.obasis.compute_overlap(mol.lf)
+    dm = mol.get_dm_full()
+    assert abs(olp.expectation_value(dm) - 9) < 1e-6
+    dm = mol.get_dm_spin()
+    assert abs(olp.expectation_value(dm) - 1) < 1e-6

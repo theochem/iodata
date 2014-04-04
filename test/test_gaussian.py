@@ -267,6 +267,19 @@ def test_load_fchk_ghost_atoms():
     assert obasis.centers.shape[0] == ( natom + nghost )
 
 
+def test_load_fchk_ch3_rohf_g03():
+    lf = DenseLinalgFactory()
+    fn_fchk = context.get_fn('test/ch3_rohf_sto3g_g03.fchk')
+    fields = load_fchk(fn_fchk, lf)
+    exp_alpha = fields['exp_alpha']
+    assert exp_alpha.occupations.sum() == 5
+    exp_beta = fields['exp_beta']
+    assert exp_beta.occupations.sum() == 4
+    assert (exp_alpha.coeffs == exp_beta.coeffs).all()
+    assert not (exp_alpha is exp_beta)
+    assert 'dm_full_scf' not in fields
+
+
 def check_load_azirine(key, numbers):
     lf = DenseLinalgFactory()
     fn_fchk = context.get_fn('test/2h-azirine-%s.fchk' % key)

@@ -407,31 +407,31 @@ def load_fchk(filename, lf):
         nbasis_indep = obasis.nbasis
 
     # Load orbitals
+    nalpha = fchk.fields['Number of alpha electrons']
+    nbeta = fchk.fields['Number of beta electrons']
+    if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
+        raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
+    exp_alpha = lf.create_expansion(obasis.nbasis, nbasis_indep)
+    exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+    exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
+    exp_alpha.occupations[:nalpha] = 1.0
+    result['exp_alpha'] = exp_alpha
     if 'Beta Orbital Energies' in fchk.fields:
-        nalpha = fchk.fields['Number of alpha electrons']
-        nbeta = fchk.fields['Number of beta electrons']
-        if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
-            raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
-        exp_alpha = lf.create_expansion(obasis.nbasis, nbasis_indep)
-        exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-        exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
-        exp_alpha.occupations[:nalpha] = 1.0
-        result['exp_alpha'] = exp_alpha
+        # UHF case
         exp_beta = lf.create_expansion(obasis.nbasis, nbasis_indep)
         exp_beta.coeffs[:] = fchk.fields['Beta MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
         exp_beta.energies[:] = fchk.fields['Beta Orbital Energies']
         exp_beta.occupations[:nbeta] = 1.0
         result['exp_beta'] = exp_beta
-    else:
-        nelec = fchk.fields["Number of electrons"]
-        if nelec <= 0:
-            raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
-        assert nelec % 2 == 0
-        exp_alpha = lf.create_expansion(obasis.nbasis, nbasis_indep)
-        exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-        exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
-        exp_alpha.occupations[:nelec/2] = 1.0
-        result['exp_alpha'] = exp_alpha
+    elif fchk.fields['Number of beta electrons'] != fchk.fields['Number of alpha electrons']:
+        # ROHF case
+        exp_beta = lf.create_expansion(obasis.nbasis, nbasis_indep)
+        exp_beta.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+        exp_beta.energies[:] = fchk.fields['Alpha Orbital Energies']
+        exp_beta.occupations[:nbeta] = 1.0
+        result['exp_beta'] = exp_beta
+        # Delete dm_full_scf because it is known to be buggy
+        result.pop('dm_full_scf')
 
     # E) Load properties
     result['energy'] = fchk.fields['Total Energy']
