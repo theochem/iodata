@@ -398,8 +398,6 @@ class Molecule(object):
             return dm_full
         elif hasattr(self, 'dm_full_scf'):
             return self.dm_full_scf
-        else:
-            raise NotImplementedError
 
     def get_dm_spin(self):
         '''Return a spin-difference density matrix using availlable attributes'''
@@ -419,5 +417,3 @@ class Molecule(object):
             return dm_spin
         elif hasattr(self, 'dm_spin_scf'):
             return self.dm_spin_scf
-        else:
-            raise NotImplementedError
