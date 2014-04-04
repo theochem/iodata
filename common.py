@@ -69,7 +69,7 @@ def renorm_helper(con_coeff, alpha, shell_type, reverse=False):
 
 
 def get_orca_signs(obasis):
-    '''Correct for different sign conventions for Gaussian basis functions used in ORCA.
+    '''Return an array with sign corrections for orbitals read from ORCA.
 
        **Arguments:**
 

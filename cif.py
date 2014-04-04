@@ -82,6 +82,12 @@ class IterRelevantCIFLines(object):
        one can easily 'undo' a line read.
     '''
     def __init__(self, f):
+        '''
+           **Arguments:**
+
+           f
+                An open file object.
+        '''
         self.f = f
         self.cache = []
         self.in_comment = False
