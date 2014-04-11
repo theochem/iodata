@@ -140,6 +140,9 @@ class Molecule(object):
        numbers
             A (N,) int vector with the atomic numbers.
 
+       polar
+            A (3, 3) matrix containing the dipole polarizability tensor.
+
        pseudo_numbers
             A (N,) float array with pseudo-potential core charges.
 
@@ -215,8 +218,9 @@ class Molecule(object):
     # only perform type checking on minimal attributes
     numbers = ArrayTypeCheckDescriptor('numbers', 1, (-1,), int, ['coordinates', 'pseudo_numbers'])
     coordinates = ArrayTypeCheckDescriptor('coordinates', 2, (-1, 3), float, ['numbers', 'pseudo_numbers'])
-    pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float, ['coordinates', 'numbers'], 'numbers')
     cube_data = ArrayTypeCheckDescriptor('cube_data', 3)
+    polar = ArrayTypeCheckDescriptor('polar', 2, (3, 3), float)
+    pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float, ['coordinates', 'numbers'], 'numbers')
 
     def _get_natom(self):
         '''The number of atoms'''

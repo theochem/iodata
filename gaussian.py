@@ -141,7 +141,7 @@ def _load_twobody_g09(f, nbasis, lf):
     return result
 
 
-class FCHKFile(object):
+class FCHKFile(dict):
     """Reader for Formatted checkpoint files
 
        After initialization, the data from the file is available in the fields
@@ -162,6 +162,7 @@ class FCHKFile(object):
                 When provided, only these fields are read from the formatted
                 checkpoint file. (This can save a lot of time.)
         """
+        dict.__init__(self, [])
         self.filename = filename
         self._read(filename, set(field_labels))
 
@@ -222,10 +223,9 @@ class FCHKFile(object):
             else:
                 raise IOError("Unexpected line in formatted checkpoint file %s\n%s" % (filename, line[:-1]))
 
-            self.fields[label] = value
+            self[label] = value
             return True
 
-        self.fields = {}
         f = file(filename, 'r')
         self.title = f.readline()[:-1].strip()
         words = f.readline().split()
@@ -240,6 +240,29 @@ class FCHKFile(object):
             pass
 
         f.close()
+
+
+def triangle_to_dense(triangle):
+    '''Convert a symmetric matrix in triangular storage to a dense square matrix.
+
+       **Arguments:**
+
+       triangle
+            A row vector containing all the unique matrix elements of symmetrix
+            matrix. (Either the lower-triangular part in row major-order or the
+            upper-triangular part in column-major order.)
+
+       **Returns:** a square symmetrix matrix.
+    '''
+    nrow = int(np.round((np.sqrt(1+8*len(triangle))-1)/2))
+    result = np.zeros((nrow, nrow))
+    begin = 0
+    for irow in xrange(nrow):
+        end = begin + irow + 1
+        result[irow,:irow+1] = triangle[begin:end]
+        result[:irow+1,irow] = triangle[begin:end]
+        begin = end
+    return result
 
 
 def load_fchk(filename, lf):
@@ -279,13 +302,14 @@ def load_fchk(filename, lf):
         'Total MP3 Density', 'Spin MP3 Density',
         'Total CC Density', 'Spin CC Density',
         'Total CI Density', 'Spin CI Density',
-        'Mulliken Charges', 'ESP Charges','NPA Charges',
+        'Mulliken Charges', 'ESP Charges', 'NPA Charges',
+        'Polarizability',
     ])
 
     # A) Load the geometry
-    numbers = fchk.fields["Atomic numbers"]
-    coordinates = fchk.fields["Current cartesian coordinates"].reshape(-1,3)
-    pseudo_numbers = fchk.fields["Nuclear charges"]
+    numbers = fchk["Atomic numbers"]
+    coordinates = fchk["Current cartesian coordinates"].reshape(-1,3)
+    pseudo_numbers = fchk["Nuclear charges"]
     # Mask out ghost atoms
     mask = pseudo_numbers != 0.0
     numbers = numbers[mask]
@@ -294,12 +318,12 @@ def load_fchk(filename, lf):
     pseudo_numbers = pseudo_numbers[mask]
 
     # B) Load the orbital basis set
-    shell_types = fchk.fields["Shell types"]
-    shell_map = fchk.fields["Shell to atom map"] - 1
-    nprims = fchk.fields["Number of primitives per shell"]
-    alphas = fchk.fields["Primitive exponents"]
-    ccoeffs_level1 = fchk.fields["Contraction coefficients"]
-    ccoeffs_level2 = fchk.fields.get("P(S=P) Contraction coefficients")
+    shell_types = fchk["Shell types"]
+    shell_map = fchk["Shell to atom map"] - 1
+    nprims = fchk["Number of primitives per shell"]
+    alphas = fchk["Primitive exponents"]
+    ccoeffs_level1 = fchk["Contraction coefficients"]
+    ccoeffs_level2 = fchk.get("P(S=P) Contraction coefficients")
 
     my_shell_types = []
     my_shell_map = []
@@ -379,13 +403,13 @@ def load_fchk(filename, lf):
 
     # C) Load density matrices
     def load_dm(label):
-        if label in fchk.fields:
+        if label in fchk:
             dm = lf.create_one_body(obasis.nbasis)
             start = 0
             for i in xrange(obasis.nbasis):
                 stop = start+i+1
-                dm._array[i,:i+1] = fchk.fields[label][start:stop]
-                dm._array[:i+1,i] = fchk.fields[label][start:stop]
+                dm._array[i,:i+1] = fchk[label][start:stop]
+                dm._array[:i+1,i] = fchk[label][start:stop]
                 start = stop
             return dm
 
@@ -401,48 +425,50 @@ def load_fchk(filename, lf):
 
     # D) Load the wavefunction
     # Handle small difference in fchk files from g03 and g09
-    nbasis_indep = fchk.fields.get("Number of independant functions") or \
-                   fchk.fields.get("Number of independent functions")
+    nbasis_indep = fchk.get("Number of independant functions") or \
+                   fchk.get("Number of independent functions")
     if nbasis_indep is None:
         nbasis_indep = obasis.nbasis
 
     # Load orbitals
-    nalpha = fchk.fields['Number of alpha electrons']
-    nbeta = fchk.fields['Number of beta electrons']
+    nalpha = fchk['Number of alpha electrons']
+    nbeta = fchk['Number of beta electrons']
     if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
         raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
     exp_alpha = lf.create_expansion(obasis.nbasis, nbasis_indep)
-    exp_alpha.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-    exp_alpha.energies[:] = fchk.fields['Alpha Orbital Energies']
+    exp_alpha.coeffs[:] = fchk['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+    exp_alpha.energies[:] = fchk['Alpha Orbital Energies']
     exp_alpha.occupations[:nalpha] = 1.0
     result['exp_alpha'] = exp_alpha
-    if 'Beta Orbital Energies' in fchk.fields:
+    if 'Beta Orbital Energies' in fchk:
         # UHF case
         exp_beta = lf.create_expansion(obasis.nbasis, nbasis_indep)
-        exp_beta.coeffs[:] = fchk.fields['Beta MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-        exp_beta.energies[:] = fchk.fields['Beta Orbital Energies']
+        exp_beta.coeffs[:] = fchk['Beta MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+        exp_beta.energies[:] = fchk['Beta Orbital Energies']
         exp_beta.occupations[:nbeta] = 1.0
         result['exp_beta'] = exp_beta
-    elif fchk.fields['Number of beta electrons'] != fchk.fields['Number of alpha electrons']:
+    elif fchk['Number of beta electrons'] != fchk['Number of alpha electrons']:
         # ROHF case
         exp_beta = lf.create_expansion(obasis.nbasis, nbasis_indep)
-        exp_beta.coeffs[:] = fchk.fields['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-        exp_beta.energies[:] = fchk.fields['Alpha Orbital Energies']
+        exp_beta.coeffs[:] = fchk['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+        exp_beta.energies[:] = fchk['Alpha Orbital Energies']
         exp_beta.occupations[:nbeta] = 1.0
         result['exp_beta'] = exp_beta
         # Delete dm_full_scf because it is known to be buggy
         result.pop('dm_full_scf')
 
     # E) Load properties
-    result['energy'] = fchk.fields['Total Energy']
+    result['energy'] = fchk['Total Energy']
+    if 'Polarizability' in fchk:
+        result['polar'] = triangle_to_dense(fchk['Polarizability'])
 
     # F) Load optional properties
     # Mask out ghost atoms from charges
-    if 'Mulliken Charges' in fchk.fields:
-        result['mulliken_charges'] = fchk.fields['Mulliken Charges'][mask]
-    if 'ESP Charges' in fchk.fields:
-        result['esp_charges'] = fchk.fields['ESP Charges'][mask]
-    if 'NPA Charges' in fchk.fields:
-        result['npa_charges'] = fchk.fields['NPA Charges'][mask]
+    if 'Mulliken Charges' in fchk:
+        result['mulliken_charges'] = fchk['Mulliken Charges'][mask]
+    if 'ESP Charges' in fchk:
+        result['esp_charges'] = fchk['ESP Charges'][mask]
+    if 'NPA Charges' in fchk:
+        result['npa_charges'] = fchk['NPA Charges'][mask]
 
     return result

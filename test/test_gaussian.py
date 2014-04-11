@@ -366,3 +366,10 @@ def test_nucnuc():
     fn_fchk = context.get_fn('test/hf_sto3g.fchk')
     mol = Molecule.from_file(fn_fchk)
     assert abs(compute_nucnuc(mol.coordinates, mol.pseudo_numbers) - 4.7247965053) < 1e-5
+
+
+def test_load_water_hfs_321g():
+    mol = Molecule.from_file(context.get_fn('test/water_hfs_321g.fchk'))
+    assert mol.polar[0, 0] == 7.23806684E+00
+    assert mol.polar[1, 1] == 8.04213953E+00
+    assert mol.polar[1, 2] == 1.20021770E-10
