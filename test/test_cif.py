@@ -21,7 +21,7 @@
 #pylint: skip-file
 
 
-import h5py as h5
+import h5py as h5, numpy as np
 
 from horton import *
 from horton.io.cif import _load_cif_low

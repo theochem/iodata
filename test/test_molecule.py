@@ -20,8 +20,11 @@
 #--
 #pylint: skip-file
 
-from horton import *
+
+import numpy as np
 from nose.tools import assert_raises
+
+from horton import *
 
 
 def test_typecheck():
