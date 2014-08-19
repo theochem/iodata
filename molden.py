@@ -136,9 +136,6 @@ def load_molden(filename, lf):
             if len(line) == 0:
                 break
             elif icoeff == -1:
-                # read 1a line
-                if line != ' Sym=     1a\n':
-                    raise IOError('Symmetry in wavefunctions is not supported.')
                 # prepare array with orbital coefficients
                 col = np.zeros((nbasis,1), float)
                 icoeff = -2
@@ -203,7 +200,10 @@ def load_molden(filename, lf):
             if len(line) == 0:
                 break
             line = line.strip()
-            if line == '[Atoms] AU':
+            if line == '[Title]':
+                title = f.readline().strip()
+            if line.startswith('[Atoms]'):
+                assert 'AU' in line
                 numbers, coordinates = helper_coordinates(f)
             elif line == '[GTO]':
                 obasis = helper_obasis(f, coordinates)

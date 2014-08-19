@@ -74,3 +74,7 @@ def test_load_dump_consistency_h2o():
 
 def test_load_dump_consistency_li2():
     check_load_dump_consistency('li2.molden.input')
+
+
+def test_load_dump_consistency_f():
+    check_load_dump_consistency('F.molden')

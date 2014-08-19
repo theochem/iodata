@@ -281,7 +281,7 @@ class Molecule(object):
             elif filename.endswith('.mkl'):
                 from horton.io.molekel import load_mkl
                 result.update(load_mkl(filename, lf))
-            elif filename.endswith('.molden.input'):
+            elif filename.endswith('.molden.input') or filename.endswith('.molden'):
                 from horton.io.molden import load_molden
                 result.update(load_molden(filename, lf))
             elif filename.endswith('.cube'):
