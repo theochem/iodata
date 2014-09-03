@@ -24,14 +24,14 @@
 import numpy as np
 
 from horton.units import angstrom
-from horton.io.common import renorm_helper, get_orca_signs
+from horton.io.molden import _fix_molden_from_buggy_codes
 
 
 __all__ = ['load_mkl']
 
 
 def load_mkl(filename, lf):
-    '''Load data from a Molekel file (with ORCA sign conventions).
+    '''Load data from a Molekel file.
 
        **Arguments:**
 
@@ -42,7 +42,7 @@ def load_mkl(filename, lf):
             A LinalgFactory instance.
 
        **Returns** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
-       ``exp_alpha``, ``signs``. It may also contain: ``exp_beta``.
+       ``exp_alpha``. It may also contain: ``exp_beta``, ``signs``.
     '''
 
     def helper_char_mult(f):
@@ -92,8 +92,7 @@ def load_mkl(filename, lf):
                     assert in_shell
                     alpha = float(words[0])
                     alphas.append(alpha)
-                    con_coeff = renorm_helper(float(words[1]), alpha, shell_type)
-                    con_coeffs.append(con_coeff)
+                    con_coeffs.append(float(words[1]))
                     nprim += 1
                 else:
                     if nprim is not None:
@@ -241,16 +240,14 @@ def load_mkl(filename, lf):
         exp_beta.energies[:] = ener_beta
         exp_beta.occupations[:] = occ_beta
 
-    signs = get_orca_signs(obasis)
-
     result = {
         'coordinates': coordinates,
         'exp_alpha': exp_alpha,
         'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
-        'signs': signs,
     }
     if exp_beta is not None:
         result['exp_beta'] = exp_beta
+    _fix_molden_from_buggy_codes(result, filename)
     return result

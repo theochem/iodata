@@ -23,17 +23,19 @@
 
 import numpy as np
 
+from horton.units import angstrom
+from horton.log import log
 from horton.periodic import periodic
 from horton.gbasis.io import str_to_shell_types, shell_type_to_str
 from horton.gbasis.gobasis import GOBasis
-from horton.io.common import renorm_helper, get_orca_signs
+from horton.gbasis.cext import gob_cart_normalization
 
 
 __all__ = ['load_molden', 'dump_molden']
 
 
 def load_molden(filename, lf):
-    '''Load data from a molden input file (with ORCA sign conventions).
+    '''Load data from a molden input file.
 
        **Arguments:**
 
@@ -47,7 +49,7 @@ def load_molden(filename, lf):
        ``exp_alpha``, ``signs``. It may also contain: ``exp_beta``.
     '''
 
-    def helper_coordinates(f):
+    def helper_coordinates(f, cunit):
         '''Load element numbers and coordinates'''
         numbers = []
         coordinates = []
@@ -65,7 +67,7 @@ def load_molden(filename, lf):
                 numbers.append(int(words[2]))
                 coordinates.append([float(words[3]), float(words[4]), float(words[5])])
         numbers = np.array(numbers, int)
-        coordinates = np.array(coordinates)
+        coordinates = np.array(coordinates)*cunit
         return numbers, coordinates
 
 
@@ -102,9 +104,9 @@ def load_molden(filename, lf):
                 nprims.append(int(words[1]))
             elif len(words) == 2 and in_atom:
                 assert in_shell
-                alpha = float(words[0])
+                alpha = float(words[0].replace('D', 'E'))
                 alphas.append(alpha)
-                con_coeff = renorm_helper(float(words[1]), alpha, shell_type)
+                con_coeff = float(words[1].replace('D', 'E'))
                 con_coeffs.append(con_coeff)
             else:
                 # done, go back one line
@@ -128,45 +130,42 @@ def load_molden(filename, lf):
         ener_beta = []
         occ_beta = []
 
-        icoeff = -1
+        new_orb = True
+        icoeff = nbasis
         while True:
             line = f.readline()
-            if icoeff == nbasis:
-                icoeff = -1
-            if len(line) == 0:
+            if len(line) == 0 or '[' in line:
                 break
-            elif icoeff == -1:
-                # prepare array with orbital coefficients
-                col = np.zeros((nbasis,1), float)
-                icoeff = -2
-            elif icoeff == -2:
-                # read energy
-                assert line.startswith(' Ene=')
-                energy = float(line[5:])
-                icoeff = -3
-            elif icoeff == -3:
-                # read expansion coefficients
-                assert line.startswith(' Spin=')
-                spin = line[6:].strip()
-                if spin == 'Alpha':
-                    coeff_alpha.append(col)
-                    ener_alpha.append(energy)
-                else:
-                    coeff_beta.append(col)
-                    ener_beta.append(energy)
-                icoeff = -4
-            elif icoeff == -4:
-                assert line.startswith(' Occup=')
-                occ = float(line[7:])
-                if spin == 'Alpha':
-                    occ_alpha.append(occ)
-                else:
-                    occ_beta.append(occ)
-                icoeff = 0
-            elif icoeff >= 0:
+            # prepare array with orbital coefficients
+            if '=' in line:
+                if line.startswith(' Ene='):
+                    energy = float(line[5:])
+                elif line.startswith(' Spin='):
+                    spin = line[6:].strip()
+                elif line.startswith(' Occup='):
+                    occ = float(line[7:])
+                new_orb = True
+            else:
+                if new_orb:
+                    # store col, energy and occ
+                    col = np.zeros((nbasis, 1))
+                    if spin.lower() == 'alpha':
+                        coeff_alpha.append(col)
+                        ener_alpha.append(energy)
+                        occ_alpha.append(occ)
+                    else:
+                        coeff_beta.append(col)
+                        ener_beta.append(energy)
+                        occ_beta.append(occ)
+                    new_orb = False
+                    if icoeff < nbasis:
+                        raise IOError('Too little expansions coefficients in one orbital in molden file.')
+                    icoeff = 0
                 words = line.split()
+                if icoeff >= nbasis:
+                    raise IOError('Too many expansions coefficients in one orbital in molden file.')
                 col[icoeff] = float(words[1])
-                icoeff+=1
+                icoeff += 1
                 assert int(words[0]) == icoeff
 
         coeff_alpha = np.hstack(coeff_alpha)
@@ -203,10 +202,15 @@ def load_molden(filename, lf):
             if line == '[Title]':
                 title = f.readline().strip()
             if line.startswith('[Atoms]'):
-                assert 'AU' in line
-                numbers, coordinates = helper_coordinates(f)
+                if 'au' in line.lower():
+                    cunit = 1
+                elif 'angs' in line.lower():
+                    cunit = angstrom
+                numbers, coordinates = helper_coordinates(f, cunit)
             elif line == '[GTO]':
                 obasis = helper_obasis(f, coordinates)
+            elif line == '[STO]':
+                raise NotImplementedError('Slater-type orbitals are not supported in Horton.')
             elif line == '[MO]':
                 data_alpha, data_beta = helper_coeffs(f, obasis.nbasis)
                 coeff_alpha, ener_alpha, occ_alpha = data_alpha
@@ -244,19 +248,171 @@ def load_molden(filename, lf):
         exp_beta.energies[:] = ener_beta
         exp_beta.occupations[:] = occ_beta
 
-    signs = get_orca_signs(obasis)
-
     result = {
         'coordinates': coordinates,
         'exp_alpha': exp_alpha,
         'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
-        'signs': signs,
     }
     if exp_beta is not None:
         result['exp_beta'] = exp_beta
+
+    _fix_molden_from_buggy_codes(result, filename)
+
     return result
+
+
+def _is_normalized_properly(lf, obasis, exp_alpha, exp_beta, signs=None, threshold=1e-4):
+    '''Test the normalization of the occupied and virtual orbitals
+
+       **Arguments:**
+
+       obasis
+            An instance of the GOBasis class.
+
+       exp_alpha
+            The alpha orbitals.
+
+       exp_beta
+            The beta orbitals (may be None).
+
+       **Optional arguments:**
+
+       signs
+            Changes in sign conventions.
+
+       threshold
+            When the maximal error on the norm is large than the threshold,
+            the function returns False. True is returned otherwise.
+    '''
+    # Set default value for signs
+    if signs is None:
+        signs = np.ones(obasis.nbasis, int)
+    # Compute the overlap matrix.
+    olp = obasis.compute_overlap(lf)
+    # Compute the norm of each occupied and virtual orbital. Keep track of
+    # the largest deviation from unity
+    error_max = 0.0
+    for iorb in xrange(exp_alpha.nfn):
+        norm = olp.dot(exp_alpha._coeffs[:,iorb]*signs, exp_alpha._coeffs[:,iorb]*signs)
+        error_max = max(error_max, abs(norm-1))
+    if exp_beta is not None:
+        for iorb in xrange(exp_beta.nfn):
+            norm = olp.dot(exp_beta._coeffs[:,iorb]*signs, exp_beta._coeffs[:,iorb]*signs)
+            error_max = max(error_max, abs(norm-1))
+    # final judgement
+    return error_max <= threshold
+
+
+def _get_orca_signs(obasis):
+    '''Return an array with sign corrections for orbitals read from ORCA.
+
+       **Arguments:**
+
+       obasis
+            An instance of GOBasis.
+    '''
+    sign_rules = {
+      -4: [1,1,1,1,1,-1,-1,-1,-1],
+      -3: [1,1,1,1,1,-1,-1],
+      -2: [1,1,1,1,1],
+       0: [1],
+       1: [1,1,1],
+    }
+    signs = []
+    for shell_type in obasis.shell_types:
+        if shell_type in sign_rules:
+            signs.extend(sign_rules[shell_type])
+        else:
+            signs.extend(get_shell_nbasis(shell_type))
+    return np.array(signs, dtype=int)
+
+
+def _get_fixed_con_coeffs(obasis, mode):
+    '''Return corrected contraction coefficients, assuming they came from an
+       ORCA/PSI4 molden/mkl file.
+
+       **Arguments:**
+
+       obasis
+            An instance of GOBasis.
+
+       mode
+            A string, either 'orca' or 'psi4'
+    '''
+    assert mode in ['orca', 'psi4']
+    fixed_con_coeffs = obasis.con_coeffs.copy()
+    iprim = 0
+    for ishell in xrange(obasis.nshell):
+        shell_type = obasis.shell_types[ishell]
+        for ialpha in xrange(obasis.nprims[ishell]):
+            alpha = obasis.alphas[iprim]
+            if shell_type == 0:
+                scale = gob_cart_normalization(alpha, np.array([0,0,0]))
+            elif shell_type == 1:
+                scale = gob_cart_normalization(alpha, np.array([1,0,0]))
+            elif shell_type == -2:
+                scale = gob_cart_normalization(alpha, np.array([1,1,0]))
+                if mode == 'psi4':
+                    scale /= np.sqrt(3)
+            elif shell_type == -3:
+                scale = gob_cart_normalization(alpha, np.array([1,1,1]))
+                if mode == 'psi4':
+                    scale /= np.sqrt(15)
+            elif shell_type == -4:
+                scale = gob_cart_normalization(alpha, np.array([2,1,1]))
+                if mode == 'psi4':
+                    scale /= np.sqrt(105)
+            else:
+                # Not sure yet what to do, just do something, error will be
+                # caught later.
+                scale = 1
+            fixed_con_coeffs[iprim] /= scale
+            iprim += 1
+    return fixed_con_coeffs
+
+
+def _fix_molden_from_buggy_codes(result, filename):
+    '''Detect errors in the data loaded from a molden/mkl/... file and correct.
+
+       **Argument:**
+
+       result
+            A dictionary with the data loaded in the ``load_molden`` function.
+
+       This function can recognize erroneous files created by PSI4 and ORCA. The
+       data in the obasis and signs fields will be updated accordingly.
+    '''
+    obasis = result['obasis']
+    if _is_normalized_properly(result['lf'], obasis, result['exp_alpha'], result.get('exp_beta')):
+        # The file is good. No need to change data.
+        return
+    if log.do_medium:
+        log('Detected incorrect normalization of orbitals loaded from a file.')
+    # Try to fix it as if it was a file generated by ORCA.
+    orca_signs = _get_orca_signs(obasis)
+    orca_con_coeffs = _get_fixed_con_coeffs(obasis, 'orca')
+    orca_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims, obasis.shell_types, obasis.alphas, orca_con_coeffs)
+    if _is_normalized_properly(result['lf'], orca_obasis, result['exp_alpha'], result.get('exp_beta'), orca_signs):
+        if log.do_medium:
+            log('Detected typical ORCA errors in file. Fixing them...')
+        result['obasis'] = orca_obasis
+        result['signs'] = orca_signs
+        return
+    # Try to fix it as if it was a file generated by PSI4.
+    psi4_con_coeffs = _get_fixed_con_coeffs(obasis, 'psi4')
+    psi4_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims, obasis.shell_types, obasis.alphas, psi4_con_coeffs)
+    if _is_normalized_properly(result['lf'], psi4_obasis, result['exp_alpha'], result.get('exp_beta')):
+        if log.do_medium:
+            log('Detected typical PSI4 errors in file. Fixing them...')
+        result['obasis'] = psi4_obasis
+        return
+
+    raise IOError(('Could not correct the data read from %s. The molden or '
+                   'mkl file you are trying to load contains errors. Please '
+                   'report this problem to Toon.Verstraelen@UGent.be, so he '
+                   'can fix it.') % filename)
 
 
 def dump_molden(filename, mol):
@@ -298,12 +454,14 @@ def dump_molden(filename, mol):
             for ishell in xrange(mol.obasis.nshell):
                 icenter = mol.obasis.shell_map[ishell]
                 shell_type = mol.obasis.shell_types[ishell]
+                if shell_type > 1:
+                    raise NotImplementedError('Horton can not write Cartesian basis functions in Molden format.')
                 sts = shell_type_to_str(shell_type)
                 end_prim = begin_prim + mol.obasis.nprims[ishell]
                 prims = []
                 for iprim in xrange(begin_prim, end_prim):
                     alpha = mol.obasis.alphas[iprim]
-                    con_coeff = renorm_helper(mol.obasis.con_coeffs[iprim], alpha, shell_type, reverse=True)
+                    con_coeff = mol.obasis.con_coeffs[iprim]
                     prims.append((alpha, con_coeff))
                 centers[icenter].append((sts, prims))
                 begin_prim = end_prim
@@ -320,9 +478,6 @@ def dump_molden(filename, mol):
             # For now, only pure basis functions are supported.
             print >> f, '[5D]'
             print >> f, '[9G]'
-
-            # The sign conventions...
-            signs = get_orca_signs(mol.obasis)
         else:
             raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
 
@@ -334,7 +489,7 @@ def dump_molden(filename, mol):
                 print >> f, ' Spin= %s' % spin.capitalize()
                 print >> f, ' Occup= %8.6f' % (exp.occupations[ifn]*occ_scale)
                 for ibasis in xrange(exp.nbasis):
-                    print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[ibasis,ifn]*signs[ibasis])
+                    print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[ibasis,ifn])
 
         # Print the mean-field orbitals
         if hasattr(mol, 'exp_beta'):

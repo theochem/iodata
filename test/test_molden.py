@@ -28,43 +28,83 @@ from horton.io.test.common import compute_mulliken_charges
 from horton.test.common import tmpdir, compare_mols
 
 
-def test_load_molden_li2():
-    fn_mkl = context.get_fn('test/li2.molden.input')
-    mol = Molecule.from_file(fn_mkl)
+def test_load_molden_li2_orca():
+    fn_molden = context.get_fn('test/li2.molden.input')
+    mol = Molecule.from_file(fn_molden)
 
     # Check normalization
     olp = mol.obasis.compute_overlap(mol.lf)
     mol.exp_alpha.check_normalization(olp, 1e-5)
     mol.exp_beta.check_normalization(olp, 1e-5)
 
-    # Check charges
+    # Check Mulliken charges
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
     expected_charges = np.array([0.5, 0.5])
     assert abs(charges - expected_charges).max() < 1e-5
 
 
-def test_load_molden_h2o():
-    fn_mkl = context.get_fn('test/h2o.molden.input')
-    mol = Molecule.from_file(fn_mkl)
+def test_load_molden_h2o_orca():
+    fn_molden = context.get_fn('test/h2o.molden.input')
+    mol = Molecule.from_file(fn_molden)
 
     # Check normalization
     olp = mol.obasis.compute_overlap(mol.lf)
     mol.exp_alpha.check_normalization(olp, 1e-5)
 
-    # Check charges
+    # Check Mulliken charges
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
     expected_charges = np.array([-0.816308, 0.408154, 0.408154])
     assert abs(charges - expected_charges).max() < 1e-5
 
 
+def test_load_molden_nh3_molden():
+    # The file tested here is created with molden. It should be read in
+    # properly without altering normalization and sign conventions.
+    fn_molden = context.get_fn('test/nh3_molden.molden')
+    mol = Molecule.from_file(fn_molden)
+    # Check Mulliken charges. Comparison with numbers from the Molden program
+    # output.
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
+    molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
+    assert abs(charges - molden_charges).max() < 1e-3
+
+
+def test_load_molden_nh3_orca():
+    # The file tested here is created with ORCA. It should be read in
+    # properly by altering normalization and sign conventions.
+    fn_molden = context.get_fn('test/nh3_orca.molden')
+    mol = Molecule.from_file(fn_molden)
+    # Check Mulliken charges. Comparison with numbers from the Molden program
+    # output.
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
+    molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
+    assert abs(charges - molden_charges).max() < 1e-3
+
+
+def test_load_molden_nh3_psi4():
+    # The file tested here is created with PSI4. It should be read in
+    # properly by altering normalization conventions.
+    fn_molden = context.get_fn('test/nh3_psi4.molden')
+    mol = Molecule.from_file(fn_molden)
+    # Check Mulliken charges. Comparison with numbers from the Molden program
+    # output.
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
+    molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
+    assert abs(charges - molden_charges).max() < 1e-3
+
+
 def check_load_dump_consistency(fn):
     mol1 = Molecule.from_file(context.get_fn(os.path.join('test', fn)))
     with tmpdir('horton.io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
-        fn_tmp = os.path.join(dn, 'foo.molden.input')
+        fn_tmp = os.path.join(dn, 'foo.molden')
         mol1.to_file(fn_tmp)
         mol2 = Molecule.from_file(fn_tmp)
+    print mol1.obasis.con_coeffs - mol2.obasis.con_coeffs
     compare_mols(mol1, mol2)
 
 

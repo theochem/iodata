@@ -361,7 +361,7 @@ class Molecule(object):
         elif filename.endswith('.cif'):
             from horton.io.cif import dump_cif
             dump_cif(filename, self)
-        elif filename.endswith('.molden.input'):
+        elif filename.endswith('.molden.input') or filename.endswith('.molden'):
             from horton.io.molden import dump_molden
             dump_molden(filename, self)
         elif os.path.basename(filename).startswith('POSCAR'):
