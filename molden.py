@@ -28,10 +28,31 @@ from horton.log import log
 from horton.periodic import periodic
 from horton.gbasis.io import str_to_shell_types, shell_type_to_str
 from horton.gbasis.gobasis import GOBasis
-from horton.gbasis.cext import gob_cart_normalization
+from horton.gbasis.cext import gob_cart_normalization, get_shell_nbasis
 
 
 __all__ = ['load_molden', 'dump_molden']
+
+
+def _get_molden_permutation(obasis, reverse=False):
+    # Reorder the Cartesian basis functions to obtain the Horton standard ordering.
+    permutation_rules = {
+       2: np.array([0, 3, 4, 1, 5, 2]),
+       3: np.array([0, 4, 5, 3, 9, 6, 1, 8, 7, 2]),
+       4: np.array([0, 3, 4, 9, 12, 10, 13, 5, 1, 6, 11, 14, 7, 8, 2]),
+    }
+    permutation = []
+    for shell_type in obasis.shell_types:
+        rule = permutation_rules.get(shell_type)
+        if reverse and rule is not None:
+            reverse_rule = np.zeros(len(rule), int)
+            for i, j in enumerate(rule):
+                reverse_rule[j] = i
+            rule = reverse_rule
+        if rule is None:
+            rule = np.arange(get_shell_nbasis(shell_type))
+        permutation.extend(rule+len(permutation))
+    return np.array(permutation, dtype=int)
 
 
 def load_molden(filename, lf):
@@ -71,7 +92,7 @@ def load_molden(filename, lf):
         return numbers, coordinates
 
 
-    def helper_obasis(f, coordinates):
+    def helper_obasis(f, coordinates, pure):
         '''Load the orbital basis'''
         shell_types = []
         shell_map = []
@@ -98,8 +119,8 @@ def load_molden(filename, lf):
             elif len(words) == 3:
                 in_shell = True
                 shell_map.append(icenter)
-                # always assume pure basis functions
-                shell_type = str_to_shell_types(words[0], True)[0]
+                shell_label = words[0].lower()
+                shell_type = str_to_shell_types(shell_label, pure.get(shell_label, False))[0]
                 shell_types.append(shell_type)
                 nprims.append(int(words[1]))
             elif len(words) == 2 and in_atom:
@@ -181,6 +202,25 @@ def load_molden(filename, lf):
             occ_beta = np.array(occ_beta)
         return (coeff_alpha, ener_alpha, occ_alpha), (coeff_beta, ener_beta, occ_beta)
 
+    # First pass: scan the file for pure/cartesian modifiers.
+    # Unfortunately, some program put this information _AFTER_ the basis
+    # set specification.
+    pure = {'d': False, 'f': False, 'g': False}
+    with open(filename) as f:
+        for line in f:
+            line = line.lower()
+            if line.startswith('[5d]') or line.startswith('[5d7f]'):
+                pure['d'] = True
+                pure['f'] = True
+            elif line.lower().startswith('[7f]'):
+                pure['f'] = True
+            elif line.lower().startswith('[5d10f]'):
+                pure['d'] = True
+                pure['f'] = False
+            elif line.lower().startswith('[9g]'):
+                pure['g'] = True
+
+    # Second pass: read all the other info.
     numbers = None
     coordinates = None
     obasis = None
@@ -201,14 +241,14 @@ def load_molden(filename, lf):
             line = line.strip()
             if line == '[Title]':
                 title = f.readline().strip()
-            if line.startswith('[Atoms]'):
+            elif line.startswith('[Atoms]'):
                 if 'au' in line.lower():
                     cunit = 1
                 elif 'angs' in line.lower():
                     cunit = angstrom
                 numbers, coordinates = helper_coordinates(f, cunit)
             elif line == '[GTO]':
-                obasis = helper_obasis(f, coordinates)
+                obasis = helper_obasis(f, coordinates, pure)
             elif line == '[STO]':
                 raise NotImplementedError('Slater-type orbitals are not supported in Horton.')
             elif line == '[MO]':
@@ -248,12 +288,15 @@ def load_molden(filename, lf):
         exp_beta.energies[:] = ener_beta
         exp_beta.occupations[:] = occ_beta
 
+    permutation = _get_molden_permutation(obasis)
+
     result = {
         'coordinates': coordinates,
         'exp_alpha': exp_alpha,
         'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
+        'permutation': permutation,
     }
     if exp_beta is not None:
         result['exp_beta'] = exp_beta
@@ -263,13 +306,20 @@ def load_molden(filename, lf):
     return result
 
 
-def _is_normalized_properly(lf, obasis, exp_alpha, exp_beta, signs=None, threshold=1e-4):
+def _is_normalized_properly(lf, obasis, permutation, exp_alpha, exp_beta, signs=None, threshold=1e-4):
     '''Test the normalization of the occupied and virtual orbitals
 
        **Arguments:**
 
+       lf
+            The linalg factory (needed for computing the overlap matrix).
+
        obasis
             An instance of the GOBasis class.
+
+       permutation
+            The permutation of the basis functions to bring them in Horton's
+            standard ordering.
 
        exp_alpha
             The alpha orbitals.
@@ -295,11 +345,17 @@ def _is_normalized_properly(lf, obasis, exp_alpha, exp_beta, signs=None, thresho
     # the largest deviation from unity
     error_max = 0.0
     for iorb in xrange(exp_alpha.nfn):
-        norm = olp.dot(exp_alpha._coeffs[:,iorb]*signs, exp_alpha._coeffs[:,iorb]*signs)
+        vec = exp_alpha._coeffs[:,iorb]*signs
+        if permutation is not None:
+            vec = vec[permutation]
+        norm = olp.dot(vec, vec)
         error_max = max(error_max, abs(norm-1))
     if exp_beta is not None:
         for iorb in xrange(exp_beta.nfn):
-            norm = olp.dot(exp_beta._coeffs[:,iorb]*signs, exp_beta._coeffs[:,iorb]*signs)
+            vec = (exp_beta._coeffs[:,iorb]*signs)
+            if permutation is not None:
+                vec = vec[permutation]
+            norm = olp.dot(vec, vec)
             error_max = max(error_max, abs(norm-1))
     # final judgement
     return error_max <= threshold
@@ -325,7 +381,7 @@ def _get_orca_signs(obasis):
         if shell_type in sign_rules:
             signs.extend(sign_rules[shell_type])
         else:
-            signs.extend(get_shell_nbasis(shell_type))
+            signs.extend([1]*get_shell_nbasis(shell_type))
     return np.array(signs, dtype=int)
 
 
@@ -385,7 +441,8 @@ def _fix_molden_from_buggy_codes(result, filename):
        data in the obasis and signs fields will be updated accordingly.
     '''
     obasis = result['obasis']
-    if _is_normalized_properly(result['lf'], obasis, result['exp_alpha'], result.get('exp_beta')):
+    permutation = result.get('permutation', None)
+    if _is_normalized_properly(result['lf'], obasis, permutation, result['exp_alpha'], result.get('exp_beta')):
         # The file is good. No need to change data.
         return
     if log.do_medium:
@@ -394,7 +451,7 @@ def _fix_molden_from_buggy_codes(result, filename):
     orca_signs = _get_orca_signs(obasis)
     orca_con_coeffs = _get_fixed_con_coeffs(obasis, 'orca')
     orca_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims, obasis.shell_types, obasis.alphas, orca_con_coeffs)
-    if _is_normalized_properly(result['lf'], orca_obasis, result['exp_alpha'], result.get('exp_beta'), orca_signs):
+    if _is_normalized_properly(result['lf'], orca_obasis, permutation, result['exp_alpha'], result.get('exp_beta'), orca_signs):
         if log.do_medium:
             log('Detected typical ORCA errors in file. Fixing them...')
         result['obasis'] = orca_obasis
@@ -403,7 +460,7 @@ def _fix_molden_from_buggy_codes(result, filename):
     # Try to fix it as if it was a file generated by PSI4.
     psi4_con_coeffs = _get_fixed_con_coeffs(obasis, 'psi4')
     psi4_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims, obasis.shell_types, obasis.alphas, psi4_con_coeffs)
-    if _is_normalized_properly(result['lf'], psi4_obasis, result['exp_alpha'], result.get('exp_beta')):
+    if _is_normalized_properly(result['lf'], psi4_obasis, permutation, result['exp_alpha'], result.get('exp_beta')):
         if log.do_medium:
             log('Detected typical PSI4 errors in file. Fixing them...')
         result['obasis'] = psi4_obasis
@@ -440,22 +497,60 @@ def dump_molden(filename, mol):
         for i in xrange(mol.natom):
             number = mol.numbers[i]
             x, y, z = mol.coordinates[i]
-            print >> f, '%2s %3i %3i  %20.10f %20.10f %20.10f' % (
+            print >> f, '%2s %3i %3i  %25.18f %25.18f %25.18f' % (
                 periodic[number].symbol.ljust(2), i+1, number, x, y, z
             )
 
         # Print the basis set
         if isinstance(mol.obasis, GOBasis):
-            if mol.obasis.shell_types.max() > 1:
-                raise ValueError('Only pure Gaussian basis functions are supported in dump_molden.')
+            # Figure out the pure/Cartesian situation. Note that the Molden
+            # format doesnot support mixed Cartesian and pure functions in the
+            # way Horton does.In practice, such combinations are too unlikely
+            # to be relevant.
+            pure = {'d': None, 'f': None, 'g': None}
+            try:
+                for shell_type in mol.obasis.shell_types:
+                    if shell_type == 2:
+                        assert pure['d'] is None or not pure['d']
+                        pure['d'] = False
+                    elif shell_type == -2:
+                        assert pure['d'] is None or pure['d']
+                        pure['d'] = True
+                    elif shell_type == 3:
+                        assert pure['f'] is None or not pure['f']
+                        pure['f'] = False
+                    elif shell_type == -3:
+                        assert pure['f'] is None or pure['f']
+                        pure['f'] = True
+                    elif shell_type == 4:
+                        assert pure['g'] is None or not pure['g']
+                        pure['g'] = False
+                    elif shell_type == -4:
+                        assert pure['g'] is None or pure['g']
+                        pure['g'] = True
+                    else:
+                        assert abs(shell_type) < 2
+            except AssertionError:
+                raise IOError('The basis set is not supported by the Molden format.')
+
+            # Write out the Cartesian/Pure conventions. What a messy format...
+            if pure['d']:
+                if pure['f']:
+                    print >> f, '[5D]'
+                else:
+                    print >> f, '[5D10F]'
+            else:
+                if pure['f']:
+                    print >> f, '[7F]'
+            if pure['g']:
+                print >> f, '[9G]'
+
             # first convert it to a format that is amenable for printing.
             centers = [list() for i in xrange(mol.obasis.ncenter)]
             begin_prim = 0
             for ishell in xrange(mol.obasis.nshell):
                 icenter = mol.obasis.shell_map[ishell]
                 shell_type = mol.obasis.shell_types[ishell]
-                if shell_type > 1:
-                    raise NotImplementedError('Horton can not write Cartesian basis functions in Molden format.')
                 sts = shell_type_to_str(shell_type)
                 end_prim = begin_prim + mol.obasis.nprims[ishell]
                 prims = []
@@ -474,10 +569,6 @@ def dump_molden(filename, mol):
                     for alpha, con_coeff in prims:
                         print >> f, '%20.10f %20.10f' % (alpha, con_coeff)
                 print >> f
-
-            # For now, only pure basis functions are supported.
-            print >> f, '[5D]'
-            print >> f, '[9G]'
         else:
             raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
 
@@ -489,7 +580,10 @@ def dump_molden(filename, mol):
                 print >> f, ' Spin= %s' % spin.capitalize()
                 print >> f, ' Occup= %8.6f' % (exp.occupations[ifn]*occ_scale)
                 for ibasis in xrange(exp.nbasis):
-                    print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[ibasis,ifn])
+                    print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[permutation[ibasis],ifn])
+
+        # Construct the permutation of the basis functions
+        permutation = _get_molden_permutation(mol.obasis, reverse=True)
 
         # Print the mean-field orbitals
         if hasattr(mol, 'exp_beta'):

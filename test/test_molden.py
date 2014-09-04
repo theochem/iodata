@@ -59,16 +59,30 @@ def test_load_molden_h2o_orca():
     assert abs(charges - expected_charges).max() < 1e-5
 
 
-def test_load_molden_nh3_molden():
+def test_load_molden_nh3_molden_pure():
     # The file tested here is created with molden. It should be read in
     # properly without altering normalization and sign conventions.
-    fn_molden = context.get_fn('test/nh3_molden.molden')
+    fn_molden = context.get_fn('test/nh3_molden_pure.molden')
     mol = Molecule.from_file(fn_molden)
     # Check Mulliken charges. Comparison with numbers from the Molden program
     # output.
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
+    assert abs(charges - molden_charges).max() < 1e-3
+
+
+def test_load_molden_nh3_molden_cart():
+    # The file tested here is created with molden. It should be read in
+    # properly without altering normalization and sign conventions.
+    fn_molden = context.get_fn('test/nh3_molden_cart.molden')
+    mol = Molecule.from_file(fn_molden)
+    # Check Mulliken charges. Comparison with numbers from the Molden program
+    # output.
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
+    print charges
+    molden_charges = np.array([0.3138, -0.4300, -0.0667, 0.1829])
     assert abs(charges - molden_charges).max() < 1e-3
 
 
@@ -98,13 +112,24 @@ def test_load_molden_nh3_psi4():
     assert abs(charges - molden_charges).max() < 1e-3
 
 
+def test_load_molden_nh3_molpro2012():
+    # The file tested here is created with MOLPRO2012.
+    fn_molden = context.get_fn('test/nh3_molpro2012.molden')
+    mol = Molecule.from_file(fn_molden)
+    # Check Mulliken charges. Comparison with numbers from the Molden program
+    # output.
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
+    molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
+    assert abs(charges - molden_charges).max() < 1e-3
+
+
 def check_load_dump_consistency(fn):
     mol1 = Molecule.from_file(context.get_fn(os.path.join('test', fn)))
     with tmpdir('horton.io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
         fn_tmp = os.path.join(dn, 'foo.molden')
         mol1.to_file(fn_tmp)
         mol2 = Molecule.from_file(fn_tmp)
-    print mol1.obasis.con_coeffs - mol2.obasis.con_coeffs
     compare_mols(mol1, mol2)
 
 
@@ -118,3 +143,11 @@ def test_load_dump_consistency_li2():
 
 def test_load_dump_consistency_f():
     check_load_dump_consistency('F.molden')
+
+
+def test_load_dump_consistency_nh3_molden_pure():
+    check_load_dump_consistency('nh3_molden_pure.molden')
+
+
+def test_load_dump_consistency_nh3_molden_cart():
+    check_load_dump_consistency('nh3_molden_cart.molden')
