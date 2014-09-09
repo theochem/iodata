@@ -34,7 +34,7 @@ def dump_fci(lf, one, two, ecore, exps, filename='./FCIDUMP', **kwargs):
        **Arguments:**
 
        one/two
-            One and two-body integrals in the AO basis.
+            One and four-index integrals in the AO basis.
 
        exps
             The AO/MO expansion coefficients. An Expansion instance.
@@ -50,9 +50,9 @@ def dump_fci(lf, one, two, ecore, exps, filename='./FCIDUMP', **kwargs):
     ms2 = kwargs.get('ms2', 0)
     norb = kwargs.get('norb', one.nbasis)
 
-    two_mo = lf.create_two_body()
+    two_mo = lf.create_four_index()
     two_mo.apply_four_index_transform_tensordot(two, exps)
-    one_mo = lf.create_one_body()
+    one_mo = lf.create_two_index()
     one_mo.apply_2index_trans(one, exps)
 
     with open(filename, 'w') as f:

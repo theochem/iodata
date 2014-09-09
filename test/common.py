@@ -26,10 +26,10 @@ import numpy as np
 from horton.cext import compute_nucnuc
 from horton.meanfield.hamiltonian import REffHam, \
     UEffHam
-from horton.meanfield.observable import ROneBodyTerm, \
-    RDirectTerm, RExchangeTerm, UOneBodyTerm, \
+from horton.meanfield.observable import RTwoIndexTerm, \
+    RDirectTerm, RExchangeTerm, UTwoIndexTerm, \
     UDirectTerm, UExchangeTerm
-from horton.matrix import DenseOneBody, DenseTwoBody
+from horton.matrix import DenseTwoIndex, DenseFourIndex
 from horton.part.mulliken import get_mulliken_operators
 
 
@@ -51,10 +51,10 @@ def compute_hf_energy(mol):
     if hasattr(mol, 'exp_beta'):
         # assuming unrestricted
         terms = [
-            UOneBodyTerm(kin, 'kin'),
+            UTwoIndexTerm(kin, 'kin'),
             UDirectTerm(er, 'hartree'),
             UExchangeTerm(er, 'x_hf'),
-            UOneBodyTerm(na, 'ne'),
+            UTwoIndexTerm(na, 'ne'),
         ]
         ham = UEffHam(terms, external)
         dm_alpha = mol.exp_alpha.to_dm()
@@ -63,10 +63,10 @@ def compute_hf_energy(mol):
     else:
         # assuming restricted
         terms = [
-            ROneBodyTerm(kin, 'kin'),
+            RTwoIndexTerm(kin, 'kin'),
             RDirectTerm(er, 'hartree'),
             RExchangeTerm(er, 'x_hf'),
-            ROneBodyTerm(na, 'ne'),
+            RTwoIndexTerm(na, 'ne'),
         ]
         ham = REffHam(terms, external)
         dm_alpha = mol.exp_alpha.to_dm()

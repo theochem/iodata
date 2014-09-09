@@ -156,7 +156,7 @@ class Molecule(object):
             The total energy (electronic+nn) of the molecule
 
        er
-            The electron repulsion two-body operator
+            The electron repulsion four-index operator
 
        exp_alpha
             The alpha orbitals (coefficients, occupations and energies)
@@ -393,7 +393,7 @@ class Molecule(object):
         elif hasattr(self, 'dm_full_cc'):
             return self.dm_full_cc
         elif hasattr(self, 'exp_alpha'):
-            dm_full = self.lf.create_one_body()
+            dm_full = self.lf.create_two_index()
             dm_full = self.exp_alpha.to_dm()
             if hasattr(self, 'exp_beta'):
                 self.exp_beta.to_dm(dm_full, 1.0)

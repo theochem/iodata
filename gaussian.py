@@ -28,7 +28,7 @@ __all__ = ['load_operators_g09', 'FCHKFile', 'load_fchk']
 
 
 def load_operators_g09(fn, lf):
-    """Loads several one- and two-body operators from a Gaussian log file.
+    """Loads several one- and four-index operators from a Gaussian log file.
 
        **Arugment:**
 
@@ -38,8 +38,8 @@ def load_operators_g09(fn, lf):
        lf
             A LinalgFactory instance.
 
-       The following one-body operators are loaded if present: overlap, kinetic,
-       nuclear attraction. The following two-body operator is loaded if present:
+       The following two-index operators are loaded if present: overlap, kinetic,
+       nuclear attraction. The following four-index operator is loaded if present:
        electrostatic repulsion. In order to make all these matrices are present
        in the Gaussian log file, the following commands must be used in the
        Gaussian input file:
@@ -57,26 +57,26 @@ def load_operators_g09(fn, lf):
             raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the log file.')
         lf.default_nbasis = nbasis
 
-        # Then load the one- and two-body operators. This part is written such
+        # Then load the one- and four-index operators. This part is written such
         # that it does not make any assumptions about the order in which these
         # operators are printed.
 
         result = {'lf': lf}
         for line in f:
             if line.startswith(' *** Overlap ***'):
-                result['olp'] = _load_onebody_g09(f, nbasis, lf)
+                result['olp'] = _load_twoindex_g09(f, nbasis, lf)
             elif line.startswith(' *** Kinetic Energy ***'):
-                result['kin'] = _load_onebody_g09(f, nbasis, lf)
+                result['kin'] = _load_twoindex_g09(f, nbasis, lf)
             elif line.startswith(' ***** Potential Energy *****'):
-                result['na'] = _load_onebody_g09(f, nbasis, lf)
+                result['na'] = _load_twoindex_g09(f, nbasis, lf)
             elif line.startswith(' *** Dumping Two-Electron integrals ***'):
-                result['er'] = _load_twobody_g09(f, nbasis, lf)
+                result['er'] = _load_fourindex_g09(f, nbasis, lf)
 
         return result
 
 
-def _load_onebody_g09(f, nbasis, lf):
-    """Load a one-body operator from a Gaussian log file
+def _load_twoindex_g09(f, nbasis, lf):
+    """Load a two-index operator from a Gaussian log file
 
        **Arguments:**
 
@@ -89,7 +89,7 @@ def _load_onebody_g09(f, nbasis, lf):
        lf
             A LinalgFactory instance.
     """
-    result = lf.create_one_body(nbasis)
+    result = lf.create_two_index(nbasis)
     block_counter = 0
     while block_counter < nbasis:
         # skip the header line
@@ -105,8 +105,8 @@ def _load_onebody_g09(f, nbasis, lf):
     return result
 
 
-def _load_twobody_g09(f, nbasis, lf):
-    """Load a two-body operator from a Gaussian log file
+def _load_fourindex_g09(f, nbasis, lf):
+    """Load a four-index operator from a Gaussian log file
 
        **Arguments:**
 
@@ -119,7 +119,7 @@ def _load_twobody_g09(f, nbasis, lf):
        lf
             A LinalgFactory instance.
     """
-    result = lf.create_two_body(nbasis)
+    result = lf.create_four_index(nbasis)
     # Skip first six lines
     for i in xrange(6):
         f.next()
@@ -404,7 +404,7 @@ def load_fchk(filename, lf):
     # C) Load density matrices
     def load_dm(label):
         if label in fchk:
-            dm = lf.create_one_body(obasis.nbasis)
+            dm = lf.create_two_index(obasis.nbasis)
             start = 0
             for i in xrange(obasis.nbasis):
                 stop = start+i+1

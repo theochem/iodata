@@ -38,8 +38,8 @@ def read_integrals(lf, filename='./FCIDUMP'):
        filename
             The filename of the fcidump file. Default "FCIDUMP".
     '''
-    one_mo = lf.create_one_body()
-    two_mo = lf.create_two_body()
+    one_mo = lf.create_two_index()
+    two_mo = lf.create_four_index()
     arrays = []
     with open(filename) as f:
         for line in f.readlines():
