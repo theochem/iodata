@@ -42,7 +42,7 @@ def dump_fci(lf, one, two, ecore, exps, filename='./FCIDUMP', **kwargs):
        filename
             The filename of the fcidump file. Default "FCIDUMP".
     '''
-    name = ["nel", "ms2", "norb",]
+    names = ["nel", "ms2", "norb",]
     for name, value in kwargs.items():
         if name not in names:
             raise ValueError("Unknown keyword argument %s" % name)
