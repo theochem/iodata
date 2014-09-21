@@ -42,3 +42,5 @@ from horton.io.molekel import *
 from horton.io.vasp import *
 from horton.io.wfn import *
 from horton.io.xyz import *
+from horton.io.dump_fci import *
+from horton.io.read_integrals import *
