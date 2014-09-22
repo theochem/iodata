@@ -268,7 +268,7 @@ class Molecule(object):
         for filename in filenames:
             if isinstance(filename, h5.Group) or filename.endswith('.h5'):
                 from horton.io.internal import load_h5
-                result.update(load_h5(filename, lf))
+                result.update(load_h5(filename))
             elif filename.endswith('.xyz'):
                 from horton.io.xyz import load_xyz
                 result.update(load_xyz(filename))

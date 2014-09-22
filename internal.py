@@ -28,7 +28,7 @@ from horton.io.lockedh5 import LockedH5File
 __all__ = ['load_h5', 'dump_h5']
 
 
-def load_h5(item, lf):
+def load_h5(item):
     '''Load a (Horton) object from an h5py File/Group
 
        **Arguments:**
@@ -38,7 +38,7 @@ def load_h5(item, lf):
     '''
     if isinstance(item, basestring):
         with LockedH5File(item, 'r') as f:
-            return load_h5(f, lf)
+            return load_h5(f)
     elif isinstance(item, h5.Dataset):
         if len(item.shape) > 0:
             # convert to a numpy array
@@ -53,12 +53,12 @@ def load_h5(item, lf):
             # read datasets. raise error when group is encountered.
             result = {}
             for key, subitem in item.iteritems():
-                result[key] = load_h5(subitem, lf)
+                result[key] = load_h5(subitem)
             return result
         else:
             # special constructor. the class is found with the imp module
             cls = __import__('horton', fromlist=[class_name]).__dict__[class_name]
-            return cls.from_hdf5(item, lf)
+            return cls.from_hdf5(item)
 
 
 def dump_h5(grp, data):
