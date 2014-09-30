@@ -38,7 +38,7 @@ __all__ = ['compute_mulliken_charges']
 
 def compute_mulliken_charges(obasis, lf, numbers, dm):
     operators = get_mulliken_operators(obasis, lf)
-    populations = np.array([operator.expectation_value(dm) for operator in operators])
+    populations = np.array([operator.contract_two('ab,ab', dm) for operator in operators])
     return numbers - np.array(populations)
 
 

@@ -98,6 +98,6 @@ def test_dm_ch3_rohf_g03():
 
     olp = mol.obasis.compute_overlap(mol.lf)
     dm = mol.get_dm_full()
-    assert abs(olp.expectation_value(dm) - 9) < 1e-6
+    assert abs(olp.contract_two('ab,ab', dm) - 9) < 1e-6
     dm = mol.get_dm_spin()
-    assert abs(olp.expectation_value(dm) - 1) < 1e-6
+    assert abs(olp.contract_two('ab,ab', dm) - 1) < 1e-6

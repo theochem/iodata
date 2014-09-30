@@ -315,12 +315,12 @@ class Molecule(object):
         if 'permutation' in result:
             for key, value in result.iteritems():
                 if isinstance(value, LinalgObject):
-                    value.apply_basis_permutation(result['permutation'])
+                    value.permute_basis(result['permutation'])
             del result['permutation']
         if 'signs' in result:
             for key, value in result.iteritems():
                 if isinstance(value, LinalgObject):
-                    value.apply_basis_signs(result['signs'])
+                    value.change_basis_signs(result['signs'])
             del result['signs']
 
         return cls(**result)
@@ -396,10 +396,12 @@ class Molecule(object):
         elif hasattr(self, 'dm_full_cc'):
             return self.dm_full_cc
         elif hasattr(self, 'exp_alpha'):
+            # First try to get it from the orbitals as some types of Gaussian
+            # jobs print print the wrong total density in FCHK file.
             dm_full = self.lf.create_two_index()
             dm_full = self.exp_alpha.to_dm()
             if hasattr(self, 'exp_beta'):
-                self.exp_beta.to_dm(dm_full, 1.0)
+                self.exp_beta.to_dm(dm_full, 1.0, clear=False)
             else:
                 dm_full.iscale(2)
             return dm_full
@@ -420,7 +422,7 @@ class Molecule(object):
             return self.dm_spin_cc
         elif hasattr(self, 'exp_alpha') and hasattr(self, 'exp_beta'):
             dm_spin = self.exp_alpha.to_dm()
-            self.exp_beta.to_dm(dm_spin, -1.0)
+            self.exp_beta.to_dm(dm_spin, -1.0, clear=False)
             return dm_spin
         elif hasattr(self, 'dm_spin_scf'):
             return self.dm_spin_scf

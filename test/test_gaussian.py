@@ -345,7 +345,7 @@ def check_normalization_dm_full_azirine(key):
     olp = mol.obasis.compute_overlap(mol.lf)
     dm = getattr(mol, 'dm_full_%s' % key)
     check_dm(dm, olp, mol.lf, eps=1e-2, occ_max=2)
-    assert abs(olp.expectation_value(dm) - 22.0) < 1e-3
+    assert abs(olp.contract_two('ab,ab', dm) - 22.0) < 1e-3
 
 
 def test_normalization_dm_full_azirine_cc():

@@ -351,14 +351,14 @@ def _is_normalized_properly(lf, obasis, permutation, exp_alpha, exp_beta, signs=
         vec = exp_alpha._coeffs[:,iorb]*signs
         if permutation is not None:
             vec = vec[permutation]
-        norm = olp.dot(vec, vec)
+        norm = olp.inner(vec, vec)
         error_max = max(error_max, abs(norm-1))
     if exp_beta is not None:
         for iorb in xrange(exp_beta.nfn):
             vec = (exp_beta._coeffs[:,iorb]*signs)
             if permutation is not None:
                 vec = vec[permutation]
-            norm = olp.dot(vec, vec)
+            norm = olp.inner(vec, vec)
             error_max = max(error_max, abs(norm-1))
     # final judgement
     return error_max <= threshold
