@@ -29,7 +29,9 @@ from horton.io.test.common import compute_mulliken_charges, compute_hf_energy
 
 def test_load_wfn_low_he_s():
     fn_wfn = context.get_fn('test/he_s_orbital.wfn')
-    numbers, coordinates, centers, type_assignment, exponents, mo_count, occ_num, mo_energy, coefficients = load_wfn_low(fn_wfn)
+    title, numbers, coordinates, centers, type_assignment, exponents, \
+        mo_count, occ_num, mo_energy, coefficients = load_wfn_low(fn_wfn)
+    assert title == 'He atom - decontracted 6-31G basis set'
     assert numbers.shape == (1,)
     assert numbers == [2]
     assert coordinates.shape == (1,3)
@@ -52,7 +54,9 @@ def test_load_wfn_low_he_s():
 
 def test_load_wfn_low_h2O():
     fn_wfn = context.get_fn('test/h2o_sto3g.wfn')
-    numbers, coordinates, centers, type_assignment, exponents, mo_count, occ_num, mo_energy, coefficients = load_wfn_low(fn_wfn)
+    title, numbers, coordinates, centers, type_assignment, exponents, \
+        mo_count, occ_num, mo_energy, coefficients = load_wfn_low(fn_wfn)
+    assert title == 'H2O Optimization'
     assert numbers.shape == (3,)
     assert (numbers == np.array([8, 1, 1])).all()
     assert coordinates.shape == (3, 3)
@@ -287,6 +291,7 @@ def test_load_wfn_li_sp_virtual():
 def test_load_wfn_li_sp():
     fn_wfn = context.get_fn('test/li_sp_orbital.wfn')
     mol = Molecule.from_file(fn_wfn)
+    assert mol.title == 'Li atom - using s & p orbitals'
     assert mol.exp_alpha.nfn == 2
     assert mol.exp_beta.nfn == 1
 

@@ -32,6 +32,9 @@ def test_load_molden_li2_orca():
     fn_molden = context.get_fn('test/li2.molden.input')
     mol = Molecule.from_file(fn_molden)
 
+    # Checkt title
+    assert mol.title == 'Molden file created by orca_2mkl for BaseName=li2'
+
     # Check normalization
     olp = mol.obasis.compute_overlap(mol.lf)
     mol.exp_alpha.check_normalization(olp, 1e-5)
@@ -47,6 +50,9 @@ def test_load_molden_li2_orca():
 def test_load_molden_h2o_orca():
     fn_molden = context.get_fn('test/h2o.molden.input')
     mol = Molecule.from_file(fn_molden)
+
+    # Checkt title
+    assert mol.title == 'Molden file created by orca_2mkl for BaseName=h2o'
 
     # Check normalization
     olp = mol.obasis.compute_overlap(mol.lf)

@@ -38,11 +38,11 @@ def load_xyz(filename):
        filename
             The file to load the geometry from
 
-       **Returns:** dictionary with coordinates and numbers.
+       **Returns:** dictionary with ``title`, ``coordinates`` and ``numbers``.
     '''
     f = file(filename)
     size = int(f.next())
-    f.next()
+    title = f.next().strip()
     coordinates = np.empty((size, 3), float)
     numbers = np.empty(size, int)
     for i in xrange(size):
@@ -53,6 +53,7 @@ def load_xyz(filename):
         coordinates[i,2] = float(words[3])*angstrom
     f.close()
     return {
+        'title': title,
         'coordinates': coordinates,
         'numbers': numbers
     }
@@ -69,10 +70,11 @@ def dump_xyz(filename, mol):
 
        mol
             A molecule instance. Must contain ``coordinates`` and ``numbers``.
+            May contain ``title``.
     '''
     with open(filename, 'w') as f:
         print >> f, mol.natom
-        print >> f, 'File generated with Horton'
+        print >> f, getattr(mol, 'title', 'Created with Horton')
         for i in xrange(mol.natom):
             n = periodic[mol.numbers[i]].symbol
             x, y, z = mol.coordinates[i]/angstrom

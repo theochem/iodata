@@ -77,7 +77,7 @@ def load_wfn_low(filename):
         return count, occ, energy, coeffs
 
     with open(filename) as f:
-        f.readline()
+        title = f.readline().strip()
         #Reading the wfn file
         num_mo, num_primitives, num_atoms = helper_num(f)
         numbers, coordinates = helper_coordinates(f)
@@ -95,7 +95,8 @@ def load_wfn_low(filename):
         for mo in xrange(num_mo):
             mo_count[mo], mo_occ[mo], mo_energy[mo], coefficients[:, mo] = helper_mo(f)
         line = f.readline()
-    return numbers, coordinates, centers, type_assignment, exponents, mo_count, mo_occ, mo_energy, coefficients
+    return title, numbers, coordinates, centers, type_assignment, exponents, \
+        mo_count, mo_occ, mo_energy, coefficients
 
 
 def setup_permutation1(type_assignment):
@@ -181,10 +182,11 @@ def load_wfn(filename, lf):
             An instance of LinalgFactory, used to initialize the wavefunction
             expansions.
 
-       **Returns:** a dictionary with ``coordinates``, ``numbers``, ``obasis``
-       and ``wfn``.
+       **Returns:** a dictionary with ``title``, ``coordinates``, ``numbers``,
+       ``obasis`` and ``wfn``.
     '''
-    numbers, coordinates, centers, type_assignment, exponents, mo_count, mo_occ, mo_energy, coefficients = load_wfn_low(filename)
+    title, numbers, coordinates, centers, type_assignment, exponents, \
+        mo_count, mo_occ, mo_energy, coefficients = load_wfn_low(filename)
     permutation = setup_permutation2(type_assignment)
     #Permuting the arrays containing the wfn data
     type_assignment = type_assignment[permutation]
@@ -234,6 +236,7 @@ def load_wfn(filename, lf):
         exp_beta.occupations[:] = mo_occ[index:]
 
     result = {
+        'title': title,
         'coordinates': coordinates,
         'exp_alpha': exp_alpha,
         'lf': lf,

@@ -40,6 +40,7 @@ def test_load_water_element():
 
 
 def check_water(mol):
+    assert mol.title == 'Water'
     assert mol.numbers[0] == 1
     assert mol.numbers[1] == 8
     assert mol.numbers[2] == 1
@@ -54,5 +55,6 @@ def test_load_dump_consistency():
         mol0.to_file('%s/test.xyz' % dn)
         mol1 = Molecule.from_file('%s/test.xyz' % dn)
 
+    assert mol0.title == mol1.title
     assert (mol0.numbers == mol1.numbers).all()
     assert abs(mol0.coordinates - mol1.coordinates).max() < 1e-5

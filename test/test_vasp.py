@@ -29,16 +29,16 @@ from horton.test.common import get_random_cell, tmpdir
 
 
 def test_unravel_counter():
-    from horton.io.vasp import unravel_counter
-    assert unravel_counter(0, [3, 3, 3]) == [0, 0, 0]
-    assert unravel_counter(0, [2, 4, 3]) == [0, 0, 0]
-    assert unravel_counter(1, [2, 4, 3]) == [1, 0, 0]
-    assert unravel_counter(2, [2, 4, 3]) == [0, 1, 0]
-    assert unravel_counter(3, [2, 4, 3]) == [1, 1, 0]
-    assert unravel_counter(8, [2, 4, 3]) == [0, 0, 1]
-    assert unravel_counter(9, [2, 4, 3]) == [1, 0, 1]
-    assert unravel_counter(11, [2, 4, 3]) == [1, 1, 1]
-    assert unravel_counter(24, [2, 4, 3]) == [0, 0, 0]
+    from horton.io.vasp import _unravel_counter
+    assert _unravel_counter(0, [3, 3, 3]) == [0, 0, 0]
+    assert _unravel_counter(0, [2, 4, 3]) == [0, 0, 0]
+    assert _unravel_counter(1, [2, 4, 3]) == [1, 0, 0]
+    assert _unravel_counter(2, [2, 4, 3]) == [0, 1, 0]
+    assert _unravel_counter(3, [2, 4, 3]) == [1, 1, 0]
+    assert _unravel_counter(8, [2, 4, 3]) == [0, 0, 1]
+    assert _unravel_counter(9, [2, 4, 3]) == [1, 0, 1]
+    assert _unravel_counter(11, [2, 4, 3]) == [1, 1, 1]
+    assert _unravel_counter(24, [2, 4, 3]) == [0, 0, 0]
 
 
 def test_load_chgcar_oxygen():
@@ -60,6 +60,7 @@ def test_load_chgcar_oxygen():
 def test_load_chgcar_water():
     fn = context.get_fn('test/CHGCAR.water')
     mol = Molecule.from_file(fn)
+    assert mol.title == 'unknown system'
     assert (mol.numbers == [8, 1, 1]).all()
     assert abs(mol.coordinates[1] - np.array([0.074983*15+0.903122*1,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
     assert abs(mol.cell.volume - (15*angstrom)**3) < 1e-10
@@ -73,6 +74,7 @@ def test_load_chgcar_water():
 def test_load_locpot_oxygen():
     fn = context.get_fn('test/LOCPOT.oxygen')
     mol = Molecule.from_file(fn)
+    assert mol.title == 'O atom in a box'
     assert (mol.numbers[0] == [8]).all()
     assert abs(mol.cell.volume - (10*angstrom)**3) < 1e-10
     ugrid = mol.grid
@@ -89,6 +91,7 @@ def test_load_locpot_oxygen():
 def test_load_poscar_water():
     fn = context.get_fn('test/POSCAR.water')
     mol = Molecule.from_file(fn)
+    assert mol.title == 'Water molecule in a box'
     assert (mol.numbers == [8, 1, 1]).all()
     assert abs(mol.coordinates[1] - np.array([0.074983*15,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
     assert abs(mol.cell.volume - (15*angstrom)**3) < 1e-10
@@ -102,6 +105,7 @@ def test_load_dump_consistency():
         mol0.to_file('%s/POSCAR' % dn)
         mol1 = Molecule.from_file('%s/POSCAR' % dn)
 
+    assert mol0.title == mol1.title
     assert (mol1.numbers == [8, 1, 1]).all()
     assert abs(mol0.coordinates[1] - mol1.coordinates[0]).max() < 1e-10
     assert abs(mol0.coordinates[0] - mol1.coordinates[1]).max() < 1e-10

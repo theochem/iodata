@@ -41,13 +41,13 @@ def dump_cif(filename, mol):
 
        mol
             A molecule instance. Must contain: ``cell``, ``coordinates``,
-            ``numbers``.
+            ``numbers``. May contain ``title``.
 
     '''
     if mol.cell.nvec != 3:
         raise TypeError('The CIF format only supports 3D periodic systems.')
     with open(filename, 'w') as f:
-        print >> f, 'data_foobar'
+        print >> f, 'data_%s' % getattr(mol, 'title', 'Created with Horton').replace(' ', '_')
         print >> f, '_symmetry_space_group_name_H-M       \'P1\''
         print >> f, '_audit_creation_method            \'Horton\''
         print >> f, '_symmetry_Int_Tables_number       1'
@@ -302,7 +302,7 @@ def load_cif(filename, lf):
        lf
             An instance of the LinalgFactory class. (Ignored here)
 
-       **Returns** a dictionary with: ``coordinates``, ``numbers``,
+       **Returns** a dictionary with: ``title``, ``coordinates``, ``numbers``,
        ``symmetry``, ``links``, ``cell``.
     '''
     from horton import angstrom, deg, periodic, Cell, Symmetry
@@ -330,6 +330,7 @@ def load_cif(filename, lf):
     coordinates, numbers, links = symmetry.generate()
 
     return {
+        'title': title,
         'coordinates': coordinates,
         'numbers': numbers,
         'symmetry': symmetry,

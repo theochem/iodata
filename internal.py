@@ -80,7 +80,7 @@ def dump_h5(grp, data):
             # Simply overwrite old data
             if key in grp:
                 del grp[key]
-            if isinstance(value, int) or isinstance(value, float) or isinstance(value, np.ndarray):
+            if isinstance(value, int) or isinstance(value, float) or isinstance(value, np.ndarray) or isinstance(value, basestring):
                 grp[key] = value
             else:
                 subgrp = grp.require_group(key)

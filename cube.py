@@ -30,8 +30,9 @@ __all__ = ['load_cube', 'dump_cube']
 
 
 def _read_cube_header(f):
-    # skip the first two lines
-    f.readline()
+    # Read the title
+    title = f.readline().strip()
+    # skip the second line
     f.readline()
 
     def read_grid_line(line):
@@ -74,7 +75,7 @@ def _read_cube_header(f):
         if pseudo_numbers[i] == 0.0:
             pseudo_numbers[i] = numbers[i]
 
-    return coordinates, numbers, cell, ugrid, pseudo_numbers
+    return title, coordinates, numbers, cell, ugrid, pseudo_numbers
 
 
 def _read_cube_data(f, ugrid):
@@ -100,13 +101,14 @@ def load_cube(filename):
        filename
             The name of the cube file
 
-       **Returns** a dictionary with ``coordinates``, ``numbers``,
+       **Returns** a dictionary with ``title``, ``coordinates``, ``numbers``,
        ``cube_data``, ``grid``, ``pseudo_numbers``.
     '''
     with open(filename) as f:
-        coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(f)
+        title, coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(f)
         data = _read_cube_data(f, ugrid)
         return {
+            'title': title,
             'coordinates': coordinates,
             'numbers': numbers,
             'cell': cell,
@@ -116,8 +118,8 @@ def load_cube(filename):
         }
 
 
-def _write_cube_header(f, coordinates, numbers, ugrid, pseudo_numbers):
-    print >> f, 'Cube file created with Horton'
+def _write_cube_header(f, title, coordinates, numbers, ugrid, pseudo_numbers):
+    print >> f, title
     print >> f, 'OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z'
     natom = len(numbers)
     x, y, z = ugrid.origin
@@ -152,10 +154,11 @@ def dump_cube(filename, mol):
 
        mol
             A Molecule instance. Must contain ``coordinates``, ``numbers``,
-            ``grid``, ``cube_data``. May contain ``pseudo_numbers``.
+            ``grid``, ``cube_data``. May contain ``title``, ``pseudo_numbers``.
     '''
     with open(filename, 'w') as f:
         if not isinstance(mol.grid, UniformGrid):
             raise ValueError('The system grid must be a UniformGrid instance.')
-        _write_cube_header(f, mol.coordinates, mol.numbers, mol.grid, mol.pseudo_numbers)
+        title = getattr(mol, 'title', 'Created with Horton')
+        _write_cube_header(f, title, mol.coordinates, mol.numbers, mol.grid, mol.pseudo_numbers)
         _write_cube_data(f, mol.cube_data)

@@ -276,13 +276,13 @@ def load_fchk(filename, lf):
        lf
             A LinalgFactory instance.
 
-       **Returns** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
-       ``exp_alpha``, ``permutation``, ``energy``, ``pseudo_numbers``,
-       ``mulliken_charges``.
-       . The dictionary may also contain: ``npa_charges``, ``esp_charges``,
-       ``exp_beta``, ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``,
-       ``dm_spin_mp3``, ``dm_full_cc``, ``dm_spin_cc``, ``dm_full_ci``,
-       ``dm_spin_ci``, ``dm_full_scf``, ``dm_spin_scf``.
+       **Returns** a dictionary with: ``title``, ``coordinates``, ``numbers``,
+       ``obasis``, ``exp_alpha``, ``permutation``, ``energy``,
+       ``pseudo_numbers``, ``mulliken_charges``. The dictionary may also
+       contain: ``npa_charges``, ``esp_charges``, ``exp_beta``, ``dm_full_mp2``,
+       ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
+       ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``,
+       ``dm_spin_scf``.
     '''
     from horton.gbasis import GOBasis
 
@@ -393,6 +393,7 @@ def load_fchk(filename, lf):
     permutation = np.array(permutation, dtype=int)
 
     result = {
+        'title': fchk.title,
         'coordinates': system_coordinates,
         'lf': lf,
         'numbers': numbers,

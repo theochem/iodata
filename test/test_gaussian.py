@@ -112,6 +112,7 @@ def test_load_fchk_nonexistent():
 def test_load_fchk_hf_sto3g_num():
     lf = DenseLinalgFactory()
     fields = load_fchk(context.get_fn('test/hf_sto3g.fchk'), lf)
+    assert fields['title'] == 'hf_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -132,6 +133,7 @@ def test_load_fchk_hf_sto3g_num():
 def test_load_fchk_h_sto3g_num():
     lf = DenseLinalgFactory()
     fields = load_fchk(context.get_fn('test/h_sto3g.fchk'), lf)
+    assert fields['title'] == 'h_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']

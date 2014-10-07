@@ -67,7 +67,7 @@ def load_molden(filename, lf):
             A LinalgFactory instance.
 
        **Returns:** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
-       ``exp_alpha``, ``signs``. It may also contain: ``exp_beta``.
+       ``exp_alpha``, ``signs``. It may also contain: ``title``, ``exp_beta``.
     '''
 
     def helper_coordinates(f, cunit):
@@ -230,6 +230,7 @@ def load_molden(filename, lf):
     coeff_beta = None
     ener_beta = None
     occ_beta = None
+    title = None
     with open(filename) as f:
         line = f.readline()
         if line != '[Molden Format]\n':
@@ -298,6 +299,8 @@ def load_molden(filename, lf):
         'obasis': obasis,
         'permutation': permutation,
     }
+    if title is not None:
+        result['title'] = title
     if exp_beta is not None:
         result['exp_beta'] = exp_beta
 
@@ -483,13 +486,13 @@ def dump_molden(filename, mol):
 
        mol
             A molecule instance. Must contain ``coordinates``, ``numbers``,
-            ``obasis``, ``exp_alpha``. May contain ``exp_beta``.
+            ``obasis``, ``exp_alpha``. May contain ``title``, ``exp_beta``.
     '''
     with open(filename, 'w') as f:
         # Print the header
         print >> f, '[Molden Format]'
         print >> f, '[Title]'
-        print >> f, ' File created with Horton'
+        print >> f, ' %s' % getattr(mol, 'title', 'Created with Horton')
         print >> f
 
         # Print the elements numbers and the coordinates

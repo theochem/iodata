@@ -159,43 +159,47 @@ class Molecule(object):
             The electron repulsion four-index operator
 
        exp_alpha
-            The alpha orbitals (coefficients, occupations and energies)
+            The alpha orbitals (coefficients, occupations and energies).
 
        exp_beta
-            The beta orbitals (coefficients, occupations and energies)
+            The beta orbitals (coefficients, occupations and energies).
 
        esp_charges
             Charges fitted to the electrostatic potential
 
        dm_full (optionally with some prefix like _mp2, _mp3, _cc, _ci, _scf).
-            The spin-summed first-order density matrix
+            The spin-summed first-order density matrix.
 
        dm_spin (optionally with some prefix like _mp2, _mp3, _cc, _ci, _scf).
-            The spin-difference first-order density matrix
+            The spin-difference first-order density matrix.
 
        grid
-            An integration grid (usually a UniformGrid instance)
+            An integration grid (usually a UniformGrid instance).
 
        kin
-            The kinetic energy operator
+            The kinetic energy operator.
 
        lf
             A LinalgFactory instance.
 
+       links
+            A mapping between the atoms in the primitive unit and the
+            crystallographic unit.
+
        mulliken_charges
-            Mulliken AIM charges
+            Mulliken AIM charges.
 
        na
-            The nuclear attraction operator
+            The nuclear attraction operator.
 
        npa_charges
-            Natural charges
+            Natural charges.
 
        obasis
             An instance of the GOBasis class.
 
        olp
-            The overlap operator
+            The overlap operator.
 
        permutation
             The permutation applied to the basis functions.
@@ -207,9 +211,8 @@ class Molecule(object):
             An instance of the Symmetry class, describing the geometric
             symmetry.
 
-       links
-            A mapping between the atoms in the primitive unit and the
-            crystallographic unit.
+       title
+            A suitable name for the molecule.
     '''
     def __init__(self, **kwargs):
         for key, value in kwargs.iteritems():

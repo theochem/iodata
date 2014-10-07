@@ -149,11 +149,13 @@ def check_lta_mol(mol):
 def test_load_cif_lta_gulp():
     mol = Molecule.from_file(context.get_fn('test/lta_gulp.cif'))
     check_lta_mol(mol)
+    assert mol.title == 'LTA_min'
 
 
 def test_load_cif_lta_iza():
     mol = Molecule.from_file(context.get_fn('test/lta_iza.cif'))
     check_lta_mol(mol)
+    assert mol.title == 'LTA'
 
 
 def test_checkpoint():
@@ -161,6 +163,7 @@ def test_checkpoint():
         mol0 = Molecule.from_file(context.get_fn('test/lta_iza.cif'))
         mol0.to_file(f)
         mol1 = Molecule.from_file(f)
+        assert mol0.title == mol1.title
         s0 = mol0.symmetry
         s1 = mol1.symmetry
         compare_symmetries(s0, s1)
@@ -173,6 +176,7 @@ def test_dump_load_consistency():
         mol0.to_file(fn_cif)
         mol1 = Molecule.from_file(fn_cif)
 
+    assert mol0.title.replace(' ', '_') == mol1.title
     assert mol0.cell.nvec == mol1.cell.nvec
     lengths0, angles0 = mol0.cell.parameters
     lengths1, angles1 = mol1.cell.parameters
@@ -187,3 +191,4 @@ def test_dump_load_consistency():
 def test_load_cage():
     mol = Molecule.from_file(context.get_fn('test/cage.cif'))
     assert (mol.coordinates != 0).all()
+    assert mol.title == 'tetr'
