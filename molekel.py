@@ -25,6 +25,8 @@ import numpy as np
 
 from horton.units import angstrom
 from horton.io.molden import _fix_molden_from_buggy_codes
+from horton.gbasis.iobas import str_to_shell_types
+from horton.gbasis.gobasis import GOBasis
 
 
 __all__ = ['load_mkl']
@@ -65,8 +67,6 @@ def load_mkl(filename, lf):
 
 
     def helper_obasis(f, coordinates):
-        from horton.gbasis.io import str_to_shell_types
-        from horton.gbasis.gobasis import GOBasis
         shell_types = []
         shell_map = []
         nprims = []

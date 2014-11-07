@@ -22,8 +22,8 @@
 
 import numpy as np
 
-from horton.gbasis.io import str_to_shell_types
-from horton.gbasis.cext import GOBasis
+from horton.gbasis.iobas import str_to_shell_types
+from horton.gbasis.cext import GOBasis, fac2
 
 
 __all__ = ['load_atom_cp2k']
@@ -85,7 +85,6 @@ def _helper_exp(exp, oe, coeffs, shell_types, restricted):
 
 
 def _get_cp2k_norm_corrections(l, alphas):
-    from horton.gbasis.cext import fac2
     expzet = 0.25*(2*l + 3)
     prefac = np.sqrt(np.sqrt(np.pi)/2.0**(l+2)*fac2(2*l+1))
     zeta = 2*np.array(alphas)

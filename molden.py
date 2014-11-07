@@ -26,7 +26,7 @@ import numpy as np
 from horton.units import angstrom
 from horton.log import log
 from horton.periodic import periodic
-from horton.gbasis.io import str_to_shell_types, shell_type_to_str
+from horton.gbasis.iobas import str_to_shell_types, shell_type_to_str
 from horton.gbasis.gobasis import GOBasis
 from horton.gbasis.cext import gob_cart_normalization, get_shell_nbasis
 
