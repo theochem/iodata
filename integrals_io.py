@@ -19,10 +19,11 @@
 #
 #--
 '''Dump FCIDUMP file to disc using the standard Molpro format of FCIDUMP.
-   One- and two-electron integrals are stored in chemical notation!.
+   One- and two-electron integrals are stored in chemists' notation!.
 '''
 
 from horton.orbital_utils import transform_integrals
+from horton.utils import check_type, check_options
 
 
 __all__ = ['integrals_from_file', 'integrals_to_file']
@@ -51,11 +52,14 @@ def integrals_from_file(lf, filename='./FCIDUMP'):
             arrays.append((line.split()))
     i = -1
     while True:
+        #
+        # Get to first line containing integrals. Ignore everything above
+        #
         i = i+1
         #
         # Molpro file format changed in version 2012
         #
-        if arrays[i][0]=="&END" or arrays[i][0]=="/END":
+        if arrays[i][0]=="&END" or arrays[i][0]=="/END" or arrays[i][0]=="/":
             while True:
                 i = i+1
                 if i>=len(arrays):
@@ -77,17 +81,20 @@ def integrals_from_file(lf, filename='./FCIDUMP'):
     return one_mo, two_mo, coreenergy
 
 
-def integrals_to_file(lf, one, two, ecore, exps, filename='./FCIDUMP', **kwargs):
+def integrals_to_file(lf, one, two, ecore, orb, filename='./FCIDUMP', **kwargs):
     '''Write one- and two-electron integrals using Molpro file conventions.
+       If ncore/nactive are specified, the Hamiltonian within the active space
+       is written to file.
+
        Works only for restricted wavefunctions.
 
        **Arguments:**
 
        one/two
-            One and two-electron integrals in the AO basis.
+            One and two-electron integrals.
 
-       exps
-            The AO/MO expansion coefficients. An Expansion instance. If None,
+       orb
+            The MO expansion coefficients. An Expansion instance. If None,
             integrals are not transformed into new basis.
 
        **Optional arguments:**
@@ -108,6 +115,9 @@ def integrals_to_file(lf, one, two, ecore, exps, filename='./FCIDUMP', **kwargs)
 
        nactive
             The number of active orbitals (int) (default nbasis)
+
+       indextrans
+            4-index transformation (str). One of ``tensordot``, ``einsum``
     '''
     names = []
     def _helper(x,y):
@@ -115,25 +125,42 @@ def integrals_to_file(lf, one, two, ecore, exps, filename='./FCIDUMP', **kwargs)
         return kwargs.get(x,y)
     nel = _helper('nel', 0)
     ncore = _helper('ncore', 0)
-    ms2 = _helper('ms2', 0)
+    ms2 = _helper('ms2', 0.0)
     nactive = _helper('nactive', one.nbasis)
-    norb = _helper('norb', one.nbasis)
+    indextrans = _helper('indextrans', 'tensordot')
     for name, value in kwargs.items():
         if name not in names:
             raise ValueError("Unknown keyword argument %s" % name)
 
-    if exps:
-        one_mo, two_mo = transform_integrals(one, two, 'tensordot', exps)
+    #
+    # Check type/option of keyword arguments
+    #
+    check_type('nel', nel, int)
+    check_type('ncore', ncore, int)
+    check_type('nactive', nactive, int)
+    check_type('ms2', ms2, int, float)
+    check_options('indextrans', indextrans, 'tensordot', 'einsum')
+    if nel < 0 or ncore < 0 or ms2 < 0 or nactive < 0:
+        raise ValueError('nel, ncore, ms2, and nactive must be larger equal 0!')
+    if nactive+ncore > one.nbasis:
+        raise ValueError('More active orbitals than basis functions!')
+
+    if orb:
+        #
+        # No need to check orb. This is done in transform_integrals function
+        #
+        one_mo, two_mo = transform_integrals(one, two, indextrans, orb)
     else:
-        one_mo = one
-        two_mo = []
-        two_mo.append(two)
+        one_mo = [one]
+        two_mo = [two]
 
     #
     # Account for core electrons
     #
+    norb = one.nbasis
+    core_ = 0.0
     if ncore > 0:
-        core_ = one_mo.trace(0, ncore, 0, ncore)*2.0
+        core_ += one_mo[0].trace(0, ncore, 0, ncore)*2.0
         tmp = two_mo[0].slice_to_two('abab->ab', None, 2.0, True, 0, ncore, 0, ncore, 0, ncore, 0, ncore)
         core_ += tmp.sum()
         #
@@ -142,18 +169,16 @@ def integrals_to_file(lf, one, two, ecore, exps, filename='./FCIDUMP', **kwargs)
         tmp = two_mo[0].slice_to_two('abba->ab', None,-1.0, True, 0, ncore, 0, ncore, 0, ncore, 0, ncore)
         core_ += tmp.sum()
 
-        one_mo_ = one_mo.new()
+        one_mo_ = one_mo[0].new()
         two_mo[0].contract_to_two('abcb->ac', one_mo_, 2.0, True, 0, norb, 0, ncore, 0, norb, 0, ncore)
         #
         # exchange part:
         #
         two_mo[0].contract_to_two('abbc->ac', one_mo_,-1.0, False, 0, norb, 0, ncore, 0, ncore, 0, norb)
-        one_mo.iadd(one_mo_, 1.0)
-    else:
-        core_ = 0.0
+        one_mo[0].iadd(one_mo_, 1.0)
 
     with open(filename, 'w') as f:
-        print >> f, ' &FCI NORB= %i,NELEC=%i,MS2= %i,' %(nactive, nel, ms2)
+        print >> f, ' &FCI NORB=%i,NELEC=%i,MS2=%i,' %(nactive, nel, ms2)
         print >> f, '  ORBSYM= '+",".join(str(1) for v in range(nactive))+","
         print >> f, '  ISYM=1'
         print >> f, ' &END'
@@ -166,6 +191,6 @@ def integrals_to_file(lf, one, two, ecore, exps, filename='./FCIDUMP', **kwargs)
                             print >> f, '%16.12f %4i %4i %4i %4i' %(two_mo[0].get_element(i,k,j,l), (i+1-ncore), (j+1-ncore), (k+1-ncore), (l+1-ncore))
         for i in range(ncore, (ncore+nactive)):
             for j in range(ncore,i+1):
-                print >> f, '%16.12f %4i %4i %4i %4i' %(one_mo.get_element(i,j), (i+1-ncore), (j+1-ncore), 0, 0)
+                print >> f, '%16.12f %4i %4i %4i %4i' %(one_mo[0].get_element(i,j), (i+1-ncore), (j+1-ncore), 0, 0)
 
         print >> f, '%16.12f %4i %4i %4i %4i' %(ecore+core_, 0, 0, 0, 0)
