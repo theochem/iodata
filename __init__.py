@@ -39,7 +39,7 @@ from horton.io.lockedh5 import *
 from horton.io.molden import *
 from horton.io.molecule import *
 from horton.io.molekel import *
+from horton.io.molpro import *
 from horton.io.vasp import *
 from horton.io.wfn import *
 from horton.io.xyz import *
-from horton.io.integrals_io import *
