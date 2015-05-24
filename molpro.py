@@ -33,173 +33,111 @@ from horton.utils import check_type, check_options
 __all__ = ['load_fcidump', 'dump_fcidump']
 
 
-def load_fcidump(lf, filename='./FCIDUMP'):
+def load_fcidump(filename, lf):
     '''Read one- and two-electron integrals from a Molpro 2012 FCIDUMP file.
 
-       Works only for restricted wavefunctions. Number of basis functions in
-       integrals must be equal to number of basis functions in lf
+       Works only for restricted wavefunctions.
 
        Keep in mind that the FCIDUMP format changed in Molpro 2012, so files
        generated with older versions are not supported.
 
        **Arguments:**
 
-       lf
-            A linear algebra factory. Must be of type DenseLinalgFactory.
-
-       **Optional arguments:**
-
        filename
-            The filename of the fcidump file. Default "FCIDUMP".
+            The filename of the fcidump file.
+
+       lf
+            A LinalgFactory instance.
     '''
-    one_mo = lf.create_two_index()
-    two_mo = lf.create_four_index()
-    arrays = []
     with open(filename) as f:
-        for line in f.readlines():
-            arrays.append((line.split()))
-    i = -1
-    while True:
-        #
-        # Get to first line containing integrals. Ignore everything above
-        #
-        i = i+1
-        #
-        # Molpro file format changed in version 2012
-        #
-        if arrays[i][0]=="&END" or arrays[i][0]=="/END" or arrays[i][0]=="/":
-            while True:
-                i = i+1
-                if i>=len(arrays):
-                    raise ValueError('Reached end of file while reading integrals. File %s might be incomplete or corrupted. Please check for errors.' %filename)
-                if arrays[i][4] == '0':
-                    if arrays[i][1] == '0':
-                        coreenergy = float(arrays[i][0])
-                        return one_mo, two_mo, coreenergy
-                    ii = int(arrays[i][1])-1
-                    ij = int(arrays[i][2])-1
-                    one_mo.set_element(ii,ij,float(arrays[i][0]))
-                else:
-                    ii = int(arrays[i][1])-1
-                    ij = int(arrays[i][2])-1
-                    ik = int(arrays[i][3])-1
-                    il = int(arrays[i][4])-1
-                    two_mo.set_element(ii,ik,ij,il,float(arrays[i][0]))
-            break
-    return one_mo, two_mo, core_energy
+        line = f.next()
+        if not line.startswith(' &FCI NORB='):
+            raise IOError('Error in FCIDUMP file header')
+        begin_pos = line.find('=')+1
+        end_pos = line.find(',')
+        nbasis = int(line[begin_pos:end_pos])
+        if lf.default_nbasis is not None and lf.default_nbasis != nbasis:
+            raise TypeError('The value of lf.default_nbasis does not match NORB reported in the FCIDUMP file.')
+        lf.default_nbasis = nbasis
+
+        # skip rest of header
+        for line in f:
+            words = line.split()
+            if words[0] == "&END" or words[0] == "/END" or words[0]=="/":
+                break
+
+        # read the integrals
+        one_mo = lf.create_two_index()
+        two_mo = lf.create_four_index()
+        core_energy = 0.0
+
+        for line in f:
+            words = line.split()
+            if len(words) != 5:
+                raise IOError('Expecting 5 fields on each data line in FCIDUMP')
+            if words[3] != '0':
+                ii = int(words[1])-1
+                ij = int(words[2])-1
+                ik = int(words[3])-1
+                il = int(words[4])-1
+                two_mo.set_element(ii,ik,ij,il,float(words[0]))
+            elif words[1] != '0':
+                ii = int(words[1])-1
+                ij = int(words[2])-1
+                one_mo.set_element(ii,ij,float(words[0]))
+            else:
+                core_energy = float(words[0])
+
+    return {
+        'lf': lf,
+        'one_mo': one_mo,
+        'two_mo': two_mo,
+        'core_energy': core_energy,
+    }
 
 
-def dump_fcidump(lf, one, two, ecore, orb, filename='./FCIDUMP', **kwargs):
-    '''Write one- and two-electron integrals int the Molpro 2012 FCIDUMP format.
-
-       If ncore/nactive are specified, the Hamiltonian within the active space
-       is written to file.
+def dump_fcidump(filename, mol):
+    '''Write one- and two-electron integrals in the Molpro 2012 FCIDUMP format.
 
        Works only for restricted wavefunctions.
 
-       **Arguments:**
-
-       one/two
-            One and two-electron integrals.
-
-       orb
-            The MO expansion coefficients. An Expansion instance. If None,
-            integrals are not transformed into new basis.
-
-       **Optional arguments:**
+       Keep in mind that the FCIDUMP format changed in Molpro 2012, so files
+       written with this function cannot be used with older versions of Molpro
 
        filename
-            The filename of the fcidump file. Default "FCIDUMP".
+            The filename of the FCIDUMP file. This is usually "FCIDUMP".
 
-       **Keyword arguments:**
-
-       nel
-            The number of active electrons (int) (default 0)
-
-       ncore
-            The number of frozen core orbitals (int) (default 0)
-
-       ms2
-            The spin multiplicity (int) (default 0)
-
-       nactive
-            The number of active orbitals (int) (default nbasis)
-
-       indextrans
-            4-index transformation (str). One of ``tensordot``, ``einsum``
+       mol
+            A Molecule instance. Must contain ``one_mo``, ``two_mo``,
+            and optionally ``core_energy``
     '''
-    names = []
-    def _helper(x,y):
-        names.append(x)
-        return kwargs.get(x,y)
-    nel = _helper('nel', 0)
-    ncore = _helper('ncore', 0)
-    ms2 = _helper('ms2', 0.0)
-    nactive = _helper('nactive', one.nbasis)
-    indextrans = _helper('indextrans', 'tensordot')
-    for name, value in kwargs.items():
-        if name not in names:
-            raise ValueError("Unknown keyword argument %s" % name)
-
-    #
-    # Check type/option of keyword arguments
-    #
-    check_type('nel', nel, int)
-    check_type('ncore', ncore, int)
-    check_type('nactive', nactive, int)
-    check_type('ms2', ms2, int, float)
-    check_options('indextrans', indextrans, 'tensordot', 'einsum')
-    if nel < 0 or ncore < 0 or ms2 < 0 or nactive < 0:
-        raise ValueError('nel, ncore, ms2, and nactive must be larger equal 0!')
-    if nactive+ncore > one.nbasis:
-        raise ValueError('More active orbitals than basis functions!')
-
-    if orb:
-        #
-        # No need to check orb. This is done in transform_integrals function
-        #
-        one_mo, two_mo = transform_integrals(one, two, indextrans, orb)
-    else:
-        one_mo = [one]
-        two_mo = [two]
-
-    #
-    # Account for core electrons
-    #
-    norb = one.nbasis
-    core_ = 0.0
-    if ncore > 0:
-        core_ += one_mo[0].trace(0, ncore, 0, ncore)*2.0
-        tmp = two_mo[0].slice_to_two('abab->ab', None, 2.0, True, 0, ncore, 0, ncore, 0, ncore, 0, ncore)
-        core_ += tmp.sum()
-        #
-        # exchange part:
-        #
-        tmp = two_mo[0].slice_to_two('abba->ab', None,-1.0, True, 0, ncore, 0, ncore, 0, ncore, 0, ncore)
-        core_ += tmp.sum()
-
-        one_mo_ = one_mo[0].new()
-        two_mo[0].contract_to_two('abcb->ac', one_mo_, 2.0, True, 0, norb, 0, ncore, 0, norb, 0, ncore)
-        #
-        # exchange part:
-        #
-        two_mo[0].contract_to_two('abbc->ac', one_mo_,-1.0, False, 0, norb, 0, ncore, 0, ncore, 0, norb)
-        one_mo[0].iadd(one_mo_, 1.0)
-
     with open(filename, 'w') as f:
-        print >> f, ' &FCI NORB=%i,NELEC=%i,MS2=%i,' %(nactive, nel, ms2)
-        print >> f, '  ORBSYM= '+",".join(str(1) for v in range(nactive))+","
+        one_mo = mol.one_mo
+        two_mo = mol.two_mo
+        core_energy = getattr(mol, 'core_energy', 0.0)
+
+        # Write header
+        nactive = one_mo.nbasis
+        print >> f, ' &FCI NORB=%i,NELEC=0,MS2=0,' % nactive
+        print >> f, '  ORBSYM= '+",".join(str(1) for v in xrange(nactive))+","
         print >> f, '  ISYM=1'
         print >> f, ' &END'
 
-        for i in range(ncore,(ncore+nactive)):
-            for j in range(ncore,i+1):
-                for k in range(ncore,(ncore+nactive)):
-                    for l in range(ncore,k+1):
-                        if (i+1)*(j+1) >= (k+1)*(l+1):
-                            print >> f, '%16.12f %4i %4i %4i %4i' %(two_mo[0].get_element(i,k,j,l), (i+1-ncore), (j+1-ncore), (k+1-ncore), (l+1-ncore))
-        for i in range(ncore, (ncore+nactive)):
-            for j in range(ncore,i+1):
-                print >> f, '%16.12f %4i %4i %4i %4i' %(one_mo[0].get_element(i,j), (i+1-ncore), (j+1-ncore), 0, 0)
-
-        print >> f, '%16.12f %4i %4i %4i %4i' %(ecore+core_, 0, 0, 0, 0)
+        # Write integrals and core energy
+        for i in xrange(nactive):
+            for j in xrange(i+1):
+                for k in xrange(nactive):
+                    for l in xrange(k+1):
+                        # old code
+                        #if (i+1)*(j+1) >= (k+1)*(l+1):
+                        if (i*(i+1))/2+j >= (k*(k+1))/2+l:
+                            value = two_mo.get_element(i,k,j,l)
+                            if value != 0.0:
+                                print >> f, '%23.16e %4i %4i %4i %4i' % (value, i+1, j+1, k+1, l+1)
+        for i in xrange(nactive):
+            for j in xrange(i+1):
+                value = one_mo.get_element(i,j)
+                if value != 0.0:
+                    print >> f, '%23.16e %4i %4i %4i %4i' % (value, i+1, j+1, 0, 0)
+        if core_energy != 0.0:
+            print >> f, '%23.16e %4i %4i %4i %4i' % (core_energy, 0, 0, 0, 0)

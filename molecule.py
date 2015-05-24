@@ -155,6 +155,9 @@ class Molecule(object):
             A Cell object that describes the (generally triclinic) periodic
             boundary conditions.
 
+       core_energy
+            The Hartree-Fock energy due to the core orbitals
+
        energy
             The total energy (electronic+nn) of the molecule
 
@@ -204,6 +207,9 @@ class Molecule(object):
        olp
             The overlap operator.
 
+       one_mo
+            One-electron integrals in the (Hartree-Fock) molecular-orbital basis
+
        permutation
             The permutation applied to the basis functions.
 
@@ -216,6 +222,9 @@ class Molecule(object):
 
        title
             A suitable name for the molecule.
+
+       two_mo
+            Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
     '''
     def __init__(self, **kwargs):
         for key, value in kwargs.iteritems():
@@ -311,6 +320,9 @@ class Molecule(object):
             elif filename.endswith('.cif'):
                 from horton.io.cif import load_cif
                 result.update(load_cif(filename, lf))
+            elif 'FCIDUMP' in os.path.basename(filename):
+                from horton.io.molpro import load_fcidump
+                result.update(load_fcidump(filename, lf))
             else:
                 raise ValueError('Unknown file format for reading: %s' % filename)
 
@@ -372,7 +384,10 @@ class Molecule(object):
             dump_molden(filename, self)
         elif os.path.basename(filename).startswith('POSCAR'):
             from horton.io.vasp import dump_poscar
-            return dump_poscar(filename, self)
+            dump_poscar(filename, self)
+        elif 'FCIDUMP' in os.path.basename(filename):
+            from horton.io.molpro import dump_fcidump
+            dump_fcidump(filename, self)
         else:
             raise ValueError('Unknown file format for writing: %s' % filename)
 
