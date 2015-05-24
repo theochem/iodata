@@ -18,21 +18,29 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''Dump FCIDUMP file to disc using the standard Molpro format of FCIDUMP.
-   One- and two-electron integrals are stored in chemists' notation!.
+'''The Molpro 2012 FCIDUMP format.
+
+   .. note ::
+
+       One- and two-electron integrals are stored in chemists' notation in an
+       FCIDUMP file while Horton internally uses Physicist's notation.
 '''
 
 from horton.orbital_utils import transform_integrals
 from horton.utils import check_type, check_options
 
 
-__all__ = ['integrals_from_file', 'integrals_to_file']
+__all__ = ['load_fcidump', 'dump_fcidump']
 
 
-def integrals_from_file(lf, filename='./FCIDUMP'):
-    '''Read one- and two-electron integrals using Molpro file conventions.
+def load_fcidump(lf, filename='./FCIDUMP'):
+    '''Read one- and two-electron integrals from a Molpro 2012 FCIDUMP file.
+
        Works only for restricted wavefunctions. Number of basis functions in
        integrals must be equal to number of basis functions in lf
+
+       Keep in mind that the FCIDUMP format changed in Molpro 2012, so files
+       generated with older versions are not supported.
 
        **Arguments:**
 
@@ -78,11 +86,12 @@ def integrals_from_file(lf, filename='./FCIDUMP'):
                     il = int(arrays[i][4])-1
                     two_mo.set_element(ii,ik,ij,il,float(arrays[i][0]))
             break
-    return one_mo, two_mo, coreenergy
+    return one_mo, two_mo, core_energy
 
 
-def integrals_to_file(lf, one, two, ecore, orb, filename='./FCIDUMP', **kwargs):
-    '''Write one- and two-electron integrals using Molpro file conventions.
+def dump_fcidump(lf, one, two, ecore, orb, filename='./FCIDUMP', **kwargs):
+    '''Write one- and two-electron integrals int the Molpro 2012 FCIDUMP format.
+
        If ncore/nactive are specified, the Hamiltonian within the active space
        is written to file.
 
