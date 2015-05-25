@@ -261,22 +261,23 @@ class Molecule(object):
            **Arguments:**
 
            filename1, filename2, ...
-                The files to load molecule data from. When multiple files are given,
-                data from the first file is overwritten by data from the second,
-                etc. When one file contains sign and permutation changes for the
-                orbital basis, these changes will be applied to data from all other
-                files.
+                The files to load molecule data from. When multiple files are
+                given, data from the first file is overwritten by data from the
+                second, etc. When one file contains sign and permutation changes
+                for the orbital basis, these changes will be applied to data
+                from all other files.
 
            **Optional arguments:**
 
            lf
                 A LinalgFactory instance. DenseLinalgFactory is used as default.
 
-           This routine uses the extension or prefix of the filename to determine the file
-           format. It returns a dictionary with data loaded from the file.
+           This routine uses the extension or prefix of the filename to
+           determine the file format. It returns a dictionary with data loaded
+           from the file.
 
-           For each file format, a specialized load_xxx function is called that
-           returns a dictionary with data from the file.
+           For each file format, a specialized function is called that returns a
+           dictionary with data from the file.
         '''
         result = {}
 
@@ -352,16 +353,10 @@ class Molecule(object):
            **Arguments:**
 
            filename
-                The file to load the geometry from
-
-           data
-                A dictionary containing all the data. When some elements of the
-                dictionary are not supported by the file format, they will be
-                ignored. When for a given format, required elements are missing from
-                the dictionary, an error is raised.
+                The file to write the data to
 
            This routine uses the extension or prefix of the filename to determine
-           the file format. For each file format, a specialized dump_xxx function is
+           the file format. For each file format, a specialized function is
            called that does the real work.
         '''
 
