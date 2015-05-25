@@ -50,12 +50,21 @@ def load_fcidump(filename, lf):
             A LinalgFactory instance.
     '''
     with open(filename) as f:
+        # check header
         line = f.next()
         if not line.startswith(' &FCI NORB='):
             raise IOError('Error in FCIDUMP file header')
-        begin_pos = line.find('=')+1
-        end_pos = line.find(',')
-        nbasis = int(line[begin_pos:end_pos])
+
+        # read info from header
+        words = line[5:].split(',')
+        header_info = {}
+        for word in words:
+            if word.count('=') == 1:
+                key, value = word.split('=')
+                header_info[key.strip()] = value.strip()
+        nbasis = int(header_info['NORB'])
+        nelec = int(header_info['NELEC'])
+        ms2 = int(header_info['MS2'])
         if lf.default_nbasis is not None and lf.default_nbasis != nbasis:
             raise TypeError('The value of lf.default_nbasis does not match NORB reported in the FCIDUMP file.')
         lf.default_nbasis = nbasis
@@ -90,6 +99,8 @@ def load_fcidump(filename, lf):
 
     return {
         'lf': lf,
+        'nelec': nelec,
+        'ms2': ms2,
         'one_mo': one_mo,
         'two_mo': two_mo,
         'core_energy': core_energy,
@@ -109,16 +120,18 @@ def dump_fcidump(filename, mol):
 
        mol
             A Molecule instance. Must contain ``one_mo``, ``two_mo``,
-            and optionally ``core_energy``
+            and optionally ``core_energy``, ``nelec`` and ``ms``
     '''
     with open(filename, 'w') as f:
         one_mo = mol.one_mo
         two_mo = mol.two_mo
+        nactive = one_mo.nbasis
         core_energy = getattr(mol, 'core_energy', 0.0)
+        nelec = getattr(mol, 'nelec', 0)
+        ms2 = getattr(mol, 'ms2', 0)
 
         # Write header
-        nactive = one_mo.nbasis
-        print >> f, ' &FCI NORB=%i,NELEC=0,MS2=0,' % nactive
+        print >> f, ' &FCI NORB=%i,NELEC=%i,MS2=%i,' % (nactive, nelec, ms2)
         print >> f, '  ORBSYM= '+",".join(str(1) for v in xrange(nactive))+","
         print >> f, '  ISYM=1'
         print >> f, ' &END'

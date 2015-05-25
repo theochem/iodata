@@ -192,11 +192,17 @@ class Molecule(object):
             A mapping between the atoms in the primitive unit and the
             crystallographic unit.
 
+       ms2
+            The spin multiplicity.
+
        mulliken_charges
             Mulliken AIM charges.
 
        na
             The nuclear attraction operator.
+
+       nelec
+            The number of electrons.
 
        npa_charges
             Natural charges.

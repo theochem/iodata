@@ -29,6 +29,8 @@ from horton.test.common import tmpdir
 def test_load_fcidump_psi4_h2():
     mol = Molecule.from_file(context.get_fn('test/FCIDUMP.psi4.h2'))
     assert mol.core_energy == 0.7151043364864863E+00
+    assert mol.nelec == 2
+    assert mol.ms2 == 0
     assert mol.lf.default_nbasis == 10
     assert mol.one_mo.nbasis == 10
     assert mol.one_mo.get_element(0, 0) == -0.1251399119550580E+01
@@ -56,6 +58,8 @@ def test_dump_load_fcidimp_consistency_ao():
 
     # Compute stuff for fcidump file. test without transforming to mo basis
     mol0.core_energy = compute_nucnuc(mol0.coordinates, mol0.pseudo_numbers)
+    mol0.nelec = 10
+    mol0.ms2 = 1
     mol0.one_mo = lf.create_two_index()
     obasis.compute_kinetic(mol0.one_mo)
     obasis.compute_nuclear_attraction(mol0.coordinates, mol0.pseudo_numbers, mol0.one_mo)
@@ -68,6 +72,8 @@ def test_dump_load_fcidimp_consistency_ao():
 
     # Compare results
     assert mol0.core_energy == mol1.core_energy
+    assert mol0.nelec == mol1.nelec
+    assert mol0.ms2 == mol1.ms2
     assert mol0.one_mo == mol1.one_mo
     assert mol0.two_mo == mol1.two_mo
 
@@ -94,6 +100,8 @@ def check_dump_load_fcidimp_consistency_mo(fn):
 
     # Compare results
     assert mol1.core_energy == 0.0
+    assert mol1.nelec == 0
+    assert mol1.ms2 == 0
     assert mol0.one_mo == mol1.one_mo
     assert abs(mol0.two_mo._array - mol1.two_mo._array).max() < 1e-13
 
@@ -120,6 +128,8 @@ def test_dump_load_fcidimp_consistency_mo_active():
     # transform to mo basis and use only active space
     enn = compute_nucnuc(mol0.coordinates, mol0.pseudo_numbers)
     mol0.one_mo, mol0.two_mo, mol0.core_energy = split_core_active(one, two, enn, mol0.exp_alpha, 2, 4)
+    mol0.nelec = 10
+    mol0.ms2 = 0
 
     # Dump to a file and load it again
     with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_mo_active') as dn:
@@ -128,5 +138,6 @@ def test_dump_load_fcidimp_consistency_mo_active():
 
     # Compare results
     assert mol0.core_energy == mol1.core_energy
-    assert abs(mol0.one_mo._array - mol1.one_mo._array).max() < 1e-15
+    assert mol0.nelec == mol1.nelec
+    assert mol0.ms2 == mol1.ms2
     assert abs(mol0.two_mo._array - mol1.two_mo._array).max() < 1e-15
