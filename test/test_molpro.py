@@ -37,6 +37,7 @@ def test_load_fcidump_psi4_h2():
     assert mol.one_mo.get_element(2, 1) == 0.9292454365115077E-01
     assert mol.one_mo.get_element(1, 2) == 0.9292454365115077E-01
     assert mol.one_mo.get_element(9, 9) == 0.9035054979531029E+00
+    assert mol.two_mo.nbasis == 10
     assert mol.two_mo.get_element(0, 0, 0, 0) == 0.6589928924251115E+00
     # Check physicist's notation and symmetry
     assert mol.two_mo.get_element(6, 1, 5, 0) == 0.5335846565304321E-01
@@ -48,6 +49,31 @@ def test_load_fcidump_psi4_h2():
     assert mol.two_mo.get_element(0, 6, 1, 5) == 0.5335846565304321E-01
     assert mol.two_mo.get_element(0, 5, 1, 6) == 0.5335846565304321E-01
     assert mol.two_mo.get_element(9, 9, 9, 9) == 0.6273759381091796E+00
+
+
+def test_load_fcidump_molpro_h2():
+    mol = Molecule.from_file(context.get_fn('test/FCIDUMP.molpro.h2'))
+    assert mol.core_energy == 0.7151043364864863E+00
+    assert mol.nelec == 2
+    assert mol.ms2 == 0
+    assert mol.lf.default_nbasis == 4
+    assert mol.one_mo.nbasis == 4
+    assert mol.one_mo.get_element(0, 0) == -0.1245406261597530E+01
+    assert mol.one_mo.get_element(0, 1) == -0.1666402467335385E+00
+    assert mol.one_mo.get_element(1, 0) == -0.1666402467335385E+00
+    assert mol.one_mo.get_element(3, 3) == 0.3216193420753873E+00
+    assert mol.two_mo.nbasis == 4
+    assert mol.two_mo.get_element(0, 0, 0, 0) == 0.6527679278914691E+00
+    # Check physicist's notation and symmetry
+    assert mol.two_mo.get_element(3, 0, 2, 1) == 0.7756042287284058E-01
+    assert mol.two_mo.get_element(2, 0, 3, 1) == 0.7756042287284058E-01
+    assert mol.two_mo.get_element(3, 1, 2, 0) == 0.7756042287284058E-01
+    assert mol.two_mo.get_element(2, 1, 3, 0) == 0.7756042287284058E-01
+    assert mol.two_mo.get_element(0, 3, 1, 2) == 0.7756042287284058E-01
+    assert mol.two_mo.get_element(0, 2, 1, 3) == 0.7756042287284058E-01
+    assert mol.two_mo.get_element(1, 3, 0, 2) == 0.7756042287284058E-01
+    assert mol.two_mo.get_element(1, 2, 0, 3) == 0.7756042287284058E-01
+    assert mol.two_mo.get_element(3, 3, 3, 3) == 0.7484308847738417E+00
 
 
 def test_dump_load_fcidimp_consistency_ao():
