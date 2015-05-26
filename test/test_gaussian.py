@@ -36,7 +36,7 @@ def test_load_operators_water_sto3g_hf_g03():
         assert op is not None
         if isinstance(op, LinalgObject):
             assert op.nbasis == 7
-            op.check_symmetry()
+            assert op.is_symmetric()
 
     overlap = result['olp']
     kinetic = result['kin']
@@ -79,7 +79,7 @@ def test_load_operators_water_ccpvdz_pure_hf_g03():
         assert op is not None
         if isinstance(op, LinalgObject):
             assert op.nbasis == 24
-            op.check_symmetry()
+            assert op.is_symmetric()
 
     assert abs(overlap.get_element(0,0) - 1.0) < eps
     assert abs(overlap.get_element(0,1) - 0.214476) < eps
@@ -127,7 +127,7 @@ def test_load_fchk_hf_sto3g_num():
     assert (fields['mulliken_charges'] == [0.45000000E+00 , 4.22300000E+00]).all()
     assert (fields['npa_charges']== [3.50000000E+00,  1.32000000E+00]).all()
     assert (fields['esp_charges']==[ 0.77700000E+00,  0.66600000E+00]).all()
-    fields['dm_full_scf'].check_symmetry()
+    assert fields['dm_full_scf'].is_symmetric()
 
 
 def test_load_fchk_h_sto3g_num():
@@ -145,8 +145,8 @@ def test_load_fchk_h_sto3g_num():
     assert coordinates.shape[1] == 3
     assert len(numbers) == 1
     assert energy == -4.665818503844346E-01
-    fields['dm_full_scf'].check_symmetry()
-    fields['dm_spin_scf'].check_symmetry()
+    assert fields['dm_full_scf'].is_symmetric()
+    assert fields['dm_spin_scf'].is_symmetric()
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
@@ -162,7 +162,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
     assert energy == -1.495944878699246E+02
-    fields['dm_full_scf'].check_symmetry()
+    assert fields['dm_full_scf'].is_symmetric()
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
@@ -178,7 +178,7 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
     assert energy == -1.495953594545721E+02
-    fields['dm_full_scf'].check_symmetry()
+    assert fields['dm_full_scf'].is_symmetric()
 
 
 def test_load_fchk_water_sto3g_hf():
@@ -206,7 +206,7 @@ def test_load_fchk_water_sto3g_hf():
     assert exp_alpha.occupations.max() == 1.0
     energy = fields['energy']
     assert energy == -7.495929232844363E+01
-    fields['dm_full_scf'].check_symmetry()
+    assert fields['dm_full_scf'].is_symmetric()
 
 
 def test_load_fchk_lih_321g_hf():
@@ -245,8 +245,8 @@ def test_load_fchk_lih_321g_hf():
     assert abs(exp_beta.occupations.sum() - 1) == 0.0
     assert exp_beta.occupations.min() == 0.0
     assert exp_beta.occupations.max() == 1.0
-    fields['dm_full_scf'].check_symmetry()
-    fields['dm_spin_scf'].check_symmetry()
+    assert fields['dm_full_scf'].is_symmetric()
+    assert fields['dm_spin_scf'].is_symmetric()
     energy = fields['energy']
     assert energy == -7.687331212191968E+00
 

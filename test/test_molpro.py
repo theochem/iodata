@@ -117,6 +117,8 @@ def check_dump_load_fcidimp_consistency_mo(fn):
 
     # transform to mo basis, skip core energy
     (mol0.one_mo,), (mol0.two_mo,) = transform_integrals(one, two, 'tensordot', mol0.exp_alpha)
+    mol0.one_mo.symmetrize()
+    mol0.two_mo.symmetrize()
 
     # Dump to a file and load it again
     with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_mo_%s' % os.path.basename(fn)) as dn:
@@ -129,7 +131,7 @@ def check_dump_load_fcidimp_consistency_mo(fn):
     assert mol1.nelec == 0
     assert mol1.ms2 == 0
     assert mol0.one_mo == mol1.one_mo
-    assert abs(mol0.two_mo._array - mol1.two_mo._array).max() < 1e-13
+    assert mol0.two_mo == mol1.two_mo
 
 
 def test_dump_load_fcidimp_consistency_mo_water_sto3g():
@@ -154,6 +156,8 @@ def test_dump_load_fcidimp_consistency_mo_active():
     # transform to mo basis and use only active space
     enn = compute_nucnuc(mol0.coordinates, mol0.pseudo_numbers)
     mol0.one_mo, mol0.two_mo, mol0.core_energy = split_core_active(one, two, enn, mol0.exp_alpha, 2, 4)
+    mol0.one_mo.symmetrize()
+    mol0.two_mo.symmetrize()
     mol0.nelec = 10
     mol0.ms2 = 0
 
@@ -166,4 +170,5 @@ def test_dump_load_fcidimp_consistency_mo_active():
     assert mol0.core_energy == mol1.core_energy
     assert mol0.nelec == mol1.nelec
     assert mol0.ms2 == mol1.ms2
-    assert abs(mol0.two_mo._array - mol1.two_mo._array).max() < 1e-15
+    assert mol0.one_mo == mol1.one_mo
+    assert mol0.two_mo == mol1.two_mo
