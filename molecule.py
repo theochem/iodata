@@ -173,10 +173,10 @@ class Molecule(object):
        esp_charges
             Charges fitted to the electrostatic potential
 
-       dm_full (optionally with some prefix like _mp2, _mp3, _cc, _ci, _scf).
+       dm_full (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
             The spin-summed first-order density matrix.
 
-       dm_spin (optionally with some prefix like _mp2, _mp3, _cc, _ci, _scf).
+       dm_spin (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
             The spin-difference first-order density matrix.
 
        grid
