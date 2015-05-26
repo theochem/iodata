@@ -92,6 +92,9 @@ def load_fcidump(filename, lf):
                 ij = int(words[2])-1
                 ik = int(words[3])-1
                 il = int(words[4])-1
+                # Uncomment the following line if you want to assert that the
+                # FCIDUMP file does not contain duplicate 4-index entries.
+                #assert two_mo.get_element(ii,ik,ij,il) == 0.0
                 two_mo.set_element(ii,ik,ij,il,float(words[0]))
             elif words[1] != '0':
                 ii = int(words[1])-1
@@ -144,8 +147,6 @@ def dump_fcidump(filename, mol):
             for j in xrange(i+1):
                 for k in xrange(nactive):
                     for l in xrange(k+1):
-                        # old code
-                        #if (i+1)*(j+1) >= (k+1)*(l+1):
                         if (i*(i+1))/2+j >= (k*(k+1))/2+l:
                             value = two_mo.get_element(i,k,j,l)
                             if value != 0.0:
