@@ -183,7 +183,7 @@ def load_wfn(filename, lf):
             expansions.
 
        **Returns:** a dictionary with ``title``, ``coordinates``, ``numbers``,
-       ``obasis`` and ``wfn``.
+       ``obasis`` and ``exp_alpha``. May contain ``exp_beta``.
     '''
     title, numbers, coordinates, centers, type_assignment, exponents, \
         mo_count, mo_occ, mo_energy, coefficients = load_wfn_low(filename)

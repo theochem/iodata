@@ -38,13 +38,16 @@ def load_operators_g09(fn, lf):
        lf
             A LinalgFactory instance.
 
-       The following two-index operators are loaded if present: overlap, kinetic,
-       nuclear attraction. The following four-index operator is loaded if present:
-       electrostatic repulsion. In order to make all these matrices are present
-       in the Gaussian log file, the following commands must be used in the
-       Gaussian input file:
+       The following two-index operators are loaded if present: overlap,
+       kinetic, nuclear attraction. The following four-index operator is loaded
+       if present: electrostatic repulsion. In order to make all these matrices
+       are present in the Gaussian log file, the following commands must be used
+       in the Gaussian input file:
 
             scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)
+
+       **Returns:** A dictionary that may contain the keys: ``olp``, ``kin``,
+       ``na`` and/or ``er``.
     """
 
     with open(fn) as f:

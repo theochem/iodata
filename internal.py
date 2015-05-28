@@ -49,8 +49,7 @@ def load_h5(item):
     elif isinstance(item, h5.Group):
         class_name = item.attrs.get('class')
         if class_name is None:
-            # assuming that an entire dictionary must be read. only
-            # read datasets. raise error when group is encountered.
+            # assuming that an entire dictionary must be read.
             result = {}
             for key, subitem in item.iteritems():
                 result[key] = load_h5(subitem)
