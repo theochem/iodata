@@ -33,9 +33,9 @@ def test_consistency_file():
         fn_h5 = '%s/foo.h5' % dn
         fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
         fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
-        mol1 = Molecule.from_file(fn_fchk, fn_log)
+        mol1 = IOData.from_file(fn_fchk, fn_log)
         mol1.to_file(fn_h5)
-        mol2 = Molecule.from_file(fn_h5)
+        mol2 = IOData.from_file(fn_h5)
         compare_mols(mol1, mol2)
 
 
@@ -43,7 +43,7 @@ def test_consistency_core():
     with h5.File('horton.io.test.test_chk.test_consistency_core', driver='core', backing_store=False) as f:
         fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
         fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
-        mol1 = Molecule.from_file(fn_fchk, fn_log)
+        mol1 = IOData.from_file(fn_fchk, fn_log)
         mol1.to_file(f)
-        mol2 = Molecule.from_file(f)
+        mol2 = IOData.from_file(f)
         compare_mols(mol1, mol2)

@@ -94,7 +94,7 @@ def _read_cube_data(f, ugrid):
 
 
 def load_cube(filename):
-    '''Load molecule data from a cube file
+    '''Load data from a cube file
 
        **Arguments:**
 
@@ -143,8 +143,8 @@ def _write_cube_data(f, cube_data):
         counter += 1
 
 
-def dump_cube(filename, mol):
-    '''Write a molecule to a .cube file.
+def dump_cube(filename, data):
+    '''Write a IOData to a .cube file.
 
        **Arguments:**
 
@@ -152,13 +152,13 @@ def dump_cube(filename, mol):
             The name of the file to be written. This usually the extension
             ".cube".
 
-       mol
-            A Molecule instance. Must contain ``coordinates``, ``numbers``,
+       data
+            An IOData instance. Must contain ``coordinates``, ``numbers``,
             ``grid``, ``cube_data``. May contain ``title``, ``pseudo_numbers``.
     '''
     with open(filename, 'w') as f:
-        if not isinstance(mol.grid, UniformGrid):
+        if not isinstance(data.grid, UniformGrid):
             raise ValueError('The system grid must be a UniformGrid instance.')
-        title = getattr(mol, 'title', 'Created with Horton')
-        _write_cube_header(f, title, mol.coordinates, mol.numbers, mol.grid, mol.pseudo_numbers)
-        _write_cube_data(f, mol.cube_data)
+        title = getattr(data, 'title', 'Created with Horton')
+        _write_cube_header(f, title, data.coordinates, data.numbers, data.grid, data.pseudo_numbers)
+        _write_cube_data(f, data.cube_data)

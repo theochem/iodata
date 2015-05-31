@@ -23,7 +23,7 @@
    All input routines begin with ``load_``. All output routines begin with
    ``dump_``.
 
-   This package also contains a ``Molecule`` class to facilitate reading from
+   This package also contains a ``IOData`` class to facilitate reading from
    and writing to different file formats. It contains the methods ``from_file``
    and ``to_file`` that automatically determine the file format based on the
    prefix or extension of the filename.
@@ -34,10 +34,10 @@ from horton.io.cif import *
 from horton.io.cp2k import *
 from horton.io.cube import *
 from horton.io.gaussian import *
+from horton.io.iodata import *
 from horton.io.internal import *
 from horton.io.lockedh5 import *
 from horton.io.molden import *
-from horton.io.molecule import *
 from horton.io.molekel import *
 from horton.io.molpro import *
 from horton.io.vasp import *

@@ -113,7 +113,7 @@ def load_fcidump(filename, lf):
     }
 
 
-def dump_fcidump(filename, mol):
+def dump_fcidump(filename, data):
     '''Write one- and two-electron integrals in the Molpro 2012 FCIDUMP format.
 
        Works only for restricted wavefunctions.
@@ -124,17 +124,17 @@ def dump_fcidump(filename, mol):
        filename
             The filename of the FCIDUMP file. This is usually "FCIDUMP".
 
-       mol
-            A Molecule instance. Must contain ``one_mo``, ``two_mo``.
+       data
+            An IOData instance. Must contain ``one_mo``, ``two_mo``.
             May contain ``core_energy``, ``nelec`` and ``ms``
     '''
     with open(filename, 'w') as f:
-        one_mo = mol.one_mo
-        two_mo = mol.two_mo
+        one_mo = data.one_mo
+        two_mo = data.two_mo
         nactive = one_mo.nbasis
-        core_energy = getattr(mol, 'core_energy', 0.0)
-        nelec = getattr(mol, 'nelec', 0)
-        ms2 = getattr(mol, 'ms2', 0)
+        core_energy = getattr(data, 'core_energy', 0.0)
+        nelec = getattr(data, 'nelec', 0)
+        ms2 = getattr(data, 'ms2', 0)
 
         # Write header
         print >> f, ' &FCI NORB=%i,NELEC=%i,MS2=%i,' % (nactive, nelec, ms2)

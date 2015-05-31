@@ -31,23 +31,23 @@ from horton.periodic import periodic
 __all__ = ['dump_cif', 'iter_equiv_pos_terms', 'equiv_pos_to_generator', 'load_cif']
 
 
-def dump_cif(filename, mol):
-    '''Write a molecule to a CIF file
+def dump_cif(filename, data):
+    '''Write a CIF file
 
        **Arguments:**
 
        filename
             The name of the new CIF file.
 
-       mol
-            A molecule instance. Must contain: ``cell``, ``coordinates``,
+       data
+            An IOData instance. Must contain: ``cell``, ``coordinates``,
             ``numbers``. May contain ``title``.
 
     '''
-    if mol.cell.nvec != 3:
+    if data.cell.nvec != 3:
         raise TypeError('The CIF format only supports 3D periodic systems.')
     with open(filename, 'w') as f:
-        print >> f, 'data_%s' % getattr(mol, 'title', 'Created with Horton').replace(' ', '_')
+        print >> f, 'data_%s' % getattr(data, 'title', 'Created with Horton').replace(' ', '_')
         print >> f, '_symmetry_space_group_name_H-M       \'P1\''
         print >> f, '_audit_creation_method            \'Horton\''
         print >> f, '_symmetry_Int_Tables_number       1'
@@ -55,7 +55,7 @@ def dump_cif(filename, mol):
         print >> f, 'loop_'
         print >> f, '_symmetry_equiv_pos_as_xyz'
         print >> f, '  x,y,z'
-        lengths, angles = mol.cell.parameters
+        lengths, angles = data.cell.parameters
         print >> f, '_cell_length_a     %12.6f' % (lengths[0]/angstrom)
         print >> f, '_cell_length_b     %12.6f' % (lengths[1]/angstrom)
         print >> f, '_cell_length_c     %12.6f' % (lengths[2]/angstrom)
@@ -68,9 +68,9 @@ def dump_cif(filename, mol):
         print >> f, '_atom_site_fract_x'
         print >> f, '_atom_site_fract_y'
         print >> f, '_atom_site_fract_z'
-        for i in xrange(mol.natom):
-            fx, fy, fz = mol.cell.to_frac(mol.coordinates[i])
-            symbol = periodic[mol.numbers[i]].symbol
+        for i in xrange(data.natom):
+            fx, fy, fz = data.cell.to_frac(data.coordinates[i])
+            symbol = periodic[data.numbers[i]].symbol
             label = symbol+str(i+1)
             print >> f, '%10s %3s % 12.6f % 12.6f % 12.6f' % (label, symbol, fx, fy, fz)
 

@@ -27,7 +27,7 @@ from horton.test.common import tmpdir
 
 
 def test_load_fcidump_psi4_h2():
-    mol = Molecule.from_file(context.get_fn('test/FCIDUMP.psi4.h2'))
+    mol = IOData.from_file(context.get_fn('test/FCIDUMP.psi4.h2'))
     assert mol.core_energy == 0.7151043364864863E+00
     assert mol.nelec == 2
     assert mol.ms2 == 0
@@ -52,7 +52,7 @@ def test_load_fcidump_psi4_h2():
 
 
 def test_load_fcidump_molpro_h2():
-    mol = Molecule.from_file(context.get_fn('test/FCIDUMP.molpro.h2'))
+    mol = IOData.from_file(context.get_fn('test/FCIDUMP.molpro.h2'))
     assert mol.core_energy == 0.7151043364864863E+00
     assert mol.nelec == 2
     assert mol.ms2 == 0
@@ -77,8 +77,8 @@ def test_load_fcidump_molpro_h2():
 
 
 def test_dump_load_fcidimp_consistency_ao():
-    # Setup molecule
-    mol0 = Molecule.from_file(context.get_fn('test/water.xyz'))
+    # Setup IOData
+    mol0 = IOData.from_file(context.get_fn('test/water.xyz'))
     obasis = get_gobasis(mol0.coordinates, mol0.numbers, '3-21G')
     lf = DenseLinalgFactory(obasis.nbasis)
 
@@ -94,7 +94,7 @@ def test_dump_load_fcidimp_consistency_ao():
     # Dump to a file and load it again
     with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_ao') as dn:
         mol0.to_file('%s/FCIDUMP' % dn)
-        mol1 = Molecule.from_file('%s/FCIDUMP' % dn)
+        mol1 = IOData.from_file('%s/FCIDUMP' % dn)
 
     # Compare results
     assert mol0.core_energy == mol1.core_energy
@@ -105,8 +105,8 @@ def test_dump_load_fcidimp_consistency_ao():
 
 
 def check_dump_load_fcidimp_consistency_mo(fn):
-    # Setup molecule
-    mol0 = Molecule.from_file(fn)
+    # Setup IOData
+    mol0 = IOData.from_file(fn)
     lf = DenseLinalgFactory(mol0.obasis.nbasis)
 
     # Compute stuff for fcidump file.
@@ -124,7 +124,7 @@ def check_dump_load_fcidimp_consistency_mo(fn):
     with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_mo_%s' % os.path.basename(fn)) as dn:
         fn = '%s/FCIDUMP' % dn
         mol0.to_file(fn)
-        mol1 = Molecule.from_file(fn)
+        mol1 = IOData.from_file(fn)
 
     # Compare results
     assert mol1.core_energy == 0.0
@@ -143,8 +143,8 @@ def test_dump_load_fcidimp_consistency_mo_water_ccpvdz():
 
 
 def test_dump_load_fcidimp_consistency_mo_active():
-    # Setup molecule
-    mol0 = Molecule.from_file(context.get_fn('test/h2o_sto3g.fchk'))
+    # Setup IOData
+    mol0 = IOData.from_file(context.get_fn('test/h2o_sto3g.fchk'))
     lf = DenseLinalgFactory(mol0.obasis.nbasis)
 
     # Compute stuff for fcidump file.
@@ -164,7 +164,7 @@ def test_dump_load_fcidimp_consistency_mo_active():
     # Dump to a file and load it again
     with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_mo_active') as dn:
         mol0.to_file('%s/FCIDUMP' % dn)
-        mol1 = Molecule.from_file('%s/FCIDUMP' % dn)
+        mol1 = IOData.from_file('%s/FCIDUMP' % dn)
 
     # Compare results
     assert mol0.core_energy == mol1.core_energy

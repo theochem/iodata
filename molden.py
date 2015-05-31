@@ -475,8 +475,8 @@ def _fix_molden_from_buggy_codes(result, filename):
                    'can fix it.') % filename)
 
 
-def dump_molden(filename, mol):
-    '''Write molecule data to a file in the molden input format.
+def dump_molden(filename, data):
+    '''Write data to a file in the molden input format.
 
        **Arguments:**
 
@@ -484,35 +484,35 @@ def dump_molden(filename, mol):
             The filename of the molden input file, which is an output file for
             this routine.
 
-       mol
-            A molecule instance. Must contain ``coordinates``, ``numbers``,
+       data
+            An IOData instance. Must contain ``coordinates``, ``numbers``,
             ``obasis``, ``exp_alpha``. May contain ``title``, ``exp_beta``.
     '''
     with open(filename, 'w') as f:
         # Print the header
         print >> f, '[Molden Format]'
         print >> f, '[Title]'
-        print >> f, ' %s' % getattr(mol, 'title', 'Created with Horton')
+        print >> f, ' %s' % getattr(data, 'title', 'Created with Horton')
         print >> f
 
         # Print the elements numbers and the coordinates
         print >> f, '[Atoms] AU'
-        for i in xrange(mol.natom):
-            number = mol.numbers[i]
-            x, y, z = mol.coordinates[i]
+        for i in xrange(data.natom):
+            number = data.numbers[i]
+            x, y, z = data.coordinates[i]
             print >> f, '%2s %3i %3i  %25.18f %25.18f %25.18f' % (
                 periodic[number].symbol.ljust(2), i+1, number, x, y, z
             )
 
         # Print the basis set
-        if isinstance(mol.obasis, GOBasis):
+        if isinstance(data.obasis, GOBasis):
             # Figure out the pure/Cartesian situation. Note that the Molden
             # format doesnot support mixed Cartesian and pure functions in the
             # way Horton does.In practice, such combinations are too unlikely
             # to be relevant.
             pure = {'d': None, 'f': None, 'g': None}
             try:
-                for shell_type in mol.obasis.shell_types:
+                for shell_type in data.obasis.shell_types:
                     if shell_type == 2:
                         assert pure['d'] is None or not pure['d']
                         pure['d'] = False
@@ -549,23 +549,23 @@ def dump_molden(filename, mol):
                 print >> f, '[9G]'
 
             # first convert it to a format that is amenable for printing.
-            centers = [list() for i in xrange(mol.obasis.ncenter)]
+            centers = [list() for i in xrange(data.obasis.ncenter)]
             begin_prim = 0
-            for ishell in xrange(mol.obasis.nshell):
-                icenter = mol.obasis.shell_map[ishell]
-                shell_type = mol.obasis.shell_types[ishell]
+            for ishell in xrange(data.obasis.nshell):
+                icenter = data.obasis.shell_map[ishell]
+                shell_type = data.obasis.shell_types[ishell]
                 sts = shell_type_to_str(shell_type)
-                end_prim = begin_prim + mol.obasis.nprims[ishell]
+                end_prim = begin_prim + data.obasis.nprims[ishell]
                 prims = []
                 for iprim in xrange(begin_prim, end_prim):
-                    alpha = mol.obasis.alphas[iprim]
-                    con_coeff = mol.obasis.con_coeffs[iprim]
+                    alpha = data.obasis.alphas[iprim]
+                    con_coeff = data.obasis.con_coeffs[iprim]
                     prims.append((alpha, con_coeff))
                 centers[icenter].append((sts, prims))
                 begin_prim = end_prim
 
             print >> f, '[GTO]'
-            for icenter in xrange(mol.obasis.ncenter):
+            for icenter in xrange(data.obasis.ncenter):
                 print >> f, '%3i 0' % (icenter+1)
                 for sts, prims in centers[icenter]:
                     print >> f, '%1s %3i 1.0' % (sts, len(prims))
@@ -576,7 +576,7 @@ def dump_molden(filename, mol):
             raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
 
         def helper_exp(spin, occ_scale=1.0):
-            exp = getattr(mol, 'exp_%s' % spin)
+            exp = getattr(data, 'exp_%s' % spin)
             for ifn in xrange(exp.nfn):
                 print >> f, ' Sym=     1a'
                 print >> f, ' Ene= %20.14E' % exp.energies[ifn]
@@ -586,10 +586,10 @@ def dump_molden(filename, mol):
                     print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[permutation[ibasis],ifn])
 
         # Construct the permutation of the basis functions
-        permutation = _get_molden_permutation(mol.obasis, reverse=True)
+        permutation = _get_molden_permutation(data.obasis, reverse=True)
 
         # Print the mean-field orbitals
-        if hasattr(mol, 'exp_beta'):
+        if hasattr(data, 'exp_beta'):
             print >> f, '[MO]'
             helper_exp('alpha')
             helper_exp('beta')

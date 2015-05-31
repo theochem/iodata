@@ -28,7 +28,7 @@ from horton import *
 
 def test_atom_si_uks():
     fn_out = context.get_fn('test/atom_si.cp2k.out')
-    mol = Molecule.from_file(fn_out)
+    mol = IOData.from_file(fn_out)
 
     assert (mol.numbers == [14]).all()
     assert (mol.pseudo_numbers == [4]).all()
@@ -50,7 +50,7 @@ def test_atom_si_uks():
 
 def test_atom_o_rks():
     fn_out = context.get_fn('test/atom_om2.cp2k.out')
-    mol = Molecule.from_file(fn_out)
+    mol = IOData.from_file(fn_out)
 
     assert (mol.numbers == [8]).all()
     assert (mol.pseudo_numbers == [6]).all()

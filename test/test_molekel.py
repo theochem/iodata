@@ -29,7 +29,7 @@ from horton.io.test.common import compute_mulliken_charges, compute_hf_energy
 
 def test_load_mkl_ethanol():
     fn_mkl = context.get_fn('test/ethanol.mkl')
-    mol = Molecule.from_file(fn_mkl)
+    mol = IOData.from_file(fn_mkl)
 
     # Direct checks with mkl file
     assert mol.numbers.shape == (9,)
@@ -83,7 +83,7 @@ def test_load_mkl_ethanol():
 
 def test_load_mkl_li2():
     fn_mkl = context.get_fn('test/li2.mkl')
-    mol = Molecule.from_file(fn_mkl)
+    mol = IOData.from_file(fn_mkl)
 
     # Check normalization
     olp = mol.obasis.compute_overlap(mol.lf)
@@ -99,7 +99,7 @@ def test_load_mkl_li2():
 
 def test_load_mkl_h2():
     fn_mkl = context.get_fn('test/h2_sto3g.mkl')
-    mol = Molecule.from_file(fn_mkl)
+    mol = IOData.from_file(fn_mkl)
     olp = mol.obasis.compute_overlap(mol.lf)
     mol.exp_alpha.check_normalization(olp, 1e-5)
 

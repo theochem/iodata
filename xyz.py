@@ -59,8 +59,8 @@ def load_xyz(filename):
     }
 
 
-def dump_xyz(filename, mol):
-    '''Write a molecule to a .xyz file.
+def dump_xyz(filename, data):
+    '''Write an ``.xyz`` file.
 
        **Arguments:**
 
@@ -68,14 +68,14 @@ def dump_xyz(filename, mol):
             The name of the file to be written. This usually the extension
             ".xyz".
 
-       mol
-            A molecule instance. Must contain ``coordinates`` and ``numbers``.
+       data
+            An IOData instance. Must contain ``coordinates`` and ``numbers``.
             May contain ``title``.
     '''
     with open(filename, 'w') as f:
-        print >> f, mol.natom
-        print >> f, getattr(mol, 'title', 'Created with Horton')
-        for i in xrange(mol.natom):
-            n = periodic[mol.numbers[i]].symbol
-            x, y, z = mol.coordinates[i]/angstrom
+        print >> f, data.natom
+        print >> f, getattr(data, 'title', 'Created with Horton')
+        for i in xrange(data.natom):
+            n = periodic[data.numbers[i]].symbol
+            x, y, z = data.coordinates[i]/angstrom
             print >> f, '%2s %15.10f %15.10f %15.10f' % (n, x, y, z)

@@ -29,7 +29,7 @@ from horton.test.common import tmpdir
 
 def test_load_aelta():
     fn_cube = context.get_fn('test/aelta.cube')
-    mol = Molecule.from_file(fn_cube)
+    mol = IOData.from_file(fn_cube)
     assert mol.title == 'Some random cube for testing (sort of) useless data'
     assert mol.natom == 72
     assert abs(mol.coordinates[5,0] - 27.275511) < 1e-5
@@ -54,12 +54,12 @@ def test_load_aelta():
 
 def test_load_dump_load_aelta():
     fn_cube1 = context.get_fn('test/aelta.cube')
-    mol1 = Molecule.from_file(fn_cube1)
+    mol1 = IOData.from_file(fn_cube1)
 
     with tmpdir('horton.io.test.test_cube.test_load_dump_load_aelta') as dn:
         fn_cube2 = '%s/%s' % (dn, 'aelta.cube')
         mol1.to_file(fn_cube2)
-        mol2 = Molecule.from_file(fn_cube2)
+        mol2 = IOData.from_file(fn_cube2)
 
         assert mol1.title == mol2.title
         assert abs(mol1.coordinates - mol2.coordinates).max() < 1e-4

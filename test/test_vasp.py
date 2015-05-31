@@ -43,7 +43,7 @@ def test_unravel_counter():
 
 def test_load_chgcar_oxygen():
     fn = context.get_fn('test/CHGCAR.oxygen')
-    mol = Molecule.from_file(fn)
+    mol = IOData.from_file(fn)
     assert (mol.numbers == [8]).all()
     assert abs(mol.cell.volume - (10*angstrom)**3) < 1e-10
     ugrid = mol.grid
@@ -59,7 +59,7 @@ def test_load_chgcar_oxygen():
 
 def test_load_chgcar_water():
     fn = context.get_fn('test/CHGCAR.water')
-    mol = Molecule.from_file(fn)
+    mol = IOData.from_file(fn)
     assert mol.title == 'unknown system'
     assert (mol.numbers == [8, 1, 1]).all()
     assert abs(mol.coordinates[1] - np.array([0.074983*15+0.903122*1,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
@@ -73,7 +73,7 @@ def test_load_chgcar_water():
 
 def test_load_locpot_oxygen():
     fn = context.get_fn('test/LOCPOT.oxygen')
-    mol = Molecule.from_file(fn)
+    mol = IOData.from_file(fn)
     assert mol.title == 'O atom in a box'
     assert (mol.numbers[0] == [8]).all()
     assert abs(mol.cell.volume - (10*angstrom)**3) < 1e-10
@@ -90,7 +90,7 @@ def test_load_locpot_oxygen():
 
 def test_load_poscar_water():
     fn = context.get_fn('test/POSCAR.water')
-    mol = Molecule.from_file(fn)
+    mol = IOData.from_file(fn)
     assert mol.title == 'Water molecule in a box'
     assert (mol.numbers == [8, 1, 1]).all()
     assert abs(mol.coordinates[1] - np.array([0.074983*15,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
@@ -98,12 +98,12 @@ def test_load_poscar_water():
 
 
 def test_load_dump_consistency():
-    mol0 = Molecule.from_file(context.get_fn('test/water_element.xyz'))
+    mol0 = IOData.from_file(context.get_fn('test/water_element.xyz'))
     mol0.cell = get_random_cell(5.0, 3)
 
     with tmpdir('horton.io.test.test_vasp.test_load_dump_consistency') as dn:
         mol0.to_file('%s/POSCAR' % dn)
-        mol1 = Molecule.from_file('%s/POSCAR' % dn)
+        mol1 = IOData.from_file('%s/POSCAR' % dn)
 
     assert mol0.title == mol1.title
     assert (mol1.numbers == [8, 1, 1]).all()

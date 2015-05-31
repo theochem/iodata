@@ -140,9 +140,9 @@ def test_setup_mask():
 def check_load_wfn(name):
     # system out of *.wfn file
     fn_wfn = context.get_fn('test/%s.wfn' % name)
-    mol1 = Molecule.from_file(fn_wfn)
+    mol1 = IOData.from_file(fn_wfn)
     # system out of *.fchk file
-    mol2 = Molecule.from_file(context.get_fn('test/%s.fchk' % name))
+    mol2 = IOData.from_file(context.get_fn('test/%s.fchk' % name))
     # Coordinates check:
     assert (abs(mol1.coordinates - mol2.coordinates) < 1e-6).all()
     # Numbers check
@@ -225,7 +225,7 @@ def test_load_wfn_he_spdfgh_virtual():
 
 def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
     fn_wfn = context.get_fn(fn_wfn)
-    mol = Molecule.from_file(fn_wfn)
+    mol = IOData.from_file(fn_wfn)
     assert mol.obasis.nbasis == nbasis
     olp = mol.obasis.compute_overlap(mol.lf)
     if restricted:
@@ -290,7 +290,7 @@ def test_load_wfn_li_sp_virtual():
 
 def test_load_wfn_li_sp():
     fn_wfn = context.get_fn('test/li_sp_orbital.wfn')
-    mol = Molecule.from_file(fn_wfn)
+    mol = IOData.from_file(fn_wfn)
     assert mol.title == 'Li atom - using s & p orbitals'
     assert mol.exp_alpha.nfn == 2
     assert mol.exp_beta.nfn == 1

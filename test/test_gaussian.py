@@ -341,7 +341,7 @@ def test_load_nitrogen_mp3():
 
 def check_normalization_dm_full_azirine(key):
     fn_fchk = context.get_fn('test/2h-azirine-%s.fchk' % key)
-    mol = Molecule.from_file(fn_fchk)
+    mol = IOData.from_file(fn_fchk)
     olp = mol.obasis.compute_overlap(mol.lf)
     dm = getattr(mol, 'dm_full_%s' % key)
     check_dm(dm, olp, mol.lf, eps=1e-2, occ_max=2)
@@ -366,12 +366,12 @@ def test_normalization_dm_full_azirine_mp3():
 
 def test_nucnuc():
     fn_fchk = context.get_fn('test/hf_sto3g.fchk')
-    mol = Molecule.from_file(fn_fchk)
+    mol = IOData.from_file(fn_fchk)
     assert abs(compute_nucnuc(mol.coordinates, mol.pseudo_numbers) - 4.7247965053) < 1e-5
 
 
 def test_load_water_hfs_321g():
-    mol = Molecule.from_file(context.get_fn('test/water_hfs_321g.fchk'))
+    mol = IOData.from_file(context.get_fn('test/water_hfs_321g.fchk'))
     assert mol.polar[0, 0] == 7.23806684E+00
     assert mol.polar[1, 1] == 8.04213953E+00
     assert mol.polar[1, 2] == 1.20021770E-10

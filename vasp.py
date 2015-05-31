@@ -186,38 +186,38 @@ def load_poscar(filename):
         }
 
 
-def dump_poscar(filename, mol):
-    '''Write a molecule to a file in VASP's POSCAR format
+def dump_poscar(filename, data):
+    '''Write a file in VASP's POSCAR format
 
        **Arguments:**
 
        filename
             The name of the file to be written. This is usually POSCAR.
 
-       mol
-            A molecule instance. Must contain ``coordinates``, ``numbers``,
+       data
+            An IOData instance. Must contain ``coordinates``, ``numbers``,
             ``cell``. May contain ``title``.
     '''
     with open(filename, 'w') as f:
-        print >> f, getattr(mol, 'title', 'Created with Horton')
+        print >> f, getattr(data, 'title', 'Created with Horton')
         print >> f, '   1.00000000000000'
 
         # Write cell vectors, each row is one vector in angstrom:
-        rvecs = mol.cell.rvecs
+        rvecs = data.cell.rvecs
         for rvec in rvecs:
             print >> f, '  % 21.16f % 21.16f % 21.16f' % tuple(rvec/angstrom)
 
         # Construct list of elements to make sure the coordinates get written
         # in this order. Heaviest elements are put furst.
-        unumbers = sorted(np.unique(mol.numbers))[::-1]
+        unumbers = sorted(np.unique(data.numbers))[::-1]
         print >> f, ' '.join('%5s' % periodic[unumber].symbol for unumber in unumbers)
-        print >> f, ' '.join('%5i' % (mol.numbers == unumber).sum() for unumber in unumbers)
+        print >> f, ' '.join('%5i' % (data.numbers == unumber).sum() for unumber in unumbers)
         print >> f, 'Selective dynamics'
         print >> f, 'Direct'
 
         # Write the coordinates
         for unumber in unumbers:
-            indexes = (mol.numbers == unumber).nonzero()[0]
+            indexes = (data.numbers == unumber).nonzero()[0]
             for index in indexes:
-                row = mol.cell.to_frac(mol.coordinates[index])
+                row = data.cell.to_frac(data.coordinates[index])
                 print >> f, '  % 21.16f % 21.16f % 21.16f   F   F   F' % tuple(row)

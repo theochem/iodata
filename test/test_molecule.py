@@ -28,35 +28,35 @@ from horton import *
 
 
 def test_typecheck():
-    m = Molecule(coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
+    m = IOData(coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
     assert issubclass(m.coordinates.dtype.type, float)
     assert not hasattr(m, 'numbers')
-    m = Molecule(numbers=np.array([2, 3]), coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
-    m = Molecule(numbers=np.array([2.0, 3.0]), pseudo_numbers=np.array([1, 1]), coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
+    m = IOData(numbers=np.array([2, 3]), coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
+    m = IOData(numbers=np.array([2.0, 3.0]), pseudo_numbers=np.array([1, 1]), coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
     assert issubclass(m.numbers.dtype.type, int)
     assert issubclass(m.pseudo_numbers.dtype.type, float)
     assert hasattr(m, 'numbers')
     del m.numbers
     assert not hasattr(m, 'numbers')
-    m = Molecule(cube_data=np.array([[[1, 2], [2, 3], [3, 2]]]), coordinates=np.array([[1, 2, 3]]))
+    m = IOData(cube_data=np.array([[[1, 2], [2, 3], [3, 2]]]), coordinates=np.array([[1, 2, 3]]))
     with assert_raises(TypeError):
-        Molecule(coordinates=np.array([[1, 2], [2, 3]]))
+        IOData(coordinates=np.array([[1, 2], [2, 3]]))
     with assert_raises(TypeError):
-        Molecule(numbers=np.array([[1, 2], [2, 3]]))
+        IOData(numbers=np.array([[1, 2], [2, 3]]))
     with assert_raises(TypeError):
-        Molecule(numbers=np.array([2, 3]), pseudo_numbers=np.array([1]))
+        IOData(numbers=np.array([2, 3]), pseudo_numbers=np.array([1]))
     with assert_raises(TypeError):
-        Molecule(numbers=np.array([2, 3]), coordinates=np.array([[1, 2, 3]]))
+        IOData(numbers=np.array([2, 3]), coordinates=np.array([[1, 2, 3]]))
     with assert_raises(TypeError):
-        Molecule(cube_data=np.array([[1, 2], [2, 3], [3, 2]]), coordinates=np.array([[1, 2, 3]]))
+        IOData(cube_data=np.array([[1, 2], [2, 3], [3, 2]]), coordinates=np.array([[1, 2, 3]]))
     with assert_raises(TypeError):
-        Molecule(cube_data=np.array([1, 2]))
+        IOData(cube_data=np.array([1, 2]))
 
 
 def test_copy():
     fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
     fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
-    mol1 = Molecule.from_file(fn_fchk, fn_log)
+    mol1 = IOData.from_file(fn_fchk, fn_log)
     mol2 = mol1.copy()
     assert mol1 != mol2
     vars1 = vars(mol1)
@@ -68,7 +68,7 @@ def test_copy():
 
 def test_dm_water_sto3g_hf():
     fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
-    mol = Molecule.from_file(fn_fchk)
+    mol = IOData.from_file(fn_fchk)
     dm = mol.get_dm_full()
     assert abs(dm.get_element(0, 0) - 2.10503807) < 1e-7
     assert abs(dm.get_element(0, 1) - -0.439115917) < 1e-7
@@ -77,7 +77,7 @@ def test_dm_water_sto3g_hf():
 
 def test_dm_lih_sto3g_hf():
     fn_fchk = context.get_fn('test/li_h_3-21G_hf_g09.fchk')
-    mol = Molecule.from_file(fn_fchk)
+    mol = IOData.from_file(fn_fchk)
 
     dm = mol.get_dm_full()
     assert abs(dm.get_element(0, 0) - 1.96589709) < 1e-7
@@ -94,7 +94,7 @@ def test_dm_lih_sto3g_hf():
 
 def test_dm_ch3_rohf_g03():
     fn_fchk = context.get_fn('test/ch3_rohf_sto3g_g03.fchk')
-    mol = Molecule.from_file(fn_fchk)
+    mol = IOData.from_file(fn_fchk)
 
     olp = mol.obasis.compute_overlap(mol.lf)
     dm = mol.get_dm_full()

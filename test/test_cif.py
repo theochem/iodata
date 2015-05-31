@@ -147,22 +147,22 @@ def check_lta_mol(mol):
 
 
 def test_load_cif_lta_gulp():
-    mol = Molecule.from_file(context.get_fn('test/lta_gulp.cif'))
+    mol = IOData.from_file(context.get_fn('test/lta_gulp.cif'))
     check_lta_mol(mol)
     assert mol.title == 'LTA_min'
 
 
 def test_load_cif_lta_iza():
-    mol = Molecule.from_file(context.get_fn('test/lta_iza.cif'))
+    mol = IOData.from_file(context.get_fn('test/lta_iza.cif'))
     check_lta_mol(mol)
     assert mol.title == 'LTA'
 
 
 def test_checkpoint():
     with h5.File('horton.io.test.test_cif.test_checkpoint', driver='core', backing_store=False) as f:
-        mol0 = Molecule.from_file(context.get_fn('test/lta_iza.cif'))
+        mol0 = IOData.from_file(context.get_fn('test/lta_iza.cif'))
         mol0.to_file(f)
-        mol1 = Molecule.from_file(f)
+        mol1 = IOData.from_file(f)
         assert mol0.title == mol1.title
         s0 = mol0.symmetry
         s1 = mol1.symmetry
@@ -170,11 +170,11 @@ def test_checkpoint():
 
 
 def test_dump_load_consistency():
-    mol0 = Molecule.from_file(context.get_fn('test/aelta.cube'))
+    mol0 = IOData.from_file(context.get_fn('test/aelta.cube'))
     with tmpdir('horton.io.test.test_cif.test_dump_load_consistency') as dn:
         fn_cif = '%s/test.cif' % dn
         mol0.to_file(fn_cif)
-        mol1 = Molecule.from_file(fn_cif)
+        mol1 = IOData.from_file(fn_cif)
 
     assert mol0.title.replace(' ', '_') == mol1.title
     assert mol0.cell.nvec == mol1.cell.nvec
@@ -189,6 +189,6 @@ def test_dump_load_consistency():
 
 
 def test_load_cage():
-    mol = Molecule.from_file(context.get_fn('test/cage.cif'))
+    mol = IOData.from_file(context.get_fn('test/cage.cif'))
     assert (mol.coordinates != 0).all()
     assert mol.title == 'tetr'

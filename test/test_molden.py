@@ -30,7 +30,7 @@ from horton.test.common import tmpdir, compare_mols
 
 def test_load_molden_li2_orca():
     fn_molden = context.get_fn('test/li2.molden.input')
-    mol = Molecule.from_file(fn_molden)
+    mol = IOData.from_file(fn_molden)
 
     # Checkt title
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=li2'
@@ -49,7 +49,7 @@ def test_load_molden_li2_orca():
 
 def test_load_molden_h2o_orca():
     fn_molden = context.get_fn('test/h2o.molden.input')
-    mol = Molecule.from_file(fn_molden)
+    mol = IOData.from_file(fn_molden)
 
     # Checkt title
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=h2o'
@@ -69,7 +69,7 @@ def test_load_molden_nh3_molden_pure():
     # The file tested here is created with molden. It should be read in
     # properly without altering normalization and sign conventions.
     fn_molden = context.get_fn('test/nh3_molden_pure.molden')
-    mol = Molecule.from_file(fn_molden)
+    mol = IOData.from_file(fn_molden)
     # Check Mulliken charges. Comparison with numbers from the Molden program
     # output.
     dm_full = mol.get_dm_full()
@@ -82,7 +82,7 @@ def test_load_molden_nh3_molden_cart():
     # The file tested here is created with molden. It should be read in
     # properly without altering normalization and sign conventions.
     fn_molden = context.get_fn('test/nh3_molden_cart.molden')
-    mol = Molecule.from_file(fn_molden)
+    mol = IOData.from_file(fn_molden)
     # Check Mulliken charges. Comparison with numbers from the Molden program
     # output.
     dm_full = mol.get_dm_full()
@@ -96,7 +96,7 @@ def test_load_molden_nh3_orca():
     # The file tested here is created with ORCA. It should be read in
     # properly by altering normalization and sign conventions.
     fn_molden = context.get_fn('test/nh3_orca.molden')
-    mol = Molecule.from_file(fn_molden)
+    mol = IOData.from_file(fn_molden)
     # Check Mulliken charges. Comparison with numbers from the Molden program
     # output.
     dm_full = mol.get_dm_full()
@@ -109,7 +109,7 @@ def test_load_molden_nh3_psi4():
     # The file tested here is created with PSI4. It should be read in
     # properly by altering normalization conventions.
     fn_molden = context.get_fn('test/nh3_psi4.molden')
-    mol = Molecule.from_file(fn_molden)
+    mol = IOData.from_file(fn_molden)
     # Check Mulliken charges. Comparison with numbers from the Molden program
     # output.
     dm_full = mol.get_dm_full()
@@ -121,7 +121,7 @@ def test_load_molden_nh3_psi4():
 def test_load_molden_nh3_molpro2012():
     # The file tested here is created with MOLPRO2012.
     fn_molden = context.get_fn('test/nh3_molpro2012.molden')
-    mol = Molecule.from_file(fn_molden)
+    mol = IOData.from_file(fn_molden)
     # Check Mulliken charges. Comparison with numbers from the Molden program
     # output.
     dm_full = mol.get_dm_full()
@@ -131,11 +131,11 @@ def test_load_molden_nh3_molpro2012():
 
 
 def check_load_dump_consistency(fn):
-    mol1 = Molecule.from_file(context.get_fn(os.path.join('test', fn)))
+    mol1 = IOData.from_file(context.get_fn(os.path.join('test', fn)))
     with tmpdir('horton.io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
         fn_tmp = os.path.join(dn, 'foo.molden')
         mol1.to_file(fn_tmp)
-        mol2 = Molecule.from_file(fn_tmp)
+        mol2 = IOData.from_file(fn_tmp)
     compare_mols(mol1, mol2)
 
 

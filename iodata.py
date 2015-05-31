@@ -20,9 +20,9 @@
 #--
 '''Input/output dispatcher for different file formats
 
-   The ``Molecule.from_file`` and ``Molecule.to_file`` functions read/write
-   molecule data from/to a file. The format is deduced from the prefix or
-   extension of the filename.
+   The ``IOData.from_file`` and ``IOData.to_file`` methods read/write data
+   from/to a file. The format is deduced from the prefix or extension of the
+   filename.
 '''
 
 
@@ -30,7 +30,7 @@ from horton.matrix import DenseLinalgFactory, LinalgObject
 import h5py as h5, os, numpy as np
 
 
-__all__ = ['Molecule']
+__all__ = ['IOData']
 
 
 class ArrayTypeCheckDescriptor(object):
@@ -124,12 +124,12 @@ class ArrayTypeCheckDescriptor(object):
         delattr(obj, '_'+self._name)
 
 
-class Molecule(object):
+class IOData(object):
     '''A container class for data loaded from (or to be written to) a file.
 
        In principle, the constructor accepts any keyword argument, which is
        stored as an attribute. All attributes are optional. Attributes can be
-       set are removed after the molecule is constructed. The following
+       set are removed after the IOData instance is constructed. The following
        attributes are supported by at least one of the io formats:
 
        **Type checked array attributes (if present):**
@@ -159,7 +159,7 @@ class Molecule(object):
             The Hartree-Fock energy due to the core orbitals
 
        energy
-            The total energy (electronic+nn) of the molecule
+            The total energy (electronic+nn)
 
        er
             The electron repulsion four-index operator
@@ -227,7 +227,7 @@ class Molecule(object):
             symmetry.
 
        title
-            A suitable name for the molecule.
+            A suitable name for the data.
 
        two_mo
             Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
@@ -256,16 +256,16 @@ class Molecule(object):
 
     @classmethod
     def from_file(cls, *filenames, **kwargs):
-        '''Load a molecule from a file.
+        '''Load data from a file.
 
            **Arguments:**
 
            filename1, filename2, ...
-                The files to load molecule data from. When multiple files are
-                given, data from the first file is overwritten by data from the
-                second, etc. When one file contains sign and permutation changes
-                for the orbital basis, these changes will be applied to data
-                from all other files.
+                The files to load data from. When multiple files are given, data
+                from the first file is overwritten by data from the second, etc.
+                When one file contains sign and permutation changes for the
+                orbital basis, these changes will be applied to data from all
+                other files.
 
            **Optional arguments:**
 
@@ -348,7 +348,7 @@ class Molecule(object):
         return cls(**result)
 
     def to_file(self, filename):
-        '''Write molecule data to a file
+        '''Write data to a file
 
            **Arguments:**
 
