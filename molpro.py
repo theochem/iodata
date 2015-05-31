@@ -48,6 +48,9 @@ def load_fcidump(filename, lf):
 
        lf
             A LinalgFactory instance.
+
+       **Returns**: A dictionary with keys: ``lf``, ``nelec``, ``ms2``,
+       ``one_mo``, ``two_mo``, ``core_energy``
     '''
     with open(filename) as f:
         # check header
@@ -119,8 +122,8 @@ def dump_fcidump(filename, mol):
             The filename of the FCIDUMP file. This is usually "FCIDUMP".
 
        mol
-            A Molecule instance. Must contain ``one_mo``, ``two_mo``,
-            and optionally ``core_energy``, ``nelec`` and ``ms``
+            A Molecule instance. Must contain ``one_mo``, ``two_mo``.
+            May contain ``core_energy``, ``nelec`` and ``ms``
     '''
     with open(filename, 'w') as f:
         one_mo = mol.one_mo
