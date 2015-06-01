@@ -71,4 +71,4 @@ def compute_hf_energy(mol):
         ham = REffHam(terms, external)
         dm_alpha = mol.exp_alpha.to_dm()
         ham.reset(dm_alpha)
-    return ham.compute()
+    return ham.compute_energy()
