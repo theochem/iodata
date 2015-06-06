@@ -124,7 +124,7 @@ def setup_permutation1(type_assignment):
 
 
 def setup_permutation2(type_assignment):
-    '''Permnutes the basis functions to get the proper order for HORTON
+    '''Permutes the basis functions to get the proper order for HORTON
 
        Permutation conventions are as follows::
 
