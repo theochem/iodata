@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-# Horton is a development platform for electronic structure methods.
-# Copyright (C) 2011-2015 The Horton Development Team
+# HORTON: Helpful Open-source Research TOol for N-fermion systems.
+# Copyright (C) 2011-2015 The HORTON Development Team
 #
-# This file is part of Horton.
+# This file is part of HORTON.
 #
-# Horton is free software; you can redistribute it and/or
+# HORTON is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 3
 # of the License, or (at your option) any later version.
 #
-# Horton is distributed in the hope that it will be useful,
+# HORTON is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
