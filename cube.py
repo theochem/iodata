@@ -159,6 +159,6 @@ def dump_cube(filename, data):
     with open(filename, 'w') as f:
         if not isinstance(data.grid, UniformGrid):
             raise ValueError('The system grid must be a UniformGrid instance.')
-        title = getattr(data, 'title', 'Created with Horton')
+        title = getattr(data, 'title', 'Created with HORTON')
         _write_cube_header(f, title, data.coordinates, data.numbers, data.grid, data.pseudo_numbers)
         _write_cube_data(f, data.cube_data)

@@ -35,7 +35,7 @@ __all__ = ['load_molden', 'dump_molden']
 
 
 def _get_molden_permutation(obasis, reverse=False):
-    # Reorder the Cartesian basis functions to obtain the Horton standard ordering.
+    # Reorder the Cartesian basis functions to obtain the HORTON standard ordering.
     permutation_rules = {
        2: np.array([0, 3, 4, 1, 5, 2]),
        3: np.array([0, 4, 5, 3, 9, 6, 1, 8, 7, 2]),
@@ -251,7 +251,7 @@ def load_molden(filename, lf):
             elif line == '[GTO]':
                 obasis = helper_obasis(f, coordinates, pure)
             elif line == '[STO]':
-                raise NotImplementedError('Slater-type orbitals are not supported in Horton.')
+                raise NotImplementedError('Slater-type orbitals are not supported in HORTON.')
             elif line == '[MO]':
                 data_alpha, data_beta = helper_coeffs(f, obasis.nbasis)
                 coeff_alpha, ener_alpha, occ_alpha = data_alpha
@@ -321,7 +321,7 @@ def _is_normalized_properly(lf, obasis, permutation, exp_alpha, exp_beta, signs=
             An instance of the GOBasis class.
 
        permutation
-            The permutation of the basis functions to bring them in Horton's
+            The permutation of the basis functions to bring them in HORTON's
             standard ordering.
 
        exp_alpha
@@ -492,7 +492,7 @@ def dump_molden(filename, data):
         # Print the header
         print >> f, '[Molden Format]'
         print >> f, '[Title]'
-        print >> f, ' %s' % getattr(data, 'title', 'Created with Horton')
+        print >> f, ' %s' % getattr(data, 'title', 'Created with HORTON')
         print >> f
 
         # Print the elements numbers and the coordinates
@@ -508,7 +508,7 @@ def dump_molden(filename, data):
         if isinstance(data.obasis, GOBasis):
             # Figure out the pure/Cartesian situation. Note that the Molden
             # format doesnot support mixed Cartesian and pure functions in the
-            # way Horton does.In practice, such combinations are too unlikely
+            # way HORTON does.In practice, such combinations are too unlikely
             # to be relevant.
             pure = {'d': None, 'f': None, 'g': None}
             try:

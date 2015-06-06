@@ -199,7 +199,7 @@ def dump_poscar(filename, data):
             ``cell``. May contain ``title``.
     '''
     with open(filename, 'w') as f:
-        print >> f, getattr(data, 'title', 'Created with Horton')
+        print >> f, getattr(data, 'title', 'Created with HORTON')
         print >> f, '   1.00000000000000'
 
         # Write cell vectors, each row is one vector in angstrom:

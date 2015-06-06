@@ -134,7 +134,7 @@ def load_atom_cp2k(filename, lf):
                 a.append(values[0])
                 c.append(values[1:])
 
-        # Convert the basis into Horton format
+        # Convert the basis into HORTON format
         shell_map = []
         shell_types = []
         nprims = []
@@ -229,7 +229,7 @@ def load_atom_cp2k(filename, lf):
             coeffs_beta = _read_coeffs_helper(f, oe_beta)
 
 
-        # Turn orbital data into a Horton orbital expansions
+        # Turn orbital data into a HORTON orbital expansions
         if restricted:
             norb, nel = _helper_norb(oe_alpha)
             assert nel%2 == 0

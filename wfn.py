@@ -100,7 +100,7 @@ def load_wfn_low(filename):
 
 
 def setup_permutation1(type_assignment):
-    '''Permutes each type of orbital to get the proper order for Horton'''
+    '''Permutes each type of orbital to get the proper order for HORTON'''
     num_primitives = type_assignment.size
     permutation = np.arange(num_primitives)
     degeneracy = {1:1, 2:3, 5:6, 11:10, 23:15, 36:21}   # degeneracy of {s:1, p:3, d:6, f:10, g:15, h:21}
@@ -124,7 +124,7 @@ def setup_permutation1(type_assignment):
 
 
 def setup_permutation2(type_assignment):
-    '''Permnutes the basis functions to get the proper order for Horton
+    '''Permnutes the basis functions to get the proper order for HORTON
 
        Permutation conventions are as follows::
 

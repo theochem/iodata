@@ -138,7 +138,7 @@ def _load_fourindex_g09(f, nbasis, lf):
         k = int(line[15:19])-1
         l = int(line[21:25])-1
         value = float(line[29:].replace('D', 'E'))
-        # Gaussian uses the chemists notation for the 4-center indexes. Horton
+        # Gaussian uses the chemists notation for the 4-center indexes. HORTON
         # uses the physicists notation.
         result.set_element(i, k, j, l, value)
     return result

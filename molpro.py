@@ -23,7 +23,7 @@
    .. note ::
 
        One- and two-electron integrals are stored in chemists' notation in an
-       FCIDUMP file while Horton internally uses Physicist's notation.
+       FCIDUMP file while HORTON internally uses Physicist's notation.
 '''
 
 from horton.orbital_utils import transform_integrals

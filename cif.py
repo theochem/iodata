@@ -47,9 +47,9 @@ def dump_cif(filename, data):
     if data.cell.nvec != 3:
         raise TypeError('The CIF format only supports 3D periodic systems.')
     with open(filename, 'w') as f:
-        print >> f, 'data_%s' % getattr(data, 'title', 'Created with Horton').replace(' ', '_')
+        print >> f, 'data_%s' % getattr(data, 'title', 'Created with HORTON').replace(' ', '_')
         print >> f, '_symmetry_space_group_name_H-M       \'P1\''
-        print >> f, '_audit_creation_method            \'Horton\''
+        print >> f, '_audit_creation_method            \'HORTON\''
         print >> f, '_symmetry_Int_Tables_number       1'
         print >> f, '_symmetry_cell_setting            triclinic'
         print >> f, 'loop_'
