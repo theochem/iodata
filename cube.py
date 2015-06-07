@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''Gaussian Cube File Format'''
+'''Gaussian cube file format'''
 
 
 import numpy as np

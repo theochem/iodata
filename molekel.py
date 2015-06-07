@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''Molekel Wavefunction Input File Format'''
+'''Molekel wavefunction input file format'''
 
 
 import numpy as np

@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''Crystalographic Information File Format'''
+'''Crystalographic Information File format'''
 
 
 

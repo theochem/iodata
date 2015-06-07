@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''HORTON Internal File Format'''
+'''HORTON internal file format'''
 
 
 import numpy as np, h5py as h5

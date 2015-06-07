@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''Molden Wavefunction Input File Format'''
+'''Molden wavefunction input file format'''
 
 
 import numpy as np

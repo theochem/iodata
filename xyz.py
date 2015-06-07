@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''XYZ File Format'''
+'''XYZ file format'''
 
 
 import numpy as np

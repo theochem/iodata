@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''The Molpro 2012 FCIDUMP format.
+'''Molpro 2012 FCIDUMP format.
 
    .. note ::
 

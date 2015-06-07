@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 #--
-'''H5 File with lock'''
+'''H5 file with lock'''
 
 
 import h5py as h5, fcntl, time
