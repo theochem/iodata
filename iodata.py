@@ -368,8 +368,6 @@ class IOData(object):
                     data[key[1:]] = data[key]
                     del data[key]
             from horton.io.internal import dump_h5
-            if 'lf' in data:
-                data.pop('lf')
             dump_h5(filename, data)
         elif filename.endswith('.xyz'):
             from horton.io.xyz import dump_xyz
