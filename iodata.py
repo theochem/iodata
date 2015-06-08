@@ -285,7 +285,7 @@ class IOData(object):
         if lf is None:
             lf = DenseLinalgFactory()
         if len(kwargs) > 0:
-            raise TypeError('Keyword argument(s) not supported: %s' % lf.keys())
+            raise TypeError('Keyword argument(s) not supported: %s' % kwargs.keys())
 
         for filename in filenames:
             if isinstance(filename, h5.Group) or filename.endswith('.h5'):
