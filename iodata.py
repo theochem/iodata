@@ -53,7 +53,7 @@ class ArrayTypeCheckDescriptor(object):
                 not fixed a priori.
 
            dtype
-                The datype of the array.
+                The datatype of the array.
 
            matching
                 A list of names of other attributes that must have consistent
