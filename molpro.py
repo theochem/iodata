@@ -26,9 +26,6 @@
        FCIDUMP file while HORTON internally uses Physicist's notation.
 '''
 
-from horton.orbital_utils import transform_integrals
-from horton.utils import check_type, check_options
-
 
 __all__ = ['load_fcidump', 'dump_fcidump']
 
