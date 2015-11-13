@@ -188,6 +188,7 @@ def test_dump_load_consistency():
     assert abs(frac0 - frac1).max() < 1e-6
 
 
+@attr('slow')
 def test_load_cage():
     mol = IOData.from_file(context.get_fn('test/cage.cif'))
     assert (mol.coordinates != 0).all()
