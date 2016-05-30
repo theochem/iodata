@@ -28,7 +28,6 @@ from horton.meanfield.hamiltonian import REffHam, \
 from horton.meanfield.observable import RTwoIndexTerm, \
     RDirectTerm, RExchangeTerm, UTwoIndexTerm, \
     UDirectTerm, UExchangeTerm
-from horton.matrix import DenseTwoIndex, DenseFourIndex
 from horton.part.mulliken import get_mulliken_operators
 
 

@@ -287,7 +287,7 @@ def load_fchk(filename, lf):
        ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``,
        ``dm_spin_scf``.
     '''
-    from horton.gbasis import GOBasis
+    from horton.gbasis.cext import GOBasis
 
     fchk = FCHKFile(filename, [
         "Number of electrons", "Number of independant functions",

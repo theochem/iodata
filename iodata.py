@@ -26,7 +26,8 @@
 '''
 
 
-from horton.matrix import DenseLinalgFactory, LinalgObject
+from horton.matrix.dense import DenseLinalgFactory
+from horton.matrix.base import LinalgObject
 import h5py as h5, os, numpy as np
 
 
