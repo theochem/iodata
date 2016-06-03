@@ -22,9 +22,9 @@
 
 import h5py as h5
 
-from horton import *
-from horton.test.common import tmpdir
-from horton.test.common import compare_mols
+from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+from horton.test.common import tmpdir, compare_mols
 
 
 def test_consistency_file():

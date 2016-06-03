@@ -22,7 +22,8 @@
 
 import numpy as np, os
 
-from horton import *
+from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 from horton.io.test.common import compute_mulliken_charges
 from horton.test.common import tmpdir, compare_mols
 

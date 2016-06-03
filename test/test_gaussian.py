@@ -22,7 +22,7 @@
 
 from nose.tools import assert_raises
 
-from horton import *
+from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def test_load_operators_water_sto3g_hf_g03():

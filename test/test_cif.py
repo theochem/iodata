@@ -23,7 +23,7 @@
 import h5py as h5, numpy as np
 from nose.plugins.attrib import attr
 
-from horton import *
+from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from horton.io.cif import _load_cif_low
 
 from horton.test.common import compare_symmetries, tmpdir
