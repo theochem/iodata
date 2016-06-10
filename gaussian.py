@@ -28,7 +28,7 @@ __all__ = ['load_operators_g09', 'FCHKFile', 'load_fchk']
 
 
 def load_operators_g09(fn, lf):
-    """Loads several one- and four-index operators from a Gaussian log file.
+    """Loads several two- and four-index operators from a Gaussian log file.
 
        **Arugment:**
 
@@ -60,7 +60,7 @@ def load_operators_g09(fn, lf):
             raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the log file.')
         lf.default_nbasis = nbasis
 
-        # Then load the one- and four-index operators. This part is written such
+        # Then load the two- and four-index operators. This part is written such
         # that it does not make any assumptions about the order in which these
         # operators are printed.
 
