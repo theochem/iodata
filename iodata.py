@@ -84,7 +84,7 @@ class ArrayTypeCheckDescriptor(object):
         if obj is None:
             return self
         if self._default is not None and not hasattr(obj, '_' + self._name):
-            return getattr(obj, '_' + self._default).astype(self._dtype)
+            setattr(obj, '_' + self._name, (getattr(obj, '_' + self._default).astype(self._dtype)))
         return getattr(obj, '_' + self._name)
 
     def __set__(self, obj, value):
