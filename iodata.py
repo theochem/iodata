@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
-#--
+# --
 '''Input/output dispatcher for different file formats
 
    The ``IOData.from_file`` and ``IOData.to_file`` methods read/write data
