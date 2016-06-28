@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Tests for CP2K ATOM output reader"""
+"""Tests for CP2K ATOM output reader."""
 
 
 from nose.tools import assert_raises
@@ -28,7 +28,7 @@ from horton.test.common import truncated_file
 
 
 def check_orthonormality(mol):
-    """Helper function to test if the orbitals are orthonormal"""
+    """Helper function to test if the orbitals are orthonormal."""
     olp = mol.obasis.compute_overlap(mol.lf)
     mol.exp_alpha.check_orthonormality(olp)
     if hasattr(mol, 'exp_beta'):
