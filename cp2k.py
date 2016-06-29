@@ -302,10 +302,6 @@ def _fill_exp(exp, oe, coeffs, shell_types, restricted):
     iorb = 0
     for l, s, occ, ener in oe:
         cs = coeffs.get((l, s))
-        # The following no longer seems relevant?
-        # if cs is None:
-        #     assert occ == 0
-        #     continue
         stride = 2*l + 1
         for m in xrange(-l, l+1):
             im = m + l
@@ -361,18 +357,16 @@ def load_atom_cp2k(filename, lf):
         if number is None:
             raise IOError('Could not find atomic number in CP2K ATOM output: %s.' % filename)
 
-        # Go to the pseudo basis set
+        # Go to the all-electron basis set and read it.
         for line in f:
             if line.startswith(' All Electron Basis'):
                 break
-
         ae_obasis = _read_cp2k_obasis(f)
 
-        # Go to the pseudo basis set
+        # Go to the pseudo basis set and read it.
         for line in f:
             if line.startswith(' Pseudopotential Basis'):
                 break
-
         pp_obasis = _read_cp2k_obasis(f)
 
         # Search for (un)restricted
