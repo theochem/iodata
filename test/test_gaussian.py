@@ -20,6 +20,8 @@
 # --
 
 
+import numpy as np
+
 from nose.tools import assert_raises
 
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -374,3 +376,25 @@ def test_load_water_hfs_321g():
     assert mol.polar[0, 0] == 7.23806684E+00
     assert mol.polar[1, 1] == 8.04213953E+00
     assert mol.polar[1, 2] == 1.20021770E-10
+    np.testing.assert_allclose(mol.dipole_moment, [
+        -5.82654324E-17, 0.00000000E+00, -8.60777067E-01])
+    np.testing.assert_allclose(mol.quadrupole_moment, [
+        -8.89536026E-01,   # xx
+        8.28408371E-17,    # xy
+        4.89353090E-17,    # xz
+        1.14114241E+00,    # yy
+        -5.47382213E-48,   # yz
+        -2.51606382E-01])  # zz
+
+
+def test_load_monosilicic_acid_hf_lan():
+    mol = IOData.from_file(context.get_fn('test/monosilicic_acid_hf_lan.fchk'))
+    np.testing.assert_allclose(mol.dipole_moment, [
+        -6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
+    np.testing.assert_allclose(mol.quadrupole_moment, [
+        2.73609152E+00,    # xx
+        -6.65787832E-02,   # xy
+        2.11973730E-01,    # xz
+        8.97029351E-01,    # yy
+        -1.38159653E-02,   # yz
+        -3.63312087E+00])  # zz

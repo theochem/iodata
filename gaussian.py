@@ -285,7 +285,7 @@ def load_fchk(filename, lf):
        contain: ``npa_charges``, ``esp_charges``, ``exp_beta``, ``dm_full_mp2``,
        ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
        ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``,
-       ``dm_spin_scf``.
+       ``dm_spin_scf``, ``polar``, ``dipole_moment``, ``quadrupole_moment``.
     '''
     from horton.gbasis.cext import GOBasis
 
@@ -306,7 +306,7 @@ def load_fchk(filename, lf):
         'Total CC Density', 'Spin CC Density',
         'Total CI Density', 'Spin CI Density',
         'Mulliken Charges', 'ESP Charges', 'NPA Charges',
-        'Polarizability',
+        'Polarizability', 'Dipole Moment', 'Quadrupole Moment',
     ])
 
     # A) Load the geometry
@@ -465,6 +465,11 @@ def load_fchk(filename, lf):
     result['energy'] = fchk['Total Energy']
     if 'Polarizability' in fchk:
         result['polar'] = triangle_to_dense(fchk['Polarizability'])
+    if 'Dipole Moment' in fchk:
+        result['dipole_moment'] = fchk['Dipole Moment']
+    if 'Quadrupole Moment' in fchk:
+        # Convert to HORTON ordering: xx, xy, xz, yy, yz, zz
+        result['quadrupole_moment'] = fchk['Quadrupole Moment'][[0, 3, 4, 1, 5, 2]]
 
     # F) Load optional properties
     # Mask out ghost atoms from charges
