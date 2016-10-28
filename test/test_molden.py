@@ -106,7 +106,7 @@ def test_load_molden_nh3_orca():
 
 
 def test_load_molden_nh3_psi4():
-    # The file tested here is created with PSI4. It should be read in
+    # The file tested here is created with PSI4 (pre 1.0). It should be read in
     # properly by altering normalization conventions.
     fn_molden = context.get_fn('test/nh3_psi4.molden')
     mol = IOData.from_file(fn_molden)
@@ -119,8 +119,8 @@ def test_load_molden_nh3_psi4():
 
 
 def test_load_molden_nh3_psi4_1():
-    # The file tested here is created with PSI4. It should be read in
-    # properly by altering normalization conventions.
+    # The file tested here is created with PSI4 (version 1.0). It should be read in
+    # properly by renormalizing the contractions.
     fn_molden = context.get_fn('test/nh3_psi4_1.0.molden')
     mol = IOData.from_file(fn_molden)
     # Check Mulliken charges. Comparison with numbers from the Molden program
