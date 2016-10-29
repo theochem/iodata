@@ -66,13 +66,14 @@ def load_molden(filename, lf):
        lf
             A LinalgFactory instance.
 
-       **Returns:** a dictionary with: ``coordinates``, ``numbers``, ``obasis``,
-       ``exp_alpha``, ``signs``. It may also contain: ``title``, ``exp_beta``.
+       **Returns:** a dictionary with: ``coordinates``, ``numbers``, ``pseudo_numbers``,
+       ``obasis``, ``exp_alpha``, ``signs``. It may also contain: ``title``, ``exp_beta``.
     """
 
     def helper_coordinates(f, cunit):
         """Load element numbers and coordinates"""
         numbers = []
+        pseudo_numbers = []
         coordinates = []
         while True:
             last_pos = f.tell()
@@ -85,11 +86,13 @@ def load_molden(filename, lf):
                 f.seek(last_pos)
                 break
             else:
-                numbers.append(int(words[2]))
+                numbers.append(periodic[words[0]].number)
+                pseudo_numbers.append(float(words[2]))
                 coordinates.append([float(words[3]), float(words[4]), float(words[5])])
         numbers = np.array(numbers, int)
+        pseudo_numbers = np.array(pseudo_numbers)
         coordinates = np.array(coordinates)*cunit
-        return numbers, coordinates
+        return numbers, pseudo_numbers, coordinates
 
 
     def helper_obasis(f, coordinates, pure):
@@ -247,7 +250,7 @@ def load_molden(filename, lf):
                     cunit = 1
                 elif 'angs' in line.lower():
                     cunit = angstrom
-                numbers, coordinates = helper_coordinates(f, cunit)
+                numbers, pseudo_numbers, coordinates = helper_coordinates(f, cunit)
             elif line == '[GTO]':
                 obasis = helper_obasis(f, coordinates, pure)
             elif line == '[STO]':
@@ -291,6 +294,12 @@ def load_molden(filename, lf):
 
     permutation = _get_molden_permutation(obasis)
 
+    # filter out ghost atoms
+    mask = pseudo_numbers != 0
+    coordinates = coordinates[mask]
+    numbers = numbers[mask]
+    pseudo_numbers = pseudo_numbers[mask]
+
     result = {
         'coordinates': coordinates,
         'exp_alpha': exp_alpha,
@@ -298,6 +307,7 @@ def load_molden(filename, lf):
         'numbers': numbers,
         'obasis': obasis,
         'permutation': permutation,
+        'pseudo_numbers': pseudo_numbers,
     }
     if title is not None:
         result['title'] = title
@@ -519,7 +529,8 @@ def dump_molden(filename, data):
 
        data
             An IOData instance. Must contain ``coordinates``, ``numbers``,
-            ``obasis``, ``exp_alpha``. May contain ``title``, ``exp_beta``.
+            ``obasis``, ``exp_alpha``. May contain ``title``, ``pseudo_numbers``,
+            ``exp_beta``.
     """
     with open(filename, 'w') as f:
         # Print the header
@@ -530,18 +541,19 @@ def dump_molden(filename, data):
 
         # Print the elements numbers and the coordinates
         print >> f, '[Atoms] AU'
-        for i in xrange(data.natom):
-            number = data.numbers[i]
-            x, y, z = data.coordinates[i]
+        for iatom in xrange(data.natom):
+            number = data.numbers[iatom]
+            pseudo_number = data.pseudo_numbers[iatom]
+            x, y, z = data.coordinates[iatom]
             print >> f, '%2s %3i %3i  %25.18f %25.18f %25.18f' % (
-                periodic[number].symbol.ljust(2), i+1, number, x, y, z
+                periodic[number].symbol.ljust(2), iatom+1, pseudo_number, x, y, z
             )
 
         # Print the basis set
         if isinstance(data.obasis, GOBasis):
             # Figure out the pure/Cartesian situation. Note that the Molden
-            # format doesnot support mixed Cartesian and pure functions in the
-            # way HORTON does.In practice, such combinations are too unlikely
+            # format does not support mixed Cartesian and pure functions in the
+            # way HORTON does. In practice, such combinations are too unlikely
             # to be relevant.
             pure = {'d': None, 'f': None, 'g': None}
             try:
@@ -581,7 +593,9 @@ def dump_molden(filename, data):
             if pure['g']:
                 print >> f, '[9G]'
 
-            # first convert it to a format that is amenable for printing.
+            # First convert it to a format that is amenable for printing. The molden
+            # format assumes that every basis function is centered on one of the atoms.
+            # (This may not always be the case.)
             centers = [list() for i in xrange(data.obasis.ncenter)]
             begin_prim = 0
             for ishell in xrange(data.obasis.nshell):

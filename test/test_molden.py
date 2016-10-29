@@ -131,6 +131,19 @@ def test_load_molden_nh3_psi4_1():
     assert abs(charges - molden_charges).max() < 1e-3
 
 
+def test_load_molden_he2_ghost_psi4_1():
+    # The file tested here is created with PSI4 (version 1.0). It should be read in
+    # properly by ignoring the ghost atoms.
+    fn_molden = context.get_fn('test/he2_ghost_psi4_1.0.molden')
+    mol = IOData.from_file(fn_molden)
+    # Check Mulliken charges. Comparison with numbers from the Molden program
+    # output.
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
+    molden_charges = np.array([2.0-0.0041, 0.0041])
+    assert abs(charges - molden_charges).max() < 5e-4
+
+
 def test_load_molden_nh3_molpro2012():
     # The file tested here is created with MOLPRO2012.
     fn_molden = context.get_fn('test/nh3_molpro2012.molden')
