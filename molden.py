@@ -247,7 +247,7 @@ def load_molden(filename, lf):
                 title = f.readline().strip()
             elif line.startswith('[Atoms]'):
                 if 'au' in line.lower():
-                    cunit = 1
+                    cunit = 1.0
                 elif 'angs' in line.lower():
                     cunit = angstrom
                 numbers, pseudo_numbers, coordinates = helper_coordinates(f, cunit)
@@ -596,7 +596,7 @@ def dump_molden(filename, data):
             # First convert it to a format that is amenable for printing. The molden
             # format assumes that every basis function is centered on one of the atoms.
             # (This may not always be the case.)
-            centers = [list() for i in xrange(data.obasis.ncenter)]
+            centers = [list() for _ in xrange(data.obasis.ncenter)]
             begin_prim = 0
             for ishell in xrange(data.obasis.nshell):
                 icenter = data.obasis.shell_map[ishell]
