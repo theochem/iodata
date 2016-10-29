@@ -70,7 +70,7 @@ def test_load_mkl_ethanol():
 
     # Mulliken charges
     dm_full = mol.get_dm_full()
-    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
     expected_charges = np.array([
         0.143316, -0.445861, 0.173045, 0.173021, 0.024542, 0.143066, 0.143080,
         -0.754230, 0.400021
@@ -92,7 +92,7 @@ def test_load_mkl_li2():
 
     # Check charges
     dm_full = mol.get_dm_full()
-    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
     expected_charges = np.array([0.5, 0.5])
     assert abs(charges - expected_charges).max() < 1e-5
 

@@ -34,10 +34,11 @@ from horton.part.mulliken import get_mulliken_operators
 __all__ = ['compute_mulliken_charges']
 
 
-def compute_mulliken_charges(obasis, lf, numbers, dm):
+def compute_mulliken_charges(obasis, lf, pseudo_numbers, dm):
     operators = get_mulliken_operators(obasis, lf)
     populations = np.array([operator.contract_two('ab,ab', dm) for operator in operators])
-    return numbers - np.array(populations)
+    assert pseudo_numbers.shape == populations.shape
+    return pseudo_numbers - np.array(populations)
 
 
 def compute_hf_energy(mol):
