@@ -78,6 +78,14 @@ def load_wfn_low(filename):
         coeffs = [i.replace('D', 'E') for i in coeffs]
         return count, occ, energy, coeffs
 
+    def helper_energy(f):
+        """Read energy."""
+        line = f.readline().lower()
+        while 'energy' not in line and line is not None:
+            line = f.readline().lower()
+        energy = float(line.split('energy =')[1].split()[0])
+        return energy
+
     # read sections of wfn file
     with open(filename) as f:
         title = f.readline().strip()
@@ -93,8 +101,9 @@ def load_wfn_low(filename):
         coefficients = np.empty([num_primitives, num_mo], float)
         for mo in xrange(num_mo):
             mo_count[mo], mo_occ[mo], mo_energy[mo], coefficients[:, mo] = helper_mo(f)
+        energy = helper_energy(f)
     return title, numbers, coordinates, centers, type_assignment, exponent, \
-        mo_count, mo_occ, mo_energy, coefficients
+        mo_count, mo_occ, mo_energy, coefficients, energy
 
 
 def get_permutation_orbital(type_assignment):
@@ -190,10 +199,10 @@ def load_wfn(filename, lf):
             expansions.
 
        **Returns:** a dictionary with ``title``, ``coordinates``, ``numbers``,
-       ``obasis`` and ``exp_alpha``. May contain ``exp_beta``.
+       ``energy``, ``obasis`` and ``exp_alpha``. May contain ``exp_beta``.
     """
     title, numbers, coordinates, centers, type_assignment, exponents, \
-        mo_count, mo_occ, mo_energy, coefficients = load_wfn_low(filename)
+        mo_count, mo_occ, mo_energy, coefficients, energy = load_wfn_low(filename)
     permutation = get_permutation_basis(type_assignment)
     # permute arrays containing wfn data
     type_assignment = type_assignment[permutation]
@@ -249,6 +258,7 @@ def load_wfn(filename, lf):
         'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
+        'energy': energy,
     }
     if exp_beta is not None:
         result['exp_beta'] = exp_beta

@@ -27,7 +27,7 @@ from horton.io.test.common import compute_mulliken_charges, compute_hf_energy
 def test_load_wfn_low_he_s():
     fn_wfn = context.get_fn('test/he_s_orbital.wfn')
     title, numbers, coordinates, centers, type_assignment, exponents, \
-        mo_count, occ_num, mo_energy, coefficients = load_wfn_low(fn_wfn)
+        mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(fn_wfn)
     assert title == 'He atom - decontracted 6-31G basis set'
     assert numbers.shape == (1,)
     assert numbers == [2]
@@ -48,12 +48,13 @@ def test_load_wfn_low_he_s():
     assert coefficients.shape == (4, 1)
     expected = np.array([0.26139500E+00, 0.41084277E+00, 0.39372947E+00, 0.14762025E+00])
     assert (coefficients == expected.reshape(4, 1)).all()
+    assert abs(energy - (-2.855160426155)) < 1.e-5
 
 
-def test_load_wfn_low_h2O():
+def test_load_wfn_low_h2o():
     fn_wfn = context.get_fn('test/h2o_sto3g.wfn')
     title, numbers, coordinates, centers, type_assignment, exponents, \
-        mo_count, occ_num, mo_energy, coefficients = load_wfn_low(fn_wfn)
+        mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(fn_wfn)
     assert title == 'H2O Optimization'
     assert numbers.shape == (3,)
     assert (numbers == np.array([8, 1, 1])).all()
@@ -90,6 +91,7 @@ def test_load_wfn_low_h2O():
     assert coefficients[17, 1] == 0.12988055E-01
     assert coefficients[-1, 0] == -0.46610858E-03
     assert coefficients[-1, -1] == -0.33277355E-15
+    assert abs(energy - (-74.965901217080)) < 1.e-6
 
 
 def test_get_permutation_orbital():
@@ -173,8 +175,7 @@ def test_get_mask():
 
 def check_load_wfn(name):
     # system out of *.wfn file
-    fn_wfn = context.get_fn('test/%s.wfn' % name)
-    mol1 = IOData.from_file(fn_wfn)
+    mol1 = IOData.from_file(context.get_fn('test/%s.wfn' % name))
     # system out of *.fchk file
     mol2 = IOData.from_file(context.get_fn('test/%s.fchk' % name))
     # Coordinates check:
@@ -204,6 +205,8 @@ def check_load_wfn(name):
     # Check energy
     energy1 = compute_hf_energy(mol1)
     energy2 = compute_hf_energy(mol2)
+    # check loaded & computed energy from wfn file
+    assert abs(energy1 - mol1.energy) < 1.e-5
     assert abs(energy1 - energy2) < 1e-5
     # Check normalization
     mol1.exp_alpha.check_normalization(olp1, 1e-5)
@@ -277,13 +280,14 @@ def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
         mol.exp_alpha.check_normalization(olp, 1e-5)
         mol.exp_beta.check_normalization(olp, 1e-5)
     if energy is not None:
+        assert abs(energy - mol.energy) < 1.e-5
         myenergy = compute_hf_energy(mol)
         assert abs(energy - myenergy) < 1e-5
     dm_full = mol.get_dm_full()
     mycharges = compute_mulliken_charges(mol.obasis, mol.lf, mol.numbers, dm_full)
     assert (abs(charges - mycharges) < 1e-5).all()
     exp_beta = getattr(mol, 'exp_beta', None)
-    return mol.obasis, mol.lf, mol.coordinates, mol.numbers, dm_full, mol.exp_alpha, exp_beta
+    return mol.obasis, mol.lf, mol.coordinates, mol.numbers, dm_full, mol.exp_alpha, exp_beta, mol.energy
 
 
 def test_load_wfn_h2o_sto3g_decontracted():
@@ -295,7 +299,7 @@ def test_load_wfn_h2o_sto3g_decontracted():
 
 
 def test_load_wfn_h2_ccpvqz_virtual():
-    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta = check_wfn(
+    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta, energy = check_wfn(
         'test/h2_ccpvqz.wfn',
         True, 74, -1.133504568400,
         np.array([0.0, 0.0]),
@@ -319,7 +323,7 @@ def test_load_wfn_h2o_sto3g():
 
 
 def test_load_wfn_li_sp_virtual():
-    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta = check_wfn(
+    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta, energy = check_wfn(
         'test/li_sp_virtual.wfn',
         False, 8, -3.712905542719,
         np.array([0.0, 0.0])
@@ -342,10 +346,11 @@ def test_load_wfn_li_sp():
     assert mol.title == 'Li atom - using s & p orbitals'
     assert mol.exp_alpha.nfn == 2
     assert mol.exp_beta.nfn == 1
+    assert abs(mol.energy - (-3.712905542719)) < 1.e-5
 
 
 def test_load_wfn_o2():
-    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta = check_wfn(
+    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta, energy = check_wfn(
         'test/o2_uhf.wfn',
         False, 72, -149.664140769678,
         np.array([0.0, 0.0]),
@@ -355,7 +360,7 @@ def test_load_wfn_o2():
 
 
 def test_load_wfn_o2_virtual():
-    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta = check_wfn(
+    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta, energy = check_wfn(
         'test/o2_uhf_virtual.wfn',
         False, 72, -149.664140769678,
         np.array([0.0, 0.0]),
@@ -381,7 +386,7 @@ def test_load_wfn_o2_virtual():
 
 
 def test_load_wfn_lif_fci():
-    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta = check_wfn(
+    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta, energy = check_wfn(
         'test/lif_fci.wfn',
         True, 44, None,
         np.array([-0.645282, 0.645282]),
@@ -405,10 +410,11 @@ def test_load_wfn_lif_fci():
     density = np.zeros(3)
     obasis.compute_grid_density_dm(dm_full, points, density)
     assert (abs(density - [0.492787, 0.784545, 0.867723]) < 1.e-4).all()
+    assert abs(energy - (-107.0575700853)) < 1.e-5  # FCI energy
 
 
 def test_load_wfn_lih_cation_fci():
-    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta = check_wfn(
+    obasis, lf, coordinates, numbers, dm_full, exp_alpha, exp_beta, energy = check_wfn(
         'test/lih_cation_fci.wfn',
         True, 26, None,
         np.array([0.913206, 0.086794]),
@@ -421,3 +427,4 @@ def test_load_wfn_lih_cation_fci():
     assert (compute_nucnuc(coordinates, numbers.astype(float)) - expected_nn) < 1.e-6
     assert exp_alpha.occupations.shape == (11,)
     assert abs(exp_alpha.occupations.sum() - 1.5) < 1.e-6
+    assert abs(energy - (-7.7214366383)) < 1.e-5  # FCI energy
