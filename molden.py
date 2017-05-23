@@ -39,7 +39,7 @@ def _get_molden_permutation(obasis, reverse=False):
     permutation_rules = {
        2: np.array([0, 3, 4, 1, 5, 2]),
        3: np.array([0, 4, 5, 3, 9, 6, 1, 8, 7, 2]),
-       4: np.array([0, 3, 4, 9, 12, 10, 13, 5, 1, 6, 11, 14, 7, 8, 2]),
+       4: np.array([0, 3, 4, 9, 12, 10, 5, 13, 14, 7, 1, 6, 11, 8, 2]),
     }
     permutation = []
     for shell_type in obasis.shell_types:
@@ -354,22 +354,34 @@ def _is_normalized_properly(lf, obasis, permutation, exp_alpha, exp_beta, signs=
         signs = np.ones(obasis.nbasis, int)
     # Compute the overlap matrix.
     olp = obasis.compute_overlap(lf)
+
+    # Convenient code for debugging files coming from crappy QC codes.
+    # np.set_printoptions(linewidth=5000, precision=2, suppress=True, threshold=100000)
+    # coeffs = exp_alpha._coeffs
+    # if permutation is not None:
+    #     coeffs = coeffs[permutation].copy()
+    # if signs is not None:
+    #     coeffs = coeffs*signs.reshape(-1, 1)
+    # print np.dot(coeffs.T, np.dot(olp._array, coeffs))
+    # print
+
     # Compute the norm of each occupied and virtual orbital. Keep track of
     # the largest deviation from unity
-    error_max = 0.0
-    for iorb in xrange(exp_alpha.nfn):
-        vec = exp_alpha._coeffs[:,iorb]*signs
-        if permutation is not None:
-            vec = vec[permutation]
-        norm = olp.inner(vec, vec)
-        error_max = max(error_max, abs(norm-1))
+    exps = [exp_alpha]
     if exp_beta is not None:
-        for iorb in xrange(exp_beta.nfn):
-            vec = (exp_beta._coeffs[:,iorb]*signs)
+        exps.append(exp_beta)
+    error_max = 0.0
+    for exp in exps:
+        for iorb in xrange(exp.nfn):
+            vec = exp._coeffs[:,iorb].copy()
+            if signs is not None:
+                vec *= signs
             if permutation is not None:
                 vec = vec[permutation]
             norm = olp.inner(vec, vec)
+            # print iorb, norm
             error_max = max(error_max, abs(norm-1))
+
     # final judgement
     return error_max <= threshold
 
@@ -398,48 +410,67 @@ def _get_orca_signs(obasis):
     return np.array(signs, dtype=int)
 
 
-def _get_fixed_con_coeffs(obasis, mode):
-    """Return corrected contraction coefficients, assuming they came from an
-       ORCA/PSI4 molden/mkl file.
+def _get_fixed_con_coeffs(obasis, code):
+    """Return corrected contraction coefficients, assuming they came from a broken QC code.
 
-       **Arguments:**
+    Parameters
+    ----------
+    obasis: GOBasos
+        The orbital basis with contraction coefficients to be corrected.
 
-       obasis
-            An instance of GOBasis.
+    code: str
+        Name of code: 'orca', 'psi4' or 'turbomole'.
 
-       mode
-            A string, either 'orca' or 'psi4'
+    Returns
+    -------
+    fixed_con_coeffs : np.ndarray, dtype=float, shape=nbasis
+        Corrected contraction coefficients, or None if corrections were not applicable.
     """
-    assert mode in ['orca', 'psi4']
+    assert code in ['orca', 'psi4', 'turbomole']
     fixed_con_coeffs = obasis.con_coeffs.copy()
     iprim = 0
+    corrected = False
     for ishell in xrange(obasis.nshell):
         shell_type = obasis.shell_types[ishell]
         for ialpha in xrange(obasis.nprims[ishell]):
             alpha = obasis.alphas[iprim]
-            if shell_type == 0:
-                scale = gob_cart_normalization(alpha, np.array([0,0,0]))
-            elif shell_type == 1:
-                scale = gob_cart_normalization(alpha, np.array([1,0,0]))
-            elif shell_type == -2:
-                scale = gob_cart_normalization(alpha, np.array([1,1,0]))
-                if mode == 'psi4':
-                    scale /= np.sqrt(3)
-            elif shell_type == -3:
-                scale = gob_cart_normalization(alpha, np.array([1,1,1]))
-                if mode == 'psi4':
-                    scale /= np.sqrt(15)
-            elif shell_type == -4:
-                scale = gob_cart_normalization(alpha, np.array([2,1,1]))
-                if mode == 'psi4':
-                    scale /= np.sqrt(105)
-            else:
-                # Not sure yet what to do, just do something, error will be
-                # caught later.
-                scale = 1
-            fixed_con_coeffs[iprim] /= scale
+            # Default 1.0: do not to correct anything, unless we know how to correct.
+            correction = 1.0
+            if code == 'turbomole':
+                if shell_type == 2:
+                    correction = 1.0/np.sqrt(3.0)
+                elif shell_type == 3:
+                    correction = 1.0/np.sqrt(15.0)
+                elif shell_type == 4:
+                    correction = 1.0/np.sqrt(105.0)
+            elif code == 'orca':
+                if shell_type == 0:
+                    correction = gob_cart_normalization(alpha, np.array([0,0,0]))
+                elif shell_type == 1:
+                    correction = gob_cart_normalization(alpha, np.array([1,0,0]))
+                elif shell_type == -2:
+                    correction = gob_cart_normalization(alpha, np.array([1,1,0]))
+                elif shell_type == -3:
+                    correction = gob_cart_normalization(alpha, np.array([1,1,1]))
+                elif shell_type == -4:
+                    correction = gob_cart_normalization(alpha, np.array([2,1,1]))
+            elif code == 'psi4':
+                if shell_type == 0:
+                    correction = gob_cart_normalization(alpha, np.array([0,0,0]))
+                elif shell_type == 1:
+                    correction = gob_cart_normalization(alpha, np.array([1,0,0]))
+                elif shell_type == -2:
+                    correction = gob_cart_normalization(alpha, np.array([1,1,0]))/np.sqrt(3.0)
+                elif shell_type == -3:
+                    correction = gob_cart_normalization(alpha, np.array([1,1,1]))/np.sqrt(15.0)
+                elif shell_type == -4:
+                    correction = gob_cart_normalization(alpha, np.array([2,1,1]))/np.sqrt(105.0)
+            fixed_con_coeffs[iprim] /= correction
+            if correction != 1.0:
+                corrected = True
             iprim += 1
-    return fixed_con_coeffs
+    if corrected:
+        return fixed_con_coeffs
 
 
 def _normalized_contractions(obasis):
@@ -463,14 +494,15 @@ def _normalized_contractions(obasis):
 def _fix_molden_from_buggy_codes(result, filename):
     """Detect errors in the data loaded from a molden/mkl/... file and correct.
 
-       **Argument:**
+    Parameters
+    ----------
 
-       result
-            A dictionary with the data loaded in the ``load_molden`` function.
+    result: dict
+        A dictionary with the data loaded in the ``load_molden`` function.
 
-       This function can recognize erroneous files created by PSI4 and ORCA. The
-       data in the obasis and signs fields will be updated accordingly.
-    """
+   This function can recognize erroneous files created by PSI4, ORCA and Turbomole. The
+   values in `results` for the `obasis` and `signs` keys will be updated accordingly.
+   """
     obasis = result['obasis']
     permutation = result.get('permutation', None)
     if _is_normalized_properly(result['lf'], obasis, permutation,
@@ -479,29 +511,59 @@ def _fix_molden_from_buggy_codes(result, filename):
         return
     if log.do_medium:
         log('Detected incorrect normalization of orbitals loaded from a file.')
-    # Try to fix it as if it was a file generated by ORCA.
+
+    # --- ORCA
+    if log.do_medium:
+        log('Trying to fix it as if it was a file generated by ORCA.')
     orca_signs = _get_orca_signs(obasis)
     orca_con_coeffs = _get_fixed_con_coeffs(obasis, 'orca')
-    orca_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
-                          obasis.shell_types, obasis.alphas, orca_con_coeffs)
-    if _is_normalized_properly(result['lf'], orca_obasis, permutation,
-                               result['exp_alpha'], result.get('exp_beta'), orca_signs):
-        if log.do_medium:
-            log('Detected typical ORCA errors in file. Fixing them...')
-        result['obasis'] = orca_obasis
-        result['signs'] = orca_signs
-        return
-    # Try to fix it as if it was a file generated by PSI4 (pre 1.0).
+    if (orca_signs < 0).any() or orca_con_coeffs is not None:
+        if orca_con_coeffs is None:
+            orca_con_coeffs = obasis.con_coeffs
+        # Only try if some changes were made to the contraction coefficients.
+        orca_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
+                              obasis.shell_types, obasis.alphas, orca_con_coeffs)
+        if _is_normalized_properly(result['lf'], orca_obasis, permutation,
+                                   result['exp_alpha'], result.get('exp_beta'), orca_signs):
+            if log.do_medium:
+                log('Detected typical ORCA errors in file. Fixing them...')
+            result['obasis'] = orca_obasis
+            result['signs'] = orca_signs
+            return
+
+    # --- PSI4
+    if log.do_medium:
+        log('Trying to fix it as if it was a file generated by PSI4 (pre 1.0).')
     psi4_con_coeffs = _get_fixed_con_coeffs(obasis, 'psi4')
-    psi4_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
-                          obasis.shell_types, obasis.alphas, psi4_con_coeffs)
-    if _is_normalized_properly(result['lf'], psi4_obasis, permutation,
-                               result['exp_alpha'], result.get('exp_beta')):
-        if log.do_medium:
-            log('Detected typical PSI4 errors in file. Fixing them...')
-        result['obasis'] = psi4_obasis
-        return
-    # Last resort: simply renormalize all contractions
+    if psi4_con_coeffs is not None:
+        # Only try if some changes were made to the contraction coefficients.
+        psi4_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
+                              obasis.shell_types, obasis.alphas, psi4_con_coeffs)
+        if _is_normalized_properly(result['lf'], psi4_obasis, permutation,
+                                   result['exp_alpha'], result.get('exp_beta')):
+            if log.do_medium:
+                log('Detected typical PSI4 errors in file. Fixing them...')
+            result['obasis'] = psi4_obasis
+            return
+
+    # -- Turbomole
+    if log.do_medium:
+        log('Trying to fix it as if it was a file generated by Turbomole.')
+    tb_con_coeffs = _get_fixed_con_coeffs(obasis, 'turbomole')
+    if tb_con_coeffs is not None:
+        # Only try if some changes were made to the contraction coefficients.
+        tb_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
+                            obasis.shell_types, obasis.alphas, tb_con_coeffs)
+        if _is_normalized_properly(result['lf'], tb_obasis, permutation,
+                                   result['exp_alpha'], result.get('exp_beta')):
+            if log.do_medium:
+                log('Detected typical Turbomole errors in file. Fixing them...')
+            result['obasis'] = tb_obasis
+            return
+
+    # --- Renormalized contractions
+    if log.do_medium:
+        log('Last resort: trying by renormalizing all contractions')
     normed_con_coeffs = _normalized_contractions(obasis)
     normed_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
                             obasis.shell_types, obasis.alphas, normed_con_coeffs)

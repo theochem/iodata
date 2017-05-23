@@ -70,8 +70,7 @@ def test_load_molden_nh3_molden_pure():
     # properly without altering normalization and sign conventions.
     fn_molden = context.get_fn('test/nh3_molden_pure.molden')
     mol = IOData.from_file(fn_molden)
-    # Check Mulliken charges. Comparison with numbers from the Molden program
-    # output.
+    # Check Mulliken charges. Comparison with numbers from the Molden program output.
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
@@ -83,8 +82,7 @@ def test_load_molden_nh3_molden_cart():
     # properly without altering normalization and sign conventions.
     fn_molden = context.get_fn('test/nh3_molden_cart.molden')
     mol = IOData.from_file(fn_molden)
-    # Check Mulliken charges. Comparison with numbers from the Molden program
-    # output.
+    # Check Mulliken charges. Comparison with numbers from the Molden program output.
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
     print charges
@@ -97,8 +95,7 @@ def test_load_molden_nh3_orca():
     # properly by altering normalization and sign conventions.
     fn_molden = context.get_fn('test/nh3_orca.molden')
     mol = IOData.from_file(fn_molden)
-    # Check Mulliken charges. Comparison with numbers from the Molden program
-    # output.
+    # Check Mulliken charges. Comparison with numbers from the Molden program output.
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
@@ -110,8 +107,7 @@ def test_load_molden_nh3_psi4():
     # properly by altering normalization conventions.
     fn_molden = context.get_fn('test/nh3_psi4.molden')
     mol = IOData.from_file(fn_molden)
-    # Check Mulliken charges. Comparison with numbers from the Molden program
-    # output.
+    # Check Mulliken charges. Comparison with numbers from the Molden program output.
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
@@ -123,8 +119,7 @@ def test_load_molden_nh3_psi4_1():
     # properly by renormalizing the contractions.
     fn_molden = context.get_fn('test/nh3_psi4_1.0.molden')
     mol = IOData.from_file(fn_molden)
-    # Check Mulliken charges. Comparison with numbers from the Molden program
-    # output.
+    # Check Mulliken charges. Comparison with numbers from the Molden program output.
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
@@ -137,8 +132,7 @@ def test_load_molden_he2_ghost_psi4_1():
     fn_molden = context.get_fn('test/he2_ghost_psi4_1.0.molden')
     mol = IOData.from_file(fn_molden)
     np.testing.assert_equal(mol.pseudo_numbers, np.array([2.0]))
-    # Check Mulliken charges. Comparison with numbers from the Molden program
-    # output.
+    # Check Mulliken charges. Comparison with numbers from the Molden program output.
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, np.array([0.0, 2.0]), dm_full)
     molden_charges = np.array([-0.0041, 0.0041])
@@ -149,11 +143,33 @@ def test_load_molden_nh3_molpro2012():
     # The file tested here is created with MOLPRO2012.
     fn_molden = context.get_fn('test/nh3_molpro2012.molden')
     mol = IOData.from_file(fn_molden)
-    # Check Mulliken charges. Comparison with numbers from the Molden program
-    # output.
+    # Check Mulliken charges. Comparison with numbers from the Molden program output.
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
+    assert abs(charges - molden_charges).max() < 1e-3
+
+
+def test_load_molden_neon_turbomole():
+    # The file tested here is created with Turbomole 7.1.
+    fn_molden = context.get_fn('test/neon_turbomole_def2-qzvp.molden')
+    mol = IOData.from_file(fn_molden)
+    # Check Mulliken charges.
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
+    assert abs(charges).max() < 1e-3
+
+
+def test_load_molden_nh3_turbomole():
+    # The file tested here is created with Turbomole 7.1
+    fn_molden = context.get_fn('test/nh3_turbomole.molden')
+    mol = IOData.from_file(fn_molden)
+    # Check Mulliken charges. Comparison with numbers from the Turbomole output. These
+    # are slightly different than in the other tests because we are using Cartesian
+    # functions.
+    dm_full = mol.get_dm_full()
+    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
+    molden_charges = np.array([0.03801, -0.27428, 0.01206, 0.22421])
     assert abs(charges - molden_charges).max() < 1e-3
 
 
