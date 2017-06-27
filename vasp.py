@@ -79,16 +79,13 @@ def _load_vasp_header(f):
     if line[0].lower() in ['s']:
         line = f.next()
     # parse direct/cartesian switch
-    if line[0].lower() in ['c','k']:
-        cartesian = True
-    else:
-        cartesian = False
+    cartesian = line[0].lower() in ['c', 'k']
 
     # read the coordinates
     coordinates = []
     for line in f:
         # check if all coordinates are read
-        if len(line.strip()) == 0 or len(coordinates) == numbers.shape[0]:
+        if (len(line.strip()) == 0) or (len(coordinates) == numbers.shape[0]):
             break
         coordinates.append([float(w) for w in line.split()[:3]])
     if cartesian:
