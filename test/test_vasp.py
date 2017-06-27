@@ -62,8 +62,8 @@ def test_load_chgcar_water():
     mol = IOData.from_file(fn)
     assert mol.title == 'unknown system'
     assert (mol.numbers == [8, 1, 1]).all()
-    assert abs(mol.coordinates[1] - np.array([0.074983*15+0.903122*1,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
-    assert abs(mol.cell.volume - (15*angstrom)**3) < 1e-10
+    assert abs(mol.coordinates[1] - np.array([0.074983*15+0.903122*1,  0.903122*15,  0.000000])).max() < 1e-10
+    assert abs(mol.cell.volume - (15)**3) < 1e-10
     ugrid = mol.grid
     assert len(ugrid.shape) == 3
     assert (ugrid.shape == 3).all()
@@ -93,8 +93,28 @@ def test_load_poscar_water():
     mol = IOData.from_file(fn)
     assert mol.title == 'Water molecule in a box'
     assert (mol.numbers == [8, 1, 1]).all()
-    assert abs(mol.coordinates[1] - np.array([0.074983*15,  0.903122*15,  0.000000])*angstrom).max() < 1e-10
-    assert abs(mol.cell.volume - (15*angstrom)**3) < 1e-10
+    print mol.coordinates[1]
+    print np.array([0.074983*15,  0.903122*15,  0.000000])
+    assert abs(mol.coordinates[1] - np.array([0.074983*15,  0.903122*15,  0.000000])).max() < 1e-10
+    assert abs(mol.cell.volume - (15)**3) < 1e-10
+
+
+def test_load_poscar_cubicbn_cartesian():
+    fn = context.get_fn('test/POSCAR.cubicbn_cartesian')
+    mol = IOData.from_file(fn)
+    assert mol.title == 'Cubic BN'
+    assert (mol.numbers == [5, 7]).all()
+    assert abs(mol.coordinates[1] - np.array([0.25]*3)*3.57*angstrom).max() < 1e-10
+    assert abs(mol.cell.volume - (3.57*angstrom)**3/4) < 1e-10
+
+
+def test_load_poscar_cubicbn_direct():
+    fn = context.get_fn('test/POSCAR.cubicbn_direct')
+    mol = IOData.from_file(fn)
+    assert mol.title == 'Cubic BN'
+    assert (mol.numbers == [5, 7]).all()
+    assert abs(mol.coordinates[1] - np.array([0.25]*3)*3.57*angstrom).max() < 1e-10
+    assert abs(mol.cell.volume - (3.57*angstrom)**3/4) < 1e-10
 
 
 def test_load_dump_consistency():

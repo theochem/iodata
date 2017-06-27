@@ -39,32 +39,34 @@ def _unravel_counter(counter, shape):
     return result
 
 
-def _load_vasp_header(f, nskip):
+def _load_vasp_header(f):
     '''Load the cell and atoms from a VASP file
+       File specification provided here:
+        http://cms.mpi.univie.ac.at/vasp/guide/node59.html
 
        **Arguments:**
 
        f
             An open file object
 
-       nskip
-            The number of lines to skip after the line with elements
-
        **Returns:** ``title``, ``cell``, ``numbers``, ``coordinates``
     '''
-    # reat the title
+    # read the title
     title = f.next().strip()
-    f.next()
+    # read the universal scaling factor
+    scaling = float(f.next().strip())
 
-    # read cell parameters in angstrom. each row is one cell vector
+    # read cell parameters in angstrom, without the universal scaling factor.
+    # each row is one cell vector
     rvecs = []
     for i in xrange(3):
         rvecs.append([float(w) for w in f.next().split()])
-    rvecs = np.array(rvecs)*angstrom
+    rvecs = np.array(rvecs)*angstrom*scaling
 
     # Convert to cell object
     cell = Cell(rvecs)
 
+    # note that in older VASP version the following line might be absent
     vasp_numbers = [periodic[w].number for w in f.next().split()]
     vasp_counts = [int(w) for w in f.next().split()]
     numbers = []
@@ -72,18 +74,27 @@ def _load_vasp_header(f, nskip):
         numbers.extend([n]*c)
     numbers = np.array(numbers)
 
-    # skip some lines
-    for i in xrange(nskip):
-        f.next()
-    assert f.next().startswith('Direct')
+    line = f.next()
+    # the 7th line can optionally indicate selective dynamics
+    if line[0].lower() in ['s']:
+        line = f.next()
+    # parse direct/cartesian switch
+    if line[0].lower() in ['c','k']:
+        cartesian = True
+    else:
+        cartesian = False
 
-    # read the fractional coordinates and convert to Cartesian
+    # read the coordinates
     coordinates = []
     for line in f:
-        if len(line.strip()) == 0:
+        # check if all coordinates are read
+        if len(line.strip()) == 0 or len(coordinates) == numbers.shape[0]:
             break
         coordinates.append([float(w) for w in line.split()[:3]])
-    coordinates = np.dot(np.array(coordinates), rvecs)
+    if cartesian:
+        coordinates = np.array(coordinates)*angstrom*scaling
+    else:
+        coordinates = np.dot(np.array(coordinates), rvecs)
 
     return title, cell, numbers, coordinates
 
@@ -101,7 +112,7 @@ def _load_vasp_grid(filename):
     '''
     with open(filename) as f:
         # Load header
-        title, cell, numbers, coordinates = _load_vasp_header(f, 0)
+        title, cell, numbers, coordinates = _load_vasp_header(f)
 
         # read the shape of the data
         shape = np.array([int(w) for w in f.next().split()])
@@ -177,7 +188,7 @@ def load_poscar(filename):
     '''
     with open(filename) as f:
         # Load header
-        title, cell, numbers, coordinates = _load_vasp_header(f, 1)
+        title, cell, numbers, coordinates = _load_vasp_header(f)
         return {
             'title': title,
             'coordinates': coordinates,
