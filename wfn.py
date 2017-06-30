@@ -24,6 +24,7 @@
 import numpy as np
 from horton.periodic import periodic
 from horton.gbasis.gobasis import GOBasis
+from horton.meanfield.orbitals import Orbitals
 
 
 __all__ = ['load_wfn_low', 'get_permutation_orbital',
@@ -186,20 +187,19 @@ def get_mask(type_assignment):
     return mask
 
 
-def load_wfn(filename, lf):
+def load_wfn(filename):
     """Load data from a WFN file.
 
-       **Arguments:**
+    Parameters
+    ----------
+    filename : str
+        The filename of the wfn file.
 
-       filename
-            The filename of the wfn file.
-
-       lf
-            An instance of LinalgFactory, used to initialize the wavefunction
-            expansions.
-
-       **Returns:** a dictionary with ``title``, ``coordinates``, ``numbers``,
-       ``energy``, ``obasis`` and ``exp_alpha``. May contain ``exp_beta``.
+    Returns
+    -------
+    results : dict
+        Data loaded from file, with keys ``title``, ``coordinates``, ``numbers``,
+        ``energy``, ``obasis`` and ``orb_alpha``. May contain ``orb_beta``.
     """
     title, numbers, coordinates, centers, type_assignment, exponents, \
         mo_count, mo_occ, mo_energy, coefficients, energy = load_wfn_low(filename)
@@ -222,44 +222,39 @@ def load_wfn(filename, lf):
     con_coeffs = np.ones(reduced_size)
     # build basis set
     obasis = GOBasis(coordinates, shell_map, nprims, shell_types, alphas, con_coeffs)
-    if lf.default_nbasis is not None and lf.default_nbasis != obasis.nbasis:
-        raise TypeError(
-            'The value of lf.default_nbasis does not match nbasis reported in the wfn file.')
-    lf.default_nbasis = obasis.nbasis
     coefficients = coefficients[permutation]
     coefficients /= obasis.get_scales().reshape(-1, 1)
     # make the wavefunction
     if mo_occ.max() > 1.0:
         # close shell system
-        exp_alpha = lf.create_expansion(obasis.nbasis, coefficients.shape[1])
-        exp_alpha.coeffs[:] = coefficients
-        exp_alpha.energies[:] = mo_energy
-        exp_alpha.occupations[:] = mo_occ / 2
-        exp_beta = None
+        orb_alpha = Orbitals(obasis.nbasis, coefficients.shape[1])
+        orb_alpha.coeffs[:] = coefficients
+        orb_alpha.energies[:] = mo_energy
+        orb_alpha.occupations[:] = mo_occ / 2
+        orb_beta = None
     else:
         # open shell system
         # counting the number of alpha and beta orbitals
         index = 1
         while index < num_mo and mo_energy[index] >= mo_energy[index - 1] and mo_count[index] == mo_count[index - 1] + 1:
             index += 1
-        exp_alpha = lf.create_expansion(obasis.nbasis, index)
-        exp_alpha.coeffs[:] = coefficients[:, :index]
-        exp_alpha.energies[:] = mo_energy[:index]
-        exp_alpha.occupations[:] = mo_occ[:index]
-        exp_beta = lf.create_expansion(obasis.nbasis, num_mo - index)
-        exp_beta.coeffs[:] = coefficients[:, index:]
-        exp_beta.energies[:] = mo_energy[index:]
-        exp_beta.occupations[:] = mo_occ[index:]
+        orb_alpha = Orbitals(obasis.nbasis, index)
+        orb_alpha.coeffs[:] = coefficients[:, :index]
+        orb_alpha.energies[:] = mo_energy[:index]
+        orb_alpha.occupations[:] = mo_occ[:index]
+        orb_beta = Orbitals(obasis.nbasis, num_mo - index)
+        orb_beta.coeffs[:] = coefficients[:, index:]
+        orb_beta.energies[:] = mo_energy[index:]
+        orb_beta.occupations[:] = mo_occ[index:]
 
     result = {
         'title': title,
         'coordinates': coordinates,
-        'exp_alpha': exp_alpha,
-        'lf': lf,
+        'orb_alpha': orb_alpha,
         'numbers': numbers,
         'obasis': obasis,
         'energy': energy,
     }
-    if exp_beta is not None:
-        result['exp_beta'] = exp_beta
+    if orb_beta is not None:
+        result['orb_beta'] = orb_beta
     return result

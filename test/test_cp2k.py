@@ -29,10 +29,10 @@ from horton.test.common import truncated_file
 
 def check_orthonormality(mol):
     """Helper function to test if the orbitals are orthonormal."""
-    olp = mol.obasis.compute_overlap(mol.lf)
-    mol.exp_alpha.check_orthonormality(olp)
-    if hasattr(mol, 'exp_beta'):
-        mol.exp_beta.check_orthonormality(olp)
+    olp = mol.obasis.compute_overlap()
+    mol.orb_alpha.check_orthonormality(olp)
+    if hasattr(mol, 'orb_beta'):
+        mol.orb_beta.check_orthonormality(olp)
 
 
 def test_atom_si_uks():
@@ -41,10 +41,10 @@ def test_atom_si_uks():
     assert mol.obasis.nbasis == 13
     assert (mol.numbers == [14]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.exp_alpha.occupations == [1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
-    assert (mol.exp_beta.occupations == [1, 0, 0, 0]).all()
-    assert abs(mol.exp_alpha.energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
-    assert abs(mol.exp_beta.energies - [-0.334567, -0.092237, -0.092237, -0.092237]).max() < 1e-4
+    assert (mol.orb_alpha.occupations == [1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_beta.occupations == [1, 0, 0, 0]).all()
+    assert abs(mol.orb_alpha.energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
+    assert abs(mol.orb_beta.energies - [-0.334567, -0.092237, -0.092237, -0.092237]).max() < 1e-4
     assert abs(mol.energy - -3.761587698067) < 1e-10
     assert (mol.obasis.shell_types == [0, 0, 1, 1, -2]).all()
     check_orthonormality(mol)
@@ -56,9 +56,9 @@ def test_atom_o_rks():
     assert mol.obasis.nbasis == 13
     assert (mol.numbers == [8]).all()
     assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.exp_alpha.occupations == [1, 1, 1, 1]).all()
-    assert abs(mol.exp_alpha.energies - [0.102709, 0.606458, 0.606458, 0.606458]).max() < 1e-4
-    assert not hasattr(mol, 'exp_beta')
+    assert (mol.orb_alpha.occupations == [1, 1, 1, 1]).all()
+    assert abs(mol.orb_alpha.energies - [0.102709, 0.606458, 0.606458, 0.606458]).max() < 1e-4
+    assert not hasattr(mol, 'orb_beta')
     assert abs(mol.energy - -15.464982778766) < 1e-10
     assert (mol.obasis.shell_types == [0, 0, 1, 1, -2]).all()
     check_orthonormality(mol)
@@ -70,11 +70,11 @@ def test_carbon_gs_ae_contracted():
     assert mol.obasis.nbasis == 18
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.exp_alpha.occupations == [1, 1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
-    assert (mol.exp_alpha.energies == [-10.058194, -0.526244, -0.214978,
+    assert (mol.orb_alpha.occupations == [1, 1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_alpha.energies == [-10.058194, -0.526244, -0.214978,
                                        -0.214978, -0.214978]).all()
-    assert (mol.exp_beta.occupations == [1, 1, 0, 0, 0]).all()
-    assert (mol.exp_beta.energies == [-10.029898, -0.434300, -0.133323,
+    assert (mol.orb_beta.occupations == [1, 1, 0, 0, 0]).all()
+    assert (mol.orb_beta.energies == [-10.029898, -0.434300, -0.133323,
                                       -0.133323, -0.133323]).all()
     assert mol.energy == -37.836423363057
     check_orthonormality(mol)
@@ -86,11 +86,11 @@ def test_carbon_gs_ae_uncontracted():
     assert mol.obasis.nbasis == 640
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.exp_alpha.occupations == [1, 1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
-    assert (mol.exp_alpha.energies == [-10.050076, -0.528162, -0.217626,
+    assert (mol.orb_alpha.occupations == [1, 1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_alpha.energies == [-10.050076, -0.528162, -0.217626,
                                        -0.217626, -0.217626]).all()
-    assert (mol.exp_beta.occupations == [1, 1, 0, 0, 0]).all()
-    assert (mol.exp_beta.energies == [-10.022715, -0.436340, -0.137135,
+    assert (mol.orb_beta.occupations == [1, 1, 0, 0, 0]).all()
+    assert (mol.orb_beta.energies == [-10.022715, -0.436340, -0.137135,
                                       -0.137135, -0.137135]).all()
     assert mol.energy == -37.842552743398
     check_orthonormality(mol)
@@ -102,10 +102,10 @@ def test_carbon_gs_pp_contracted():
     assert mol.obasis.nbasis == 17
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.exp_alpha.occupations == [1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
-    assert (mol.exp_alpha.energies == [-0.528007, -0.219974, -0.219974, -0.219974]).all()
-    assert (mol.exp_beta.occupations == [1, 0, 0, 0]).all()
-    assert (mol.exp_beta.energies == [-0.429657, -0.127060, -0.127060, -0.127060]).all()
+    assert (mol.orb_alpha.occupations == [1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_alpha.energies == [-0.528007, -0.219974, -0.219974, -0.219974]).all()
+    assert (mol.orb_beta.occupations == [1, 0, 0, 0]).all()
+    assert (mol.orb_beta.energies == [-0.429657, -0.127060, -0.127060, -0.127060]).all()
     assert mol.energy == -5.399938535844
     check_orthonormality(mol)
 
@@ -116,10 +116,10 @@ def test_carbon_gs_pp_uncontracted():
     assert mol.obasis.nbasis == 256
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.exp_alpha.occupations == [1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
-    assert (mol.exp_alpha.energies == [-0.528146, -0.219803, -0.219803, -0.219803]).all()
-    assert (mol.exp_beta.occupations == [1, 0, 0, 0]).all()
-    assert (mol.exp_beta.energies == [-0.429358, -0.126411, -0.126411, -0.126411]).all()
+    assert (mol.orb_alpha.occupations == [1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_alpha.energies == [-0.528146, -0.219803, -0.219803, -0.219803]).all()
+    assert (mol.orb_beta.occupations == [1, 0, 0, 0]).all()
+    assert (mol.orb_beta.energies == [-0.429358, -0.126411, -0.126411, -0.126411]).all()
     assert mol.energy == -5.402288849332
     check_orthonormality(mol)
 
@@ -130,10 +130,10 @@ def test_carbon_sc_ae_contracted():
     assert mol.obasis.nbasis == 18
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.exp_alpha.occupations == [1, 1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
-    assert (mol.exp_alpha.energies == [-10.067251, -0.495823, -0.187878,
+    assert (mol.orb_alpha.occupations == [1, 1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
+    assert (mol.orb_alpha.energies == [-10.067251, -0.495823, -0.187878,
                                        -0.187878, -0.187878]).all()
-    assert not hasattr(mol, 'exp_beta')
+    assert not hasattr(mol, 'orb_beta')
     assert mol.energy == -37.793939631890
     check_orthonormality(mol)
 
@@ -144,10 +144,10 @@ def test_carbon_sc_ae_uncontracted():
     assert mol.obasis.nbasis == 640
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.exp_alpha.occupations == [1, 1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
-    assert (mol.exp_alpha.energies == [-10.062206, -0.499716, -0.192580,
+    assert (mol.orb_alpha.occupations == [1, 1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
+    assert (mol.orb_alpha.energies == [-10.062206, -0.499716, -0.192580,
                                        -0.192580, -0.192580]).all()
-    assert not hasattr(mol, 'exp_beta')
+    assert not hasattr(mol, 'orb_beta')
     assert mol.energy == -37.800453482378
     check_orthonormality(mol)
 
@@ -158,9 +158,9 @@ def test_carbon_sc_pp_contracted():
     assert mol.obasis.nbasis == 17
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.exp_alpha.occupations == [1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
-    assert (mol.exp_alpha.energies == [-0.500732, -0.193138, -0.193138, -0.193138]).all()
-    assert not hasattr(mol, 'exp_beta')
+    assert (mol.orb_alpha.occupations == [1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
+    assert (mol.orb_alpha.energies == [-0.500732, -0.193138, -0.193138, -0.193138]).all()
+    assert not hasattr(mol, 'orb_beta')
     assert mol.energy == -5.350765755382
     check_orthonormality(mol)
 
@@ -171,9 +171,9 @@ def test_carbon_sc_pp_uncontracted():
     assert mol.obasis.nbasis == 256
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.exp_alpha.occupations == [1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
-    assert (mol.exp_alpha.energies == [-0.500238, -0.192365, -0.192365, -0.192365]).all()
-    assert not hasattr(mol, 'exp_beta')
+    assert (mol.orb_alpha.occupations == [1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
+    assert (mol.orb_alpha.energies == [-0.500238, -0.192365, -0.192365, -0.192365]).all()
+    assert not hasattr(mol, 'orb_beta')
     assert mol.energy == -5.352864672201
     check_orthonormality(mol)
 
@@ -192,9 +192,6 @@ def test_errors():
     with truncated_file('horton.io.test.test_cp2k.test_errors', fn_test, 405, 10) as fn:
         with assert_raises(IOError):
             IOData.from_file(fn)
-    lf = DenseLinalgFactory(1)
-    with assert_raises(IOError):
-        IOData.from_file(fn_test, lf=lf)
     fn_test = context.get_fn('test/carbon_gs_pp_uncontracted.cp2k.out')
     with truncated_file('horton.io.test.test_cp2k.test_errors', fn_test, 456, 10) as fn:
         with assert_raises(IOError):

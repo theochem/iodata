@@ -31,23 +31,23 @@ from horton.meanfield.observable import RTwoIndexTerm, \
 from horton.part.mulliken import get_mulliken_operators
 
 
-__all__ = ['compute_mulliken_charges']
+__all__ = ['compute_mulliken_charges', 'compute_hf_energy']
 
 
-def compute_mulliken_charges(obasis, lf, pseudo_numbers, dm):
-    operators = get_mulliken_operators(obasis, lf)
-    populations = np.array([operator.contract_two('ab,ab', dm) for operator in operators])
+def compute_mulliken_charges(obasis, pseudo_numbers, dm):
+    operators = get_mulliken_operators(obasis)
+    populations = np.array([np.einsum('ab,ba', operator, dm) for operator in operators])
     assert pseudo_numbers.shape == populations.shape
     return pseudo_numbers - np.array(populations)
 
 
 def compute_hf_energy(mol):
-    olp = mol.obasis.compute_overlap(mol.lf)
-    kin = mol.obasis.compute_kinetic(mol.lf)
-    na = mol.obasis.compute_nuclear_attraction(mol.coordinates, mol.pseudo_numbers, mol.lf)
-    er = mol.obasis.compute_electron_repulsion(mol.lf)
+    olp = mol.obasis.compute_overlap()
+    kin = mol.obasis.compute_kinetic()
+    na = mol.obasis.compute_nuclear_attraction(mol.coordinates, mol.pseudo_numbers)
+    er = mol.obasis.compute_electron_repulsion()
     external = {'nn': compute_nucnuc(mol.coordinates, mol.pseudo_numbers)}
-    if hasattr(mol, 'exp_beta'):
+    if hasattr(mol, 'orb_beta'):
         # assuming unrestricted
         terms = [
             UTwoIndexTerm(kin, 'kin'),
@@ -56,8 +56,8 @@ def compute_hf_energy(mol):
             UTwoIndexTerm(na, 'ne'),
         ]
         ham = UEffHam(terms, external)
-        dm_alpha = mol.exp_alpha.to_dm()
-        dm_beta = mol.exp_beta.to_dm()
+        dm_alpha = mol.orb_alpha.to_dm()
+        dm_beta = mol.orb_beta.to_dm()
         ham.reset(dm_alpha, dm_beta)
     else:
         # assuming restricted
@@ -68,6 +68,6 @@ def compute_hf_energy(mol):
             RTwoIndexTerm(na, 'ne'),
         ]
         ham = REffHam(terms, external)
-        dm_alpha = mol.exp_alpha.to_dm()
+        dm_alpha = mol.orb_alpha.to_dm()
         ham.reset(dm_alpha)
     return ham.compute_energy()

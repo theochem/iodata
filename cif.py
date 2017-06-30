@@ -293,18 +293,18 @@ def equiv_pos_to_generator(s):
     return g
 
 
-def load_cif(filename, lf):
-    '''Load a CIF file
+def load_cif(filename):
+    '''Load a CIF file.
 
-       **Arguments:**
+    Parameters
+    ----------
+    filename: str
+        The name of an existing CIF file
 
-       filename
-            The name of an existing CIF file
-
-       lf
-            An instance of the LinalgFactory class. (Ignored here)
-
-       **Returns** a dictionary with: ``title``, ``coordinates``, ``numbers``,
+    Returns
+    -------
+    result : dict
+       Data load from file with keys: ``title``, ``coordinates``, ``numbers``,
        ``symmetry``, ``links``, ``cell``.
     '''
     title, fields = _load_cif_low(filename)

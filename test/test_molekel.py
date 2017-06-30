@@ -48,16 +48,16 @@ def test_load_mkl_ethanol():
     assert (mol.obasis.shell_map[:5] == [0, 0, 1, 1, 1]).all()
     assert (mol.obasis.shell_types[:5] == [0, 0, 0, 0, 1]).all()
     assert (mol.obasis.nprims[-5:] == [3, 1, 1, 3, 1]).all()
-    assert mol.exp_alpha.coeffs.shape == (39,39)
-    assert mol.exp_alpha.energies.shape == (39,)
-    assert mol.exp_alpha.occupations.shape == (39,)
-    assert (mol.exp_alpha.occupations[:13] == 1.0).all()
-    assert (mol.exp_alpha.occupations[13:] == 0.0).all()
-    assert mol.exp_alpha.energies[4] == -1.0206976
-    assert mol.exp_alpha.energies[-1] == 2.0748685
-    assert mol.exp_alpha.coeffs[0,0] == 0.0000119
-    assert mol.exp_alpha.coeffs[1,0] == -0.0003216
-    assert mol.exp_alpha.coeffs[-1,-1] == -0.1424743
+    assert mol.orb_alpha.coeffs.shape == (39,39)
+    assert mol.orb_alpha.energies.shape == (39,)
+    assert mol.orb_alpha.occupations.shape == (39,)
+    assert (mol.orb_alpha.occupations[:13] == 1.0).all()
+    assert (mol.orb_alpha.occupations[13:] == 0.0).all()
+    assert mol.orb_alpha.energies[4] == -1.0206976
+    assert mol.orb_alpha.energies[-1] == 2.0748685
+    assert mol.orb_alpha.coeffs[0,0] == 0.0000119
+    assert mol.orb_alpha.coeffs[1,0] == -0.0003216
+    assert mol.orb_alpha.coeffs[-1,-1] == -0.1424743
 
     # Comparison of derived properties with ORCA output file
 
@@ -65,12 +65,12 @@ def test_load_mkl_ethanol():
     assert abs(compute_nucnuc(mol.coordinates, mol.pseudo_numbers) - 81.87080034) < 1e-5
 
     # Check normalization
-    olp = mol.obasis.compute_overlap(mol.lf)
-    mol.exp_alpha.check_normalization(olp, 1e-5)
+    olp = mol.obasis.compute_overlap()
+    mol.orb_alpha.check_normalization(olp, 1e-5)
 
     # Mulliken charges
     dm_full = mol.get_dm_full()
-    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
+    charges = compute_mulliken_charges(mol.obasis, mol.pseudo_numbers, dm_full)
     expected_charges = np.array([
         0.143316, -0.445861, 0.173045, 0.173021, 0.024542, 0.143066, 0.143080,
         -0.754230, 0.400021
@@ -86,13 +86,13 @@ def test_load_mkl_li2():
     mol = IOData.from_file(fn_mkl)
 
     # Check normalization
-    olp = mol.obasis.compute_overlap(mol.lf)
-    mol.exp_alpha.check_normalization(olp, 1e-5)
-    mol.exp_beta.check_normalization(olp, 1e-5)
+    olp = mol.obasis.compute_overlap()
+    mol.orb_alpha.check_normalization(olp, 1e-5)
+    mol.orb_beta.check_normalization(olp, 1e-5)
 
     # Check charges
     dm_full = mol.get_dm_full()
-    charges = compute_mulliken_charges(mol.obasis, mol.lf, mol.pseudo_numbers, dm_full)
+    charges = compute_mulliken_charges(mol.obasis, mol.pseudo_numbers, dm_full)
     expected_charges = np.array([0.5, 0.5])
     assert abs(charges - expected_charges).max() < 1e-5
 
@@ -100,8 +100,8 @@ def test_load_mkl_li2():
 def test_load_mkl_h2():
     fn_mkl = context.get_fn('test/h2_sto3g.mkl')
     mol = IOData.from_file(fn_mkl)
-    olp = mol.obasis.compute_overlap(mol.lf)
-    mol.exp_alpha.check_normalization(olp, 1e-5)
+    olp = mol.obasis.compute_overlap()
+    mol.orb_alpha.check_normalization(olp, 1e-5)
 
     # Compute HF energy
     assert abs(compute_hf_energy(mol) - -1.11750589) < 1e-4

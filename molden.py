@@ -29,6 +29,7 @@ from horton.periodic import periodic
 from horton.gbasis.iobas import str_to_shell_types, shell_type_to_str
 from horton.gbasis.gobasis import GOBasisContraction
 from horton.gbasis.cext import gob_cart_normalization, get_shell_nbasis, GOBasis
+from horton.meanfield.orbitals import Orbitals
 
 
 __all__ = ['load_molden', 'dump_molden']
@@ -55,19 +56,20 @@ def _get_molden_permutation(obasis, reverse=False):
     return np.array(permutation, dtype=int)
 
 
-def load_molden(filename, lf):
+def load_molden(filename):
     """Load data from a molden input file.
 
-       **Arguments:**
+    Parameters
+    ----------
+    filename : str
+        The filename of the molden input file.
 
-       filename
-            The filename of the molden input file.
-
-       lf
-            A LinalgFactory instance.
-
-       **Returns:** a dictionary with: ``coordinates``, ``numbers``, ``pseudo_numbers``,
-       ``obasis``, ``exp_alpha``, ``signs``. It may also contain: ``title``, ``exp_beta``.
+    Returns
+    -------
+    results : dict
+        Data loaded from file, with with: ``coordinates``, ``numbers``,
+        ``pseudo_numbers``, ``obasis``, ``orb_alpha``, ``signs``. It may also contain:
+        ``title``, ``orb_beta``.
     """
 
     def helper_coordinates(f, cunit):
@@ -267,30 +269,27 @@ def load_molden(filename, lf):
     if coeff_alpha is None:
         raise IOError('Alpha orbitals not found in molden input file.')
 
-    if lf.default_nbasis is not None and lf.default_nbasis != obasis.nbasis:
-        raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the molden.input file.')
-    lf.default_nbasis = obasis.nbasis
     if coeff_beta is None:
         nalpha = int(np.round(occ_alpha.sum()))/2
-        exp_alpha = lf.create_expansion(obasis.nbasis, coeff_alpha.shape[1])
-        exp_alpha.coeffs[:] = coeff_alpha
-        exp_alpha.energies[:] = ener_alpha
-        exp_alpha.occupations[:] = occ_alpha/2
-        exp_beta = None
+        orb_alpha = Orbitals(obasis.nbasis, coeff_alpha.shape[1])
+        orb_alpha.coeffs[:] = coeff_alpha
+        orb_alpha.energies[:] = ener_alpha
+        orb_alpha.occupations[:] = occ_alpha/2
+        orb_beta = None
     else:
         nalpha = int(np.round(occ_alpha.sum()))
         nbeta = int(np.round(occ_beta.sum()))
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
-        exp_alpha = lf.create_expansion(obasis.nbasis, coeff_alpha.shape[1])
-        exp_alpha.coeffs[:] = coeff_alpha
-        exp_alpha.energies[:] = ener_alpha
-        exp_alpha.occupations[:] = occ_alpha
-        exp_beta = lf.create_expansion(obasis.nbasis, coeff_beta.shape[1])
-        exp_beta.coeffs[:] = coeff_beta
-        exp_beta.energies[:] = ener_beta
-        exp_beta.occupations[:] = occ_beta
+        orb_alpha = Orbitals(obasis.nbasis, coeff_alpha.shape[1])
+        orb_alpha.coeffs[:] = coeff_alpha
+        orb_alpha.energies[:] = ener_alpha
+        orb_alpha.occupations[:] = occ_alpha
+        orb_beta = Orbitals(obasis.nbasis, coeff_beta.shape[1])
+        orb_beta.coeffs[:] = coeff_beta
+        orb_beta.energies[:] = ener_beta
+        orb_beta.occupations[:] = occ_beta
 
     permutation = _get_molden_permutation(obasis)
 
@@ -302,8 +301,7 @@ def load_molden(filename, lf):
 
     result = {
         'coordinates': coordinates,
-        'exp_alpha': exp_alpha,
-        'lf': lf,
+        'orb_alpha': orb_alpha,
         'numbers': numbers,
         'obasis': obasis,
         'permutation': permutation,
@@ -311,21 +309,18 @@ def load_molden(filename, lf):
     }
     if title is not None:
         result['title'] = title
-    if exp_beta is not None:
-        result['exp_beta'] = exp_beta
+    if orb_beta is not None:
+        result['orb_beta'] = orb_beta
 
     _fix_molden_from_buggy_codes(result, filename)
 
     return result
 
 
-def _is_normalized_properly(lf, obasis, permutation, exp_alpha, exp_beta, signs=None, threshold=1e-4):
+def _is_normalized_properly(obasis, permutation, orb_alpha, orb_beta, signs=None, threshold=1e-4):
     """Test the normalization of the occupied and virtual orbitals
 
        **Arguments:**
-
-       lf
-            The linalg factory (needed for computing the overlap matrix).
 
        obasis
             An instance of the GOBasis class.
@@ -334,10 +329,10 @@ def _is_normalized_properly(lf, obasis, permutation, exp_alpha, exp_beta, signs=
             The permutation of the basis functions to bring them in HORTON's
             standard ordering.
 
-       exp_alpha
+       orb_alpha
             The alpha orbitals.
 
-       exp_beta
+       orb_beta
             The beta orbitals (may be None).
 
        **Optional arguments:**
@@ -353,11 +348,11 @@ def _is_normalized_properly(lf, obasis, permutation, exp_alpha, exp_beta, signs=
     if signs is None:
         signs = np.ones(obasis.nbasis, int)
     # Compute the overlap matrix.
-    olp = obasis.compute_overlap(lf)
+    olp = obasis.compute_overlap()
 
     # Convenient code for debugging files coming from crappy QC codes.
     # np.set_printoptions(linewidth=5000, precision=2, suppress=True, threshold=100000)
-    # coeffs = exp_alpha._coeffs
+    # coeffs = orb_alpha._coeffs
     # if permutation is not None:
     #     coeffs = coeffs[permutation].copy()
     # if signs is not None:
@@ -367,18 +362,18 @@ def _is_normalized_properly(lf, obasis, permutation, exp_alpha, exp_beta, signs=
 
     # Compute the norm of each occupied and virtual orbital. Keep track of
     # the largest deviation from unity
-    exps = [exp_alpha]
-    if exp_beta is not None:
-        exps.append(exp_beta)
+    orbs = [orb_alpha]
+    if orb_beta is not None:
+        orbs.append(orb_beta)
     error_max = 0.0
-    for exp in exps:
-        for iorb in xrange(exp.nfn):
-            vec = exp._coeffs[:, iorb].copy()
+    for orb in orbs:
+        for iorb in xrange(orb.nfn):
+            vec = orb._coeffs[:, iorb].copy()
             if signs is not None:
                 vec *= signs
             if permutation is not None:
                 vec = vec[permutation]
-            norm = olp.inner(vec, vec)
+            norm = np.dot(vec, np.dot(olp, vec))
             # print iorb, norm
             error_max = max(error_max, abs(norm-1))
 
@@ -505,8 +500,7 @@ def _fix_molden_from_buggy_codes(result, filename):
    """
     obasis = result['obasis']
     permutation = result.get('permutation', None)
-    if _is_normalized_properly(result['lf'], obasis, permutation,
-                               result['exp_alpha'], result.get('exp_beta')):
+    if _is_normalized_properly(obasis, permutation, result['orb_alpha'], result.get('orb_beta')):
         # The file is good. No need to change data.
         return
     if log.do_medium:
@@ -521,8 +515,8 @@ def _fix_molden_from_buggy_codes(result, filename):
         # Only try if some changes were made to the contraction coefficients.
         orca_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
                               obasis.shell_types, obasis.alphas, orca_con_coeffs)
-        if _is_normalized_properly(result['lf'], orca_obasis, permutation,
-                                   result['exp_alpha'], result.get('exp_beta'), orca_signs):
+        if _is_normalized_properly(orca_obasis, permutation,
+                                   result['orb_alpha'], result.get('orb_beta'), orca_signs):
             if log.do_medium:
                 log('Detected typical ORCA errors in file. Fixing them...')
             result['obasis'] = orca_obasis
@@ -537,8 +531,8 @@ def _fix_molden_from_buggy_codes(result, filename):
         # Only try if some changes were made to the contraction coefficients.
         psi4_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
                               obasis.shell_types, obasis.alphas, psi4_con_coeffs)
-        if _is_normalized_properly(result['lf'], psi4_obasis, permutation,
-                                   result['exp_alpha'], result.get('exp_beta')):
+        if _is_normalized_properly(psi4_obasis, permutation,
+                                   result['orb_alpha'], result.get('orb_beta')):
             if log.do_medium:
                 log('Detected typical PSI4 errors in file. Fixing them...')
             result['obasis'] = psi4_obasis
@@ -552,8 +546,8 @@ def _fix_molden_from_buggy_codes(result, filename):
         # Only try if some changes were made to the contraction coefficients.
         tb_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
                             obasis.shell_types, obasis.alphas, tb_con_coeffs)
-        if _is_normalized_properly(result['lf'], tb_obasis, permutation,
-                                   result['exp_alpha'], result.get('exp_beta')):
+        if _is_normalized_properly(tb_obasis, permutation,
+                                   result['orb_alpha'], result.get('orb_beta')):
             if log.do_medium:
                 log('Detected typical Turbomole errors in file. Fixing them...')
             result['obasis'] = tb_obasis
@@ -565,8 +559,8 @@ def _fix_molden_from_buggy_codes(result, filename):
     normed_con_coeffs = _normalized_contractions(obasis)
     normed_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
                             obasis.shell_types, obasis.alphas, normed_con_coeffs)
-    if _is_normalized_properly(result['lf'], normed_obasis, permutation,
-                               result['exp_alpha'], result.get('exp_beta')):
+    if _is_normalized_properly(normed_obasis, permutation,
+                               result['orb_alpha'], result.get('orb_beta')):
         if log.do_medium:
             log('Detected unnormalized contractions in file. Fixing them...')
         result['obasis'] = normed_obasis
@@ -581,16 +575,13 @@ def _fix_molden_from_buggy_codes(result, filename):
 def dump_molden(filename, data):
     """Write data to a file in the molden input format.
 
-       **Arguments:**
-
-       filename
-            The filename of the molden input file, which is an output file for
-            this routine.
-
-       data
-            An IOData instance. Must contain ``coordinates``, ``numbers``,
-            ``obasis``, ``exp_alpha``. May contain ``title``, ``pseudo_numbers``,
-            ``exp_beta``.
+    Parameters
+    ----------
+    filename : str
+        The filename of the molden input file, which is an output file for this routine.
+    data : IOData
+        Must contain ``coordinates``, ``numbers``, ``obasis``, ``orb_alpha``. May contain
+        ``title``, ``pseudo_numbers``, ``orb_beta``.
     """
     with open(filename, 'w') as f:
         # Print the header
@@ -682,24 +673,24 @@ def dump_molden(filename, data):
         else:
             raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
 
-        def helper_exp(spin, occ_scale=1.0):
-            exp = getattr(data, 'exp_%s' % spin)
-            for ifn in xrange(exp.nfn):
+        def helper_orb(spin, occ_scale=1.0):
+            orb = getattr(data, 'orb_%s' % spin)
+            for ifn in xrange(orb.nfn):
                 print >> f, ' Sym=     1a'
-                print >> f, ' Ene= %20.14E' % exp.energies[ifn]
+                print >> f, ' Ene= %20.14E' % orb.energies[ifn]
                 print >> f, ' Spin= %s' % spin.capitalize()
-                print >> f, ' Occup= %8.6f' % (exp.occupations[ifn]*occ_scale)
-                for ibasis in xrange(exp.nbasis):
-                    print >> f, '%3i %20.12f' % (ibasis+1, exp.coeffs[permutation[ibasis], ifn])
+                print >> f, ' Occup= %8.6f' % (orb.occupations[ifn]*occ_scale)
+                for ibasis in xrange(orb.nbasis):
+                    print >> f, '%3i %20.12f' % (ibasis+1, orb.coeffs[permutation[ibasis], ifn])
 
         # Construct the permutation of the basis functions
         permutation = _get_molden_permutation(data.obasis, reverse=True)
 
         # Print the mean-field orbitals
-        if hasattr(data, 'exp_beta'):
+        if hasattr(data, 'orb_beta'):
             print >> f, '[MO]'
-            helper_exp('alpha')
-            helper_exp('beta')
+            helper_orb('alpha')
+            helper_orb('beta')
         else:
             print >> f, '[MO]'
-            helper_exp('alpha', 2.0)
+            helper_orb('alpha', 2.0)

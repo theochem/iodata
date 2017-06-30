@@ -28,91 +28,85 @@ from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def test_load_operators_water_sto3g_hf_g03():
-    lf = DenseLinalgFactory()
     eps = 1e-5
     fn = context.get_fn('test/water_sto3g_hf_g03.log')
-    result = load_operators_g09(fn, lf)
-
-    for op in result.itervalues():
-        assert op is not None
-        if isinstance(op, LinalgObject):
-            assert op.nbasis == 7
-            assert op.is_symmetric()
+    result = load_operators_g09(fn)
 
     overlap = result['olp']
     kinetic = result['kin']
     nuclear_attraction = result['na']
     electronic_repulsion = result['er']
 
-    assert abs(overlap.get_element(0,0) - 1.0) < eps
-    assert abs(overlap.get_element(0,1) - 0.236704) < eps
-    assert abs(overlap.get_element(0,2) - 0.0) < eps
-    assert abs(overlap.get_element(-1,-3) - (-0.13198)) < eps
+    assert overlap.shape == (7, 7)
+    assert kinetic.shape == (7, 7)
+    assert nuclear_attraction.shape == (7, 7)
+    assert electronic_repulsion.shape == (7, 7, 7, 7)
 
-    assert abs(kinetic.get_element(2,0) - 0.0) < eps
-    assert abs(kinetic.get_element(4,4) - 2.52873) < eps
-    assert abs(kinetic.get_element(-1,5) - 0.00563279) < eps
-    assert abs(kinetic.get_element(-1,-3) - (-0.0966161)) < eps
+    assert abs(overlap[0, 0] - 1.0) < eps
+    assert abs(overlap[0, 1] - 0.236704) < eps
+    assert abs(overlap[0, 2] - 0.0) < eps
+    assert abs(overlap[-1, -3] - (-0.13198)) < eps
 
-    assert abs(nuclear_attraction.get_element(3,3) - 9.99259) < eps
-    assert abs(nuclear_attraction.get_element(-2,-1) - 1.55014) < eps
-    assert abs(nuclear_attraction.get_element(2,6) - 2.76941) < eps
-    assert abs(nuclear_attraction.get_element(0,3) - 0.0) < eps
+    assert abs(kinetic[2, 0] - 0.0) < eps
+    assert abs(kinetic[4, 4] - 2.52873) < eps
+    assert abs(kinetic[-1, 5] - 0.00563279) < eps
+    assert abs(kinetic[-1, -3] - (-0.0966161)) < eps
 
-    assert abs(electronic_repulsion.get_element(0,0,0,0) - 4.78506575204) < eps
-    assert abs(electronic_repulsion.get_element(6,6,6,6) - 0.774605944194) < eps
-    assert abs(electronic_repulsion.get_element(6,5,0,5) - 0.0289424337101) < eps
-    assert abs(electronic_repulsion.get_element(5,4,0,1) - 0.00274145291476) < eps
+    assert abs(nuclear_attraction[3, 3] - 9.99259) < eps
+    assert abs(nuclear_attraction[-2, -1] - 1.55014) < eps
+    assert abs(nuclear_attraction[2, 6] - 2.76941) < eps
+    assert abs(nuclear_attraction[0, 3] - 0.0) < eps
+
+    assert abs(electronic_repulsion[0, 0, 0, 0] - 4.78506575204) < eps
+    assert abs(electronic_repulsion[6, 6, 6, 6] - 0.774605944194) < eps
+    assert abs(electronic_repulsion[6, 5, 0, 5] - 0.0289424337101) < eps
+    assert abs(electronic_repulsion[5, 4, 0, 1] - 0.00274145291476) < eps
 
 
 def test_load_operators_water_ccpvdz_pure_hf_g03():
-    lf = DenseLinalgFactory()
     eps = 1e-5
     fn = context.get_fn('test/water_ccpvdz_pure_hf_g03.log')
-    result = load_operators_g09(fn, lf)
+    result = load_operators_g09(fn)
 
     overlap = result['olp']
     kinetic = result['kin']
     nuclear_attraction = result['na']
     electronic_repulsion = result['er']
 
-    for op in overlap, kinetic, nuclear_attraction, electronic_repulsion:
-        assert op is not None
-        if isinstance(op, LinalgObject):
-            assert op.nbasis == 24
-            assert op.is_symmetric()
+    assert overlap.shape == (24, 24)
+    assert kinetic.shape == (24, 24)
+    assert nuclear_attraction.shape == (24, 24)
+    assert electronic_repulsion.shape == (24, 24, 24, 24)
 
-    assert abs(overlap.get_element(0,0) - 1.0) < eps
-    assert abs(overlap.get_element(0,1) - 0.214476) < eps
-    assert abs(overlap.get_element(0,2) - 0.183817) < eps
-    assert abs(overlap.get_element(10,16) - 0.380024) < eps
-    assert abs(overlap.get_element(-1,-3) - 0.000000) < eps
+    assert abs(overlap[0, 0] - 1.0) < eps
+    assert abs(overlap[0, 1] - 0.214476) < eps
+    assert abs(overlap[0, 2] - 0.183817) < eps
+    assert abs(overlap[10, 16] - 0.380024) < eps
+    assert abs(overlap[-1, -3] - 0.000000) < eps
 
-    assert abs(kinetic.get_element(2,0) - 0.160648) < eps
-    assert abs(kinetic.get_element(11,11) - 4.14750) < eps
-    assert abs(kinetic.get_element(-1,5) - (-0.0244025)) < eps
-    assert abs(kinetic.get_element(-1,-6) - (-0.0614899)) < eps
+    assert abs(kinetic[2, 0] - 0.160648) < eps
+    assert abs(kinetic[11, 11] - 4.14750) < eps
+    assert abs(kinetic[-1, 5] - (-0.0244025)) < eps
+    assert abs(kinetic[-1, -6] - (-0.0614899)) < eps
 
-    assert abs(nuclear_attraction.get_element(3,3) - 12.8806) < eps
-    assert abs(nuclear_attraction.get_element(-2,-1) - 0.0533113) < eps
-    assert abs(nuclear_attraction.get_element(2,6) - 0.173282) < eps
-    assert abs(nuclear_attraction.get_element(-1,0) - 1.24131) < eps
+    assert abs(nuclear_attraction[3, 3] - 12.8806) < eps
+    assert abs(nuclear_attraction[-2, -1] - 0.0533113) < eps
+    assert abs(nuclear_attraction[2, 6] - 0.173282) < eps
+    assert abs(nuclear_attraction[-1, 0] - 1.24131) < eps
 
-    assert abs(electronic_repulsion.get_element(0,0,0,0) - 4.77005841522) < eps
-    assert abs(electronic_repulsion.get_element(23,23,23,23) - 0.785718708997) < eps
-    assert abs(electronic_repulsion.get_element(23,8,23,2) - (-0.0400337571969)) < eps
-    assert abs(electronic_repulsion.get_element(15,2,12,0) - (-0.0000308196281033)) < eps
+    assert abs(electronic_repulsion[0, 0, 0, 0] - 4.77005841522) < eps
+    assert abs(electronic_repulsion[23, 23, 23, 23] - 0.785718708997) < eps
+    assert abs(electronic_repulsion[23, 8, 23, 2] - (-0.0400337571969)) < eps
+    assert abs(electronic_repulsion[15, 2, 12, 0] - (-0.0000308196281033)) < eps
 
 
 def test_load_fchk_nonexistent():
-    lf = DenseLinalgFactory()
     with assert_raises(IOError):
-        load_fchk(context.get_fn('test/fubar_crap.fchk'), lf)
+        load_fchk(context.get_fn('test/fubar_crap.fchk'))
 
 
 def test_load_fchk_hf_sto3g_num():
-    lf = DenseLinalgFactory()
-    fields = load_fchk(context.get_fn('test/hf_sto3g.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/hf_sto3g.fchk'))
     assert fields['title'] == 'hf_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -128,12 +122,10 @@ def test_load_fchk_hf_sto3g_num():
     assert (fields['mulliken_charges'] == [0.45000000E+00 , 4.22300000E+00]).all()
     assert (fields['npa_charges']== [3.50000000E+00,  1.32000000E+00]).all()
     assert (fields['esp_charges']==[ 0.77700000E+00,  0.66600000E+00]).all()
-    assert fields['dm_full_scf'].is_symmetric()
 
 
 def test_load_fchk_h_sto3g_num():
-    lf = DenseLinalgFactory()
-    fields = load_fchk(context.get_fn('test/h_sto3g.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/h_sto3g.fchk'))
     assert fields['title'] == 'h_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -146,13 +138,10 @@ def test_load_fchk_h_sto3g_num():
     assert coordinates.shape[1] == 3
     assert len(numbers) == 1
     assert energy == -4.665818503844346E-01
-    assert fields['dm_full_scf'].is_symmetric()
-    assert fields['dm_spin_scf'].is_symmetric()
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    lf = DenseLinalgFactory()
-    fields = load_fchk(context.get_fn('test/o2_cc_pvtz_pure.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/o2_cc_pvtz_pure.fchk'))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -163,12 +152,10 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
     assert energy == -1.495944878699246E+02
-    assert fields['dm_full_scf'].is_symmetric()
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    lf = DenseLinalgFactory()
-    fields = load_fchk(context.get_fn('test/o2_cc_pvtz_cart.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/o2_cc_pvtz_cart.fchk'))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -179,12 +166,10 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
     assert energy == -1.495953594545721E+02
-    assert fields['dm_full_scf'].is_symmetric()
 
 
 def test_load_fchk_water_sto3g_hf():
-    lf = DenseLinalgFactory()
-    fields = load_fchk(context.get_fn('test/water_sto3g_hf_g03.fchk'), lf)
+    fields = load_fchk(context.get_fn('test/water_sto3g_hf_g03.fchk'))
     obasis = fields['obasis']
     assert obasis.nshell == 5
     assert obasis.nbasis == 7
@@ -193,27 +178,24 @@ def test_load_fchk_water_sto3g_hf():
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 3
-    exp_alpha = fields['exp_alpha']
-    assert exp_alpha.nbasis == 7
-    assert abs(exp_alpha.energies[0] - (-2.02333942E+01)) < 1e-7
-    assert abs(exp_alpha.energies[-1] - 7.66134805E-01) < 1e-7
-    assert abs(exp_alpha.coeffs[0,0] - 0.99410) < 1e-4
-    assert abs(exp_alpha.coeffs[1,0] - 0.02678) < 1e-4
-    assert abs(exp_alpha.coeffs[-1,2] - (-0.44154)) < 1e-4
-    assert abs(exp_alpha.coeffs[3,-1]) < 1e-4
-    assert abs(exp_alpha.coeffs[4,-1] - (-0.82381)) < 1e-4
-    assert abs(exp_alpha.occupations.sum() - 5) == 0.0
-    assert exp_alpha.occupations.min() == 0.0
-    assert exp_alpha.occupations.max() == 1.0
+    orb_alpha = fields['orb_alpha']
+    assert orb_alpha.nbasis == 7
+    assert abs(orb_alpha.energies[0] - (-2.02333942E+01)) < 1e-7
+    assert abs(orb_alpha.energies[-1] - 7.66134805E-01) < 1e-7
+    assert abs(orb_alpha.coeffs[0,0] - 0.99410) < 1e-4
+    assert abs(orb_alpha.coeffs[1,0] - 0.02678) < 1e-4
+    assert abs(orb_alpha.coeffs[-1,2] - (-0.44154)) < 1e-4
+    assert abs(orb_alpha.coeffs[3,-1]) < 1e-4
+    assert abs(orb_alpha.coeffs[4,-1] - (-0.82381)) < 1e-4
+    assert abs(orb_alpha.occupations.sum() - 5) == 0.0
+    assert orb_alpha.occupations.min() == 0.0
+    assert orb_alpha.occupations.max() == 1.0
     energy = fields['energy']
     assert energy == -7.495929232844363E+01
-    assert fields['dm_full_scf'].is_symmetric()
 
 
 def test_load_fchk_lih_321g_hf():
-    lf = DenseLinalgFactory()
-    fn_fchk = context.get_fn('test/li_h_3-21G_hf_g09.fchk')
-    fields = load_fchk(fn_fchk, lf)
+    fields = load_fchk(context.get_fn('test/li_h_3-21G_hf_g09.fchk'))
     obasis = fields['obasis']
     assert obasis.nshell == 7
     assert obasis.nbasis == 11
@@ -222,41 +204,37 @@ def test_load_fchk_lih_321g_hf():
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
-    exp_alpha = fields['exp_alpha']
-    assert exp_alpha.nbasis == 11
-    assert abs(exp_alpha.energies[0] - (-2.76117)) < 1e-4
-    assert abs(exp_alpha.energies[-1] - 0.97089) < 1e-4
-    assert abs(exp_alpha.coeffs[0,0] - 0.99105) < 1e-4
-    assert abs(exp_alpha.coeffs[1,0] - 0.06311) < 1e-4
-    assert abs(exp_alpha.coeffs[3,2]) < 1e-4
-    assert abs(exp_alpha.coeffs[-1,9] - 0.13666) < 1e-4
-    assert abs(exp_alpha.coeffs[4,-1] - 0.17828) < 1e-4
-    assert abs(exp_alpha.occupations.sum() - 2) == 0.0
-    assert exp_alpha.occupations.min() == 0.0
-    assert exp_alpha.occupations.max() == 1.0
-    exp_beta = fields['exp_beta']
-    assert exp_beta.nbasis == 11
-    assert abs(exp_beta.energies[0] - (-2.76031)) < 1e-4
-    assert abs(exp_beta.energies[-1] - 1.13197) < 1e-4
-    assert abs(exp_beta.coeffs[0,0] - 0.99108) < 1e-4
-    assert abs(exp_beta.coeffs[1,0] - 0.06295) < 1e-4
-    assert abs(exp_beta.coeffs[3,2]) < 1e-4
-    assert abs(exp_beta.coeffs[-1,9] - 0.80875) < 1e-4
-    assert abs(exp_beta.coeffs[4,-1] - (-0.15503)) < 1e-4
-    assert abs(exp_beta.occupations.sum() - 1) == 0.0
-    assert exp_beta.occupations.min() == 0.0
-    assert exp_beta.occupations.max() == 1.0
-    assert fields['dm_full_scf'].is_symmetric()
-    assert fields['dm_spin_scf'].is_symmetric()
+    orb_alpha = fields['orb_alpha']
+    assert orb_alpha.nbasis == 11
+    assert abs(orb_alpha.energies[0] - (-2.76117)) < 1e-4
+    assert abs(orb_alpha.energies[-1] - 0.97089) < 1e-4
+    assert abs(orb_alpha.coeffs[0,0] - 0.99105) < 1e-4
+    assert abs(orb_alpha.coeffs[1,0] - 0.06311) < 1e-4
+    assert abs(orb_alpha.coeffs[3,2]) < 1e-4
+    assert abs(orb_alpha.coeffs[-1,9] - 0.13666) < 1e-4
+    assert abs(orb_alpha.coeffs[4,-1] - 0.17828) < 1e-4
+    assert abs(orb_alpha.occupations.sum() - 2) == 0.0
+    assert orb_alpha.occupations.min() == 0.0
+    assert orb_alpha.occupations.max() == 1.0
+    orb_beta = fields['orb_beta']
+    assert orb_beta.nbasis == 11
+    assert abs(orb_beta.energies[0] - (-2.76031)) < 1e-4
+    assert abs(orb_beta.energies[-1] - 1.13197) < 1e-4
+    assert abs(orb_beta.coeffs[0,0] - 0.99108) < 1e-4
+    assert abs(orb_beta.coeffs[1,0] - 0.06295) < 1e-4
+    assert abs(orb_beta.coeffs[3,2]) < 1e-4
+    assert abs(orb_beta.coeffs[-1,9] - 0.80875) < 1e-4
+    assert abs(orb_beta.coeffs[4,-1] - (-0.15503)) < 1e-4
+    assert abs(orb_beta.occupations.sum() - 1) == 0.0
+    assert orb_beta.occupations.min() == 0.0
+    assert orb_beta.occupations.max() == 1.0
     energy = fields['energy']
     assert energy == -7.687331212191968E+00
 
 
 def test_load_fchk_ghost_atoms():
     # Load fchk file with ghost atoms
-    lf = DenseLinalgFactory()
-    fn_fchk = context.get_fn('test/water_dimer_ghost.fchk')
-    fields = load_fchk(fn_fchk, lf)
+    fields = load_fchk(context.get_fn('test/water_dimer_ghost.fchk'))
     numbers = fields['numbers']
     coordinates = fields['coordinates']
     mulliken_charges = fields['mulliken_charges']
@@ -271,27 +249,23 @@ def test_load_fchk_ghost_atoms():
 
 
 def test_load_fchk_ch3_rohf_g03():
-    lf = DenseLinalgFactory()
-    fn_fchk = context.get_fn('test/ch3_rohf_sto3g_g03.fchk')
-    fields = load_fchk(fn_fchk, lf)
-    exp_alpha = fields['exp_alpha']
-    assert exp_alpha.occupations.sum() == 5
-    exp_beta = fields['exp_beta']
-    assert exp_beta.occupations.sum() == 4
-    assert (exp_alpha.coeffs == exp_beta.coeffs).all()
-    assert not (exp_alpha is exp_beta)
+    fields = load_fchk(context.get_fn('test/ch3_rohf_sto3g_g03.fchk'))
+    orb_alpha = fields['orb_alpha']
+    assert orb_alpha.occupations.sum() == 5
+    orb_beta = fields['orb_beta']
+    assert orb_beta.occupations.sum() == 4
+    assert (orb_alpha.coeffs == orb_beta.coeffs).all()
+    assert not (orb_alpha is orb_beta)
     assert 'dm_full_scf' not in fields
 
 
 def check_load_azirine(key, numbers):
-    lf = DenseLinalgFactory()
-    fn_fchk = context.get_fn('test/2h-azirine-%s.fchk' % key)
-    fields = load_fchk(fn_fchk, lf)
+    fields = load_fchk(context.get_fn('test/2h-azirine-%s.fchk' % key))
     obasis = fields['obasis']
     assert obasis.nbasis == 33
     dm_full = fields['dm_full_%s' % key]
-    assert dm_full._array[0, 0] == numbers[0]
-    assert dm_full._array[32, 32] == numbers[1]
+    assert dm_full[0, 0] == numbers[0]
+    assert dm_full[32, 32] == numbers[1]
 
 
 def test_load_azirine_cc():
@@ -311,17 +285,15 @@ def test_load_azirine_mp3():
 
 
 def check_load_nitrogen(key, numbers_full, numbers_spin):
-    lf = DenseLinalgFactory()
-    fn_fchk = context.get_fn('test/nitrogen-%s.fchk' % key)
-    fields = load_fchk(fn_fchk, lf)
+    fields = load_fchk(context.get_fn('test/nitrogen-%s.fchk' % key))
     obasis = fields['obasis']
     assert obasis.nbasis == 9
     dm_full = fields['dm_full_%s' % key]
-    assert dm_full._array[0, 0] == numbers_full[0]
-    assert dm_full._array[8, 8] == numbers_full[1]
+    assert dm_full[0, 0] == numbers_full[0]
+    assert dm_full[8, 8] == numbers_full[1]
     dm_spin = fields['dm_spin_%s' % key]
-    assert dm_spin._array[0, 0] == numbers_spin[0]
-    assert dm_spin._array[8, 8] == numbers_spin[1]
+    assert dm_spin[0, 0] == numbers_spin[0]
+    assert dm_spin[8, 8] == numbers_spin[1]
 
 
 def test_load_nitrogen_cc():
@@ -341,12 +313,11 @@ def test_load_nitrogen_mp3():
 
 
 def check_normalization_dm_full_azirine(key):
-    fn_fchk = context.get_fn('test/2h-azirine-%s.fchk' % key)
-    mol = IOData.from_file(fn_fchk)
-    olp = mol.obasis.compute_overlap(mol.lf)
+    mol = IOData.from_file(context.get_fn('test/2h-azirine-%s.fchk' % key))
+    olp = mol.obasis.compute_overlap()
     dm = getattr(mol, 'dm_full_%s' % key)
-    check_dm(dm, olp, mol.lf, eps=1e-2, occ_max=2)
-    assert abs(olp.contract_two('ab,ab', dm) - 22.0) < 1e-3
+    check_dm(dm, olp, eps=1e-2, occ_max=2)
+    assert abs(np.einsum('ab,ba', olp, dm) - 22.0) < 1e-3
 
 
 def test_normalization_dm_full_azirine_cc():
@@ -366,8 +337,7 @@ def test_normalization_dm_full_azirine_mp3():
 
 
 def test_nucnuc():
-    fn_fchk = context.get_fn('test/hf_sto3g.fchk')
-    mol = IOData.from_file(fn_fchk)
+    mol = IOData.from_file(context.get_fn('test/hf_sto3g.fchk'))
     assert abs(compute_nucnuc(mol.coordinates, mol.pseudo_numbers) - 4.7247965053) < 1e-5
 
 

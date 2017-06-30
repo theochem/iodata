@@ -23,20 +23,20 @@
 
 import numpy as np
 
+from horton.io.utils import set_four_index_element
+from horton.meanfield.orbitals import Orbitals
+
 
 __all__ = ['load_operators_g09', 'FCHKFile', 'load_fchk']
 
 
-def load_operators_g09(fn, lf):
+def load_operators_g09(fn):
     """Loads several two- and four-index operators from a Gaussian log file.
 
        **Arugment:**
 
        fn
             The filename of the Gaussian log file.
-
-       lf
-            A LinalgFactory instance.
 
        The following two-index operators are loaded if present: overlap,
        kinetic, nuclear attraction. The following four-index operator is loaded
@@ -56,29 +56,24 @@ def load_operators_g09(fn, lf):
             if line.startswith('    NBasis ='):
                 nbasis = int(line[12:18])
                 break
-        if lf.default_nbasis is not None and lf.default_nbasis != nbasis:
-            raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the log file.')
-        lf.default_nbasis = nbasis
 
         # Then load the two- and four-index operators. This part is written such
         # that it does not make any assumptions about the order in which these
         # operators are printed.
-
-        result = {'lf': lf}
+        result = {}
         for line in f:
             if line.startswith(' *** Overlap ***'):
-                result['olp'] = _load_twoindex_g09(f, nbasis, lf)
+                result['olp'] = _load_twoindex_g09(f, nbasis)
             elif line.startswith(' *** Kinetic Energy ***'):
-                result['kin'] = _load_twoindex_g09(f, nbasis, lf)
+                result['kin'] = _load_twoindex_g09(f, nbasis)
             elif line.startswith(' ***** Potential Energy *****'):
-                result['na'] = _load_twoindex_g09(f, nbasis, lf)
+                result['na'] = _load_twoindex_g09(f, nbasis)
             elif line.startswith(' *** Dumping Two-Electron integrals ***'):
-                result['er'] = _load_fourindex_g09(f, nbasis, lf)
-
+                result['er'] = _load_fourindex_g09(f, nbasis)
         return result
 
 
-def _load_twoindex_g09(f, nbasis, lf):
+def _load_twoindex_g09(f, nbasis):
     """Load a two-index operator from a Gaussian log file
 
        **Arguments:**
@@ -88,11 +83,8 @@ def _load_twoindex_g09(f, nbasis, lf):
 
        nbasis
             The number of orbital basis functions.
-
-       lf
-            A LinalgFactory instance.
     """
-    result = lf.create_two_index(nbasis)
+    result = np.zeros((nbasis, nbasis))
     block_counter = 0
     while block_counter < nbasis:
         # skip the header line
@@ -103,12 +95,13 @@ def _load_twoindex_g09(f, nbasis, lf):
             words = f.next().split()[1:]
             for j in xrange(len(words)):
                 value = float(words[j].replace('D', 'E'))
-                result.set_element(i+block_counter, j+block_counter, value)
+                result[i+block_counter, j+block_counter] = value
+                result[j+block_counter, i+block_counter] = value
         block_counter += 5
     return result
 
 
-def _load_fourindex_g09(f, nbasis, lf):
+def _load_fourindex_g09(f, nbasis):
     """Load a four-index operator from a Gaussian log file
 
        **Arguments:**
@@ -118,11 +111,8 @@ def _load_fourindex_g09(f, nbasis, lf):
 
        nbasis
             The number of orbital basis functions.
-
-       lf
-            A LinalgFactory instance.
     """
-    result = lf.create_four_index(nbasis)
+    result = np.zeros((nbasis, nbasis, nbasis, nbasis))
     # Skip first six lines
     for i in xrange(6):
         f.next()
@@ -140,7 +130,7 @@ def _load_fourindex_g09(f, nbasis, lf):
         value = float(line[29:].replace('D', 'E'))
         # Gaussian uses the chemists notation for the 4-center indexes. HORTON
         # uses the physicists notation.
-        result.set_element(i, k, j, l, value)
+        set_four_index_element(result, i, k, j, l, value)
     return result
 
 
@@ -268,7 +258,7 @@ def triangle_to_dense(triangle):
     return result
 
 
-def load_fchk(filename, lf):
+def load_fchk(filename):
     '''Load from a formatted checkpoint file.
 
        **Arguments:**
@@ -276,13 +266,10 @@ def load_fchk(filename, lf):
        filename
             The filename of the Gaussian formatted checkpoint file.
 
-       lf
-            A LinalgFactory instance.
-
        **Returns** a dictionary with: ``title``, ``coordinates``, ``numbers``,
-       ``obasis``, ``exp_alpha``, ``permutation``, ``energy``,
+       ``obasis``, ``orb_alpha``, ``permutation``, ``energy``,
        ``pseudo_numbers``, ``mulliken_charges``. The dictionary may also
-       contain: ``npa_charges``, ``esp_charges``, ``exp_beta``, ``dm_full_mp2``,
+       contain: ``npa_charges``, ``esp_charges``, ``orb_beta``, ``dm_full_mp2``,
        ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
        ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``,
        ``dm_spin_scf``, ``polar``, ``dipole_moment``, ``quadrupole_moment``.
@@ -365,9 +352,6 @@ def load_fchk(filename, lf):
     del alphas
 
     obasis = GOBasis(coordinates, my_shell_map, my_nprims, my_shell_types, my_alphas, con_coeffs)
-    if lf.default_nbasis is not None and lf.default_nbasis != obasis.nbasis:
-        raise TypeError('The value of lf.default_nbasis does not match nbasis reported in the fchk file.')
-    lf.default_nbasis = obasis.nbasis
 
     # permutation of the orbital basis functions
     permutation_rules = {
@@ -398,7 +382,6 @@ def load_fchk(filename, lf):
     result = {
         'title': fchk.title,
         'coordinates': system_coordinates,
-        'lf': lf,
         'numbers': numbers,
         'obasis': obasis,
         'permutation': permutation,
@@ -408,12 +391,12 @@ def load_fchk(filename, lf):
     # C) Load density matrices
     def load_dm(label):
         if label in fchk:
-            dm = lf.create_two_index(obasis.nbasis)
+            dm = np.zeros((obasis.nbasis, obasis.nbasis))
             start = 0
             for i in xrange(obasis.nbasis):
                 stop = start+i+1
-                dm._array[i,:i+1] = fchk[label][start:stop]
-                dm._array[:i+1,i] = fchk[label][start:stop]
+                dm[i, :i+1] = fchk[label][start:stop]
+                dm[:i+1, i] = fchk[label][start:stop]
                 start = stop
             return dm
 
@@ -439,25 +422,25 @@ def load_fchk(filename, lf):
     nbeta = fchk['Number of beta electrons']
     if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
         raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
-    exp_alpha = lf.create_expansion(obasis.nbasis, nbasis_indep)
-    exp_alpha.coeffs[:] = fchk['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-    exp_alpha.energies[:] = fchk['Alpha Orbital Energies']
-    exp_alpha.occupations[:nalpha] = 1.0
-    result['exp_alpha'] = exp_alpha
+    orb_alpha = Orbitals(obasis.nbasis, nbasis_indep)
+    orb_alpha.coeffs[:] = fchk['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+    orb_alpha.energies[:] = fchk['Alpha Orbital Energies']
+    orb_alpha.occupations[:nalpha] = 1.0
+    result['orb_alpha'] = orb_alpha
     if 'Beta Orbital Energies' in fchk:
         # UHF case
-        exp_beta = lf.create_expansion(obasis.nbasis, nbasis_indep)
-        exp_beta.coeffs[:] = fchk['Beta MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-        exp_beta.energies[:] = fchk['Beta Orbital Energies']
-        exp_beta.occupations[:nbeta] = 1.0
-        result['exp_beta'] = exp_beta
+        orb_beta = Orbitals(obasis.nbasis, nbasis_indep)
+        orb_beta.coeffs[:] = fchk['Beta MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+        orb_beta.energies[:] = fchk['Beta Orbital Energies']
+        orb_beta.occupations[:nbeta] = 1.0
+        result['orb_beta'] = orb_beta
     elif fchk['Number of beta electrons'] != fchk['Number of alpha electrons']:
         # ROHF case
-        exp_beta = lf.create_expansion(obasis.nbasis, nbasis_indep)
-        exp_beta.coeffs[:] = fchk['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
-        exp_beta.energies[:] = fchk['Alpha Orbital Energies']
-        exp_beta.occupations[:nbeta] = 1.0
-        result['exp_beta'] = exp_beta
+        orb_beta = Orbitals(obasis.nbasis, nbasis_indep)
+        orb_beta.coeffs[:] = fchk['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T
+        orb_beta.energies[:] = fchk['Alpha Orbital Energies']
+        orb_beta.occupations[:nbeta] = 1.0
+        result['orb_beta'] = orb_beta
         # Delete dm_full_scf because it is known to be buggy
         result.pop('dm_full_scf')
 

@@ -26,8 +26,6 @@
 '''
 
 
-from horton.matrix.dense import DenseLinalgFactory
-from horton.matrix.base import LinalgObject
 import h5py as h5, os, numpy as np
 
 
@@ -165,10 +163,10 @@ class IOData(object):
        er
             The electron repulsion four-index operator
 
-       exp_alpha
+       orb_alpha
             The alpha orbitals (coefficients, occupations and energies).
 
-       exp_beta
+       orb_beta
             The beta orbitals (coefficients, occupations and energies).
 
        esp_charges
@@ -185,9 +183,6 @@ class IOData(object):
 
        kin
             The kinetic energy operator.
-
-       lf
-            A LinalgFactory instance.
 
        links
             A mapping between the atoms in the primitive unit and the
@@ -237,6 +232,12 @@ class IOData(object):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
 
+    # Numpy array attributes that may require orbital basis reordering or sign correction.
+    two_index_names = ['dm_full', 'dm_full_mp2', 'dm_full_mp3', 'dm_full_cc',
+                       'dm_full_ci', 'dm_full_scf', 'dm_spin', 'dm_spin_mp2',
+                       'dm_spin_mp3', 'dm_spin_cc', 'dm_spin_ci', 'dm_spin_scf', 'kin',
+                       'na', 'olp']
+
     # only perform type checking on minimal attributes
     numbers = ArrayTypeCheckDescriptor('numbers', 1, (-1,), int, ['coordinates', 'pseudo_numbers'])
     coordinates = ArrayTypeCheckDescriptor('coordinates', 2, (-1, 3), float, ['numbers', 'pseudo_numbers'])
@@ -256,7 +257,7 @@ class IOData(object):
     natom = property(_get_natom)
 
     @classmethod
-    def from_file(cls, *filenames, **kwargs):
+    def from_file(cls, *filenames):
         '''Load data from a file.
 
            **Arguments:**
@@ -268,11 +269,6 @@ class IOData(object):
                 orbital basis, these changes will be applied to data from all
                 other files.
 
-           **Optional arguments:**
-
-           lf
-                A LinalgFactory instance. DenseLinalgFactory is used as default.
-
            This routine uses the extension or prefix of the filename to
            determine the file format. It returns a dictionary with data loaded
            from the file.
@@ -281,13 +277,6 @@ class IOData(object):
            dictionary with data from the file.
         '''
         result = {}
-
-        lf = kwargs.pop('lf', None)
-        if lf is None:
-            lf = DenseLinalgFactory()
-        if len(kwargs) > 0:
-            raise TypeError('Keyword argument(s) not supported: %s' % kwargs.keys())
-
         for filename in filenames:
             if isinstance(filename, h5.Group) or filename.endswith('.h5'):
                 from horton.io.internal import load_h5
@@ -297,22 +286,22 @@ class IOData(object):
                 result.update(load_xyz(filename))
             elif filename.endswith('.fchk'):
                 from horton.io.gaussian import load_fchk
-                result.update(load_fchk(filename, lf))
+                result.update(load_fchk(filename))
             elif filename.endswith('.log'):
                 from horton.io.gaussian import load_operators_g09
-                result.update(load_operators_g09(filename, lf))
+                result.update(load_operators_g09(filename))
             elif filename.endswith('.mkl'):
                 from horton.io.molekel import load_mkl
-                result.update(load_mkl(filename, lf))
+                result.update(load_mkl(filename))
             elif filename.endswith('.molden.input') or filename.endswith('.molden'):
                 from horton.io.molden import load_molden
-                result.update(load_molden(filename, lf))
+                result.update(load_molden(filename))
             elif filename.endswith('.cube'):
                 from horton.io.cube import load_cube
                 result.update(load_cube(filename))
             elif filename.endswith('.wfn'):
                 from horton.io.wfn import load_wfn
-                result.update(load_wfn(filename, lf))
+                result.update(load_wfn(filename))
             elif os.path.basename(filename).startswith('POSCAR'):
                 from horton.io.vasp import load_poscar
                 result.update(load_poscar(filename))
@@ -324,26 +313,54 @@ class IOData(object):
                 result.update(load_locpot(filename))
             elif filename.endswith('.cp2k.out'):
                 from horton.io.cp2k import load_atom_cp2k
-                result.update(load_atom_cp2k(filename, lf))
+                result.update(load_atom_cp2k(filename))
             elif filename.endswith('.cif'):
                 from horton.io.cif import load_cif
-                result.update(load_cif(filename, lf))
+                result.update(load_cif(filename))
             elif 'FCIDUMP' in os.path.basename(filename):
                 from horton.io.molpro import load_fcidump
-                result.update(load_fcidump(filename, lf))
+                result.update(load_fcidump(filename))
             else:
                 raise ValueError('Unknown file format for reading: %s' % filename)
 
-        # Apply changes in orbital order and sign conventions
-        if 'permutation' in result:
-            for key, value in result.iteritems():
-                if isinstance(value, LinalgObject):
-                    value.permute_basis(result['permutation'])
+        # Apply changes in atomic orbital basis order
+        permutation = result.get('permutation')
+        if permutation is not None:
+            for name in cls.two_index_names:
+                value = result.get(name)
+                if value is not None:
+                    value[:] = value[permutation][:, permutation]
+            er = result.get('er')
+            if er is not None:
+                er[:] = er[permutation][:, permutation][:, :, permutation][:, :, :, permutation]
+            orb_alpha = result.get('orb_alpha')
+            if orb_alpha is not None:
+                orb_alpha.permute_basis(permutation)
+            orb_beta = result.get('orb_beta')
+            if orb_beta is not None:
+                orb_beta.permute_basis(permutation)
             del result['permutation']
-        if 'signs' in result:
-            for key, value in result.iteritems():
-                if isinstance(value, LinalgObject):
-                    value.change_basis_signs(result['signs'])
+
+        # Apply changes in atomic orbital basis sign conventions
+        signs = result.get('signs')
+        if signs is not None:
+            for name in cls.two_index_names:
+                value = result.get(name)
+                if value is not None:
+                    value *= signs
+                    value *= signs.reshape(-1, 1)
+            er = result.get('er')
+            if er is not None:
+                er *= signs
+                er *= signs.reshape(-1, 1)
+                er *= signs.reshape(-1, 1, 1)
+                er *= signs.reshape(-1, 1, 1, 1)
+            orb_alpha = result.get('orb_alpha')
+            if orb_alpha is not None:
+                orb_alpha.change_basis_signs(signs)
+            orb_beta = result.get('orb_beta')
+            if orb_beta is not None:
+                orb_beta.change_basis_signs(signs)
             del result['signs']
 
         return cls(**result)
@@ -413,15 +430,14 @@ class IOData(object):
             return self.dm_full_ci
         elif hasattr(self, 'dm_full_cc'):
             return self.dm_full_cc
-        elif hasattr(self, 'exp_alpha'):
+        elif hasattr(self, 'orb_alpha'):
             # First try to get it from the orbitals as some types of Gaussian
             # jobs print print the wrong total density in FCHK file.
-            dm_full = self.lf.create_two_index()
-            dm_full = self.exp_alpha.to_dm()
-            if hasattr(self, 'exp_beta'):
-                self.exp_beta.to_dm(dm_full, 1.0, clear=False)
+            dm_full = self.orb_alpha.to_dm()
+            if hasattr(self, 'orb_beta'):
+                dm_full += self.orb_beta.to_dm()
             else:
-                dm_full.iscale(2)
+                dm_full *= 2
             return dm_full
         elif hasattr(self, 'dm_full_scf'):
             return self.dm_full_scf
@@ -438,9 +454,7 @@ class IOData(object):
             return self.dm_spin_ci
         elif hasattr(self, 'dm_spin_cc'):
             return self.dm_spin_cc
-        elif hasattr(self, 'exp_alpha') and hasattr(self, 'exp_beta'):
-            dm_spin = self.exp_alpha.to_dm()
-            self.exp_beta.to_dm(dm_spin, -1.0, clear=False)
-            return dm_spin
+        elif hasattr(self, 'orb_alpha') and hasattr(self, 'orb_beta'):
+            return self.orb_alpha.to_dm() - self.orb_beta.to_dm()
         elif hasattr(self, 'dm_spin_scf'):
             return self.dm_spin_scf

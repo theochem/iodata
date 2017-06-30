@@ -27,27 +27,32 @@
 '''
 
 
+import numpy as np
+
+from horton.io.utils import set_four_index_element
+
+
 __all__ = ['load_fcidump', 'dump_fcidump']
 
 
-def load_fcidump(filename, lf):
+def load_fcidump(filename):
     '''Read one- and two-electron integrals from a Molpro 2012 FCIDUMP file.
 
-       Works only for restricted wavefunctions.
+    Works only for restricted wavefunctions.
 
-       Keep in mind that the FCIDUMP format changed in Molpro 2012, so files
-       generated with older versions are not supported.
+    Keep in mind that the FCIDUMP format changed in Molpro 2012, so files generated with
+    older versions are not supported.
 
-       **Arguments:**
+    Parameters
+    ----------
+    filename : str
+        The filename of the fcidump file.
 
-       filename
-            The filename of the fcidump file.
-
-       lf
-            A LinalgFactory instance.
-
-       **Returns**: A dictionary with keys: ``lf``, ``nelec``, ``ms2``,
-       ``one_mo``, ``two_mo``, ``core_energy``
+    Returns
+    -------
+    results : dict
+        Data loaded from the file, with keys: ``nelec``, ``ms2``, ``one_mo``, ``two_mo``,
+        ``core_energy``.
     '''
     with open(filename) as f:
         # check header
@@ -65,9 +70,6 @@ def load_fcidump(filename, lf):
         nbasis = int(header_info['NORB'])
         nelec = int(header_info['NELEC'])
         ms2 = int(header_info['MS2'])
-        if lf.default_nbasis is not None and lf.default_nbasis != nbasis:
-            raise TypeError('The value of lf.default_nbasis does not match NORB reported in the FCIDUMP file.')
-        lf.default_nbasis = nbasis
 
         # skip rest of header
         for line in f:
@@ -76,14 +78,15 @@ def load_fcidump(filename, lf):
                 break
 
         # read the integrals
-        one_mo = lf.create_two_index()
-        two_mo = lf.create_four_index()
+        one_mo = np.zeros((nbasis, nbasis))
+        two_mo = np.zeros((nbasis, nbasis, nbasis, nbasis))
         core_energy = 0.0
 
         for line in f:
             words = line.split()
             if len(words) != 5:
                 raise IOError('Expecting 5 fields on each data line in FCIDUMP')
+            value = float(words[0])
             if words[3] != '0':
                 ii = int(words[1])-1
                 ij = int(words[2])-1
@@ -92,16 +95,16 @@ def load_fcidump(filename, lf):
                 # Uncomment the following line if you want to assert that the
                 # FCIDUMP file does not contain duplicate 4-index entries.
                 #assert two_mo.get_element(ii,ik,ij,il) == 0.0
-                two_mo.set_element(ii,ik,ij,il,float(words[0]))
+                set_four_index_element(two_mo, ii, ik, ij, il, value)
             elif words[1] != '0':
                 ii = int(words[1])-1
                 ij = int(words[2])-1
-                one_mo.set_element(ii,ij,float(words[0]))
+                one_mo[ii, ij] = value
+                one_mo[ij, ii] = value
             else:
-                core_energy = float(words[0])
+                core_energy = value
 
     return {
-        'lf': lf,
         'nelec': nelec,
         'ms2': ms2,
         'one_mo': one_mo,
@@ -113,22 +116,24 @@ def load_fcidump(filename, lf):
 def dump_fcidump(filename, data):
     '''Write one- and two-electron integrals in the Molpro 2012 FCIDUMP format.
 
-       Works only for restricted wavefunctions.
+    Works only for restricted wavefunctions.
 
-       Keep in mind that the FCIDUMP format changed in Molpro 2012, so files
-       written with this function cannot be used with older versions of Molpro
+    Keep in mind that the FCIDUMP format changed in Molpro 2012, so files
+    written with this function cannot be used with older versions of Molpro
 
-       filename
-            The filename of the FCIDUMP file. This is usually "FCIDUMP".
+    Parmeters
+    ---------
+    filename : str
+        The filename of the FCIDUMP file. This is usually "FCIDUMP".
 
-       data
-            An IOData instance. Must contain ``one_mo``, ``two_mo``.
-            May contain ``core_energy``, ``nelec`` and ``ms``
+    data : IOData
+        Must contain ``one_mo``, ``two_mo``. May contain ``core_energy``, ``nelec`` and
+        ``ms``.
     '''
     with open(filename, 'w') as f:
         one_mo = data.one_mo
         two_mo = data.two_mo
-        nactive = one_mo.nbasis
+        nactive = one_mo.shape[0]
         core_energy = getattr(data, 'core_energy', 0.0)
         nelec = getattr(data, 'nelec', 0)
         ms2 = getattr(data, 'ms2', 0)
@@ -145,12 +150,12 @@ def dump_fcidump(filename, data):
                 for k in xrange(nactive):
                     for l in xrange(k+1):
                         if (i*(i+1))/2+j >= (k*(k+1))/2+l:
-                            value = two_mo.get_element(i,k,j,l)
+                            value = two_mo[i, k, j, l]
                             if value != 0.0:
                                 print >> f, '%23.16e %4i %4i %4i %4i' % (value, i+1, j+1, k+1, l+1)
         for i in xrange(nactive):
             for j in xrange(i+1):
-                value = one_mo.get_element(i,j)
+                value = one_mo[i, j]
                 if value != 0.0:
                     print >> f, '%23.16e %4i %4i %4i %4i' % (value, i+1, j+1, 0, 0)
         if core_energy != 0.0:

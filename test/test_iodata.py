@@ -69,9 +69,9 @@ def test_dm_water_sto3g_hf():
     fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
     mol = IOData.from_file(fn_fchk)
     dm = mol.get_dm_full()
-    assert abs(dm.get_element(0, 0) - 2.10503807) < 1e-7
-    assert abs(dm.get_element(0, 1) - -0.439115917) < 1e-7
-    assert abs(dm.get_element(1, 1) - 1.93312061) < 1e-7
+    assert abs(dm[0, 0] - 2.10503807) < 1e-7
+    assert abs(dm[0, 1] - -0.439115917) < 1e-7
+    assert abs(dm[1, 1] - 1.93312061) < 1e-7
 
 
 def test_dm_lih_sto3g_hf():
@@ -79,24 +79,24 @@ def test_dm_lih_sto3g_hf():
     mol = IOData.from_file(fn_fchk)
 
     dm = mol.get_dm_full()
-    assert abs(dm.get_element(0, 0) - 1.96589709) < 1e-7
-    assert abs(dm.get_element(0, 1) - 0.122114249) < 1e-7
-    assert abs(dm.get_element(1, 1) - 0.0133112081) < 1e-7
-    assert abs(dm.get_element(10, 10) - 4.23924688E-01) < 1e-7
+    assert abs(dm[0, 0] - 1.96589709) < 1e-7
+    assert abs(dm[0, 1] - 0.122114249) < 1e-7
+    assert abs(dm[1, 1] - 0.0133112081) < 1e-7
+    assert abs(dm[10, 10] - 4.23924688E-01) < 1e-7
 
     dm = mol.get_dm_spin()
-    assert abs(dm.get_element(0, 0) - 1.40210760E-03) < 1e-9
-    assert abs(dm.get_element(0, 1) - -2.65370873E-03) < 1e-9
-    assert abs(dm.get_element(1, 1) - 5.38701212E-03) < 1e-9
-    assert abs(dm.get_element(10, 10) - 4.23889148E-01) < 1e-7
+    assert abs(dm[0, 0] - 1.40210760E-03) < 1e-9
+    assert abs(dm[0, 1] - -2.65370873E-03) < 1e-9
+    assert abs(dm[1, 1] - 5.38701212E-03) < 1e-9
+    assert abs(dm[10, 10] - 4.23889148E-01) < 1e-7
 
 
 def test_dm_ch3_rohf_g03():
     fn_fchk = context.get_fn('test/ch3_rohf_sto3g_g03.fchk')
     mol = IOData.from_file(fn_fchk)
 
-    olp = mol.obasis.compute_overlap(mol.lf)
+    olp = mol.obasis.compute_overlap()
     dm = mol.get_dm_full()
-    assert abs(olp.contract_two('ab,ab', dm) - 9) < 1e-6
+    assert abs(np.einsum('ab,ba', olp, dm) - 9) < 1e-6
     dm = mol.get_dm_spin()
-    assert abs(olp.contract_two('ab,ab', dm) - 1) < 1e-6
+    assert abs(np.einsum('ab,ba', olp, dm) - 1) < 1e-6

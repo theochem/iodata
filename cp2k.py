@@ -24,6 +24,7 @@ import numpy as np
 
 from horton.gbasis.iobas import str_to_shell_types
 from horton.gbasis.cext import GOBasis, fac2
+from horton.meanfield.orbitals import Orbitals
 
 
 __all__ = ['load_atom_cp2k']
@@ -272,22 +273,22 @@ def _get_norb_nel(oe):
     return norb, nel
 
 
-def _fill_exp(exp, oe, coeffs, shell_types, restricted):
-    """Fill in orbital coefficients, energies and occupation numbers in ``exp``.
+def _fill_orbitals(orb, oe, coeffs, shell_types, restricted):
+    """Fill in orbital coefficients, energies and occupation numbers in ``orb``.
 
     Parameters
     ----------
-    exp : DenseExpansion
-          An object to represent the orbitals
+    orb : Orbitals
+        An object to represent the orbitals
     oe : list
-         The orbital occupation numbers and energies read with
-         ``_read_cp2k_occupations_energies``.
+        The orbital occupation numbers and energies read with
+        ``_read_cp2k_occupations_energies``.
     coeffs : dict
-             The orbital coefficients read with ``_read_cp2k_orbital_coeffs``.
+        The orbital coefficients read with ``_read_cp2k_orbital_coeffs``.
     shell_types : np.ndarray
-                  The array with shell types of the GOBasis instance.
+        The array with shell types of the GOBasis instance.
     restricted : bool
-                 Is wavefunction restricted or unrestricted?
+        Is wavefunction restricted or unrestricted?
     """
     # Find the offsets for each angular momentum
     offset = 0
@@ -305,34 +306,30 @@ def _fill_exp(exp, oe, coeffs, shell_types, restricted):
         stride = 2*l + 1
         for m in xrange(-l, l+1):
             im = m + l
-            exp.energies[iorb] = ener
-            exp.occupations[iorb] = occ/float((restricted + 1)*(2*l + 1))
+            orb.energies[iorb] = ener
+            orb.occupations[iorb] = occ/float((restricted + 1)*(2*l + 1))
             for ic in xrange(len(cs)):
-                exp.coeffs[offsets[l] + stride*ic + im, iorb] = cs[ic]
+                orb.coeffs[offsets[l] + stride*ic + im, iorb] = cs[ic]
             iorb += 1
 
 
-def load_atom_cp2k(filename, lf):
+def load_atom_cp2k(filename):
     """Load data from a CP2K ATOM computation.
 
     Parameters
     ---------
-
     filename : str
-               The name of the cp2k out file
-    lf : LinalgFactory
-         A linear-algebra factory.
+        The name of the cp2k out file
 
     Returns
     -------
     results : dict
-              Contains: ``obasis``, ``exp_alpha``, ``coordinates``, ``numbers``,
-              ``energy``, ``pseudo_numbers``. May contain: ``exp_beta``.
+        Contains: ``obasis``, ``orb_alpha``, ``coordinates``, ``numbers``, ``energy``,
+        ``pseudo_numbers``. May contain: ``orb_beta``.
 
 
     Notes
     -----
-
     This function assumes that the following subsections are present in the CP2K
     ATOM input file, in the section ``ATOM%PRINT``:
 
@@ -399,10 +396,6 @@ def load_atom_cp2k(filename, lf):
             obasis = ae_obasis
         else:
             obasis = pp_obasis
-        if lf.default_nbasis is not None and lf.default_nbasis != obasis.nbasis:
-            raise IOError('The value of lf.default_nbasis does not match nbasis '
-                          'reported in CP2K ATOM output: %s' % filename)
-        lf.default_nbasis = obasis.nbasis
 
         # Search for energy
         for line in f:
@@ -436,27 +429,26 @@ def load_atom_cp2k(filename, lf):
         if restricted:
             norb, nel = _get_norb_nel(oe_alpha)
             assert nel % 2 == 0
-            exp_alpha = lf.create_expansion(obasis.nbasis, norb)
-            exp_beta = None
-            _fill_exp(exp_alpha, oe_alpha, coeffs_alpha, obasis.shell_types, restricted)
+            orb_alpha = Orbitals(obasis.nbasis, norb)
+            orb_beta = None
+            _fill_orbitals(orb_alpha, oe_alpha, coeffs_alpha, obasis.shell_types, restricted)
         else:
             norb_alpha = _get_norb_nel(oe_alpha)[0]
             norb_beta = _get_norb_nel(oe_beta)[0]
             assert norb_alpha == norb_beta
-            exp_alpha = lf.create_expansion(obasis.nbasis, norb_alpha)
-            exp_beta = lf.create_expansion(obasis.nbasis, norb_beta)
-            _fill_exp(exp_alpha, oe_alpha, coeffs_alpha, obasis.shell_types, restricted)
-            _fill_exp(exp_beta, oe_beta, coeffs_beta, obasis.shell_types, restricted)
+            orb_alpha = Orbitals(obasis.nbasis, norb_alpha)
+            orb_beta = Orbitals(obasis.nbasis, norb_beta)
+            _fill_orbitals(orb_alpha, oe_alpha, coeffs_alpha, obasis.shell_types, restricted)
+            _fill_orbitals(orb_beta, oe_beta, coeffs_beta, obasis.shell_types, restricted)
 
     result = {
         'obasis': obasis,
-        'lf': lf,
-        'exp_alpha': exp_alpha,
+        'orb_alpha': orb_alpha,
         'coordinates': obasis.centers,
         'numbers': np.array([number]),
         'energy': energy,
         'pseudo_numbers': np.array([pseudo_number]),
     }
-    if exp_beta is not None:
-        result['exp_beta'] = exp_beta
+    if orb_beta is not None:
+        result['orb_beta'] = orb_beta
     return result
