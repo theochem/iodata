@@ -430,17 +430,15 @@ class IOData(object):
             return self.dm_full_ci
         elif hasattr(self, 'dm_full_cc'):
             return self.dm_full_cc
+        elif hasattr(self, 'dm_full_scf'):
+            return self.dm_full_scf
         elif hasattr(self, 'orb_alpha'):
-            # First try to get it from the orbitals as some types of Gaussian
-            # jobs print print the wrong total density in FCHK file.
             dm_full = self.orb_alpha.to_dm()
             if hasattr(self, 'orb_beta'):
                 dm_full += self.orb_beta.to_dm()
             else:
                 dm_full *= 2
             return dm_full
-        elif hasattr(self, 'dm_full_scf'):
-            return self.dm_full_scf
 
     def get_dm_spin(self):
         '''Return a spin-difference density matrix using availlable attributes'''
@@ -454,7 +452,7 @@ class IOData(object):
             return self.dm_spin_ci
         elif hasattr(self, 'dm_spin_cc'):
             return self.dm_spin_cc
-        elif hasattr(self, 'orb_alpha') and hasattr(self, 'orb_beta'):
-            return self.orb_alpha.to_dm() - self.orb_beta.to_dm()
         elif hasattr(self, 'dm_spin_scf'):
             return self.dm_spin_scf
+        elif hasattr(self, 'orb_alpha') and hasattr(self, 'orb_beta'):
+            return self.orb_alpha.to_dm() - self.orb_beta.to_dm()

@@ -105,7 +105,7 @@ def test_dm_lih_sto3g_hf():
     dm_full2 = mol.get_dm_full()
     np.testing.assert_allclose(dm_full, dm_full2)
     dm_spin2 = mol.get_dm_spin()
-    np.testing.assert_allclose(dm_spin, dm_spin2)
+    np.testing.assert_allclose(dm_spin, dm_spin2, atol=1e-7)
 
 
 def test_dm_ch3_rohf_g03():
