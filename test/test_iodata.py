@@ -52,6 +52,11 @@ def test_typecheck():
         IOData(cube_data=np.array([1, 2]))
 
 
+def test_unknown_format():
+    with assert_raises(ValueError):
+        IOData.from_file('foo.unknown_file_extension')
+
+
 def test_copy():
     fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
     fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
@@ -72,23 +77,35 @@ def test_dm_water_sto3g_hf():
     assert abs(dm[0, 0] - 2.10503807) < 1e-7
     assert abs(dm[0, 1] - -0.439115917) < 1e-7
     assert abs(dm[1, 1] - 1.93312061) < 1e-7
+    # Now remove the dm and reconstruct from the orbitals
+    del mol.dm_full_scf
+    dm2 = mol.get_dm_full()
+    np.testing.assert_allclose(dm, dm2)
 
 
 def test_dm_lih_sto3g_hf():
     fn_fchk = context.get_fn('test/li_h_3-21G_hf_g09.fchk')
     mol = IOData.from_file(fn_fchk)
 
-    dm = mol.get_dm_full()
-    assert abs(dm[0, 0] - 1.96589709) < 1e-7
-    assert abs(dm[0, 1] - 0.122114249) < 1e-7
-    assert abs(dm[1, 1] - 0.0133112081) < 1e-7
-    assert abs(dm[10, 10] - 4.23924688E-01) < 1e-7
+    dm_full = mol.get_dm_full()
+    assert abs(dm_full[0, 0] - 1.96589709) < 1e-7
+    assert abs(dm_full[0, 1] - 0.122114249) < 1e-7
+    assert abs(dm_full[1, 1] - 0.0133112081) < 1e-7
+    assert abs(dm_full[10, 10] - 4.23924688E-01) < 1e-7
 
-    dm = mol.get_dm_spin()
-    assert abs(dm[0, 0] - 1.40210760E-03) < 1e-9
-    assert abs(dm[0, 1] - -2.65370873E-03) < 1e-9
-    assert abs(dm[1, 1] - 5.38701212E-03) < 1e-9
-    assert abs(dm[10, 10] - 4.23889148E-01) < 1e-7
+    dm_spin = mol.get_dm_spin()
+    assert abs(dm_spin[0, 0] - 1.40210760E-03) < 1e-9
+    assert abs(dm_spin[0, 1] - -2.65370873E-03) < 1e-9
+    assert abs(dm_spin[1, 1] - 5.38701212E-03) < 1e-9
+    assert abs(dm_spin[10, 10] - 4.23889148E-01) < 1e-7
+
+    # Now remove the dms and reconstruct from the orbitals
+    del mol.dm_full_scf
+    del mol.dm_spin_scf
+    dm_full2 = mol.get_dm_full()
+    np.testing.assert_allclose(dm_full, dm_full2)
+    dm_spin2 = mol.get_dm_spin()
+    np.testing.assert_allclose(dm_spin, dm_spin2)
 
 
 def test_dm_ch3_rohf_g03():
@@ -100,3 +117,9 @@ def test_dm_ch3_rohf_g03():
     assert abs(np.einsum('ab,ba', olp, dm) - 9) < 1e-6
     dm = mol.get_dm_spin()
     assert abs(np.einsum('ab,ba', olp, dm) - 1) < 1e-6
+
+
+def test_dms_empty():
+    mol = IOData()
+    assert mol.get_dm_full() is None
+    assert mol.get_dm_spin() is None
