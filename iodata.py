@@ -233,6 +233,14 @@ class IOData(object):
             setattr(self, key, value)
 
     # Numpy array attributes that may require orbital basis reordering or sign correction.
+    # Note: this list is a very fragile thing and should be implemented differently in
+    # future. Ideally, each IO format should be implemented as a class, with a load and
+    # a dump method. Besides these two basic methods, it should also provide additional
+    # information on the fields it can read/write and which should be considered for
+    # reordering basis functions or changing their signs. The current approach to maintain
+    # this list at the iodata level requires us to keep it up-to-date whenever we change
+    # something in the file formats. (The same can be said of the class doc string and the
+    # documentation of the file formats.)
     two_index_names = ['dm_full', 'dm_full_mp2', 'dm_full_mp3', 'dm_full_cc',
                        'dm_full_ci', 'dm_full_scf', 'dm_spin', 'dm_spin_mp2',
                        'dm_spin_mp3', 'dm_spin_cc', 'dm_spin_ci', 'dm_spin_scf', 'kin',
