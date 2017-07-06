@@ -218,10 +218,6 @@ class IOData(object):
        signs
             The sign changes applied to the basis functions.
 
-       symmetry
-            An instance of the Symmetry class, describing the geometric
-            symmetry.
-
        title
             A suitable name for the data.
 
