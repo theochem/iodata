@@ -322,9 +322,6 @@ class IOData(object):
             elif filename.endswith('.cp2k.out'):
                 from horton.io.cp2k import load_atom_cp2k
                 result.update(load_atom_cp2k(filename))
-            elif filename.endswith('.cif'):
-                from horton.io.cif import load_cif
-                result.update(load_cif(filename))
             elif 'FCIDUMP' in os.path.basename(filename):
                 from horton.io.molpro import load_fcidump
                 result.update(load_fcidump(filename))
@@ -401,9 +398,6 @@ class IOData(object):
         elif filename.endswith('.cube'):
             from horton.io.cube import dump_cube
             dump_cube(filename, self)
-        elif filename.endswith('.cif'):
-            from horton.io.cif import dump_cif
-            dump_cif(filename, self)
         elif filename.endswith('.molden.input') or filename.endswith('.molden'):
             from horton.io.molden import dump_molden
             dump_molden(filename, self)

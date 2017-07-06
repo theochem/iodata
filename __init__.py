@@ -30,7 +30,6 @@
 '''
 
 
-from horton.io.cif import *
 from horton.io.cp2k import *
 from horton.io.cube import *
 from horton.io.gaussian import *
