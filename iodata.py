@@ -334,12 +334,12 @@ class IOData(object):
             er = result.get('er')
             if er is not None:
                 er[:] = er[permutation][:, permutation][:, :, permutation][:, :, :, permutation]
-            orb_alpha = result.get('orb_alpha')
-            if orb_alpha is not None:
-                orb_alpha.permute_basis(permutation)
-            orb_beta = result.get('orb_beta')
-            if orb_beta is not None:
-                orb_beta.permute_basis(permutation)
+            orb_alpha_coeffs = result.get('orb_alpha_coeffs')
+            if orb_alpha_coeffs is not None:
+                orb_alpha_coeffs[:] = orb_alpha_coeffs[permutation]
+            orb_beta_coeffs = result.get('orb_beta_coeffs')
+            if orb_beta_coeffs is not None:
+                orb_beta_coeffs[:] = orb_beta_coeffs[permutation]
             del result['permutation']
 
         # Apply changes in atomic orbital basis sign conventions
@@ -356,12 +356,12 @@ class IOData(object):
                 er *= signs.reshape(-1, 1)
                 er *= signs.reshape(-1, 1, 1)
                 er *= signs.reshape(-1, 1, 1, 1)
-            orb_alpha = result.get('orb_alpha')
-            if orb_alpha is not None:
-                orb_alpha.change_basis_signs(signs)
-            orb_beta = result.get('orb_beta')
-            if orb_beta is not None:
-                orb_beta.change_basis_signs(signs)
+            orb_alpha_coeffs = result.get('orb_alpha_coeffs')
+            if orb_alpha_coeffs is not None:
+                orb_alpha_coeffs *= signs.reshape(-1, 1)
+            orb_beta_coeffs = result.get('orb_beta_coeffs')
+            if orb_alpha_coeffs is not None:
+                orb_beta_coeffs *= signs.reshape(-1, 1)
             del result['signs']
 
         return cls(**result)
@@ -417,7 +417,7 @@ class IOData(object):
         return self.__class__(**kwargs)
 
     def get_dm_full(self):
-        """Return a spin-summed density matrix using availlable attributes"""
+        """Return a spin-summed density matrix using available attributes"""
         if hasattr(self, 'dm_full'):
             return self.dm_full
         if hasattr(self, 'dm_full_mp2'):
@@ -430,16 +430,16 @@ class IOData(object):
             return self.dm_full_cc
         elif hasattr(self, 'dm_full_scf'):
             return self.dm_full_scf
-        elif hasattr(self, 'orb_alpha'):
-            dm_full = self.orb_alpha.to_dm()
-            if hasattr(self, 'orb_beta'):
-                dm_full += self.orb_beta.to_dm()
+        elif hasattr(self, 'orb_alpha_coeffs'):
+            dm_full = self._alpha_orbs_to_dm()
+            if hasattr(self, 'orb_beta_coeffs'):
+                dm_full += self._beta_orbs_to_dm()
             else:
                 dm_full *= 2
             return dm_full
 
     def get_dm_spin(self):
-        """Return a spin-difference density matrix using availlable attributes"""
+        """Return a spin-difference density matrix using available attributes"""
         if hasattr(self, 'dm_spin'):
             return self.dm_spin
         if hasattr(self, 'dm_spin_mp2'):
@@ -452,5 +452,11 @@ class IOData(object):
             return self.dm_spin_cc
         elif hasattr(self, 'dm_spin_scf'):
             return self.dm_spin_scf
-        elif hasattr(self, 'orb_alpha') and hasattr(self, 'orb_beta'):
-            return self.orb_alpha.to_dm() - self.orb_beta.to_dm()
+        elif hasattr(self, 'orb_alpha_coeffs') and hasattr(self, 'orb_beta_coeffs'):
+            return self._alpha_orbs_to_dm() - self._beta_orbs_to_dm()
+
+    def _alpha_orbs_to_dm(self):
+        return np.dot(self.orb_alpha_coeffs * self.orb_alpha_occupations, self.orb_alpha_coeffs.T)
+
+    def _beta_orbs_to_dm(self):
+        return np.dot(self.orb_beta_coeffs * self.orb_beta_occupations, self.orb_beta_coeffs.T)

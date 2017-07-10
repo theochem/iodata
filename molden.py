@@ -19,21 +19,22 @@
 #
 # --
 """Molden wavefunction input file format"""
+from collections import OrderedDict
 
 import numpy as np
 
-from horton.units import angstrom
 from horton.log import log
-from horton.periodic import periodic
-from horton.gbasis.iobas import str_to_shell_types, shell_type_to_str
 from horton.gbasis.gobasis import GOBasisContraction
 from horton.gbasis.cext import gob_cart_normalization, get_shell_nbasis, GOBasis
-from horton.meanfield.orbitals import Orbitals
+
+from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
+from . periodic import sym2num, num2sym
+
 
 __all__ = ['load_molden', 'dump_molden']
 
 
-def _get_molden_permutation(obasis, reverse=False):
+def _get_molden_permutation(shell_types, reverse=False):
     # Reorder the Cartesian basis functions to obtain the HORTON standard ordering.
     permutation_rules = {
         2: np.array([0, 3, 4, 1, 5, 2]),
@@ -41,7 +42,7 @@ def _get_molden_permutation(obasis, reverse=False):
         4: np.array([0, 3, 4, 9, 12, 10, 5, 13, 14, 7, 1, 6, 11, 8, 2]),
     }
     permutation = []
-    for shell_type in obasis.shell_types:
+    for shell_type in shell_types:
         rule = permutation_rules.get(shell_type)
         if reverse and rule is not None:
             reverse_rule = np.zeros(len(rule), int)
@@ -86,7 +87,7 @@ def load_molden(filename):
                 f.seek(last_pos)
                 break
             else:
-                numbers.append(periodic[words[0]].number)
+                numbers.append(sym2num[words[0]])
                 pseudo_numbers.append(float(words[2]))
                 coordinates.append([float(words[3]), float(words[4]), float(words[5])])
         numbers = np.array(numbers, int)
@@ -141,7 +142,17 @@ def load_molden(filename):
         shell_types = np.array(shell_types)
         alphas = np.array(alphas)
         con_coeffs = np.array(con_coeffs)
-        return GOBasis(coordinates, shell_map, nprims, shell_types, alphas, con_coeffs)
+
+        obasis = OrderedDict()
+        obasis["centers"] = coordinates
+        obasis["shell_map"] = shell_map
+        obasis["nprims"] = nprims
+        obasis["shell_types"] = shell_types
+        obasis["alphas"] = alphas
+        obasis["con_coeffs"] = con_coeffs
+
+        nbasis = shells_to_nbasis(shell_types)
+        return obasis, nbasis
 
     def helper_coeffs(f, nbasis):
         """Load the orbital coefficients"""
@@ -250,11 +261,11 @@ def load_molden(filename):
                     cunit = angstrom
                 numbers, pseudo_numbers, coordinates = helper_coordinates(f, cunit)
             elif line == '[GTO]':
-                obasis = helper_obasis(f, coordinates, pure)
+                obasis, nbasis = helper_obasis(f, coordinates, pure)
             elif line == '[STO]':
                 raise NotImplementedError('Slater-type orbitals are not supported in HORTON.')
             elif line == '[MO]':
-                data_alpha, data_beta = helper_coeffs(f, obasis.nbasis)
+                data_alpha, data_beta = helper_coeffs(f, nbasis)
                 coeff_alpha, ener_alpha, occ_alpha = data_alpha
                 coeff_beta, ener_beta, occ_beta = data_beta
 
@@ -267,10 +278,10 @@ def load_molden(filename):
 
     if coeff_beta is None:
         nalpha = int(np.round(occ_alpha.sum())) / 2
-        orb_alpha = Orbitals(obasis.nbasis, coeff_alpha.shape[1])
-        orb_alpha.coeffs[:] = coeff_alpha
-        orb_alpha.energies[:] = ener_alpha
-        orb_alpha.occupations[:] = occ_alpha / 2
+        orb_alpha = (nbasis, coeff_alpha.shape[1])
+        orb_alpha_coeffs = coeff_alpha
+        orb_alpha_energies = ener_alpha
+        orb_alpha_occupations = occ_alpha / 2
         orb_beta = None
     else:
         nalpha = int(np.round(occ_alpha.sum()))
@@ -278,14 +289,14 @@ def load_molden(filename):
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
-        orb_alpha = Orbitals(obasis.nbasis, coeff_alpha.shape[1])
-        orb_alpha.coeffs[:] = coeff_alpha
-        orb_alpha.energies[:] = ener_alpha
-        orb_alpha.occupations[:] = occ_alpha
-        orb_beta = Orbitals(obasis.nbasis, coeff_beta.shape[1])
-        orb_beta.coeffs[:] = coeff_beta
-        orb_beta.energies[:] = ener_beta
-        orb_beta.occupations[:] = occ_beta
+        orb_alpha = (nbasis, coeff_alpha.shape[1])
+        orb_alpha_coeffs = coeff_alpha
+        orb_alpha_energies = ener_alpha
+        orb_alpha_occupations = occ_alpha
+        orb_beta = (nbasis, coeff_beta.shape[1])
+        orb_beta_coeffs = coeff_beta
+        orb_beta_energies = ener_beta
+        orb_beta_occupations = occ_beta
 
     permutation = _get_molden_permutation(obasis)
 
@@ -298,6 +309,9 @@ def load_molden(filename):
     result = {
         'coordinates': coordinates,
         'orb_alpha': orb_alpha,
+        'orb_alpha_coeffs': orb_alpha_coeffs,
+        'orb_alpha_energies': orb_alpha_energies,
+        'orb_alpha_occupations': orb_alpha_occupations,
         'numbers': numbers,
         'obasis': obasis,
         'permutation': permutation,
@@ -307,6 +321,9 @@ def load_molden(filename):
         result['title'] = title
     if orb_beta is not None:
         result['orb_beta'] = orb_beta
+        result['orb_beta_coeffs'] = orb_beta_coeffs
+        result['orb_beta_energies'] = orb_beta_energies
+        result['orb_beta_occupations'] = orb_beta_occupations
 
     _fix_molden_from_buggy_codes(result, filename)
 
@@ -593,7 +610,7 @@ def dump_molden(filename, data):
             pseudo_number = data.pseudo_numbers[iatom]
             x, y, z = data.coordinates[iatom]
             print >> f, '%2s %3i %3i  %25.18f %25.18f %25.18f' % (
-                periodic[number].symbol.ljust(2), iatom + 1, pseudo_number, x, y, z
+                num2sym[number].ljust(2), iatom + 1, pseudo_number, x, y, z
             )
 
         # Print the basis set

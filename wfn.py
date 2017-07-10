@@ -19,12 +19,11 @@
 #
 # --
 """WFN File format (Gaussian and GAMESS)"""
-
+from collections import OrderedDict
 
 import numpy as np
-from horton.periodic import periodic
-from horton.gbasis.gobasis import GOBasis
-from horton.meanfield.orbitals import Orbitals
+
+from . periodic import sym2num
 
 
 __all__ = ['load_wfn_low', 'get_permutation_orbital',
@@ -53,7 +52,7 @@ def load_wfn_low(filename):
         for atom in xrange(num_atoms):
             line = f.readline()
             line = line.split()
-            numbers[atom] = periodic[line[0]].number
+            numbers[atom] = sym2num[line[0]]
             coordinates[atom, :] = [line[4], line[5], line[6]]
         return numbers, coordinates
 
@@ -92,7 +91,7 @@ def load_wfn_low(filename):
         title = f.readline().strip()
         num_mo, num_primitives, num_atoms = helper_num(f)
         numbers, coordinates = helper_coordinates(f)
-        # centers are indexed from zeron in HORTON
+        # centers are indexed from zero in HORTON
         centers = np.array([int(i) - 1 for i in helper_section(f, 'CENTRE ASSIGNMENTS', 2)])
         type_assignment = np.array([int(i) for i in helper_section(f, 'TYPE ASSIGNMENTS', 2)])
         exponent = np.array([float(i.replace('D', 'E')) for i in helper_section(f, 'EXPONENTS', 1)])
@@ -221,16 +220,23 @@ def load_wfn(filename):
     nprims = np.ones(reduced_size, int)
     con_coeffs = np.ones(reduced_size)
     # build basis set
-    obasis = GOBasis(coordinates, shell_map, nprims, shell_types, alphas, con_coeffs)
+    obasis = OrderedDict()
+    obasis["centers"] = coordinates
+    obasis["shell_map"] = shell_map
+    obasis["nprims"] = nprims
+    obasis["shell_types"] = shell_types
+    obasis["alphas"] = alphas
+    obasis["con_coeffs"] = con_coeffs
+    nbasis = coefficients.shape[0]
     coefficients = coefficients[permutation]
-    coefficients /= obasis.get_scales().reshape(-1, 1)
+    coefficients /= obasis.get_scales().reshape(-1, 1)  # FIXME: need to fix normalization
     # make the wavefunction
     if mo_occ.max() > 1.0:
         # close shell system
-        orb_alpha = Orbitals(obasis.nbasis, coefficients.shape[1])
-        orb_alpha.coeffs[:] = coefficients
-        orb_alpha.energies[:] = mo_energy
-        orb_alpha.occupations[:] = mo_occ / 2
+        orb_alpha = (nbasis, coefficients.shape[1])
+        orb_alpha_coeffs = coefficients
+        orb_alpha_energies = mo_energy
+        orb_alpha_occupations = mo_occ / 2
         orb_beta = None
     else:
         # open shell system
@@ -238,23 +244,29 @@ def load_wfn(filename):
         index = 1
         while index < num_mo and mo_energy[index] >= mo_energy[index - 1] and mo_count[index] == mo_count[index - 1] + 1:
             index += 1
-        orb_alpha = Orbitals(obasis.nbasis, index)
-        orb_alpha.coeffs[:] = coefficients[:, :index]
-        orb_alpha.energies[:] = mo_energy[:index]
-        orb_alpha.occupations[:] = mo_occ[:index]
-        orb_beta = Orbitals(obasis.nbasis, num_mo - index)
-        orb_beta.coeffs[:] = coefficients[:, index:]
-        orb_beta.energies[:] = mo_energy[index:]
-        orb_beta.occupations[:] = mo_occ[index:]
+        orb_alpha = (nbasis, index)
+        orb_alpha_coeffs = np.copy(coefficients[:, :index])
+        orb_alpha_energies = np.copy(mo_energy[:index])
+        orb_alpha_occupations = np.copy(mo_occ[:index])
+        orb_beta = (nbasis, num_mo - index)
+        orb_beta_coeffs = np.copy(coefficients[:, index:])
+        orb_beta_energies = np.copy(mo_energy[index:])
+        orb_beta_occupations = np.copy(mo_occ[index:])
 
     result = {
         'title': title,
         'coordinates': coordinates,
         'orb_alpha': orb_alpha,
+        'orb_alpha_coeffs' : orb_alpha_coeffs,
+        'orb_alpha_energies' : orb_alpha_energies,
+        'orb_alpha_occupations' : orb_alpha_occupations,
         'numbers': numbers,
         'obasis': obasis,
         'energy': energy,
     }
     if orb_beta is not None:
         result['orb_beta'] = orb_beta
+        result['orb_beta_coeffs'] = orb_beta_coeffs
+        result['orb_beta_energies'] = orb_beta_energies
+        result['orb_beta_occupations'] = orb_beta_occupations
     return result

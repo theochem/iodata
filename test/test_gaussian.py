@@ -114,7 +114,7 @@ def test_load_fchk_hf_sto3g_num():
     energy = fields['energy']
     assert obasis.nshell == 4
     assert obasis.nbasis == 6
-    assert (obasis.nprims == 3).all()
+    assert (obasis['nprims'] == 3).all()
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
@@ -133,7 +133,7 @@ def test_load_fchk_h_sto3g_num():
     energy = fields['energy']
     assert obasis.nshell == 1
     assert obasis.nbasis == 1
-    assert (obasis.nprims == 3).all()
+    assert (obasis['nprims'] == 3).all()
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 1
@@ -245,7 +245,7 @@ def test_load_fchk_ghost_atoms():
     assert numbers.shape[0] == natom
     assert coordinates.shape[0] == natom
     assert mulliken_charges.shape[0] == natom
-    assert obasis.centers.shape[0] == (natom + nghost)
+    assert obasis['centers'].shape[0] == (natom + nghost)
 
 
 def test_load_fchk_ch3_rohf_g03():

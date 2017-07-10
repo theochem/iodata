@@ -19,14 +19,12 @@
 #
 # --
 """Molekel wavefunction input file format"""
+from collections import OrderedDict
 
 import numpy as np
 
-from horton.units import angstrom
-from .molden import _fix_molden_from_buggy_codes
-from horton.gbasis.iobas import str_to_shell_types
-from horton.gbasis.gobasis import GOBasis
-from horton.meanfield.orbitals import Orbitals
+from .utils import angstrom, str_to_shell_types, shells_to_nbasis
+from . molden import _fix_molden_from_buggy_codes
 
 __all__ = ['load_mkl']
 
@@ -108,7 +106,17 @@ def load_mkl(filename):
         shell_types = np.array(shell_types)
         alphas = np.array(alphas)
         con_coeffs = np.array(con_coeffs)
-        return GOBasis(coordinates, shell_map, nprims, shell_types, alphas, con_coeffs)
+
+        obasis = OrderedDict()
+        obasis["centers"] = coordinates
+        obasis["shell_map"] = shell_map
+        obasis["nprims"] = nprims
+        obasis["shell_types"] = shell_types
+        obasis["alphas"] = alphas
+        obasis["con_coeffs"] = con_coeffs
+
+        nbasis = shells_to_nbasis(shell_types)
+        return obasis, nbasis
 
     def helper_coeffs(f, nbasis):
         coeffs = []
@@ -183,13 +191,13 @@ def load_mkl(filename):
             elif line == '$COORD':
                 numbers, coordinates = helper_coordinates(f)
             elif line == '$BASIS':
-                obasis = helper_obasis(f, coordinates)
+                obasis, nbasis = helper_obasis(f, coordinates)
             elif line == '$COEFF_ALPHA':
-                coeff_alpha, ener_alpha = helper_coeffs(f, obasis.nbasis)
+                coeff_alpha, ener_alpha = helper_coeffs(f, nbasis)
             elif line == '$OCC_ALPHA':
                 occ_alpha = helper_occ(f)
             elif line == '$COEFF_BETA':
-                coeff_beta, ener_beta = helper_coeffs(f, obasis.nbasis)
+                coeff_beta, ener_beta = helper_coeffs(f, nbasis)
             elif line == '$OCC_BETA':
                 occ_beta = helper_occ(f)
 
@@ -208,10 +216,10 @@ def load_mkl(filename):
     if coeff_beta is None:
         assert nelec % 2 == 0
         assert abs(occ_alpha.sum() - nelec) < 1e-7
-        orb_alpha = Orbitals(obasis.nbasis, coeff_alpha.shape[1])
-        orb_alpha.coeffs[:] = coeff_alpha
-        orb_alpha.energies[:] = ener_alpha
-        orb_alpha.occupations[:] = occ_alpha / 2
+        orb_alpha = (nbasis, coeff_alpha.shape[1])
+        orb_alpha_coeffs = coeff_alpha
+        orb_alpha_energies = ener_alpha
+        orb_alpha_occupations = occ_alpha / 2
         orb_beta = None
     else:
         if occ_beta is None:
@@ -222,22 +230,28 @@ def load_mkl(filename):
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
-        orb_alpha = Orbitals(obasis.nbasis, coeff_alpha.shape[1])
-        orb_alpha.coeffs[:] = coeff_alpha
-        orb_alpha.energies[:] = ener_alpha
-        orb_alpha.occupations[:] = occ_alpha
-        orb_beta = Orbitals(obasis.nbasis, coeff_beta.shape[1])
-        orb_beta.coeffs[:] = coeff_beta
-        orb_beta.energies[:] = ener_beta
-        orb_beta.occupations[:] = occ_beta
+        orb_alpha = (nbasis, coeff_alpha.shape[1])
+        orb_alpha_coeffs = coeff_alpha
+        orb_alpha_energies = ener_alpha
+        orb_alpha_occupations = occ_alpha
+        orb_beta = (nbasis, coeff_beta.shape[1])
+        orb_beta_coeffs = coeff_beta
+        orb_beta_energies = ener_beta
+        orb_beta_occupations = occ_beta
 
     result = {
         'coordinates': coordinates,
         'orb_alpha': orb_alpha,
+        'orb_alpha_coeffs': orb_alpha_coeffs,
+        'orb_alpha_energies': orb_alpha_energies,
+        'orb_alpha_occupations': orb_alpha_occupations,
         'numbers': numbers,
         'obasis': obasis,
     }
     if orb_beta is not None:
         result['orb_beta'] = orb_beta
+        result['orb_beta_coeffs'] = orb_beta_coeffs
+        result['orb_beta_energies'] = orb_beta_energies
+        result['orb_beta_occupations'] = orb_beta_occupations
     _fix_molden_from_buggy_codes(result, filename)
     return result

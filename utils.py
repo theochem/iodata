@@ -22,6 +22,21 @@
 
 __all__ = ['set_four_index_element']
 
+angstrom = 1.0e-10 / 0.5291772083e-10
+
+
+def str_to_shell_types(s, pure=False):
+    """Convert a string into a list of contraction types"""
+    if pure:
+        d = {'s': 0, 'p': 1, 'd': -2, 'f': -3, 'g': -4, 'h': -5, 'i': -6}
+    else:
+        d = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6}
+    return [d[c] for c in s.lower()]
+
+def shell_type_to_str(shell_type):
+    """Convert a shell type into a character"""
+    return {0: 's', 1: 'p', 2: 'd', 3: 'f', 4: 'g', 5: 'h', 6: 'i'}[abs(shell_type)]
+
 
 def set_four_index_element(four_index_object, i, j, k, l, value):
     """Assign values to a four index object, account for 8-fold index symmetry.
@@ -45,3 +60,16 @@ def set_four_index_element(four_index_object, i, j, k, l, value):
     four_index_object[l, k, j, i] = value
     four_index_object[j, k, l, i] = value
     four_index_object[l, i, j, k] = value
+
+
+def shells_to_nbasis(shell_types):
+    nbasis_shell = [2*i + 1 for i in shell_types]
+    return sum(nbasis_shell)
+
+
+def fac2(n):
+    result = 1
+    while n > 1:
+        result *= n
+        n -= 2
+    return result

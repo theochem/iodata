@@ -22,8 +22,8 @@
 
 import numpy as np
 
-from horton.units import angstrom
-from horton.periodic import periodic
+from .periodic import sym2num, num2sym
+from .utils import angstrom
 
 __all__ = ['load_xyz', 'dump_xyz']
 
@@ -45,7 +45,7 @@ def load_xyz(filename):
     numbers = np.empty(size, int)
     for i in xrange(size):
         words = f.next().split()
-        numbers[i] = periodic[words[0]].number
+        numbers[i] = sym2num[words[0]]
         coordinates[i, 0] = float(words[1]) * angstrom
         coordinates[i, 1] = float(words[2]) * angstrom
         coordinates[i, 2] = float(words[3]) * angstrom
@@ -74,6 +74,6 @@ def dump_xyz(filename, data):
         print >> f, data.natom
         print >> f, getattr(data, 'title', 'Created with HORTON')
         for i in xrange(data.natom):
-            n = periodic[data.numbers[i]].symbol
+            n = num2sym[data.numbers[i]]
             x, y, z = data.coordinates[i] / angstrom
             print >> f, '%2s %15.10f %15.10f %15.10f' % (n, x, y, z)
