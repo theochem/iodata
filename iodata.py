@@ -283,43 +283,43 @@ class IOData(object):
         result = {}
         for filename in filenames:
             if isinstance(filename, h5.Group) or filename.endswith('.h5'):
-                from horton.io.internal import load_h5
+                from . internal import load_h5
                 result.update(load_h5(filename))
             elif filename.endswith('.xyz'):
-                from horton.io.xyz import load_xyz
+                from . xyz import load_xyz
                 result.update(load_xyz(filename))
             elif filename.endswith('.fchk'):
-                from horton.io.gaussian import load_fchk
+                from . gaussian import load_fchk
                 result.update(load_fchk(filename))
             elif filename.endswith('.log'):
-                from horton.io.gaussian import load_operators_g09
+                from . gaussian import load_operators_g09
                 result.update(load_operators_g09(filename))
             elif filename.endswith('.mkl'):
-                from horton.io.molekel import load_mkl
+                from . molekel import load_mkl
                 result.update(load_mkl(filename))
             elif filename.endswith('.molden.input') or filename.endswith('.molden'):
-                from horton.io.molden import load_molden
+                from . molden import load_molden
                 result.update(load_molden(filename))
             elif filename.endswith('.cube'):
-                from horton.io.cube import load_cube
+                from . cube import load_cube
                 result.update(load_cube(filename))
             elif filename.endswith('.wfn'):
-                from horton.io.wfn import load_wfn
+                from . wfn import load_wfn
                 result.update(load_wfn(filename))
             elif os.path.basename(filename).startswith('POSCAR'):
-                from horton.io.vasp import load_poscar
+                from . vasp import load_poscar
                 result.update(load_poscar(filename))
             elif os.path.basename(filename)[:6] in ['CHGCAR', 'AECCAR']:
-                from horton.io.vasp import load_chgcar
+                from . vasp import load_chgcar
                 result.update(load_chgcar(filename))
             elif os.path.basename(filename).startswith('LOCPOT'):
-                from horton.io.vasp import load_locpot
+                from . vasp import load_locpot
                 result.update(load_locpot(filename))
             elif filename.endswith('.cp2k.out'):
-                from horton.io.cp2k import load_atom_cp2k
+                from . cp2k import load_atom_cp2k
                 result.update(load_atom_cp2k(filename))
             elif 'FCIDUMP' in os.path.basename(filename):
-                from horton.io.molpro import load_fcidump
+                from . molpro import load_fcidump
                 result.update(load_fcidump(filename))
             else:
                 raise ValueError('Unknown file format for reading: %s' % filename)
@@ -386,22 +386,22 @@ class IOData(object):
                 if key[0] == '_':
                     data[key[1:]] = data[key]
                     del data[key]
-            from horton.io.internal import dump_h5
+            from . internal import dump_h5
             dump_h5(filename, data)
         elif filename.endswith('.xyz'):
-            from horton.io.xyz import dump_xyz
+            from . xyz import dump_xyz
             dump_xyz(filename, self)
         elif filename.endswith('.cube'):
-            from horton.io.cube import dump_cube
+            from . cube import dump_cube
             dump_cube(filename, self)
         elif filename.endswith('.molden.input') or filename.endswith('.molden'):
-            from horton.io.molden import dump_molden
+            from . molden import dump_molden
             dump_molden(filename, self)
         elif os.path.basename(filename).startswith('POSCAR'):
-            from horton.io.vasp import dump_poscar
+            from . vasp import dump_poscar
             dump_poscar(filename, self)
         elif 'FCIDUMP' in os.path.basename(filename):
-            from horton.io.molpro import dump_fcidump
+            from . molpro import dump_fcidump
             dump_fcidump(filename, self)
         else:
             raise ValueError('Unknown file format for writing: %s' % filename)

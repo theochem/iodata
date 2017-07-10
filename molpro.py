@@ -29,7 +29,7 @@
 
 import numpy as np
 
-from horton.io.utils import set_four_index_element
+from . utils import set_four_index_element
 
 
 __all__ = ['load_fcidump', 'dump_fcidump']

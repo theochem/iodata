@@ -22,7 +22,7 @@
 
 
 import numpy as np, h5py as h5
-from horton.io.lockedh5 import LockedH5File
+from . lockedh5 import LockedH5File
 
 
 __all__ = ['load_h5', 'dump_h5']
