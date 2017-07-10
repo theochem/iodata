@@ -18,15 +18,13 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-'''VASP POSCAR, CHGCAR and POTCAR file formats'''
-
+"""VASP POSCAR, CHGCAR and POTCAR file formats"""
 
 import numpy as np
 from horton.units import angstrom, electronvolt
 from horton.periodic import periodic
 from horton.cext import Cell
 from horton.grid.cext import UniformGrid
-
 
 __all__ = ['load_chgcar', 'load_locpot', 'load_poscar', 'dump_poscar']
 
@@ -40,7 +38,7 @@ def _unravel_counter(counter, shape):
 
 
 def _load_vasp_header(f):
-    '''Load the cell and atoms from a VASP file
+    """Load the cell and atoms from a VASP file
        File specification provided here:
         http://cms.mpi.univie.ac.at/vasp/guide/node59.html
 
@@ -50,7 +48,7 @@ def _load_vasp_header(f):
             An open file object
 
        **Returns:** ``title``, ``cell``, ``numbers``, ``coordinates``
-    '''
+    """
     # read the title
     title = f.next().strip()
     # read the universal scaling factor
@@ -61,7 +59,7 @@ def _load_vasp_header(f):
     rvecs = []
     for i in xrange(3):
         rvecs.append([float(w) for w in f.next().split()])
-    rvecs = np.array(rvecs)*angstrom*scaling
+    rvecs = np.array(rvecs) * angstrom * scaling
 
     # Convert to cell object
     cell = Cell(rvecs)
@@ -71,7 +69,7 @@ def _load_vasp_header(f):
     vasp_counts = [int(w) for w in f.next().split()]
     numbers = []
     for n, c in zip(vasp_numbers, vasp_counts):
-        numbers.extend([n]*c)
+        numbers.extend([n] * c)
     numbers = np.array(numbers)
 
     line = f.next()
@@ -89,7 +87,7 @@ def _load_vasp_header(f):
             break
         coordinates.append([float(w) for w in line.split()[:3]])
     if cartesian:
-        coordinates = np.array(coordinates)*angstrom*scaling
+        coordinates = np.array(coordinates) * angstrom * scaling
     else:
         coordinates = np.dot(np.array(coordinates), rvecs)
 
@@ -97,7 +95,7 @@ def _load_vasp_header(f):
 
 
 def _load_vasp_grid(filename):
-    '''Load a grid data file from VASP 5
+    """Load a grid data file from VASP 5
 
        **Arguments:**
 
@@ -106,7 +104,7 @@ def _load_vasp_grid(filename):
 
        **Returns:** a dictionary containing: ``title``, ``coordinates``,
        ``numbers``, ``cell``, ``grid``, ``cube_data``.
-    '''
+    """
     with open(filename) as f:
         # Load header
         title, cell, numbers, coordinates = _load_vasp_header(f)
@@ -133,13 +131,13 @@ def _load_vasp_grid(filename):
         'coordinates': coordinates,
         'numbers': numbers,
         'cell': cell,
-        'grid': UniformGrid(np.zeros(3), cell.rvecs/shape.reshape(-1,1), shape, np.ones(3, int)),
+        'grid': UniformGrid(np.zeros(3), cell.rvecs / shape.reshape(-1, 1), shape, np.ones(3, int)),
         'cube_data': cube_data,
     }
 
 
 def load_chgcar(filename):
-    '''Reads a vasp 5 chgcar file.
+    """Reads a vasp 5 chgcar file.
 
        **Arguments:**
 
@@ -148,7 +146,7 @@ def load_chgcar(filename):
 
        **Returns:** a dictionary containing: ``title``, ``coordinates``,
        ``numbers``, ``cell``, ``grid``, ``cube_data``.
-    '''
+    """
     result = _load_vasp_grid(filename)
     # renormalize electron density
     result['cube_data'] /= result['cell'].volume
@@ -156,7 +154,7 @@ def load_chgcar(filename):
 
 
 def load_locpot(filename):
-    '''Reads a vasp 5 locpot file.
+    """Reads a vasp 5 locpot file.
 
        **Arguments:**
 
@@ -165,7 +163,7 @@ def load_locpot(filename):
 
        **Returns:** a dictionary containing: ``title``, ``coordinates``,
        ``numbers``, ``cell``, ``grid``, ``cube_data``.
-    '''
+    """
     result = _load_vasp_grid(filename)
     # convert locpot to atomic units
     result['cube_data'] *= electronvolt
@@ -173,7 +171,7 @@ def load_locpot(filename):
 
 
 def load_poscar(filename):
-    '''Reads a vasp 5 poscar file.
+    """Reads a vasp 5 poscar file.
 
        **Arguments:**
 
@@ -182,7 +180,7 @@ def load_poscar(filename):
 
        **Returns:** a dictionary containing: ``title``, ``coordinates``,
        ``numbers``, ``cell``.
-    '''
+    """
     with open(filename) as f:
         # Load header
         title, cell, numbers, coordinates = _load_vasp_header(f)
@@ -195,7 +193,7 @@ def load_poscar(filename):
 
 
 def dump_poscar(filename, data):
-    '''Write a file in VASP's POSCAR format
+    """Write a file in VASP's POSCAR format
 
        **Arguments:**
 
@@ -205,7 +203,7 @@ def dump_poscar(filename, data):
        data
             An IOData instance. Must contain ``coordinates``, ``numbers``,
             ``cell``. May contain ``title``.
-    '''
+    """
     with open(filename, 'w') as f:
         print >> f, getattr(data, 'title', 'Created with HORTON')
         print >> f, '   1.00000000000000'
@@ -213,7 +211,7 @@ def dump_poscar(filename, data):
         # Write cell vectors, each row is one vector in angstrom:
         rvecs = data.cell.rvecs
         for rvec in rvecs:
-            print >> f, '  % 21.16f % 21.16f % 21.16f' % tuple(rvec/angstrom)
+            print >> f, '  % 21.16f % 21.16f % 21.16f' % tuple(rvec / angstrom)
 
         # Construct list of elements to make sure the coordinates get written
         # in this order. Heaviest elements are put furst.

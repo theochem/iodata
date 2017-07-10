@@ -119,9 +119,9 @@ def test_load_fchk_hf_sto3g_num():
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
     assert energy == -9.856961609951867E+01
-    assert (fields['mulliken_charges'] == [0.45000000E+00 , 4.22300000E+00]).all()
-    assert (fields['npa_charges']== [3.50000000E+00,  1.32000000E+00]).all()
-    assert (fields['esp_charges']==[ 0.77700000E+00,  0.66600000E+00]).all()
+    assert (fields['mulliken_charges'] == [0.45000000E+00, 4.22300000E+00]).all()
+    assert (fields['npa_charges'] == [3.50000000E+00, 1.32000000E+00]).all()
+    assert (fields['esp_charges'] == [0.77700000E+00, 0.66600000E+00]).all()
 
 
 def test_load_fchk_h_sto3g_num():
@@ -182,11 +182,11 @@ def test_load_fchk_water_sto3g_hf():
     assert orb_alpha.nbasis == 7
     assert abs(orb_alpha.energies[0] - (-2.02333942E+01)) < 1e-7
     assert abs(orb_alpha.energies[-1] - 7.66134805E-01) < 1e-7
-    assert abs(orb_alpha.coeffs[0,0] - 0.99410) < 1e-4
-    assert abs(orb_alpha.coeffs[1,0] - 0.02678) < 1e-4
-    assert abs(orb_alpha.coeffs[-1,2] - (-0.44154)) < 1e-4
-    assert abs(orb_alpha.coeffs[3,-1]) < 1e-4
-    assert abs(orb_alpha.coeffs[4,-1] - (-0.82381)) < 1e-4
+    assert abs(orb_alpha.coeffs[0, 0] - 0.99410) < 1e-4
+    assert abs(orb_alpha.coeffs[1, 0] - 0.02678) < 1e-4
+    assert abs(orb_alpha.coeffs[-1, 2] - (-0.44154)) < 1e-4
+    assert abs(orb_alpha.coeffs[3, -1]) < 1e-4
+    assert abs(orb_alpha.coeffs[4, -1] - (-0.82381)) < 1e-4
     assert abs(orb_alpha.occupations.sum() - 5) == 0.0
     assert orb_alpha.occupations.min() == 0.0
     assert orb_alpha.occupations.max() == 1.0
@@ -208,11 +208,11 @@ def test_load_fchk_lih_321g_hf():
     assert orb_alpha.nbasis == 11
     assert abs(orb_alpha.energies[0] - (-2.76117)) < 1e-4
     assert abs(orb_alpha.energies[-1] - 0.97089) < 1e-4
-    assert abs(orb_alpha.coeffs[0,0] - 0.99105) < 1e-4
-    assert abs(orb_alpha.coeffs[1,0] - 0.06311) < 1e-4
-    assert abs(orb_alpha.coeffs[3,2]) < 1e-4
-    assert abs(orb_alpha.coeffs[-1,9] - 0.13666) < 1e-4
-    assert abs(orb_alpha.coeffs[4,-1] - 0.17828) < 1e-4
+    assert abs(orb_alpha.coeffs[0, 0] - 0.99105) < 1e-4
+    assert abs(orb_alpha.coeffs[1, 0] - 0.06311) < 1e-4
+    assert abs(orb_alpha.coeffs[3, 2]) < 1e-4
+    assert abs(orb_alpha.coeffs[-1, 9] - 0.13666) < 1e-4
+    assert abs(orb_alpha.coeffs[4, -1] - 0.17828) < 1e-4
     assert abs(orb_alpha.occupations.sum() - 2) == 0.0
     assert orb_alpha.occupations.min() == 0.0
     assert orb_alpha.occupations.max() == 1.0
@@ -220,11 +220,11 @@ def test_load_fchk_lih_321g_hf():
     assert orb_beta.nbasis == 11
     assert abs(orb_beta.energies[0] - (-2.76031)) < 1e-4
     assert abs(orb_beta.energies[-1] - 1.13197) < 1e-4
-    assert abs(orb_beta.coeffs[0,0] - 0.99108) < 1e-4
-    assert abs(orb_beta.coeffs[1,0] - 0.06295) < 1e-4
-    assert abs(orb_beta.coeffs[3,2]) < 1e-4
-    assert abs(orb_beta.coeffs[-1,9] - 0.80875) < 1e-4
-    assert abs(orb_beta.coeffs[4,-1] - (-0.15503)) < 1e-4
+    assert abs(orb_beta.coeffs[0, 0] - 0.99108) < 1e-4
+    assert abs(orb_beta.coeffs[1, 0] - 0.06295) < 1e-4
+    assert abs(orb_beta.coeffs[3, 2]) < 1e-4
+    assert abs(orb_beta.coeffs[-1, 9] - 0.80875) < 1e-4
+    assert abs(orb_beta.coeffs[4, -1] - (-0.15503)) < 1e-4
     assert abs(orb_beta.occupations.sum() - 1) == 0.0
     assert orb_beta.occupations.min() == 0.0
     assert orb_beta.occupations.max() == 1.0
@@ -245,7 +245,7 @@ def test_load_fchk_ghost_atoms():
     assert numbers.shape[0] == natom
     assert coordinates.shape[0] == natom
     assert mulliken_charges.shape[0] == natom
-    assert obasis.centers.shape[0] == ( natom + nghost )
+    assert obasis.centers.shape[0] == (natom + nghost)
 
 
 def test_load_fchk_ch3_rohf_g03():
@@ -349,11 +349,11 @@ def test_load_water_hfs_321g():
     np.testing.assert_allclose(mol.dipole_moment, [
         -5.82654324E-17, 0.00000000E+00, -8.60777067E-01])
     np.testing.assert_allclose(mol.quadrupole_moment, [
-        -8.89536026E-01,   # xx
-        8.28408371E-17,    # xy
-        4.89353090E-17,    # xz
-        1.14114241E+00,    # yy
-        -5.47382213E-48,   # yz
+        -8.89536026E-01,  # xx
+        8.28408371E-17,  # xy
+        4.89353090E-17,  # xz
+        1.14114241E+00,  # yy
+        -5.47382213E-48,  # yz
         -2.51606382E-01])  # zz
 
 
@@ -362,9 +362,9 @@ def test_load_monosilicic_acid_hf_lan():
     np.testing.assert_allclose(mol.dipole_moment, [
         -6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
     np.testing.assert_allclose(mol.quadrupole_moment, [
-        2.73609152E+00,    # xx
-        -6.65787832E-02,   # xy
-        2.11973730E-01,    # xz
-        8.97029351E-01,    # yy
-        -1.38159653E-02,   # yz
+        2.73609152E+00,  # xx
+        -6.65787832E-02,  # xy
+        2.11973730E-01,  # xz
+        8.97029351E-01,  # yy
+        -1.38159653E-02,  # yz
         -3.63312087E+00])  # zz

@@ -20,7 +20,6 @@
 # --
 """Molden wavefunction input file format"""
 
-
 import numpy as np
 
 from horton.units import angstrom
@@ -30,7 +29,6 @@ from horton.gbasis.iobas import str_to_shell_types, shell_type_to_str
 from horton.gbasis.gobasis import GOBasisContraction
 from horton.gbasis.cext import gob_cart_normalization, get_shell_nbasis, GOBasis
 from horton.meanfield.orbitals import Orbitals
-
 
 __all__ = ['load_molden', 'dump_molden']
 
@@ -52,7 +50,7 @@ def _get_molden_permutation(obasis, reverse=False):
             rule = reverse_rule
         if rule is None:
             rule = np.arange(get_shell_nbasis(shell_type))
-        permutation.extend(rule+len(permutation))
+        permutation.extend(rule + len(permutation))
     return np.array(permutation, dtype=int)
 
 
@@ -93,9 +91,8 @@ def load_molden(filename):
                 coordinates.append([float(words[3]), float(words[4]), float(words[5])])
         numbers = np.array(numbers, int)
         pseudo_numbers = np.array(pseudo_numbers)
-        coordinates = np.array(coordinates)*cunit
+        coordinates = np.array(coordinates) * cunit
         return numbers, pseudo_numbers, coordinates
-
 
     def helper_obasis(f, coordinates, pure):
         """Load the orbital basis"""
@@ -118,7 +115,7 @@ def load_molden(filename):
                 in_atom = False
                 in_shell = False
             elif len(words) == 2 and not in_atom:
-                icenter = int(words[0])-1
+                icenter = int(words[0]) - 1
                 in_atom = True
                 in_shell = False
             elif len(words) == 3:
@@ -145,7 +142,6 @@ def load_molden(filename):
         alphas = np.array(alphas)
         con_coeffs = np.array(con_coeffs)
         return GOBasis(coordinates, shell_map, nprims, shell_types, alphas, con_coeffs)
-
 
     def helper_coeffs(f, nbasis):
         """Load the orbital coefficients"""
@@ -270,11 +266,11 @@ def load_molden(filename):
         raise IOError('Alpha orbitals not found in molden input file.')
 
     if coeff_beta is None:
-        nalpha = int(np.round(occ_alpha.sum()))/2
+        nalpha = int(np.round(occ_alpha.sum())) / 2
         orb_alpha = Orbitals(obasis.nbasis, coeff_alpha.shape[1])
         orb_alpha.coeffs[:] = coeff_alpha
         orb_alpha.energies[:] = ener_alpha
-        orb_alpha.occupations[:] = occ_alpha/2
+        orb_alpha.occupations[:] = occ_alpha / 2
         orb_beta = None
     else:
         nalpha = int(np.round(occ_alpha.sum()))
@@ -375,7 +371,7 @@ def _is_normalized_properly(obasis, permutation, orb_alpha, orb_beta, signs=None
                 vec = vec[permutation]
             norm = np.dot(vec, np.dot(olp, vec))
             # print iorb, norm
-            error_max = max(error_max, abs(norm-1))
+            error_max = max(error_max, abs(norm - 1))
 
     # final judgement
     return error_max <= threshold
@@ -390,18 +386,18 @@ def _get_orca_signs(obasis):
             An instance of GOBasis.
     """
     sign_rules = {
-      -4: [1, 1, 1, 1, 1,-1,-1,-1,-1],
-      -3: [1, 1, 1, 1, 1,-1,-1],
-      -2: [1, 1, 1, 1, 1],
-       0: [1],
-       1: [1, 1, 1],
+        -4: [1, 1, 1, 1, 1, -1, -1, -1, -1],
+        -3: [1, 1, 1, 1, 1, -1, -1],
+        -2: [1, 1, 1, 1, 1],
+        0: [1],
+        1: [1, 1, 1],
     }
     signs = []
     for shell_type in obasis.shell_types:
         if shell_type in sign_rules:
             signs.extend(sign_rules[shell_type])
         else:
-            signs.extend([1]*get_shell_nbasis(shell_type))
+            signs.extend([1] * get_shell_nbasis(shell_type))
     return np.array(signs, dtype=int)
 
 
@@ -433,11 +429,11 @@ def _get_fixed_con_coeffs(obasis, code):
             correction = 1.0
             if code == 'turbomole':
                 if shell_type == 2:
-                    correction = 1.0/np.sqrt(3.0)
+                    correction = 1.0 / np.sqrt(3.0)
                 elif shell_type == 3:
-                    correction = 1.0/np.sqrt(15.0)
+                    correction = 1.0 / np.sqrt(15.0)
                 elif shell_type == 4:
-                    correction = 1.0/np.sqrt(105.0)
+                    correction = 1.0 / np.sqrt(105.0)
             elif code == 'orca':
                 if shell_type == 0:
                     correction = gob_cart_normalization(alpha, np.array([0, 0, 0]))
@@ -455,11 +451,11 @@ def _get_fixed_con_coeffs(obasis, code):
                 elif shell_type == 1:
                     correction = gob_cart_normalization(alpha, np.array([1, 0, 0]))
                 elif shell_type == -2:
-                    correction = gob_cart_normalization(alpha, np.array([1, 1, 0]))/np.sqrt(3.0)
+                    correction = gob_cart_normalization(alpha, np.array([1, 1, 0])) / np.sqrt(3.0)
                 elif shell_type == -3:
-                    correction = gob_cart_normalization(alpha, np.array([1, 1, 1]))/np.sqrt(15.0)
-                # elif shell_type == -4: ##  ! Not tested
-                #     correction = gob_cart_normalization(alpha, np.array([2, 1, 1]))/np.sqrt(105.0)
+                    correction = gob_cart_normalization(alpha, np.array([1, 1, 1])) / np.sqrt(15.0)
+                    # elif shell_type == -4: ##  ! Not tested
+                    #     correction = gob_cart_normalization(alpha, np.array([2, 1, 1]))/np.sqrt(105.0)
             fixed_con_coeffs[iprim] /= correction
             if correction != 1.0:
                 corrected = True
@@ -597,7 +593,7 @@ def dump_molden(filename, data):
             pseudo_number = data.pseudo_numbers[iatom]
             x, y, z = data.coordinates[iatom]
             print >> f, '%2s %3i %3i  %25.18f %25.18f %25.18f' % (
-                periodic[number].symbol.ljust(2), iatom+1, pseudo_number, x, y, z
+                periodic[number].symbol.ljust(2), iatom + 1, pseudo_number, x, y, z
             )
 
         # Print the basis set
@@ -664,7 +660,7 @@ def dump_molden(filename, data):
 
             print >> f, '[GTO]'
             for icenter in xrange(data.obasis.ncenter):
-                print >> f, '%3i 0' % (icenter+1)
+                print >> f, '%3i 0' % (icenter + 1)
                 for sts, prims in centers[icenter]:
                     print >> f, '%1s %3i 1.0' % (sts, len(prims))
                     for alpha, con_coeff in prims:
@@ -679,9 +675,9 @@ def dump_molden(filename, data):
                 print >> f, ' Sym=     1a'
                 print >> f, ' Ene= %20.14E' % orb.energies[ifn]
                 print >> f, ' Spin= %s' % spin.capitalize()
-                print >> f, ' Occup= %8.6f' % (orb.occupations[ifn]*occ_scale)
+                print >> f, ' Occup= %8.6f' % (orb.occupations[ifn] * occ_scale)
                 for ibasis in xrange(orb.nbasis):
-                    print >> f, '%3i %20.12f' % (ibasis+1, orb.coeffs[permutation[ibasis], ifn])
+                    print >> f, '%3i %20.12f' % (ibasis + 1, orb.coeffs[permutation[ibasis], ifn])
 
         # Construct the permutation of the basis functions
         permutation = _get_molden_permutation(data.obasis, reverse=True)

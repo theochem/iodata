@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-'''H5 file with lock'''
+"""H5 file with lock"""
 
 
 import h5py as h5, fcntl, time
@@ -29,7 +29,7 @@ __all__ = ['LockedH5File']
 
 class LockedH5File(h5.File):
     def __init__(self, *args, **kwargs):
-        '''Open an HDF5 file exclusively using flock (works only with sec2 driver)
+        """Open an HDF5 file exclusively using flock (works only with sec2 driver)
 
            Except for the following two optional arguments, all arguments and
            keyword arguments are passed on to the h5.File constructor:
@@ -55,7 +55,7 @@ class LockedH5File(h5.File):
            This class guarantees that only one process is writing to the HDF5
            file (while no other processes are reading). Multiple processes may
            still read from the same HDF5 file.
-        '''
+        """
         count = kwargs.pop('count', 10)
         wait = kwargs.pop('wait', 10.0)
         # first try to open the file

@@ -18,14 +18,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-'''Gaussian LOG and FCHK file fromats'''
-
+"""Gaussian LOG and FCHK file fromats"""
 
 import numpy as np
 
-from . utils import set_four_index_element
+from .utils import set_four_index_element
 from horton.meanfield.orbitals import Orbitals
-
 
 __all__ = ['load_operators_g09', 'FCHKFile', 'load_fchk']
 
@@ -95,8 +93,8 @@ def _load_twoindex_g09(f, nbasis):
             words = f.next().split()[1:]
             for j in xrange(len(words)):
                 value = float(words[j].replace('D', 'E'))
-                result[i+block_counter, j+block_counter] = value
-                result[j+block_counter, i+block_counter] = value
+                result[i + block_counter, j + block_counter] = value
+                result[j + block_counter, i + block_counter] = value
         block_counter += 5
     return result
 
@@ -122,11 +120,11 @@ def _load_fourindex_g09(f, nbasis):
         line = f.next()
         if not line.startswith(' I='):
             break
-        #print line[3:7], line[9:13], line[15:19], line[21:25], line[28:].replace('D', 'E')
-        i = int(line[3:7])-1
-        j = int(line[9:13])-1
-        k = int(line[15:19])-1
-        l = int(line[21:25])-1
+        # print line[3:7], line[9:13], line[15:19], line[21:25], line[28:].replace('D', 'E')
+        i = int(line[3:7]) - 1
+        j = int(line[9:13]) - 1
+        k = int(line[15:19]) - 1
+        l = int(line[21:25]) - 1
         value = float(line[29:].replace('D', 'E'))
         # Gaussian uses the chemists notation for the 4-center indexes. HORTON
         # uses the physicists notation.
@@ -161,6 +159,7 @@ class FCHKFile(dict):
 
     def _read(self, filename, field_labels=None):
         """Read all the requested fields"""
+
         # if fields is None, all fields are read
         def read_field(f):
             """Read a single field"""
@@ -236,7 +235,7 @@ class FCHKFile(dict):
 
 
 def triangle_to_dense(triangle):
-    '''Convert a symmetric matrix in triangular storage to a dense square matrix.
+    """Convert a symmetric matrix in triangular storage to a dense square matrix.
 
        **Arguments:**
 
@@ -246,20 +245,20 @@ def triangle_to_dense(triangle):
             upper-triangular part in column-major order.)
 
        **Returns:** a square symmetrix matrix.
-    '''
-    nrow = int(np.round((np.sqrt(1+8*len(triangle))-1)/2))
+    """
+    nrow = int(np.round((np.sqrt(1 + 8 * len(triangle)) - 1) / 2))
     result = np.zeros((nrow, nrow))
     begin = 0
     for irow in xrange(nrow):
         end = begin + irow + 1
-        result[irow,:irow+1] = triangle[begin:end]
-        result[:irow+1,irow] = triangle[begin:end]
+        result[irow, :irow + 1] = triangle[begin:end]
+        result[:irow + 1, irow] = triangle[begin:end]
         begin = end
     return result
 
 
 def load_fchk(filename):
-    '''Load from a formatted checkpoint file.
+    """Load from a formatted checkpoint file.
 
        **Arguments:**
 
@@ -273,7 +272,7 @@ def load_fchk(filename):
        ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
        ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``,
        ``dm_spin_scf``, ``polar``, ``dipole_moment``, ``quadrupole_moment``.
-    '''
+    """
     from horton.gbasis.cext import GOBasis
 
     fchk = FCHKFile(filename, [
@@ -298,7 +297,7 @@ def load_fchk(filename):
 
     # A) Load the geometry
     numbers = fchk["Atomic numbers"]
-    coordinates = fchk["Current cartesian coordinates"].reshape(-1,3)
+    coordinates = fchk["Current cartesian coordinates"].reshape(-1, 3)
     pseudo_numbers = fchk["Nuclear charges"]
     # Mask out ghost atoms
     mask = pseudo_numbers != 0.0
@@ -330,16 +329,16 @@ def load_fchk(filename):
             my_shell_map.append(shell_map[i])
             my_nprims.append(nprims[i])
             my_nprims.append(nprims[i])
-            my_alphas.append(alphas[counter:counter+n])
-            my_alphas.append(alphas[counter:counter+n])
-            con_coeffs.append(ccoeffs_level1[counter:counter+n])
-            con_coeffs.append(ccoeffs_level2[counter:counter+n])
+            my_alphas.append(alphas[counter:counter + n])
+            my_alphas.append(alphas[counter:counter + n])
+            con_coeffs.append(ccoeffs_level1[counter:counter + n])
+            con_coeffs.append(ccoeffs_level2[counter:counter + n])
         else:
             my_shell_types.append(shell_types[i])
             my_shell_map.append(shell_map[i])
             my_nprims.append(nprims[i])
-            my_alphas.append(alphas[counter:counter+n])
-            con_coeffs.append(ccoeffs_level1[counter:counter+n])
+            my_alphas.append(alphas[counter:counter + n])
+            con_coeffs.append(ccoeffs_level1[counter:counter + n])
         counter += n
     my_shell_types = np.array(my_shell_types)
     my_shell_map = np.array(my_shell_map)
@@ -355,28 +354,28 @@ def load_fchk(filename):
 
     # permutation of the orbital basis functions
     permutation_rules = {
-      -9: np.arange(19),
-      -8: np.arange(17),
-      -7: np.arange(15),
-      -6: np.arange(13),
-      -5: np.arange(11),
-      -4: np.arange(9),
-      -3: np.arange(7),
-      -2: np.arange(5),
-       0: np.array([0]),
-       1: np.arange(3),
-       2: np.array([0, 3, 4, 1, 5, 2]),
-       3: np.array([0, 4, 5, 3, 9, 6, 1, 8, 7, 2]),
-       4: np.arange(15)[::-1],
-       5: np.arange(21)[::-1],
-       6: np.arange(28)[::-1],
-       7: np.arange(36)[::-1],
-       8: np.arange(45)[::-1],
-       9: np.arange(55)[::-1],
+        -9: np.arange(19),
+        -8: np.arange(17),
+        -7: np.arange(15),
+        -6: np.arange(13),
+        -5: np.arange(11),
+        -4: np.arange(9),
+        -3: np.arange(7),
+        -2: np.arange(5),
+        0: np.array([0]),
+        1: np.arange(3),
+        2: np.array([0, 3, 4, 1, 5, 2]),
+        3: np.array([0, 4, 5, 3, 9, 6, 1, 8, 7, 2]),
+        4: np.arange(15)[::-1],
+        5: np.arange(21)[::-1],
+        6: np.arange(28)[::-1],
+        7: np.arange(36)[::-1],
+        8: np.arange(45)[::-1],
+        9: np.arange(55)[::-1],
     }
     permutation = []
     for shell_type in my_shell_types:
-        permutation.extend(permutation_rules[shell_type]+len(permutation))
+        permutation.extend(permutation_rules[shell_type] + len(permutation))
     permutation = np.array(permutation, dtype=int)
 
     result = {
@@ -394,9 +393,9 @@ def load_fchk(filename):
             dm = np.zeros((obasis.nbasis, obasis.nbasis))
             start = 0
             for i in xrange(obasis.nbasis):
-                stop = start+i+1
-                dm[i, :i+1] = fchk[label][start:stop]
-                dm[:i+1, i] = fchk[label][start:stop]
+                stop = start + i + 1
+                dm[i, :i + 1] = fchk[label][start:stop]
+                dm[:i + 1, i] = fchk[label][start:stop]
                 start = stop
             return dm
 
@@ -420,7 +419,7 @@ def load_fchk(filename):
     # Load orbitals
     nalpha = fchk['Number of alpha electrons']
     nbeta = fchk['Number of beta electrons']
-    if nalpha < 0 or nbeta < 0 or nalpha+nbeta <= 0:
+    if nalpha < 0 or nbeta < 0 or nalpha + nbeta <= 0:
         raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
     orb_alpha = Orbitals(obasis.nbasis, nbasis_indep)
     orb_alpha.coeffs[:] = fchk['Alpha MO coefficients'].reshape(nbasis_indep, obasis.nbasis).T

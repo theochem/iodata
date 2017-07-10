@@ -32,19 +32,19 @@ def test_load_aelta():
     mol = IOData.from_file(fn_cube)
     assert mol.title == 'Some random cube for testing (sort of) useless data'
     assert mol.natom == 72
-    assert abs(mol.coordinates[5,0] - 27.275511) < 1e-5
-    assert abs(mol.coordinates[-2,2] - 26.460812) < 1e-5
+    assert abs(mol.coordinates[5, 0] - 27.275511) < 1e-5
+    assert abs(mol.coordinates[-2, 2] - 26.460812) < 1e-5
     assert (mol.grid.shape == 12).all()
     assert mol.cell.nvec == 3
     rvecs = mol.cell.rvecs
-    my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)*12
+    my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float) * 12
     assert abs(rvecs - my_rvecs).max() < 1e-5
     rvecs = mol.grid.grid_rvecs
     my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float)
     assert abs(rvecs - my_rvecs).max() < 1e-5
     assert abs(mol.grid.origin - np.array([0.0, 1.2, 0.0])).max() < 1e-10
-    assert abs(mol.cube_data[0,0,0] - 9.49232e-06) < 1e-12
-    assert abs(mol.cube_data[-1,-1,-1] - 2.09856e-04) < 1e-10
+    assert abs(mol.cube_data[0, 0, 0] - 9.49232e-06) < 1e-12
+    assert abs(mol.cube_data[-1, -1, -1] - 2.09856e-04) < 1e-10
     pn = mol.pseudo_numbers
     assert abs(pn[0] - 1.0) < 1e-10
     assert abs(pn[1] - 0.1) < 1e-10

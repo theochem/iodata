@@ -18,12 +18,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-'''Input/output dispatcher for different file formats
+"""Input/output dispatcher for different file formats
 
    The ``IOData.from_file`` and ``IOData.to_file`` methods read/write data
    from/to a file. The format is deduced from the prefix or extension of the
    filename.
-'''
+"""
 
 
 import h5py as h5, os, numpy as np
@@ -34,7 +34,7 @@ __all__ = ['IOData']
 
 class ArrayTypeCheckDescriptor(object):
     def __init__(self, name, ndim=None, shape=None, dtype=None, matching=None, default=None):
-        '''
+        """
            Decorator to perform type checking an np.ndarray attributes
 
            **Arguments:**
@@ -63,7 +63,7 @@ class ArrayTypeCheckDescriptor(object):
            default
                 The name of another (type-checke) attribute to return as default
                 when this attribute is not set
-        '''
+        """
         if matching is not None and shape is None:
             raise TypeError('The matching argument requires the shape to be '
                             'specified.')
@@ -124,7 +124,7 @@ class ArrayTypeCheckDescriptor(object):
 
 
 class IOData(object):
-    '''A container class for data loaded from (or to be written to) a file.
+    """A container class for data loaded from (or to be written to) a file.
 
        In principle, the constructor accepts any keyword argument, which is
        stored as an attribute. All attributes are optional. Attributes can be
@@ -223,7 +223,7 @@ class IOData(object):
 
        two_mo
             Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
-    '''
+    """
     def __init__(self, **kwargs):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
@@ -250,7 +250,7 @@ class IOData(object):
     pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float, ['coordinates', 'numbers'], 'numbers')
 
     def _get_natom(self):
-        '''The number of atoms'''
+        """The number of atoms"""
         if hasattr(self, 'numbers'):
             return len(self.numbers)
         elif hasattr(self, 'coordinates'):
@@ -262,7 +262,7 @@ class IOData(object):
 
     @classmethod
     def from_file(cls, *filenames):
-        '''Load data from a file.
+        """Load data from a file.
 
            **Arguments:**
 
@@ -279,7 +279,7 @@ class IOData(object):
 
            For each file format, a specialized function is called that returns a
            dictionary with data from the file.
-        '''
+        """
         result = {}
         for filename in filenames:
             if isinstance(filename, h5.Group) or filename.endswith('.h5'):
@@ -367,7 +367,7 @@ class IOData(object):
         return cls(**result)
 
     def to_file(self, filename):
-        '''Write data to a file
+        """Write data to a file
 
            **Arguments:**
 
@@ -377,7 +377,7 @@ class IOData(object):
            This routine uses the extension or prefix of the filename to determine
            the file format. For each file format, a specialized function is
            called that does the real work.
-        '''
+        """
 
         if isinstance(filename, h5.Group) or filename.endswith('.h5'):
             data = vars(self).copy()
@@ -407,7 +407,7 @@ class IOData(object):
             raise ValueError('Unknown file format for writing: %s' % filename)
 
     def copy(self):
-        '''Return a shallow copy'''
+        """Return a shallow copy"""
         kwargs = vars(self).copy()
         # get rid of leading underscores
         for key in kwargs.keys():
@@ -417,7 +417,7 @@ class IOData(object):
         return self.__class__(**kwargs)
 
     def get_dm_full(self):
-        '''Return a spin-summed density matrix using availlable attributes'''
+        """Return a spin-summed density matrix using availlable attributes"""
         if hasattr(self, 'dm_full'):
             return self.dm_full
         if hasattr(self, 'dm_full_mp2'):
@@ -439,7 +439,7 @@ class IOData(object):
             return dm_full
 
     def get_dm_spin(self):
-        '''Return a spin-difference density matrix using availlable attributes'''
+        """Return a spin-difference density matrix using availlable attributes"""
         if hasattr(self, 'dm_spin'):
             return self.dm_spin
         if hasattr(self, 'dm_spin_mp2'):

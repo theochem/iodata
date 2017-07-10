@@ -18,13 +18,11 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-'''Gaussian cube file format'''
-
+"""Gaussian cube file format"""
 
 import numpy as np
 from horton.cext import Cell
 from horton.grid.cext import UniformGrid
-
 
 __all__ = ['load_cube', 'dump_cube']
 
@@ -53,7 +51,7 @@ def _read_cube_header(f):
     shape = np.array([shape0, shape1, shape2], int)
     axes = np.array([axis0, axis1, axis2])
 
-    cell = Cell(axes*shape.reshape(-1,1))
+    cell = Cell(axes * shape.reshape(-1, 1))
     ugrid = UniformGrid(origin, axes, shape, np.ones(3, int))
 
     def read_coordinate_line(line):
@@ -94,7 +92,7 @@ def _read_cube_data(f, ugrid):
 
 
 def load_cube(filename):
-    '''Load data from a cube file
+    """Load data from a cube file
 
        **Arguments:**
 
@@ -103,7 +101,7 @@ def load_cube(filename):
 
        **Returns** a dictionary with ``title``, ``coordinates``, ``numbers``,
        ``cube_data``, ``grid``, ``pseudo_numbers``.
-    '''
+    """
     with open(filename) as f:
         title, coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(f)
         data = _read_cube_data(f, ugrid)
@@ -138,13 +136,13 @@ def _write_cube_data(f, cube_data):
     counter = 0
     for value in cube_data.flat:
         f.write(' % 12.5E' % value)
-        if counter%6 == 5:
+        if counter % 6 == 5:
             f.write('\n')
         counter += 1
 
 
 def dump_cube(filename, data):
-    '''Write a IOData to a .cube file.
+    """Write a IOData to a .cube file.
 
        **Arguments:**
 
@@ -155,7 +153,7 @@ def dump_cube(filename, data):
        data
             An IOData instance. Must contain ``coordinates``, ``numbers``,
             ``grid``, ``cube_data``. May contain ``title``, ``pseudo_numbers``.
-    '''
+    """
     with open(filename, 'w') as f:
         if not isinstance(data.grid, UniformGrid):
             raise ValueError('The system grid must be a UniformGrid instance.')

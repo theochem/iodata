@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-'''HORTON internal file format'''
+"""HORTON internal file format"""
 
 
 import numpy as np, h5py as h5
@@ -29,13 +29,13 @@ __all__ = ['load_h5', 'dump_h5']
 
 
 def load_h5(item):
-    '''Load a (HORTON) object from an h5py File/Group
+    """Load a (HORTON) object from an h5py File/Group
 
        **Arguments:**
 
        item
             A HD5 Dataset or group, or a filename of an HDF5 file
-    '''
+    """
     if isinstance(item, basestring):
         with LockedH5File(item, 'r') as f:
             return load_h5(f)
@@ -61,7 +61,7 @@ def load_h5(item):
 
 
 def dump_h5(grp, data):
-    '''Dump a (HORTON) object to a HDF5 file.
+    """Dump a (HORTON) object to a HDF5 file.
 
        grp
             A HDF5 group or a filename of a new HDF5 file.
@@ -70,7 +70,7 @@ def dump_h5(grp, data):
             The object to be written. This can be a dictionary of objects or
             an instance of a HORTON class that has a ``to_hdf5`` method. The
             dictionary my contain numpy arrays
-    '''
+    """
     if isinstance(grp, basestring):
         with LockedH5File(grp, 'w') as f:
             dump_h5(f, data)
