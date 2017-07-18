@@ -261,7 +261,7 @@ class IOData(object):
     natom = property(_get_natom)
 
     @classmethod
-    def from_file(cls, *filenames):
+    def from_file(cls, *filenames, **kwargs):
         """Load data from a file.
 
            **Arguments:**
@@ -280,6 +280,8 @@ class IOData(object):
            For each file format, a specialized function is called that returns a
            dictionary with data from the file.
         """
+        gobasis = kwargs.get("gobasis", None)
+
         result = {}
         for filename in filenames:
             if isinstance(filename, h5.Group) or filename.endswith('.h5'):
@@ -299,7 +301,7 @@ class IOData(object):
                 result.update(load_mkl(filename))
             elif filename.endswith('.molden.input') or filename.endswith('.molden'):
                 from . molden import load_molden
-                result.update(load_molden(filename))
+                result.update(load_molden(filename, gobasis))
             elif filename.endswith('.cube'):
                 from . cube import load_cube
                 result.update(load_cube(filename))

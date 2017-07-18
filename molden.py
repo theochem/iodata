@@ -24,10 +24,9 @@ from collections import OrderedDict
 import numpy as np
 
 from horton.log import log
-from horton.gbasis.gobasis import GOBasisContraction
-from horton.gbasis.cext import gob_cart_normalization, get_shell_nbasis, GOBasis
 
-from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
+from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis, \
+    get_shell_nbasis, gob_cart_normalization
 from . periodic import sym2num, num2sym
 
 
@@ -55,7 +54,7 @@ def _get_molden_permutation(shell_types, reverse=False):
     return np.array(permutation, dtype=int)
 
 
-def load_molden(filename):
+def load_molden(filename, gobasis):
     """Load data from a molden input file.
 
     Parameters
@@ -70,6 +69,10 @@ def load_molden(filename):
         ``pseudo_numbers``, ``obasis``, ``orb_alpha``, ``signs``. It may also contain:
         ``title``, ``orb_beta``.
     """
+
+    if gobasis is None:
+        raise RuntimeError("Molden files need an implementation of GOBasis that can calculate overlaps "
+                           "to check normalization.")
 
     def helper_coordinates(f, cunit):
         """Load element numbers and coordinates"""
@@ -298,7 +301,7 @@ def load_molden(filename):
         orb_beta_energies = ener_beta
         orb_beta_occupations = occ_beta
 
-    permutation = _get_molden_permutation(obasis)
+    permutation = _get_molden_permutation(obasis["shell_types"])
 
     # filter out ghost atoms
     mask = pseudo_numbers != 0
@@ -325,7 +328,7 @@ def load_molden(filename):
         result['orb_beta_energies'] = orb_beta_energies
         result['orb_beta_occupations'] = orb_beta_occupations
 
-    _fix_molden_from_buggy_codes(result, filename)
+    _fix_molden_from_buggy_codes(result, filename, gobasis)
 
     return result
 
@@ -343,7 +346,7 @@ def _is_normalized_properly(obasis, permutation, orb_alpha, orb_beta, signs=None
             standard ordering.
 
        orb_alpha
-            The alpha orbitals.
+            The alpha orbitals coefficients
 
        orb_beta
             The beta orbitals (may be None).
@@ -381,7 +384,7 @@ def _is_normalized_properly(obasis, permutation, orb_alpha, orb_beta, signs=None
     error_max = 0.0
     for orb in orbs:
         for iorb in xrange(orb.nfn):
-            vec = orb._coeffs[:, iorb].copy()
+            vec = orb[:, iorb].copy()
             if signs is not None:
                 vec *= signs
             if permutation is not None:
@@ -394,7 +397,7 @@ def _is_normalized_properly(obasis, permutation, orb_alpha, orb_beta, signs=None
     return error_max <= threshold
 
 
-def _get_orca_signs(obasis):
+def _get_orca_signs(shell_types):
     """Return an array with sign corrections for orbitals read from ORCA.
 
        **Arguments:**
@@ -410,7 +413,7 @@ def _get_orca_signs(obasis):
         1: [1, 1, 1],
     }
     signs = []
-    for shell_type in obasis.shell_types:
+    for shell_type in shell_types:
         if shell_type in sign_rules:
             signs.extend(sign_rules[shell_type])
         else:
@@ -418,7 +421,7 @@ def _get_orca_signs(obasis):
     return np.array(signs, dtype=int)
 
 
-def _get_fixed_con_coeffs(obasis, code):
+def _get_fixed_con_coeffs(nprims, shell_types, alphas, con_coeffs, code):
     """Return corrected contraction coefficients, assuming they came from a broken QC code.
 
     Parameters
@@ -435,13 +438,13 @@ def _get_fixed_con_coeffs(obasis, code):
         Corrected contraction coefficients, or None if corrections were not applicable.
     """
     assert code in ['orca', 'psi4', 'turbomole']
-    fixed_con_coeffs = obasis.con_coeffs.copy()
+    fixed_con_coeffs = con_coeffs.copy()
     iprim = 0
     corrected = False
-    for ishell in xrange(obasis.nshell):
-        shell_type = obasis.shell_types[ishell]
-        for ialpha in xrange(obasis.nprims[ishell]):
-            alpha = obasis.alphas[iprim]
+    for ishell in xrange(shell_types.size):
+        shell_type = shell_types[ishell]
+        for ialpha in xrange(nprims[ishell]):
+            alpha = alphas[iprim]
             # Default 1.0: do not to correct anything, unless we know how to correct.
             correction = 1.0
             if code == 'turbomole':
@@ -481,7 +484,7 @@ def _get_fixed_con_coeffs(obasis, code):
         return fixed_con_coeffs
 
 
-def _normalized_contractions(obasis):
+def _normalized_contractions(obasis_dict, gobasis):
     """Return contraction coefficients of normalized contractions."""
     # Files written by Molden don't need this and have properly normalized contractions.
     # When Molden reads files in the Molden format, it does renormalize the contractions
@@ -490,16 +493,26 @@ def _normalized_contractions(obasis):
     # would do it up-front, like Molden, we would not be able to fix errors in files from
     # ORCA and older PSI-4 versions.
     iprim = 0
-    new_con_coeffs = obasis.con_coeffs.copy()
-    for nprim, shell_type in zip(obasis.nprims, obasis.shell_types):
-        gobc = GOBasisContraction(shell_type, obasis.alphas[iprim:iprim + nprim],
-                                  new_con_coeffs[iprim:iprim + nprim])
-        gobc.normalize()
+    new_con_coeffs = obasis_dict['con_coeffs'].copy()
+    for nprim, shell_type in zip(obasis_dict['nprims'], obasis_dict['shell_types']):
+        centers = np.array([[0.0, 0.0, 0.0]])
+        shell_map = np.array([0])
+        shell_types = np.array([shell_type])
+        alphas = obasis_dict['alphas'][iprim:iprim + nprim]
+        nprims = np.array([len(alphas)])
+        con_coeffs = new_con_coeffs[iprim:iprim + nprim]
+
+        gbs = gobasis(centers, shell_map, nprims, shell_types, alphas, con_coeffs)
+
+        # 2) Get the first diagonal element of the overlap matrix
+        olpdiag = gbs.compute_overlap()[0, 0]
+        # 3) Normalize the contraction
+        con_coeffs /= np.sqrt(olpdiag)
         iprim += nprim
     return new_con_coeffs
 
 
-def _fix_molden_from_buggy_codes(result, filename):
+def _fix_molden_from_buggy_codes(result, filename, gobasis):
     """Detect errors in the data loaded from a molden/mkl/... file and correct.
 
     Parameters
@@ -511,9 +524,10 @@ def _fix_molden_from_buggy_codes(result, filename):
    This function can recognize erroneous files created by PSI4, ORCA and Turbomole. The
    values in `results` for the `obasis` and `signs` keys will be updated accordingly.
    """
-    obasis = result['obasis']
+    obasis_dict = result['obasis']
     permutation = result.get('permutation', None)
-    if _is_normalized_properly(obasis, permutation, result['orb_alpha'], result.get('orb_beta')):
+    obasis = gobasis(*obasis_dict.values())
+    if _is_normalized_properly(obasis, permutation, result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
         # The file is good. No need to change data.
         return
     if log.do_medium:
@@ -522,14 +536,14 @@ def _fix_molden_from_buggy_codes(result, filename):
     # --- ORCA
     if log.do_medium:
         log('Trying to fix it as if it was a file generated by ORCA.')
-    orca_signs = _get_orca_signs(obasis)
-    orca_con_coeffs = _get_fixed_con_coeffs(obasis, 'orca')
+    orca_signs = _get_orca_signs(obasis_dict['shell_types'])
+    orca_con_coeffs = _get_fixed_con_coeffs(*obasis_dict.values()[2:], code='orca')
     if orca_con_coeffs is not None:
         # Only try if some changes were made to the contraction coefficients.
-        orca_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
-                              obasis.shell_types, obasis.alphas, orca_con_coeffs)
+        obasis_dict["con_coeffs"] = orca_con_coeffs
+        orca_obasis = gobasis(*obasis_dict.values())
         if _is_normalized_properly(orca_obasis, permutation,
-                                   result['orb_alpha'], result.get('orb_beta'), orca_signs):
+                                   result['orb_alpha_coeffs'], result.get('orb_beta_coeffs'), orca_signs):
             if log.do_medium:
                 log('Detected typical ORCA errors in file. Fixing them...')
             result['obasis'] = orca_obasis
@@ -539,13 +553,13 @@ def _fix_molden_from_buggy_codes(result, filename):
     # --- PSI4
     if log.do_medium:
         log('Trying to fix it as if it was a file generated by PSI4 (pre 1.0).')
-    psi4_con_coeffs = _get_fixed_con_coeffs(obasis, 'psi4')
+    psi4_con_coeffs = _get_fixed_con_coeffs(*obasis_dict.values()[2:], code='psi4')
     if psi4_con_coeffs is not None:
         # Only try if some changes were made to the contraction coefficients.
-        psi4_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
-                              obasis.shell_types, obasis.alphas, psi4_con_coeffs)
+        obasis_dict["con_coeffs"] = psi4_con_coeffs
+        psi4_obasis = gobasis(*obasis_dict.values())
         if _is_normalized_properly(psi4_obasis, permutation,
-                                   result['orb_alpha'], result.get('orb_beta')):
+                                   result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
             if log.do_medium:
                 log('Detected typical PSI4 errors in file. Fixing them...')
             result['obasis'] = psi4_obasis
@@ -554,13 +568,13 @@ def _fix_molden_from_buggy_codes(result, filename):
     # -- Turbomole
     if log.do_medium:
         log('Trying to fix it as if it was a file generated by Turbomole.')
-    tb_con_coeffs = _get_fixed_con_coeffs(obasis, 'turbomole')
+    tb_con_coeffs = _get_fixed_con_coeffs(*obasis_dict.values()[2:], code='turbomole')
     if tb_con_coeffs is not None:
         # Only try if some changes were made to the contraction coefficients.
-        tb_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
-                            obasis.shell_types, obasis.alphas, tb_con_coeffs)
+        obasis_dict["con_coeffs"] = tb_con_coeffs
+        tb_obasis = gobasis(*obasis_dict.values())
         if _is_normalized_properly(tb_obasis, permutation,
-                                   result['orb_alpha'], result.get('orb_beta')):
+                                   result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
             if log.do_medium:
                 log('Detected typical Turbomole errors in file. Fixing them...')
             result['obasis'] = tb_obasis
@@ -569,11 +583,11 @@ def _fix_molden_from_buggy_codes(result, filename):
     # --- Renormalized contractions
     if log.do_medium:
         log('Last resort: trying by renormalizing all contractions')
-    normed_con_coeffs = _normalized_contractions(obasis)
-    normed_obasis = GOBasis(obasis.centers, obasis.shell_map, obasis.nprims,
-                            obasis.shell_types, obasis.alphas, normed_con_coeffs)
+    normed_con_coeffs = _normalized_contractions(obasis_dict, gobasis)
+    obasis_dict["con_coeffs"] = normed_con_coeffs
+    normed_obasis = gobasis(*obasis_dict.values())
     if _is_normalized_properly(normed_obasis, permutation,
-                               result['orb_alpha'], result.get('orb_beta')):
+                               result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
         if log.do_medium:
             log('Detected unnormalized contractions in file. Fixing them...')
         result['obasis'] = normed_obasis
@@ -614,14 +628,14 @@ def dump_molden(filename, data):
             )
 
         # Print the basis set
-        if isinstance(data.obasis, GOBasis):
+        if isinstance(data.obasis, OrderedDict):
             # Figure out the pure/Cartesian situation. Note that the Molden
             # format does not support mixed Cartesian and pure functions in the
             # way HORTON does. In practice, such combinations are too unlikely
             # to be relevant.
             pure = {'d': None, 'f': None, 'g': None}
             try:
-                for shell_type in data.obasis.shell_types:
+                for shell_type in data.obasis["shell_types"]:
                     if shell_type == 2:
                         assert pure['d'] is None or not pure['d']
                         pure['d'] = False
@@ -660,23 +674,23 @@ def dump_molden(filename, data):
             # First convert it to a format that is amenable for printing. The molden
             # format assumes that every basis function is centered on one of the atoms.
             # (This may not always be the case.)
-            centers = [list() for _ in xrange(data.obasis.ncenter)]
+            centers = [list() for _ in xrange(data.obasis["centers"].shape[0])]
             begin_prim = 0
-            for ishell in xrange(data.obasis.nshell):
-                icenter = data.obasis.shell_map[ishell]
-                shell_type = data.obasis.shell_types[ishell]
+            for ishell in xrange(data.obasis["shell_types"].size):
+                icenter = data.obasis["shell_map"][ishell]
+                shell_type = data.obasis["shell_types"][ishell]
                 sts = shell_type_to_str(shell_type)
-                end_prim = begin_prim + data.obasis.nprims[ishell]
+                end_prim = begin_prim + data.obasis["nprims"][ishell]
                 prims = []
                 for iprim in xrange(begin_prim, end_prim):
-                    alpha = data.obasis.alphas[iprim]
-                    con_coeff = data.obasis.con_coeffs[iprim]
+                    alpha = data.obasis["alphas"][iprim]
+                    con_coeff = data.obasis["con_coeffs"][iprim]
                     prims.append((alpha, con_coeff))
                 centers[icenter].append((sts, prims))
                 begin_prim = end_prim
 
             print >> f, '[GTO]'
-            for icenter in xrange(data.obasis.ncenter):
+            for icenter in xrange(data.obasis["centers"].shape[0]):
                 print >> f, '%3i 0' % (icenter + 1)
                 for sts, prims in centers[icenter]:
                     print >> f, '%1s %3i 1.0' % (sts, len(prims))
@@ -687,20 +701,22 @@ def dump_molden(filename, data):
             raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
 
         def helper_orb(spin, occ_scale=1.0):
-            orb = getattr(data, 'orb_%s' % spin)
-            for ifn in xrange(orb.nfn):
+            orb_coeffs = getattr(data, 'orb_%s_coeffs' % spin)
+            orb_energies = getattr(data, 'orb_%s_energies' % spin)
+            orb_occupations = getattr(data, 'orb_%s_occupations' % spin)
+            for ifn in xrange(orb_coeffs.shape[1]):
                 print >> f, ' Sym=     1a'
-                print >> f, ' Ene= %20.14E' % orb.energies[ifn]
+                print >> f, ' Ene= %20.14E' % orb_energies[ifn]
                 print >> f, ' Spin= %s' % spin.capitalize()
-                print >> f, ' Occup= %8.6f' % (orb.occupations[ifn] * occ_scale)
-                for ibasis in xrange(orb.nbasis):
-                    print >> f, '%3i %20.12f' % (ibasis + 1, orb.coeffs[permutation[ibasis], ifn])
+                print >> f, ' Occup= %8.6f' % (orb_occupations[ifn] * occ_scale)
+                for ibasis in xrange(orb_coeffs.shape[0]):
+                    print >> f, '%3i %20.12f' % (ibasis + 1, orb_coeffs[permutation[ibasis], ifn])
 
         # Construct the permutation of the basis functions
-        permutation = _get_molden_permutation(data.obasis, reverse=True)
+        permutation = _get_molden_permutation(data.obasis["shell_types"], reverse=True)
 
         # Print the mean-field orbitals
-        if hasattr(data, 'orb_beta'):
+        if hasattr(data, 'orb_beta_coeffs'):
             print >> f, '[MO]'
             helper_orb('alpha')
             helper_orb('beta')

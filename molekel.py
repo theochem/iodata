@@ -23,7 +23,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from .utils import angstrom, str_to_shell_types, shells_to_nbasis
+from . utils import angstrom, str_to_shell_types, shells_to_nbasis
 from . molden import _fix_molden_from_buggy_codes
 
 __all__ = ['load_mkl']
