@@ -19,12 +19,11 @@
 #
 # --
 """VASP POSCAR, CHGCAR and POTCAR file formats"""
+from collections import OrderedDict
 
 import numpy as np
-from horton.units import angstrom, electronvolt
-from horton.periodic import periodic
-from horton.cext import Cell
-from horton.grid.cext import UniformGrid
+from . utils import angstrom, electronvolt
+from . periodic import num2sym, sym2num
 
 __all__ = ['load_chgcar', 'load_locpot', 'load_poscar', 'dump_poscar']
 
@@ -61,11 +60,8 @@ def _load_vasp_header(f):
         rvecs.append([float(w) for w in f.next().split()])
     rvecs = np.array(rvecs) * angstrom * scaling
 
-    # Convert to cell object
-    cell = Cell(rvecs)
-
     # note that in older VASP version the following line might be absent
-    vasp_numbers = [periodic[w].number for w in f.next().split()]
+    vasp_numbers = [sym2num[w] for w in f.next().split()]
     vasp_counts = [int(w) for w in f.next().split()]
     numbers = []
     for n, c in zip(vasp_numbers, vasp_counts):
@@ -91,7 +87,7 @@ def _load_vasp_header(f):
     else:
         coordinates = np.dot(np.array(coordinates), rvecs)
 
-    return title, cell, numbers, coordinates
+    return title, rvecs, numbers, coordinates
 
 
 def _load_vasp_grid(filename):
@@ -126,12 +122,18 @@ def _load_vasp_grid(filename):
                 counter += 1
         assert counter == cube_data.size
 
+    ugrid = OrderedDict()
+    ugrid["origin"] = np.zeros(3)
+    ugrid['grid_rvecs'] = cell / shape.reshape(-1, 1)
+    ugrid['shape'] = shape
+    ugrid['pbc'] = np.ones(3, int)
+
     return {
         'title': title,
         'coordinates': coordinates,
         'numbers': numbers,
         'cell': cell,
-        'grid': UniformGrid(np.zeros(3), cell.rvecs / shape.reshape(-1, 1), shape, np.ones(3, int)),
+        'grid': ugrid,
         'cube_data': cube_data,
     }
 
@@ -216,7 +218,7 @@ def dump_poscar(filename, data):
         # Construct list of elements to make sure the coordinates get written
         # in this order. Heaviest elements are put furst.
         unumbers = sorted(np.unique(data.numbers))[::-1]
-        print >> f, ' '.join('%5s' % periodic[unumber].symbol for unumber in unumbers)
+        print >> f, ' '.join('%5s' % num2sym[unumber] for unumber in unumbers)
         print >> f, ' '.join('%5i' % (data.numbers == unumber).sum() for unumber in unumbers)
         print >> f, 'Selective dynamics'
         print >> f, 'Direct'

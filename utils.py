@@ -25,6 +25,7 @@ import numpy as np
 __all__ = ['set_four_index_element']
 
 angstrom = 1.0e-10 / 0.5291772083e-10
+electronvolt = 1.602176462e-19 / 4.35974381e-18
 
 
 def str_to_shell_types(s, pure=False):
