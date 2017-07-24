@@ -23,6 +23,8 @@ import numpy as np
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from horton.io.test.common import compute_mulliken_charges, compute_hf_energy, get_fn
 
+#TODO: removed density, kin, nucnuc checks
+
 
 def test_load_wfn_low_he_s():
     fn_wfn = get_fn('he_s_orbital.wfn')
@@ -173,101 +175,6 @@ def test_get_mask():
     assert (get_mask(np.array([11, 21, 36, 1])) == [True, True, True, True]).all()
 
 
-def check_load_wfn(name):
-    # system out of *.wfn file
-    mol1 = IOData.from_file(get_fn('%s.wfn') % name)
-    # system out of *.fchk file
-    mol2 = IOData.from_file(get_fn('%s.fchk') % name)
-    # Coordinates check:
-    assert (abs(mol1.coordinates - mol2.coordinates) < 1e-6).all()
-    # Numbers check
-    numbers1 = mol1.numbers
-    numbers2 = mol2.numbers
-    assert (numbers1 == numbers2).all()
-    # Basis Set check:
-    obasis1 = mol1.obasis
-    obasis2 = mol2.obasis
-    assert obasis1.nbasis == obasis2.nbasis
-    assert (obasis1.shell_map == obasis2.shell_map).all()
-    assert (obasis1.shell_types == obasis2.shell_types).all()
-    assert (obasis1.nprims == obasis2.nprims).all()
-    assert (abs(obasis1.alphas - obasis2.alphas) < 1.e-4).all()
-    # Comparing MOs (*.wfn might not contain virtual orbitals):
-    n_mo = mol1.orb_alpha.nfn
-    assert (abs(mol1.orb_alpha_energies - mol2.orb_alpha_energies[:n_mo]) < 1.e-5).all()
-    assert (mol1.orb_alpha_occs == mol2.orb_alpha_occs[:n_mo]).all()
-    assert (abs(mol1.orb_alpha_coeffs - mol2.orb_alpha_coeffs[:, :n_mo]) < 1.e-7).all()
-    # Check overlap
-    olp1 = obasis1.compute_overlap()
-    olp2 = obasis2.compute_overlap()
-    obasis2.compute_overlap(olp2)
-    assert (abs(olp1 - olp2) < 1e-6).all()
-    # Check normalization
-    mol1.orb_alpha.check_normalization(olp1, 1e-5)
-    # Check charges
-    dm_full1 = mol1.get_dm_full()
-    charges1 = compute_mulliken_charges(obasis1, numbers1, dm_full1)
-    dm_full2 = mol2.get_dm_full()
-    charges2 = compute_mulliken_charges(obasis2, numbers2, dm_full2)
-    assert (abs(charges1 - charges2) < 1e-6).all()
-    # Check energy
-    energy1 = compute_hf_energy(mol1)
-    energy2 = compute_hf_energy(mol2)
-    # check loaded & computed energy from wfn file
-    assert abs(energy1 - mol1.energy) < 1.e-5
-    assert abs(energy1 - energy2) < 1e-5
-    return energy1, charges1
-
-
-def test_load_wfn_he_s_virtual():
-    energy, charges = check_load_wfn('he_s_virtual')
-    # Compare to the energy printed in wfn file
-    assert abs(energy - (-2.855160426155)) < 1.e-6
-    assert (abs(charges - [0.0]) < 1e-5).all()
-
-
-def test_load_wfn_he_s():
-    energy, charges = check_load_wfn('he_s_orbital')
-    # Compare to the energy printed in wfn file
-    assert abs(energy - (-2.855160426155)) < 1.e-6
-    assert (abs(charges - [0.0]) < 1e-5).all()
-
-
-def test_load_wfn_he_sp():
-    energy, charges = check_load_wfn('he_sp_orbital')
-    # Compare to the energy printed in wfn file
-    assert abs(energy - (-2.859895424589)) < 1.e-6
-    assert (abs(charges - [0.0]) < 1e-5).all()
-
-
-def test_load_wfn_he_spd():
-    energy, charges = check_load_wfn('he_spd_orbital')
-    # Compare to the energy printed in wfn file
-    assert abs(energy - (-2.855319016184)) < 1.e-6
-    assert (abs(charges - [0.0]) < 1e-5).all()
-
-
-def test_load_wfn_he_spdf():
-    energy, charges = check_load_wfn('he_spdf_orbital')
-    # Compare to the energy printed in wfn file
-    assert abs(energy - (-1.100269433080)) < 1.e-6
-    assert (abs(charges - [0.0]) < 1e-5).all()
-
-
-def test_load_wfn_he_spdfgh():
-    energy, charges = check_load_wfn('he_spdfgh_orbital')
-    # Compare to the energy printed in wfn file
-    assert abs(energy - (-1.048675168346)) < 1.e-6
-    assert (abs(charges - [0.0]) < 1e-5).all()
-
-
-def test_load_wfn_he_spdfgh_virtual():
-    energy, charges = check_load_wfn('he_spdfgh_virtual')
-    # Compare to the energy printed in wfn file
-    assert abs(energy - (-1.048675168346)) < 1.e-6
-    assert (abs(charges - [0.0]) < 1e-5).all()
-
-
 def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
     fn_wfn = context.get_fn(fn_wfn)
     mol = IOData.from_file(fn_wfn)
@@ -297,7 +204,7 @@ def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
 
 def test_load_wfn_h2o_sto3g_decontracted():
     check_wfn(
-        'test/h2o_sto3g_decontracted.wfn',
+        'h2o_sto3g_decontracted.wfn',
         True, 21, -75.162231674351,
         np.array([-0.546656, 0.273328, 0.273328]),
     )
@@ -306,7 +213,7 @@ def test_load_wfn_h2o_sto3g_decontracted():
 def test_load_wfn_h2_ccpvqz_virtual():
     obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
     orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
-        'test/h2_ccpvqz.wfn',
+        'h2_ccpvqz.wfn',
         True, 74, -1.133504568400,
         np.array([0.0, 0.0]),
     )
@@ -322,7 +229,7 @@ def test_load_wfn_h2_ccpvqz_virtual():
 
 def test_load_wfn_h2o_sto3g():
     check_wfn(
-        'test/h2o_sto3g.wfn',
+        'h2o_sto3g.wfn',
         True, 21, -74.965901217080,
         np.array([-0.330532, 0.165266, 0.165266])
     )
@@ -331,7 +238,7 @@ def test_load_wfn_h2o_sto3g():
 def test_load_wfn_li_sp_virtual():
     obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
     orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
-        'test/li_sp_virtual.wfn',
+        'li_sp_virtual.wfn',
         False, 8, -3.712905542719,
         np.array([0.0, 0.0])
     )
@@ -351,26 +258,26 @@ def test_load_wfn_li_sp():
     fn_wfn = get_fn('li_sp_orbital.wfn')
     mol = IOData.from_file(fn_wfn)
     assert mol.title == 'Li atom - using s & p orbitals'
-    assert mol.orb_alpha.nfn == 2
-    assert mol.orb_beta.nfn == 1
+    assert mol.orb_alpha[1] == 2
+    assert mol.orb_beta[1] == 1
     assert abs(mol.energy - (-3.712905542719)) < 1.e-5
 
 
 def test_load_wfn_o2():
     obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
     orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
-        'test/o2_uhf.wfn',
+        'o2_uhf.wfn',
         False, 72, -149.664140769678,
         np.array([0.0, 0.0]),
     )
-    assert orb_alpha.nfn == 9
-    assert orb_beta.nfn == 7
+    assert orb_alpha[1] == 9
+    assert orb_beta[1] == 7
 
 
 def test_load_wfn_o2_virtual():
     obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
     orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
-        'test/o2_uhf_virtual.wfn',
+        'o2_uhf_virtual.wfn',
         False, 72, -149.664140769678,
         np.array([0.0, 0.0]),
     )
@@ -397,7 +304,7 @@ def test_load_wfn_o2_virtual():
 def test_load_wfn_lif_fci():
     obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
     orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
-        'test/lif_fci.wfn',
+        'lif_fci.wfn',
         True, 44, None,
         np.array([-0.645282, 0.645282]),
     )
@@ -411,31 +318,17 @@ def test_load_wfn_lif_fci():
     assert orb_alpha_energies[15] == 1.70096290
     assert orb_alpha_energies[-1] == 2.17434072
     assert orb_alpha_coeffs.shape == (44, 18)
-    kin = obasis.compute_kinetic()
-    expected_kin = 106.9326884815  # FCI kinetic energy
-    expected_nn = 9.1130265227
-    assert (np.einsum('ab,ba', kin, dm_full) - expected_kin) < 1.e-6
-    assert (compute_nucnuc(coordinates, numbers.astype(float)) - expected_nn) < 1.e-6
-    points = np.array([[0.0, 0.0, -0.17008], [0.0, 0.0, 0.0], [0.0, 0.0, 0.03779]])
-    density = np.zeros(3)
-    obasis.compute_grid_density_dm(dm_full, points, density)
-    assert (abs(density - [0.492787, 0.784545, 0.867723]) < 1.e-4).all()
     assert abs(energy - (-107.0575700853)) < 1.e-5  # FCI energy
 
 
 def test_load_wfn_lih_cation_fci():
     obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
     orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
-        'test/lih_cation_fci.wfn',
+        'lih_cation_fci.wfn',
         True, 26, None,
         np.array([0.913206, 0.086794]),
     )
     assert (numbers == [3, 1]).all()
-    expected_kin = 7.7989675958  # FCI kinetic energy
-    expected_nn = 0.9766607347
-    kin = obasis.compute_kinetic()
-    assert (np.einsum('ab,ba', kin, dm_full) - expected_kin) < 1.e-6
-    assert (compute_nucnuc(coordinates, numbers.astype(float)) - expected_nn) < 1.e-6
     assert orb_alpha_occs.shape == (11,)
     assert abs(orb_alpha_occs.sum() - 1.5) < 1.e-6
     assert abs(energy - (-7.7214366383)) < 1.e-5  # FCI energy

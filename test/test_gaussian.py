@@ -214,7 +214,7 @@ def test_load_fchk_lih_321g_hf():
     orb_alpha_coeffs = fields['orb_alpha_coeffs']
     orb_alpha_energies = fields['orb_alpha_energies']
     orb_alpha_occs = fields['orb_alpha_occs']
-    assert orb_alpha.nbasis == 11
+    assert orb_alpha[0] == 11
     assert abs(orb_alpha_energies[0] - (-2.76117)) < 1e-4
     assert abs(orb_alpha_energies[-1] - 0.97089) < 1e-4
     assert abs(orb_alpha_coeffs[0, 0] - 0.99105) < 1e-4
@@ -229,7 +229,7 @@ def test_load_fchk_lih_321g_hf():
     orb_beta_coeffs = fields['orb_beta_coeffs']
     orb_beta_energies = fields['orb_beta_energies']
     orb_beta_occs = fields['orb_beta_occs']
-    assert orb_beta.nbasis == 11
+    assert orb_beta[0] == 11
     assert abs(orb_beta_energies[0] - (-2.76031)) < 1e-4
     assert abs(orb_beta_energies[-1] - 1.13197) < 1e-4
     assert abs(orb_beta_coeffs[0, 0] - 0.99108) < 1e-4

@@ -27,6 +27,9 @@ from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from horton.io.test.common import compute_mulliken_charges, compute_hf_energy, get_fn
 
 
+#TODO: optional gbasis import?
+
+
 def test_load_mkl_ethanol():
     fn_mkl = get_fn('ethanol.mkl')
     mol = IOData.from_file(fn_mkl)
@@ -59,27 +62,6 @@ def test_load_mkl_ethanol():
     assert mol.orb_alpha_coeffs[1, 0] == -0.0003216
     assert mol.orb_alpha_coeffs[-1, -1] == -0.1424743
 
-    # Comparison of derived properties with ORCA output file
-
-    # nuclear-nuclear repulsion
-    assert abs(compute_nucnuc(mol.coordinates, mol.pseudo_numbers) - 81.87080034) < 1e-5
-
-    # Check normalization
-    olp = mol.obasis.compute_overlap()
-    mol.orb_alpha.check_normalization(olp, 1e-5)
-
-    # Mulliken charges
-    dm_full = mol.get_dm_full()
-    charges = compute_mulliken_charges(mol.obasis, mol.pseudo_numbers, dm_full)
-    expected_charges = np.array([
-        0.143316, -0.445861, 0.173045, 0.173021, 0.024542, 0.143066, 0.143080,
-        -0.754230, 0.400021
-    ])
-    assert abs(charges - expected_charges).max() < 1e-5
-
-    # Compute HF energy
-    assert abs(compute_hf_energy(mol) - -154.01322894) < 1e-4
-
 
 def test_load_mkl_li2():
     fn_mkl = get_fn('li2.mkl')
@@ -90,18 +72,9 @@ def test_load_mkl_li2():
     mol.orb_alpha.check_normalization(olp, 1e-5)
     mol.orb_beta.check_normalization(olp, 1e-5)
 
-    # Check charges
-    dm_full = mol.get_dm_full()
-    charges = compute_mulliken_charges(mol.obasis, mol.pseudo_numbers, dm_full)
-    expected_charges = np.array([0.5, 0.5])
-    assert abs(charges - expected_charges).max() < 1e-5
-
 
 def test_load_mkl_h2():
     fn_mkl = get_fn('h2_sto3g.mkl')
     mol = IOData.from_file(fn_mkl)
     olp = mol.obasis.compute_overlap()
     mol.orb_alpha.check_normalization(olp, 1e-5)
-
-    # Compute HF energy
-    assert abs(compute_hf_energy(mol) - -1.11750589) < 1e-4
