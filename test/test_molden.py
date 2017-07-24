@@ -28,6 +28,10 @@ from horton.io.test.common import compute_mulliken_charges, get_fn
 from horton.test.common import tmpdir, compare_mols
 
 
+#TODO: optional import for obasis?
+#TODO: remove mulliken charges?
+
+
 def test_load_molden_li2_orca():
     fn_molden = get_fn('li2.molden.input')
     mol = IOData.from_file(fn_molden)

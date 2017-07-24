@@ -311,7 +311,7 @@ def test_load_wfn_h2_ccpvqz_virtual():
         np.array([0.0, 0.0]),
     )
     expect = [82.64000, 12.41000, 2.824000, 0.7977000, 0.2581000]
-    assert (abs(obasis.alphas[:5] - expect) < 1.e-5).all()
+    assert (abs(obasis['alphas'][:5] - expect) < 1.e-5).all()
     expect = [-0.596838, 0.144565, 0.209605, 0.460401, 0.460401]
     assert (orb_alpha_energies[:5] == expect).all()
     expect = [12.859067, 13.017471, 16.405834, 25.824716, 26.100443]

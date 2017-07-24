@@ -39,15 +39,15 @@ def test_load_mkl_ethanol():
     assert abs(mol.coordinates[2, 1] / angstrom - 2.239037) < 1e-5
     assert abs(mol.coordinates[5, 2] / angstrom - 0.948420) < 1e-5
     assert mol.obasis.nbasis == 39
-    assert mol.obasis.alphas[0] == 18.731137000
-    assert mol.obasis.alphas[10] == 7.868272400
-    assert mol.obasis.alphas[-3] == 2.825393700
+    assert mol.obasis['alphas'][0] == 18.731137000
+    assert mol.obasis['alphas'][10] == 7.868272400
+    assert mol.obasis['alphas'][-3] == 2.825393700
     # assert mol.obasis.con_coeffs[5] == 0.989450608
     # assert mol.obasis.con_coeffs[7] == 2.079187061
     # assert mol.obasis.con_coeffs[-1] == 0.181380684
     assert (mol.obasis["shell_map"][:5] == [0, 0, 1, 1, 1]).all()
     assert (mol.obasis["shell_types"][:5] == [0, 0, 0, 0, 1]).all()
-    assert (mol.obasis.nprims[-5:] == [3, 1, 1, 3, 1]).all()
+    assert (mol.obasis['nprims'][-5:] == [3, 1, 1, 3, 1]).all()
     assert mol.orb_alpha_coeffs.shape == (39, 39)
     assert mol.orb_alpha_energies.shape == (39,)
     assert mol.orb_alpha_occs.shape == (39,)

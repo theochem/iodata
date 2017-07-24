@@ -70,7 +70,7 @@ def load_molden(filename, gobasis):
 
     if gobasis is None:
         raise RuntimeError("Molden files need an implementation of GOBasis that can calculate overlaps "
-                           "to check normalization.")
+                           "to check normalization. Please supply an implementation of the GOBasis class.")
 
     def helper_coordinates(f, cunit):
         """Load element numbers and coordinates"""

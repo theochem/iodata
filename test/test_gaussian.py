@@ -27,6 +27,8 @@ from nose.tools import assert_raises
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from horton.io.test.common import get_fn
 
+#TODO: obasis.nbasis replacement test
+
 
 def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
