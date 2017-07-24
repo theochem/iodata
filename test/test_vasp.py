@@ -49,8 +49,8 @@ def test_load_chgcar_oxygen():
     ugrid = mol.grid
     assert len(ugrid['shape']) == 3
     assert (ugrid['shape'] == 2).all()
-    assert abs(ugrid.grid_rvecs - mol.cell.rvecs / 2).max() < 1e-10
-    assert abs(ugrid.origin).max() < 1e-10
+    assert abs(ugrid['grid_rvecs'] - mol.cell / 2).max() < 1e-10
+    assert abs(ugrid['origin']).max() < 1e-10
     d = mol.cube_data
     assert abs(d[0, 0, 0] - 0.78406017013E+04 / mol.cell.volume) < 1e-10
     assert abs(d[-1, -1, -1] - 0.10024522914E+04 / mol.cell.volume) < 1e-10
@@ -67,8 +67,8 @@ def test_load_chgcar_water():
     ugrid = mol.grid
     assert len(ugrid['shape']) == 3
     assert (ugrid['shape'] == 3).all()
-    assert abs(ugrid.grid_rvecs - mol.cell.rvecs / 3).max() < 1e-10
-    assert abs(ugrid.origin).max() < 1e-10
+    assert abs(ugrid['grid_rvecs'] - mol.cell / 3).max() < 1e-10
+    assert abs(ugrid['origin']).max() < 1e-10
 
 
 def test_load_locpot_oxygen():
@@ -80,7 +80,7 @@ def test_load_locpot_oxygen():
     ugrid = mol.grid
     assert len(ugrid['shape']) == 3
     assert (ugrid['shape'] == [1, 4, 2]).all()
-    assert abs(ugrid.origin).max() < 1e-10
+    assert abs(ugrid['origin']).max() < 1e-10
     d = mol.cube_data
     assert abs(d[0, 0, 0] / electronvolt - 0.35046350435E+01) < 1e-10
     assert abs(d[0, 1, 0] / electronvolt - 0.213732132354E+01) < 1e-10
@@ -128,4 +128,4 @@ def test_load_dump_consistency():
     assert abs(mol0.coordinates[1] - mol1.coordinates[0]).max() < 1e-10
     assert abs(mol0.coordinates[0] - mol1.coordinates[1]).max() < 1e-10
     assert abs(mol0.coordinates[2] - mol1.coordinates[2]).max() < 1e-10
-    assert abs(mol0.cell.rvecs - mol1.cell.rvecs).max() < 1e-10
+    assert abs(mol0.cell - mol1.cell).max() < 1e-10
