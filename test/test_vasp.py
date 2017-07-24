@@ -23,6 +23,7 @@
 import numpy as np
 
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from horton.io.test.common import get_fn
 
 from horton.test.common import get_random_cell, tmpdir
 
@@ -41,13 +42,13 @@ def test_unravel_counter():
 
 
 def test_load_chgcar_oxygen():
-    fn = context.get_fn('test/CHGCAR.oxygen')
+    fn = get_fn('CHGCAR.oxygen')
     mol = IOData.from_file(fn)
     assert (mol.numbers == [8]).all()
     assert abs(mol.cell.volume - (10 * angstrom) ** 3) < 1e-10
     ugrid = mol.grid
-    assert len(ugrid.shape) == 3
-    assert (ugrid.shape == 2).all()
+    assert len(ugrid['shape']) == 3
+    assert (ugrid['shape'] == 2).all()
     assert abs(ugrid.grid_rvecs - mol.cell.rvecs / 2).max() < 1e-10
     assert abs(ugrid.origin).max() < 1e-10
     d = mol.cube_data
@@ -57,28 +58,28 @@ def test_load_chgcar_oxygen():
 
 
 def test_load_chgcar_water():
-    fn = context.get_fn('test/CHGCAR.water')
+    fn = get_fn('CHGCAR.water')
     mol = IOData.from_file(fn)
     assert mol.title == 'unknown system'
     assert (mol.numbers == [8, 1, 1]).all()
     assert abs(mol.coordinates[1] - np.array([0.074983 * 15 + 0.903122 * 1, 0.903122 * 15, 0.000000])).max() < 1e-10
     assert abs(mol.cell.volume - 15 ** 3) < 1e-10
     ugrid = mol.grid
-    assert len(ugrid.shape) == 3
-    assert (ugrid.shape == 3).all()
+    assert len(ugrid['shape']) == 3
+    assert (ugrid['shape'] == 3).all()
     assert abs(ugrid.grid_rvecs - mol.cell.rvecs / 3).max() < 1e-10
     assert abs(ugrid.origin).max() < 1e-10
 
 
 def test_load_locpot_oxygen():
-    fn = context.get_fn('test/LOCPOT.oxygen')
+    fn = get_fn('LOCPOT.oxygen')
     mol = IOData.from_file(fn)
     assert mol.title == 'O atom in a box'
     assert (mol.numbers[0] == [8]).all()
     assert abs(mol.cell.volume - (10 * angstrom) ** 3) < 1e-10
     ugrid = mol.grid
-    assert len(ugrid.shape) == 3
-    assert (ugrid.shape == [1, 4, 2]).all()
+    assert len(ugrid['shape']) == 3
+    assert (ugrid['shape'] == [1, 4, 2]).all()
     assert abs(ugrid.origin).max() < 1e-10
     d = mol.cube_data
     assert abs(d[0, 0, 0] / electronvolt - 0.35046350435E+01) < 1e-10
@@ -88,7 +89,7 @@ def test_load_locpot_oxygen():
 
 
 def test_load_poscar_water():
-    fn = context.get_fn('test/POSCAR.water')
+    fn = get_fn('POSCAR.water')
     mol = IOData.from_file(fn)
     assert mol.title == 'Water molecule in a box'
     assert (mol.numbers == [8, 1, 1]).all()
@@ -97,7 +98,7 @@ def test_load_poscar_water():
 
 
 def test_load_poscar_cubicbn_cartesian():
-    fn = context.get_fn('test/POSCAR.cubicbn_cartesian')
+    fn = get_fn('POSCAR.cubicbn_cartesian')
     mol = IOData.from_file(fn)
     assert mol.title == 'Cubic BN'
     assert (mol.numbers == [5, 7]).all()
@@ -106,7 +107,7 @@ def test_load_poscar_cubicbn_cartesian():
 
 
 def test_load_poscar_cubicbn_direct():
-    fn = context.get_fn('test/POSCAR.cubicbn_direct')
+    fn = get_fn('POSCAR.cubicbn_direct')
     mol = IOData.from_file(fn)
     assert mol.title == 'Cubic BN'
     assert (mol.numbers == [5, 7]).all()
@@ -115,7 +116,7 @@ def test_load_poscar_cubicbn_direct():
 
 
 def test_load_dump_consistency():
-    mol0 = IOData.from_file(context.get_fn('test/water_element.xyz'))
+    mol0 = IOData.from_file(get_fn('water_element.xyz'))
     mol0.cell = get_random_cell(5.0, 3)
 
     with tmpdir('horton.io.test.test_vasp.test_load_dump_consistency') as dn:

@@ -23,18 +23,19 @@
 import numpy as np
 
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from horton.io.test.common import get_fn
 
 from horton.test.common import tmpdir
 
 
 def test_load_water_number():
-    fn = context.get_fn('test/water_number.xyz')
+    fn = get_fn('water_number.xyz')
     mol = IOData.from_file(fn)
     check_water(mol)
 
 
 def test_load_water_element():
-    fn = context.get_fn('test/water_element.xyz')
+    fn = get_fn('water_element.xyz')
     mol = IOData.from_file(fn)
     check_water(mol)
 
@@ -49,7 +50,7 @@ def check_water(mol):
 
 
 def test_load_dump_consistency():
-    mol0 = IOData.from_file(context.get_fn('test/ch3_hf_sto3g.fchk'))
+    mol0 = IOData.from_file(get_fn('ch3_hf_sto3g.fchk'))
 
     with tmpdir('horton.io.test.test_xyz.test_load_dump_consistency') as dn:
         mol0.to_file('%s/test.xyz' % dn)

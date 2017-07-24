@@ -25,11 +25,12 @@ import numpy as np
 from nose.tools import assert_raises
 
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from horton.io.test.common import get_fn
 
 
 def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
-    fn = context.get_fn('test/water_sto3g_hf_g03.log')
+    fn = get_fn('water_sto3g_hf_g03.log')
     result = load_operators_g09(fn)
 
     overlap = result['olp']
@@ -65,7 +66,7 @@ def test_load_operators_water_sto3g_hf_g03():
 
 def test_load_operators_water_ccpvdz_pure_hf_g03():
     eps = 1e-5
-    fn = context.get_fn('test/water_ccpvdz_pure_hf_g03.log')
+    fn = get_fn('water_ccpvdz_pure_hf_g03.log')
     result = load_operators_g09(fn)
 
     overlap = result['olp']
@@ -102,11 +103,11 @@ def test_load_operators_water_ccpvdz_pure_hf_g03():
 
 def test_load_fchk_nonexistent():
     with assert_raises(IOError):
-        load_fchk(context.get_fn('test/fubar_crap.fchk'))
+        load_fchk(get_fn('fubar_crap.fchk'))
 
 
 def test_load_fchk_hf_sto3g_num():
-    fields = load_fchk(context.get_fn('test/hf_sto3g.fchk'))
+    fields = load_fchk(get_fn('hf_sto3g.fchk'))
     assert fields['title'] == 'hf_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -125,7 +126,7 @@ def test_load_fchk_hf_sto3g_num():
 
 
 def test_load_fchk_h_sto3g_num():
-    fields = load_fchk(context.get_fn('test/h_sto3g.fchk'))
+    fields = load_fchk(get_fn('h_sto3g.fchk'))
     assert fields['title'] == 'h_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -141,7 +142,7 @@ def test_load_fchk_h_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    fields = load_fchk(context.get_fn('test/o2_cc_pvtz_pure.fchk'))
+    fields = load_fchk(get_fn('o2_cc_pvtz_pure.fchk'))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -155,7 +156,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    fields = load_fchk(context.get_fn('test/o2_cc_pvtz_cart.fchk'))
+    fields = load_fchk(get_fn('o2_cc_pvtz_cart.fchk'))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -169,7 +170,7 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
 
 
 def test_load_fchk_water_sto3g_hf():
-    fields = load_fchk(context.get_fn('test/water_sto3g_hf_g03.fchk'))
+    fields = load_fchk(get_fn('water_sto3g_hf_g03.fchk'))
     obasis = fields['obasis']
     assert obasis.nshell == 5
     assert obasis.nbasis == 7
@@ -179,23 +180,26 @@ def test_load_fchk_water_sto3g_hf():
     assert coordinates.shape[1] == 3
     assert len(numbers) == 3
     orb_alpha = fields['orb_alpha']
-    assert orb_alpha.nbasis == 7
-    assert abs(orb_alpha.energies[0] - (-2.02333942E+01)) < 1e-7
-    assert abs(orb_alpha.energies[-1] - 7.66134805E-01) < 1e-7
-    assert abs(orb_alpha.coeffs[0, 0] - 0.99410) < 1e-4
-    assert abs(orb_alpha.coeffs[1, 0] - 0.02678) < 1e-4
-    assert abs(orb_alpha.coeffs[-1, 2] - (-0.44154)) < 1e-4
-    assert abs(orb_alpha.coeffs[3, -1]) < 1e-4
-    assert abs(orb_alpha.coeffs[4, -1] - (-0.82381)) < 1e-4
-    assert abs(orb_alpha.occupations.sum() - 5) == 0.0
-    assert orb_alpha.occupations.min() == 0.0
-    assert orb_alpha.occupations.max() == 1.0
+    orb_alpha_coeffs = fields['orb_alpha_coeffs']
+    orb_alpha_energies = fields['orb_alpha_energies']
+    orb_alpha_occs = fields['orb_alpha_occs']
+    assert orb_alpha[0] == 7
+    assert abs(orb_alpha_energies[0] - (-2.02333942E+01)) < 1e-7
+    assert abs(orb_alpha_energies[-1] - 7.66134805E-01) < 1e-7
+    assert abs(orb_alpha_coeffs[0, 0] - 0.99410) < 1e-4
+    assert abs(orb_alpha_coeffs[1, 0] - 0.02678) < 1e-4
+    assert abs(orb_alpha_coeffs[-1, 2] - (-0.44154)) < 1e-4
+    assert abs(orb_alpha_coeffs[3, -1]) < 1e-4
+    assert abs(orb_alpha_coeffs[4, -1] - (-0.82381)) < 1e-4
+    assert abs(orb_alpha_occs.sum() - 5) == 0.0
+    assert orb_alpha_occs.min() == 0.0
+    assert orb_alpha_occs.max() == 1.0
     energy = fields['energy']
     assert energy == -7.495929232844363E+01
 
 
 def test_load_fchk_lih_321g_hf():
-    fields = load_fchk(context.get_fn('test/li_h_3-21G_hf_g09.fchk'))
+    fields = load_fchk(get_fn('li_h_3-21G_hf_g09.fchk'))
     obasis = fields['obasis']
     assert obasis.nshell == 7
     assert obasis.nbasis == 11
@@ -205,36 +209,42 @@ def test_load_fchk_lih_321g_hf():
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
     orb_alpha = fields['orb_alpha']
+    orb_alpha_coeffs = fields['orb_alpha_coeffs']
+    orb_alpha_energies = fields['orb_alpha_energies']
+    orb_alpha_occs = fields['orb_alpha_occs']
     assert orb_alpha.nbasis == 11
-    assert abs(orb_alpha.energies[0] - (-2.76117)) < 1e-4
-    assert abs(orb_alpha.energies[-1] - 0.97089) < 1e-4
-    assert abs(orb_alpha.coeffs[0, 0] - 0.99105) < 1e-4
-    assert abs(orb_alpha.coeffs[1, 0] - 0.06311) < 1e-4
-    assert abs(orb_alpha.coeffs[3, 2]) < 1e-4
-    assert abs(orb_alpha.coeffs[-1, 9] - 0.13666) < 1e-4
-    assert abs(orb_alpha.coeffs[4, -1] - 0.17828) < 1e-4
-    assert abs(orb_alpha.occupations.sum() - 2) == 0.0
-    assert orb_alpha.occupations.min() == 0.0
-    assert orb_alpha.occupations.max() == 1.0
+    assert abs(orb_alpha_energies[0] - (-2.76117)) < 1e-4
+    assert abs(orb_alpha_energies[-1] - 0.97089) < 1e-4
+    assert abs(orb_alpha_coeffs[0, 0] - 0.99105) < 1e-4
+    assert abs(orb_alpha_coeffs[1, 0] - 0.06311) < 1e-4
+    assert abs(orb_alpha_coeffs[3, 2]) < 1e-4
+    assert abs(orb_alpha_coeffs[-1, 9] - 0.13666) < 1e-4
+    assert abs(orb_alpha_coeffs[4, -1] - 0.17828) < 1e-4
+    assert abs(orb_alpha_occs.sum() - 2) == 0.0
+    assert orb_alpha_occs.min() == 0.0
+    assert orb_alpha_occs.max() == 1.0
     orb_beta = fields['orb_beta']
+    orb_beta_coeffs = fields['orb_beta_coeffs']
+    orb_beta_energies = fields['orb_beta_energies']
+    orb_beta_occs = fields['orb_beta_occs']
     assert orb_beta.nbasis == 11
-    assert abs(orb_beta.energies[0] - (-2.76031)) < 1e-4
-    assert abs(orb_beta.energies[-1] - 1.13197) < 1e-4
-    assert abs(orb_beta.coeffs[0, 0] - 0.99108) < 1e-4
-    assert abs(orb_beta.coeffs[1, 0] - 0.06295) < 1e-4
-    assert abs(orb_beta.coeffs[3, 2]) < 1e-4
-    assert abs(orb_beta.coeffs[-1, 9] - 0.80875) < 1e-4
-    assert abs(orb_beta.coeffs[4, -1] - (-0.15503)) < 1e-4
-    assert abs(orb_beta.occupations.sum() - 1) == 0.0
-    assert orb_beta.occupations.min() == 0.0
-    assert orb_beta.occupations.max() == 1.0
+    assert abs(orb_beta_energies[0] - (-2.76031)) < 1e-4
+    assert abs(orb_beta_energies[-1] - 1.13197) < 1e-4
+    assert abs(orb_beta_coeffs[0, 0] - 0.99108) < 1e-4
+    assert abs(orb_beta_coeffs[1, 0] - 0.06295) < 1e-4
+    assert abs(orb_beta_coeffs[3, 2]) < 1e-4
+    assert abs(orb_beta_coeffs[-1, 9] - 0.80875) < 1e-4
+    assert abs(orb_beta_coeffs[4, -1] - (-0.15503)) < 1e-4
+    assert abs(orb_beta_occs.sum() - 1) == 0.0
+    assert orb_beta_occs.min() == 0.0
+    assert orb_beta_occs.max() == 1.0
     energy = fields['energy']
     assert energy == -7.687331212191968E+00
 
 
 def test_load_fchk_ghost_atoms():
     # Load fchk file with ghost atoms
-    fields = load_fchk(context.get_fn('test/water_dimer_ghost.fchk'))
+    fields = load_fchk(get_fn('water_dimer_ghost.fchk'))
     numbers = fields['numbers']
     coordinates = fields['coordinates']
     mulliken_charges = fields['mulliken_charges']
@@ -249,18 +259,22 @@ def test_load_fchk_ghost_atoms():
 
 
 def test_load_fchk_ch3_rohf_g03():
-    fields = load_fchk(context.get_fn('test/ch3_rohf_sto3g_g03.fchk'))
+    fields = load_fchk(get_fn('ch3_rohf_sto3g_g03.fchk'))
     orb_alpha = fields['orb_alpha']
-    assert orb_alpha.occupations.sum() == 5
+    orb_alpha_coeffs = fields['orb_alpha_coeffs']
+    orb_alpha_occs = fields['orb_alpha_occs']
+    orb_beta_coeffs = fields['orb_beta_coeffs']
+    orb_beta_occs = fields['orb_beta_occs']
+    assert orb_alpha_occs.sum() == 5
     orb_beta = fields['orb_beta']
-    assert orb_beta.occupations.sum() == 4
-    assert (orb_alpha.coeffs == orb_beta.coeffs).all()
+    assert orb_beta_occs.sum() == 4
+    assert (orb_alpha_coeffs == orb_beta_coeffs).all()
     assert not (orb_alpha is orb_beta)
     assert 'dm_full_scf' not in fields
 
 
 def check_load_azirine(key, numbers):
-    fields = load_fchk(context.get_fn('test/2h-azirine-%s.fchk' % key))
+    fields = load_fchk(get_fn('2h-azirine-%s.fchk') % key)
     obasis = fields['obasis']
     assert obasis.nbasis == 33
     dm_full = fields['dm_full_%s' % key]
@@ -285,7 +299,7 @@ def test_load_azirine_mp3():
 
 
 def check_load_nitrogen(key, numbers_full, numbers_spin):
-    fields = load_fchk(context.get_fn('test/nitrogen-%s.fchk' % key))
+    fields = load_fchk(get_fn('nitrogen-%s.fchk') % key)
     obasis = fields['obasis']
     assert obasis.nbasis == 9
     dm_full = fields['dm_full_%s' % key]
@@ -313,7 +327,7 @@ def test_load_nitrogen_mp3():
 
 
 def check_normalization_dm_full_azirine(key):
-    mol = IOData.from_file(context.get_fn('test/2h-azirine-%s.fchk' % key))
+    mol = IOData.from_file(get_fn('2h-azirine-%s.fchk') % key)
     olp = mol.obasis.compute_overlap()
     dm = getattr(mol, 'dm_full_%s' % key)
     check_dm(dm, olp, eps=1e-2, occ_max=2)
@@ -337,12 +351,12 @@ def test_normalization_dm_full_azirine_mp3():
 
 
 def test_nucnuc():
-    mol = IOData.from_file(context.get_fn('test/hf_sto3g.fchk'))
+    mol = IOData.from_file(get_fn('hf_sto3g.fchk'))
     assert abs(compute_nucnuc(mol.coordinates, mol.pseudo_numbers) - 4.7247965053) < 1e-5
 
 
 def test_load_water_hfs_321g():
-    mol = IOData.from_file(context.get_fn('test/water_hfs_321g.fchk'))
+    mol = IOData.from_file(get_fn('water_hfs_321g.fchk'))
     assert mol.polar[0, 0] == 7.23806684E+00
     assert mol.polar[1, 1] == 8.04213953E+00
     assert mol.polar[1, 2] == 1.20021770E-10
@@ -358,7 +372,7 @@ def test_load_water_hfs_321g():
 
 
 def test_load_monosilicic_acid_hf_lan():
-    mol = IOData.from_file(context.get_fn('test/monosilicic_acid_hf_lan.fchk'))
+    mol = IOData.from_file(get_fn('monosilicic_acid_hf_lan.fchk'))
     np.testing.assert_allclose(mol.dipole_moment, [
         -6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
     np.testing.assert_allclose(mol.quadrupole_moment, [

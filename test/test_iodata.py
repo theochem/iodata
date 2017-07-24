@@ -24,6 +24,7 @@ import numpy as np
 from nose.tools import assert_raises
 
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from horton.io.test.common import get_fn
 
 
 def test_typecheck():
@@ -58,8 +59,8 @@ def test_unknown_format():
 
 
 def test_copy():
-    fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
-    fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
+    fn_fchk = get_fn('water_sto3g_hf_g03.fchk')
+    fn_log = get_fn('water_sto3g_hf_g03.log')
     mol1 = IOData.from_file(fn_fchk, fn_log)
     mol2 = mol1.copy()
     assert mol1 != mol2
@@ -71,7 +72,7 @@ def test_copy():
 
 
 def test_dm_water_sto3g_hf():
-    fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
+    fn_fchk = get_fn('water_sto3g_hf_g03.fchk')
     mol = IOData.from_file(fn_fchk)
     dm = mol.get_dm_full()
     assert abs(dm[0, 0] - 2.10503807) < 1e-7
@@ -84,7 +85,7 @@ def test_dm_water_sto3g_hf():
 
 
 def test_dm_lih_sto3g_hf():
-    fn_fchk = context.get_fn('test/li_h_3-21G_hf_g09.fchk')
+    fn_fchk = get_fn('li_h_3-21G_hf_g09.fchk')
     mol = IOData.from_file(fn_fchk)
 
     dm_full = mol.get_dm_full()
@@ -109,7 +110,7 @@ def test_dm_lih_sto3g_hf():
 
 
 def test_dm_ch3_rohf_g03():
-    fn_fchk = context.get_fn('test/ch3_rohf_sto3g_g03.fchk')
+    fn_fchk = get_fn('ch3_rohf_sto3g_g03.fchk')
     mol = IOData.from_file(fn_fchk)
 
     olp = mol.obasis.compute_overlap()

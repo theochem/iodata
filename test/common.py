@@ -21,6 +21,7 @@
 
 
 import numpy as np
+from os import path
 
 from horton.cext import compute_nucnuc
 from horton.meanfield.hamiltonian import REffHam, \
@@ -33,6 +34,10 @@ from horton.part.mulliken import get_mulliken_operators
 
 __all__ = ['compute_mulliken_charges', 'compute_hf_energy']
 
+
+def get_fn(fn):
+    cur_pth = path.split(__file__)[0]
+    return cur_pth + "/cached/{}".format(fn)
 
 def compute_mulliken_charges(obasis, pseudo_numbers, dm):
     operators = get_mulliken_operators(obasis)

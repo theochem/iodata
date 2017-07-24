@@ -23,19 +23,19 @@
 import numpy as np
 
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from horton.io.test.common import get_fn
 
 from horton.test.common import tmpdir
 
 
 def test_load_aelta():
-    fn_cube = context.get_fn('test/aelta.cube')
+    fn_cube = get_fn('aelta.cube')
     mol = IOData.from_file(fn_cube)
     assert mol.title == 'Some random cube for testing (sort of) useless data'
     assert mol.natom == 72
     assert abs(mol.coordinates[5, 0] - 27.275511) < 1e-5
     assert abs(mol.coordinates[-2, 2] - 26.460812) < 1e-5
-    assert (mol.grid.shape == 12).all()
-    assert mol.cell.nvec == 3
+    assert (mol.grid['shape'] == 12).all()
     rvecs = mol.cell.rvecs
     my_rvecs = np.array([[1.8626, 0.1, 0.0], [0.0, 1.8626, 0.0], [0.0, 0.0, 1.8626]], float) * 12
     assert abs(rvecs - my_rvecs).max() < 1e-5
@@ -53,7 +53,7 @@ def test_load_aelta():
 
 
 def test_load_dump_load_aelta():
-    fn_cube1 = context.get_fn('test/aelta.cube')
+    fn_cube1 = get_fn('aelta.cube')
     mol1 = IOData.from_file(fn_cube1)
 
     with tmpdir('horton.io.test.test_cube.test_load_dump_load_aelta') as dn:

@@ -25,12 +25,13 @@ import numpy as np
 from nose.plugins.attrib import attr
 
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from horton.io.test.common import get_fn
 
 from horton.test.common import tmpdir
 
 
 def test_load_fcidump_psi4_h2():
-    mol = IOData.from_file(context.get_fn('test/FCIDUMP.psi4.h2'))
+    mol = IOData.from_file(get_fn('FCIDUMP.psi4.h2'))
     assert mol.core_energy == 0.7151043364864863E+00
     assert mol.nelec == 2
     assert mol.ms2 == 0
@@ -54,7 +55,7 @@ def test_load_fcidump_psi4_h2():
 
 
 def test_load_fcidump_molpro_h2():
-    mol = IOData.from_file(context.get_fn('test/FCIDUMP.molpro.h2'))
+    mol = IOData.from_file(get_fn('FCIDUMP.molpro.h2'))
     assert mol.core_energy == 0.7151043364864863E+00
     assert mol.nelec == 2
     assert mol.ms2 == 0
@@ -79,7 +80,7 @@ def test_load_fcidump_molpro_h2():
 
 def test_dump_load_fcidimp_consistency_ao():
     # Setup IOData
-    mol0 = IOData.from_file(context.get_fn('test/water.xyz'))
+    mol0 = IOData.from_file(get_fn('water.xyz'))
     obasis = get_gobasis(mol0.coordinates, mol0.numbers, '3-21G')
 
     # Compute stuff for fcidump file. test without transforming to mo basis
@@ -131,17 +132,17 @@ def check_dump_load_fcidimp_consistency_mo(fn):
 
 
 def test_dump_load_fcidimp_consistency_mo_water_sto3g():
-    check_dump_load_fcidimp_consistency_mo(context.get_fn('test/h2o_sto3g.fchk'))
+    check_dump_load_fcidimp_consistency_mo(get_fn('h2o_sto3g.fchk'))
 
 
 @attr('slow')
 def test_dump_load_fcidimp_consistency_mo_water_ccpvdz():
-    check_dump_load_fcidimp_consistency_mo(context.get_fn('test/water_ccpvdz_pure_hf_g03.fchk'))
+    check_dump_load_fcidimp_consistency_mo(get_fn('water_ccpvdz_pure_hf_g03.fchk'))
 
 
 def test_dump_load_fcidimp_consistency_mo_active():
     # Setup IOData
-    mol0 = IOData.from_file(context.get_fn('test/h2o_sto3g.fchk'))
+    mol0 = IOData.from_file(get_fn('h2o_sto3g.fchk'))
 
     # Compute stuff for fcidump file.
     one = mol0.obasis.compute_kinetic()

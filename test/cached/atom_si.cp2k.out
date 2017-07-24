@@ -1,0 +1,439 @@
+
+  **** **** ******  **  PROGRAM STARTED AT               2013-02-20 09:06:44.083
+ ***** ** ***  *** **   PROGRAM STARTED ON                     molmod49.ugent.be
+ **    ****   ******    PROGRAM STARTED BY                                  toon
+ ***** **    ** ** **   PROGRAM PROCESS ID                                 15622
+  **** **  *******  **  PROGRAM STARTED IN /home/toon/unief/research/collaborati
+                                           on/fischer/atoms-cp2k/014_si_014_q+00
+                                           /mult03
+
+ CP2K| version string:                    CP2K version 2.4 (Development Version)
+ CP2K| source code revision number:                                        12719
+ CP2K| is freely available from                             http://www.cp2k.org/
+ CP2K| Program compiled at                          Tue Feb 19 05:36:27 CET 2013
+ CP2K| Program compiled on                                     molmod49.ugent.be
+ CP2K| Program compiled for                                    Linux-x86-64-toon
+ CP2K| Input file name                                                   atom.in
+
+ GLOBAL| Method name                                                        ATOM
+ GLOBAL| Project name                                                       ATOM
+ GLOBAL| Preferred FFT library                                             FFTW3
+ GLOBAL| Run type                                                   ENERGY_FORCE
+ GLOBAL| All-to-all communication in single precision                          F
+ GLOBAL| FFTs using library dependent lengths                                  F
+ GLOBAL| Global print level                                               MEDIUM
+ GLOBAL| Total number of message passing processes                             1
+ GLOBAL| Number of threads for this process                                    1
+ GLOBAL| This output is from process                                           0
+
+ MEMORY| system memory details [Kb]
+ MEMORY|                        rank 0           min           max       average
+ MEMORY| MemTotal              4049252       4049252       4049252       4049252
+ MEMORY| MemFree                275792        275792        275792        275792
+ MEMORY| Buffers                579804        579804        579804        579804
+ MEMORY| Cached                1323128       1323128       1323128       1323128
+ MEMORY| Slab                   684864        684864        684864        684864
+ MEMORY| SReclaimable           581736        581736        581736        581736
+ MEMORY| MemLikelyFree         2760460       2760460       2760460       2760460
+
+
+ *** Fundamental physical constants (SI units) ***
+
+ *** Literature: B. J. Mohr and B. N. Taylor,
+ ***             CODATA recommended values of the fundamental physical
+ ***             constants: 2006, Web Version 5.1
+ ***             http://physics.nist.gov/constants
+
+ Speed of light in vacuum [m/s]                             2.99792458000000E+08
+ Magnetic constant or permeability of vacuum [N/A**2]       1.25663706143592E-06
+ Electric constant or permittivity of vacuum [F/m]          8.85418781762039E-12
+ Planck constant (h) [J*s]                                  6.62606896000000E-34
+ Planck constant (h-bar) [J*s]                              1.05457162825177E-34
+ Elementary charge [C]                                      1.60217648700000E-19
+ Electron mass [kg]                                         9.10938215000000E-31
+ Electron g factor [ ]                                     -2.00231930436220E+00
+ Proton mass [kg]                                           1.67262163700000E-27
+ Fine-structure constant                                    7.29735253760000E-03
+ Rydberg constant [1/m]                                     1.09737315685270E+07
+ Avogadro constant [1/mol]                                  6.02214179000000E+23
+ Boltzmann constant [J/K]                                   1.38065040000000E-23
+ Atomic mass unit [kg]                                      1.66053878200000E-27
+ Bohr radius [m]                                            5.29177208590000E-11
+
+ *** Conversion factors ***
+
+ [u] -> [a.u.]                                              1.82288848426455E+03
+ [Angstrom] -> [Bohr] = [a.u.]                              1.88972613288564E+00
+ [a.u.] = [Bohr] -> [Angstrom]                              5.29177208590000E-01
+ [a.u.] -> [s]                                              2.41888432650478E-17
+ [a.u.] -> [fs]                                             2.41888432650478E-02
+ [a.u.] -> [J]                                              4.35974393937059E-18
+ [a.u.] -> [K]                                              3.15774647902944E+05
+ [a.u.] -> [kJ/mol]                                         2.62549961709828E+03
+ [a.u.] -> [kcal/mol]                                       6.27509468713739E+02
+ [a.u.] -> [Pa]                                             2.94210107994716E+13
+ [a.u.] -> [bar]                                            2.94210107994716E+08
+ [a.u.] -> [atm]                                            2.90362800883016E+08
+ [a.u.] -> [eV]                                             2.72113838565563E+01
+ [a.u.] -> [Hz]                                             6.57968392072181E+15
+ [a.u.] -> [1/cm] (wave numbers)                            2.19474631370540E+05
+ [a.u./Bohr**2] -> [1/cm]                                   5.14048714338585E+03
+ 
+ DBCSR| Multiplication driver                                                SMM
+ DBCSR| Multiplication stack size                                           1000
+ DBCSR| Multiplication size stacks                                             0
+
+
+
+                           ****  ******  ****   ****   
+                          **  ** ****** **  ** ******  
+                          ******   **   **  ** **  **  
+                          **  **   **    ****  **  **  
+                                                       
+                             University of Zurich      
+                                 2009 - 2013           
+                                                       
+                                 Version 0.0           
+                                                                   
+
+
+ Atomic Energy Calculation             Silicon [Si]          Atomic number:   14
+
+
+ All Electron Basis
+
+ ********************* Uncontracted Gaussian Type Orbitals *********************
+
+ s Exponents:                    1                                    0.00729900
+                                 2                                    0.01370500
+                                 3                                    0.02573300
+                                 4                                    0.04831600
+                                 5                                    0.09071800
+                                 6                                    0.17033300
+                                 7                                    0.31981900
+                                 8                                    0.60049600
+                                 9                                    1.12749700
+                                10                                    2.11700000
+                                11                                    3.97490200
+                                12                                    7.46331700
+                                13                                   14.01320400
+                                14                                   26.31133900
+                                15                                   49.40244900
+                                16                                   92.75856100
+                                17                                  174.16445600
+                                18                                  327.01302400
+                                19                                  614.00311400
+                                20                                 1152.85874300
+                                21                                 2164.61977200
+                                22                                 4064.31298400
+                                23                                 7631.19705600
+                                24                                14328.41632400
+                                25                                26903.18607400
+                                26                                50513.70678900
+                                27                                94845.07026500
+                                28                               178082.10732000
+                                29                               334368.84868300
+                                30                               627814.48766300
+                                31                              1178791.12385100
+                                32                              2213310.68488600
+                                33                              4155735.55714100
+                                34                              7802853.04671300
+                                35                             14650719.42895400
+                                36                             27508345.79363700
+                                37                             51649961.08019400
+                                38                             96978513.34276401
+                                39                            182087882.61370200
+                                40                            341890134.75133097
+
+ p Exponents:                    1                                    0.00729900
+                                 2                                    0.01370500
+                                 3                                    0.02573300
+                                 4                                    0.04831600
+                                 5                                    0.09071800
+                                 6                                    0.17033300
+                                 7                                    0.31981900
+                                 8                                    0.60049600
+                                 9                                    1.12749700
+                                10                                    2.11700000
+                                11                                    3.97490200
+                                12                                    7.46331700
+                                13                                   14.01320400
+                                14                                   26.31133900
+                                15                                   49.40244900
+                                16                                   92.75856100
+                                17                                  174.16445600
+                                18                                  327.01302400
+                                19                                  614.00311400
+                                20                                 1152.85874300
+                                21                                 2164.61977200
+                                22                                 4064.31298400
+                                23                                 7631.19705600
+                                24                                14328.41632400
+                                25                                26903.18607400
+                                26                                50513.70678900
+                                27                                94845.07026500
+                                28                               178082.10732000
+                                29                               334368.84868300
+                                30                               627814.48766300
+                                31                              1178791.12385100
+                                32                              2213310.68488600
+                                33                              4155735.55714100
+                                34                              7802853.04671300
+                                35                             14650719.42895400
+                                36                             27508345.79363700
+                                37                             51649961.08019400
+                                38                             96978513.34276401
+                                39                            182087882.61370200
+                                40                            341890134.75133097
+
+ d Exponents:                    1                                    0.00729900
+                                 2                                    0.01370500
+                                 3                                    0.02573300
+                                 4                                    0.04831600
+                                 5                                    0.09071800
+                                 6                                    0.17033300
+                                 7                                    0.31981900
+                                 8                                    0.60049600
+                                 9                                    1.12749700
+                                10                                    2.11700000
+                                11                                    3.97490200
+                                12                                    7.46331700
+                                13                                   14.01320400
+                                14                                   26.31133900
+                                15                                   49.40244900
+                                16                                   92.75856100
+                                17                                  174.16445600
+                                18                                  327.01302400
+                                19                                  614.00311400
+                                20                                 1152.85874300
+                                21                                 2164.61977200
+                                22                                 4064.31298400
+                                23                                 7631.19705600
+                                24                                14328.41632400
+                                25                                26903.18607400
+                                26                                50513.70678900
+                                27                                94845.07026500
+                                28                               178082.10732000
+                                29                               334368.84868300
+                                30                               627814.48766300
+                                31                              1178791.12385100
+                                32                              2213310.68488600
+                                33                              4155735.55714100
+                                34                              7802853.04671300
+                                35                             14650719.42895400
+                                36                             27508345.79363700
+                                37                             51649961.08019400
+                                38                             96978513.34276401
+                                39                            182087882.61370200
+                                40                            341890134.75133097
+
+ f Exponents:                    1                                    0.00729900
+                                 2                                    0.01370500
+                                 3                                    0.02573300
+                                 4                                    0.04831600
+                                 5                                    0.09071800
+                                 6                                    0.17033300
+                                 7                                    0.31981900
+                                 8                                    0.60049600
+                                 9                                    1.12749700
+                                10                                    2.11700000
+                                11                                    3.97490200
+                                12                                    7.46331700
+                                13                                   14.01320400
+                                14                                   26.31133900
+                                15                                   49.40244900
+                                16                                   92.75856100
+                                17                                  174.16445600
+                                18                                  327.01302400
+                                19                                  614.00311400
+                                20                                 1152.85874300
+                                21                                 2164.61977200
+                                22                                 4064.31298400
+                                23                                 7631.19705600
+                                24                                14328.41632400
+                                25                                26903.18607400
+                                26                                50513.70678900
+                                27                                94845.07026500
+                                28                               178082.10732000
+                                29                               334368.84868300
+                                30                               627814.48766300
+                                31                              1178791.12385100
+                                32                              2213310.68488600
+                                33                              4155735.55714100
+                                34                              7802853.04671300
+                                35                             14650719.42895400
+                                36                             27508345.79363700
+                                37                             51649961.08019400
+                                38                             96978513.34276401
+                                39                            182087882.61370200
+                                40                            341890134.75133097
+ *******************************************************************************
+
+ Pseudopotential Basis
+
+ ********************** Contracted Gaussian Type Orbitals **********************
+ s Functions
+       1.256768       0.682896 -3.076075
+       0.506394      -0.036890  1.052975
+       0.238884      -0.482266  0.050211
+       0.087337      -0.084131 -0.104794
+ p Functions
+       1.256768       0.263106  0.387366
+       0.506394      -0.266338 -0.513425
+       0.238884      -0.199705 -0.027860
+       0.087337      -0.049022  0.097000
+ d Functions
+       1.256768       0.619007
+       0.506394       0.311198
+       0.238884       0.083723
+       0.087337       0.020149
+ *******************************************************************************
+
+ METHOD    | Unrestricted Kohn-Sham Calculation
+ METHOD    | Nonrelativistic Calculation
+ FUNCTIONAL| ROUTINE=NEW
+ FUNCTIONAL| PBE:
+ FUNCTIONAL| J.P.Perdew, K.Burke, M.Ernzerhof, Phys. Rev. Letter, vol. 77, n 18,
+ FUNCTIONAL|  pp. 3865-3868, (1996){spin polarized}
+
+ ***************************** GTH Pseudopotential *****************************
+          Core Charge                                                        4.0
+          Rc                                                            0.440000
+          C1 C2 ...                                                    -6.269288
+          Angular momentum                                                     0
+          Rcnl                                                          0.435634
+          Nl                                                                   2
+          Hnl                                               8.951742   -2.706271
+                                                                        3.493781
+          Angular momentum                                                     1
+          Rcnl                                                          0.497942
+          Nl                                                                   1
+          Hnl                                                           2.431277
+ *******************************************************************************
+
+ Electronic structure
+    Total number of core electrons                                          0.00
+    Total number of valence electrons                                       4.00
+    Total number of electrons                                               4.00
+    Multiplicity                                                         triplet
+    Alpha Electrons
+    S      1.00
+    P      2.00
+    Beta Electrons
+    S      1.00
+    P      0.00
+
+
+ *******************************************************************************
+                  Iteration          Convergence                     Energy [au]
+ *******************************************************************************
+                          1        0.891497                      -3.516178527532
+                          2        0.139293                      -3.757480126881
+                          3        0.195011E-02                  -3.761586764881
+                          4        0.655109E-03                  -3.761587664802
+                          5        0.437384E-03                  -3.761587683258
+                          6        0.328409E-03                  -3.761587689721
+                          7        0.292918E-03                  -3.761587691433
+                          8        0.164237E-05                  -3.761587698067
+                          9        0.191978E-05                  -3.761587698066
+                         10        0.720366E-06                  -3.761587698067
+
+ Energy components [Hartree]           Total Energy ::           -3.761587698067
+                                        Band Energy ::           -1.043122452177
+                                     Kinetic Energy ::            1.420264081105
+                                   Potential Energy ::           -5.181851779172
+                                      Virial (-V/T) ::            3.648512870324
+                                        Core Energy ::           -5.736440458809
+                                          XC Energy ::           -1.051071404622
+                                     Coulomb Energy ::            3.025924165364
+                       Total Pseudopotential Energy ::           -7.156704539914
+                       Local Pseudopotential Energy ::           -8.011336700023
+                    Nonlocal Pseudopotential Energy ::            0.854632160109
+
+ Orbital energies  State     Spin  L     Occupation   Energy[a.u.]    Energy[eV]
+
+                       1    alpha  0          1.000      -0.398762    -10.850855
+                       1     beta  0          1.000      -0.334569     -9.104078
+
+                       1    alpha  1          2.000      -0.154896     -4.214936
+                       1     beta  1          0.000      -0.092238     -2.509922
+
+
+ Atomic orbital expansion coefficients [Alpha]
+
+    ORBITAL      L = 0      State =   1
+        1.522011166887716E+00
+        5.826783575694383E-02
+
+    ORBITAL      L = 1      State =   1
+        1.105690402569389E+00
+       -2.168156687704281E-01
+
+ Atomic orbital expansion coefficients [Beta]
+
+    ORBITAL      L = 0      State =   1
+        1.521757206856266E+00
+        6.109107594608343E-02
+
+    ORBITAL      L = 1      State =   1
+        1.096000187325513E+00
+       -2.407297795767154E-01
+
+
+                             NORMAL TERMINATION OF     
+                                                       
+                           ****  ******  ****   ****   
+                          **  ** ****** **  ** ******  
+                          ******   **   **  ** **  **  
+                          **  **   **    ****  **  **  
+
+
+ -------------------------------------------------------------------------------
+ -                                                                             -
+ -                           R E F E R E N C E S                               -
+ -                                                                             -
+ -------------------------------------------------------------------------------
+ 
+ CP2K version 2.4 (Development Version), the CP2K developers group (2013).
+ CP2K is freely available from http://www.cp2k.org/ .
+
+ Frigo, M; Johnson, SG. 
+ PROCEEDINGS OF THE IEEE, 93 (2), 216-231 (2005). 
+ The design and implementation of FFTW3.
+ http://dx.doi.org/10.1109/JPROC.2004.840301
+
+
+ Perdew, JP; Burke, K; Ernzerhof, M. 
+ PHYSICAL REVIEW LETTERS, 77 (18), 3865-3868 (1996). 
+ Generalized gradient approximation made simple.
+ http://dx.doi.org/10.1103/PhysRevLett.77.3865
+
+
+ -------------------------------------------------------------------------------
+ -                                                                             -
+ -                                T I M I N G                                  -
+ -                                                                             -
+ -------------------------------------------------------------------------------
+ SUBROUTINE                       CALLS  ASD         SELF TIME        TOTAL TIME
+                                              AVERAGE  MAXIMUM  AVERAGE  MAXIMUM
+ CP2K                                 1  1.0    0.002    0.002    0.031    0.031
+ atom_energy_opt                      1  3.0    0.015    0.015    0.028    0.028
+ atom_code                            1  2.0    0.000    0.000    0.028    0.028
+ calculate_atom_unrestricted          1  5.0    0.002    0.002    0.010    0.010
+ calculate_atom                       1  4.0    0.000    0.000    0.010    0.010
+ calculate_atom_vxc_lsd              10  6.0    0.001    0.001    0.008    0.008
+ pbe_lsd_eval                        10  8.0    0.007    0.007    0.007    0.007
+ xc_functional_eval                  10  7.0    0.000    0.000    0.007    0.007
+ parser_read_line_low                 2  4.0    0.002    0.002    0.002    0.002
+ create_grid_atom                     2  4.0    0.001    0.001    0.001    0.001
+ get_fft_scratch                      1  3.0    0.001    0.001    0.001    0.001
+ fft3d_s                              1  2.0    0.000    0.000    0.001    0.001
+ -------------------------------------------------------------------------------
+
+  **** **** ******  **  PROGRAM ENDED AT                 2013-02-20 09:06:44.173
+ ***** ** ***  *** **   PROGRAM RAN ON                         molmod49.ugent.be
+ **    ****   ******    PROGRAM RAN BY                                      toon
+ ***** **    ** ** **   PROGRAM PROCESS ID                                 15622
+  **** **  *******  **  PROGRAM STOPPED IN /home/toon/unief/research/collaborati
+                                           on/fischer/atoms-cp2k/014_si_014_q+00
+                                           /mult03

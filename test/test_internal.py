@@ -23,6 +23,7 @@
 import h5py as h5
 
 from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from horton.io.test.common import get_fn
 
 from horton.test.common import tmpdir, compare_mols
 
@@ -30,8 +31,8 @@ from horton.test.common import tmpdir, compare_mols
 def test_consistency_file():
     with tmpdir('horton.io.test.test_chk.test_consistency_file') as dn:
         fn_h5 = '%s/foo.h5' % dn
-        fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
-        fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
+        fn_fchk = get_fn('water_sto3g_hf_g03.fchk')
+        fn_log = get_fn('water_sto3g_hf_g03.log')
         mol1 = IOData.from_file(fn_fchk, fn_log)
         mol1.to_file(fn_h5)
         mol2 = IOData.from_file(fn_h5)
@@ -40,8 +41,8 @@ def test_consistency_file():
 
 def test_consistency_core():
     with h5.File('horton.io.test.test_chk.test_consistency_core', driver='core', backing_store=False) as f:
-        fn_fchk = context.get_fn('test/water_sto3g_hf_g03.fchk')
-        fn_log = context.get_fn('test/water_sto3g_hf_g03.log')
+        fn_fchk = get_fn('water_sto3g_hf_g03.fchk')
+        fn_log = get_fn('water_sto3g_hf_g03.log')
         mol1 = IOData.from_file(fn_fchk, fn_log)
         mol1.to_file(f)
         mol2 = IOData.from_file(f)
