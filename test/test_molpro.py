@@ -79,7 +79,7 @@ def test_load_fcidump_molpro_h2():
 
 
 def test_dump_load_fcidimp_consistency_ao():
-    # TODO: replace with random data?
+    # TODO: replace with random data
     # Setup IOData
     mol0 = IOData.from_file(get_fn('water.xyz'))
     obasis = get_gobasis(mol0.coordinates, mol0.numbers, '3-21G')
@@ -107,7 +107,7 @@ def test_dump_load_fcidimp_consistency_ao():
 
 
 def check_dump_load_fcidimp_consistency_mo(fn):
-    # TODO: replace with random data?
+    # TODO: replace with random data
     # Setup IOData
     mol0 = IOData.from_file(fn)
 
@@ -143,7 +143,7 @@ def test_dump_load_fcidimp_consistency_mo_water_ccpvdz():
 
 
 def test_dump_load_fcidimp_consistency_mo_active():
-    # TODO: replace with random data?
+    # TODO: replace with random data
     # Setup IOData
     mol0 = IOData.from_file(get_fn('h2o_sto3g.fchk'))
 
