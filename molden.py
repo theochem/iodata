@@ -23,8 +23,8 @@ from collections import OrderedDict
 
 import numpy as np
 
-from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis, \
-    get_shell_nbasis, gob_cart_normalization
+from . overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
+from . utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
 from . periodic import sym2num, num2sym
 
 
@@ -52,7 +52,7 @@ def _get_molden_permutation(shell_types, reverse=False):
     return np.array(permutation, dtype=int)
 
 
-def load_molden(filename, gobasis):
+def load_molden(filename):
     """Load data from a molden input file.
 
     Parameters
@@ -67,10 +67,6 @@ def load_molden(filename, gobasis):
         ``pseudo_numbers``, ``obasis``, ``orb_alpha``, ``signs``. It may also contain:
         ``title``, ``orb_beta``.
     """
-
-    if gobasis is None:
-        raise RuntimeError("Molden files need an implementation of GOBasis that can calculate overlaps "
-                           "to check normalization. Please supply an implementation of the GOBasis class.")
 
     def helper_coordinates(f, cunit):
         """Load element numbers and coordinates"""
@@ -326,7 +322,7 @@ def load_molden(filename, gobasis):
         result['orb_beta_energies'] = orb_beta_energies
         result['orb_beta_occupations'] = orb_beta_occupations
 
-    _fix_molden_from_buggy_codes(result, filename, gobasis)
+    _fix_molden_from_buggy_codes(result, filename)
 
     return result
 
@@ -362,7 +358,7 @@ def _is_normalized_properly(obasis, permutation, orb_alpha, orb_beta, signs=None
     if signs is None:
         signs = np.ones(obasis.nbasis, int)
     # Compute the overlap matrix.
-    olp = obasis.compute_overlap()
+    olp = compute_overlap(*obasis.values())
 
     # Convenient code for debugging files coming from crappy QC codes.
     # np.set_printoptions(linewidth=5000, precision=2, suppress=True, threshold=100000)
@@ -482,7 +478,7 @@ def _get_fixed_con_coeffs(nprims, shell_types, alphas, con_coeffs, code):
         return fixed_con_coeffs
 
 
-def _normalized_contractions(obasis_dict, gobasis):
+def _normalized_contractions(obasis_dict):
     """Return contraction coefficients of normalized contractions."""
     # Files written by Molden don't need this and have properly normalized contractions.
     # When Molden reads files in the Molden format, it does renormalize the contractions
@@ -500,17 +496,15 @@ def _normalized_contractions(obasis_dict, gobasis):
         nprims = np.array([len(alphas)])
         con_coeffs = new_con_coeffs[iprim:iprim + nprim]
 
-        gbs = gobasis(centers, shell_map, nprims, shell_types, alphas, con_coeffs)
-
         # 2) Get the first diagonal element of the overlap matrix
-        olpdiag = gbs.compute_overlap()[0, 0]
+        olpdiag = compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs)[0, 0]
         # 3) Normalize the contraction
         con_coeffs /= np.sqrt(olpdiag)
         iprim += nprim
     return new_con_coeffs
 
 
-def _fix_molden_from_buggy_codes(result, filename, gobasis):
+def _fix_molden_from_buggy_codes(result, filename):
     """Detect errors in the data loaded from a molden/mkl/... file and correct.
 
     Parameters
@@ -524,8 +518,7 @@ def _fix_molden_from_buggy_codes(result, filename, gobasis):
    """
     obasis_dict = result['obasis']
     permutation = result.get('permutation', None)
-    obasis = gobasis(*obasis_dict.values())
-    if _is_normalized_properly(obasis, permutation, result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
+    if _is_normalized_properly(obasis_dict, permutation, result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
         # The file is good. No need to change data.
         return
     print('5:Detected incorrect normalization of orbitals loaded from a file.')
@@ -537,11 +530,10 @@ def _fix_molden_from_buggy_codes(result, filename, gobasis):
     if orca_con_coeffs is not None:
         # Only try if some changes were made to the contraction coefficients.
         obasis_dict["con_coeffs"] = orca_con_coeffs
-        orca_obasis = gobasis(*obasis_dict.values())
-        if _is_normalized_properly(orca_obasis, permutation,
+        if _is_normalized_properly(obasis_dict, permutation,
                                    result['orb_alpha_coeffs'], result.get('orb_beta_coeffs'), orca_signs):
             print('5:Detected typical ORCA errors in file. Fixing them...')
-            result['obasis'] = orca_obasis
+            result['obasis'] = obasis_dict
             result['signs'] = orca_signs
             return
 
@@ -551,11 +543,10 @@ def _fix_molden_from_buggy_codes(result, filename, gobasis):
     if psi4_con_coeffs is not None:
         # Only try if some changes were made to the contraction coefficients.
         obasis_dict["con_coeffs"] = psi4_con_coeffs
-        psi4_obasis = gobasis(*obasis_dict.values())
-        if _is_normalized_properly(psi4_obasis, permutation,
+        if _is_normalized_properly(obasis_dict, permutation,
                                    result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
             print('5:Detected typical PSI4 errors in file. Fixing them...')
-            result['obasis'] = psi4_obasis
+            result['obasis'] = obasis_dict
             return
 
     # -- Turbomole
@@ -564,22 +555,20 @@ def _fix_molden_from_buggy_codes(result, filename, gobasis):
     if tb_con_coeffs is not None:
         # Only try if some changes were made to the contraction coefficients.
         obasis_dict["con_coeffs"] = tb_con_coeffs
-        tb_obasis = gobasis(*obasis_dict.values())
-        if _is_normalized_properly(tb_obasis, permutation,
+        if _is_normalized_properly(obasis_dict, permutation,
                                    result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
             print('5:Detected typical Turbomole errors in file. Fixing them...')
-            result['obasis'] = tb_obasis
+            result['obasis'] = obasis_dict
             return
 
     # --- Renormalized contractions
     print('5:Last resort: trying by renormalizing all contractions')
-    normed_con_coeffs = _normalized_contractions(obasis_dict, gobasis)
+    normed_con_coeffs = _normalized_contractions(obasis_dict)
     obasis_dict["con_coeffs"] = normed_con_coeffs
-    normed_obasis = gobasis(*obasis_dict.values())
-    if _is_normalized_properly(normed_obasis, permutation,
+    if _is_normalized_properly(obasis_dict, permutation,
                                result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
         print('5:Detected unnormalized contractions in file. Fixing them...')
-        result['obasis'] = normed_obasis
+        result['obasis'] = obasis_dict
         return
 
     raise IOError(('Could not correct the data read from %s. The molden or '

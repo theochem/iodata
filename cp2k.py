@@ -23,7 +23,8 @@ from collections import OrderedDict
 
 import numpy as np
 
-from . utils import shells_to_nbasis, str_to_shell_types, fac2
+from . utils import shells_to_nbasis, str_to_shell_types
+from . overlap import fac2
 
 __all__ = ['load_atom_cp2k']
 

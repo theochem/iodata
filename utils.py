@@ -20,6 +20,7 @@
 # --
 
 import numpy as np
+from . overlap import get_shell_nbasis
 
 
 __all__ = ['set_four_index_element']
@@ -67,30 +68,5 @@ def set_four_index_element(four_index_object, i, j, k, l, value):
 
 
 def shells_to_nbasis(shell_types):
-    nbasis_shell = [2 * i + 1 for i in shell_types]
+    nbasis_shell = [get_shell_nbasis(i) for i in shell_types]
     return sum(nbasis_shell)
-
-
-def get_shell_nbasis(shell):
-    if shell > 0:  # Cartesian
-        return (shell + 1) * (shell + 2) / 2
-    elif shell == -1:
-        raise ValueError
-    else:  # Pure
-        return -2 * shell + 1
-
-
-def gob_cart_normalization(alpha, n):
-    # sqrt(pow(4.0*alpha, n[0]+n[1]+n[2])*pow(2.0*alpha/M_PI, 1.5)
-    #        /(fac2(2*n[0]-1)*fac2(2*n[1]-1)*fac2(2*n[2]-1)));
-
-    vfac2 = np.vectorize(fac2)
-    return np.sqrt((4*alpha)**sum(n) * (2*alpha/np.pi)**1.5 / np.prod(vfac2(2*n-1)))
-
-
-def fac2(n):
-    result = 1
-    while n > 1:
-        result *= n
-        n -= 2
-    return result
