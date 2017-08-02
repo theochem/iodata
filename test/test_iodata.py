@@ -23,8 +23,8 @@
 import numpy as np
 from nose.tools import assert_raises
 
-from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from horton.io.test.common import get_fn
+from . common import get_fn
+from .. iodata import IOData
 
 
 def test_typecheck():

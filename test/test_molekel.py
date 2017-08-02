@@ -22,9 +22,10 @@
 
 import numpy as np
 
-from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-from horton.io.test.common import compute_mulliken_charges, compute_hf_energy, get_fn
+from . common import get_fn
+from .. iodata import IOData
+from .. utils import angstrom
 
 
 #TODO: optional gbasis import?

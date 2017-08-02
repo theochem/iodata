@@ -20,8 +20,9 @@
 # --
 
 import numpy as np
-from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from horton.io.test.common import compute_mulliken_charges, compute_hf_energy, get_fn
+from . common import compute_mulliken_charges, compute_hf_energy, get_fn
+from .. wfn import load_wfn_low, get_permutation_basis, get_permutation_orbital, get_mask
+from .. iodata import IOData
 
 #TODO: removed density, kin, nucnuc checks
 
@@ -176,7 +177,7 @@ def test_get_mask():
 
 
 def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
-    fn_wfn = context.get_fn(fn_wfn)
+    fn_wfn = get_fn(fn_wfn)
     mol = IOData.from_file(fn_wfn)
     assert mol.obasis.nbasis == nbasis
     olp = mol.obasis.compute_overlap()

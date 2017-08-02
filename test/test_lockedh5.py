@@ -22,9 +22,8 @@
 
 from nose.tools import assert_raises
 
-from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-from horton.test.common import tmpdir
+from . common import tmpdir
+from .. lockedh5 import LockedH5File
 
 
 def test_locked1():

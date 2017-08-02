@@ -70,3 +70,17 @@ def set_four_index_element(four_index_object, i, j, k, l, value):
 def shells_to_nbasis(shell_types):
     nbasis_shell = [get_shell_nbasis(i) for i in shell_types]
     return sum(nbasis_shell)
+
+
+def volume(rvecs):
+    """Takes a numpy matrix of shape (x,3) where x is in {1,2,3}"""
+    nvecs = rvecs.shape[0]
+    if len(rvecs.shape) == 1 or nvecs == 1:
+        return np.linalg.norm(rvecs)
+    elif nvecs == 2:
+        return np.linalg.norm(np.cross(rvecs[0], rvecs[1]))
+    elif nvecs == 3:
+        return np.linalg.det(rvecs)
+    else:
+        print "1: Expected rvecs to be of shape (x,3), where x is in {1,2,3}"
+        raise ValueError

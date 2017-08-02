@@ -22,7 +22,7 @@
 from collections import OrderedDict
 
 import numpy as np
-from . utils import angstrom, electronvolt
+from . utils import angstrom, electronvolt, volume
 from . periodic import num2sym, sym2num
 
 __all__ = ['load_chgcar', 'load_locpot', 'load_poscar', 'dump_poscar']
@@ -99,11 +99,11 @@ def _load_vasp_grid(filename):
             The VASP filename
 
        **Returns:** a dictionary containing: ``title``, ``coordinates``,
-       ``numbers``, ``cell``, ``grid``, ``cube_data``.
+       ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
     """
     with open(filename) as f:
         # Load header
-        title, cell, numbers, coordinates = _load_vasp_header(f)
+        title, rvecs, numbers, coordinates = _load_vasp_header(f)
 
         # read the shape of the data
         shape = np.array([int(w) for w in f.next().split()])
@@ -124,7 +124,7 @@ def _load_vasp_grid(filename):
 
     ugrid = OrderedDict()
     ugrid["origin"] = np.zeros(3)
-    ugrid['grid_rvecs'] = cell / shape.reshape(-1, 1)
+    ugrid['grid_cell'] = rvecs / shape.reshape(-1, 1)
     ugrid['shape'] = shape
     ugrid['pbc'] = np.ones(3, int)
 
@@ -132,7 +132,7 @@ def _load_vasp_grid(filename):
         'title': title,
         'coordinates': coordinates,
         'numbers': numbers,
-        'cell': cell,
+        'cell': rvecs,
         'grid': ugrid,
         'cube_data': cube_data,
     }
@@ -151,7 +151,7 @@ def load_chgcar(filename):
     """
     result = _load_vasp_grid(filename)
     # renormalize electron density
-    result['cube_data'] /= result['cell'].volume
+    result['cube_data'] /= volume(result['cell'])
     return result
 
 
@@ -204,14 +204,14 @@ def dump_poscar(filename, data):
 
        data
             An IOData instance. Must contain ``coordinates``, ``numbers``,
-            ``cell``. May contain ``title``.
+            ``rvecs``, ``cell_frac``. May contain ``title``.
     """
     with open(filename, 'w') as f:
         print >> f, getattr(data, 'title', 'Created with HORTON')
         print >> f, '   1.00000000000000'
 
         # Write cell vectors, each row is one vector in angstrom:
-        rvecs = data.cell.rvecs
+        rvecs = data.rvecs
         for rvec in rvecs:
             print >> f, '  % 21.16f % 21.16f % 21.16f' % tuple(rvec / angstrom)
 
@@ -227,5 +227,5 @@ def dump_poscar(filename, data):
         for unumber in unumbers:
             indexes = (data.numbers == unumber).nonzero()[0]
             for index in indexes:
-                row = data.cell.to_frac(data.coordinates[index])
+                row = data.cell_frac(data.coordinates[index])
                 print >> f, '  % 21.16f % 21.16f % 21.16f   F   F   F' % tuple(row)

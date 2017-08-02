@@ -22,10 +22,8 @@
 
 import numpy as np, os
 
-from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-from horton.io.test.common import compute_mulliken_charges, get_fn
-from horton.test.common import tmpdir, compare_mols
+from . common import compute_mulliken_charges, get_fn, tmpdir, compare_mols
+from .. iodata import IOData
 
 
 #TODO: optional import for obasis?
@@ -178,7 +176,7 @@ def test_load_molden_nh3_turbomole():
 
 
 def check_load_dump_consistency(fn):
-    mol1 = IOData.from_file(context.get_fn(os.path.join('test', fn)))
+    mol1 = IOData.from_file(get_fn(fn))
     with tmpdir('horton.io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
         fn_tmp = os.path.join(dn, 'foo.molden')
         mol1.to_file(fn_tmp)

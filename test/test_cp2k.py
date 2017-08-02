@@ -23,9 +23,10 @@
 
 from nose.tools import assert_raises
 
-from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from horton.io.test.common import get_fn
-from horton.test.common import truncated_file
+
+from . common import get_fn, truncated_file
+
+from .. iodata import IOData
 
 # TODO: add more obasis tests?
 

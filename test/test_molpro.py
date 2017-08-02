@@ -20,14 +20,10 @@
 # --
 
 
-import os
 import numpy as np
-from nose.plugins.attrib import attr
 
-from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from horton.io.test.common import get_fn
-
-from horton.test.common import tmpdir
+from .common import get_fn, tmpdir
+from ..iodata import IOData
 
 
 def test_load_fcidump_psi4_h2():
@@ -82,16 +78,10 @@ def test_dump_load_fcidimp_consistency_ao():
     # TODO: replace with random data
     # Setup IOData
     mol0 = IOData.from_file(get_fn('water.xyz'))
-    obasis = get_gobasis(mol0.coordinates, mol0.numbers, '3-21G')
-
-    # Compute stuff for fcidump file. test without transforming to mo basis
-    mol0.core_energy = compute_nucnuc(mol0.coordinates, mol0.pseudo_numbers)
     mol0.nelec = 10
     mol0.ms2 = 1
-    mol0.one_mo = (
-        obasis.compute_kinetic() +
-        obasis.compute_nuclear_attraction(mol0.coordinates, mol0.pseudo_numbers))
-    mol0.two_mo = obasis.compute_electron_repulsion()
+    mol0.one_mo = np.random.rand(5, 5)
+    mol0.two_mo = np.random.rand(5, 5, 5, 5)
 
     # Dump to a file and load it again
     with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_ao') as dn:
@@ -99,72 +89,6 @@ def test_dump_load_fcidimp_consistency_ao():
         mol1 = IOData.from_file('%s/FCIDUMP' % dn)
 
     # Compare results
-    np.testing.assert_equal(mol0.core_energy, mol1.core_energy)
-    np.testing.assert_equal(mol0.nelec, mol1.nelec)
-    np.testing.assert_equal(mol0.ms2, mol1.ms2)
-    np.testing.assert_almost_equal(mol0.one_mo, mol1.one_mo)
-    np.testing.assert_almost_equal(mol0.two_mo, mol1.two_mo)
-
-
-def check_dump_load_fcidimp_consistency_mo(fn):
-    # TODO: replace with random data
-    # Setup IOData
-    mol0 = IOData.from_file(fn)
-
-    # Compute stuff for fcidump file.
-    one = mol0.obasis.compute_kinetic()
-    mol0.obasis.compute_nuclear_attraction(mol0.coordinates, mol0.pseudo_numbers, one)
-    two = mol0.obasis.compute_electron_repulsion()
-
-    # transform to mo basis, skip core energy
-    (mol0.one_mo,), (mol0.two_mo,) = transform_integrals(one, two, 'tensordot', mol0.orb_alpha)
-
-    # Dump to a file and load it again
-    with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_mo_%s' % os.path.basename(fn)) as dn:
-        fn = '%s/FCIDUMP' % dn
-        mol0.to_file(fn)
-        mol1 = IOData.from_file(fn)
-
-    # Compare results
-    assert mol1.core_energy == 0.0
-    assert mol1.nelec == 0
-    assert mol1.ms2 == 0
-    np.testing.assert_almost_equal(mol0.one_mo, mol1.one_mo)
-    np.testing.assert_almost_equal(mol0.two_mo, mol1.two_mo)
-
-
-def test_dump_load_fcidimp_consistency_mo_water_sto3g():
-    check_dump_load_fcidimp_consistency_mo(get_fn('h2o_sto3g.fchk'))
-
-
-@attr('slow')
-def test_dump_load_fcidimp_consistency_mo_water_ccpvdz():
-    check_dump_load_fcidimp_consistency_mo(get_fn('water_ccpvdz_pure_hf_g03.fchk'))
-
-
-def test_dump_load_fcidimp_consistency_mo_active():
-    # TODO: replace with random data
-    # Setup IOData
-    mol0 = IOData.from_file(get_fn('h2o_sto3g.fchk'))
-
-    # Compute stuff for fcidump file.
-    one = mol0.obasis.compute_kinetic()
-    mol0.obasis.compute_nuclear_attraction(mol0.coordinates, mol0.pseudo_numbers, one)
-    two = mol0.obasis.compute_electron_repulsion()
-
-    # transform to mo basis and use only active space
-    enn = compute_nucnuc(mol0.coordinates, mol0.pseudo_numbers)
-    mol0.one_mo, mol0.two_mo, mol0.core_energy = split_core_active(one, two, enn, mol0.orb_alpha, 2, 4)
-    mol0.nelec = 10
-    mol0.ms2 = 0
-
-    # Dump to a file and load it again
-    with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_mo_active') as dn:
-        mol0.to_file('%s/FCIDUMP' % dn)
-        mol1 = IOData.from_file('%s/FCIDUMP' % dn)
-
-    # Compare results
-    np.testing.assert_equal(mol0.core_energy, mol1.core_energy)
     np.testing.assert_equal(mol0.nelec, mol1.nelec)
     np.testing.assert_equal(mol0.ms2, mol1.ms2)
     np.testing.assert_almost_equal(mol0.one_mo, mol1.one_mo)

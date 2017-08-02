@@ -24,8 +24,9 @@ import numpy as np
 
 from nose.tools import assert_raises
 
-from horton import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from horton.io.test.common import get_fn
+from . common import get_fn
+from .. gaussian import load_operators_g09, load_fchk
+from .. iodata import IOData
 
 #TODO: obasis.nbasis replacement test
 
@@ -329,6 +330,7 @@ def test_load_nitrogen_mp3():
 
 
 def check_normalization_dm_full_azirine(key):
+    #TODO: replace with cached data
     mol = IOData.from_file(get_fn('2h-azirine-%s.fchk') % key)
     olp = mol.obasis.compute_overlap()
     dm = getattr(mol, 'dm_full_%s' % key)
@@ -350,11 +352,6 @@ def test_normalization_dm_full_azirine_mp2():
 
 def test_normalization_dm_full_azirine_mp3():
     check_normalization_dm_full_azirine('mp3')
-
-
-def test_nucnuc():
-    mol = IOData.from_file(get_fn('hf_sto3g.fchk'))
-    assert abs(compute_nucnuc(mol.coordinates, mol.pseudo_numbers) - 4.7247965053) < 1e-5
 
 
 def test_load_water_hfs_321g():
