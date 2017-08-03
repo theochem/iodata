@@ -25,6 +25,7 @@ from nose.tools import assert_raises
 
 from . common import get_fn
 from .. iodata import IOData
+from .. overlap import compute_overlap
 
 
 def test_typecheck():
@@ -113,7 +114,7 @@ def test_dm_ch3_rohf_g03():
     fn_fchk = get_fn('ch3_rohf_sto3g_g03.fchk')
     mol = IOData.from_file(fn_fchk)
 
-    olp = mol.obasis.compute_overlap()
+    olp = compute_overlap(*mol.obasis.values())
     dm = mol.get_dm_full()
     assert abs(np.einsum('ab,ba', olp, dm) - 9) < 1e-6
     dm = mol.get_dm_spin()
