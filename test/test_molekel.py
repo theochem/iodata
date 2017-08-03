@@ -25,7 +25,7 @@ import numpy as np
 
 from . common import get_fn, check_normalization
 from .. iodata import IOData
-from .. utils import angstrom
+from .. utils import angstrom, shells_to_nbasis
 from .. overlap import compute_overlap
 
 
@@ -43,7 +43,7 @@ def test_load_mkl_ethanol():
     assert mol.coordinates.shape == (9, 3)
     assert abs(mol.coordinates[2, 1] / angstrom - 2.239037) < 1e-5
     assert abs(mol.coordinates[5, 2] / angstrom - 0.948420) < 1e-5
-    assert mol.obasis.nbasis == 39
+    assert shells_to_nbasis(mol.obasis["shell_types"]) == 39
     assert mol.obasis['alphas'][0] == 18.731137000
     assert mol.obasis['alphas'][10] == 7.868272400
     assert mol.obasis['alphas'][-3] == 2.825393700
