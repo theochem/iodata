@@ -450,7 +450,7 @@ def load_atom_cp2k(filename):
             orb_alpha_energies = np.zeros(norb)
             orb_alpha_occupations = np.zeros(norb)
             _fill_orbitals(orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occupations,
-                           oe_alpha, coeffs_alpha, obasis.shell_types, restricted)
+                           oe_alpha, coeffs_alpha, obasis["shell_types"], restricted)
         else:
             norb_alpha = _get_norb_nel(oe_alpha)[0]
             norb_beta = _get_norb_nel(oe_beta)[0]
@@ -464,17 +464,17 @@ def load_atom_cp2k(filename):
             orb_beta_energies = np.zeros(norb_beta)
             orb_beta_occupations = np.zeros(norb_beta)
             _fill_orbitals(orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occupations,
-                           oe_alpha, coeffs_alpha, obasis.shell_types, restricted)
+                           oe_alpha, coeffs_alpha, obasis["shell_types"], restricted)
             _fill_orbitals(orb_beta_coeffs, orb_beta_energies, orb_beta_occupations,
-                           orb_beta, oe_beta, coeffs_beta, obasis.shell_types, restricted)
+                           oe_beta, coeffs_beta, obasis["shell_types"], restricted)
 
     result = {
         'obasis': obasis,
         'orb_alpha': orb_alpha,
         'orb_alpha_coeffs': orb_alpha_coeffs,
         'orb_alpha_energies': orb_alpha_energies,
-        'orb_alpha_occupations': orb_alpha_occupations,
-        'coordinates': obasis.centers,
+        'orb_alpha_occs': orb_alpha_occupations,
+        'coordinates': obasis["centers"],
         'numbers': np.array([number]),
         'energy': energy,
         'pseudo_numbers': np.array([pseudo_number]),
@@ -483,5 +483,5 @@ def load_atom_cp2k(filename):
         result['orb_beta'] = orb_beta
         result['orb_beta_coeffs'] = orb_beta_coeffs
         result['orb_beta_energies'] = orb_beta_energies
-        result['orb_beta_occupations'] = orb_beta_occupations
+        result['orb_beta_occs'] = orb_beta_occupations
     return result

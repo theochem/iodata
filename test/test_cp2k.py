@@ -24,19 +24,24 @@
 from nose.tools import assert_raises
 
 
-from . common import get_fn, truncated_file
+from . common import get_fn, truncated_file, check_orthonormal
+# from horton.io.test.common import get_fn, truncated_file, check_orthonormal
+
 
 from .. iodata import IOData
+from .. overlap import compute_overlap
 
+# from horton.io.iodata import IOData
+# from horton.io.overlap import compute_overlap
 # TODO: add more obasis tests?
 
 
 def check_orthonormality(mol):
     """Helper function to test if the orbitals are orthonormal."""
-    olp = mol.obasis.compute_overlap()
-    mol.orb_alpha.check_orthonormality(olp)
+    olp = compute_overlap(*mol.obasis.values())
+    check_orthonormal(mol.orb_alpha_occs, mol.orb_alpha_coeffs, olp)
     if hasattr(mol, 'orb_beta'):
-        mol.orb_beta.check_orthonormality(olp)
+        check_orthonormal(mol.orb_beta_occs, mol.orb_beta_coeffs, olp)
 
 
 def test_atom_si_uks():
