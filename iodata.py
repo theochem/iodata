@@ -204,7 +204,7 @@ class IOData(object):
             Natural charges.
 
        obasis
-            An instance of the GOBasis class.
+            An OrderedDict containing parameters to instantiate a GOBasis class.
 
        olp
             The overlap operator.
@@ -280,8 +280,6 @@ class IOData(object):
            For each file format, a specialized function is called that returns a
            dictionary with data from the file.
         """
-        gobasis = kwargs.get("gobasis", None)
-
         result = {}
         for filename in filenames:
             if isinstance(filename, h5.Group) or filename.endswith('.h5'):
@@ -301,7 +299,7 @@ class IOData(object):
                 result.update(load_mkl(filename))
             elif filename.endswith('.molden.input') or filename.endswith('.molden'):
                 from . molden import load_molden
-                result.update(load_molden(filename, gobasis))
+                result.update(load_molden(filename))
             elif filename.endswith('.cube'):
                 from . cube import load_cube
                 result.update(load_cube(filename))
@@ -362,7 +360,7 @@ class IOData(object):
             if orb_alpha_coeffs is not None:
                 orb_alpha_coeffs *= signs.reshape(-1, 1)
             orb_beta_coeffs = result.get('orb_beta_coeffs')
-            if orb_alpha_coeffs is not None:
+            if orb_beta_coeffs is not None:
                 orb_beta_coeffs *= signs.reshape(-1, 1)
             del result['signs']
 

@@ -25,13 +25,7 @@ from contextlib import contextmanager
 import numpy as np
 from os import path
 
-from horton.cext import compute_nucnuc
-from horton.meanfield.hamiltonian import REffHam, \
-    UEffHam
-from horton.meanfield.observable import RTwoIndexTerm, \
-    RDirectTerm, RExchangeTerm, UTwoIndexTerm, \
-    UDirectTerm, UExchangeTerm
-from horton.part.mulliken import get_mulliken_operators
+from . mulliken import get_mulliken_operators
 
 __all__ = ['compute_mulliken_charges', 'compute_hf_energy']
 
@@ -84,18 +78,6 @@ def truncated_file(name, fn_orig, nline, nadd):
         yield fn_truncated
 
 
-def compare_orbs(mol1, mol2):
-    assert (mol1.orb_alpha == mol2.orb_alpha).all()
-    assert (mol1.orb_alpha_coeffs == mol2.orb_alpha_coeffs).all()
-    assert (mol1.orb_alpha_energies == mol2.orb_alpha_energies).all()
-    assert (mol1.orb_alpha_occs == mol2.orb_alpha_occs).all()
-    if hasattr(mol1, "orb_beta") is not None:
-        assert (mol1.orb_beta == mol2.orb_beta).all()
-        assert (mol1.orb_beta_coeffs == mol2.orb_beta_coeffs).all()
-        assert (mol1.orb_beta_energies == mol2.orb_beta_energies).all()
-        assert (mol1.orb_beta_occs == mol2.orb_beta_occs).all()
-
-
 def compare_dict_floats(d1, d2):
     for i, j in zip(d1.values(), d2.values()):
         assert abs(i - j).max() < 1e-8
@@ -111,12 +93,12 @@ def compare_mols(mol1, mol2):
     else:
         assert mol2.obasis is None
     # wfn
-    assert (mol1.orb_alpha == mol2.orb_alpha).all()
+    assert mol1.orb_alpha == mol2.orb_alpha
     assert (mol1.orb_alpha_coeffs == mol2.orb_alpha_coeffs).all()
     assert (mol1.orb_alpha_energies == mol2.orb_alpha_energies).all()
     assert (mol1.orb_alpha_occs == mol2.orb_alpha_occs).all()
-    if hasattr(mol1, "orb_beta") is not None:
-        assert (mol1.orb_beta == mol2.orb_beta).all()
+    if hasattr(mol1, "orb_beta"):
+        assert mol1.orb_beta == mol2.orb_beta
         assert (mol1.orb_beta_coeffs == mol2.orb_beta_coeffs).all()
         assert (mol1.orb_beta_energies == mol2.orb_beta_energies).all()
         assert (mol1.orb_beta_occs == mol2.orb_beta_occs).all()
@@ -159,11 +141,35 @@ def check_orthonormal(occupations, coeffs, overlap, eps=1e-4):
     for i0 in xrange(occupations.size):
         if occupations[i0] == 0:
             continue
-        for i1 in xrange(i0+1):
+        for i1 in xrange(i0 + 1):
             if occupations[i1] == 0:
                 continue
-            dot = np.dot(coeffs[:,i0], np.dot(overlap, coeffs[:,i1]))
+            dot = np.dot(coeffs[:, i0], np.dot(overlap, coeffs[:, i1]))
             if i0 == i1:
-                assert abs(dot-1) < eps
+                assert abs(dot - 1) < eps
             else:
                 assert abs(dot) < eps
+
+
+def check_normalization(coeffs, occupations, overlap, eps=1e-4):
+    """Check that the occupied orbitals are normalized.
+
+    When the orbitals are not normalized, an AssertionError is raised.
+
+    Parameters
+    ----------
+    coeffs : np.ndarray, shape=(nbasis, nfn)
+        Orbital coefficients
+    occupations : np.ndarray, shape=(nfn, )
+        Orbital occupations
+    overlap : np.ndarray, shape=(nbasis, nbasis)
+        The overlap matrix.
+    eps : float
+        The allowed deviation from unity, very loose by default.
+    """
+    for i in xrange(occupations.size):
+        if occupations[i] == 0:
+            continue
+        norm = np.dot(coeffs[:, i], np.dot(overlap, coeffs[:, i]))
+        # print i, norm
+        assert abs(norm - 1) < eps, 'The orbitals are not normalized!'

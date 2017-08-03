@@ -22,8 +22,9 @@
 
 import numpy as np, os
 
-from . common import compute_mulliken_charges, get_fn, tmpdir, compare_mols
+from . common import compute_mulliken_charges, get_fn, tmpdir, compare_mols, check_normalization
 from .. iodata import IOData
+from .. overlap import compute_overlap
 
 
 #TODO: optional import for obasis?
@@ -38,9 +39,9 @@ def test_load_molden_li2_orca():
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=li2'
 
     # Check normalization
-    olp = mol.obasis.compute_overlap()
-    mol.orb_alpha.check_normalization(olp, 1e-5)
-    mol.orb_beta.check_normalization(olp, 1e-5)
+    olp = compute_overlap(*mol.obasis.values())
+    check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
+    check_normalization(mol.orb_beta_coeffs, mol.orb_beta_occs, olp, 1e-5)
 
     # Check Mulliken charges
     dm_full = mol.get_dm_full()
@@ -57,8 +58,8 @@ def test_load_molden_h2o_orca():
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=h2o'
 
     # Check normalization
-    olp = mol.obasis.compute_overlap()
-    mol.orb_alpha.check_normalization(olp, 1e-5)
+    olp = compute_overlap(*mol.obasis.values())
+    check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
 
     # Check Mulliken charges
     dm_full = mol.get_dm_full()

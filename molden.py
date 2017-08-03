@@ -84,7 +84,7 @@ def load_molden(filename):
                 f.seek(last_pos)
                 break
             else:
-                numbers.append(sym2num[words[0]])
+                numbers.append(sym2num[words[0].title()])
                 pseudo_numbers.append(float(words[2]))
                 coordinates.append([float(words[3]), float(words[4]), float(words[5])])
         numbers = np.array(numbers, int)
@@ -356,7 +356,7 @@ def _is_normalized_properly(obasis, permutation, orb_alpha, orb_beta, signs=None
     """
     # Set default value for signs
     if signs is None:
-        signs = np.ones(obasis.nbasis, int)
+        signs = np.ones(orb_alpha.shape[0], int)
     # Compute the overlap matrix.
     olp = compute_overlap(*obasis.values())
 
@@ -377,7 +377,7 @@ def _is_normalized_properly(obasis, permutation, orb_alpha, orb_beta, signs=None
         orbs.append(orb_beta)
     error_max = 0.0
     for orb in orbs:
-        for iorb in xrange(orb.nfn):
+        for iorb in xrange(orb.shape[1]):
             vec = orb[:, iorb].copy()
             if signs is not None:
                 vec *= signs
@@ -529,11 +529,12 @@ def _fix_molden_from_buggy_codes(result, filename):
     orca_con_coeffs = _get_fixed_con_coeffs(*obasis_dict.values()[2:], code='orca')
     if orca_con_coeffs is not None:
         # Only try if some changes were made to the contraction coefficients.
-        obasis_dict["con_coeffs"] = orca_con_coeffs
-        if _is_normalized_properly(obasis_dict, permutation,
+        obasis_dict_orca = obasis_dict.copy()
+        obasis_dict_orca["con_coeffs"] = orca_con_coeffs
+        if _is_normalized_properly(obasis_dict_orca, permutation,
                                    result['orb_alpha_coeffs'], result.get('orb_beta_coeffs'), orca_signs):
             print('5:Detected typical ORCA errors in file. Fixing them...')
-            result['obasis'] = obasis_dict
+            result['obasis'] = obasis_dict_orca
             result['signs'] = orca_signs
             return
 
@@ -542,11 +543,12 @@ def _fix_molden_from_buggy_codes(result, filename):
     psi4_con_coeffs = _get_fixed_con_coeffs(*obasis_dict.values()[2:], code='psi4')
     if psi4_con_coeffs is not None:
         # Only try if some changes were made to the contraction coefficients.
-        obasis_dict["con_coeffs"] = psi4_con_coeffs
-        if _is_normalized_properly(obasis_dict, permutation,
+        obasis_dict_psi4 = obasis_dict.copy()
+        obasis_dict_psi4["con_coeffs"] = psi4_con_coeffs
+        if _is_normalized_properly(obasis_dict_psi4, permutation,
                                    result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
             print('5:Detected typical PSI4 errors in file. Fixing them...')
-            result['obasis'] = obasis_dict
+            result['obasis'] = obasis_dict_psi4
             return
 
     # -- Turbomole
@@ -554,21 +556,23 @@ def _fix_molden_from_buggy_codes(result, filename):
     tb_con_coeffs = _get_fixed_con_coeffs(*obasis_dict.values()[2:], code='turbomole')
     if tb_con_coeffs is not None:
         # Only try if some changes were made to the contraction coefficients.
-        obasis_dict["con_coeffs"] = tb_con_coeffs
-        if _is_normalized_properly(obasis_dict, permutation,
+        obasis_dict_tb = obasis_dict.copy()
+        obasis_dict_tb["con_coeffs"] = tb_con_coeffs
+        if _is_normalized_properly(obasis_dict_tb, permutation,
                                    result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
             print('5:Detected typical Turbomole errors in file. Fixing them...')
-            result['obasis'] = obasis_dict
+            result['obasis'] = obasis_dict_tb
             return
 
     # --- Renormalized contractions
     print('5:Last resort: trying by renormalizing all contractions')
     normed_con_coeffs = _normalized_contractions(obasis_dict)
-    obasis_dict["con_coeffs"] = normed_con_coeffs
-    if _is_normalized_properly(obasis_dict, permutation,
+    obasis_dict_norm = obasis_dict.copy()
+    obasis_dict_norm["con_coeffs"] = normed_con_coeffs
+    if _is_normalized_properly(obasis_dict_norm, permutation,
                                result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
         print('5:Detected unnormalized contractions in file. Fixing them...')
-        result['obasis'] = obasis_dict
+        result['obasis'] = obasis_dict_norm
         return
 
     raise IOError(('Could not correct the data read from %s. The molden or '
@@ -681,7 +685,7 @@ def dump_molden(filename, data):
         def helper_orb(spin, occ_scale=1.0):
             orb_coeffs = getattr(data, 'orb_%s_coeffs' % spin)
             orb_energies = getattr(data, 'orb_%s_energies' % spin)
-            orb_occupations = getattr(data, 'orb_%s_occupations' % spin)
+            orb_occupations = getattr(data, 'orb_%s_occs' % spin)
             for ifn in xrange(orb_coeffs.shape[1]):
                 print >> f, ' Sym=     1a'
                 print >> f, ' Ene= %20.14E' % orb_energies[ifn]

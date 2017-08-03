@@ -20,9 +20,10 @@
 # --
 
 import numpy as np
-from . common import compute_mulliken_charges, compute_hf_energy, get_fn
+from . common import compute_mulliken_charges, compute_hf_energy, get_fn, check_normalization
 from .. wfn import load_wfn_low, get_permutation_basis, get_permutation_orbital, get_mask
 from .. iodata import IOData
+from .. overlap import compute_overlap
 
 #TODO: removed density, kin, nucnuc checks
 
@@ -180,13 +181,13 @@ def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
     fn_wfn = get_fn(fn_wfn)
     mol = IOData.from_file(fn_wfn)
     assert mol.obasis.nbasis == nbasis
-    olp = mol.obasis.compute_overlap()
+    olp = compute_overlap(*mol.obasis.values())
     if restricted:
-        mol.orb_alpha.check_normalization(olp, 1e-5)
+        check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
         assert not hasattr(mol, 'orb_beta')
     else:
-        mol.orb_alpha.check_normalization(olp, 1e-5)
-        mol.orb_beta.check_normalization(olp, 1e-5)
+        check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
+        check_normalization(mol.orb_beta_coeffs, mol.orb_beta_occs, olp, 1e-5)
     if energy is not None:
         assert abs(energy - mol.energy) < 1.e-5
         myenergy = compute_hf_energy(mol)
