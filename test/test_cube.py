@@ -65,7 +65,7 @@ def test_load_dump_load_aelta():
         assert (mol1.numbers == mol2.numbers).all()
         ugrid1 = mol1.grid
         ugrid2 = mol2.grid
-        assert abs(ugrid1.grid_rvecs - ugrid2.grid_rvecs).max() < 1e-4
-        assert (ugrid1.shape == ugrid2.shape).all()
+        assert abs(ugrid1["grid_rvecs"] - ugrid2["grid_rvecs"]).max() < 1e-4
+        assert (ugrid1["shape"] == ugrid2["shape"]).all()
         assert abs(mol1.cube_data - mol2.cube_data).max() < 1e-4
         assert abs(mol1.pseudo_numbers - mol2.pseudo_numbers).max() < 1e-4

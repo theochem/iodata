@@ -80,7 +80,7 @@ def _read_cube_header(f):
 
 
 def _read_cube_data(f, ugrid):
-    data = np.zeros(tuple(ugrid.shape), float)
+    data = np.zeros(tuple(ugrid["shape"]), float)
     tmp = data.ravel()
     counter = 0
     while True:
