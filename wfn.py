@@ -236,7 +236,7 @@ def load_wfn(filename):
         orb_alpha = (nbasis, coefficients.shape[1])
         orb_alpha_coeffs = coefficients
         orb_alpha_energies = mo_energy
-        orb_alpha_occupations = mo_occ / 2
+        orb_alpha_occs = mo_occ / 2
         orb_beta = None
     else:
         # open shell system
@@ -247,11 +247,11 @@ def load_wfn(filename):
         orb_alpha = (nbasis, index)
         orb_alpha_coeffs = np.copy(coefficients[:, :index])
         orb_alpha_energies = np.copy(mo_energy[:index])
-        orb_alpha_occupations = np.copy(mo_occ[:index])
+        orb_alpha_occs = np.copy(mo_occ[:index])
         orb_beta = (nbasis, num_mo - index)
         orb_beta_coeffs = np.copy(coefficients[:, index:])
         orb_beta_energies = np.copy(mo_energy[index:])
-        orb_beta_occupations = np.copy(mo_occ[index:])
+        orb_beta_occs = np.copy(mo_occ[index:])
 
     result = {
         'title': title,
@@ -259,7 +259,7 @@ def load_wfn(filename):
         'orb_alpha': orb_alpha,
         'orb_alpha_coeffs' : orb_alpha_coeffs,
         'orb_alpha_energies' : orb_alpha_energies,
-        'orb_alpha_occupations' : orb_alpha_occupations,
+        'orb_alpha_occs' : orb_alpha_occs,
         'numbers': numbers,
         'obasis': obasis,
         'energy': energy,
@@ -268,5 +268,5 @@ def load_wfn(filename):
         result['orb_beta'] = orb_beta
         result['orb_beta_coeffs'] = orb_beta_coeffs
         result['orb_beta_energies'] = orb_beta_energies
-        result['orb_beta_occupations'] = orb_beta_occupations
+        result['orb_beta_occs'] = orb_beta_occs
     return result

@@ -278,7 +278,7 @@ def load_molden(filename):
         orb_alpha = (nbasis, coeff_alpha.shape[1])
         orb_alpha_coeffs = coeff_alpha
         orb_alpha_energies = ener_alpha
-        orb_alpha_occupations = occ_alpha / 2
+        orb_alpha_occs = occ_alpha / 2
         orb_beta = None
     else:
         nalpha = int(np.round(occ_alpha.sum()))
@@ -289,11 +289,11 @@ def load_molden(filename):
         orb_alpha = (nbasis, coeff_alpha.shape[1])
         orb_alpha_coeffs = coeff_alpha
         orb_alpha_energies = ener_alpha
-        orb_alpha_occupations = occ_alpha
+        orb_alpha_occs = occ_alpha
         orb_beta = (nbasis, coeff_beta.shape[1])
         orb_beta_coeffs = coeff_beta
         orb_beta_energies = ener_beta
-        orb_beta_occupations = occ_beta
+        orb_beta_occs = occ_beta
 
     permutation = _get_molden_permutation(obasis["shell_types"])
 
@@ -308,7 +308,7 @@ def load_molden(filename):
         'orb_alpha': orb_alpha,
         'orb_alpha_coeffs': orb_alpha_coeffs,
         'orb_alpha_energies': orb_alpha_energies,
-        'orb_alpha_occupations': orb_alpha_occupations,
+        'orb_alpha_occs': orb_alpha_occs,
         'numbers': numbers,
         'obasis': obasis,
         'permutation': permutation,
@@ -320,7 +320,7 @@ def load_molden(filename):
         result['orb_beta'] = orb_beta
         result['orb_beta_coeffs'] = orb_beta_coeffs
         result['orb_beta_energies'] = orb_beta_energies
-        result['orb_beta_occupations'] = orb_beta_occupations
+        result['orb_beta_occs'] = orb_beta_occs
 
     _fix_molden_from_buggy_codes(result, filename)
 

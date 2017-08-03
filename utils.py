@@ -20,8 +20,8 @@
 # --
 
 import numpy as np
-from . overlap import get_shell_nbasis
-
+from scipy.linalg import eigh
+from .overlap import get_shell_nbasis
 
 __all__ = ['set_four_index_element']
 
@@ -84,3 +84,62 @@ def volume(rvecs):
     else:
         print "1: Expected rvecs to be of shape (x,3), where x is in {1,2,3}"
         raise ValueError
+
+
+def derive_naturals(dm, overlap):
+    """Derive natural orbitals from a given density matrix and assign the result to self.
+
+    Parameters
+    ----------
+    dm : np.ndarray, shape=(nbasis, nbasis)
+        The density matrix.
+    overlap : np.ndarray, shape=(nbasis, nbasis)
+        The overlap matrix
+
+    Returns
+    -------
+    coeffs : np.ndarray, shape=(nbasis, nfn)
+        Orbital coefficients
+    occs : np.ndarray, shape=(nfn, )
+        Orbital occupations
+    energies : np.ndarray, shape=(nfn, )
+        Orbital energies
+    """
+    # Transform density matrix to Fock-like form
+    sds = np.dot(overlap.T, np.dot(dm, overlap))
+    # Diagonalize and compute eigenvalues
+    evals, evecs = eigh(sds, overlap)
+    coeffs = np.zeros_like(overlap)
+    coeffs = evecs[:, :coeffs.shape[1]]
+    occs = evals
+    energies = np.zeros(overlap.shape[0])
+    return coeffs, occs, energies
+
+
+def check_dm(dm, overlap, eps=1e-4, occ_max=1.0):
+    """Check if the density matrix has eigenvalues in the proper range.
+
+    Parameters
+    ----------
+    dm : np.ndarray, shape=(nbasis, nbasis), dtype=float
+        The density matrix
+    overlap : np.ndarray, shape=(nbasis, nbasis), dtype=float
+        The overlap matrix
+    eps : float
+        The threshold on the eigenvalue inequalities.
+    occ_max : float
+        The maximum occupation.
+
+    Raises
+    ------
+    ValueError
+        When the density matrix has wrong eigenvalues.
+    """
+    # construct natural orbitals
+    coeffs, occupations, energies = derive_naturals(dm, overlap)
+    if occupations.min() < -eps:
+        raise ValueError('The density matrix has eigenvalues considerably smaller than '
+                         'zero. error=%e' % (occupations.min()))
+    if occupations.max() > occ_max + eps:
+        raise ValueError('The density matrix has eigenvalues considerably larger than '
+                         'max. error=%e' % (occupations.max() - 1))

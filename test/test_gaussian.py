@@ -27,8 +27,10 @@ from nose.tools import assert_raises
 from . common import get_fn
 from .. gaussian import load_operators_g09, load_fchk
 from .. iodata import IOData
+from .. utils import shells_to_nbasis, check_dm
+from .. overlap import compute_overlap
 
-#TODO: obasis.nbasis replacement test
+#TODO: shells_to_nbasis(obasis["shell_types"]) replacement test
 
 
 def test_load_operators_water_sto3g_hf_g03():
@@ -116,8 +118,8 @@ def test_load_fchk_hf_sto3g_num():
     coordinates = fields['coordinates']
     numbers = fields['numbers']
     energy = fields['energy']
-    assert obasis.nshell == 4
-    assert obasis.nbasis == 6
+    assert len(obasis["shell_types"]) == 4
+    assert shells_to_nbasis(obasis["shell_types"]) == 6
     assert (obasis['nprims'] == 3).all()
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
@@ -135,8 +137,8 @@ def test_load_fchk_h_sto3g_num():
     coordinates = fields['coordinates']
     numbers = fields['numbers']
     energy = fields['energy']
-    assert obasis.nshell == 1
-    assert obasis.nbasis == 1
+    assert len(obasis["shell_types"]) == 1
+    assert shells_to_nbasis(obasis["shell_types"]) == 1
     assert (obasis['nprims'] == 3).all()
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
@@ -150,8 +152,8 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     coordinates = fields['coordinates']
     numbers = fields['numbers']
     energy = fields['energy']
-    assert obasis.nshell == 20
-    assert obasis.nbasis == 60
+    assert len(obasis["shell_types"]) == 20
+    assert shells_to_nbasis(obasis["shell_types"]) == 60
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
@@ -164,8 +166,8 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     coordinates = fields['coordinates']
     numbers = fields['numbers']
     energy = fields['energy']
-    assert obasis.nshell == 20
-    assert obasis.nbasis == 70
+    assert len(obasis["shell_types"]) == 20
+    assert shells_to_nbasis(obasis["shell_types"]) == 70
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
@@ -175,8 +177,8 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
 def test_load_fchk_water_sto3g_hf():
     fields = load_fchk(get_fn('water_sto3g_hf_g03.fchk'))
     obasis = fields['obasis']
-    assert obasis.nshell == 5
-    assert obasis.nbasis == 7
+    assert len(obasis["shell_types"]) == 5
+    assert shells_to_nbasis(obasis["shell_types"]) == 7
     coordinates = fields['coordinates']
     numbers = fields['numbers']
     assert len(coordinates) == len(numbers)
@@ -204,8 +206,8 @@ def test_load_fchk_water_sto3g_hf():
 def test_load_fchk_lih_321g_hf():
     fields = load_fchk(get_fn('li_h_3-21G_hf_g09.fchk'))
     obasis = fields['obasis']
-    assert obasis.nshell == 7
-    assert obasis.nbasis == 11
+    assert len(obasis["shell_types"]) == 7
+    assert shells_to_nbasis(obasis["shell_types"]) == 11
     coordinates = fields['coordinates']
     numbers = fields['numbers']
     assert len(coordinates) == len(numbers)
@@ -279,7 +281,7 @@ def test_load_fchk_ch3_rohf_g03():
 def check_load_azirine(key, numbers):
     fields = load_fchk(get_fn('2h-azirine-%s.fchk') % key)
     obasis = fields['obasis']
-    assert obasis.nbasis == 33
+    assert shells_to_nbasis(obasis["shell_types"]) == 33
     dm_full = fields['dm_full_%s' % key]
     assert dm_full[0, 0] == numbers[0]
     assert dm_full[32, 32] == numbers[1]
@@ -304,7 +306,7 @@ def test_load_azirine_mp3():
 def check_load_nitrogen(key, numbers_full, numbers_spin):
     fields = load_fchk(get_fn('nitrogen-%s.fchk') % key)
     obasis = fields['obasis']
-    assert obasis.nbasis == 9
+    assert shells_to_nbasis(obasis["shell_types"]) == 9
     dm_full = fields['dm_full_%s' % key]
     assert dm_full[0, 0] == numbers_full[0]
     assert dm_full[8, 8] == numbers_full[1]
@@ -332,7 +334,7 @@ def test_load_nitrogen_mp3():
 def check_normalization_dm_full_azirine(key):
     #TODO: replace with cached data
     mol = IOData.from_file(get_fn('2h-azirine-%s.fchk') % key)
-    olp = mol.obasis.compute_overlap()
+    olp = compute_overlap(*mol.obasis.values())
     dm = getattr(mol, 'dm_full_%s' % key)
     check_dm(dm, olp, eps=1e-2, occ_max=2)
     assert abs(np.einsum('ab,ba', olp, dm) - 22.0) < 1e-3

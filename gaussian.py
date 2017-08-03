@@ -434,7 +434,7 @@ def load_fchk(filename):
     result['orb_alpha_energies'] = np.copy(fchk['Alpha Orbital Energies'])
     aoccs = np.zeros(nbasis)
     aoccs[:nalpha] = 1.0
-    result['orb_alpha_occupations'] = aoccs
+    result['orb_alpha_occs'] = aoccs
     if 'Beta Orbital Energies' in fchk:
         # UHF case
         result['orb_beta'] = (nbasis, nbasis_indep)
@@ -442,7 +442,7 @@ def load_fchk(filename):
         result['orb_beta_energies'] = np.copy(fchk['Beta Orbital Energies'])
         boccs = np.zeros(nbasis)
         boccs[:nbeta] = 1.0
-        result['orb_beta_occupations'] = boccs
+        result['orb_beta_occs'] = boccs
 
     elif fchk['Number of beta electrons'] != fchk['Number of alpha electrons']:
         # ROHF case
@@ -451,7 +451,7 @@ def load_fchk(filename):
         result['orb_beta_energies'] = fchk['Alpha Orbital Energies']
         boccs = np.zeros(nbasis)
         boccs[:nbeta] = 1.0
-        result['orb_beta_occupations'] = boccs
+        result['orb_beta_occs'] = boccs
 
         # Delete dm_full_scf because it is known to be buggy
         result.pop('dm_full_scf')

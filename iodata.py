@@ -458,7 +458,7 @@ class IOData(object):
             return self._alpha_orbs_to_dm() - self._beta_orbs_to_dm()
 
     def _alpha_orbs_to_dm(self):
-        return np.dot(self.orb_alpha_coeffs * self.orb_alpha_occupations, self.orb_alpha_coeffs.T)
+        return np.dot(self.orb_alpha_coeffs * self.orb_alpha_occs, self.orb_alpha_coeffs.T)
 
     def _beta_orbs_to_dm(self):
-        return np.dot(self.orb_beta_coeffs * self.orb_beta_occupations, self.orb_beta_coeffs.T)
+        return np.dot(self.orb_beta_coeffs * self.orb_beta_occs, self.orb_beta_coeffs.T)
