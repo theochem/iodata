@@ -26,7 +26,7 @@
 """
 
 
-import h5py as h5, os, numpy as np
+import os, numpy as np
 
 
 __all__ = ['IOData']
@@ -282,10 +282,7 @@ class IOData(object):
         """
         result = {}
         for filename in filenames:
-            if isinstance(filename, h5.Group) or filename.endswith('.h5'):
-                from . internal import load_h5
-                result.update(load_h5(filename))
-            elif filename.endswith('.xyz'):
+            if filename.endswith('.xyz'):
                 from . xyz import load_xyz
                 result.update(load_xyz(filename))
             elif filename.endswith('.fchk'):
@@ -379,16 +376,7 @@ class IOData(object):
            called that does the real work.
         """
 
-        if isinstance(filename, h5.Group) or filename.endswith('.h5'):
-            data = vars(self).copy()
-            # get rid of leading underscores
-            for key in data.keys():
-                if key[0] == '_':
-                    data[key[1:]] = data[key]
-                    del data[key]
-            from . internal import dump_h5
-            dump_h5(filename, data)
-        elif filename.endswith('.xyz'):
+        if filename.endswith('.xyz'):
             from . xyz import dump_xyz
             dump_xyz(filename, self)
         elif filename.endswith('.cube'):

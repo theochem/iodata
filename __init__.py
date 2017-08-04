@@ -34,8 +34,6 @@ from . cp2k import *
 from . cube import *
 from . gaussian import *
 from . iodata import *
-from . internal import *
-from . lockedh5 import *
 from . molden import *
 from . molekel import *
 from . molpro import *
