@@ -8,12 +8,11 @@ def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs)
     """Computes overlap matrix. Follows same parameter convention as horton.GOBasis"""
     nshell = len(shell_types)
     nbasis = sum([get_shell_nbasis(i) for i in shell_types])
-    nscales = sum([get_shell_nbasis(abs(s)) * p for s, p in zip(shell_types, nprims)])
 
     shell_offsets = get_shell_offsets(shell_types, nbasis)
 
     integral = np.zeros((nbasis, nbasis))
-    scales, scales_offsets = init_scales(alphas, nshell, nprims, nscales, shell_types)
+    scales, scales_offsets = init_scales(alphas, nprims, shell_types)
 
     alphas_split = split_data_by_prims(alphas, nprims)
     con_coeffs_split = split_data_by_prims(con_coeffs, nprims)
@@ -82,13 +81,14 @@ def get_shell_offsets(shell_types, nbasis):
     return shell_offsets
 
 
-def init_scales(alphas, nshell, nprims, nscales, shell_types):
+def init_scales(alphas, nprims, shell_types):
     """Returns normalization constants and offsets per shell"""
     counter, oprim = 0, 0
+    nscales = sum([get_shell_nbasis(abs(s)) * p for s, p in zip(shell_types, nprims)])
     scales = np.zeros(nscales)
     scales_offsets = np.zeros(sum(nprims), dtype=int)
 
-    for s in range(nshell):
+    for s in range(len(shell_types)):
         for p in range(nprims[s]):
             scales_offsets[oprim + p] = counter
             alpha = alphas[oprim + p]

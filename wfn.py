@@ -23,6 +23,7 @@ from collections import OrderedDict
 
 import numpy as np
 
+from . overlap import init_scales
 from . periodic import sym2num
 
 
@@ -52,7 +53,7 @@ def load_wfn_low(filename):
         for atom in xrange(num_atoms):
             line = f.readline()
             line = line.split()
-            numbers[atom] = sym2num[line[0]]
+            numbers[atom] = sym2num[line[0].title()]
             coordinates[atom, :] = [line[4], line[5], line[6]]
         return numbers, coordinates
 
@@ -229,7 +230,8 @@ def load_wfn(filename):
     obasis["con_coeffs"] = con_coeffs
     nbasis = coefficients.shape[0]
     coefficients = coefficients[permutation]
-    coefficients /= obasis.get_scales().reshape(-1, 1)  # FIXME: need to fix normalization
+    scales, dummy = init_scales(obasis["alphas"], obasis["nprims"], obasis["shell_types"])
+    coefficients /= scales.reshape(-1, 1)
     # make the wavefunction
     if mo_occ.max() > 1.0:
         # close shell system
