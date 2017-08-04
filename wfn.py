@@ -221,7 +221,7 @@ def load_wfn(filename):
     nprims = np.ones(reduced_size, int)
     con_coeffs = np.ones(reduced_size)
     # build basis set
-    obasis = OrderedDict()
+    obasis = {}
     obasis["centers"] = coordinates
     obasis["shell_map"] = shell_map
     obasis["nprims"] = nprims

@@ -107,7 +107,7 @@ def load_mkl(filename):
         alphas = np.array(alphas)
         con_coeffs = np.array(con_coeffs)
 
-        obasis = OrderedDict()
+        obasis = {}
         obasis["centers"] = coordinates
         obasis["shell_map"] = shell_map
         obasis["nprims"] = nprims

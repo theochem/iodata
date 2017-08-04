@@ -350,7 +350,7 @@ def load_fchk(filename):
     del nprims
     del alphas
 
-    obasis = OrderedDict()
+    obasis = {}
     obasis["centers"] = coordinates
     obasis["shell_map"] = my_shell_map
     obasis["nprims"] = my_nprims

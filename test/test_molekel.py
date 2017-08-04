@@ -70,7 +70,7 @@ def test_load_mkl_li2():
     mol = IOData.from_file(fn_mkl)
 
     # Check normalization
-    olp = compute_overlap(*mol.obasis.values())
+    olp = compute_overlap(**mol.obasis)
     check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
     check_normalization(mol.orb_beta_coeffs, mol.orb_beta_occs, olp, 1e-5)
 
@@ -78,5 +78,5 @@ def test_load_mkl_li2():
 def test_load_mkl_h2():
     fn_mkl = get_fn('h2_sto3g.mkl')
     mol = IOData.from_file(fn_mkl)
-    olp = compute_overlap(*mol.obasis.values())
+    olp = compute_overlap(**mol.obasis)
     check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)

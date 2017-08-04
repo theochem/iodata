@@ -334,7 +334,7 @@ def test_load_nitrogen_mp3():
 def check_normalization_dm_full_azirine(key):
     #TODO: replace with cached data
     mol = IOData.from_file(get_fn('2h-azirine-%s.fchk') % key)
-    olp = compute_overlap(*mol.obasis.values())
+    olp = compute_overlap(**mol.obasis)
     dm = getattr(mol, 'dm_full_%s' % key)
     check_dm(dm, olp, eps=1e-2, occ_max=2)
     assert abs(np.einsum('ab,ba', olp, dm) - 22.0) < 1e-3

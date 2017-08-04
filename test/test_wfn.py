@@ -182,7 +182,7 @@ def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
     fn_wfn = get_fn(fn_wfn)
     mol = IOData.from_file(fn_wfn)
     assert shells_to_nbasis(mol.obasis["shell_types"]) == nbasis
-    olp = compute_overlap(*mol.obasis.values())
+    olp = compute_overlap(**mol.obasis)
     if restricted:
         check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
         assert not hasattr(mol, 'orb_beta')

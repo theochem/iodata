@@ -114,7 +114,7 @@ def test_dm_ch3_rohf_g03():
     fn_fchk = get_fn('ch3_rohf_sto3g_g03.fchk')
     mol = IOData.from_file(fn_fchk)
 
-    olp = compute_overlap(*mol.obasis.values())
+    olp = compute_overlap(**mol.obasis)
     dm = mol.get_dm_full()
     assert abs(np.einsum('ab,ba', olp, dm) - 9) < 1e-6
     dm = mol.get_dm_spin()

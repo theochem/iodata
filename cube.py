@@ -51,7 +51,7 @@ def _read_cube_header(f):
     axes = np.array([axis0, axis1, axis2])
 
     cell = axes * shape.reshape(-1, 1)
-    ugrid = OrderedDict()
+    ugrid = {}
     ugrid["origin"] = origin
     ugrid['grid_rvecs'] = axes
     ugrid['shape'] = shape
@@ -158,7 +158,7 @@ def dump_cube(filename, data):
             ``grid``, ``cube_data``. May contain ``title``, ``pseudo_numbers``.
     """
     with open(filename, 'w') as f:
-        if not isinstance(data.grid, OrderedDict):
+        if not isinstance(data.grid, dict):
             raise ValueError('The system grid must contain a dict to initialize a UniformGrid instance.')
         title = getattr(data, 'title', 'Created with HORTON')
         _write_cube_header(f, title, data.coordinates, data.numbers, data.grid, data.pseudo_numbers)

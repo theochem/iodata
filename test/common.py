@@ -79,8 +79,9 @@ def truncated_file(name, fn_orig, nline, nadd):
 
 
 def compare_dict_floats(d1, d2):
-    for i, j in zip(d1.values(), d2.values()):
-        assert abs(i - j).max() < 1e-8
+    for k, v in d1.iteritems():
+        assert abs(v - d2[k]).max() < 1e-8
+    assert len(d1) == len(d2)
 
 
 def compare_mols(mol1, mol2):

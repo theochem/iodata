@@ -38,7 +38,7 @@ from .. overlap import compute_overlap
 
 def check_orthonormality(mol):
     """Helper function to test if the orbitals are orthonormal."""
-    olp = compute_overlap(*mol.obasis.values())
+    olp = compute_overlap(**mol.obasis)
     check_orthonormal(mol.orb_alpha_occs, mol.orb_alpha_coeffs, olp)
     if hasattr(mol, 'orb_beta'):
         check_orthonormal(mol.orb_beta_occs, mol.orb_beta_coeffs, olp)

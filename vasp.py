@@ -122,7 +122,7 @@ def _load_vasp_grid(filename):
                 counter += 1
         assert counter == cube_data.size
 
-    ugrid = OrderedDict()
+    ugrid = {}
     ugrid["origin"] = np.zeros(3)
     ugrid['grid_rvecs'] = rvecs / shape.reshape(-1, 1)
     ugrid['shape'] = shape

@@ -50,7 +50,7 @@ def test_binom():
 
 def test_load_fchk_hf_sto3g_num():
     ref = np.load(get_fn("load_fchk_hf_sto3g_num.npy"))
-    d = OrderedDict([('centers', np.array([[0., 0., 0.19048439],
+    d = dict([('centers', np.array([[0., 0., 0.19048439],
                                            [0., 0., -1.71435955]])),
                      ('shell_map', np.array([0, 0, 0, 1])),
                      ('nprims', np.array([3, 3, 3, 3])), ('shell_types', np.array([0, 0, 1, 0])),
@@ -62,12 +62,12 @@ def test_load_fchk_hf_sto3g_num():
                                 0.70011547, 0.15591627, 0.60768372, 0.39195739, 0.15432897,
                                 0.53532814, 0.44463454]))])
 
-    assert np.allclose(ref, compute_overlap(*d.values()))
+    assert np.allclose(ref, compute_overlap(**d))
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
     ref = np.load(get_fn("load_fchk_o2_cc_pvtz_pure_num.npy"))
-    d = OrderedDict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
+    d = dict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                            [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (
                          'shell_map',
                          np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])), (
@@ -107,12 +107,12 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
                                               1.00000000e+00, 4.11634896e-02, 2.57762836e-01,
                                               8.02419274e-01, 1.00000000e+00, 1.00000000e+00,
                                               1.00000000e+00, 1.00000000e+00, 1.00000000e+00]))])
-    assert np.allclose(ref, compute_overlap(*d.values()))
+    assert np.allclose(ref, compute_overlap(**d))
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
     ref = np.load(get_fn("load_fchk_o2_cc_pvtz_cart_num.npy"))
-    d = OrderedDict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
+    d = dict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                            [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (
                          'shell_map',
                          np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])), (
@@ -153,4 +153,4 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
                                               8.02419274e-01, 1.00000000e+00, 1.00000000e+00,
                                               1.00000000e+00, 1.00000000e+00, 1.00000000e+00]))])
 
-    assert np.allclose(ref, compute_overlap(*d.values()), atol=1e-8)
+    assert np.allclose(ref, compute_overlap(**d), atol=1e-8)

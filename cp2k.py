@@ -112,7 +112,7 @@ def _read_cp2k_contracted_obasis(f):
     alphas = np.array(alphas)
     con_coeffs = np.array(con_coeffs)
 
-    obasis = OrderedDict()
+    obasis = {}
     obasis["centers"] = coordinates
     obasis["shell_map"] = shell_map
     obasis["nprims"] = nprims
@@ -174,7 +174,7 @@ def _read_cp2k_uncontracted_obasis(f):
     alphas = np.array(alphas)
     con_coeffs = np.array(con_coeffs)
 
-    obasis = OrderedDict()
+    obasis = {}
     obasis["centers"] = centers
     obasis["shell_map"] = shell_map
     obasis["nprims"] = nprims

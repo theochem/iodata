@@ -39,7 +39,7 @@ def test_load_molden_li2_orca():
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=li2'
 
     # Check normalization
-    olp = compute_overlap(*mol.obasis.values())
+    olp = compute_overlap(**mol.obasis)
     check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
     check_normalization(mol.orb_beta_coeffs, mol.orb_beta_occs, olp, 1e-5)
 
@@ -58,7 +58,7 @@ def test_load_molden_h2o_orca():
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=h2o'
 
     # Check normalization
-    olp = compute_overlap(*mol.obasis.values())
+    olp = compute_overlap(**mol.obasis)
     check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
 
     # Check Mulliken charges
