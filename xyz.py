@@ -21,6 +21,7 @@
 """XYZ file format"""
 
 import numpy as np
+from numbers import Number
 
 from .periodic import sym2num, num2sym
 from .utils import angstrom
@@ -45,7 +46,10 @@ def load_xyz(filename):
     numbers = np.empty(size, int)
     for i in xrange(size):
         words = f.next().split()
-        numbers[i] = sym2num[words[0]]
+        try:
+            numbers[i] = sym2num[words[0].title()]
+        except KeyError:
+            numbers[i] = int(words[0])
         coordinates[i, 0] = float(words[1]) * angstrom
         coordinates[i, 1] = float(words[2]) * angstrom
         coordinates[i, 2] = float(words[3]) * angstrom
