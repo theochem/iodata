@@ -1,7 +1,29 @@
+# -*- coding: utf-8 -*-
+# HORTON: Helpful Open-source Research TOol for N-fermion systems.
+# Copyright (C) 2011-2017 The HORTON Development Team
+#
+# This file is part of HORTON.
+#
+# HORTON is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+#
+# HORTON is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses/>
+#
+# --
+
 from collections import OrderedDict
 
 import numpy as np
 from ..overlap import fac2, binom, compute_overlap
+from . common import get_fn
 
 
 def test_fac2():
@@ -27,7 +49,7 @@ def test_binom():
 
 
 def test_load_fchk_hf_sto3g_num():
-    ref = np.load("load_fchk_hf_sto3g_num.npy")
+    ref = np.load(get_fn("load_fchk_hf_sto3g_num.npy"))
     d = OrderedDict([('centers', np.array([[0., 0., 0.19048439],
                                            [0., 0., -1.71435955]])),
                      ('shell_map', np.array([0, 0, 0, 1])),
@@ -44,7 +66,7 @@ def test_load_fchk_hf_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    ref = np.load("load_fchk_o2_cc_pvtz_pure_num.npy")
+    ref = np.load(get_fn("load_fchk_o2_cc_pvtz_pure_num.npy"))
     d = OrderedDict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                            [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (
                          'shell_map',
@@ -89,7 +111,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    ref = np.load("load_fchk_o2_cc_pvtz_cart_num.npy")
+    ref = np.load(get_fn("load_fchk_o2_cc_pvtz_cart_num.npy"))
     d = OrderedDict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                            [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (
                          'shell_map',
