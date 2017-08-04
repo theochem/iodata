@@ -44,16 +44,16 @@ def test_load_chgcar_oxygen():
     fn = get_fn('CHGCAR.oxygen')
     mol = IOData.from_file(fn)
     assert (mol.numbers == [8]).all()
-    assert abs(volume(mol.cell) - (10 * angstrom) ** 3) < 1e-10
+    assert abs(volume(mol.rvecs) - (10 * angstrom) ** 3) < 1e-10
     ugrid = mol.grid
     assert len(ugrid['shape']) == 3
     assert (ugrid['shape'] == 2).all()
-    assert abs(ugrid['grid_rvecs'] - mol.cell / 2).max() < 1e-10
+    assert abs(ugrid['grid_rvecs'] - mol.rvecs / 2).max() < 1e-10
     assert abs(ugrid['origin']).max() < 1e-10
     d = mol.cube_data
-    assert abs(d[0, 0, 0] - 0.78406017013E+04 / volume(mol.cell)) < 1e-10
-    assert abs(d[-1, -1, -1] - 0.10024522914E+04 / volume(mol.cell)) < 1e-10
-    assert abs(d[1, 0, 0] - 0.76183317989E+04 / volume(mol.cell)) < 1e-10
+    assert abs(d[0, 0, 0] - 0.78406017013E+04 / volume(mol.rvecs)) < 1e-10
+    assert abs(d[-1, -1, -1] - 0.10024522914E+04 / volume(mol.rvecs)) < 1e-10
+    assert abs(d[1, 0, 0] - 0.76183317989E+04 / volume(mol.rvecs)) < 1e-10
 
 
 def test_load_chgcar_water():
@@ -63,11 +63,11 @@ def test_load_chgcar_water():
     assert (mol.numbers == [8, 1, 1]).all()
     assert abs(mol.coordinates[1] - np.array(
         [0.074983 * 15 + 0.903122 * 1, 0.903122 * 15, 0.000000])).max() < 1e-10
-    assert abs(volume(mol.cell) - 15 ** 3) < 1e-10
+    assert abs(volume(mol.rvecs) - 15 ** 3) < 1e-10
     ugrid = mol.grid
     assert len(ugrid['shape']) == 3
     assert (ugrid['shape'] == 3).all()
-    assert abs(ugrid['grid_rvecs'] - mol.cell / 3).max() < 1e-10
+    assert abs(ugrid['grid_rvecs'] - mol.rvecs / 3).max() < 1e-10
     assert abs(ugrid['origin']).max() < 1e-10
 
 
@@ -76,7 +76,7 @@ def test_load_locpot_oxygen():
     mol = IOData.from_file(fn)
     assert mol.title == 'O atom in a box'
     assert (mol.numbers[0] == [8]).all()
-    assert abs(volume(mol.cell) - (10 * angstrom) ** 3) < 1e-10
+    assert abs(volume(mol.rvecs) - (10 * angstrom) ** 3) < 1e-10
     ugrid = mol.grid
     assert len(ugrid['shape']) == 3
     assert (ugrid['shape'] == [1, 4, 2]).all()
@@ -95,7 +95,7 @@ def test_load_poscar_water():
     assert (mol.numbers == [8, 1, 1]).all()
     assert abs(
         mol.coordinates[1] - np.array([0.074983 * 15, 0.903122 * 15, 0.000000])).max() < 1e-10
-    assert abs(volume(mol.cell) - 15 ** 3) < 1e-10
+    assert abs(volume(mol.rvecs) - 15 ** 3) < 1e-10
 
 
 def test_load_poscar_cubicbn_cartesian():
@@ -104,7 +104,7 @@ def test_load_poscar_cubicbn_cartesian():
     assert mol.title == 'Cubic BN'
     assert (mol.numbers == [5, 7]).all()
     assert abs(mol.coordinates[1] - np.array([0.25] * 3) * 3.57 * angstrom).max() < 1e-10
-    assert abs(volume(mol.cell) - (3.57 * angstrom) ** 3 / 4) < 1e-10
+    assert abs(volume(mol.rvecs) - (3.57 * angstrom) ** 3 / 4) < 1e-10
 
 
 def test_load_poscar_cubicbn_direct():
@@ -113,12 +113,13 @@ def test_load_poscar_cubicbn_direct():
     assert mol.title == 'Cubic BN'
     assert (mol.numbers == [5, 7]).all()
     assert abs(mol.coordinates[1] - np.array([0.25] * 3) * 3.57 * angstrom).max() < 1e-10
-    assert abs(volume(mol.cell) - (3.57 * angstrom) ** 3 / 4) < 1e-10
+    assert abs(volume(mol.rvecs) - (3.57 * angstrom) ** 3 / 4) < 1e-10
 
 
 def test_load_dump_consistency():
     mol0 = IOData.from_file(get_fn('water_element.xyz'))
-    mol0.cell = get_random_cell(5.0, 3)
+    mol0.rvecs = get_random_cell(5.0, 3)
+    mol0.gvecs = np.linalg.inv(mol0.rvecs).T
 
     with tmpdir('horton.io.test.test_vasp.test_load_dump_consistency') as dn:
         mol0.to_file('%s/POSCAR' % dn)
@@ -129,4 +130,4 @@ def test_load_dump_consistency():
     assert abs(mol0.coordinates[1] - mol1.coordinates[0]).max() < 1e-10
     assert abs(mol0.coordinates[0] - mol1.coordinates[1]).max() < 1e-10
     assert abs(mol0.coordinates[2] - mol1.coordinates[2]).max() < 1e-10
-    assert abs(mol0.cell - mol1.cell).max() < 1e-10
+    assert abs(mol0.rvecs - mol1.rvecs).max() < 1e-10

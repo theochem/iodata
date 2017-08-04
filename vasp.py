@@ -124,7 +124,7 @@ def _load_vasp_grid(filename):
 
     ugrid = OrderedDict()
     ugrid["origin"] = np.zeros(3)
-    ugrid['grid_cell'] = rvecs / shape.reshape(-1, 1)
+    ugrid['grid_rvecs'] = rvecs / shape.reshape(-1, 1)
     ugrid['shape'] = shape
     ugrid['pbc'] = np.ones(3, int)
 
@@ -132,7 +132,7 @@ def _load_vasp_grid(filename):
         'title': title,
         'coordinates': coordinates,
         'numbers': numbers,
-        'cell': rvecs,
+        'rvecs': rvecs,
         'grid': ugrid,
         'cube_data': cube_data,
     }
@@ -147,11 +147,11 @@ def load_chgcar(filename):
             The VASP filename
 
        **Returns:** a dictionary containing: ``title``, ``coordinates``,
-       ``numbers``, ``cell``, ``grid``, ``cube_data``.
+       ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
     """
     result = _load_vasp_grid(filename)
     # renormalize electron density
-    result['cube_data'] /= volume(result['cell'])
+    result['cube_data'] /= volume(result['rvecs'])
     return result
 
 
@@ -164,7 +164,7 @@ def load_locpot(filename):
             The VASP filename
 
        **Returns:** a dictionary containing: ``title``, ``coordinates``,
-       ``numbers``, ``cell``, ``grid``, ``cube_data``.
+       ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
     """
     result = _load_vasp_grid(filename)
     # convert locpot to atomic units
@@ -181,16 +181,16 @@ def load_poscar(filename):
             The VASP filename
 
        **Returns:** a dictionary containing: ``title``, ``coordinates``,
-       ``numbers``, ``cell``.
+       ``numbers``, ``rvecs``.
     """
     with open(filename) as f:
         # Load header
-        title, cell, numbers, coordinates = _load_vasp_header(f)
+        title, rvecs, numbers, coordinates = _load_vasp_header(f)
         return {
             'title': title,
             'coordinates': coordinates,
             'numbers': numbers,
-            'cell': cell,
+            'rvecs': rvecs,
         }
 
 
@@ -227,5 +227,5 @@ def dump_poscar(filename, data):
         for unumber in unumbers:
             indexes = (data.numbers == unumber).nonzero()[0]
             for index in indexes:
-                row = data.cell_frac(data.coordinates[index])
+                row = np.dot(data.gvecs, data.coordinates[index])
                 print >> f, '  % 21.16f % 21.16f % 21.16f   F   F   F' % tuple(row)

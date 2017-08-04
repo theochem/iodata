@@ -75,13 +75,12 @@ def test_load_fcidump_molpro_h2():
 
 
 def test_dump_load_fcidimp_consistency_ao():
-    # TODO: replace with random data
     # Setup IOData
     mol0 = IOData.from_file(get_fn('water.xyz'))
     mol0.nelec = 10
     mol0.ms2 = 1
-    mol0.one_mo = np.random.rand(5, 5)
-    mol0.two_mo = np.random.rand(5, 5, 5, 5)
+    mol0.one_mo = np.load(get_fn("psi4_h2_one.npy"))
+    mol0.two_mo = np.load(get_fn("psi4_h2_two.npy"))
 
     # Dump to a file and load it again
     with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_ao') as dn:
