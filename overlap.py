@@ -1,23 +1,27 @@
-
-
 import numpy as np
-from overlap_helper import tfs
+from overlap_helper import tfs, iter_pow
+from overlap_accel import add_overlap
 
 
 def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs):
     """Computes overlap matrix. Follows same parameter convention as horton.GOBasis"""
+
+    # Initialize helper variables
     nshell = len(shell_types)
     nbasis = sum([get_shell_nbasis(i) for i in shell_types])
 
     shell_offsets = get_shell_offsets(shell_types, nbasis)
-
-    integral = np.zeros((nbasis, nbasis))
     scales, scales_offsets = init_scales(alphas, nprims, shell_types)
 
+    # Initialize result
+    integral = np.zeros((nbasis, nbasis))
+
+    # Reorganize arrays in pythonic manner
     alphas_split = split_data_by_prims(alphas, nprims)
     con_coeffs_split = split_data_by_prims(con_coeffs, nprims)
     scales_offsets_split = split_data_by_prims(scales_offsets, nprims)
 
+    # Loop over shell0
     for big_tuple0 in zip(range(nshell), shell_map, shell_types, shell_offsets, shell_offsets[1:],
                           alphas_split, con_coeffs_split, scales_offsets_split):
 
@@ -26,7 +30,7 @@ def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs)
 
         r0 = centers[center0, :]
 
-        # loop over symmetric portion only
+        # Loop over shell1 (lower triangular only)
         for big_tuple1 in zip(shell_map[:ishell0 + 1], shell_types[:ishell0 + 1], shell_offsets,
                               shell_offsets[1:], alphas_split[:ishell0 + 1],
                               con_coeffs_split[:ishell0 + 1], scales_offsets_split[:ishell0 + 1]):
@@ -35,18 +39,22 @@ def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs)
 
             r1 = centers[center1, :]
 
-            # START of Cartesian coordinates
+            # START of Cartesian coordinates. Shell types are positive
             result = np.zeros((get_shell_nbasis(abs(shell_type0)),
                                get_shell_nbasis(abs(shell_type1))))
+            # print "shell type", shell_type0, shell_type1
+            # Loop over primitives in shell0 (Cartesian)
             for a0, so0, cc0 in zip(alphas0, scales_offsets0, con_coeffs0):
                 s0 = scales[so0:]
 
+                # Loop over primitives in shell1 (Cartesian)
                 for a1, so1, cc1 in zip(alphas1, scales_offsets1, con_coeffs1):
                     s1 = scales[so1:]
 
-                    cc = cc0 * cc1
-                    add_overlap(cc, a0, a1, s0, s1, r0, r1,
-                                shell_type0, shell_type1, result)
+                    add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, iter_pow[abs(shell_type0)],
+                                iter_pow[abs(shell_type1)], result)
+                    # print result
+
             # END of Cartesian coordinate system (if going to pure coordinates)
 
             # cart to pure
@@ -101,30 +109,8 @@ def init_scales(alphas, nprims, shell_types):
 
 
 def gob_cart_normalization(alpha, n):  # from utils
-    vfac2 = np.vectorize(fac2)
+    vfac2 = np.vectorize(fac2_slow)
     return np.sqrt((4 * alpha) ** sum(n) * (2 * alpha / np.pi) ** 1.5 / np.prod(vfac2(2 * n - 1)))
-
-
-def add_overlap(coeff, alpha0, alpha1, scales0, scales1, r0, r1, shell_type0, shell_type1, result):
-    """Calculates overlap integrals within a primitive basis function and adds to result"""
-    # This entire function is in Cartesian coordinates
-    gamma_inv = 1.0 / (alpha0 + alpha1)
-    pre = coeff * np.exp(-alpha0 * alpha1 * gamma_inv * dist_sq(r0, r1))
-    gpt_center = compute_gpt_center(alpha0, r0, alpha1, r1, gamma_inv)
-
-    nshell0 = get_shell_nbasis(abs(shell_type0))  # In cartesian coordinates
-    nshell1 = get_shell_nbasis(abs(shell_type1))  # In cartesian coordinates
-    for n0, s0 in zip(get_iter_pow(abs(shell_type0)), range(nshell0)):
-        for n1, s1 in zip(get_iter_pow(abs(shell_type1)), range(nshell1)):
-            result[s0, s1] += pre * np.prod(vec_gb_overlap_int1d(n0, n1,
-                                                                 gpt_center - r0,
-                                                                 gpt_center - r1,
-                                                                 gamma_inv)) \
-                              * scales0[s0] * scales1[s1]
-            # print np.ravel_multi_index((s0, s1), result.shape), "|", result[s0, s1], "|", pre, \
-            #     vec_gb_overlap_int1d(n0, n1, gpt_center - r0, gpt_center - r1, gamma_inv), \
-            #     scales0[s0], scales1[s1]
-    return result
 
 
 def get_shell_nbasis(shell):
@@ -138,59 +124,12 @@ def get_shell_nbasis(shell):
         return -2 * shell + 1
 
 
-def dist_sq(r0, r1):
-    """The square of the distance between two coordinates"""
-    return sum((r0 - r1) ** 2)
-
-
-def compute_gpt_center(alpha0, r0, alpha1, r1, gamma_inv):
-    return gamma_inv * (alpha0 * r0 + alpha1 * r1)
-
-
-def gb_overlap_int1d(n0, n1, pa, pb, gamma_inv):
-    """The overlap integral in one dimension. This function will be Numpy vectorized."""
-    kmax = (n0 + n1) / 2
-    result = 0.0
-    for k in range(kmax + 1):
-        result += fac2(2 * k - 1) * gpt_coeff(2 * k, n0, n1, pa, pb) * np.power(0.5 * gamma_inv, k)
-
-    return np.sqrt(np.pi * gamma_inv) * result
-
-
-vec_gb_overlap_int1d = np.vectorize(gb_overlap_int1d)
-
-
-def fac2(n):
+def fac2_slow(n):
     result = 1
     while n > 1:
         result *= n
         n -= 2
     return result
-
-
-def gpt_coeff(k, n0, n1, pa, pb):
-    result = 0.0
-    i0 = k - n1
-    if i0 < 0:
-        i0 = 0
-    i1 = k - i0
-
-    while True:
-        result += binom(n0, i0) * binom(n1, i1) * np.power(pa, n0 - i0) * np.power(pb, n1 - i1)
-        i0 += 1
-        i1 -= 1
-        if not (i1 >= 0 and i0 <= n0):
-            break
-    return result
-
-
-def binom(n, m):
-    numer, denom = 1, 1
-    while n > m:
-        numer *= n
-        denom *= n - m
-        n -= 1
-    return numer / denom
 
 
 def get_iter_pow(n):

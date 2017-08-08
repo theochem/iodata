@@ -20,19 +20,18 @@
 # --
 """Tests for CP2K ATOM output reader."""
 
-
 from nose.tools import assert_raises
 
+# from . common import get_fn, truncated_file, check_orthonormal
+from horton.io.test.common import get_fn, truncated_file, check_orthonormal
 
-from . common import get_fn, truncated_file, check_orthonormal
-# from horton.io.test.common import get_fn, truncated_file, check_orthonormal
+# from .. iodata import IOData
+# from .. overlap import compute_overlap
+
+from horton.io.iodata import IOData
+from horton.io.overlap import compute_overlap
 
 
-from .. iodata import IOData
-from .. overlap import compute_overlap
-
-# from horton.io.iodata import IOData
-# from horton.io.overlap import compute_overlap
 # TODO: add more obasis tests?
 
 
@@ -49,7 +48,7 @@ def test_atom_si_uks():
     mol = IOData.from_file(fn_out)
     assert (mol.numbers == [14]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_alpha_occs == [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
     assert (mol.orb_beta_occs == [1, 0, 0, 0]).all()
     assert abs(mol.orb_alpha_energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
     assert abs(mol.orb_beta_energies - [-0.334567, -0.092237, -0.092237, -0.092237]).max() < 1e-4
@@ -76,7 +75,7 @@ def test_carbon_gs_ae_contracted():
     mol = IOData.from_file(fn_out)
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.orb_alpha_occs == [1, 1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_alpha_occs == [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
     assert (mol.orb_alpha_energies == [-10.058194, -0.526244, -0.214978,
                                        -0.214978, -0.214978]).all()
     assert (mol.orb_beta_occs == [1, 1, 0, 0, 0]).all()
@@ -91,7 +90,7 @@ def test_carbon_gs_ae_uncontracted():
     mol = IOData.from_file(fn_out)
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.orb_alpha_occs == [1, 1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_alpha_occs == [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
     assert (mol.orb_alpha_energies == [-10.050076, -0.528162, -0.217626,
                                        -0.217626, -0.217626]).all()
     assert (mol.orb_beta_occs == [1, 1, 0, 0, 0]).all()
@@ -106,7 +105,7 @@ def test_carbon_gs_pp_contracted():
     mol = IOData.from_file(fn_out)
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_alpha_occs == [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
     assert (mol.orb_alpha_energies == [-0.528007, -0.219974, -0.219974, -0.219974]).all()
     assert (mol.orb_beta_occs == [1, 0, 0, 0]).all()
     assert (mol.orb_beta_energies == [-0.429657, -0.127060, -0.127060, -0.127060]).all()
@@ -119,7 +118,7 @@ def test_carbon_gs_pp_uncontracted():
     mol = IOData.from_file(fn_out)
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 2.0/3.0, 2.0/3.0, 2.0/3.0]).all()
+    assert (mol.orb_alpha_occs == [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
     assert (mol.orb_alpha_energies == [-0.528146, -0.219803, -0.219803, -0.219803]).all()
     assert (mol.orb_beta_occs == [1, 0, 0, 0]).all()
     assert (mol.orb_beta_energies == [-0.429358, -0.126411, -0.126411, -0.126411]).all()
@@ -132,7 +131,7 @@ def test_carbon_sc_ae_contracted():
     mol = IOData.from_file(fn_out)
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.orb_alpha_occs == [1, 1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
+    assert (mol.orb_alpha_occs == [1, 1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]).all()
     assert (mol.orb_alpha_energies == [-10.067251, -0.495823, -0.187878,
                                        -0.187878, -0.187878]).all()
     assert not hasattr(mol, 'orb_beta')
@@ -145,7 +144,7 @@ def test_carbon_sc_ae_uncontracted():
     mol = IOData.from_file(fn_out)
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.orb_alpha_occs == [1, 1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
+    assert (mol.orb_alpha_occs == [1, 1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]).all()
     assert (mol.orb_alpha_energies == [-10.062206, -0.499716, -0.192580,
                                        -0.192580, -0.192580]).all()
     assert not hasattr(mol, 'orb_beta')
@@ -158,7 +157,7 @@ def test_carbon_sc_pp_contracted():
     mol = IOData.from_file(fn_out)
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
+    assert (mol.orb_alpha_occs == [1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]).all()
     assert (mol.orb_alpha_energies == [-0.500732, -0.193138, -0.193138, -0.193138]).all()
     assert not hasattr(mol, 'orb_beta')
     assert mol.energy == -5.350765755382
@@ -170,7 +169,7 @@ def test_carbon_sc_pp_uncontracted():
     mol = IOData.from_file(fn_out)
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 1.0/3.0, 1.0/3.0, 1.0/3.0]).all()
+    assert (mol.orb_alpha_occs == [1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]).all()
     assert (mol.orb_alpha_energies == [-0.500238, -0.192365, -0.192365, -0.192365]).all()
     assert not hasattr(mol, 'orb_beta')
     assert mol.energy == -5.352864672201
