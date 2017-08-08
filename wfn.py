@@ -19,8 +19,6 @@
 #
 # --
 """WFN File format (Gaussian and GAMESS)"""
-from collections import OrderedDict
-
 import numpy as np
 
 from .overlap import init_scales

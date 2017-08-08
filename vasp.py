@@ -19,8 +19,6 @@
 #
 # --
 """VASP POSCAR, CHGCAR and POTCAR file formats"""
-from collections import OrderedDict
-
 import numpy as np
 from . utils import angstrom, electronvolt, volume
 from . periodic import num2sym, sym2num

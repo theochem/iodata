@@ -150,7 +150,8 @@ def dump_fcidump(filename, data):
                         if (i * (i + 1)) / 2 + j >= (k * (k + 1)) / 2 + l:
                             value = two_mo[i, k, j, l]
                             if value != 0.0:
-                                print >> f, '%23.16e %4i %4i %4i %4i' % (value, i + 1, j + 1, k + 1, l + 1)
+                                print >> f, '%23.16e %4i %4i %4i %4i' % (
+                                value, i + 1, j + 1, k + 1, l + 1)
         for i in xrange(nactive):
             for j in xrange(i + 1):
                 value = one_mo[i, j]

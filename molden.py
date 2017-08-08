@@ -19,14 +19,11 @@
 #
 # --
 """Molden wavefunction input file format"""
-from collections import OrderedDict
-
 import numpy as np
 
-from . overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
-from . utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
-from . periodic import sym2num, num2sym
-
+from .overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
+from .periodic import sym2num, num2sym
+from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
 
 __all__ = ['load_molden', 'dump_molden']
 
@@ -184,7 +181,8 @@ def load_molden(filename):
                         occ_beta.append(occ)
                     new_orb = False
                     if icoeff < nbasis:
-                        raise IOError('Too little expansions coefficients in one orbital in molden file.')
+                        raise IOError(
+                            'Too little expansions coefficients in one orbital in molden file.')
                     icoeff = 0
                 words = line.split()
                 if icoeff >= nbasis:
@@ -460,8 +458,8 @@ def _get_fixed_con_coeffs(nprims, shell_types, alphas, con_coeffs, code):
                     correction = gob_cart_normalization(alpha, np.array([1, 1, 0])) / np.sqrt(3.0)
                 elif shell_type == -3:
                     correction = gob_cart_normalization(alpha, np.array([1, 1, 1])) / np.sqrt(15.0)
-                    # elif shell_type == -4: ##  ! Not tested
-                    #     correction = gob_cart_normalization(alpha, np.array([2, 1, 1]))/np.sqrt(105.0)
+                # elif shell_type == -4: ##  ! Not tested
+                #     correction = gob_cart_normalization(alpha, np.array([2, 1, 1]))/np.sqrt(105.0)
             fixed_con_coeffs[iprim] /= correction
             if correction != 1.0:
                 corrected = True
@@ -510,7 +508,8 @@ def _fix_molden_from_buggy_codes(result, filename):
    """
     obasis_dict = result['obasis']
     permutation = result.get('permutation', None)
-    if _is_normalized_properly(obasis_dict, permutation, result['orb_alpha_coeffs'], result.get('orb_beta_coeffs')):
+    if _is_normalized_properly(obasis_dict, permutation, result['orb_alpha_coeffs'],
+                               result.get('orb_beta_coeffs')):
         # The file is good. No need to change data.
         return
     print('5:Detected incorrect normalization of orbitals loaded from a file.')
@@ -526,7 +525,8 @@ def _fix_molden_from_buggy_codes(result, filename):
         obasis_dict_orca = obasis_dict.copy()
         obasis_dict_orca["con_coeffs"] = orca_con_coeffs
         if _is_normalized_properly(obasis_dict_orca, permutation,
-                                   result['orb_alpha_coeffs'], result.get('orb_beta_coeffs'), orca_signs):
+                                   result['orb_alpha_coeffs'], result.get('orb_beta_coeffs'),
+                                   orca_signs):
             print('5:Detected typical ORCA errors in file. Fixing them...')
             result['obasis'] = obasis_dict_orca
             result['signs'] = orca_signs
@@ -678,7 +678,8 @@ def dump_molden(filename, data):
                         print >> f, '%20.10f %20.10f' % (alpha, con_coeff)
                 print >> f
         else:
-            raise NotImplementedError('A Gaussian orbital basis is required to write a molden input file.')
+            raise NotImplementedError(
+                'A Gaussian orbital basis is required to write a molden input file.')
 
         def helper_orb(spin, occ_scale=1.0):
             orb_coeffs = getattr(data, 'orb_%s_coeffs' % spin)

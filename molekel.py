@@ -19,12 +19,10 @@
 #
 # --
 """Molekel wavefunction input file format"""
-from collections import OrderedDict
-
 import numpy as np
 
-from . utils import angstrom, str_to_shell_types, shells_to_nbasis
-from . molden import _fix_molden_from_buggy_codes
+from .molden import _fix_molden_from_buggy_codes
+from .utils import angstrom, str_to_shell_types, shells_to_nbasis
 
 __all__ = ['load_mkl']
 
@@ -218,7 +216,8 @@ def load_mkl(filename):
         orb_beta = None
     else:
         if occ_beta is None:
-            raise IOError('Beta occupation numbers not found in mkl file while beta orbitals were present.')
+            raise IOError(
+                'Beta occupation numbers not found in mkl file while beta orbitals were present.')
         nalpha = int(np.round(occ_alpha.sum()))
         nbeta = int(np.round(occ_beta.sum()))
         assert nelec == nalpha + nbeta

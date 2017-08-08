@@ -19,8 +19,6 @@
 #
 # --
 """Gaussian cube file format"""
-from collections import OrderedDict
-
 import numpy as np
 
 __all__ = ['load_cube', 'dump_cube']
@@ -98,7 +96,7 @@ def load_cube(filename):
        filename
             The name of the cube file
 
-       **Returns** a dictionary with ``title``, ``coordinates``, ``numbers``,
+       **Returns** a dictionary with ``title``, ``coordinates``, ``numbers``, ``cell``,
        ``cube_data``, ``grid``, ``pseudo_numbers``.
     """
     with open(filename) as f:
@@ -155,7 +153,8 @@ def dump_cube(filename, data):
     """
     with open(filename, 'w') as f:
         if not isinstance(data.grid, dict):
-            raise ValueError('The system grid must contain a dict to initialize a UniformGrid instance.')
+            raise ValueError(
+                'The system grid must contain a dict to initialize a UniformGrid instance.')
         title = getattr(data, 'title', 'Created with HORTON')
         _write_cube_header(f, title, data.coordinates, data.numbers, data.grid, data.pseudo_numbers)
         _write_cube_data(f, data.cube_data)

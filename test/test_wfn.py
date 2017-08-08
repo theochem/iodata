@@ -20,19 +20,20 @@
 # --
 
 import numpy as np
-from . common import compute_mulliken_charges, get_fn, check_normalization
-from .. wfn import load_wfn_low, get_permutation_basis, get_permutation_orbital, get_mask
-from .. iodata import IOData
-from .. overlap import compute_overlap
-from .. utils import shells_to_nbasis
+from .common import compute_mulliken_charges, get_fn, check_normalization
+from ..wfn import load_wfn_low, get_permutation_basis, get_permutation_orbital, get_mask
+from ..iodata import IOData
+from ..overlap import compute_overlap
+from ..utils import shells_to_nbasis
 
-#TODO: removed density, kin, nucnuc checks
+
+# TODO: removed density, kin, nucnuc checks
 
 
 def test_load_wfn_low_he_s():
     fn_wfn = get_fn('he_s_orbital.wfn')
     title, numbers, coordinates, centers, type_assignment, exponents, \
-        mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(fn_wfn)
+    mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(fn_wfn)
     assert title == 'He atom - decontracted 6-31G basis set'
     assert numbers.shape == (1,)
     assert numbers == [2]
@@ -59,7 +60,7 @@ def test_load_wfn_low_he_s():
 def test_load_wfn_low_h2o():
     fn_wfn = get_fn('h2o_sto3g.wfn')
     title, numbers, coordinates, centers, type_assignment, exponents, \
-        mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(fn_wfn)
+    mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(fn_wfn)
     assert title == 'H2O Optimization'
     assert numbers.shape == (3,)
     assert (numbers == np.array([8, 1, 1])).all()
@@ -199,8 +200,8 @@ def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
     orb_beta_energies = getattr(mol, 'orb_beta_energies', None)
     orb_beta_occs = getattr(mol, 'orb_beta_occs', None)
     return mol.obasis, mol.coordinates, mol.numbers, dm_full, mol.orb_alpha, mol.orb_alpha_coeffs, \
-           mol.orb_alpha_energies, mol.orb_alpha_occs, orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, \
-           mol.energy
+           mol.orb_alpha_energies, mol.orb_alpha_occs, orb_beta, orb_beta_coeffs, \
+           orb_beta_energies, orb_beta_occs, mol.energy
 
 
 def test_load_wfn_h2o_sto3g_decontracted():
@@ -212,8 +213,8 @@ def test_load_wfn_h2o_sto3g_decontracted():
 
 
 def test_load_wfn_h2_ccpvqz_virtual():
-    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
-    orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
+    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, \
+    orb_alpha_occs, orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
         'h2_ccpvqz.wfn',
         True, 74, -1.133504568400,
         np.array([0.0, 0.0]),
@@ -237,8 +238,8 @@ def test_load_wfn_h2o_sto3g():
 
 
 def test_load_wfn_li_sp_virtual():
-    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
-    orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
+    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, \
+    orb_alpha_occs, orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
         'li_sp_virtual.wfn',
         False, 8, -3.712905542719,
         np.array([0.0, 0.0])
@@ -265,8 +266,8 @@ def test_load_wfn_li_sp():
 
 
 def test_load_wfn_o2():
-    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
-    orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
+    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, \
+    orb_alpha_occs, orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
         'o2_uhf.wfn',
         False, 72, -149.664140769678,
         np.array([0.0, 0.0]),
@@ -276,8 +277,8 @@ def test_load_wfn_o2():
 
 
 def test_load_wfn_o2_virtual():
-    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
-    orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
+    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, \
+    orb_alpha_occs, orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
         'o2_uhf_virtual.wfn',
         False, 72, -149.664140769678,
         np.array([0.0, 0.0]),
@@ -303,8 +304,8 @@ def test_load_wfn_o2_virtual():
 
 
 def test_load_wfn_lif_fci():
-    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
-    orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
+    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, \
+    orb_alpha_occs, orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
         'lif_fci.wfn',
         True, 44, None,
         np.array([-0.645282, 0.645282]),
@@ -323,8 +324,8 @@ def test_load_wfn_lif_fci():
 
 
 def test_load_wfn_lih_cation_fci():
-    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs, \
-    orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
+    obasis, coordinates, numbers, dm_full, orb_alpha, orb_alpha_coeffs, orb_alpha_energies, \
+    orb_alpha_occs, orb_beta, orb_beta_coeffs, orb_beta_energies, orb_beta_occs, energy = check_wfn(
         'lih_cation_fci.wfn',
         True, 26, None,
         np.array([0.913206, 0.086794]),

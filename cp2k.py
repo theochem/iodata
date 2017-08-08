@@ -19,12 +19,10 @@
 #
 # --
 """CP2K atomic wavefunctions"""
-from collections import OrderedDict
-
 import numpy as np
 
-from . utils import shells_to_nbasis, str_to_shell_types
-from . overlap_accel import fac2
+from .overlap_accel import fac2
+from .utils import shells_to_nbasis, str_to_shell_types
 
 __all__ = ['load_atom_cp2k']
 

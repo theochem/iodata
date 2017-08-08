@@ -25,7 +25,8 @@
    filename.
 """
 
-import os, numpy as np
+import numpy as np
+import os
 
 __all__ = ['IOData']
 

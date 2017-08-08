@@ -27,15 +27,17 @@ from os import path
 
 from . mulliken import get_mulliken_operators
 
-__all__ = ['compute_mulliken_charges', 'compute_hf_energy']
+__all__ = ['compute_mulliken_charges']
 
 
 def get_fn(fn):
+    """Get the path of a file in the cached directory"""
     cur_pth = path.split(__file__)[0]
     return cur_pth + "/cached/{}".format(fn)
 
 
 def compute_mulliken_charges(obasis, pseudo_numbers, dm):
+    """Compute mulliken charges"""
     operators = get_mulliken_operators(obasis)
     populations = np.array([np.einsum('ab,ba', operator, dm) for operator in operators])
     assert pseudo_numbers.shape == populations.shape
@@ -78,19 +80,21 @@ def truncated_file(name, fn_orig, nline, nadd):
         yield fn_truncated
 
 
-def compare_dict_floats(d1, d2):
+def _compare_dict_floats(d1, d2):
+    """Compare the float values in a dictionary"""
     for k, v in d1.iteritems():
         assert abs(v - d2[k]).max() < 1e-8
     assert len(d1) == len(d2)
 
 
 def compare_mols(mol1, mol2):
+    """Compare two IOData objects"""
     assert (getattr(mol1, 'title') == getattr(mol2, 'title'))
     assert (mol1.numbers == mol2.numbers).all()
     assert (mol1.coordinates == mol2.coordinates).all()
     # orbital basis
     if mol1.obasis is not None:
-        compare_dict_floats(mol1.obasis, mol2.obasis)
+        _compare_dict_floats(mol1.obasis, mol2.obasis)
     else:
         assert mol2.obasis is None
     # wfn
@@ -116,6 +120,7 @@ def compare_mols(mol1, mol2):
 
 
 def get_random_cell(a, nvec):
+    """Return a random cell"""
     if nvec == 0:
         return None
     if a <= 0:
