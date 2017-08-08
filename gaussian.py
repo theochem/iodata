@@ -350,13 +350,8 @@ def load_fchk(filename):
     del nprims
     del alphas
 
-    obasis = {}
-    obasis["centers"] = coordinates
-    obasis["shell_map"] = my_shell_map
-    obasis["nprims"] = my_nprims
-    obasis["shell_types"] = my_shell_types
-    obasis["alphas"] = my_alphas
-    obasis["con_coeffs"] = con_coeffs
+    obasis = {"centers": coordinates, "shell_map": my_shell_map, "nprims": my_nprims,
+              "shell_types": my_shell_types, "alphas": my_alphas, "con_coeffs": con_coeffs}
 
     # permutation of the orbital basis functions
     permutation_rules = {
@@ -408,7 +403,6 @@ def load_fchk(filename):
             return dm
 
     # First try to load the post-hf density matrices.
-    load_orbitals = True
     for key in 'MP2', 'MP3', 'CC', 'CI', 'SCF':
         dm_full = load_dm('Total %s Density' % key)
         if dm_full is not None:

@@ -23,9 +23,8 @@ from collections import OrderedDict
 
 import numpy as np
 
-from . overlap import init_scales
-from . periodic import sym2num
-
+from .overlap import init_scales
+from .periodic import sym2num
 
 __all__ = ['load_wfn_low', 'get_permutation_orbital',
            'get_permutation_basis', 'get_mask', 'load_wfn']
@@ -104,7 +103,7 @@ def load_wfn_low(filename):
             mo_count[mo], mo_occ[mo], mo_energy[mo], coefficients[:, mo] = helper_mo(f)
         energy = helper_energy(f)
     return title, numbers, coordinates, centers, type_assignment, exponent, \
-        mo_count, mo_occ, mo_energy, coefficients, energy
+           mo_count, mo_occ, mo_energy, coefficients, energy
 
 
 def get_permutation_orbital(type_assignment):
@@ -202,7 +201,7 @@ def load_wfn(filename):
         ``energy``, ``obasis`` and ``orb_alpha``. May contain ``orb_beta``.
     """
     title, numbers, coordinates, centers, type_assignment, exponents, \
-        mo_count, mo_occ, mo_energy, coefficients, energy = load_wfn_low(filename)
+    mo_count, mo_occ, mo_energy, coefficients, energy = load_wfn_low(filename)
     permutation = get_permutation_basis(type_assignment)
     # permute arrays containing wfn data
     type_assignment = type_assignment[permutation]
@@ -221,13 +220,8 @@ def load_wfn(filename):
     nprims = np.ones(reduced_size, int)
     con_coeffs = np.ones(reduced_size)
     # build basis set
-    obasis = {}
-    obasis["centers"] = coordinates
-    obasis["shell_map"] = shell_map
-    obasis["nprims"] = nprims
-    obasis["shell_types"] = shell_types
-    obasis["alphas"] = alphas
-    obasis["con_coeffs"] = con_coeffs
+    obasis = {"centers": coordinates, "shell_map": shell_map, "nprims": nprims,
+              "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
     nbasis = coefficients.shape[0]
     coefficients = coefficients[permutation]
     scales, dummy = init_scales(obasis["alphas"], obasis["nprims"], obasis["shell_types"])
@@ -244,7 +238,8 @@ def load_wfn(filename):
         # open shell system
         # counting the number of alpha and beta orbitals
         index = 1
-        while index < num_mo and mo_energy[index] >= mo_energy[index - 1] and mo_count[index] == mo_count[index - 1] + 1:
+        while index < num_mo and mo_energy[index] >= mo_energy[index - 1] and mo_count[index] == \
+                        mo_count[index - 1] + 1:
             index += 1
         orb_alpha = (nbasis, index)
         orb_alpha_coeffs = np.copy(coefficients[:, :index])
@@ -259,9 +254,9 @@ def load_wfn(filename):
         'title': title,
         'coordinates': coordinates,
         'orb_alpha': orb_alpha,
-        'orb_alpha_coeffs' : orb_alpha_coeffs,
-        'orb_alpha_energies' : orb_alpha_energies,
-        'orb_alpha_occs' : orb_alpha_occs,
+        'orb_alpha_coeffs': orb_alpha_coeffs,
+        'orb_alpha_energies': orb_alpha_energies,
+        'orb_alpha_occs': orb_alpha_occs,
         'numbers': numbers,
         'obasis': obasis,
         'energy': energy,

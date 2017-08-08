@@ -51,11 +51,7 @@ def _read_cube_header(f):
     axes = np.array([axis0, axis1, axis2])
 
     cell = axes * shape.reshape(-1, 1)
-    ugrid = {}
-    ugrid["origin"] = origin
-    ugrid['grid_rvecs'] = axes
-    ugrid['shape'] = shape
-    ugrid['pbc'] = np.ones(3, int)
+    ugrid = {"origin": origin, 'grid_rvecs': axes, 'shape': shape, 'pbc': np.ones(3, int)}
 
     def read_coordinate_line(line):
         """Read an atom number and coordinate from the cube file"""

@@ -112,13 +112,8 @@ def _read_cp2k_contracted_obasis(f):
     alphas = np.array(alphas)
     con_coeffs = np.array(con_coeffs)
 
-    obasis = {}
-    obasis["centers"] = coordinates
-    obasis["shell_map"] = shell_map
-    obasis["nprims"] = nprims
-    obasis["shell_types"] = shell_types
-    obasis["alphas"] = alphas
-    obasis["con_coeffs"] = con_coeffs
+    obasis = {"centers": coordinates, "shell_map": shell_map, "nprims": nprims,
+              "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
 
     return obasis
 
@@ -174,13 +169,8 @@ def _read_cp2k_uncontracted_obasis(f):
     alphas = np.array(alphas)
     con_coeffs = np.array(con_coeffs)
 
-    obasis = {}
-    obasis["centers"] = centers
-    obasis["shell_map"] = shell_map
-    obasis["nprims"] = nprims
-    obasis["shell_types"] = shell_types
-    obasis["alphas"] = alphas
-    obasis["con_coeffs"] = con_coeffs
+    obasis = {"centers": centers, "shell_map": shell_map, "nprims": nprims,
+              "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
     return obasis
 
 

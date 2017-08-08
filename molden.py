@@ -140,13 +140,8 @@ def load_molden(filename):
         alphas = np.array(alphas)
         con_coeffs = np.array(con_coeffs)
 
-        obasis = {}
-        obasis["centers"] = coordinates
-        obasis["shell_map"] = shell_map
-        obasis["nprims"] = nprims
-        obasis["shell_types"] = shell_types
-        obasis["alphas"] = alphas
-        obasis["con_coeffs"] = con_coeffs
+        obasis = {"centers": coordinates, "shell_map": shell_map, "nprims": nprims,
+                  "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
 
         nbasis = shells_to_nbasis(shell_types)
         return obasis, nbasis
@@ -274,15 +269,12 @@ def load_molden(filename):
         raise IOError('Alpha orbitals not found in molden input file.')
 
     if coeff_beta is None:
-        nalpha = int(np.round(occ_alpha.sum())) / 2
         orb_alpha = (nbasis, coeff_alpha.shape[1])
         orb_alpha_coeffs = coeff_alpha
         orb_alpha_energies = ener_alpha
         orb_alpha_occs = occ_alpha / 2
         orb_beta = None
     else:
-        nalpha = int(np.round(occ_alpha.sum()))
-        nbeta = int(np.round(occ_beta.sum()))
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape

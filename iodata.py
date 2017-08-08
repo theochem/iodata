@@ -25,9 +25,7 @@
    filename.
 """
 
-
 import os, numpy as np
-
 
 __all__ = ['IOData']
 
@@ -88,39 +86,39 @@ class ArrayTypeCheckDescriptor(object):
     def __set__(self, obj, value):
         # try casting to proper dtype:
         value = np.array(value, dtype=self._dtype, copy=False)
-        #if not isinstance(value, np.ndarray):
+        # if not isinstance(value, np.ndarray):
         #    raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy '
         #                    'array.' % (self._name, type(obj)))
         if self._ndim is not None and value.ndim != self._ndim:
             raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy array '
                             'with %i dimension(s).' % (self._name, type(obj),
-                            self._ndim))
+                                                       self._ndim))
         if self._shape is not None:
             for i in xrange(len(self._shape)):
                 if self._shape[i] >= 0 and self._shape[i] != value.shape[i]:
                     raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy'
                                     ' array %i elements in dimension %i.' % (
-                                    self._name, type(obj), self._shape[i], i))
+                                        self._name, type(obj), self._shape[i], i))
         if self._dtype is not None:
             if not issubclass(value.dtype.type, self._dtype.type):
                 raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy '
                                 'array with dtype \'%s\'.' % (self._name,
-                                type(obj), self._dtype.type))
+                                                              type(obj), self._dtype.type))
         if self._matching is not None:
             for othername in self._matching:
-                other = getattr(obj, '_'+othername, None)
+                other = getattr(obj, '_' + othername, None)
                 if other is not None:
                     for i in xrange(len(self._shape)):
                         if self._shape[i] == -1 and \
-                           other.shape[i] != value.shape[i]:
+                                        other.shape[i] != value.shape[i]:
                             raise TypeError('shape[%i] of attribute \'%s\' of '
                                             '\'%s\' in is incompatible with '
                                             'that of \'%s\'.' % (i, self._name,
-                                            type(obj), othername))
-        setattr(obj, '_'+self._name, value)
+                                                                 type(obj), othername))
+        setattr(obj, '_' + self._name, value)
 
     def __delete__(self, obj):
-        delattr(obj, '_'+self._name)
+        delattr(obj, '_' + self._name)
 
 
 class IOData(object):
@@ -224,6 +222,7 @@ class IOData(object):
        two_mo
             Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
     """
+
     def __init__(self, **kwargs):
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
@@ -244,10 +243,12 @@ class IOData(object):
 
     # only perform type checking on minimal attributes
     numbers = ArrayTypeCheckDescriptor('numbers', 1, (-1,), int, ['coordinates', 'pseudo_numbers'])
-    coordinates = ArrayTypeCheckDescriptor('coordinates', 2, (-1, 3), float, ['numbers', 'pseudo_numbers'])
+    coordinates = ArrayTypeCheckDescriptor('coordinates', 2, (-1, 3), float,
+                                           ['numbers', 'pseudo_numbers'])
     cube_data = ArrayTypeCheckDescriptor('cube_data', 3)
     polar = ArrayTypeCheckDescriptor('polar', 2, (3, 3), float)
-    pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float, ['coordinates', 'numbers'], 'numbers')
+    pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float,
+                                              ['coordinates', 'numbers'], 'numbers')
 
     def _get_natom(self):
         """The number of atoms"""
@@ -261,7 +262,7 @@ class IOData(object):
     natom = property(_get_natom)
 
     @classmethod
-    def from_file(cls, *filenames, **kwargs):
+    def from_file(cls, *filenames):
         """Load data from a file.
 
            **Arguments:**
@@ -283,40 +284,40 @@ class IOData(object):
         result = {}
         for filename in filenames:
             if filename.endswith('.xyz'):
-                from . xyz import load_xyz
+                from .xyz import load_xyz
                 result.update(load_xyz(filename))
             elif filename.endswith('.fchk'):
-                from . gaussian import load_fchk
+                from .gaussian import load_fchk
                 result.update(load_fchk(filename))
             elif filename.endswith('.log'):
-                from . gaussian import load_operators_g09
+                from .gaussian import load_operators_g09
                 result.update(load_operators_g09(filename))
             elif filename.endswith('.mkl'):
-                from . molekel import load_mkl
+                from .molekel import load_mkl
                 result.update(load_mkl(filename))
             elif filename.endswith('.molden.input') or filename.endswith('.molden'):
-                from . molden import load_molden
+                from .molden import load_molden
                 result.update(load_molden(filename))
             elif filename.endswith('.cube'):
-                from . cube import load_cube
+                from .cube import load_cube
                 result.update(load_cube(filename))
             elif filename.endswith('.wfn'):
-                from . wfn import load_wfn
+                from .wfn import load_wfn
                 result.update(load_wfn(filename))
             elif os.path.basename(filename).startswith('POSCAR'):
-                from . vasp import load_poscar
+                from .vasp import load_poscar
                 result.update(load_poscar(filename))
             elif os.path.basename(filename)[:6] in ['CHGCAR', 'AECCAR']:
-                from . vasp import load_chgcar
+                from .vasp import load_chgcar
                 result.update(load_chgcar(filename))
             elif os.path.basename(filename).startswith('LOCPOT'):
-                from . vasp import load_locpot
+                from .vasp import load_locpot
                 result.update(load_locpot(filename))
             elif filename.endswith('.cp2k.out'):
-                from . cp2k import load_atom_cp2k
+                from .cp2k import load_atom_cp2k
                 result.update(load_atom_cp2k(filename))
             elif 'FCIDUMP' in os.path.basename(filename):
-                from . molpro import load_fcidump
+                from .molpro import load_fcidump
                 result.update(load_fcidump(filename))
             else:
                 raise ValueError('Unknown file format for reading: %s' % filename)
@@ -377,19 +378,19 @@ class IOData(object):
         """
 
         if filename.endswith('.xyz'):
-            from . xyz import dump_xyz
+            from .xyz import dump_xyz
             dump_xyz(filename, self)
         elif filename.endswith('.cube'):
-            from . cube import dump_cube
+            from .cube import dump_cube
             dump_cube(filename, self)
         elif filename.endswith('.molden.input') or filename.endswith('.molden'):
-            from . molden import dump_molden
+            from .molden import dump_molden
             dump_molden(filename, self)
         elif os.path.basename(filename).startswith('POSCAR'):
-            from . vasp import dump_poscar
+            from .vasp import dump_poscar
             dump_poscar(filename, self)
         elif 'FCIDUMP' in os.path.basename(filename):
-            from . molpro import dump_fcidump
+            from .molpro import dump_fcidump
             dump_fcidump(filename, self)
         else:
             raise ValueError('Unknown file format for writing: %s' % filename)
