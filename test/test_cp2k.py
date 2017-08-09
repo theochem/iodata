@@ -22,14 +22,11 @@
 
 from nose.tools import assert_raises
 
-# from . common import get_fn, truncated_file, check_orthonormal
-from horton.io.test.common import get_fn, truncated_file, check_orthonormal
+from . common import get_fn, truncated_file, check_orthonormal
 
-# from .. iodata import IOData
-# from .. overlap import compute_overlap
+from .. iodata import IOData
+from .. overlap import compute_overlap
 
-from horton.io.iodata import IOData
-from horton.io.overlap import compute_overlap
 
 
 # TODO: add more obasis tests?
@@ -178,19 +175,19 @@ def test_carbon_sc_pp_uncontracted():
 
 def test_errors():
     fn_test = get_fn('carbon_sc_pp_uncontracted.cp2k.out')
-    with truncated_file('horton.io.test.test_cp2k.test_errors', fn_test, 0, 0) as fn:
+    with truncated_file('io.test.test_cp2k.test_errors', fn_test, 0, 0) as fn:
         with assert_raises(IOError):
             IOData.from_file(fn)
-    with truncated_file('horton.io.test.test_cp2k.test_errors', fn_test, 107, 10) as fn:
+    with truncated_file('io.test.test_cp2k.test_errors', fn_test, 107, 10) as fn:
         with assert_raises(IOError):
             IOData.from_file(fn)
-    with truncated_file('horton.io.test.test_cp2k.test_errors', fn_test, 357, 10) as fn:
+    with truncated_file('io.test.test_cp2k.test_errors', fn_test, 357, 10) as fn:
         with assert_raises(IOError):
             IOData.from_file(fn)
-    with truncated_file('horton.io.test.test_cp2k.test_errors', fn_test, 405, 10) as fn:
+    with truncated_file('io.test.test_cp2k.test_errors', fn_test, 405, 10) as fn:
         with assert_raises(IOError):
             IOData.from_file(fn)
     fn_test = get_fn('carbon_gs_pp_uncontracted.cp2k.out')
-    with truncated_file('horton.io.test.test_cp2k.test_errors', fn_test, 456, 10) as fn:
+    with truncated_file('io.test.test_cp2k.test_errors', fn_test, 456, 10) as fn:
         with assert_raises(IOError):
             IOData.from_file(fn)

@@ -83,7 +83,7 @@ def test_dump_load_fcidimp_consistency_ao():
     mol0.two_mo = np.load(get_fn("psi4_h2_two.npy"))
 
     # Dump to a file and load it again
-    with tmpdir('horton.io.test.test_molpro.test_dump_load_fcidump_consistency_ao') as dn:
+    with tmpdir('io.test.test_molpro.test_dump_load_fcidump_consistency_ao') as dn:
         mol0.to_file('%s/FCIDUMP' % dn)
         mol1 = IOData.from_file('%s/FCIDUMP' % dn)
 

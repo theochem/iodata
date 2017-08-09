@@ -178,7 +178,7 @@ def test_load_molden_nh3_turbomole():
 
 def check_load_dump_consistency(fn):
     mol1 = IOData.from_file(get_fn(fn))
-    with tmpdir('horton.io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
+    with tmpdir('io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
         fn_tmp = os.path.join(dn, 'foo.molden')
         mol1.to_file(fn_tmp)
         mol2 = IOData.from_file(fn_tmp)

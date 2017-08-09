@@ -52,7 +52,7 @@ def check_water(mol):
 def test_load_dump_consistency():
     mol0 = IOData.from_file(get_fn('ch3_hf_sto3g.fchk'))
 
-    with tmpdir('horton.io.test.test_xyz.test_load_dump_consistency') as dn:
+    with tmpdir('io.test.test_xyz.test_load_dump_consistency') as dn:
         mol0.to_file('%s/test.xyz' % dn)
         mol1 = IOData.from_file('%s/test.xyz' % dn)
 

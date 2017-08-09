@@ -20,9 +20,9 @@
 # --
 
 import numpy as np
-from ..overlap import compute_overlap
-from horton.io.overlap_accel import fac2, binom
-from .common import get_fn
+from .. overlap import compute_overlap
+from .. overlap_accel import fac2, binom
+from . common import get_fn
 
 
 def test_fac2():

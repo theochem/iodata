@@ -121,7 +121,7 @@ def test_load_dump_consistency():
     mol0.rvecs = get_random_cell(5.0, 3)
     mol0.gvecs = np.linalg.inv(mol0.rvecs).T
 
-    with tmpdir('horton.io.test.test_vasp.test_load_dump_consistency') as dn:
+    with tmpdir('io.test.test_vasp.test_load_dump_consistency') as dn:
         mol0.to_file('%s/POSCAR' % dn)
         mol1 = IOData.from_file('%s/POSCAR' % dn)
 

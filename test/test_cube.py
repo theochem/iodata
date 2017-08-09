@@ -55,7 +55,7 @@ def test_load_dump_load_aelta():
     fn_cube1 = get_fn('aelta.cube')
     mol1 = IOData.from_file(fn_cube1)
 
-    with tmpdir('horton.io.test.test_cube.test_load_dump_load_aelta') as dn:
+    with tmpdir('io.test.test_cube.test_load_dump_load_aelta') as dn:
         fn_cube2 = '%s/%s' % (dn, 'aelta.cube')
         mol1.to_file(fn_cube2)
         mol2 = IOData.from_file(fn_cube2)
