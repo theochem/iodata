@@ -32,7 +32,7 @@ __all__ = ['load_chgcar', 'load_locpot', 'load_poscar', 'dump_poscar']
 def _unravel_counter(counter, shape):
     result = []
     for i in range(0, len(shape)):
-        result.append(counter % shape[i])
+        result.append(int(counter % shape[i]))
         counter /= shape[i]
     return result
 

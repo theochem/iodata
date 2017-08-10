@@ -117,7 +117,7 @@ def get_shell_nbasis(shell):
     """Returns number of basis functions within a shell.
     Negative shell numbers refer to pure functions."""
     if shell > 0:  # Cartesian
-        return (shell + 1) * (shell + 2) / 2
+        return int((shell + 1) * (shell + 2) / 2)
     elif shell == -1:
         raise ValueError
     else:  # Pure
