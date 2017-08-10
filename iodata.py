@@ -95,7 +95,7 @@ class ArrayTypeCheckDescriptor(object):
                             'with %i dimension(s).' % (self._name, type(obj),
                                                        self._ndim))
         if self._shape is not None:
-            for i in xrange(len(self._shape)):
+            for i in range(len(self._shape)):
                 if self._shape[i] >= 0 and self._shape[i] != value.shape[i]:
                     raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy'
                                     ' array %i elements in dimension %i.' % (
@@ -109,7 +109,7 @@ class ArrayTypeCheckDescriptor(object):
             for othername in self._matching:
                 other = getattr(obj, '_' + othername, None)
                 if other is not None:
-                    for i in xrange(len(self._shape)):
+                    for i in range(len(self._shape)):
                         if self._shape[i] == -1 and \
                                         other.shape[i] != value.shape[i]:
                             raise TypeError('shape[%i] of attribute \'%s\' of '
@@ -225,7 +225,7 @@ class IOData(object):
     """
 
     def __init__(self, **kwargs):
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             setattr(self, key, value)
 
     # Numpy array attributes that may require orbital basis reordering or sign correction.
@@ -400,7 +400,7 @@ class IOData(object):
         """Return a shallow copy"""
         kwargs = vars(self).copy()
         # get rid of leading underscores
-        for key in kwargs.keys():
+        for key in list(kwargs.keys()):
             if key[0] == '_':
                 kwargs[key[1:]] = kwargs[key]
                 del kwargs[key]

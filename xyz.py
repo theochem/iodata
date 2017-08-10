@@ -20,6 +20,7 @@
 # --
 """XYZ file format"""
 
+from __future__ import print_function
 import numpy as np
 from numbers import Number
 
@@ -39,13 +40,13 @@ def load_xyz(filename):
 
        **Returns:** dictionary with ``title`, ``coordinates`` and ``numbers``.
     """
-    f = file(filename)
-    size = int(f.next())
-    title = f.next().strip()
+    f = open(filename)
+    size = int(next(f))
+    title = next(f).strip()
     coordinates = np.empty((size, 3), float)
     numbers = np.empty(size, int)
-    for i in xrange(size):
-        words = f.next().split()
+    for i in range(size):
+        words = next(f).split()
         try:
             numbers[i] = sym2num[words[0].title()]
         except KeyError:
@@ -75,9 +76,9 @@ def dump_xyz(filename, data):
             May contain ``title``.
     """
     with open(filename, 'w') as f:
-        print >> f, data.natom
-        print >> f, getattr(data, 'title', 'Created with HORTON')
-        for i in xrange(data.natom):
+        print(data.natom, file=f)
+        print(getattr(data, 'title', 'Created with HORTON'), file=f)
+        for i in range(data.natom):
             n = num2sym[data.numbers[i]]
             x, y, z = data.coordinates[i] / angstrom
-            print >> f, '%2s %15.10f %15.10f %15.10f' % (n, x, y, z)
+            print('%2s %15.10f %15.10f %15.10f' % (n, x, y, z), file=f)

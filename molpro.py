@@ -26,8 +26,9 @@
        FCIDUMP file while HORTON internally uses Physicist's notation.
 """
 
-import numpy as np
+from __future__ import print_function
 
+import numpy as np
 from .utils import set_four_index_element
 
 __all__ = ['load_fcidump', 'dump_fcidump']
@@ -54,7 +55,7 @@ def load_fcidump(filename):
     """
     with open(filename) as f:
         # check header
-        line = f.next()
+        line = next(f)
         if not line.startswith(' &FCI NORB='):
             raise IOError('Error in FCIDUMP file header')
 
@@ -137,25 +138,24 @@ def dump_fcidump(filename, data):
         ms2 = getattr(data, 'ms2', 0)
 
         # Write header
-        print >> f, ' &FCI NORB=%i,NELEC=%i,MS2=%i,' % (nactive, nelec, ms2)
-        print >> f, '  ORBSYM= ' + ",".join(str(1) for v in xrange(nactive)) + ","
-        print >> f, '  ISYM=1'
-        print >> f, ' &END'
+        print(' &FCI NORB=%i,NELEC=%i,MS2=%i,' % (nactive, nelec, ms2), file=f)
+        print('  ORBSYM= ' + ",".join(str(1) for v in range(nactive)) + ",", file=f)
+        print('  ISYM=1', file=f)
+        print(' &END', file=f)
 
         # Write integrals and core energy
-        for i in xrange(nactive):
-            for j in xrange(i + 1):
-                for k in xrange(nactive):
-                    for l in xrange(k + 1):
+        for i in range(nactive):
+            for j in range(i + 1):
+                for k in range(nactive):
+                    for l in range(k + 1):
                         if (i * (i + 1)) / 2 + j >= (k * (k + 1)) / 2 + l:
                             value = two_mo[i, k, j, l]
                             if value != 0.0:
-                                print >> f, '%23.16e %4i %4i %4i %4i' % (
-                                value, i + 1, j + 1, k + 1, l + 1)
-        for i in xrange(nactive):
-            for j in xrange(i + 1):
+                                print('%23.16e %4i %4i %4i %4i' % (value, i + 1, j + 1, k + 1, l + 1), file=f)
+        for i in range(nactive):
+            for j in range(i + 1):
                 value = one_mo[i, j]
                 if value != 0.0:
-                    print >> f, '%23.16e %4i %4i %4i %4i' % (value, i + 1, j + 1, 0, 0)
+                    print('%23.16e %4i %4i %4i %4i' % (value, i + 1, j + 1, 0, 0), file=f)
         if core_energy != 0.0:
-            print >> f, '%23.16e %4i %4i %4i %4i' % (core_energy, 0, 0, 0, 0)
+            print('%23.16e %4i %4i %4i %4i' % (core_energy, 0, 0, 0, 0), file=f)

@@ -68,7 +68,7 @@ def test_copy():
     vars1 = vars(mol1)
     vars2 = vars(mol2)
     assert len(vars1) == len(vars2)
-    for key1, value1 in vars1.iteritems():
+    for key1, value1 in vars1.items():
         assert value1 is vars2[key1]
 
 

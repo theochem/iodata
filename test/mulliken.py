@@ -47,7 +47,7 @@ def partition_mulliken(operator, obasis, index):
     """
     mask = np.zeros_like(operator, dtype=bool)
     begin = 0
-    for ishell in xrange(obasis["shell_types"].size):
+    for ishell in range(obasis["shell_types"].size):
         end = begin + get_shell_nbasis(obasis["shell_types"][ishell])
         if obasis["shell_map"][ishell] != index:
             mask[begin:end] = True
@@ -60,7 +60,7 @@ def get_mulliken_operators(obasis):
     """Return a list of Mulliken operators for the given obasis."""
     operators = []
     olp = compute_overlap(**obasis)
-    for icenter in xrange(obasis["centers"].shape[0]):
+    for icenter in range(obasis["centers"].shape[0]):
         operator = olp.copy()
         partition_mulliken(operator, obasis, icenter)
         operators.append(operator)

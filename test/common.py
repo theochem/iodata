@@ -75,14 +75,14 @@ def truncated_file(name, fn_orig, nline, nadd):
                 if counter >= nline:
                     break
                 f_truncated.write(line)
-            for _ in xrange(nadd):
+            for _ in range(nadd):
                 f_truncated.write('\n')
         yield fn_truncated
 
 
 def _compare_dict_floats(d1, d2):
     """Compare the float values in a dictionary"""
-    for k, v in d1.iteritems():
+    for k, v in d1.items():
         assert abs(v - d2[k]).max() < 1e-8
     assert len(d1) == len(d2)
 
@@ -144,10 +144,10 @@ def check_orthonormal(occupations, coeffs, overlap, eps=1e-4):
     eps : float
         The allowed deviation from unity, very loose by default.
     """
-    for i0 in xrange(occupations.size):
+    for i0 in range(occupations.size):
         if occupations[i0] == 0:
             continue
-        for i1 in xrange(i0 + 1):
+        for i1 in range(i0 + 1):
             if occupations[i1] == 0:
                 continue
             dot = np.dot(coeffs[:, i0], np.dot(overlap, coeffs[:, i1]))
@@ -173,7 +173,7 @@ def check_normalization(coeffs, occupations, overlap, eps=1e-4):
     eps : float
         The allowed deviation from unity, very loose by default.
     """
-    for i in xrange(occupations.size):
+    for i in range(occupations.size):
         if occupations[i] == 0:
             continue
         norm = np.dot(coeffs[:, i], np.dot(overlap, coeffs[:, i]))

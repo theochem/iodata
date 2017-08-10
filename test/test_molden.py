@@ -88,7 +88,6 @@ def test_load_molden_nh3_molden_cart():
     # Check Mulliken charges. Comparison with numbers from the Molden program output.
     dm_full = mol.get_dm_full()
     charges = compute_mulliken_charges(mol.obasis, mol.pseudo_numbers, dm_full)
-    print charges
     molden_charges = np.array([0.3138, -0.4300, -0.0667, 0.1829])
     assert abs(charges - molden_charges).max() < 1e-3
 

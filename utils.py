@@ -82,7 +82,7 @@ def volume(rvecs):
     elif nvecs == 3:
         return np.linalg.det(rvecs)
     else:
-        print "1: Expected rvecs to be of shape (x,3), where x is in {1,2,3}"
+        print("1: Expected rvecs to be of shape (x,3), where x is in {1,2,3}")
         raise ValueError
 
 

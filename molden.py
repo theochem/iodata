@@ -19,6 +19,9 @@
 #
 # --
 """Molden wavefunction input file format"""
+
+from __future__ import print_function
+
 import numpy as np
 
 from .overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
@@ -367,7 +370,7 @@ def _is_normalized_properly(obasis, permutation, orb_alpha, orb_beta, signs=None
         orbs.append(orb_beta)
     error_max = 0.0
     for orb in orbs:
-        for iorb in xrange(orb.shape[1]):
+        for iorb in range(orb.shape[1]):
             vec = orb[:, iorb].copy()
             if signs is not None:
                 vec *= signs
@@ -425,9 +428,9 @@ def _get_fixed_con_coeffs(nprims, shell_types, alphas, con_coeffs, code):
     fixed_con_coeffs = con_coeffs.copy()
     iprim = 0
     corrected = False
-    for ishell in xrange(shell_types.size):
+    for ishell in range(shell_types.size):
         shell_type = shell_types[ishell]
-        for ialpha in xrange(nprims[ishell]):
+        for ialpha in range(nprims[ishell]):
             alpha = alphas[iprim]
             # Default 1.0: do not to correct anything, unless we know how to correct.
             correction = 1.0
@@ -592,20 +595,20 @@ def dump_molden(filename, data):
     """
     with open(filename, 'w') as f:
         # Print the header
-        print >> f, '[Molden Format]'
-        print >> f, '[Title]'
-        print >> f, ' %s' % getattr(data, 'title', 'Created with HORTON')
-        print >> f
+        print('[Molden Format]', file=f)
+        print('[Title]', file=f)
+        print(' %s' % getattr(data, 'title', 'Created with HORTON'), file=f)
+        print(file=f)
 
         # Print the elements numbers and the coordinates
-        print >> f, '[Atoms] AU'
-        for iatom in xrange(data.natom):
+        print('[Atoms] AU', file=f)
+        for iatom in range(data.natom):
             number = data.numbers[iatom]
             pseudo_number = data.pseudo_numbers[iatom]
             x, y, z = data.coordinates[iatom]
-            print >> f, '%2s %3i %3i  %25.18f %25.18f %25.18f' % (
+            print('%2s %3i %3i  %25.18f %25.18f %25.18f' % (
                 num2sym[number].ljust(2), iatom + 1, pseudo_number, x, y, z
-            )
+            ), file=f)
 
         # Print the basis set
         if isinstance(data.obasis, dict):
@@ -642,41 +645,41 @@ def dump_molden(filename, data):
             # Write out the Cartesian/Pure conventions. What a messy format...
             if pure['d']:
                 if pure['f']:
-                    print >> f, '[5D]'
+                    print('[5D]', file=f)
                 else:
-                    print >> f, '[5D10F]'
+                    print('[5D10F]', file=f)
             else:
                 if pure['f']:
-                    print >> f, '[7F]'
+                    print('[7F]', file=f)
             if pure['g']:
-                print >> f, '[9G]'
+                print('[9G]', file=f)
 
             # First convert it to a format that is amenable for printing. The molden
             # format assumes that every basis function is centered on one of the atoms.
             # (This may not always be the case.)
-            centers = [list() for _ in xrange(data.obasis["centers"].shape[0])]
+            centers = [list() for _ in range(data.obasis["centers"].shape[0])]
             begin_prim = 0
-            for ishell in xrange(data.obasis["shell_types"].size):
+            for ishell in range(data.obasis["shell_types"].size):
                 icenter = data.obasis["shell_map"][ishell]
                 shell_type = data.obasis["shell_types"][ishell]
                 sts = shell_type_to_str(shell_type)
                 end_prim = begin_prim + data.obasis["nprims"][ishell]
                 prims = []
-                for iprim in xrange(begin_prim, end_prim):
+                for iprim in range(begin_prim, end_prim):
                     alpha = data.obasis["alphas"][iprim]
                     con_coeff = data.obasis["con_coeffs"][iprim]
                     prims.append((alpha, con_coeff))
                 centers[icenter].append((sts, prims))
                 begin_prim = end_prim
 
-            print >> f, '[GTO]'
-            for icenter in xrange(data.obasis["centers"].shape[0]):
-                print >> f, '%3i 0' % (icenter + 1)
+            print('[GTO]', file=f)
+            for icenter in range(data.obasis["centers"].shape[0]):
+                print('%3i 0' % (icenter + 1), file=f)
                 for sts, prims in centers[icenter]:
-                    print >> f, '%1s %3i 1.0' % (sts, len(prims))
+                    print('%1s %3i 1.0' % (sts, len(prims)), file=f)
                     for alpha, con_coeff in prims:
-                        print >> f, '%20.10f %20.10f' % (alpha, con_coeff)
-                print >> f
+                        print('%20.10f %20.10f' % (alpha, con_coeff), file=f)
+                print(file=f)
         else:
             raise NotImplementedError(
                 'A Gaussian orbital basis is required to write a molden input file.')
@@ -685,22 +688,22 @@ def dump_molden(filename, data):
             orb_coeffs = getattr(data, 'orb_%s_coeffs' % spin)
             orb_energies = getattr(data, 'orb_%s_energies' % spin)
             orb_occupations = getattr(data, 'orb_%s_occs' % spin)
-            for ifn in xrange(orb_coeffs.shape[1]):
-                print >> f, ' Sym=     1a'
-                print >> f, ' Ene= %20.14E' % orb_energies[ifn]
-                print >> f, ' Spin= %s' % spin.capitalize()
-                print >> f, ' Occup= %8.6f' % (orb_occupations[ifn] * occ_scale)
-                for ibasis in xrange(orb_coeffs.shape[0]):
-                    print >> f, '%3i %20.12f' % (ibasis + 1, orb_coeffs[permutation[ibasis], ifn])
+            for ifn in range(orb_coeffs.shape[1]):
+                print(' Sym=     1a', file=f)
+                print(' Ene= %20.14E' % orb_energies[ifn], file=f)
+                print(' Spin= %s' % spin.capitalize(), file=f)
+                print(' Occup= %8.6f' % (orb_occupations[ifn] * occ_scale), file=f)
+                for ibasis in range(orb_coeffs.shape[0]):
+                    print('%3i %20.12f' % (ibasis + 1, orb_coeffs[permutation[ibasis], ifn]), file=f)
 
         # Construct the permutation of the basis functions
         permutation = _get_molden_permutation(data.obasis["shell_types"], reverse=True)
 
         # Print the mean-field orbitals
         if hasattr(data, 'orb_beta_coeffs'):
-            print >> f, '[MO]'
+            print('[MO]', file=f)
             helper_orb('alpha')
             helper_orb('beta')
         else:
-            print >> f, '[MO]'
+            print('[MO]', file=f)
             helper_orb('alpha', 2.0)

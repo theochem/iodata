@@ -44,4 +44,4 @@ num2sym = {1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9:
            115: 'Uup',
            116: 'Lv', 117: 'Uus', 118: 'Uuo'}
 
-sym2num = dict((value, key) for key, value in num2sym.iteritems())
+sym2num = dict((value, key) for key, value in num2sym.items())

@@ -19,6 +19,9 @@
 #
 # --
 """VASP POSCAR, CHGCAR and POTCAR file formats"""
+
+from __future__ import print_function
+
 import numpy as np
 from . utils import angstrom, electronvolt, volume
 from . periodic import num2sym, sym2num
@@ -28,7 +31,7 @@ __all__ = ['load_chgcar', 'load_locpot', 'load_poscar', 'dump_poscar']
 
 def _unravel_counter(counter, shape):
     result = []
-    for i in xrange(0, len(shape)):
+    for i in range(0, len(shape)):
         result.append(counter % shape[i])
         counter /= shape[i]
     return result
@@ -47,29 +50,29 @@ def _load_vasp_header(f):
        **Returns:** ``title``, ``cell``, ``numbers``, ``coordinates``
     """
     # read the title
-    title = f.next().strip()
+    title = next(f).strip()
     # read the universal scaling factor
-    scaling = float(f.next().strip())
+    scaling = float(next(f).strip())
 
     # read cell parameters in angstrom, without the universal scaling factor.
     # each row is one cell vector
     rvecs = []
-    for i in xrange(3):
-        rvecs.append([float(w) for w in f.next().split()])
+    for i in range(3):
+        rvecs.append([float(w) for w in next(f).split()])
     rvecs = np.array(rvecs) * angstrom * scaling
 
     # note that in older VASP version the following line might be absent
-    vasp_numbers = [sym2num[w] for w in f.next().split()]
-    vasp_counts = [int(w) for w in f.next().split()]
+    vasp_numbers = [sym2num[w] for w in next(f).split()]
+    vasp_counts = [int(w) for w in next(f).split()]
     numbers = []
     for n, c in zip(vasp_numbers, vasp_counts):
         numbers.extend([n] * c)
     numbers = np.array(numbers)
 
-    line = f.next()
+    line = next(f)
     # the 7th line can optionally indicate selective dynamics
     if line[0].lower() in ['s']:
-        line = f.next()
+        line = next(f)
     # parse direct/cartesian switch
     cartesian = line[0].lower() in ['c', 'k']
 
@@ -104,7 +107,7 @@ def _load_vasp_grid(filename):
         title, rvecs, numbers, coordinates = _load_vasp_header(f)
 
         # read the shape of the data
-        shape = np.array([int(w) for w in f.next().split()])
+        shape = np.array([int(w) for w in next(f).split()])
 
         # read data
         cube_data = np.zeros(shape, float)
@@ -202,25 +205,25 @@ def dump_poscar(filename, data):
             ``rvecs``, ``cell_frac``. May contain ``title``.
     """
     with open(filename, 'w') as f:
-        print >> f, getattr(data, 'title', 'Created with HORTON')
-        print >> f, '   1.00000000000000'
+        print(getattr(data, 'title', 'Created with HORTON'), file=f)
+        print('   1.00000000000000', file=f)
 
         # Write cell vectors, each row is one vector in angstrom:
         rvecs = data.rvecs
         for rvec in rvecs:
-            print >> f, '  % 21.16f % 21.16f % 21.16f' % tuple(rvec / angstrom)
+            print('  % 21.16f % 21.16f % 21.16f' % tuple(rvec / angstrom), file=f)
 
         # Construct list of elements to make sure the coordinates get written
         # in this order. Heaviest elements are put furst.
         unumbers = sorted(np.unique(data.numbers))[::-1]
-        print >> f, ' '.join('%5s' % num2sym[unumber] for unumber in unumbers)
-        print >> f, ' '.join('%5i' % (data.numbers == unumber).sum() for unumber in unumbers)
-        print >> f, 'Selective dynamics'
-        print >> f, 'Direct'
+        print(' '.join('%5s' % num2sym[unumber] for unumber in unumbers), file=f)
+        print(' '.join('%5i' % (data.numbers == unumber).sum() for unumber in unumbers), file=f)
+        print('Selective dynamics', file=f)
+        print('Direct', file=f)
 
         # Write the coordinates
         for unumber in unumbers:
             indexes = (data.numbers == unumber).nonzero()[0]
             for index in indexes:
                 row = np.dot(data.gvecs, data.coordinates[index])
-                print >> f, '  % 21.16f % 21.16f % 21.16f   F   F   F' % tuple(row)
+                print('  % 21.16f % 21.16f % 21.16f   F   F   F' % tuple(row), file=f)

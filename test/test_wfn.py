@@ -119,19 +119,19 @@ def test_get_permutation_orbital():
     assert (get_permutation_orbital(assign) == expect).all()
     # f orbitals
     assign = np.array([11, 12, 13, 17, 14, 15, 18, 19, 16, 20])
-    assert (get_permutation_orbital(assign) == range(10)).all()
+    assert (get_permutation_orbital(assign) == list(range(10))).all()
     # g orbitals
     assign = np.array([23, 29, 32, 27, 22, 28, 35, 34, 26, 31, 33, 30, 25, 24, 21])
-    assert (get_permutation_orbital(assign) == range(15)).all()
+    assert (get_permutation_orbital(assign) == list(range(15))).all()
     # g orbitals
     assign = np.array([23, 29, 32, 27, 22, 28, 35, 34, 26, 31, 33, 30, 25, 24, 21])
-    assert (get_permutation_orbital(assign) == range(15)).all()
+    assert (get_permutation_orbital(assign) == list(range(15))).all()
     # h orbitals
-    assert (get_permutation_orbital(np.arange(36, 57)) == range(21)).all()
+    assert (get_permutation_orbital(np.arange(36, 57)) == list(range(21))).all()
     assign = np.array([1, 1, 11, 12, 13, 17, 14, 15, 18, 19, 16, 20])
-    assert (get_permutation_orbital(assign) == range(12)).all()
+    assert (get_permutation_orbital(assign) == list(range(12))).all()
     assign = np.array([2, 3, 4, 11, 12, 13, 17, 14, 15, 18, 19, 16, 20, 1, 1])
-    assert (get_permutation_orbital(assign) == range(15)).all()
+    assert (get_permutation_orbital(assign) == list(range(15))).all()
 
 
 def test_get_permutation_basis():
@@ -162,7 +162,7 @@ def test_get_permutation_basis():
     assign = [23, 29, 32, 27, 22, 28, 35, 34, 26, 31, 33, 30, 25, 24, 21]
     expect = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
     assert (get_permutation_basis(np.array(assign)) == expect).all()
-    assert (get_permutation_basis(np.arange(36, 57)) == range(21)[::-1]).all()
+    assert (get_permutation_basis(np.arange(36, 57)) == list(range(21))[::-1]).all()
 
 
 def test_get_mask():

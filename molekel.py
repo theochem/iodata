@@ -128,7 +128,7 @@ def load_mkl(filename):
                 assert ncol > 0
                 for word in words:
                     assert word == 'a1g'
-                cols = [np.zeros((nbasis, 1), float) for icol in xrange(ncol)]
+                cols = [np.zeros((nbasis, 1), float) for icol in range(ncol)]
                 in_orb = 1
             elif in_orb == 1:
                 # read energies
@@ -142,7 +142,7 @@ def load_mkl(filename):
                 # read expansion coefficients
                 words = lstrip.split()
                 assert len(words) == ncol
-                for icol in xrange(ncol):
+                for icol in range(ncol):
                     cols[icol][ibasis] = float(words[icol])
                 ibasis += 1
                 if ibasis == nbasis:

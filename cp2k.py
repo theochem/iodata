@@ -174,8 +174,8 @@ def _read_cp2k_uncontracted_obasis(f):
 
 def _read_cp2k_obasis(f):
     """Read a basis set from an open CP2K ATOM output file."""
-    f.next()         # Skip empty line
-    line = f.next()  # Check for contracted versus uncontracted
+    next(f)         # Skip empty line
+    line = next(f)  # Check for contracted versus uncontracted
     if line == ' ********************** Contracted Gaussian Type Orbitals '\
                '**********************\n':
         return _read_cp2k_contracted_obasis(f)
@@ -207,7 +207,7 @@ def _read_cp2k_occupations_energies(f, restricted):
     oe_beta = []
     empty = 0
     while empty < 2:
-        line = f.next()
+        line = next(f)
         words = line.split()
         if len(words) == 0:
             empty += 1
@@ -241,16 +241,16 @@ def _read_cp2k_orbital_coeffs(f, oe):
              Key is an (l, s) pair and value is an array with orbital coefficients.
     """
     coeffs = {}
-    f.next()
+    next(f)
     while len(coeffs) < len(oe):
-        line = f.next()
+        line = next(f)
         assert line.startswith("    ORBITAL      L =")
         words = line.split()
         l = int(words[3])
         s = int(words[6])
         c = []
         while True:
-            line = f.next()
+            line = next(f)
             if len(line.strip()) == 0:
                 break
             c.append(float(line))
@@ -306,11 +306,11 @@ def _fill_orbitals(orb_coeffs, orb_energies, orb_occupations, oe, coeffs, shell_
     for l, s, occ, ener in oe:
         cs = coeffs.get((l, s))
         stride = 2*l + 1
-        for m in xrange(-l, l+1):
+        for m in range(-l, l+1):
             im = m + l
             orb_energies[iorb] = ener
             orb_occupations[iorb] = occ/float((restricted + 1)*(2*l + 1))
-            for ic in xrange(len(cs)):
+            for ic in range(len(cs)):
                 orb_coeffs[offsets[l] + stride*ic + im, iorb] = cs[ic]
             iorb += 1
 
@@ -409,11 +409,11 @@ def load_atom_cp2k(filename):
         for line in f:
             if line.startswith(' Orbital energies'):
                 break
-        f.next()
+        next(f)
         oe_alpha, oe_beta = _read_cp2k_occupations_energies(f, restricted)
 
         # Read orbital expansion coefficients
-        line = f.next()
+        line = next(f)
         if (line != " Atomic orbital expansion coefficients [Alpha]\n") and \
            (line != " Atomic orbital expansion coefficients []\n"):
             raise IOError('Could not find orbital coefficients in CP2K ATOM output: '
@@ -421,7 +421,7 @@ def load_atom_cp2k(filename):
         coeffs_alpha = _read_cp2k_orbital_coeffs(f, oe_alpha)
 
         if not restricted:
-            line = f.next()
+            line = next(f)
             if line != " Atomic orbital expansion coefficients [Beta]\n":
                 raise IOError('Could not find beta orbital coefficient in CP2K ATOM '
                               'output: %s' % filename)

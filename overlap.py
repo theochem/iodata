@@ -1,6 +1,6 @@
 import numpy as np
-from overlap_helper import tfs, iter_pow
-from overlap_accel import add_overlap
+from .overlap_helper import tfs, iter_pow
+from .overlap_accel import add_overlap
 
 
 def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs):
@@ -22,7 +22,7 @@ def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs)
     scales_offsets_split = split_data_by_prims(scales_offsets, nprims)
 
     # Loop over shell0
-    for big_tuple0 in zip(range(nshell), shell_map, shell_types, shell_offsets, shell_offsets[1:],
+    for big_tuple0 in zip(list(range(nshell)), shell_map, shell_types, shell_offsets, shell_offsets[1:],
                           alphas_split, con_coeffs_split, scales_offsets_split):
 
         ishell0, center0, shell_type0, start0, \
