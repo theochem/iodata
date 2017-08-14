@@ -1,0 +1,129 @@
+env:
+  matrix:
+  - MYCONDAPY=2.7
+  - MYCONDAPY=3.5
+  - MYCONDAPY=3.6
+  global:
+    # ANACONDA_TOKEN
+    - secure: "EwDvNNbo6xnXz99ggD//LSbi0Bs8MNME3AuxAPB7LQiSsFcMZ3EETE1OkAmvSQDTgCjpO6x0izy8i3H+H249f/FI89bfPMvd67RB1YQAnkPj05HWx9zUxyCGaxdSMdw0IKLZBUq2itwSsx6+ltbNhgCAbWxB7vOBpNeIHmk7zv753sSfk5C/cI48SzZyRbfliAMqcfXyj6kM3uhmAVmQ/Li5wkXY7Owhp9oYw1/Lpfl0FZUA5km3jUdCWg/yMQ0rdKtDvm749GASIIKChIdjmSFlfAc8pvKahHfpiL1XO9+NdwflU7AMkg6RYZpDxyM5wt86MdyLyIOxqzhD8a4DNzkpm2u9eGsxx77SxtteNVkDkxkt1xhW5Vw3amdIIKn+/VVR1Oyq8A13ZzLCtiqvrn+lJaWvejpF39fJPBXtvWxBmDJQYOL98nrG8vNwyFw6dQOgMKJEtfmxEH/2gjeJvi/cY8aNUMrVDWF304v9rrbO6Nm9LrM220Tq1/OfSdgqb9hBo7EwyDHZ9kV0yRLcU30LBDOGlBqa9BUq/CQbPFjWLfJuUqpVFKBOpvmBFt9OSP53m45DqcVWSdNBDeCawlpaDHfHJ95fUi+kS04KkmzaBos6vWpyxs2oIylLhi+r3SQYR1jyavG0r14d7SXLa/AU11f+p6eEoiM6Zp3fPIQ="
+    # GITHUB_TOKEN
+    - secure: "s9VMWQYN93W702bHud7wl29qKJfYIQH5B2d0b2rPU+/ZGW32AO3ichF8kRR5Z2ePJGETw2h20r6GEigUToC4eum9VA9yuLClDyvUP41XYslh0ZFT7RSCuVAl0pyhB9zml6LpnDa4EB2zuo6W/cbnvhvq5MJi9PHP0nSmGKBX/RIN0Yz5kkH6hjo3YqRu6NwftsDyRdpgFSmtDSSOrHRfwzFogg4OLNexGXC5AEgwjjEHH4N+2YCwX0LmZY5tlyxElkj23WGAlp9B3OFNnA68cw1axnNKiNKRL7VmlmykXxplkLz2YxKqovhup9uUlkzmC7aRlgEWrCvMAgaxDtgYf0KDCrYn4HQCmcuxuIgSqY8srLxEiZPuHxfBalTqvEXuehJQTDj9AmKx7v3jEYlAlDLS86sdxKtIpmsb5ReJcJ4aWWRJWcN7TdiRqINIasqYZuxPJqR7eVp1mNhXUq/uxi2RHxcdbt54f7eKz3ZBP9LpmyxcMWa9lrHjyvIz8BerLbkWSBfo8v62VJgG8hhn7JOm0e+5LO7y7vRldcpknVOLvrmsSIp/5T0ybQtka9FNQBV5/fPl3Ty7JMOvpYgrf4llXP1BG8WQWlpCI2Xbj7PM8//qWfnFa63n/dm3Q9+Z1bwftDMEqaLb972t68gl+K9gh2iT3+smHnGztow3NtE="
+    # PYPI_PASSWD
+    - secure: "eVqw72IFej1iFYefMNd67CXu82CiLrpten2SYarRsnrn5BIHFIrnNmeZ7ZVBv35oHsfk9rCJZBjwUKlzDKDKi9KX7NqVz2hMMJGxnHrAAdy4fYEPj0sRp9thtfsgRs24Ekmeyo/mqAd/qZOhDEGKJFERdvrTXIe0Gv4imKJDv5ZPdp7uelMGTS7nWRHa2uqKhGtEE8tEKtdsBJh27rjPv4nfyjfg3gsS8cbAL7gPBs5+5yZZo6SVJjpWBrWSIKpPBHqxFx9d6Rt/ebLbVNriUzJoS7lP4KT7CnllgQDY39sm0WT0XD41Z2FsbziZ5u4ede9rGIsJpB3Nls554dvb/saxlnO4fzAEu4tTT4ErRRdJaaAgxkx/CMDTL5ztKlyeh9Pq1qPzhaFDjG5qnE3ES1y8jyQkiZ583JMFvoCyGditFpBxEA7xOHCPpbN6D4U6JamlY9Ol7SlNpgfEH+/dFyOQ73r5skmj8zBbxAFaUK1vtpp7xRJDgxBU3ZRyHPq333Te0sxwikX4GTdBH0jTmWA25BzjgANPda5WI4RgQxNZ4f4GJJm1ldUziVl/SSltUBp5WIx3VjmeNNLRSygXyg/OleLH0pYtQO4fKb2DPo80TAO58Bqu4f0haPuymX7D5xB/L5y+GidJdJSuQ+c49YUNpROlGOJ4WrcCN1yrAT8="
+    - PYPKG=iodata
+    - GITHUB_REPO_NAME=theochem/iodata
+
+# Do not use Travis Python to save some time.
+language: generic
+os:
+  - linux
+  - osx
+osx_image: xcode8.3
+dist: trusty
+sudo: false
+
+install:
+# Get miniconda. Take the right version, so re-installing python is only needed for 3.5.
+- if [[ "$MYCONDAPY" == "2.7" ]]; then
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh -O miniconda.sh;
+    fi;
+  else
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
+    fi;
+  fi
+- bash miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
+- hash -r
+
+# Configure conda and get a few essentials
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+# Get the right python version for building. This only does something for 3.5.
+# Install extra package needed to make things work. Most things can be listed as
+# dependencies on metal.yaml and setup.py, unless setup.py already imports them.
+# Install conda tools for packaging and uploading
+- conda install python=${MYCONDAPY} numpy cython sphinx conda-build anaconda-client
+- conda info -a
+
+script:
+# Build the conda package
+- git fetch origin --tags
+- conda build -q tools/conda.recipe
+
+# Build source package, should work too and needed for deployment to Github and
+# PyPI.
+- python setup.py sdist
+
+# Install Conda package
+- conda install --use-local $PYPKG
+
+# Compile documentation
+# - (cd doc; make html)
+
+# Run tests out of source tree, to make sure that installed version is tested.
+- (cd; nosetests $PYPKG -v --processes=2 --detailed-errors --process-timeout=600)
+
+# In deployment, the env var TRAVIS_TAG contains the name of the current tag, if any.
+deploy:
+- provider: releases
+  skip_cleanup: true
+  api_key: ${GITHUB_TOKEN}
+  file: dist/${PYPKG}-${TRAVIS_TAG}.tar.gz
+  on:
+    repo: ${GITHUB_REPO_NAME}
+    tags: true
+    condition: "$TRAVIS_TAG != *[ab]* && $MYCONDAPY == 2.7 && $TRAVIS_OS_NAME == linux"
+  prerelease: false
+- provider: releases
+  skip_cleanup: true
+  api_key: ${GITHUB_TOKEN}
+  file: dist/${PYPKG}-${TRAVIS_TAG}.tar.gz
+  on:
+    repo: ${GITHUB_REPO_NAME}
+    tags: true
+    condition: "$TRAVIS_TAG == *[ab]* && $MYCONDAPY == 2.7 && $TRAVIS_OS_NAME == linux"
+  prerelease: true
+- provider: script
+  skip_cleanup: true
+  script: anaconda -t $ANACONDA_TOKEN upload -l alpha ${HOME}/miniconda/conda-bld/*/${PYPKG}-*.tar.bz2
+  on:
+    repo: ${GITHUB_REPO_NAME}
+    tags: true
+    condition: "$TRAVIS_TAG == *a*"
+- provider: script
+  skip_cleanup: true
+  script: anaconda -t $ANACONDA_TOKEN upload -l beta ${HOME}/miniconda/conda-bld/*/${PYPKG}-*.tar.bz2
+  on:
+    repo: ${GITHUB_REPO_NAME}
+    tags: true
+    condition: "$TRAVIS_TAG == *b*"
+- provider: script
+  skip_cleanup: true
+  script: anaconda -t $ANACONDA_TOKEN upload -l main ${HOME}/miniconda/conda-bld/*/${PYPKG}-*.tar.bz2
+  on:
+    repo: ${GITHUB_REPO_NAME}
+    tags: true
+    condition: "$TRAVIS_TAG != *[ab]*"
+- provider: pypi
+  skip_cleanup: true
+  user: tovrstra
+  password: ${PYPI_PASSWD}
+  on:
+    repo: ${GITHUB_REPO_NAME}
+    tags: true
+    condition: "$TRAVIS_TAG != *[ab]* && $MYCONDAPY == 2.7 && $TRAVIS_OS_NAME == linux"
+- provider: pages
+  skip_cleanup: true
+  github_token: ${GITHUB_TOKEN}
+  project_name: ${PYPKG}
+  local_dir: doc/_build/html
+  on:
+    repo: ${GITHUB_REPO_NAME}
+    condition: "$TRAVIS_TAG != *[ab]* && $MYCONDAPY == 2.7 && $TRAVIS_OS_NAME == linux"
+    tags: true

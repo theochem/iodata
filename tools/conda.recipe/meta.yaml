@@ -1,0 +1,28 @@
+package:
+  version: "{{ load_setup_py_data().version }}"
+  name: 'iodata'
+
+source:
+  path: ../../
+
+build:
+  number: 0
+  script: python setup.py install
+
+requirements:
+  build:
+    - python
+    - numpy
+    - scipy
+    - cython >=0.24.1
+    - setuptools
+    - nose
+  run:
+    - python
+    - numpy
+    - scipy
+    - nose
+
+about:
+  home: https://github.com/theochem/iodata
+  license: GNU Version 3
