@@ -22,6 +22,12 @@ osx_image: xcode8.3
 dist: trusty
 sudo: false
 
+# Only run tests on master branch to avoid wasting Travis resources.
+# PRs will still be tested.
+branches:
+  only:
+    - master
+
 install:
 # Get miniconda. Take the right version, so re-installing python is only needed for 3.5.
 - if [[ "$MYCONDAPY" == "2.7" ]]; then
@@ -49,7 +55,11 @@ install:
 # dependencies on metal.yaml and setup.py, unless setup.py already imports them.
 # Install conda tools for packaging and uploading
 - conda install python=${MYCONDAPY} numpy cython sphinx conda-build anaconda-client
+# Install codecov tool for uploading coverage reports
+- pip install codecov coverage
+# Show conda info for debugging
 - conda info -a
+
 
 script:
 # Build the conda package
@@ -67,7 +77,12 @@ script:
 # - (cd doc; make html)
 
 # Run tests out of source tree, to make sure that installed version is tested.
-- (cd; nosetests $PYPKG -v --processes=2 --detailed-errors --process-timeout=600)
+# Parallel tests break coverage analysis.
+- (cd; nosetests $PYPKG -v --detailed-errors --with-coverage --cover-package=$PYPKG --cover-tests --cover-erase --cover-inclusive --cover-branches --cover-xml)
+
++after_success:
+# Upload the coverage analysis
+- codecov -f ~/coverage.xml
 
 # In deployment, the env var TRAVIS_TAG contains the name of the current tag, if any.
 deploy:
