@@ -80,7 +80,7 @@ script:
 # Parallel tests break coverage analysis.
 - (cd; nosetests $PYPKG -v --detailed-errors --with-coverage --cover-package=$PYPKG --cover-tests --cover-erase --cover-inclusive --cover-branches --cover-xml)
 
-+after_success:
+after_success:
 # Upload the coverage analysis
 - codecov -f ~/coverage.xml
 
