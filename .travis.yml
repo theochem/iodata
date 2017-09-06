@@ -159,7 +159,9 @@ script:
 # ----------------
 
 # Compile documentation
-- (cd doc; make html)
+- if [[ -e doc ]]; then
+    (cd doc; make html);
+  fi
 
 after_success:
 # Upload the coverage analysis
