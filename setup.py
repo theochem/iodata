@@ -2,14 +2,9 @@
 
 from __future__ import print_function
 
-import os
-import sys
-import glob
-import subprocess
 import numpy as np
-from setuptools import setup
-from distutils.extension import Extension
-from Cython.Distutils import build_ext
+from setuptools import setup, Extension
+from Cython.Build
 
 
 def get_version():
@@ -50,5 +45,7 @@ setup(
         'Topic :: Scientific/Engineering :: Chemistry',
         'Intended Audience :: Science/Research',
     ],
-    requires=['numpy', 'scipy', 'setuptools', 'distutils', 'Cython'],
-    )
+    zip_safe=False,
+    setup_requires=['numpy>=1.0', 'cython>=0.24.1'],
+    install_requires=['numpy>=1.0', 'nose>=0.11', 'cython>=0.24.1'],    
+)
