@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
+import Cython.Build
 import numpy as np
 from setuptools import setup, Extension
-import Cython.Build
 
 
 def get_version():
