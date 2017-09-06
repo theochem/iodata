@@ -46,7 +46,6 @@ matrix:
   allow_failures:
   - os: osx
 
-
 cache:
   directories:
     - $HOME/download # Sufficient to add miniconda.sh to TRAVIS cache.
