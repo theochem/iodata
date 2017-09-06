@@ -6,5 +6,6 @@ linters:
                  '+ *.py', '+ *.pyx']
 - pylint:
 - pycodestyle:
+    config: .pycodestylerc
 - pydocstyle:
 - whitespace:

@@ -1,5 +1,5 @@
 package:
-  version: "{{ PROJECT_VERSION }}" 
+  version: "{{ PROJECT_VERSION }}"
   name: 'iodata'
 
 source:

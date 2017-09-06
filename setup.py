@@ -10,16 +10,15 @@ def get_version():
 
     This function assumes that the last line in the file contains a variable defining the
     version string with single quotes.
-
     """
-    with open('iodata/version.py', 'r') as f:
-        return f.read().split('=')[-1].replace('\'', '').strip()
+    with open('iodata/version.py', 'r') as fh:
+        return fh.read().split('=')[-1].replace('\'', '').strip()
 
 
 def get_readme():
     """Load README.rst for display on PyPI."""
-    with open('README.rst') as f:
-        return f.read()
+    with open('README.rst') as fh:
+        return fh.read()
 
 
 setup(
@@ -52,5 +51,5 @@ setup(
     ],
     zip_safe=False,
     setup_requires=['numpy>=1.0', 'cython>=0.24.1'],
-    install_requires=['numpy>=1.0', 'nose>=0.11', 'cython>=0.24.1'],    
+    install_requires=['numpy>=1.0', 'nose>=0.11', 'cython>=0.24.1'],
 )
