@@ -1,5 +1,5 @@
 package:
-  version: "{{ load_setup_py_data().version }}"
+  version: "{{ PROJECT_VERSION }}" 
   name: 'iodata'
 
 source:
@@ -17,11 +17,13 @@ requirements:
     - cython >=0.24.1
     - setuptools
     - nose
+    - gcc     # [ not win ]
   run:
     - python
     - numpy
     - scipy
     - nose
+    - libgcc  # [ not win ]
 
 about:
   home: https://github.com/theochem/iodata
