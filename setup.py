@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-
 import numpy as np
 from setuptools import setup, Extension
 import Cython.Build
@@ -18,10 +16,17 @@ def get_version():
         return f.read().split('=')[-1].replace('\'', '').strip()
 
 
+def get_readme():
+    """Load README.rst for display on PyPI."""
+    with open('README.rst') as f:
+        return f.read()
+
+
 setup(
     name='iodata',
     version=get_version(),
     description='',
+    long_description=get_readme(),
     author='Toon Verstraelen',
     author_email='Toon.Verstraelen@UGent.be',
     url='https://github.com/theochem/iodata',
