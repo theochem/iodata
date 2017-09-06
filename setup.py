@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 from setuptools import setup, Extension
-from Cython.Build
+import Cython.Build
 
 
 def get_version():
@@ -27,7 +27,7 @@ setup(
     url='https://github.com/theochem/iodata',
     package_dir={'iodata': 'iodata'},
     packages=['iodata', 'iodata.test'],
-    cmdclass={'build_ext': build_ext},
+    cmdclass={'build_ext': Cython.Build.build_ext},
     ext_modules=[Extension(
         "iodata.overlap_accel",
         sources=['iodata/overlap_accel.pyx'],
