@@ -11,14 +11,14 @@ def get_version():
     This function assumes that the last line in the file contains a variable defining the
     version string with single quotes.
     """
-    with open('iodata/version.py', 'r') as fh:
-        return fh.read().split('=')[-1].replace('\'', '').strip()
+    with open('iodata/version.py', 'r') as file:
+        return file.read().split('=')[-1].replace('\'', '').strip()
 
 
 def get_readme():
     """Load README.rst for display on PyPI."""
-    with open('README.rst') as fh:
-        return fh.read()
+    with open('README.rst') as file:
+        return file.read()
 
 
 setup(
