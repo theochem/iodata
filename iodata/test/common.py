@@ -21,25 +21,27 @@
 import shutil
 import tempfile
 from contextlib import contextmanager
-
-import numpy as np
 from os import path
 
-from . mulliken import get_mulliken_operators
+import numpy as np
+from pkg_resources import resource_filename
+
+from .mulliken import get_mulliken_operators
 
 __all__ = ['compute_mulliken_charges']
 
 
 def get_fn(fn):
     """Get the path of a file in the cached directory"""
-    cur_pth = path.split(__file__)[0]
-    return cur_pth + "/cached/{}".format(fn)
+    # pkg_resources will handle backslash for diffrent platforms
+    return resource_filename(__name__, 'cached/{}'.format(fn))
 
 
 def compute_mulliken_charges(obasis, pseudo_numbers, dm):
     """Compute mulliken charges"""
     operators = get_mulliken_operators(obasis)
-    populations = np.array([np.einsum('ab,ba', operator, dm) for operator in operators])
+    populations = np.array(
+        [np.einsum('ab,ba', operator, dm) for operator in operators])
     assert pseudo_numbers.shape == populations.shape
     return pseudo_numbers - np.array(populations)
 
@@ -69,7 +71,8 @@ def truncated_file(name, fn_orig, nline, nadd):
            The number of empty lines to add.
     """
     with tmpdir(name) as dn:
-        fn_truncated = '%s/truncated_%i_%s' % (dn, nline, path.basename(fn_orig))
+        fn_truncated = '%s/truncated_%i_%s' % (dn, nline,
+                                               path.basename(fn_orig))
         with open(fn_orig) as f_orig, open(fn_truncated, 'w') as f_truncated:
             for counter, line in enumerate(f_orig):
                 if counter >= nline:
