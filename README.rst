@@ -1,10 +1,11 @@
 IOData
 ======
-[![Build Status](https://travis-ci.org/theochem/iodata.svg?branch=master)](https://travis-ci.org/theochem/iodata)
-<a href='https://docs.python.org/2.7/'><img src='https://img.shields.io/badge/python-2.7-blue.svg'></a>
-<a href='https://docs.python.org/3.5/'><img src='https://img.shields.io/badge/python-3.5-blue.svg'></a>
-[![codecov](https://codecov.io/gh/theochem/iodata/branch/master/graph/badge.svg)](https://codecov.io/gh/theochem/iodata)
-[![Build status](https://ci.appveyor.com/api/projects/status/s1v03mj127dmoi7s/branch/master?svg=true)](https://ci.appveyor.com/project/theochem-ci-bot/iodata/branch/master)
+|Travis|
+|Conda|
+|Pypi|
+|Codecov|
+|Version|
+|CondaVersion|
 
 
 About
@@ -46,3 +47,15 @@ To run tests:
 ```bash
 nosetests -v iodata
 ```
+
+.. |Travis| image:: https://travis-ci.org/theochem/iodata.svg?branch=master
+    :target: https://travis-ci.org/theochem/iodata
+.. |Version| image:: https://img.shields.io/pypi/pyversions/iodata.svg
+.. |Pypi| image:: https://img.shields.io/pypi/v/iodata.svg
+    :target: https://pypi.python.org/pypi/iodata/0.1.3
+.. |Codecov| image:: https://img.shields.io/codecov/c/github/theochem/iodata/master.svg
+    :target: https://codecov.io/gh/theochem/iodata
+.. |Conda| image:: https://img.shields.io/conda/v/theochem/iodata.svg
+    :target: https://anaconda.org/theochem/iodata
+.. |CondaVersion| image:: https://img.shields.io/conda/pn/theochem/iodata.svg
+    :target: https://anaconda.org/theochem/iodata
