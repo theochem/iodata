@@ -17,13 +17,12 @@ requirements:
     - cython >=0.24.1
     - setuptools
     - nose
-    - gcc     # [ not win ]
+    - {{ compiler("c") }}
   run:
     - python
     - numpy
     - scipy
     - nose
-    - libgcc  # [ not win ]
 
 about:
   home: https://github.com/theochem/iodata
