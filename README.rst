@@ -32,21 +32,42 @@ The following dependencies will be necessary for IOData to build properly,
 Installation
 ------------
 
-To install IOData:
+To install IOData using a conda environment:
 
-```bash
-python ./setup install --user
-```
+* Install miniconda: https://conda.io/miniconda.html
+* OR anaconda: https://www.anaconda.com/download
+
+.. code-block:: bash
+
+    $ conda create -n iodata_env
+    $ source activate iodata_env
+    (iodata_env) $ conda install -c theochem iodata
+
+Alternatively, to install IOData:
+
+.. code-block:: bash
+
+    $ python ./setup install --user
 
 
 Testing
 -------
 
-To run tests:
+Requires nosetests to be installed.
 
-```bash
-nosetests -v iodata
-```
+To run tests using the iodata_env conda environment:
+
+.. code-block:: bash
+
+    (iodata_env) $ conda install nose
+    (iodata_env) $ nosetests -v iodata
+
+
+Alternatively, to run tests:
+
+.. code-block:: bash
+
+    $ nosetests -v iodata
 
 .. |Travis| image:: https://travis-ci.org/theochem/iodata.svg?branch=master
     :target: https://travis-ci.org/theochem/iodata
