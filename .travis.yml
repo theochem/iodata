@@ -13,6 +13,7 @@ env:
     - GITHUB_REPO_NAME=theochem/iodata
     - PROJECT_NAME=iodata
     - CONDA_PKG_NAME_PY=iodata
+    - PYPI_LOGIN=theochem
 
 # TEMPLATED FROM https://raw.githubusercontent.com/theochem/python-cython-ci-example/master/.travis.yml
 ####
@@ -208,7 +209,7 @@ deploy:
 
 - provider: pypi
   skip_cleanup: true
-  user: theochem
+  user: ${PYPI_LOGIN}
   password: ${PYPI_PASSWD}
   on:
     repo: ${GITHUB_REPO_NAME}
