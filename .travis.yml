@@ -104,7 +104,7 @@ install:
 
 # Get a list of all build and runtime dependencies.
 # This should become easier, without the copy to conda.recipe.ugly.
-- conda render tools/conda.recipe > tools/conda.recipe/rendered.yaml
+- conda render -f tools/conda.recipe/rendered.yaml tools/conda.recipe
 - CONDA_DEPENDENCIES=$(python -c "from yaml import load;
     req1 = load(open('tools/conda.recipe/rendered.yaml'))['requirements'];
     deps = req1['build'] + req1['run'];
@@ -174,7 +174,7 @@ before_deploy:
 # travis. See https://github.com/travis-ci/dpl/issues/613
 #- export IS_PRERELEASE=$(python -c 'import os; tt=os.environ["TRAVIS_TAG"]; print("true" if ("a" in tt or "b" in tt) else "false")')
 #- echo ${IS_PRERELEASE}
-- export ANACONDA_LABEL=$(python -c 'import os; tt=os.environ["TRAVIS_TAG"]; print("alpha" if ("a" in tt) else ("beta" if "b" in tt else "main"))')
+- export ANACONDA_LABEL=$(python -c 'import os; tt=os.environ["TRAVIS_TAG"]; print("dev" if ("a" in tt) else ("test" if "b" in tt else "main"))')
 - echo ${ANACONDA_LABEL}
 
 # In deployment, the env var TRAVIS_TAG contains the name of the current version, if any.
