@@ -108,7 +108,7 @@ install:
 - conda render -f tools/conda.recipe/rendered.yaml tools/conda.recipe
 - CONDA_DEPENDENCIES=$(python -c "from yaml import load;
     req1 = load(open('tools/conda.recipe/rendered.yaml'))['requirements'];
-    deps = req1['build'] + req1['run'];
+    deps = req1['build'] + req1['run'] + req1['host'];
     print(' '.join(set(dep.split()[0] for dep in deps)))")
 
 # Get the right python version for building. This only does something for 3.5.
