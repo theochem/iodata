@@ -11,18 +11,15 @@ build:
 
 requirements:
   build:
+    - {{ compiler("c") }}
+  host:
     - python
     - numpy
-    - scipy
     - cython >=0.24.1
     - setuptools
     - nose
-    - {{ compiler("c") }}
   run:
-    - python
-    - numpy
     - scipy
-    - nose
 
 about:
   home: https://github.com/theochem/iodata
