@@ -13,13 +13,20 @@ requirements:
   build:
     - {{ compiler("c") }}
   host:
-    - python
+    - python >=3
     - numpy
     - cython >=0.24.1
     - setuptools
     - nose
   run:
     - scipy
+test:
+  requires:
+    - python >=3
+    - nose
+  commands:
+    - conda inspect linkages iodata
+    - nosetests -v iodata
 
 about:
   home: https://github.com/theochem/iodata
