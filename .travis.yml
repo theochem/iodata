@@ -136,7 +136,7 @@ script:
 # Unit tests and dynamic linting
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - if [[ $TRAVIS_TAG ]]; then
-    conda build -q tools/conda.recipe 
+    conda build -q tools/conda.recipe; 
   else
     python setup.py build_ext -i --define CYTHON_TRACE_NOGIL &&
     nosetests ${PROJECT_NAME}
