@@ -13,7 +13,7 @@ requirements:
   build:
     - {{ compiler("c") }}
   host:
-    - python >=3
+    - python ={{ MYCONDAPY }}
     - numpy
     - cython >=0.24.1
     - setuptools
@@ -22,7 +22,7 @@ requirements:
     - scipy
 test:
   requires:
-    - python >=3
+    - python ={{ MYCONDAPY }}
     - nose
   commands:
     - conda inspect linkages iodata
