@@ -22,7 +22,7 @@ requirements:
     - scipy
 test:
   requires:
-    - python ={{ MYCONDAPY }}
+    - python
     - nose
   commands:
     - conda inspect linkages iodata
