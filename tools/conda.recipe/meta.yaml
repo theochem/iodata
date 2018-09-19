@@ -19,6 +19,7 @@ requirements:
     - setuptools
     - nose
   run:
+    - python
     - scipy
 test:
   requires:
