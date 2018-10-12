@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os
 
 import Cython.Build
 import numpy as np
@@ -6,13 +7,8 @@ from setuptools import setup, Extension
 
 
 def get_version():
-    """Load the version from version.py, without importing it.
-
-    This function assumes that the last line in the file contains a variable defining the
-    version string with single quotes.
-    """
-    with open('iodata/version.py', 'r') as fhandle:
-        return fhandle.read().split('=')[-1].replace('\'', '').strip()
+    """Get the version string set by Travis, else default to version 0.0.0"""    
+    return os.environ.get("PROJECT_VERSION", "0.0.0")
 
 
 def get_readme():
@@ -35,9 +31,10 @@ setup(
     ext_modules=[Extension(
         "iodata.overlap_accel",
         sources=['iodata/overlap_accel.pyx'],
-        depends=['iodata/overlap_accel.pxd'],
+#        depends=['iodata/overlap_accel.pxd'],
         include_dirs=[np.get_include()],
     )],
+    scripts=['bin/horton-convert'],
     include_package_data=True,
     classifiers=[
         'Environment :: Console',

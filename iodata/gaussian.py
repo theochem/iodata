@@ -234,7 +234,7 @@ class FCHKFile(dict):
         f.close()
 
 
-def triangle_to_dense(triangle):
+def _triangle_to_dense(triangle):
     """Convert a symmetric matrix in triangular storage to a dense square matrix.
 
        **Arguments:**
@@ -453,7 +453,7 @@ def load_fchk(filename):
     # E) Load properties
     result['energy'] = fchk['Total Energy']
     if 'Polarizability' in fchk:
-        result['polar'] = triangle_to_dense(fchk['Polarizability'])
+        result['polar'] = _triangle_to_dense(fchk['Polarizability'])
     if 'Dipole Moment' in fchk:
         result['dipole_moment'] = fchk['Dipole Moment']
     if 'Quadrupole Moment' in fchk:
