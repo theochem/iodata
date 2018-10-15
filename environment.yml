@@ -1,6 +1,4 @@
 name: rtd-iodata
-channels:
-  - theochem
 dependencies:
   - python=3.7
   - numpy
