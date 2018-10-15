@@ -1,0 +1,12 @@
+name: rtd-iodata
+channels:
+  - theochem
+dependencies:
+  - python=3.7
+  - numpy
+  - gcc_linux-64
+  - cython
+  - pip:
+      - sphinx-autodoc-typehints
+      - sphinxcontrib-mermaid
+      - sphinxcontrib-napoleon
