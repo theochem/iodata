@@ -27,10 +27,9 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 if on_rtd:
     branch = os.environ.get("READTHEDOCS_VERSION", "latest")
-    conda_prefix = "/home/docs/checkouts/readthedocs.org/user_builds/gbasis/conda/{}".format(branch)
+    conda_prefix = "/home/docs/checkouts/readthedocs.org/user_builds/iodata/conda/{}".format(branch)
     os.environ["PATH"] = "{}:{}/bin".format(os.environ["PATH"], conda_prefix)
     os.environ["CC"] = "{}/bin/x86_64-conda_cos6-linux-gnu-cc".format(conda_prefix)
-    os.environ["CXX"] = "{}/bin/x86_64-conda_cos6-linux-gnu-c++".format(conda_prefix)
     os.environ["LD"] = "{}/bin/x86_64-conda_cos6-linux-gnu-ld".format(conda_prefix)
 
     os.chdir("../")
