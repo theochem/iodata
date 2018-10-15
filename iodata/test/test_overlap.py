@@ -21,7 +21,7 @@
 
 import numpy as np
 from .. overlap import compute_overlap
-from .. overlap_accel import fac2, binom
+from iodata.overlap_accel import fac2, _binom
 from . common import get_fn
 
 
@@ -36,15 +36,15 @@ def test_fac2():
 
 
 def test_binom():
-    assert binom(1, 1) == 1
-    assert binom(5, 3) == 10
-    assert binom(3, 2) == 3
-    assert binom(10, 4) == 210
-    assert binom(18, 14) == 3060
-    assert binom(5, 1) == 5
-    assert binom(5, 0) == 1
-    assert binom(0, 0) == 1
-    assert binom(5, 5) == 1
+    assert _binom(1, 1) == 1
+    assert _binom(5, 3) == 10
+    assert _binom(3, 2) == 3
+    assert _binom(10, 4) == 210
+    assert _binom(18, 14) == 3060
+    assert _binom(5, 1) == 5
+    assert _binom(5, 0) == 1
+    assert _binom(0, 0) == 1
+    assert _binom(5, 5) == 1
 
 
 def test_load_fchk_hf_sto3g_num():
