@@ -18,9 +18,11 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+from typing import List, Dict, Tuple
 
 import numpy as np
 from scipy.linalg import eigh
+
 from .overlap import get_shell_nbasis
 
 __all__ = ['set_four_index_element']
@@ -29,7 +31,7 @@ angstrom = 1.0e-10 / 0.5291772083e-10
 electronvolt = 1.602176462e-19 / 4.35974381e-18
 
 
-def str_to_shell_types(s, pure=False):
+def str_to_shell_types(s: str, pure: bool = False) -> List[int]:
     """Convert a string into a list of contraction types"""
     if pure:
         d = {'s': 0, 'p': 1, 'd': -2, 'f': -3, 'g': -4, 'h': -5, 'i': -6}
@@ -38,23 +40,25 @@ def str_to_shell_types(s, pure=False):
     return [d[c] for c in s.lower()]
 
 
-def shell_type_to_str(shell_type):
+def shell_type_to_str(shell_type: np.ndarray) -> Dict:
     """Convert a shell type into a character"""
     return {0: 's', 1: 'p', 2: 'd', 3: 'f', 4: 'g', 5: 'h', 6: 'i'}[abs(shell_type)]
 
 
-def set_four_index_element(four_index_object, i, j, k, l, value):
+def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int, l: int,
+                           value: float):
     """Assign values to a four index object, account for 8-fold index symmetry.
 
     This function assumes physicists' notation
 
     Parameters
     ----------
-    four_index_object : np.ndarray, shape=(nbasis, nbasis, nbasis, nbasis), dtype=float
-        The four-index object
-    i, j, k, l: int
+    four_index_object
+        The four-index object. It will be written to.
+        shape=(nbasis, nbasis, nbasis, nbasis), dtype=float
+    i, j, k, l
         The indices to assign to.
-    value : float
+    value
         The value of the matrix element to store.
     """
     four_index_object[i, j, k, l] = value
@@ -67,13 +71,19 @@ def set_four_index_element(four_index_object, i, j, k, l, value):
     four_index_object[l, i, j, k] = value
 
 
-def shells_to_nbasis(shell_types):
+def shells_to_nbasis(shell_types: np.ndarray) -> int:
     nbasis_shell = [get_shell_nbasis(i) for i in shell_types]
     return sum(nbasis_shell)
 
 
-def volume(rvecs):
-    """Takes a numpy matrix of shape (x,3) where x is in {1,2,3}"""
+def volume(rvecs: np.ndarray) -> float:
+    """Calculates cell volume
+
+    Parameters
+    ----------
+    rvecs
+        a numpy matrix of shape (x,3) where x is in {1,2,3}
+    """
     nvecs = rvecs.shape[0]
     if len(rvecs.shape) == 1 or nvecs == 1:
         return np.linalg.norm(rvecs)
@@ -86,24 +96,30 @@ def volume(rvecs):
         raise ValueError
 
 
-def derive_naturals(dm, overlap):
+def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray]:
     """Derive natural orbitals from a given density matrix and assign the result to self.
 
     Parameters
     ----------
-    dm : np.ndarray, shape=(nbasis, nbasis)
+    dm
         The density matrix.
-    overlap : np.ndarray, shape=(nbasis, nbasis)
+        shape=(nbasis, nbasis)
+    overlap
         The overlap matrix
+        shape=(nbasis, nbasis)
 
     Returns
     -------
-    coeffs : np.ndarray, shape=(nbasis, nfn)
+    coeffs
         Orbital coefficients
-    occs : np.ndarray, shape=(nfn, )
+        shape=(nbasis, nfn)
+    occs
         Orbital occupations
-    energies : np.ndarray, shape=(nfn, )
+        shape=(nfn, )
+    energies
         Orbital energies
+        shape=(nfn, )
     """
     # Transform density matrix to Fock-like form
     sds = np.dot(overlap.T, np.dot(dm, overlap))
@@ -116,18 +132,20 @@ def derive_naturals(dm, overlap):
     return coeffs, occs, energies
 
 
-def check_dm(dm, overlap, eps=1e-4, occ_max=1.0):
+def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: float = 1.0):
     """Check if the density matrix has eigenvalues in the proper range.
 
     Parameters
     ----------
-    dm : np.ndarray, shape=(nbasis, nbasis), dtype=float
+    dm
         The density matrix
-    overlap : np.ndarray, shape=(nbasis, nbasis), dtype=float
+        shape=(nbasis, nbasis), dtype=float
+    overlap
         The overlap matrix
-    eps : float
+        shape=(nbasis, nbasis), dtype=float
+    eps
         The threshold on the eigenvalue inequalities.
-    occ_max : float
+    occ_max
         The maximum occupation.
 
     Raises

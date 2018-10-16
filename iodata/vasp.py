@@ -20,9 +20,12 @@
 # --
 """VASP POSCAR, CHGCAR and POTCAR file formats"""
 
-from __future__ import print_function
+from __future__ import print_function, annotations
+
+from typing import TextIO, Tuple, Dict
 
 import numpy as np
+
 from . utils import angstrom, electronvolt, volume
 from . periodic import num2sym, sym2num
 
@@ -37,17 +40,20 @@ def _unravel_counter(counter, shape):
     return result
 
 
-def _load_vasp_header(f):
+def _load_vasp_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray]:
     """Load the cell and atoms from a VASP file
        File specification provided here:
         http://cms.mpi.univie.ac.at/vasp/guide/node59.html
 
-       **Arguments:**
-
+       Parameters
+       ----------
        f
             An open file object
 
-       **Returns:** ``title``, ``cell``, ``numbers``, ``coordinates``
+       Returns
+       -------
+       tuple
+           Contains ``title``, ``cell``, ``numbers``, ``coordinates``.
     """
     # read the title
     title = next(f).strip()
@@ -91,16 +97,20 @@ def _load_vasp_header(f):
     return title, rvecs, numbers, coordinates
 
 
-def _load_vasp_grid(filename):
+def _load_vasp_grid(filename: str) -> Dict:
     """Load a grid data file from VASP 5
 
-       **Arguments:**
+    Parameters
+    ----------
 
-       filename
-            The VASP filename
+    filename
+        The VASP filename
 
-       **Returns:** a dictionary containing: ``title``, ``coordinates``,
-       ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
+    Returns
+    -------
+    dict
+        Containing: ``title``, ``coordinates``,
+        ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
     """
     with open(filename) as f:
         # Load header
@@ -136,15 +146,18 @@ def _load_vasp_grid(filename):
     }
 
 
-def load_chgcar(filename):
+def load_chgcar(filename: str) -> Dict:
     """Reads a vasp 5 chgcar file.
 
-       **Arguments:**
+    Parameters
+    ----------
+    filename
+        The VASP filename
 
-       filename
-            The VASP filename
-
-       **Returns:** a dictionary containing: ``title``, ``coordinates``,
+    Returns
+    -------
+    result
+        Containing: ``title``, ``coordinates``,
        ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
     """
     result = _load_vasp_grid(filename)
@@ -153,16 +166,19 @@ def load_chgcar(filename):
     return result
 
 
-def load_locpot(filename):
+def load_locpot(filename: str) -> Dict:
     """Reads a vasp 5 locpot file.
 
-       **Arguments:**
+    Parameters
+    ----------
+    filename
+        The VASP filename
 
-       filename
-            The VASP filename
-
-       **Returns:** a dictionary containing: ``title``, ``coordinates``,
-       ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
+    Returns
+    -------
+    result
+        containing: ``title``, ``coordinates``,
+        ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
     """
     result = _load_vasp_grid(filename)
     # convert locpot to atomic units
@@ -170,16 +186,20 @@ def load_locpot(filename):
     return result
 
 
-def load_poscar(filename):
+def load_poscar(filename: str) -> Dict:
     """Reads a vasp 5 poscar file.
 
-       **Arguments:**
+    Parameters
+    ----------
+    filename
+        The VASP filename
 
-       filename
-            The VASP filename
+    Returns
+    -------
+    result
+        containing: ``title``, ``coordinates``,
+        ``numbers``, ``rvecs``
 
-       **Returns:** a dictionary containing: ``title``, ``coordinates``,
-       ``numbers``, ``rvecs``.
     """
     with open(filename) as f:
         # Load header
@@ -192,17 +212,17 @@ def load_poscar(filename):
         }
 
 
-def dump_poscar(filename, data):
+def dump_poscar(filename: str, data: IOData):
     """Write a file in VASP's POSCAR format
 
-       **Arguments:**
+    Parameters
+    ----------
+    filename
+        The name of the file to be written. This is usually POSCAR.
 
-       filename
-            The name of the file to be written. This is usually POSCAR.
-
-       data
-            An IOData instance. Must contain ``coordinates``, ``numbers``,
-            ``rvecs``, ``cell_frac``. May contain ``title``.
+    data
+        An IOData instance. Must contain ``coordinates``, ``numbers``,
+        ``rvecs``, ``cell_frac``. May contain ``title``.
     """
     with open(filename, 'w') as f:
         print(getattr(data, 'title', 'Created with HORTON'), file=f)
@@ -211,13 +231,14 @@ def dump_poscar(filename, data):
         # Write cell vectors, each row is one vector in angstrom:
         rvecs = data.rvecs
         for rvec in rvecs:
-            print('  % 21.16f % 21.16f % 21.16f' % tuple(rvec / angstrom), file=f)
+            r = rvec/angstrom
+            print(f'{r[0]: 21.16f} {r[1]: 21.16f} {r[2]: 21.16f}', file=f)
 
         # Construct list of elements to make sure the coordinates get written
         # in this order. Heaviest elements are put furst.
         unumbers = sorted(np.unique(data.numbers))[::-1]
-        print(' '.join('%5s' % num2sym[unumber] for unumber in unumbers), file=f)
-        print(' '.join('%5i' % (data.numbers == unumber).sum() for unumber in unumbers), file=f)
+        print(' '.join(f'{num2sym[unumber]:5s}' for unumber in unumbers), file=f)
+        print(' '.join(f'{(data.numbers == unumber).sum():5d}' for unumber in unumbers), file=f)
         print('Selective dynamics', file=f)
         print('Direct', file=f)
 
@@ -226,4 +247,4 @@ def dump_poscar(filename, data):
             indexes = (data.numbers == unumber).nonzero()[0]
             for index in indexes:
                 row = np.dot(data.gvecs, data.coordinates[index])
-                print('  % 21.16f % 21.16f % 21.16f   F   F   F' % tuple(row), file=f)
+                print(f'  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F', file=f)

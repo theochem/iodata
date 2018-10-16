@@ -19,6 +19,8 @@
 #
 # --
 """WFN File format (Gaussian and GAMESS)"""
+from typing import Tuple, List, TextIO, Dict
+
 import numpy as np
 
 from .overlap import init_scales
@@ -28,22 +30,22 @@ __all__ = ['load_wfn_low', 'get_permutation_orbital',
            'get_permutation_basis', 'get_mask', 'load_wfn']
 
 
-def load_wfn_low(filename):
+def load_wfn_low(filename: str) -> Tuple:
     """Load data from a WFN file into arrays.
 
-       **Arguments:**
-
-       filename
-            The filename of the wfn file.
+    Parameters
+    ----------
+    filename
+        The filename of the wfn file.
     """
 
-    def helper_num(f):
+    def helper_num(f: TextIO) -> List[int]:
         """Read number of orbitals, primitives and atoms."""
         line = f.readline()
         assert line.startswith('GAUSSIAN')
         return [int(i) for i in line.split() if i.isdigit()]
 
-    def helper_coordinates(f):
+    def helper_coordinates(f: TextIO) -> Tuple[np.ndarray, np.ndarray]:
         """Read the coordiantes of the atoms."""
         numbers = np.empty(num_atoms, int)
         coordinates = np.empty((num_atoms, 3), float)
@@ -54,7 +56,7 @@ def load_wfn_low(filename):
             coordinates[atom, :] = [line[4], line[5], line[6]]
         return numbers, coordinates
 
-    def helper_section(f, start, skip):
+    def helper_section(f: TextIO, start:str, skip:int)-> List:
         """Read CENTRE ASSIGNMENTS, TYPE ASSIGNMENTS, and EXPONENTS sections."""
         section = []
         while len(section) < num_primitives:
@@ -65,7 +67,7 @@ def load_wfn_low(filename):
         assert len(section) == num_primitives
         return section
 
-    def helper_mo(f):
+    def helper_mo(f: TextIO) -> Tuple[str, str, str, List[str]]:
         """Read one section of MO information."""
         line = f.readline()
         assert line.startswith('MO')
@@ -76,7 +78,7 @@ def load_wfn_low(filename):
         coeffs = [i.replace('D', 'E') for i in coeffs]
         return count, occ, energy, coeffs
 
-    def helper_energy(f):
+    def helper_energy(f: TextIO) -> float:
         """Read energy."""
         line = f.readline().lower()
         while 'energy' not in line and line is not None:
@@ -104,7 +106,7 @@ def load_wfn_low(filename):
            mo_count, mo_occ, mo_energy, coefficients, energy
 
 
-def get_permutation_orbital(type_assignment):
+def get_permutation_orbital(type_assignment: np.ndarray) -> np.ndarray:
     """Permute each type of orbital to get the proper order for HORTON."""
     num_primitive = len(type_assignment)
     permutation = np.arange(num_primitive)
@@ -129,7 +131,7 @@ def get_permutation_orbital(type_assignment):
     return permutation
 
 
-def get_permutation_basis(type_assignment):
+def get_permutation_basis(type_assignment: np.ndarray) -> np.ndarray:
     """
     Permute the basis functions to get the proper order for HORTON.
 
@@ -176,7 +178,7 @@ def get_permutation_basis(type_assignment):
     return permutation
 
 
-def get_mask(type_assignment):
+def get_mask(type_assignment: np.ndarray) -> np.ndarray:
     """Return array to mask orbital types other than s, 1st_p, 1st_d, 1st_f, 1st_g, 1st_h."""
     # index of [s, 1st_p, 1st_d, 1st_f, 1st_g, 1st_h]
     temp = [1, 2, 5, 11, 21, 36]
@@ -184,17 +186,17 @@ def get_mask(type_assignment):
     return mask
 
 
-def load_wfn(filename):
+def load_wfn(filename: str) -> Dict:
     """Load data from a WFN file.
 
     Parameters
     ----------
-    filename : str
+    filename
         The filename of the wfn file.
 
     Returns
     -------
-    results : dict
+    results
         Data loaded from file, with keys ``title``, ``coordinates``, ``numbers``,
         ``energy``, ``obasis`` and ``orb_alpha``. May contain ``orb_beta``.
     """

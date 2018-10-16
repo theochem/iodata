@@ -19,7 +19,7 @@
 #
 # --
 """Gaussian LOG and FCHK file formats"""
-from collections import OrderedDict
+from typing import Dict, TextIO, Set, List
 
 import numpy as np
 
@@ -28,24 +28,27 @@ from .utils import set_four_index_element
 __all__ = ['load_operators_g09', 'FCHKFile', 'load_fchk']
 
 
-def load_operators_g09(fn):
-    """Loads several two- and four-index operators from a Gaussian log file.
+def load_operators_g09(fn: str) -> Dict:
+    """Loads several two- and four-index operators from a Gaussian09 log file.
 
-       **Argument:**
+    The following two-index operators are loaded if present: overlap,
+    kinetic, nuclear attraction. The following four-index operator is loaded
+    if present: electrostatic repulsion. In order to make all these matrices
+    are present in the Gaussian log file, the following commands must be used
+    in the Gaussian input file:
+    ```
+        scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)
+    ```
 
-       fn
-            The filename of the Gaussian log file.
+    Parameters
+    ----------
+    fn
+       The filename of the Gaussian09 log file.
 
-       The following two-index operators are loaded if present: overlap,
-       kinetic, nuclear attraction. The following four-index operator is loaded
-       if present: electrostatic repulsion. In order to make all these matrices
-       are present in the Gaussian log file, the following commands must be used
-       in the Gaussian input file:
-
-            scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)
-
-       **Returns:** A dictionary that may contain the keys: ``olp``, ``kin``,
-       ``na`` and/or ``er``.
+    Returns
+    -------
+    Dict
+        May contain the keys: ``olp``, ``kin``, ``na`` and/or ``er``.
     """
 
     with open(fn) as f:
@@ -71,16 +74,20 @@ def load_operators_g09(fn):
         return result
 
 
-def _load_twoindex_g09(f, nbasis):
+def _load_twoindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
     """Load a two-index operator from a Gaussian log file
 
-       **Arguments:**
+    Parameters
+    ----------
+    f
+        A file object for the Gaussian log file in read mode.
+    nbasis
+        The number of orbital basis functions.
 
-       f
-            A file object for the Gaussian log file in read mode.
-
-       nbasis
-            The number of orbital basis functions.
+    Returns
+    -------
+    ndarray
+        The (nbasis, nbasis) operator
     """
     result = np.zeros((nbasis, nbasis))
     block_counter = 0
@@ -99,16 +106,20 @@ def _load_twoindex_g09(f, nbasis):
     return result
 
 
-def _load_fourindex_g09(f, nbasis):
+def _load_fourindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
     """Load a four-index operator from a Gaussian log file
 
-       **Arguments:**
+    Parameters
+    ----------
+    f
+        A file object for the Gaussian log file in read mode.
+    nbasis
+        The number of orbital basis functions.
 
-       f
-            A file object for the Gaussian log file in read mode.
-
-       nbasis
-            The number of orbital basis functions.
+    Returns
+    -------
+    ndarray
+        The (nbasis, nbasis, nbasis, nbasis) operator
     """
     result = np.zeros((nbasis, nbasis, nbasis, nbasis))
     # Skip first six lines
@@ -140,28 +151,25 @@ class FCHKFile(dict):
        command, lot (level of theory) and basis.
     """
 
-    def __init__(self, filename, field_labels=None):
+    def __init__(self, filename: str, field_labels: List[str] = None):
         """
-           **Arguments:**
-
-           filename
-                The formatted checkpoint file.
-
-           **Optional arguments:**
-
-           field_labels
-                When provided, only these fields are read from the formatted
-                checkpoint file. (This can save a lot of time.)
+        Parameters
+        ----------
+        filename
+            The formatted checkpoint file.
+        field_labels
+            When provided, only these fields are read from the formatted
+            checkpoint file. (This can save a lot of time.)
         """
         dict.__init__(self, [])
         self.filename = filename
         self._read(filename, set(field_labels))
 
-    def _read(self, filename, field_labels=None):
-        """Read all the requested fields"""
+    def _read(self, filename: str, field_labels: Set[str] = None):
+        """Read all the requested fields and populates instance"""
 
         # if fields is None, all fields are read
-        def read_field(f):
+        def read_field(f: TextIO) -> bool:
             """Read a single field"""
             datatype = None
             while datatype is None:
@@ -195,7 +203,8 @@ class FCHKFile(dict):
                     return True
             elif len(words) == 3:
                 if words[1] != "N=":
-                    raise IOError("Unexpected line in formatted checkpoint file %s\n%s" % (filename, line[:-1]))
+                    raise IOError(f"Unexpected line in formatted checkpoint file {filename}\n"
+                                  f"{line[:-1]}")
                 length = int(words[2])
                 value = np.zeros(length, datatype)
                 counter = 0
@@ -203,17 +212,19 @@ class FCHKFile(dict):
                     while counter < length:
                         line = f.readline()
                         if line == "":
-                            raise IOError("Unexpected end of formatted checkpoint file %s" % filename)
+                            raise IOError(f"Unexpected end of formatted checkpoint file {filename}")
                         for word in line.split():
                             try:
                                 value[counter] = datatype(word)
                             except (ValueError, OverflowError) as e:
-                                raise IOError('Could not interpret word while reading %s: %s' % (word, filename))
+                                raise IOError(f'Could not interpret word while reading {word}: '
+                                              f'{filename}')
                             counter += 1
                 except ValueError:
                     return True
             else:
-                raise IOError("Unexpected line in formatted checkpoint file %s\n%s" % (filename, line[:-1]))
+                raise IOError(f"Unexpected line in formatted checkpoint file "
+                              f"{filename}\n{line[:-1]}")
 
             self[label] = value
             return True
@@ -234,17 +245,20 @@ class FCHKFile(dict):
         f.close()
 
 
-def _triangle_to_dense(triangle):
+def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
     """Convert a symmetric matrix in triangular storage to a dense square matrix.
 
-       **Arguments:**
+    Parameters
+    ----------
+    triangle
+        A row vector containing all the unique matrix elements of symmetric
+        matrix. (Either the lower-triangular part in row major-order or the
+        upper-triangular part in column-major order.)
 
-       triangle
-            A row vector containing all the unique matrix elements of symmetrix
-            matrix. (Either the lower-triangular part in row major-order or the
-            upper-triangular part in column-major order.)
-
-       **Returns:** a square symmetrix matrix.
+    Returns
+    -------
+    ndarray
+        a square symmetric matrix.
     """
     nrow = int(np.round((np.sqrt(1 + 8 * len(triangle)) - 1) / 2))
     result = np.zeros((nrow, nrow))
@@ -257,21 +271,24 @@ def _triangle_to_dense(triangle):
     return result
 
 
-def load_fchk(filename):
+def load_fchk(filename: str) -> Dict:
     """Load from a formatted checkpoint file.
 
-       **Arguments:**
+    Parameters
+    ----------
+    filename
+        The filename of the Gaussian formatted checkpoint file.
 
-       filename
-            The filename of the Gaussian formatted checkpoint file.
-
-       **Returns** a dictionary with: ``title``, ``coordinates``, ``numbers``,
-       ``obasis``, ``orb_alpha``, ``permutation``, ``energy``,
-       ``pseudo_numbers``, ``mulliken_charges``. The dictionary may also
-       contain: ``npa_charges``, ``esp_charges``, ``orb_beta``, ``dm_full_mp2``,
-       ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
-       ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``,
-       ``dm_spin_scf``, ``polar``, ``dipole_moment``, ``quadrupole_moment``.
+    Returns
+    -------
+    dict
+        Contains keys: ``title``, ``coordinates``, ``numbers``,
+        ``obasis``, ``orb_alpha``, ``permutation``, ``energy``,
+        ``pseudo_numbers``, ``mulliken_charges``.
+        The dictionary may also contain: ``npa_charges``, ``esp_charges``, ``orb_beta``,
+        ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
+        ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``,
+        ``dm_spin_scf``, ``polar``, ``dipole_moment``, ``quadrupole_moment``.
     """
 
     fchk = FCHKFile(filename, [
@@ -424,7 +441,8 @@ def load_fchk(filename):
     if nalpha < 0 or nbeta < 0 or nalpha + nbeta <= 0:
         raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
     result['orb_alpha'] = (nbasis, nbasis_indep)
-    result['orb_alpha_coeffs'] = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
+    result['orb_alpha_coeffs'] = np.copy(
+        fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
     result['orb_alpha_energies'] = np.copy(fchk['Alpha Orbital Energies'])
     aoccs = np.zeros(nbasis)
     aoccs[:nalpha] = 1.0
@@ -432,7 +450,8 @@ def load_fchk(filename):
     if 'Beta Orbital Energies' in fchk:
         # UHF case
         result['orb_beta'] = (nbasis, nbasis_indep)
-        result['orb_beta_coeffs'] = np.copy(fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
+        result['orb_beta_coeffs'] = np.copy(
+            fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
         result['orb_beta_energies'] = np.copy(fchk['Beta Orbital Energies'])
         boccs = np.zeros(nbasis)
         boccs[:nbeta] = 1.0

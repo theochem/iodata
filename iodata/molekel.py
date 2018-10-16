@@ -19,6 +19,8 @@
 #
 # --
 """Molekel wavefunction input file format"""
+from typing import Dict, Tuple, TextIO, List
+
 import numpy as np
 
 from .molden import _fix_molden_from_buggy_codes
@@ -27,25 +29,26 @@ from .utils import angstrom, str_to_shell_types, shells_to_nbasis
 __all__ = ['load_mkl']
 
 
-def load_mkl(filename):
+def load_mkl(filename: str) -> Dict:
     """Load data from a Molekel file.
 
     Parameters
     ----------
-    filename : str
+    filename
         The filename of the mkl file.
 
     Returns
     -------
-    results : dict
+    results
         Data loaded from file, with keys: ``coordinates``, ``numbers``, ``obasis``,
         ``orb_alpha``. It may also contain: ``orb_beta``, ``signs``.
+
     """
 
-    def helper_char_mult(f):
+    def helper_char_mult(f: TextIO) -> List[int]:
         return [int(word) for word in f.readline().split()]
 
-    def helper_coordinates(f):
+    def helper_coordinates(f: TextIO) -> Tuple[np.ndarray, np.ndarray]:
         numbers = []
         coordinates = []
         while True:
@@ -59,7 +62,7 @@ def load_mkl(filename):
         coordinates = np.array(coordinates) * angstrom
         return numbers, coordinates
 
-    def helper_obasis(f, coordinates):
+    def helper_obasis(f:TextIO, coordinates: np.ndarray) -> Tuple[Dict, int]:
         shell_types = []
         shell_map = []
         nprims = []
@@ -111,7 +114,7 @@ def load_mkl(filename):
         nbasis = shells_to_nbasis(shell_types)
         return obasis, nbasis
 
-    def helper_coeffs(f, nbasis):
+    def helper_coeffs(f: TextIO, nbasis: int) -> np.ndarray:
         coeffs = []
         energies = []
 
@@ -151,7 +154,7 @@ def load_mkl(filename):
 
         return np.hstack(coeffs), np.array(energies)
 
-    def helper_occ(f):
+    def helper_occ(f: TextIO) -> np.ndarray:
         occs = []
         while True:
             line = f.readline()

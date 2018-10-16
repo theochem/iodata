@@ -21,6 +21,9 @@
 """XYZ file format"""
 
 from __future__ import print_function
+
+from typing import Dict
+
 import numpy as np
 from numbers import Number
 
@@ -30,15 +33,19 @@ from .utils import angstrom
 __all__ = ['load_xyz', 'dump_xyz']
 
 
-def load_xyz(filename):
+def load_xyz(filename: str) -> Dict:
     """Load a molecular geometry from a .xyz file.
 
-       **Argument:**
+    Parameters
+    ----------
+    filename
+        The file to load the geometry from
 
-       filename
-            The file to load the geometry from
+    Returns
+    -------
+    dict
+        Contains keys ``title`, ``coordinates`` and ``numbers``.
 
-       **Returns:** dictionary with ``title`, ``coordinates`` and ``numbers``.
     """
     f = open(filename)
     size = int(next(f))
@@ -62,18 +69,17 @@ def load_xyz(filename):
     }
 
 
-def dump_xyz(filename, data):
+def dump_xyz(filename: str, data: Dict):
     """Write an ``.xyz`` file.
 
-       **Arguments:**
-
-       filename
-            The name of the file to be written. This usually the extension
-            ".xyz".
-
-       data
-            An IOData instance. Must contain ``coordinates`` and ``numbers``.
-            May contain ``title``.
+    Parameters
+    ----------
+    filename
+        The name of the file to be written. This usually the extension
+        ".xyz".
+    data
+        An IOData instance. Must contain ``coordinates`` and ``numbers``.
+        May contain ``title``.
     """
     with open(filename, 'w') as f:
         print(data.natom, file=f)
@@ -81,4 +87,4 @@ def dump_xyz(filename, data):
         for i in range(data.natom):
             n = num2sym[data.numbers[i]]
             x, y, z = data.coordinates[i] / angstrom
-            print('%2s %15.10f %15.10f %15.10f' % (n, x, y, z), file=f)
+            print(f'{n:2s} {x:15.10f} {y:15.10f} {z:15.10f}', file=f)

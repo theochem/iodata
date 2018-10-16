@@ -24,6 +24,9 @@
    from/to a file. The format is deduced from the prefix or extension of the
    filename.
 """
+from __future__ import annotations
+
+from typing import List, Tuple, Type
 
 import numpy as np
 import os
@@ -31,37 +34,31 @@ import os
 __all__ = ['IOData']
 
 
-class ArrayTypeCheckDescriptor(object):
-    def __init__(self, name, ndim=None, shape=None, dtype=None, matching=None, default=None):
+class ArrayTypeCheckDescriptor:
+    def __init__(self, name:str, ndim:int=None, shape:Tuple=None, dtype:Type=None, matching:List[str]=None, default:str=None):
         """
            Decorator to perform type checking an np.ndarray attributes
 
-           **Arguments:**
-
+           Parameters
+           ----------
            name
                 Name of the attribute (without leading underscores).
-
-           **Optional arguments:**
-
            ndim
                 The number of dimensions of the array.
-
            shape
                 The shape of the array. Use -1 for dimensions where the shape is
                 not fixed a priori.
-
            dtype
                 The datatype of the array.
-
            matching
                 A list of names of other attributes that must have consistent
-                shapes. This argument requires that the shape is speciefied.
+                shapes. This argument requires that the shape is specified.
                 All dimensions for which the shape tuple equals -1 are must be
                 the same in this attribute and the matching attributes.
-
            default
-                The name of another (type-checke) attribute to return as default
+                The name of another (type-checked) attribute to return as default
                 when this attribute is not set
+
         """
         if matching is not None and shape is None:
             raise TypeError('The matching argument requires the shape to be '
@@ -91,20 +88,17 @@ class ArrayTypeCheckDescriptor(object):
         #    raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy '
         #                    'array.' % (self._name, type(obj)))
         if self._ndim is not None and value.ndim != self._ndim:
-            raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy array '
-                            'with %i dimension(s).' % (self._name, type(obj),
-                                                       self._ndim))
+            raise TypeError(f"Attribute '{self._name}' of '{type(obj)}' must be a numpy array "
+                            f"with {self._ndim} dimension(s).")
         if self._shape is not None:
             for i in range(len(self._shape)):
                 if self._shape[i] >= 0 and self._shape[i] != value.shape[i]:
-                    raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy'
-                                    ' array %i elements in dimension %i.' % (
-                                        self._name, type(obj), self._shape[i], i))
+                    raise TypeError(f"Attribute '{self._name}' of '{type(obj)}' must be a numpy"
+                                    f" array {self._shape[i]} elements in dimension {i}.")
         if self._dtype is not None:
             if not issubclass(value.dtype.type, self._dtype.type):
-                raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy '
-                                'array with dtype \'%s\'.' % (self._name,
-                                                              type(obj), self._dtype.type))
+                raise TypeError(f"Attribute '{self._name}' of '{type(obj)}' must be a numpy "
+                                f"array with dtype '{self.dtype.type}'.")
         if self._matching is not None:
             for othername in self._matching:
                 other = getattr(obj, '_' + othername, None)
@@ -112,17 +106,16 @@ class ArrayTypeCheckDescriptor(object):
                     for i in range(len(self._shape)):
                         if self._shape[i] == -1 and \
                                         other.shape[i] != value.shape[i]:
-                            raise TypeError('shape[%i] of attribute \'%s\' of '
-                                            '\'%s\' in is incompatible with '
-                                            'that of \'%s\'.' % (i, self._name,
-                                                                 type(obj), othername))
+                            raise TypeError(f"shape[{i}] of attribute '{self._name}' of "
+                                            f"'{type(obj)}' in is incompatible with "
+                                            f"that of '{othername}'.")
         setattr(obj, '_' + self._name, value)
 
     def __delete__(self, obj):
         delattr(obj, '_' + self._name)
 
 
-class IOData(object):
+class IOData:
     """A container class for data loaded from (or to be written to) a file.
 
        In principle, the constructor accepts any keyword argument, which is
@@ -222,6 +215,7 @@ class IOData(object):
 
        two_mo
             Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
+
     """
 
     def __init__(self, **kwargs):
@@ -251,7 +245,8 @@ class IOData(object):
     pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float,
                                               ['coordinates', 'numbers'], 'numbers')
 
-    def _get_natom(self):
+    @property
+    def natom(self) -> int:
         """The number of atoms"""
         if hasattr(self, 'numbers'):
             return len(self.numbers)
@@ -260,27 +255,32 @@ class IOData(object):
         elif hasattr(self, 'pseudo_numbers'):
             return len(self.pseudo_numbers)
 
-    natom = property(_get_natom)
 
     @classmethod
-    def from_file(cls, *filenames):
+    def from_file(cls, *filenames: str) -> IOData:
         """Load data from a file.
 
-           **Arguments:**
+        This routine uses the extension or prefix of the filename to
+        determine the file format. It returns a dictionary with data loaded
+        from the file.
 
-           filename1, filename2, ...
-                The files to load data from. When multiple files are given, data
-                from the first file is overwritten by data from the second, etc.
-                When one file contains sign and permutation changes for the
-                orbital basis, these changes will be applied to data from all
-                other files.
+        For each file format, a specialized function is called that returns a
+        dictionary with data from the file.
 
-           This routine uses the extension or prefix of the filename to
-           determine the file format. It returns a dictionary with data loaded
-           from the file.
+        Parameters
+        ----------
+        filenames
+            The files to load data from. When multiple files are given, data
+            from the first file is overwritten by data from the second, etc.
+            When one file contains sign and permutation changes for the
+            orbital basis, these changes will be applied to data from all
+            other files.
 
-           For each file format, a specialized function is called that returns a
-           dictionary with data from the file.
+        Returns
+        -------
+        IOData
+            The instance of IOData with data loaded from the input files.
+
         """
         result = {}
         for filename in filenames:
@@ -365,17 +365,18 @@ class IOData(object):
 
         return cls(**result)
 
-    def to_file(self, filename):
+    def to_file(self, filename: str):
         """Write data to a file
 
-           **Arguments:**
+        This routine uses the extension or prefix of the filename to determine
+        the file format. For each file format, a specialized function is
+        called that does the real work.
 
-           filename
-                The file to write the data to
+        Parameters
+        ----------
+        filename
+            The file to write the data to
 
-           This routine uses the extension or prefix of the filename to determine
-           the file format. For each file format, a specialized function is
-           called that does the real work.
         """
 
         if filename.endswith('.xyz'):
@@ -406,7 +407,7 @@ class IOData(object):
                 del kwargs[key]
         return self.__class__(**kwargs)
 
-    def get_dm_full(self):
+    def get_dm_full(self) -> np.ndarray:
         """Return a spin-summed density matrix using available attributes"""
         if hasattr(self, 'dm_full'):
             return self.dm_full
@@ -428,7 +429,7 @@ class IOData(object):
                 dm_full *= 2
             return dm_full
 
-    def get_dm_spin(self):
+    def get_dm_spin(self) -> np.ndarray:
         """Return a spin-difference density matrix using available attributes"""
         if hasattr(self, 'dm_spin'):
             return self.dm_spin
@@ -445,8 +446,8 @@ class IOData(object):
         elif hasattr(self, 'orb_alpha_coeffs') and hasattr(self, 'orb_beta_coeffs'):
             return self._alpha_orbs_to_dm() - self._beta_orbs_to_dm()
 
-    def _alpha_orbs_to_dm(self):
+    def _alpha_orbs_to_dm(self) -> np.ndarray:
         return np.dot(self.orb_alpha_coeffs * self.orb_alpha_occs, self.orb_alpha_coeffs.T)
 
-    def _beta_orbs_to_dm(self):
+    def _beta_orbs_to_dm(self) -> np.ndarray:
         return np.dot(self.orb_beta_coeffs * self.orb_beta_occs, self.orb_beta_coeffs.T)

@@ -19,6 +19,8 @@
 #
 # --
 """CP2K atomic wavefunctions"""
+from typing import TextIO, Dict, Union, List, Tuple
+
 import numpy as np
 
 from .overlap_accel import fac2
@@ -27,7 +29,8 @@ from .utils import shells_to_nbasis, str_to_shell_types
 __all__ = ['load_atom_cp2k']
 
 
-def _get_cp2k_norm_corrections(l, alphas):
+def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) -> Union[
+    float, np.ndarray]:
     """Compute the corrections for the normalization of the basis functions.
 
     This correction is needed because the CP2K atom code works with non-normalized basis
@@ -35,37 +38,38 @@ def _get_cp2k_norm_corrections(l, alphas):
 
     Parameters
     ----------
-    l : int
+    l
         The angular momentum of the (pure) basis function. (s=0, p=1, ...)
-    alphas : float or np.ndarray
-             The exponent or exponents of the Gaussian primitives for which the correction
-             is to be computed.
+    alphas
+        The exponent or exponents of the Gaussian primitives for which the correction
+        is to be computed.
 
     Returns
     -------
-    corrections : float or np.ndarray
-                  The scale factor for the expansion coefficients of the wavefunction in
-                  terms of primitive Gaussians. The inverse of this correction can be
-                  applied to the contraction coefficients.
+    corrections
+        The scale factor for the expansion coefficients of the wavefunction in
+        terms of primitive Gaussians. The inverse of this correction can be
+        applied to the contraction coefficients.
     """
-    expzet = 0.25*(2*l + 3)
-    prefac = np.sqrt(np.sqrt(np.pi)/2.0**(l + 2)*fac2(2*l + 1))
-    zeta = 2.0*alphas
-    return zeta**expzet/prefac
+    expzet = 0.25 * (2 * l + 3)
+    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (l + 2) * fac2(2 * l + 1))
+    zeta = 2.0 * alphas
+    return zeta ** expzet / prefac
 
 
-def _read_cp2k_contracted_obasis(f):
+def _read_cp2k_contracted_obasis(f: TextIO) -> Dict:
     """Read a contracted basis set from an open CP2K ATOM output file.
 
     Parameters
     ----------
-    f : file
+    f
         An open readable file object.
 
     Returns
     -------
-    obasis : GOBasis
-             The orbital basis read from the file.
+    obasis
+        The orbital basis parameters read from the file. Can be used to initialize a GOBasis
+        object.
     """
     # Load the relevant data from the file
     basis_desc = []
@@ -79,7 +83,7 @@ def _read_cp2k_contracted_obasis(f):
             basis_desc.append((shell_type, a, c))
         else:
             values = [float(w) for w in line.split()]
-            a.append(values[0])   # one exponent per line
+            a.append(values[0])  # one exponent per line
             c.append(values[1:])  # many contraction coefficients per line
 
     # Convert the basis into HORTON format
@@ -93,7 +97,7 @@ def _read_cp2k_contracted_obasis(f):
         # get correction to contraction coefficients. CP2K uses different normalization
         # conventions.
         corrections = _get_cp2k_norm_corrections(abs(shell_type), np.array(a))
-        c = np.array(c)/corrections.reshape(-1, 1)
+        c = np.array(c) / corrections.reshape(-1, 1)
         # fill in arrays
         for col in c.T:
             shell_map.append(0)
@@ -116,18 +120,19 @@ def _read_cp2k_contracted_obasis(f):
     return obasis
 
 
-def _read_cp2k_uncontracted_obasis(f):
+def _read_cp2k_uncontracted_obasis(f: TextIO) -> Dict:
     """Read an uncontracted basis set from an open CP2K ATOM output file.
 
     Parameters
     ----------
-    f : file
+    f
         An open readable file object.
 
     Returns
     -------
-    obasis : GOBasis
-             The orbital basis read from the file.
+    obasis
+        The orbital basis parameters read from the file. Can be used to initialize a GOBasis
+        object.
     """
     # Load the relevant data from the file
     basis_desc = []
@@ -172,36 +177,50 @@ def _read_cp2k_uncontracted_obasis(f):
     return obasis
 
 
-def _read_cp2k_obasis(f):
-    """Read a basis set from an open CP2K ATOM output file."""
-    next(f)         # Skip empty line
+def _read_cp2k_obasis(f: TextIO) -> Dict:
+    """Read a basis set from an open CP2K ATOM output file.
+
+    Parameters
+    ----------
+    f
+        An open readable file object.
+
+    Returns
+    -------
+    obasis
+        The orbital basis parameters read from the file. Can be used to initialize a GOBasis
+        object.
+
+    """
+    next(f)  # Skip empty line
     line = next(f)  # Check for contracted versus uncontracted
-    if line == ' ********************** Contracted Gaussian Type Orbitals '\
+    if line == ' ********************** Contracted Gaussian Type Orbitals ' \
                '**********************\n':
         return _read_cp2k_contracted_obasis(f)
-    elif line == ' ********************* Uncontracted Gaussian Type Orbitals '\
+    elif line == ' ********************* Uncontracted Gaussian Type Orbitals ' \
                  '*********************\n':
         return _read_cp2k_uncontracted_obasis(f)
     else:
         raise IOError('Could not find basis set in CP2K ATOM output.')
 
 
-def _read_cp2k_occupations_energies(f, restricted):
+def _read_cp2k_occupations_energies(f: TextIO, restricted: bool) -> List[
+    Tuple[int, int, float, float]]:
     """Read orbital occupation numbers and energies from an open CP2K ATOM output file.
 
     Parameters
     ----------
-    f : file
+    f
         An open readable file object.
-    restricted : bool
-                 Is wavefunction restricted or unrestricted?
+    restricted
+        Is wavefunction restricted or unrestricted?
 
     Returns
     -------
-    oe_alpha, oe_beta : list
-                        A list with orbital properties. Each element is a tuple with the
-                        following info: (angular_momentum l, spin component: 'alpha' or
-                        'beta', occupation number, orbital energy).
+    oe_alpha, oe_beta
+        A list with orbital properties. Each element is a tuple with the
+        following info: (angular_momentum l, spin component: 'alpha' or
+        'beta', occupation number, orbital energy).
     """
     oe_alpha = []
     oe_beta = []
@@ -224,21 +243,22 @@ def _read_cp2k_occupations_energies(f, restricted):
     return oe_alpha, oe_beta
 
 
-def _read_cp2k_orbital_coeffs(f, oe):
+def _read_cp2k_orbital_coeffs(f: TextIO, oe: List[Tuple[int, int, float, float]]) -> Dict[
+    Tuple[int, int], np.ndarray]:
     """Read the expansion coefficients of the orbital from an open CP2K ATOM output.
 
     Parameters
     ----------
-    f : file
+    f
         An open readable file object.
-    oe : list
-         The orbital occupation numbers and energies read with
-         ``_read_cp2k_occupations_energies``.
+    oe
+        The orbital occupation numbers and energies read with
+        ``_read_cp2k_occupations_energies``.
 
     Returns
     -------
-    result : dict
-             Key is an (l, s) pair and value is an array with orbital coefficients.
+    result
+        Key is an (l, s) pair and value is an array with orbital coefficients.
     """
     coeffs = {}
     next(f)
@@ -258,38 +278,51 @@ def _read_cp2k_orbital_coeffs(f, oe):
     return coeffs
 
 
-def _get_norb_nel(oe):
+def _get_norb_nel(oe: List[Tuple[int, int, float, float]]) -> Tuple[int, float]:
     """Return number of orbitals and electrons.
 
     Parameters
     ----------
-    oe : list
+    oe
          The orbital occupation numbers and energies read with
          ``_read_cp2k_occupations_energies``.
+
+    Returns
+    -------
+    Tuple
+        Number of orbitals and electrons
     """
     norb = 0
     nel = 0
     for row in oe:
-        norb += 2*row[0] + 1
+        norb += 2 * row[0] + 1
         nel += row[2]
     return norb, nel
 
 
-def _fill_orbitals(orb_coeffs, orb_energies, orb_occupations, oe, coeffs, shell_types, restricted):
-    """Fill in orbital coefficients, energies and occupation numbers in ``orb``.
+def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupations: np.ndarray,
+                   oe: List[Tuple[int, int, float, float]],
+                   coeffs: Dict[Tuple[int, int], np.ndarray], shell_types: np.ndarray,
+                   restricted: bool):
+    """Fill in orbital coefficients, energies and occupation numbers in ``orb_coeffs``,
+    ``orb_energies``, and ``orb_occupations``.
 
     Parameters
     ----------
-    orb : Orbitals
-        An object to represent the orbitals
-    oe : list
+    orb_coeffs
+        The orbital coefficients. Will be written to.
+    orb_energies
+        The orbital energies. Will be written to.
+    orb_occupations
+        The orbital coefficients. Will be written to.
+    oe
         The orbital occupation numbers and energies read with
         ``_read_cp2k_occupations_energies``.
-    coeffs : dict
+    coeffs
         The orbital coefficients read with ``_read_cp2k_orbital_coeffs``.
-    shell_types : np.ndarray
+    shell_types
         The array with shell types of the GOBasis instance.
-    restricted : bool
+    restricted
         Is wavefunction restricted or unrestricted?
     """
     # Find the offsets for each angular momentum
@@ -298,34 +331,34 @@ def _fill_orbitals(orb_coeffs, orb_energies, orb_occupations, oe, coeffs, shell_
     ls = abs(shell_types)
     for l in sorted(set(ls)):
         offsets.append(offset)
-        offset += (2*l + 1)*(l == ls).sum()
+        offset += (2 * l + 1) * (l == ls).sum()
     del offset
 
     # Fill in the coefficients
     iorb = 0
     for l, s, occ, ener in oe:
         cs = coeffs.get((l, s))
-        stride = 2*l + 1
-        for m in range(-l, l+1):
+        stride = 2 * l + 1
+        for m in range(-l, l + 1):
             im = m + l
             orb_energies[iorb] = ener
-            orb_occupations[iorb] = occ/float((restricted + 1)*(2*l + 1))
+            orb_occupations[iorb] = occ / float((restricted + 1) * (2 * l + 1))
             for ic in range(len(cs)):
-                orb_coeffs[offsets[l] + stride*ic + im, iorb] = cs[ic]
+                orb_coeffs[offsets[l] + stride * ic + im, iorb] = cs[ic]
             iorb += 1
 
 
-def load_atom_cp2k(filename):
+def load_atom_cp2k(filename: str) -> Dict:
     """Load data from a CP2K ATOM computation.
 
     Parameters
     ---------
-    filename : str
+    filename
         The name of the cp2k out file
 
     Returns
     -------
-    results : dict
+    results
         Contains: ``obasis``, ``orb_alpha``, ``coordinates``, ``numbers``, ``energy``,
         ``pseudo_numbers``. May contain: ``orb_beta``.
 
@@ -354,7 +387,7 @@ def load_atom_cp2k(filename):
                 number = int(line[-5:-1])
                 break
         if number is None:
-            raise IOError('Could not find atomic number in CP2K ATOM output: %s.' % filename)
+            raise IOError(f'Could not find atomic number in CP2K ATOM output: {filename}.')
 
         # Go to the all-electron basis set and read it.
         for line in f:
@@ -391,7 +424,7 @@ def load_atom_cp2k(filename):
                 break
         if pseudo_number is None:
             raise IOError('Could not find effective core charge in CP2K ATOM output:'
-                          ' %s' % filename)
+                          f' {filename}')
 
         # Select the correct basis
         if pseudo_number == number:
@@ -415,16 +448,16 @@ def load_atom_cp2k(filename):
         # Read orbital expansion coefficients
         line = next(f)
         if (line != " Atomic orbital expansion coefficients [Alpha]\n") and \
-           (line != " Atomic orbital expansion coefficients []\n"):
+                (line != " Atomic orbital expansion coefficients []\n"):
             raise IOError('Could not find orbital coefficients in CP2K ATOM output: '
-                          '%s' % filename)
+                          f'{filename}')
         coeffs_alpha = _read_cp2k_orbital_coeffs(f, oe_alpha)
 
         if not restricted:
             line = next(f)
             if line != " Atomic orbital expansion coefficients [Beta]\n":
                 raise IOError('Could not find beta orbital coefficient in CP2K ATOM '
-                              'output: %s' % filename)
+                              f'output: {filename}')
             coeffs_beta = _read_cp2k_orbital_coeffs(f, oe_beta)
 
         # Turn orbital data into a HORTON orbital expansions

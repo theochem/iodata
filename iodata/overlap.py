@@ -1,12 +1,17 @@
 """
 Computes the overlap integral. Used for calculating normalization in molden and wfn files.
 """
+from typing import List, Tuple
 
 import numpy as np
-from .overlap_helper import tfs, iter_pow
-from .overlap_accel import add_overlap
 
-def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs):
+from .overlap_accel import add_overlap
+from .overlap_helper import tfs, iter_pow
+
+
+def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarray,
+                    shell_types: np.ndarray, alphas: np.ndarray,
+                    con_coeffs: np.ndarray) -> np.ndarray:
     r"""
     Computes overlap matrix. Follows same parameter convention as horton.GOBasis
 
@@ -40,7 +45,8 @@ def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs)
 
     Returns
     -------
-    The overlap integral
+    integral
+        The overlap integral
 
     """
 
@@ -60,7 +66,8 @@ def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs)
     scales_offsets_split = _split_data_by_prims(scales_offsets, nprims)
 
     # Loop over shell0
-    for big_tuple0 in zip(list(range(nshell)), shell_map, shell_types, shell_offsets, shell_offsets[1:],
+    for big_tuple0 in zip(list(range(nshell)), shell_map, shell_types, shell_offsets,
+                          shell_offsets[1:],
                           alphas_split, con_coeffs_split, scales_offsets_split):
 
         ishell0, center0, shell_type0, start0, \
@@ -109,7 +116,7 @@ def compute_overlap(centers, shell_map, nprims, shell_types, alphas, con_coeffs)
     return integral
 
 
-def _split_data_by_prims(x, nprims):
+def _split_data_by_prims(x: np.ndarray, nprims: np.ndarray) -> List[np.ndarray]:
     """Returns nested lists according to the number of primitives per shell"""
     nprims = np.insert(nprims, 0, 0)
     nprims = np.cumsum(nprims)
@@ -127,7 +134,8 @@ def _get_shell_offsets(shell_types, nbasis):
     return shell_offsets
 
 
-def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray):
+def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray) -> Tuple[
+    np.ndarray, np.ndarray]:
     """
     Returns normalization constants and offsets per shell
 
@@ -162,7 +170,7 @@ def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray)
     return scales, scales_offsets
 
 
-def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray):  # from utils
+def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # from utils
     """
     Check normalization of exponents
 
@@ -175,14 +183,14 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray):  # from utils
 
     Returns
     -------
-    The normalization constant for the gaussian cartesian basis.
+        The normalization constant for the gaussian cartesian basis.
 
     """
     vfac2 = np.vectorize(_fac2_slow)
     return np.sqrt((4 * alpha) ** sum(n) * (2 * alpha / np.pi) ** 1.5 / np.prod(vfac2(2 * n - 1)))
 
 
-def get_shell_nbasis(shell: int):
+def get_shell_nbasis(shell: int) -> int:
     """
     Returns number of basis functions within a shell.
     Negative shell numbers refer to pure functions.
@@ -205,7 +213,7 @@ def get_shell_nbasis(shell: int):
         return -2 * shell + 1
 
 
-def _fac2_slow(n):
+def _fac2_slow(n: int) -> int:
     result = 1
     while n > 1:
         result *= n
@@ -213,7 +221,7 @@ def _fac2_slow(n):
     return result
 
 
-def _get_iter_pow(n):
+def _get_iter_pow(n: int) -> np.ndarray:
     """Gives the ordering within shells.
     See http://theochem.github.io/horton/2.1.0b1/tech_ref_gaussian_basis.html for details."""
     for nx in range(n, -1, -1):

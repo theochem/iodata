@@ -21,20 +21,23 @@
 """Gaussian cube file format"""
 
 
-from __future__ import print_function
+from __future__ import print_function, annotations
+
+from typing import TextIO, Dict, Tuple, Union
 
 import numpy as np
 
 __all__ = ['load_cube', 'dump_cube']
 
 
-def _read_cube_header(f):
+def _read_cube_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray,
+                                          Dict[str, np.ndarray], np.ndarray]:
     # Read the title
     title = f.readline().strip()
     # skip the second line
     f.readline()
 
-    def read_grid_line(line):
+    def read_grid_line(line: str) -> Tuple[int, np.ndarray]:
         """Read a grid line from the cube file"""
         words = line.split()
         return (
@@ -55,7 +58,7 @@ def _read_cube_header(f):
     cell = axes * shape.reshape(-1, 1)
     ugrid = {"origin": origin, 'grid_rvecs': axes, 'shape': shape, 'pbc': np.ones(3, int)}
 
-    def read_coordinate_line(line):
+    def read_coordinate_line(line: str) -> Tuple[int, float, np.ndarray]:
         """Read an atom number and coordinate from the cube file"""
         words = line.split()
         return (
@@ -77,7 +80,7 @@ def _read_cube_header(f):
     return title, coordinates, numbers, cell, ugrid, pseudo_numbers
 
 
-def _read_cube_data(f, ugrid):
+def _read_cube_data(f: TextIO, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
     data = np.zeros(tuple(ugrid["shape"]), float)
     tmp = data.ravel()
     counter = 0
@@ -92,16 +95,19 @@ def _read_cube_data(f, ugrid):
     return data
 
 
-def load_cube(filename):
+def load_cube(filename: str) -> Dict[str, Union[str, np.ndarray,Dict]]:
     """Load data from a cube file
 
-       **Arguments:**
-
+       Parameters
+       ----------
        filename
             The name of the cube file
 
-       **Returns** a dictionary with ``title``, ``coordinates``, ``numbers``, ``cell``,
-       ``cube_data``, ``grid``, ``pseudo_numbers``.
+        Returns
+        -------
+        Dict
+            Contains keys ``title``, ``coordinates``, ``numbers``, ``cell``,
+           ``cube_data``, ``grid``, ``pseudo_numbers``.
     """
     with open(filename) as f:
         title, coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(f)
@@ -117,42 +123,43 @@ def load_cube(filename):
         }
 
 
-def _write_cube_header(f, title, coordinates, numbers, ugrid_dict, pseudo_numbers):
+def _write_cube_header(f: TextIO, title: str, coordinates: np.ndarray, numbers: np.ndarray,
+                       ugrid_dict: Dict[str, np.ndarray], pseudo_numbers: np.ndarray):
     print(title, file=f)
     print('OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z', file=f)
     natom = len(numbers)
     x, y, z = ugrid_dict["origin"]
-    print('%5i % 11.6f % 11.6f % 11.6f' % (natom, x, y, z), file=f)
+    print(f'{natom:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
     rvecs = ugrid_dict["grid_rvecs"]
     for i in range(3):
         x, y, z = rvecs[i]
-        print('%5i % 11.6f % 11.6f % 11.6f' % (ugrid_dict["shape"][i], x, y, z), file=f)
+        print(f'{ugrid_dict["shape"][i]:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
     for i in range(natom):
         q = pseudo_numbers[i]
         x, y, z = coordinates[i]
-        print('%5i % 11.6f % 11.6f % 11.6f % 11.6f' % (numbers[i], q, x, y, z), file=f)
+        print(f'{numbers[i]:5d} {q: 11.6f} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
 
 
-def _write_cube_data(f, cube_data):
+def _write_cube_data(f: TextIO, cube_data: np.ndarray):
     counter = 0
     for value in cube_data.flat:
-        f.write(' % 12.5E' % value)
+        f.write(f' {value: 12.5E}')
         if counter % 6 == 5:
             f.write('\n')
         counter += 1
 
 
-def dump_cube(filename, data):
+def dump_cube(filename: str, data: IOData):
     """Write a IOData to a .cube file.
 
-       **Arguments:**
-
+       Parameters
+       ----------
        filename
             The name of the file to be written. This usually the extension
             ".cube".
 
        data
-            An IOData instance. Must contain ``coordinates``, ``numbers``,
+            Must contain ``coordinates``, ``numbers``,
             ``grid``, ``cube_data``. May contain ``title``, ``pseudo_numbers``.
     """
     with open(filename, 'w') as f:

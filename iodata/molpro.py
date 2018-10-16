@@ -26,15 +26,18 @@
        FCIDUMP file while HORTON internally uses Physicist's notation.
 """
 
-from __future__ import print_function
+from __future__ import print_function, annotations
+
+from typing import Dict
 
 import numpy as np
+
 from .utils import set_four_index_element
 
 __all__ = ['load_fcidump', 'dump_fcidump']
 
 
-def load_fcidump(filename):
+def load_fcidump(filename: str) -> Dict:
     """Read one- and two-electron integrals from a Molpro 2012 FCIDUMP file.
 
     Works only for restricted wavefunctions.
@@ -44,12 +47,12 @@ def load_fcidump(filename):
 
     Parameters
     ----------
-    filename : str
+    filename
         The filename of the fcidump file.
 
     Returns
     -------
-    results : dict
+    results
         Data loaded from the file, with keys: ``nelec``, ``ms2``, ``one_mo``, ``two_mo``,
         ``core_energy``.
     """
@@ -112,7 +115,7 @@ def load_fcidump(filename):
     }
 
 
-def dump_fcidump(filename, data):
+def dump_fcidump(filename: str, data: IOData):
     """Write one- and two-electron integrals in the Molpro 2012 FCIDUMP format.
 
     Works only for restricted wavefunctions.
@@ -138,8 +141,8 @@ def dump_fcidump(filename, data):
         ms2 = getattr(data, 'ms2', 0)
 
         # Write header
-        print(' &FCI NORB=%i,NELEC=%i,MS2=%i,' % (nactive, nelec, ms2), file=f)
-        print('  ORBSYM= ' + ",".join(str(1) for v in range(nactive)) + ",", file=f)
+        print(f' &FCI NORB={nactive:d},NELEC={nelec:d},MS2={ms2:d},', file=f)
+        print(f"  ORBSYM= {','.join('1' for v in range(nactive))},", file=f)
         print('  ISYM=1', file=f)
         print(' &END', file=f)
 
@@ -151,11 +154,11 @@ def dump_fcidump(filename, data):
                         if (i * (i + 1)) / 2 + j >= (k * (k + 1)) / 2 + l:
                             value = two_mo[i, k, j, l]
                             if value != 0.0:
-                                print('%23.16e %4i %4i %4i %4i' % (value, i + 1, j + 1, k + 1, l + 1), file=f)
+                                print(f'{value:23.16e} {i+1:4d} {j+1:4d} {k+1:4d} {l+1:4d}', file=f)
         for i in range(nactive):
             for j in range(i + 1):
                 value = one_mo[i, j]
                 if value != 0.0:
-                    print('%23.16e %4i %4i %4i %4i' % (value, i + 1, j + 1, 0, 0), file=f)
+                    print(f'{value:23.16e} {i+1:4d} {j+1:4d} {0:4d} {0:4d}', file=f)
         if core_energy != 0.0:
-            print('%23.16e %4i %4i %4i %4i' % (core_energy, 0, 0, 0, 0), file=f)
+            print(f'{core_energy:23.16e} {0:4d} {0:4d} {0:4d} {0:4d}', file=f)
