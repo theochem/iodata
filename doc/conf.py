@@ -34,7 +34,7 @@ if on_rtd:
 
     os.chdir("../")
     print(os.listdir())
-    subprocess.call(['python', 'setup.py', 'build_ext', '-i'], shell=True)
+    subprocess.call(['python', 'setup.py', 'build_ext', '-i'])
     os.chdir("doc")
     subprocess.call('./gen_docs.sh', shell=True)
 
