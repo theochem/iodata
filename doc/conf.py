@@ -32,10 +32,10 @@ if on_rtd:
     os.environ["CC"] = "{}/bin/x86_64-conda_cos6-linux-gnu-cc".format(conda_prefix)
     os.environ["LD"] = "{}/bin/x86_64-conda_cos6-linux-gnu-ld".format(conda_prefix)
 
-    os.chdir("../")
-    print(os.listdir())
-    subprocess.call(['python', 'setup.py', 'build_ext', '-i'])
-    os.chdir("doc")
+    # os.chdir("../")
+    # print(os.listdir())
+    # subprocess.call(['python', 'setup.py', 'build_ext', '-i'])
+    # os.chdir("doc")
     subprocess.call('./gen_docs.sh', shell=True)
 
 # -- General configuration ------------------------------------------------
