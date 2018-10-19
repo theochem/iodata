@@ -26,16 +26,17 @@
 """
 from __future__ import annotations
 
+import os
 from typing import List, Tuple, Type
 
 import numpy as np
-import os
 
 __all__ = ['IOData']
 
 
 class ArrayTypeCheckDescriptor:
-    def __init__(self, name:str, ndim:int=None, shape:Tuple=None, dtype:Type=None, matching:List[str]=None, default:str=None):
+    def __init__(self, name: str, ndim: int = None, shape: Tuple = None, dtype: Type = None,
+                 matching: List[str] = None, default: str = None, doc=None):
         """
            Decorator to perform type checking an np.ndarray attributes
 
@@ -72,7 +73,7 @@ class ArrayTypeCheckDescriptor:
             self._dtype = np.dtype(dtype)
         self._matching = matching
         self._default = default
-        self.__doc__ = 'A type-checked attribute'
+        self.__doc__ = doc or 'A type-checked attribute'
 
     def __get__(self, obj, type=None):
         if obj is None:
@@ -105,7 +106,7 @@ class ArrayTypeCheckDescriptor:
                 if other is not None:
                     for i in range(len(self._shape)):
                         if self._shape[i] == -1 and \
-                                        other.shape[i] != value.shape[i]:
+                                other.shape[i] != value.shape[i]:
                             raise TypeError(f"shape[{i}] of attribute '{self._name}' of "
                                             f"'{type(obj)}' in is incompatible with "
                                             f"that of '{othername}'.")
@@ -237,13 +238,22 @@ class IOData:
                        'na', 'olp']
 
     # only perform type checking on minimal attributes
-    numbers = ArrayTypeCheckDescriptor('numbers', 1, (-1,), int, ['coordinates', 'pseudo_numbers'])
+    numbers = ArrayTypeCheckDescriptor('numbers', 1, (-1,), int, ['coordinates', 'pseudo_numbers'],
+                                       doc="A (N,) int vector with the atomic numbers.")
     coordinates = ArrayTypeCheckDescriptor('coordinates', 2, (-1, 3), float,
-                                           ['numbers', 'pseudo_numbers'])
-    cube_data = ArrayTypeCheckDescriptor('cube_data', 3)
-    polar = ArrayTypeCheckDescriptor('polar', 2, (3, 3), float)
+                                           ['numbers', 'pseudo_numbers'],
+                                           doc="A (N, 3) float array with Cartesian coordinates "
+                                               "of the atoms.")
+    cube_data = ArrayTypeCheckDescriptor('cube_data', 3,
+                                         doc="A (L, M, N) array of data on a uniform grid "
+                                             "(defined by ugrid).")
+    polar = ArrayTypeCheckDescriptor('polar', 2, (3, 3), float,
+                                     doc="A (3, 3) matrix containing the dipole polarizability "
+                                         "tensor.")
     pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float,
-                                              ['coordinates', 'numbers'], 'numbers')
+                                              ['coordinates', 'numbers'], 'numbers',
+                                              doc="A (N,) float array with pseudo-potential core "
+                                                  "charges.")
 
     @property
     def natom(self) -> int:
@@ -254,7 +264,6 @@ class IOData:
             return len(self.coordinates)
         elif hasattr(self, 'pseudo_numbers'):
             return len(self.pseudo_numbers)
-
 
     @classmethod
     def from_file(cls, *filenames: str) -> IOData:

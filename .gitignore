@@ -9,6 +9,13 @@ iodata/version.py
 # C extensions
 *.so
 
+# Cython compiled files
+iodata/overlap_accel.c
+
+# Documentation files
+doc/_build
+doc/pyapi
+
 # Distribution / packaging
 .Python
 env/
