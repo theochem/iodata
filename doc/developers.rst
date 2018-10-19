@@ -63,7 +63,7 @@ The important thing to note here is that this function does a few things:
 
 The keys are only stored as attributes within an IOData object, so technically the naming is
 arbitrary, but the rest of the code usually expects specific names. They are listed in the
-documentation of :py:class:`iodata.IOData`
+documentation of :py:class:`~iodata.iodata.IOData`
 
 The easiest way to determine the proper input format for the code though is to load a test
 file (e.g. a ``.fchk``) and to examine the values stored in the IOData instance afterwards.
