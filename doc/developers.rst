@@ -62,32 +62,11 @@ The important thing to note here is that this function does a few things:
 3. Returns a dictionary with specific keys
 
 The keys are only stored as attributes within an IOData object, so technically the naming is
-arbitrary, but the rest of the code usually expects specific names, so here they are:
+arbitrary, but the rest of the code usually expects specific names. They are listed in the
+documentation of :py:class:`IOData`
 
-+---------------------------+----------------------------------------------------------------------+
-| **key**                   | **value**                                                            |
-+---------------------------+----------------------------------------------------------------------+
-| coordinates               | The coordinates of the system                                        |
-+---------------------------+----------------------------------------------------------------------+
-| orb_[alpha,beta]          | The orbital parameters. A tuple of (nbasis, and orb_coeffs.shape[1]) |
-+---------------------------+----------------------------------------------------------------------+
-| orb_[alpha,beta]_coeffs   | The orbital coefficients                                             |
-+---------------------------+----------------------------------------------------------------------+
-| orb_[alpha,beta]_energies | The orbital energies                                                 |
-+---------------------------+----------------------------------------------------------------------+
-| orb_[alpha,beta]_occs     | The orbital occupations                                              |
-+---------------------------+----------------------------------------------------------------------+
-| numbers                   | The atomic numbers                                                   |
-+---------------------------+----------------------------------------------------------------------+
-| obasis                    | A dictionary for initializing a GOBasis instance                     |
-+---------------------------+----------------------------------------------------------------------+
-| permutation               | A set of permuted indices for the basis                              |
-+---------------------------+----------------------------------------------------------------------+
-| pseudo_numbers            | Pseudo atomic numbers, for specifying effective core potentials      |
-+---------------------------+----------------------------------------------------------------------+
-
-The easiest way to determine the proper input format for the code is to load a test file (e.g. a
-``.fchk``) and to examine the values stored in the IOData instance afterwards.
+The easiest way to determine the proper input format for the code though is to load a test
+file (e.g. a ``.fchk``) and to examine the values stored in the IOData instance afterwards.
 
 Some loaders (like for ``.fchk`` files) are extremely complicated internally, but the only
 public attributes of the modules are :code:`load_file` and :code:`to_file`.
