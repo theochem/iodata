@@ -10,6 +10,8 @@ IOData
 
 About
 -----
+IOData is a HORTON 3 module for input/output of quantum chemistry file formats. Documentation is 
+here: https://iodata.readthedocs.io/en/latest/index.html
 
 
 License
@@ -43,31 +45,7 @@ To install IOData using a conda environment:
     $ source activate iodata_env
     (iodata_env) $ conda install -c theochem iodata
 
-Alternatively, to install IOData:
-
-.. code-block:: bash
-
-    $ python ./setup install --user
-
-
-Testing
--------
-
-Requires nosetests to be installed.
-
-To run tests using the iodata_env conda environment:
-
-.. code-block:: bash
-
-    (iodata_env) $ conda install nose
-    (iodata_env) $ nosetests -v iodata
-
-
-Alternatively, to run tests:
-
-.. code-block:: bash
-
-    $ nosetests -v iodata
+See https://iodata.readthedocs.io/en/latest/install.html for full details.
 
 .. |Travis| image:: https://travis-ci.org/theochem/iodata.svg?branch=master
     :target: https://travis-ci.org/theochem/iodata
