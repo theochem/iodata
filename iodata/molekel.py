@@ -39,7 +39,7 @@ def load_mkl(filename: str) -> Dict:
 
     Returns
     -------
-    results
+    dict
         Data loaded from file, with keys: ``coordinates``, ``numbers``, ``obasis``,
         ``orb_alpha``. It may also contain: ``orb_beta``, ``signs``.
 

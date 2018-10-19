@@ -53,7 +53,7 @@ def load_fcidump(filename: str) -> Dict:
 
     Returns
     -------
-    results
+    dict
         Data loaded from the file, with keys: ``nelec``, ``ms2``, ``one_mo``, ``two_mo``,
         ``core_energy``.
     """

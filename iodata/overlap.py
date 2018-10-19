@@ -45,7 +45,7 @@ def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarr
 
     Returns
     -------
-    integral
+    np.ndarray
         The overlap integral
 
     """
@@ -150,6 +150,7 @@ def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray)
 
     Returns
     -------
+    Tuple[np.ndarray, np.ndarray]
         The normalization factors for each shell
 
     """
@@ -183,6 +184,7 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # f
 
     Returns
     -------
+    np.ndarray
         The normalization constant for the gaussian cartesian basis.
 
     """
@@ -202,6 +204,7 @@ def get_shell_nbasis(shell: int) -> int:
 
     Returns
     -------
+    int
         The number of basis functions in the shell
 
     """

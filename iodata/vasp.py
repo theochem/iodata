@@ -157,7 +157,7 @@ def load_chgcar(filename: str) -> Dict:
 
     Returns
     -------
-    result
+    dict
         Containing: ``title``, ``coordinates``,
        ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
     """
@@ -177,7 +177,7 @@ def load_locpot(filename: str) -> Dict:
 
     Returns
     -------
-    result
+    dict
         containing: ``title``, ``coordinates``,
         ``numbers``, ``rvecs``, ``grid``, ``cube_data``.
     """
@@ -197,7 +197,7 @@ def load_poscar(filename: str) -> Dict:
 
     Returns
     -------
-    result
+    dict
         containing: ``title``, ``coordinates``,
         ``numbers``, ``rvecs``
 

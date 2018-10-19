@@ -2,6 +2,6 @@ IOData API
 ==========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
 
    pyapi/iodata

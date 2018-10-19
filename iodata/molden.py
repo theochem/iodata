@@ -65,7 +65,7 @@ def load_molden(filename: str) -> dict:
 
     Returns
     -------
-    results
+    dict
         Data loaded from file, with with: ``coordinates``, ``numbers``,
         ``pseudo_numbers``, ``obasis``, ``orb_alpha``, ``signs``. It may also contain:
         ``title``, ``orb_beta``.

@@ -107,7 +107,7 @@ def load_cube(filename: str) -> Dict[str, Union[str, np.ndarray,Dict]]:
 
         Returns
         -------
-        Dict
+        dict
             Contains keys ``title``, ``coordinates``, ``numbers``, ``cell``,
            ``cube_data``, ``grid``, ``pseudo_numbers``.
     """

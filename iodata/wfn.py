@@ -196,7 +196,7 @@ def load_wfn(filename: str) -> Dict:
 
     Returns
     -------
-    results
+    dict
         Data loaded from file, with keys ``title``, ``coordinates``, ``numbers``,
         ``energy``, ``obasis`` and ``orb_alpha``. May contain ``orb_beta``.
     """

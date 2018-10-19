@@ -358,7 +358,7 @@ def load_atom_cp2k(filename: str) -> Dict:
 
     Returns
     -------
-    results
+    dict
         Contains: ``obasis``, ``orb_alpha``, ``coordinates``, ``numbers``, ``energy``,
         ``pseudo_numbers``. May contain: ``orb_beta``.
 
