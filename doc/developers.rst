@@ -90,7 +90,7 @@ The easiest way to determine the proper input format for the code is to load a t
 ``.fchk``) and to examine the values stored in the IOData instance afterwards.
 
 Some loaders (like for ``.fchk`` files) are extremely complicated internally, but the only
-interaction outside the module is :code:`load_file` and :code:`to_file`.
+public attributes of the modules are :code:`load_file` and :code:`to_file`.
 
 
 Writing Files
@@ -123,3 +123,7 @@ Within :code:`dump_*`, it simply writes the file to disk with the given filename
             for i in range(data.natom):
                 ... # setup data
                 print(f'{n}, {x}, {y}, {z}', file=f)
+
+It is the user's responsibility to ensure the proper attributes already exist within the IOData
+instance. It would be nice if you provided some reasonable error messages if they are
+missing though.

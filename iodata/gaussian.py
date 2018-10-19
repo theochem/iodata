@@ -38,7 +38,7 @@ def load_operators_g09(fn: str) -> Dict:
     in the Gaussian input file:
     ```scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)
     ```
-    
+
     Parameters
     ----------
     fn
