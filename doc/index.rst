@@ -37,7 +37,7 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
-   pyapi/iodata
+   API
 
 Indices and tables
 ==================

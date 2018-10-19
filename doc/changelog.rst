@@ -6,4 +6,4 @@ Python3/HORTON3.
 
 * H5 file format support has been removed
 * A GOBasis instance is no longer returned. Instead, the parameters to initialize the instance
-  is returned.
+  are returned within a dictionary.
