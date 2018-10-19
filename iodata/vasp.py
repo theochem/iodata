@@ -28,6 +28,7 @@ import numpy as np
 
 from . utils import angstrom, electronvolt, volume
 from . periodic import num2sym, sym2num
+from . iodata import IOData
 
 __all__ = ['load_chgcar', 'load_locpot', 'load_poscar', 'dump_poscar']
 

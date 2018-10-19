@@ -36,14 +36,13 @@ def load_operators_g09(fn: str) -> Dict:
     if present: electrostatic repulsion. In order to make all these matrices
     are present in the Gaussian log file, the following commands must be used
     in the Gaussian input file:
+    ```scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)
     ```
-        scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)
-    ```
-
+    
     Parameters
     ----------
     fn
-       The filename of the Gaussian09 log file.
+        The filename of the Gaussian09 log file.
 
     Returns
     -------

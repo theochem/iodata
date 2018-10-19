@@ -29,6 +29,7 @@ import numpy as np
 from .overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
 from .periodic import sym2num, num2sym
 from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
+from . iodata import IOData
 
 __all__ = ['load_molden', 'dump_molden']
 

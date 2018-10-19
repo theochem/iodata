@@ -33,6 +33,7 @@ from typing import Dict
 import numpy as np
 
 from .utils import set_four_index_element
+from .iodata import IOData
 
 __all__ = ['load_fcidump', 'dump_fcidump']
 

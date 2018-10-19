@@ -27,6 +27,8 @@ from typing import TextIO, Dict, Tuple, Union
 
 import numpy as np
 
+from . iodata import IOData
+
 __all__ = ['load_cube', 'dump_cube']
 
 
