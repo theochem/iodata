@@ -10,7 +10,7 @@ IOData
 
 About
 -----
-IOData is a HORTON 3 module for input/output of quantum chemistry file formats. Documentation is 
+IOData is a HORTON 3 module for input/output of quantum chemistry file formats. Documentation is
 here: https://iodata.readthedocs.io/en/latest/index.html
 
 
@@ -25,7 +25,7 @@ Dependencies
 
 The following dependencies will be necessary for IOData to build properly,
 
-* Python >= 2.7, >= 3.5: http://www.python.org/
+* Python >= 3.5: http://www.python.org/
 * SciPy >= 0.11.0: http://www.scipy.org/
 * NumPy >= 1.9.1: http://www.numpy.org/
 * Nosetests >= 1.1.2: http://readthedocs.org/docs/nose/en/latest/
