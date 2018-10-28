@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 import numpy as np
 
-from .overlap_accel import add_overlap
+from .overlap_accel import add_overlap, fac2
 from .overlap_helper import tfs, iter_pow
 
 
@@ -188,7 +188,7 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # f
         The normalization constant for the gaussian cartesian basis.
 
     """
-    vfac2 = np.vectorize(_fac2_slow)
+    vfac2 = np.vectorize(fac2)
     return np.sqrt((4 * alpha) ** sum(n) * (2 * alpha / np.pi) ** 1.5 / np.prod(vfac2(2 * n - 1)))
 
 
@@ -214,14 +214,6 @@ def get_shell_nbasis(shell: int) -> int:
         raise ValueError
     else:  # Pure
         return -2 * shell + 1
-
-
-def _fac2_slow(n: int) -> int:
-    result = 1
-    while n > 1:
-        result *= n
-        n -= 2
-    return result
 
 
 def _get_iter_pow(n: int) -> np.ndarray:
