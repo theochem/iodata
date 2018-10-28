@@ -20,7 +20,7 @@
 # --
 """Molden wavefunction input file format"""
 
-from __future__ import print_function, annotations
+from __future__ import print_function
 
 from typing import TextIO, Tuple, Dict, Union
 

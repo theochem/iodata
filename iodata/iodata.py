@@ -24,8 +24,6 @@
    from/to a file. The format is deduced from the prefix or extension of the
    filename.
 """
-from __future__ import annotations
-
 import os
 from typing import List, Tuple, Type
 
@@ -266,7 +264,7 @@ class IOData:
             return len(self.pseudo_numbers)
 
     @classmethod
-    def from_file(cls, *filenames: str) -> IOData:
+    def from_file(cls, *filenames: str) -> "IOData":
         """Load data from a file.
 
         This routine uses the extension or prefix of the filename to

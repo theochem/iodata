@@ -26,7 +26,7 @@
        FCIDUMP file while HORTON internally uses Physicist's notation.
 """
 
-from __future__ import print_function, annotations
+from __future__ import print_function
 
 from typing import Dict
 
