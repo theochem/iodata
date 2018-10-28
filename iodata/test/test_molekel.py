@@ -20,9 +20,6 @@
 # --
 
 
-import numpy as np
-
-
 from . common import get_fn, check_normalization
 from .. iodata import IOData
 from .. utils import angstrom, shells_to_nbasis

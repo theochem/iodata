@@ -25,7 +25,6 @@ from __future__ import print_function
 from typing import Dict
 
 import numpy as np
-from numbers import Number
 
 from .periodic import sym2num, num2sym
 from .utils import angstrom
