@@ -69,7 +69,7 @@ def load_xyz(filename: str) -> Dict:
     }
 
 
-def dump_xyz(filename: str, data: Dict):
+def dump_xyz(filename: str, data: 'IOData'):
     """Write an ``.xyz`` file.
 
     Parameters
