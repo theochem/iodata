@@ -25,6 +25,10 @@ from libc.math cimport sqrt, pow, exp, abs
 cimport cython
 import numpy as np
 
+
+__all__ = ['add_overlap', 'fac2']
+
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cpdef void add_overlap(double coeff, double alpha0, double alpha1, double[::1] scales0,

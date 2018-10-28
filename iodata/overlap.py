@@ -29,6 +29,9 @@ from .overlap_accel import add_overlap, fac2
 from .overlap_helper import tfs, iter_pow
 
 
+__all__ = ['compute_overlap', 'gob_cart_normalization', 'get_shell_nbasis']
+
+
 def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarray,
                     shell_types: np.ndarray, alphas: np.ndarray,
                     con_coeffs: np.ndarray) -> np.ndarray:
