@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+"""Test iodata.molekel module."""
 
 
 from . common import get_fn, check_normalization

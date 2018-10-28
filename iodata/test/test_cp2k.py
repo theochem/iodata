@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Tests for CP2K ATOM output reader."""
+"""Test iodata.cp2k module."""
 
 from nose.tools import assert_raises
 

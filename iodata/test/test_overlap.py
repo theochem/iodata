@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+"""Test iodata.overlap & iodata.overlap_accel modules."""
 
 import numpy as np
 from .. overlap import compute_overlap
