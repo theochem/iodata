@@ -20,7 +20,6 @@
 # --
 """VASP POSCAR, CHGCAR and POTCAR file formats"""
 
-from __future__ import print_function
 
 from typing import TextIO, Tuple, Dict
 
