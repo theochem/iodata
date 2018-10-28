@@ -32,14 +32,13 @@ def test_typecheck():
     m = IOData(coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
     assert np.issubdtype(m.coordinates.dtype, np.floating)
     assert not hasattr(m, 'numbers')
-    m = IOData(numbers=np.array([2, 3]), coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
-    m = IOData(numbers=np.array([2.0, 3.0]), pseudo_numbers=np.array([1, 1]), coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
+    m = IOData(numbers=np.array([2.0, 3.0]), pseudo_numbers=np.array([1, 1]),
+               coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
     assert np.issubdtype(m.numbers.dtype, np.integer)
     assert np.issubdtype(m.pseudo_numbers.dtype, np.floating)
     assert hasattr(m, 'numbers')
     del m.numbers
     assert not hasattr(m, 'numbers')
-    m = IOData(cube_data=np.array([[[1, 2], [2, 3], [3, 2]]]), coordinates=np.array([[1, 2, 3]]))
     with assert_raises(TypeError):
         IOData(coordinates=np.array([[1, 2], [2, 3]]))
     with assert_raises(TypeError):
