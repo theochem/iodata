@@ -46,21 +46,20 @@ def load_xyz(filename: str) -> Dict:
         Contains keys ``title`, ``coordinates`` and ``numbers``.
 
     """
-    f = open(filename)
-    size = int(next(f))
-    title = next(f).strip()
-    coordinates = np.empty((size, 3), float)
-    numbers = np.empty(size, int)
-    for i in range(size):
-        words = next(f).split()
-        try:
-            numbers[i] = sym2num[words[0].title()]
-        except KeyError:
-            numbers[i] = int(words[0])
-        coordinates[i, 0] = float(words[1]) * angstrom
-        coordinates[i, 1] = float(words[2]) * angstrom
-        coordinates[i, 2] = float(words[3]) * angstrom
-    f.close()
+    with open(filename, 'r') as f:
+        size = int(next(f))
+        title = next(f).strip()
+        coordinates = np.empty((size, 3), float)
+        numbers = np.empty(size, int)
+        for i in range(size):
+            words = next(f).split()
+            try:
+                numbers[i] = sym2num[words[0].title()]
+            except KeyError:
+                numbers[i] = int(words[0])
+            coordinates[i, 0] = float(words[1]) * angstrom
+            coordinates[i, 1] = float(words[2]) * angstrom
+            coordinates[i, 2] = float(words[3]) * angstrom
     return {
         'title': title,
         'coordinates': coordinates,

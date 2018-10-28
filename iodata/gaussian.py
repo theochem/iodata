@@ -228,20 +228,18 @@ class FCHKFile(dict):
             self[label] = value
             return True
 
-        f = open(filename, 'r')
-        self.title = f.readline()[:-1].strip()
-        words = f.readline().split()
-        if len(words) == 3:
-            self.command, self.lot, self.obasis = words
-        elif len(words) == 2:
-            self.command, self.lot = words
-        else:
-            raise IOError('The second line of the FCHK file should contain two or three words.')
+        with open(filename, 'r') as f:
+            self.title = f.readline()[:-1].strip()
+            words = f.readline().split()
+            if len(words) == 3:
+                self.command, self.lot, self.obasis = words
+            elif len(words) == 2:
+                self.command, self.lot = words
+            else:
+                raise IOError('The second line of the FCHK file should contain two or three words.')
 
-        while read_field(f):
-            pass
-
-        f.close()
+            while read_field(f):
+                pass
 
 
 def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
