@@ -1,3 +1,23 @@
+# -*- coding: utf-8 -*-
+# HORTON: Helpful Open-source Research TOol for N-fermion systems.
+# Copyright (C) 2011-2017 The HORTON Development Team
+#
+# This file is part of HORTON.
+#
+# HORTON is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+#
+# HORTON is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses/>
+#
+# --
 """
 Computes the overlap integral. Used for calculating normalization in molden and wfn files.
 """
@@ -5,8 +25,11 @@ from typing import List, Tuple
 
 import numpy as np
 
-from .overlap_accel import add_overlap
+from .overlap_accel import add_overlap, fac2
 from .overlap_helper import tfs, iter_pow
+
+
+__all__ = ['compute_overlap', 'gob_cart_normalization', 'get_shell_nbasis']
 
 
 def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarray,
@@ -188,7 +211,7 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # f
         The normalization constant for the gaussian cartesian basis.
 
     """
-    vfac2 = np.vectorize(_fac2_slow)
+    vfac2 = np.vectorize(fac2)
     return np.sqrt((4 * alpha) ** sum(n) * (2 * alpha / np.pi) ** 1.5 / np.prod(vfac2(2 * n - 1)))
 
 
@@ -214,14 +237,6 @@ def get_shell_nbasis(shell: int) -> int:
         raise ValueError
     else:  # Pure
         return -2 * shell + 1
-
-
-def _fac2_slow(n: int) -> int:
-    result = 1
-    while n > 1:
-        result *= n
-        n -= 2
-    return result
 
 
 def _get_iter_pow(n: int) -> np.ndarray:

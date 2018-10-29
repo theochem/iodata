@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+"""Test iodata.molden module."""
 
 
 import numpy as np, os

@@ -18,6 +18,8 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+"""Test iodata.wfn module."""
+
 
 import numpy as np
 from .common import compute_mulliken_charges, get_fn, check_normalization

@@ -21,8 +21,6 @@
 """Gaussian cube file format"""
 
 
-from __future__ import print_function
-
 from typing import TextIO, Dict, Tuple, Union
 
 import numpy as np
