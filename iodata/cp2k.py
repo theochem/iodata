@@ -24,8 +24,8 @@
 import numpy as np
 
 from typing import TextIO, Dict, Union, List, Tuple
+from scipy.special import factorialk
 
-from .overlap_accel import fac2
 from .utils import shells_to_nbasis, str_to_shell_types
 
 
@@ -55,7 +55,7 @@ def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) -> Unio
         applied to the contraction coefficients.
     """
     expzet = 0.25 * (2 * l + 3)
-    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (l + 2) * fac2(2 * l + 1))
+    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (l + 2) * factorialk(2 * l + 1, 2))
     zeta = 2.0 * alphas
     return zeta ** expzet / prefac
 

@@ -24,8 +24,9 @@
 import numpy as np
 
 from typing import List, Tuple
+from scipy.special import factorialk
 
-from .overlap_accel import add_overlap, fac2
+from .overlap_accel import add_overlap
 from .overlap_helper import tfs, iter_pow
 
 
@@ -205,8 +206,8 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # f
         The normalization constant for the gaussian cartesian basis.
 
     """
-    vfac2 = np.vectorize(fac2)
-    return np.sqrt((4 * alpha) ** sum(n) * (2 * alpha / np.pi) ** 1.5 / np.prod(vfac2(2 * n - 1)))
+    vfac2 = np.vectorize(factorialk)
+    return np.sqrt((4 * alpha)**sum(n) * (2 * alpha / np.pi)**1.5 / np.prod(vfac2(2 * n - 1, 2)))
 
 
 def get_shell_nbasis(shell: int) -> int:
