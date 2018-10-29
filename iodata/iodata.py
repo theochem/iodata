@@ -18,16 +18,14 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Input/output dispatcher for different file formats
+"""Module for handling input/output from different file formats."""
 
-   The ``IOData.from_file`` and ``IOData.to_file`` methods read/write data
-   from/to a file. The format is deduced from the prefix or extension of the
-   filename.
-"""
+
 import os
+import numpy as np
+
 from typing import List, Tuple, Type
 
-import numpy as np
 
 __all__ = ['IOData']
 

@@ -18,14 +18,19 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-from typing import List, Dict, Tuple
+"""Utility functions module."""
+
 
 import numpy as np
+
 from scipy.linalg import eigh
+from typing import List, Dict, Tuple
 
 from .overlap import get_shell_nbasis
 
+
 __all__ = ['set_four_index_element']
+
 
 angstrom = 1.0e-10 / 0.5291772083e-10
 electronvolt = 1.602176462e-19 / 4.35974381e-18

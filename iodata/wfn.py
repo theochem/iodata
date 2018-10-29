@@ -18,13 +18,16 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""WFN File format (Gaussian and GAMESS)"""
-from typing import Tuple, List, TextIO, Dict
+"""Module for handling GUASSIAN/GAMESS-US WNF file format."""
+
 
 import numpy as np
 
+from typing import Tuple, List, TextIO, Dict
+
 from .overlap import init_scales
 from .periodic import sym2num
+
 
 __all__ = ['load_wfn_low', 'get_permutation_orbital',
            'get_permutation_basis', 'get_mask', 'load_wfn']

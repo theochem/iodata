@@ -18,13 +18,16 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""CP2K atomic wavefunctions"""
-from typing import TextIO, Dict, Union, List, Tuple
+"""Module for handling CP2K file format."""
+
 
 import numpy as np
 
+from typing import TextIO, Dict, Union, List, Tuple
+
 from .overlap_accel import fac2
 from .utils import shells_to_nbasis, str_to_shell_types
+
 
 __all__ = ['load_atom_cp2k']
 

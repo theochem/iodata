@@ -18,13 +18,16 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Molekel wavefunction input file format"""
-from typing import Dict, Tuple, TextIO, List
+"""Module for handling MOLEKEL file format."""
+
 
 import numpy as np
 
+from typing import Dict, Tuple, TextIO, List
+
 from .molden import _fix_molden_from_buggy_codes
 from .utils import angstrom, str_to_shell_types, shells_to_nbasis
+
 
 __all__ = ['load_mkl']
 

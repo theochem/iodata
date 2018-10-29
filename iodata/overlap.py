@@ -18,12 +18,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""
-Computes the overlap integral. Used for calculating normalization in molden and wfn files.
-"""
-from typing import List, Tuple
+"""Module for computing overlap of atomic orbital basis functions."""
+
 
 import numpy as np
+
+from typing import List, Tuple
 
 from .overlap_accel import add_overlap, fac2
 from .overlap_helper import tfs, iter_pow

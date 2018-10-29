@@ -18,14 +18,15 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Gaussian cube file format"""
+"""Module for handling GAUSSIAN CUBE file format."""
 
-
-from typing import TextIO, Dict, Tuple, Union
 
 import numpy as np
 
-from . iodata import IOData
+from typing import TextIO, Dict, Tuple, Union
+
+from .iodata import IOData
+
 
 __all__ = ['load_cube', 'dump_cube']
 

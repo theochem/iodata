@@ -18,12 +18,15 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Gaussian LOG and FCHK file formats"""
-from typing import Dict, TextIO, Set, List
+"""Module for handling GAUSSIAN LOG and FCHK file formats."""
+
 
 import numpy as np
 
+from typing import Dict, TextIO, Set, List
+
 from .utils import set_four_index_element
+
 
 __all__ = ['load_operators_g09', 'FCHKFile', 'load_fchk']
 

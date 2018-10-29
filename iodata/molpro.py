@@ -18,21 +18,16 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Molpro 2012 FCIDUMP format.
+"""Module for handling MOLPRO file formal."""
 
-   .. note ::
-
-       One- and two-electron integrals are stored in chemists' notation in an
-       FCIDUMP file while HORTON internally uses Physicist's notation.
-"""
-
-
-from typing import Dict
 
 import numpy as np
 
-from .utils import set_four_index_element
+from typing import Dict
+
 from .iodata import IOData
+from .utils import set_four_index_element
+
 
 __all__ = ['load_fcidump', 'dump_fcidump']
 

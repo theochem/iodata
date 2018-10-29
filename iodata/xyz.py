@@ -18,15 +18,17 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""XYZ file format"""
+"""Module for handling XYZ file format."""
 
-
-from typing import Dict
 
 import numpy as np
 
-from .periodic import sym2num, num2sym
+from typing import Dict
+
+from .iodata import IOData
 from .utils import angstrom
+from .periodic import sym2num, num2sym
+
 
 __all__ = ['load_xyz', 'dump_xyz']
 

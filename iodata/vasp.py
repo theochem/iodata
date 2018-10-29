@@ -18,16 +18,17 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""VASP POSCAR, CHGCAR and POTCAR file formats"""
+"""Module for handling VASP POSCAR, CHGCAR and POTCAR file formats."""
 
-
-from typing import TextIO, Tuple, Dict
 
 import numpy as np
 
-from . utils import angstrom, electronvolt, volume
-from . periodic import num2sym, sym2num
-from . iodata import IOData
+from typing import TextIO, Tuple, Dict
+
+from .iodata import IOData
+from .periodic import num2sym, sym2num
+from .utils import angstrom, electronvolt, volume
+
 
 __all__ = ['load_chgcar', 'load_locpot', 'load_poscar', 'dump_poscar']
 

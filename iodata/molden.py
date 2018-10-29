@@ -18,17 +18,18 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Molden wavefunction input file format"""
+"""Module for handling MOLDEN file format."""
 
-
-from typing import TextIO, Tuple, Dict, Union
 
 import numpy as np
 
-from .overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
+from typing import TextIO, Tuple, Dict, Union
+
+from .iodata import IOData
 from .periodic import sym2num, num2sym
+from .overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
 from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
-from . iodata import IOData
+
 
 __all__ = ['load_molden', 'dump_molden']
 
