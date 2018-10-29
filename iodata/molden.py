@@ -56,19 +56,20 @@ def _get_molden_permutation(shell_types: np.ndarray, reverse=False) -> np.ndarra
 
 
 def load_molden(filename: str) -> dict:
-    """Load data from a molden input file.
+    """Load data from a MOLDEN input file format.
 
     Parameters
     ----------
     filename
-        The filename of the molden input file.
+        The MOLDEN input filename.
 
     Returns
     -------
-    dict
-        Data loaded from file, with with: ``coordinates``, ``numbers``,
-        ``pseudo_numbers``, ``obasis``, ``orb_alpha``, ``signs``. It may also contain:
-        ``title``, ``orb_beta``.
+    out : dict
+        output dictionary containing ``coordinates``, ``numbers``, ``pseudo_numbers``,
+        ``obasis``, ``orb_alpha`` & ``signs`` keys and corresponding values. It may contain
+        ``title`` and ``orb_beta`` keys and their values as well.
+
     """
 
     def helper_coordinates(f: TextIO, cunit: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:

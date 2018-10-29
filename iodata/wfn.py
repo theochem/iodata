@@ -190,18 +190,20 @@ def get_mask(type_assignment: np.ndarray) -> np.ndarray:
 
 
 def load_wfn(filename: str) -> Dict:
-    """Load data from a WFN file.
+    """Load data from a WFN file format.
 
     Parameters
     ----------
     filename
-        The filename of the wfn file.
+        The WFN filename.
 
     Returns
     -------
-    dict
-        Data loaded from file, with keys ``title``, ``coordinates``, ``numbers``,
-        ``energy``, ``obasis`` and ``orb_alpha``. May contain ``orb_beta``.
+    out : dict
+        Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``energy``,
+        ``obasis`` & ``orb_alpha`` keys and their corresponding values. It may contain
+        ``orb_beta`` key and its value as well.
+
     """
     title, numbers, coordinates, centers, type_assignment, exponents, \
     mo_count, mo_occ, mo_energy, coefficients, energy = load_wfn_low(filename)

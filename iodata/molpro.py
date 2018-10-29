@@ -33,23 +33,27 @@ __all__ = ['load_fcidump', 'dump_fcidump']
 
 
 def load_fcidump(filename: str) -> Dict:
-    """Read one- and two-electron integrals from a Molpro 2012 FCIDUMP file.
-
-    Works only for restricted wavefunctions.
-
-    Keep in mind that the FCIDUMP format changed in Molpro 2012, so files generated with
-    older versions are not supported.
+    """Load one- and two-electron integrals from a MOLPRO 2012 FCIDUMP file format.
 
     Parameters
     ----------
     filename
-        The filename of the fcidump file.
+        The MOLPRO 2012 FCIDUMP filename.
 
     Returns
     -------
-    dict
-        Data loaded from the file, with keys: ``nelec``, ``ms2``, ``one_mo``, ``two_mo``,
-        ``core_energy``.
+    out : dict
+        Output dictionary containing ``nelec``, ``ms2``, ``one_mo``, ``two_mo`` & ``core_energy``
+        keys and their corresponding values.
+
+    Notes
+    -----
+    1. This function works only for restricted wave-functions.
+    2. One- and two-electron integrals are stored in chemists' notation in an FCIDUMP file,
+       while HORTON internally uses Physicist's notation.
+    3. Keep in mind that the FCIDUMP format changed in MOLPRO 2012, so files generated with
+       older versions are not supported.
+
     """
     with open(filename) as f:
         # check header

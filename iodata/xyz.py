@@ -34,17 +34,18 @@ __all__ = ['load_xyz', 'dump_xyz']
 
 
 def load_xyz(filename: str) -> Dict:
-    """Load a molecular geometry from a .xyz file.
+    """Load molecular geometry from a XYZ file format.
 
     Parameters
     ----------
     filename
-        The file to load the geometry from
+        The XYZ filename.
 
     Returns
     -------
-    dict
-        Contains keys ``title`, ``coordinates`` and ``numbers``.
+    out : dict
+        Output dictionary containing ``title`, ``coordinates`` & ``numbers`` keys
+        and corresponding values.
 
     """
     with open(filename, 'r') as f:
