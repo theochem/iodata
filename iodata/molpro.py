@@ -118,8 +118,8 @@ def dump_fcidump(filename: str, data: IOData):
     Keep in mind that the FCIDUMP format changed in Molpro 2012, so files
     written with this function cannot be used with older versions of Molpro
 
-    Parmeters
-    ---------
+    Parameters
+    ----------
     filename : str
         The filename of the FCIDUMP file. This is usually "FCIDUMP".
 
