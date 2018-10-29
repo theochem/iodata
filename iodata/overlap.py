@@ -72,12 +72,15 @@ def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarr
         The overlap integral
 
     """
-
-    # Initialize helper variables
+    # compute total number of shells
     nshell = len(shell_types)
-    nbasis = sum([get_shell_nbasis(i) for i in shell_types])
+    # compute number of basis functions in each shell
+    shell_nbasis = np.array([get_shell_nbasis(shell) for shell in shell_types])
+    # compute total number of basis functions
+    nbasis = np.sum(shell_nbasis)
+    # compute index offset of each shell
+    shell_offsets = np.cumsum(np.insert(shell_nbasis, 0, 0), dtype=int)
 
-    shell_offsets = _get_shell_offsets(shell_types, nbasis)
     scales, scales_offsets = init_scales(alphas, nprims, shell_types)
 
     # Initialize result
@@ -146,15 +149,6 @@ def _split_data_by_prims(x: np.ndarray, nprims: np.ndarray) -> List[np.ndarray]:
     return [x[s:e] for s, e in zip(nprims, nprims[1:])]
 
 
-def _get_shell_offsets(shell_types, nbasis):
-    """Calculates index offset for shells"""
-    shell_offsets = []
-    last = 0
-    for i in shell_types:
-        shell_offsets.append(last)
-        last += get_shell_nbasis(i)
-    shell_offsets.append(nbasis)
-    return shell_offsets
 
 
 def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray) -> Tuple[
