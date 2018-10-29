@@ -97,8 +97,7 @@ def volume(rvecs: np.ndarray) -> float:
     elif nvecs == 3:
         return np.linalg.det(rvecs)
     else:
-        print("1: Expected rvecs to be of shape (x,3), where x is in {1,2,3}")
-        raise ValueError
+        raise ValueError("Argument rvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
 def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[

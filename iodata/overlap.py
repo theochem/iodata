@@ -228,7 +228,7 @@ def get_shell_nbasis(shell: int) -> int:
     if shell > 0:  # Cartesian
         return int((shell + 1) * (shell + 2) / 2)
     elif shell == -1:
-        raise ValueError
+        raise ValueError("Argument shell={0} is not recognized.".format(shell))
     else:  # Pure
         return -2 * shell + 1
 

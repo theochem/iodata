@@ -58,8 +58,8 @@ class ArrayTypeCheckDescriptor:
 
         """
         if matching is not None and shape is None:
-            raise TypeError('The matching argument requires the shape to be '
-                            'specified.')
+            raise TypeError('The matching argument requires the shape to be specified.')
+
         self._name = name
         self._ndim = ndim
         self._shape = shape
