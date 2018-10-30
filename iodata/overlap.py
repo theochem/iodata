@@ -27,7 +27,7 @@ from typing import List, Tuple
 from scipy.special import factorialk
 
 from .overlap_accel import add_overlap
-from .overlap_helper import tfs, iter_pow
+from .overlap_helper import tfs
 
 
 __all__ = ['compute_overlap', 'gob_cart_normalization', 'get_shell_nbasis']
@@ -122,10 +122,9 @@ def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarr
                 # Loop over primitives in shell1 (Cartesian)
                 for a1, so1, cc1 in zip(alphas1, scales_offsets1, con_coeffs1):
                     s1 = scales[so1:]
-
-                    add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, iter_pow[abs(shell_type0)],
-                                iter_pow[abs(shell_type1)], result)
-                    # print result
+                    n0 = np.vstack(list(_get_iter_pow(abs(shell_type0))))
+                    n1 = np.vstack(list(_get_iter_pow(abs(shell_type1))))
+                    add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, n0, n1, result)
 
             # END of Cartesian coordinate system (if going to pure coordinates)
 
