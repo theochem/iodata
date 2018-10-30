@@ -178,17 +178,16 @@ def _write_cube_data(f: TextIO, cube_data: np.ndarray):
 
 
 def dump_cube(filename: str, data: IOData):
-    """Write a IOData to a .cube file.
+    """Write data into a CUBE file format.
 
-       Parameters
-       ----------
-       filename
-            The name of the file to be written. This usually the extension
-            ".cube".
+    Parameters
+    ----------
+    filename
+        The CUBE filename.
+    data
+        An IOData instance which must contain ``coordinates``, ``numbers``, ``grid`` &
+        ``cube_data`` attributes. It may contain ``title``  & ``pseudo_numbers`` attributes.
 
-       data
-            Must contain ``coordinates``, ``numbers``,
-            ``grid``, ``cube_data``. May contain ``title``, ``pseudo_numbers``.
     """
     with open(filename, 'w') as f:
         if not isinstance(data.grid, dict):

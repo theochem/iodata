@@ -70,20 +70,20 @@ def load_xyz(filename: str) -> Dict:
 
 
 def dump_xyz(filename: str, data: 'IOData'):
-    """Write an ``.xyz`` file.
+    """Write molecular geometry into a XYZ file format.
 
     Parameters
     ----------
     filename
-        The name of the file to be written. This usually the extension
-        ".xyz".
+        The XYZ filename.
     data
-        An IOData instance. Must contain ``coordinates`` and ``numbers``.
-        May contain ``title``.
+        An IOData instance which must contain ``coordinates`` & ``numbers`` attributes.
+        If ``title`` attribute is not included, 'Created with IODATA module' is used.
+
     """
     with open(filename, 'w') as f:
         print(data.natom, file=f)
-        print(getattr(data, 'title', 'Created with HORTON'), file=f)
+        print(getattr(data, 'title', 'Created with IODATA module'), file=f)
         for i in range(data.natom):
             n = num2sym[data.numbers[i]]
             x, y, z = data.coordinates[i] / angstrom

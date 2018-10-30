@@ -115,21 +115,24 @@ def load_fcidump(filename: str) -> Dict:
 
 
 def dump_fcidump(filename: str, data: IOData):
-    """Write one- and two-electron integrals in the Molpro 2012 FCIDUMP format.
-
-    Works only for restricted wavefunctions.
-
-    Keep in mind that the FCIDUMP format changed in Molpro 2012, so files
-    written with this function cannot be used with older versions of Molpro
+    """Write one- and two-electron integrals into a MOLPRO 2012 FCIDUMP file format.
 
     Parameters
     ----------
-    filename : str
-        The filename of the FCIDUMP file. This is usually "FCIDUMP".
+    filename
+        The MOLPRO 2012 FCIDUMP filename.
+    data
+        An IOData instance which must contain ``one_mo`` & ``two_mo`` attributes.
+        It may contain ``core_energy``, ``nelec`` and ``ms`` attributes.
 
-    data : IOData
-        Must contain ``one_mo``, ``two_mo``. May contain ``core_energy``, ``nelec`` and
-        ``ms``.
+    Notes
+    -----
+    1. This function works only for restricted wave-functions.
+    2. One- and two-electron integrals are stored in chemists' notation in an FCIDUMP file,
+       while HORTON internally uses Physicist's notation.
+    3. Keep in mind that the FCIDUMP format changed in MOLPRO 2012, so files generated with
+       older versions are not supported.
+
     """
     with open(filename, 'w') as f:
         one_mo = data.one_mo

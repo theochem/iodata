@@ -219,16 +219,17 @@ def load_poscar(filename: str) -> Dict:
 
 
 def dump_poscar(filename: str, data: IOData):
-    """Write a file in VASP's POSCAR format
+    """Write data into a VASP 5 POSCAR file format.
 
     Parameters
     ----------
     filename
-        The name of the file to be written. This is usually POSCAR.
+        The VASP 5 POSCAR filename.
 
     data
-        An IOData instance. Must contain ``coordinates``, ``numbers``,
-        ``rvecs``, ``cell_frac``. May contain ``title``.
+        An IOData instance which must contain ``coordinates``, ``numbers``, ``rvecs`` &
+        ``cell_frac`` attributes. It may contain ``title`` attribute.
+
     """
     with open(filename, 'w') as f:
         print(getattr(data, 'title', 'Created with HORTON'), file=f)

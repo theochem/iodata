@@ -592,15 +592,17 @@ def _fix_molden_from_buggy_codes(result: Dict, filename: str):
 
 
 def dump_molden(filename: str, data: IOData):
-    """Write data to a file in the molden input format.
+    """Write data into a MOLDEN input file format.
 
     Parameters
     ----------
     filename
-        The filename of the molden input file, which is an output file for this routine.
+        The MOLDEN input filename.
     data
-        Must contain ``coordinates``, ``numbers``, ``obasis``, ``orb_alpha``. May contain
-        ``title``, ``pseudo_numbers``, ``orb_beta``.
+        An IOData instance which must contain ```coordinates``, ``numbers``, ``obasis``
+        & ``orb_alpha`` attributes. It may contain ```title``, ``pseudo_numbers``, ``orb_beta``
+        attributes.
+
     """
     with open(filename, 'w') as f:
         # Print the header
