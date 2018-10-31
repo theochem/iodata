@@ -166,3 +166,23 @@ def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: fl
     if occupations.max() > occ_max + eps:
         raise ValueError('The density matrix has eigenvalues considerably larger than '
                          'max. error=%e' % (occupations.max() - 1))
+
+
+def compute_dm_1st_order(coeffs: np.ndarray, occs: np.ndarray) -> np.ndarray:
+    r"""Compute first-order reduced density matrix (1DM).
+
+    .. math::
+
+    Parameters
+    ----------
+    coeffs
+        Coefficients of spin orbitals.
+    occs
+        Occupations of spin orbitals.
+
+    Returns
+    -------
+    out : array_like
+        First-order reduced density matrix (1DM).
+    """
+    return np.dot(coeffs * occs, coeffs.T)

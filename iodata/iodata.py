@@ -26,6 +26,8 @@ import numpy as np
 
 from typing import List, Tuple, Type
 
+from .utils import compute_dm_1st_order
+
 
 __all__ = ['IOData']
 
@@ -426,9 +428,9 @@ class IOData:
         elif hasattr(self, 'dm_full_scf'):
             return self.dm_full_scf
         elif hasattr(self, 'orb_alpha_coeffs'):
-            dm_full = self._alpha_orbs_to_dm()
+            dm_full = compute_dm_1st_order(self.orb_alpha_coeffs, self.orb_alpha_occs)
             if hasattr(self, 'orb_beta_coeffs'):
-                dm_full += self._beta_orbs_to_dm()
+                dm_full += compute_dm_1st_order(self.orb_beta_coeffs, self.orb_beta_occs)
             else:
                 dm_full *= 2
             return dm_full
@@ -448,10 +450,7 @@ class IOData:
         elif hasattr(self, 'dm_spin_scf'):
             return self.dm_spin_scf
         elif hasattr(self, 'orb_alpha_coeffs') and hasattr(self, 'orb_beta_coeffs'):
-            return self._alpha_orbs_to_dm() - self._beta_orbs_to_dm()
+            dm = compute_dm_1st_order(self.orb_alpha_coeffs, self.orb_alpha_occs)
+            dm -= compute_dm_1st_order(self.orb_beta_coeffs, self.orb_beta_occs)
+            return dm
 
-    def _alpha_orbs_to_dm(self) -> np.ndarray:
-        return np.dot(self.orb_alpha_coeffs * self.orb_alpha_occs, self.orb_alpha_coeffs.T)
-
-    def _beta_orbs_to_dm(self) -> np.ndarray:
-        return np.dot(self.orb_beta_coeffs * self.orb_beta_occs, self.orb_beta_coeffs.T)
