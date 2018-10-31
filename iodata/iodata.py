@@ -33,28 +33,27 @@ __all__ = ['IOData']
 class ArrayTypeCheckDescriptor:
     def __init__(self, name: str, ndim: int = None, shape: Tuple = None, dtype: Type = None,
                  matching: List[str] = None, default: str = None, doc=None):
-        """
-           Decorator to perform type checking an np.ndarray attributes
+        """Decorator to perform type checking an np.ndarray attributes
 
-           Parameters
-           ----------
-           name
-                Name of the attribute (without leading underscores).
-           ndim
-                The number of dimensions of the array.
-           shape
-                The shape of the array. Use -1 for dimensions where the shape is
-                not fixed a priori.
-           dtype
-                The datatype of the array.
-           matching
-                A list of names of other attributes that must have consistent
-                shapes. This argument requires that the shape is specified.
-                All dimensions for which the shape tuple equals -1 are must be
-                the same in this attribute and the matching attributes.
-           default
-                The name of another (type-checked) attribute to return as default
-                when this attribute is not set
+        Parameters
+        ----------
+        name
+            Name of the attribute (without leading underscores).
+        ndim
+            The number of dimensions of the array.
+        shape
+            The shape of the array. Use -1 for dimensions where the shape is
+            not fixed a priori.
+        dtype
+            The datatype of the array.
+        matching
+            A list of names of other attributes that must have consistent
+            shapes. This argument requires that the shape is specified.
+            All dimensions for which the shape tuple equals -1 are must be
+            the same in this attribute and the matching attributes.
+        default
+            The name of another (type-checked) attribute to return as default
+            when this attribute is not set
 
         """
         if matching is not None and shape is None:
