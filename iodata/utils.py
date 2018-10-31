@@ -186,3 +186,8 @@ def compute_dm_1st_order(coeffs: np.ndarray, occs: np.ndarray) -> np.ndarray:
         First-order reduced density matrix (1DM).
     """
     return np.dot(coeffs * occs, coeffs.T)
+
+
+def compute_dm_2nd_order(coeffs: np.ndarray, occs: np.ndarray) -> np.ndarray:
+    r"""Compute second-order reduced density matrix (2DM)."""
+    raise NotImplementedError
