@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=unused-import,wrong-import-order
 """Module for handling XYZ file format."""
 
 

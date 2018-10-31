@@ -33,7 +33,7 @@ __all__ = ['IOData']
 class ArrayTypeCheckDescriptor:
     def __init__(self, name: str, ndim: int = None, shape: Tuple = None, dtype: Type = None,
                  matching: List[str] = None, default: str = None, doc=None):
-        """Decorator to perform type checking an np.ndarray attributes
+        """Initialize decorator to perform type and shape checking of np.ndarray attributes.
 
         Parameters
         ----------

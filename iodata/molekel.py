@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=wrong-import-order
 """Module for handling MOLEKEL file format."""
 
 

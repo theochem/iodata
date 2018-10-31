@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=wrong-import-order
 """Module for handling GAUSSIAN LOG and FCHK file formats."""
 
 
@@ -55,7 +56,6 @@ def load_operators_g09(filename: str) -> Dict:
        ```scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)```
 
     """
-
     with open(filename) as f:
         # First get the line with the number of orbital basis functions
         for line in f:
@@ -295,7 +295,6 @@ def load_fchk(filename: str) -> Dict:
         ``polar``, ``dipole_moment`` & ``quadrupole_moment`` keys and their values as well.
 
     """
-
     fchk = FCHKFile(filename, [
         "Number of electrons", "Number of basis functions",
         "Number of independant functions",

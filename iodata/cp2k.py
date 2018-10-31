@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=wrong-import-order
 """Module for handling CP2K file format."""
 
 
@@ -224,6 +225,7 @@ def _read_cp2k_occupations_energies(f: TextIO,
         A list with orbital properties. Each element is a tuple with the
         following info: (angular_momentum l, spin component: 'alpha' or
         'beta', occupation number, orbital energy).
+
     """
     oe_alpha = []
     oe_beta = []

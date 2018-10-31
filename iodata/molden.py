@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=wrong-import-order
 """Module for handling MOLDEN file format."""
 
 
@@ -71,7 +72,6 @@ def load_molden(filename: str) -> dict:
         ``title`` and ``orb_beta`` keys and their values as well.
 
     """
-
     def helper_coordinates(f: TextIO, cunit: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Load element numbers and coordinates"""
         numbers = []
