@@ -18,20 +18,34 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Gaussian cube file format"""
+"""Module for handling GAUSSIAN CUBE file format."""
 
-
-from typing import TextIO, Dict, Tuple, Union
 
 import numpy as np
 
-from . iodata import IOData
+from typing import TextIO, Dict, Tuple, Union
+
+from .iodata import IOData
+
 
 __all__ = ['load_cube', 'dump_cube']
 
 
 def _read_cube_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray,
                                           Dict[str, np.ndarray], np.ndarray]:
+    """Load header data from a CUBE file object.
+
+    Parameters
+    ----------
+    f
+        A CUBE file object (in read mode).
+
+    Returns
+    -------
+    out : tuple
+        The output tuple contains title, coordinates, numbers, cell, ugrid & pseudo_numbers.
+
+    """
     # Read the title
     title = f.readline().strip()
     # skip the second line
@@ -81,6 +95,19 @@ def _read_cube_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarra
 
 
 def _read_cube_data(f: TextIO, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
+    """Load cube data from a CUBE file object.
+
+    Parameters
+    ----------
+    f
+        A CUBE file object (in read mode).
+
+    Returns
+    -------
+    out : array_like
+        The cube data array.
+
+    """
     data = np.zeros(tuple(ugrid["shape"]), float)
     tmp = data.ravel()
     counter = 0
@@ -96,18 +123,19 @@ def _read_cube_data(f: TextIO, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
 
 
 def load_cube(filename: str) -> Dict[str, Union[str, np.ndarray,Dict]]:
-    """Load data from a cube file
+    """Load data from a CUBE file format.
 
-       Parameters
-       ----------
-       filename
-            The name of the cube file
+    Parameters
+    ----------
+    filename
+        The CUBE filename.
 
-        Returns
-        -------
-        dict
-            Contains keys ``title``, ``coordinates``, ``numbers``, ``cell``,
-           ``cube_data``, ``grid``, ``pseudo_numbers``.
+    Returns
+    -------
+    out : dict
+        Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``pseudo_numbers``,
+        ``cell``, ``cube_data`` & ``grid`` keys and their corresponding values.
+
     """
     with open(filename) as f:
         title, coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(f)
@@ -150,17 +178,16 @@ def _write_cube_data(f: TextIO, cube_data: np.ndarray):
 
 
 def dump_cube(filename: str, data: IOData):
-    """Write a IOData to a .cube file.
+    """Write data into a CUBE file format.
 
-       Parameters
-       ----------
-       filename
-            The name of the file to be written. This usually the extension
-            ".cube".
+    Parameters
+    ----------
+    filename
+        The CUBE filename.
+    data
+        An IOData instance which must contain ``coordinates``, ``numbers``, ``grid`` &
+        ``cube_data`` attributes. It may contain ``title``  & ``pseudo_numbers`` attributes.
 
-       data
-            Must contain ``coordinates``, ``numbers``,
-            ``grid``, ``cube_data``. May contain ``title``, ``pseudo_numbers``.
     """
     with open(filename, 'w') as f:
         if not isinstance(data.grid, dict):

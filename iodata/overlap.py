@@ -18,15 +18,17 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""
-Computes the overlap integral. Used for calculating normalization in molden and wfn files.
-"""
-from typing import List, Tuple
+# pragma pylint: disable=invalid-name,wrong-import-order
+"""Module for computing overlap of atomic orbital basis functions."""
+
 
 import numpy as np
 
-from .overlap_accel import add_overlap, fac2
-from .overlap_helper import tfs, iter_pow
+from typing import List, Tuple
+from scipy.special import factorialk
+
+from .overlap_accel import add_overlap
+from .overlap_helper import tfs
 
 
 __all__ = ['compute_overlap', 'gob_cart_normalization', 'get_shell_nbasis']
@@ -72,12 +74,15 @@ def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarr
         The overlap integral
 
     """
-
-    # Initialize helper variables
+    # compute total number of shells
     nshell = len(shell_types)
-    nbasis = sum([get_shell_nbasis(i) for i in shell_types])
+    # compute number of basis functions in each shell
+    shell_nbasis = np.array([get_shell_nbasis(shell) for shell in shell_types])
+    # compute total number of basis functions
+    nbasis = np.sum(shell_nbasis)
+    # compute index offset of each shell
+    shell_offsets = np.cumsum(np.insert(shell_nbasis, 0, 0), dtype=int)
 
-    shell_offsets = _get_shell_offsets(shell_types, nbasis)
     scales, scales_offsets = init_scales(alphas, nprims, shell_types)
 
     # Initialize result
@@ -118,10 +123,9 @@ def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarr
                 # Loop over primitives in shell1 (Cartesian)
                 for a1, so1, cc1 in zip(alphas1, scales_offsets1, con_coeffs1):
                     s1 = scales[so1:]
-
-                    add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, iter_pow[abs(shell_type0)],
-                                iter_pow[abs(shell_type1)], result)
-                    # print result
+                    n0 = np.vstack(list(_get_iter_pow(abs(shell_type0))))
+                    n1 = np.vstack(list(_get_iter_pow(abs(shell_type1))))
+                    add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, n0, n1, result)
 
             # END of Cartesian coordinate system (if going to pure coordinates)
 
@@ -146,15 +150,6 @@ def _split_data_by_prims(x: np.ndarray, nprims: np.ndarray) -> List[np.ndarray]:
     return [x[s:e] for s, e in zip(nprims, nprims[1:])]
 
 
-def _get_shell_offsets(shell_types, nbasis):
-    """Calculates index offset for shells"""
-    shell_offsets = []
-    last = 0
-    for i in shell_types:
-        shell_offsets.append(last)
-        last += get_shell_nbasis(i)
-    shell_offsets.append(nbasis)
-    return shell_offsets
 
 
 def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray) -> Tuple[
@@ -211,8 +206,8 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # f
         The normalization constant for the gaussian cartesian basis.
 
     """
-    vfac2 = np.vectorize(fac2)
-    return np.sqrt((4 * alpha) ** sum(n) * (2 * alpha / np.pi) ** 1.5 / np.prod(vfac2(2 * n - 1)))
+    vfac2 = np.vectorize(factorialk)
+    return np.sqrt((4 * alpha)**sum(n) * (2 * alpha / np.pi)**1.5 / np.prod(vfac2(2 * n - 1, 2)))
 
 
 def get_shell_nbasis(shell: int) -> int:
@@ -234,7 +229,7 @@ def get_shell_nbasis(shell: int) -> int:
     if shell > 0:  # Cartesian
         return int((shell + 1) * (shell + 2) / 2)
     elif shell == -1:
-        raise ValueError
+        raise ValueError("Argument shell={0} is not recognized.".format(shell))
     else:  # Pure
         return -2 * shell + 1
 

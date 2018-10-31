@@ -18,14 +18,20 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-from typing import List, Dict, Tuple
+# pragma pylint: disable=wrong-import-order
+"""Utility functions module."""
+
 
 import numpy as np
+
 from scipy.linalg import eigh
+from typing import List, Dict, Tuple
 
 from .overlap import get_shell_nbasis
 
+
 __all__ = ['set_four_index_element']
+
 
 angstrom = 1.0e-10 / 0.5291772083e-10
 electronvolt = 1.602176462e-19 / 4.35974381e-18
@@ -92,8 +98,7 @@ def volume(rvecs: np.ndarray) -> float:
     elif nvecs == 3:
         return np.linalg.det(rvecs)
     else:
-        print("1: Expected rvecs to be of shape (x,3), where x is in {1,2,3}")
-        raise ValueError
+        raise ValueError("Argument rvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
 def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[

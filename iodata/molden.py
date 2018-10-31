@@ -18,17 +18,19 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Molden wavefunction input file format"""
+# pragma pylint: disable=wrong-import-order
+"""Module for handling MOLDEN file format."""
 
-
-from typing import TextIO, Tuple, Dict, Union
 
 import numpy as np
 
-from .overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
+from typing import TextIO, Tuple, Dict, Union
+
+from .iodata import IOData
 from .periodic import sym2num, num2sym
+from .overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
 from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
-from . iodata import IOData
+
 
 __all__ = ['load_molden', 'dump_molden']
 
@@ -55,21 +57,21 @@ def _get_molden_permutation(shell_types: np.ndarray, reverse=False) -> np.ndarra
 
 
 def load_molden(filename: str) -> dict:
-    """Load data from a molden input file.
+    """Load data from a MOLDEN input file format.
 
     Parameters
     ----------
     filename
-        The filename of the molden input file.
+        The MOLDEN input filename.
 
     Returns
     -------
-    dict
-        Data loaded from file, with with: ``coordinates``, ``numbers``,
-        ``pseudo_numbers``, ``obasis``, ``orb_alpha``, ``signs``. It may also contain:
-        ``title``, ``orb_beta``.
-    """
+    out : dict
+        output dictionary containing ``coordinates``, ``numbers``, ``pseudo_numbers``,
+        ``obasis``, ``orb_alpha`` & ``signs`` keys and corresponding values. It may contain
+        ``title`` and ``orb_beta`` keys and their values as well.
 
+    """
     def helper_coordinates(f: TextIO, cunit: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Load element numbers and coordinates"""
         numbers = []
@@ -590,15 +592,17 @@ def _fix_molden_from_buggy_codes(result: Dict, filename: str):
 
 
 def dump_molden(filename: str, data: IOData):
-    """Write data to a file in the molden input format.
+    """Write data into a MOLDEN input file format.
 
     Parameters
     ----------
     filename
-        The filename of the molden input file, which is an output file for this routine.
+        The MOLDEN input filename.
     data
-        Must contain ``coordinates``, ``numbers``, ``obasis``, ``orb_alpha``. May contain
-        ``title``, ``pseudo_numbers``, ``orb_beta``.
+        An IOData instance which must contain ```coordinates``, ``numbers``, ``obasis``
+        & ``orb_alpha`` attributes. It may contain ```title``, ``pseudo_numbers``, ``orb_beta``
+        attributes.
+
     """
     with open(filename, 'w') as f:
         # Print the header

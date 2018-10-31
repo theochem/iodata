@@ -18,33 +18,38 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Molekel wavefunction input file format"""
-from typing import Dict, Tuple, TextIO, List
+# pragma pylint: disable=wrong-import-order
+"""Module for handling MOLEKEL file format."""
+
 
 import numpy as np
 
+from typing import Dict, Tuple, TextIO, List
+
 from .molden import _fix_molden_from_buggy_codes
 from .utils import angstrom, str_to_shell_types, shells_to_nbasis
+
 
 __all__ = ['load_mkl']
 
 
 def load_mkl(filename: str) -> Dict:
-    """Load data from a Molekel file.
+    """Load data from a MOLEKEL file format.
 
     Parameters
     ----------
     filename
-        The filename of the mkl file.
+        The MKL filename.
 
     Returns
     -------
-    dict
-        Data loaded from file, with keys: ``coordinates``, ``numbers``, ``obasis``,
-        ``orb_alpha``. It may also contain: ``orb_beta``, ``signs``.
+    out : dict
+        Output dictionary containing ``coordinates``, ``numbers``, ``obasis``, ``orb_alpha``,
+        ``orb_alpha_coeffs``, ``orb_alpha_energies`` & ``orb_alpha_occs`` keys and their
+        corresponding values. It may also contain ``orb_beta``, ``orb_beta_coeffs``,
+        ``orb_beta_energies`` & ``orb_beta_occs`` keys and their values.
 
     """
-
     def helper_char_mult(f: TextIO) -> List[int]:
         return [int(word) for word in f.readline().split()]
 

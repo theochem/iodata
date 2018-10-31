@@ -23,7 +23,8 @@
 
 
 import numpy as np
-from nose.tools import assert_raises
+
+from numpy.testing import assert_raises
 
 from . common import get_fn
 from .. iodata import IOData
@@ -41,23 +42,23 @@ def test_typecheck():
     assert hasattr(m, 'numbers')
     del m.numbers
     assert not hasattr(m, 'numbers')
-    with assert_raises(TypeError):
-        IOData(coordinates=np.array([[1, 2], [2, 3]]))
-    with assert_raises(TypeError):
-        IOData(numbers=np.array([[1, 2], [2, 3]]))
-    with assert_raises(TypeError):
-        IOData(numbers=np.array([2, 3]), pseudo_numbers=np.array([1]))
-    with assert_raises(TypeError):
-        IOData(numbers=np.array([2, 3]), coordinates=np.array([[1, 2, 3]]))
-    with assert_raises(TypeError):
-        IOData(cube_data=np.array([[1, 2], [2, 3], [3, 2]]), coordinates=np.array([[1, 2, 3]]))
-    with assert_raises(TypeError):
-        IOData(cube_data=np.array([1, 2]))
+
+
+def test_typecheck_raises():
+    # check attribute type
+    assert_raises(TypeError, IOData, coordinates=np.array([[1, 2], [2, 3]]))
+    assert_raises(TypeError, IOData, numbers=np.array([[1, 2], [2, 3]]))
+    # check inconsistency between various attributes
+    numbers, pseudo_numbers, coordinates = np.array([2, 3]), np.array([1]), np.array([[1, 2, 3]])
+    assert_raises(TypeError, IOData, numbers=numbers, pseudo_numbers=pseudo_numbers)
+    assert_raises(TypeError, IOData, numbers=numbers, coordinates=coordinates)
+    assert_raises(TypeError, IOData, cube_data=np.array([1, 2]))
+    cube_data = np.array([[1, 2], [2, 3], [3, 2]])
+    assert_raises(TypeError, IOData, coordinates=coordinates, cube_data=cube_data)
 
 
 def test_unknown_format():
-    with assert_raises(ValueError):
-        IOData.from_file('foo.unknown_file_extension')
+    assert_raises(ValueError, IOData.from_file, 'foo.unknown_file_extension')
 
 
 def test_copy():

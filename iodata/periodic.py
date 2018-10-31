@@ -18,7 +18,11 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Periodic Table lookups"""
+"""Periodic table module."""
+
+
+__all__ = ['num2sym', 'sym2num']
+
 
 num2sym = {1: 'H', 2: 'He', 3: 'Li', 4: 'Be', 5: 'B', 6: 'C', 7: 'N', 8: 'O', 9: 'F', 10: 'Ne',
            11: 'Na', 12: 'Mg',

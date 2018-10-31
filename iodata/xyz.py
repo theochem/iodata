@@ -18,31 +18,35 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""XYZ file format"""
+# pragma pylint: disable=unused-import,wrong-import-order
+"""Module for handling XYZ file format."""
 
-
-from typing import Dict
 
 import numpy as np
 
-from .periodic import sym2num, num2sym
+from typing import Dict
+
+from .iodata import IOData
 from .utils import angstrom
+from .periodic import sym2num, num2sym
+
 
 __all__ = ['load_xyz', 'dump_xyz']
 
 
 def load_xyz(filename: str) -> Dict:
-    """Load a molecular geometry from a .xyz file.
+    """Load molecular geometry from a XYZ file format.
 
     Parameters
     ----------
     filename
-        The file to load the geometry from
+        The XYZ filename.
 
     Returns
     -------
-    dict
-        Contains keys ``title`, ``coordinates`` and ``numbers``.
+    out : dict
+        Output dictionary containing ``title`, ``coordinates`` & ``numbers`` keys
+        and corresponding values.
 
     """
     with open(filename, 'r') as f:
@@ -67,20 +71,20 @@ def load_xyz(filename: str) -> Dict:
 
 
 def dump_xyz(filename: str, data: 'IOData'):
-    """Write an ``.xyz`` file.
+    """Write molecular geometry into a XYZ file format.
 
     Parameters
     ----------
     filename
-        The name of the file to be written. This usually the extension
-        ".xyz".
+        The XYZ filename.
     data
-        An IOData instance. Must contain ``coordinates`` and ``numbers``.
-        May contain ``title``.
+        An IOData instance which must contain ``coordinates`` & ``numbers`` attributes.
+        If ``title`` attribute is not included, 'Created with IODATA module' is used.
+
     """
     with open(filename, 'w') as f:
         print(data.natom, file=f)
-        print(getattr(data, 'title', 'Created with HORTON'), file=f)
+        print(getattr(data, 'title', 'Created with IODATA module'), file=f)
         for i in range(data.natom):
             n = num2sym[data.numbers[i]]
             x, y, z = data.coordinates[i] / angstrom

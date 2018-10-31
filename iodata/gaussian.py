@@ -18,39 +18,45 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Gaussian LOG and FCHK file formats"""
-from typing import Dict, TextIO, Set, List
+# pragma pylint: disable=wrong-import-order
+"""Module for handling GAUSSIAN LOG and FCHK file formats."""
+
 
 import numpy as np
 
+from typing import Dict, TextIO, Set, List
+
 from .utils import set_four_index_element
+
 
 __all__ = ['load_operators_g09', 'FCHKFile', 'load_fchk']
 
 
-def load_operators_g09(fn: str) -> Dict:
-    """Loads several two- and four-index operators from a Gaussian09 log file.
-
-    The following two-index operators are loaded if present: overlap,
-    kinetic, nuclear attraction. The following four-index operator is loaded
-    if present: electrostatic repulsion. In order to make all these matrices
-    are present in the Gaussian log file, the following commands must be used
-    in the Gaussian input file:
-    ```scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)
-    ```
+def load_operators_g09(filename: str) -> Dict:
+    """Load several two- and four-index operators from a GAUSSIAN09 LOG file format.
 
     Parameters
     ----------
-    fn
-        The filename of the Gaussian09 log file.
+    filename
+        The GAUSSIAN09 LOG filename.
 
     Returns
     -------
-    Dict
-        May contain the keys: ``olp``, ``kin``, ``na`` and/or ``er``.
-    """
+    out : dict
+        Output dictionary may contain ``olp``, ``kin``, ``na`` and/or ``er`` keys and
+        corresponding values.
 
-    with open(fn) as f:
+    Notes
+    -----
+    1. The following two-index operators are loaded if present:
+       overlap, kinetic, nuclear attraction.
+    2. The following four-index operator is loaded if present: electrostatic repulsion.
+       In order to make all these matrices present in the GAUSSIAN LOG file, the following
+       commands must be used in the GAUSSIAN INPUT file:
+       ```scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)```
+
+    """
+    with open(filename) as f:
         # First get the line with the number of orbital basis functions
         for line in f:
             if line.startswith('    NBasis ='):
@@ -74,19 +80,20 @@ def load_operators_g09(fn: str) -> Dict:
 
 
 def _load_twoindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
-    """Load a two-index operator from a Gaussian log file
+    """Load a two-index operator from a GAUSSIAN LOG file format.
 
     Parameters
     ----------
     f
-        A file object for the Gaussian log file in read mode.
+        A GAUSSIAN LOG file object (in read mode).
     nbasis
-        The number of orbital basis functions.
+        The number of atomic orbital basis functions.
 
     Returns
     -------
-    ndarray
-        The (nbasis, nbasis) operator
+    out: array_like
+        The output (nbasis, nbasis) array of operator.
+
     """
     result = np.zeros((nbasis, nbasis))
     block_counter = 0
@@ -106,19 +113,20 @@ def _load_twoindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
 
 
 def _load_fourindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
-    """Load a four-index operator from a Gaussian log file
+    """Load a four-index operator from a GAUSSIAN LOG file.
 
     Parameters
     ----------
     f
-        A file object for the Gaussian log file in read mode.
+        A GAUSSIAN LOG file object (in read mode).
     nbasis
-        The number of orbital basis functions.
+        The number of atomic orbital basis functions.
 
     Returns
     -------
-    ndarray
-        The (nbasis, nbasis, nbasis, nbasis) operator
+    out: array_like
+        The (nbasis, nbasis, nbasis, nbasis) array of operator.
+
     """
     result = np.zeros((nbasis, nbasis, nbasis, nbasis))
     # Skip first six lines
@@ -155,10 +163,10 @@ class FCHKFile(dict):
         Parameters
         ----------
         filename
-            The formatted checkpoint file.
+            The GAUSSIAN FCHK filename.
         field_labels
             When provided, only these fields are read from the formatted
-            checkpoint file. (This can save a lot of time.)
+            checkpoint file which can make loading the file faster.
         """
         dict.__init__(self, [])
         self.filename = filename
@@ -269,25 +277,24 @@ def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
 
 
 def load_fchk(filename: str) -> Dict:
-    """Load from a formatted checkpoint file.
+    """Load data from a GAUSSIAN FCHK file format.
 
     Parameters
     ----------
     filename
-        The filename of the Gaussian formatted checkpoint file.
+        The GAUSSIAN FCHK filename.
 
     Returns
     -------
-    dict
-        Contains keys: ``title``, ``coordinates``, ``numbers``,
-        ``obasis``, ``orb_alpha``, ``permutation``, ``energy``,
-        ``pseudo_numbers``, ``mulliken_charges``.
-        The dictionary may also contain: ``npa_charges``, ``esp_charges``, ``orb_beta``,
+    out : dict
+        Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``pseudo_numbers``,
+        ``obasis``, ``orb_alpha``, ``permutation``, ``energy`` & ``mulliken_charges`` keys and
+        corresponding values. It may also contain ``npa_charges``, ``esp_charges``, ``orb_beta``,
         ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
-        ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``,
-        ``dm_spin_scf``, ``polar``, ``dipole_moment``, ``quadrupole_moment``.
-    """
+        ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``, ``dm_spin_scf``,
+        ``polar``, ``dipole_moment`` & ``quadrupole_moment`` keys and their values as well.
 
+    """
     fchk = FCHKFile(filename, [
         "Number of electrons", "Number of basis functions",
         "Number of independant functions",

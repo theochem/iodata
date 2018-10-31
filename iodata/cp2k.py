@@ -18,13 +18,17 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""CP2K atomic wavefunctions"""
-from typing import TextIO, Dict, Union, List, Tuple
+# pragma pylint: disable=wrong-import-order
+"""Module for handling CP2K file format."""
+
 
 import numpy as np
 
-from .overlap_accel import fac2
+from typing import TextIO, Dict, Union, List, Tuple
+from scipy.special import factorialk
+
 from .utils import shells_to_nbasis, str_to_shell_types
+
 
 __all__ = ['load_atom_cp2k']
 
@@ -52,7 +56,7 @@ def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) -> Unio
         applied to the contraction coefficients.
     """
     expzet = 0.25 * (2 * l + 3)
-    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (l + 2) * fac2(2 * l + 1))
+    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (l + 2) * factorialk(2 * l + 1, 2))
     zeta = 2.0 * alphas
     return zeta ** expzet / prefac
 
@@ -178,18 +182,17 @@ def _read_cp2k_uncontracted_obasis(f: TextIO) -> Dict:
 
 
 def _read_cp2k_obasis(f: TextIO) -> Dict:
-    """Read a basis set from an open CP2K ATOM output file.
+    """Read atomic orbital basis set from a CP2K ATOM file object.
 
     Parameters
     ----------
     f
-        An open readable file object.
+        A CP2K ATOM file object.
 
     Returns
     -------
-    obasis
-        The orbital basis parameters read from the file. Can be used to initialize a GOBasis
-        object.
+    out : dict
+        The atomic orbital basis data which can be used to initialize a ``GOBasis`` class.
 
     """
     next(f)  # Skip empty line
@@ -204,16 +207,17 @@ def _read_cp2k_obasis(f: TextIO) -> Dict:
         raise IOError('Could not find basis set in CP2K ATOM output.')
 
 
-def _read_cp2k_occupations_energies(f: TextIO, restricted: bool) -> List[
-    Tuple[int, int, float, float]]:
-    """Read orbital occupation numbers and energies from an open CP2K ATOM output file.
+def _read_cp2k_occupations_energies(f: TextIO,
+                                    restricted: bool) -> List[Tuple[int, int, float, float]]:
+    """Read orbital occupation numbers and energies from a CP2K ATOM file object.
 
     Parameters
     ----------
     f
-        An open readable file object.
+        A CP2K ATOM file object.
     restricted
-        Is wavefunction restricted or unrestricted?
+        If ``True`` the wave-function is considered to be restricted. If ``False`` the unrestricted
+        wave-function is assumed.
 
     Returns
     -------
@@ -221,6 +225,7 @@ def _read_cp2k_occupations_energies(f: TextIO, restricted: bool) -> List[
         A list with orbital properties. Each element is a tuple with the
         following info: (angular_momentum l, spin component: 'alpha' or
         'beta', occupation number, orbital energy).
+
     """
     oe_alpha = []
     oe_beta = []
@@ -349,24 +354,24 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
 
 
 def load_atom_cp2k(filename: str) -> Dict:
-    """Load data from a CP2K ATOM computation.
+    """Load data from a CP2K ATOM file format.
 
     Parameters
     ---------
     filename
-        The name of the cp2k out file
+        The CP2K (ATOM computation) filename.
 
     Returns
     -------
-    dict
-        Contains: ``obasis``, ``orb_alpha``, ``coordinates``, ``numbers``, ``energy``,
-        ``pseudo_numbers``. May contain: ``orb_beta``.
-
+    out : dict
+        Output dictionary containing ``obasis``, ``orb_alpha``, ``coordinates``, ``numbers``,
+        ``energy`` & ``pseudo_numbers`` keys and corresponding values. It may contain ``orb_beta``
+        key and its value as well.
 
     Notes
     -----
-    This function assumes that the following subsections are present in the CP2K
-    ATOM input file, in the section ``ATOM%PRINT``:
+    This function assumes that the following subsections are present in the CP2K ATOM input file,
+    in the section ``ATOM%PRINT``:
 
     .. code-block:: text
 
@@ -378,6 +383,7 @@ def load_atom_cp2k(filename: str) -> Dict:
         &ORBITALS
         &END ORBITALS
       &END PRINT
+
     """
     with open(filename) as f:
         # Find the element number

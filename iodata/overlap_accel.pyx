@@ -19,6 +19,7 @@
 #
 # --
 # cython: profile=True
+"""Cython module to accelerate computation of overlap integrals."""
 
 
 from libc.math cimport sqrt, pow, exp, abs

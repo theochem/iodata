@@ -18,16 +18,14 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Input/output dispatcher for different file formats
+"""Module for handling input/output from different file formats."""
 
-   The ``IOData.from_file`` and ``IOData.to_file`` methods read/write data
-   from/to a file. The format is deduced from the prefix or extension of the
-   filename.
-"""
+
 import os
+import numpy as np
+
 from typing import List, Tuple, Type
 
-import numpy as np
 
 __all__ = ['IOData']
 
@@ -35,33 +33,32 @@ __all__ = ['IOData']
 class ArrayTypeCheckDescriptor:
     def __init__(self, name: str, ndim: int = None, shape: Tuple = None, dtype: Type = None,
                  matching: List[str] = None, default: str = None, doc=None):
-        """
-           Decorator to perform type checking an np.ndarray attributes
+        """Initialize decorator to perform type and shape checking of np.ndarray attributes.
 
-           Parameters
-           ----------
-           name
-                Name of the attribute (without leading underscores).
-           ndim
-                The number of dimensions of the array.
-           shape
-                The shape of the array. Use -1 for dimensions where the shape is
-                not fixed a priori.
-           dtype
-                The datatype of the array.
-           matching
-                A list of names of other attributes that must have consistent
-                shapes. This argument requires that the shape is specified.
-                All dimensions for which the shape tuple equals -1 are must be
-                the same in this attribute and the matching attributes.
-           default
-                The name of another (type-checked) attribute to return as default
-                when this attribute is not set
+        Parameters
+        ----------
+        name
+            Name of the attribute (without leading underscores).
+        ndim
+            The number of dimensions of the array.
+        shape
+            The shape of the array. Use -1 for dimensions where the shape is
+            not fixed a priori.
+        dtype
+            The datatype of the array.
+        matching
+            A list of names of other attributes that must have consistent
+            shapes. This argument requires that the shape is specified.
+            All dimensions for which the shape tuple equals -1 are must be
+            the same in this attribute and the matching attributes.
+        default
+            The name of another (type-checked) attribute to return as default
+            when this attribute is not set
 
         """
         if matching is not None and shape is None:
-            raise TypeError('The matching argument requires the shape to be '
-                            'specified.')
+            raise TypeError('The matching argument requires the shape to be specified.')
+
         self._name = name
         self._ndim = ndim
         self._shape = shape

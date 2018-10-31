@@ -18,13 +18,17 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""WFN File format (Gaussian and GAMESS)"""
-from typing import Tuple, List, TextIO, Dict
+# pragma pylint: disable=wrong-import-order
+"""Module for handling GUASSIAN/GAMESS-US WNF file format."""
+
 
 import numpy as np
 
+from typing import Tuple, List, TextIO, Dict
+
 from .overlap import init_scales
 from .periodic import sym2num
+
 
 __all__ = ['load_wfn_low', 'get_permutation_orbital',
            'get_permutation_basis', 'get_mask', 'load_wfn']
@@ -187,18 +191,20 @@ def get_mask(type_assignment: np.ndarray) -> np.ndarray:
 
 
 def load_wfn(filename: str) -> Dict:
-    """Load data from a WFN file.
+    """Load data from a WFN file format.
 
     Parameters
     ----------
     filename
-        The filename of the wfn file.
+        The WFN filename.
 
     Returns
     -------
-    dict
-        Data loaded from file, with keys ``title``, ``coordinates``, ``numbers``,
-        ``energy``, ``obasis`` and ``orb_alpha``. May contain ``orb_beta``.
+    out : dict
+        Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``energy``,
+        ``obasis`` & ``orb_alpha`` keys and their corresponding values. It may contain
+        ``orb_beta`` key and its value as well.
+
     """
     title, numbers, coordinates, centers, type_assignment, exponents, \
     mo_count, mo_occ, mo_energy, coefficients, energy = load_wfn_low(filename)
