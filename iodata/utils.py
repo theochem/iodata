@@ -168,7 +168,7 @@ def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: fl
                          'max. error=%e' % (occupations.max() - 1))
 
 
-def compute_dm_1st_order(coeffs: np.ndarray, occs: np.ndarray) -> np.ndarray:
+def compute_1dm(coeffs: np.ndarray, occs: np.ndarray) -> np.ndarray:
     r"""Compute first-order reduced density matrix (1DM).
 
     .. math::
@@ -188,6 +188,6 @@ def compute_dm_1st_order(coeffs: np.ndarray, occs: np.ndarray) -> np.ndarray:
     return np.dot(coeffs * occs, coeffs.T)
 
 
-def compute_dm_2nd_order(coeffs: np.ndarray, occs: np.ndarray) -> np.ndarray:
-    r"""Compute second-order reduced density matrix (2DM)."""
+def compute_2dm_slater(coeffs: np.ndarray, occs: np.ndarray) -> np.ndarray:
+    r"""Compute second-order reduced density matrix (2DM) of a Slater determinant wave-function."""
     raise NotImplementedError

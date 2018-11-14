@@ -26,7 +26,7 @@ import numpy as np
 
 from typing import List, Tuple, Type
 
-from .utils import compute_dm_1st_order
+from .utils import compute_1dm
 
 
 __all__ = ['IOData']
@@ -428,9 +428,9 @@ class IOData:
         elif hasattr(self, 'dm_full_scf'):
             return self.dm_full_scf
         elif hasattr(self, 'orb_alpha_coeffs'):
-            dm_full = compute_dm_1st_order(self.orb_alpha_coeffs, self.orb_alpha_occs)
+            dm_full = compute_1dm(self.orb_alpha_coeffs, self.orb_alpha_occs)
             if hasattr(self, 'orb_beta_coeffs'):
-                dm_full += compute_dm_1st_order(self.orb_beta_coeffs, self.orb_beta_occs)
+                dm_full += compute_1dm(self.orb_beta_coeffs, self.orb_beta_occs)
             else:
                 dm_full *= 2
             return dm_full
@@ -450,7 +450,7 @@ class IOData:
         elif hasattr(self, 'dm_spin_scf'):
             return self.dm_spin_scf
         elif hasattr(self, 'orb_alpha_coeffs') and hasattr(self, 'orb_beta_coeffs'):
-            dm = compute_dm_1st_order(self.orb_alpha_coeffs, self.orb_alpha_occs)
-            dm -= compute_dm_1st_order(self.orb_beta_coeffs, self.orb_beta_occs)
+            dm = compute_1dm(self.orb_alpha_coeffs, self.orb_alpha_occs)
+            dm -= compute_1dm(self.orb_beta_coeffs, self.orb_beta_occs)
             return dm
 
