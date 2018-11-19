@@ -209,12 +209,12 @@ deploy:
 #    tags: true
 #    condition: "$TRAVIS_TAG != *[ab]* && $MYCONDAPY == 3.6 && $TRAVIS_OS_NAME == linux"
 
-- provider: pages
-  skip_cleanup: true
-  github_token: ${GITHUB_TOKEN}
-  project_name: ${PROJECT_NAME}
-  local_dir: doc/_build/html
-  on:
-    repo: ${GITHUB_REPO_NAME}
-    condition: "-e doc && $TRAVIS_TAG != *[ab]* && $MYCONDAPY == 3.6 && $TRAVIS_OS_NAME == linux"
-    tags: true
+#- provider: pages
+#  skip_cleanup: true
+#  github_token: ${GITHUB_TOKEN}
+#  project_name: ${PROJECT_NAME}
+#  local_dir: doc/_build/html
+#  on:
+#    repo: ${GITHUB_REPO_NAME}
+#    condition: "-e doc && $TRAVIS_TAG != *[ab]* && $MYCONDAPY == 3.6 && $TRAVIS_OS_NAME == linux"
+#    tags: true
