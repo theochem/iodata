@@ -448,7 +448,7 @@ def load_fchk(filename: str) -> Dict:
     result['orb_alpha_coeffs'] = np.copy(
         fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
     result['orb_alpha_energies'] = np.copy(fchk['Alpha Orbital Energies'])
-    aoccs = np.zeros(nbasis)
+    aoccs = np.zeros(nbasis_indep)
     aoccs[:nalpha] = 1.0
     result['orb_alpha_occs'] = aoccs
     if 'Beta Orbital Energies' in fchk:
@@ -457,7 +457,7 @@ def load_fchk(filename: str) -> Dict:
         result['orb_beta_coeffs'] = np.copy(
             fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
         result['orb_beta_energies'] = np.copy(fchk['Beta Orbital Energies'])
-        boccs = np.zeros(nbasis)
+        boccs = np.zeros(nbasis_indep)
         boccs[:nbeta] = 1.0
         result['orb_beta_occs'] = boccs
 
@@ -466,7 +466,7 @@ def load_fchk(filename: str) -> Dict:
         result['orb_beta'] = (nbasis, nbasis_indep)
         result['orb_beta_coeffs'] = fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T
         result['orb_beta_energies'] = fchk['Alpha Orbital Energies']
-        boccs = np.zeros(nbasis)
+        boccs = np.zeros(nbasis_indep)
         boccs[:nbeta] = 1.0
         result['orb_beta_occs'] = boccs
 
