@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+
 import os
 
 import Cython.Build
@@ -7,7 +9,7 @@ from setuptools import setup, Extension
 
 
 def get_version():
-    """Get the version string set by Travis, else default to version 0.0.0"""    
+    """Get the version string set by Travis, else default to version 0.0.0."""
     return os.environ.get("PROJECT_VERSION", "0.0.0")
 
 
@@ -28,12 +30,9 @@ setup(
     package_dir={'iodata': 'iodata'},
     packages=['iodata', 'iodata.test'],
     cmdclass={'build_ext': Cython.Build.build_ext},
-    ext_modules=[Extension(
-        "iodata.overlap_accel",
-        sources=['iodata/overlap_accel.pyx'],
-#        depends=['iodata/overlap_accel.pxd'],
-        include_dirs=[np.get_include()],
-    )],
+    ext_modules=[Extension("iodata.overlap_accel",
+                           sources=['iodata/overlap_accel.pyx'],
+                           include_dirs=[np.get_include()])],
     scripts=['bin/horton-convert'],
     include_package_data=True,
     classifiers=[
@@ -47,6 +46,6 @@ setup(
         'Intended Audience :: Science/Research',
     ],
     zip_safe=False,
-    setup_requires=['numpy>=1.0', 'cython>=0.24.1'],
-    install_requires=['numpy>=1.0', 'nose>=0.11', 'cython>=0.24.1'],
+    setup_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy'],
+    install_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy', 'nose>=0.11'],
 )
