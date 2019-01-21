@@ -401,16 +401,6 @@ class IOData:
         else:
             raise ValueError('Unknown file format for writing: %s' % filename)
 
-    def copy(self):
-        """Return a shallow copy"""
-        kwargs = vars(self).copy()
-        # get rid of leading underscores
-        for key in list(kwargs.keys()):
-            if key[0] == '_':
-                kwargs[key[1:]] = kwargs[key]
-                del kwargs[key]
-        return self.__class__(**kwargs)
-
     def get_dm_full(self) -> np.ndarray:
         """Return a spin-summed density matrix using available attributes"""
         if hasattr(self, 'dm_full'):
