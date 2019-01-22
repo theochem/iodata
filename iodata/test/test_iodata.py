@@ -61,19 +61,6 @@ def test_unknown_format():
     assert_raises(ValueError, IOData.from_file, 'foo.unknown_file_extension')
 
 
-def test_copy():
-    fn_fchk = get_fn('water_sto3g_hf_g03.fchk')
-    fn_log = get_fn('water_sto3g_hf_g03.log')
-    mol1 = IOData.from_file(fn_fchk, fn_log)
-    mol2 = mol1.copy()
-    assert mol1 != mol2
-    vars1 = vars(mol1)
-    vars2 = vars(mol2)
-    assert len(vars1) == len(vars2)
-    for key1, value1 in vars1.items():
-        assert value1 is vars2[key1]
-
-
 def test_dm_water_sto3g_hf():
     fn_fchk = get_fn('water_sto3g_hf_g03.fchk')
     mol = IOData.from_file(fn_fchk)

@@ -62,9 +62,9 @@ def test_load_chgcar_water():
     mol = IOData.from_file(fn)
     assert mol.title == 'unknown system'
     assert (mol.numbers == [8, 1, 1]).all()
-    assert abs(mol.coordinates[1] - np.array(
-        [0.074983 * 15 + 0.903122 * 1, 0.903122 * 15, 0.000000])).max() < 1e-10
-    assert abs(volume(mol.rvecs) - 15 ** 3) < 1e-10
+    coords = np.array([0.074983 * 15 + 0.903122 * 1, 0.903122 * 15, 0.000000])
+    assert abs(mol.coordinates[1] - coords).max() < 1e-7
+    assert abs(volume(mol.rvecs) - 15 ** 3) < 1e-4
     ugrid = mol.grid
     assert len(ugrid['shape']) == 3
     assert (ugrid['shape'] == 3).all()
@@ -94,9 +94,9 @@ def test_load_poscar_water():
     mol = IOData.from_file(fn)
     assert mol.title == 'Water molecule in a box'
     assert (mol.numbers == [8, 1, 1]).all()
-    assert abs(
-        mol.coordinates[1] - np.array([0.074983 * 15, 0.903122 * 15, 0.000000])).max() < 1e-10
-    assert abs(volume(mol.rvecs) - 15 ** 3) < 1e-10
+    coords = np.array([0.074983 * 15, 0.903122 * 15, 0.000000])
+    assert abs(mol.coordinates[1] - coords).max() < 1e-7
+    assert abs(volume(mol.rvecs) - 15 ** 3) < 1e-4
 
 
 def test_load_poscar_cubicbn_cartesian():
