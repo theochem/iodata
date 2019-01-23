@@ -21,18 +21,20 @@
 """Test iodata.molekel module."""
 
 
-from . common import get_fn, check_normalization
+from . common import check_normalization
 from .. iodata import IOData
 from .. utils import angstrom, shells_to_nbasis
 from .. overlap import compute_overlap
 
-
-#TODO: optional gbasis import?
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
 
 
 def test_load_mkl_ethanol():
-    fn_mkl = get_fn('ethanol.mkl')
-    mol = IOData.from_file(fn_mkl)
+    with path('iodata.test.cached', 'ethanol.mkl') as fn_mkl:
+        mol = IOData.from_file(str(fn_mkl))
 
     # Direct checks with mkl file
     assert mol.numbers.shape == (9,)
@@ -64,8 +66,8 @@ def test_load_mkl_ethanol():
 
 
 def test_load_mkl_li2():
-    fn_mkl = get_fn('li2.mkl')
-    mol = IOData.from_file(fn_mkl)
+    with path('iodata.test.cached', 'li2.mkl') as fn_mkl:
+        mol = IOData.from_file(str(fn_mkl))
 
     # Check normalization
     olp = compute_overlap(**mol.obasis)
@@ -74,7 +76,7 @@ def test_load_mkl_li2():
 
 
 def test_load_mkl_h2():
-    fn_mkl = get_fn('h2_sto3g.mkl')
-    mol = IOData.from_file(fn_mkl)
+    with path('iodata.test.cached', 'h2_sto3g.mkl') as fn_mkl:
+        mol = IOData.from_file(str(fn_mkl))
     olp = compute_overlap(**mol.obasis)
     check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)

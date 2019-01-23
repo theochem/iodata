@@ -21,6 +21,7 @@ requirements:
   run:
     - python
     - scipy
+    - importlib_resources
 test:
   requires:
     - python

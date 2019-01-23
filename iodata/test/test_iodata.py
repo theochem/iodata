@@ -26,9 +26,12 @@ import numpy as np
 
 from numpy.testing import assert_raises
 
-from . common import get_fn
 from .. iodata import IOData
 from .. overlap import compute_overlap
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
 
 
 def test_typecheck():
@@ -62,8 +65,8 @@ def test_unknown_format():
 
 
 def test_dm_water_sto3g_hf():
-    fn_fchk = get_fn('water_sto3g_hf_g03.fchk')
-    mol = IOData.from_file(fn_fchk)
+    with path('iodata.test.cached', 'water_sto3g_hf_g03.fchk') as fn_fchk:
+        mol = IOData.from_file(str(fn_fchk))
     dm = mol.get_dm_full()
     assert abs(dm[0, 0] - 2.10503807) < 1e-7
     assert abs(dm[0, 1] - -0.439115917) < 1e-7
@@ -75,8 +78,8 @@ def test_dm_water_sto3g_hf():
 
 
 def test_dm_lih_sto3g_hf():
-    fn_fchk = get_fn('li_h_3-21G_hf_g09.fchk')
-    mol = IOData.from_file(fn_fchk)
+    with path('iodata.test.cached', 'li_h_3-21G_hf_g09.fchk') as fn_fchk:
+        mol = IOData.from_file(str(fn_fchk))
 
     dm_full = mol.get_dm_full()
     assert abs(dm_full[0, 0] - 1.96589709) < 1e-7
@@ -100,8 +103,8 @@ def test_dm_lih_sto3g_hf():
 
 
 def test_dm_ch3_rohf_g03():
-    fn_fchk = get_fn('ch3_rohf_sto3g_g03.fchk')
-    mol = IOData.from_file(fn_fchk)
+    with path('iodata.test.cached', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
+        mol = IOData.from_file(str(fn_fchk))
 
     olp = compute_overlap(**mol.obasis)
     dm = mol.get_dm_full()

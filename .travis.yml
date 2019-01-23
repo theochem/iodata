@@ -95,6 +95,7 @@ install:
 # Configure conda and get a few essentials
 - conda config --set always_yes yes
 - conda config --add channels theochem
+- conda config --add channels conda-forge
 - conda install -q conda conda-build conda-verify
 
 # Set the version info from the git tag

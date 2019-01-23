@@ -25,15 +25,9 @@ from contextlib import contextmanager
 import numpy as np
 from os import path
 
-from . mulliken import get_mulliken_operators
+from .mulliken import get_mulliken_operators
 
 __all__ = ['compute_mulliken_charges']
-
-
-def get_fn(fn):
-    """Get the path of a file in the cached directory"""
-    cur_pth = path.split(__file__)[0]
-    return cur_pth + "/cached/{}".format(fn)
 
 
 def compute_mulliken_charges(obasis, pseudo_numbers, dm):

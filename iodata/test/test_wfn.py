@@ -22,20 +22,24 @@
 
 
 import numpy as np
-from .common import compute_mulliken_charges, get_fn, check_normalization
+from .common import compute_mulliken_charges, check_normalization
 from ..wfn import load_wfn_low, get_permutation_basis, get_permutation_orbital, get_mask
 from ..iodata import IOData
 from ..overlap import compute_overlap
 from ..utils import shells_to_nbasis
 
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
 
 # TODO: removed density, kin, nucnuc checks
 
 
 def test_load_wfn_low_he_s():
-    fn_wfn = get_fn('he_s_orbital.wfn')
-    title, numbers, coordinates, centers, type_assignment, exponents, \
-    mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(fn_wfn)
+    with path('iodata.test.cached', 'he_s_orbital.wfn') as fn_wfn:
+        title, numbers, coordinates, centers, type_assignment, exponents, \
+        mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(str(fn_wfn))
     assert title == 'He atom - decontracted 6-31G basis set'
     assert numbers.shape == (1,)
     assert numbers == [2]
@@ -60,9 +64,9 @@ def test_load_wfn_low_he_s():
 
 
 def test_load_wfn_low_h2o():
-    fn_wfn = get_fn('h2o_sto3g.wfn')
-    title, numbers, coordinates, centers, type_assignment, exponents, \
-    mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(fn_wfn)
+    with path('iodata.test.cached', 'h2o_sto3g.wfn') as fn_wfn:
+        title, numbers, coordinates, centers, type_assignment, exponents, \
+        mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(str(fn_wfn))
     assert title == 'H2O Optimization'
     assert numbers.shape == (3,)
     assert (numbers == np.array([8, 1, 1])).all()
@@ -182,8 +186,8 @@ def test_get_mask():
 
 
 def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
-    fn_wfn = get_fn(fn_wfn)
-    mol = IOData.from_file(fn_wfn)
+    with path('iodata.test.cached', fn_wfn) as file_wfn:
+        mol = IOData.from_file(str(file_wfn))
     assert shells_to_nbasis(mol.obasis["shell_types"]) == nbasis
     olp = compute_overlap(**mol.obasis)
     if restricted:
@@ -259,8 +263,8 @@ def test_load_wfn_li_sp_virtual():
 
 
 def test_load_wfn_li_sp():
-    fn_wfn = get_fn('li_sp_orbital.wfn')
-    mol = IOData.from_file(fn_wfn)
+    with path('iodata.test.cached', 'li_sp_orbital.wfn') as fn_wfn:
+        mol = IOData.from_file(str(fn_wfn))
     assert mol.title == 'Li atom - using s & p orbitals'
     assert mol.orb_alpha[1] == 2
     assert mol.orb_beta[1] == 1

@@ -25,19 +25,22 @@ import numpy as np
 
 from nose.tools import assert_raises
 
-from . common import get_fn
 from .. gaussian import load_operators_g09, load_fchk
 from .. iodata import IOData
 from .. utils import shells_to_nbasis, check_dm
 from .. overlap import compute_overlap
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
 
 #TODO: shells_to_nbasis(obasis["shell_types"]) replacement test
 
 
 def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
-    fn = get_fn('water_sto3g_hf_g03.log')
-    result = load_operators_g09(fn)
+    with path('iodata.test.cached', 'water_sto3g_hf_g03.log') as fn:
+        result = load_operators_g09(str(fn))
 
     overlap = result['olp']
     kinetic = result['kin']
@@ -72,8 +75,8 @@ def test_load_operators_water_sto3g_hf_g03():
 
 def test_load_operators_water_ccpvdz_pure_hf_g03():
     eps = 1e-5
-    fn = get_fn('water_ccpvdz_pure_hf_g03.log')
-    result = load_operators_g09(fn)
+    with path('iodata.test.cached', 'water_ccpvdz_pure_hf_g03.log') as fn:
+        result = load_operators_g09(str(fn))
 
     overlap = result['olp']
     kinetic = result['kin']
@@ -109,11 +112,13 @@ def test_load_operators_water_ccpvdz_pure_hf_g03():
 
 def test_load_fchk_nonexistent():
     with assert_raises(IOError):
-        load_fchk(get_fn('fubar_crap.fchk'))
+        with path('iodata.test.cached', 'fubar_crap.fchk') as fn:
+            load_fchk(str(fn))
 
 
 def test_load_fchk_hf_sto3g_num():
-    fields = load_fchk(get_fn('hf_sto3g.fchk'))
+    with path('iodata.test.cached', 'hf_sto3g.fchk') as fn:
+        fields = load_fchk(str(fn))
     assert fields['title'] == 'hf_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -132,7 +137,8 @@ def test_load_fchk_hf_sto3g_num():
 
 
 def test_load_fchk_h_sto3g_num():
-    fields = load_fchk(get_fn('h_sto3g.fchk'))
+    with path('iodata.test.cached', 'h_sto3g.fchk') as fn:
+        fields = load_fchk(str(fn))
     assert fields['title'] == 'h_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -148,7 +154,8 @@ def test_load_fchk_h_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    fields = load_fchk(get_fn('o2_cc_pvtz_pure.fchk'))
+    with path('iodata.test.cached', 'o2_cc_pvtz_pure.fchk') as fn:
+        fields = load_fchk(str(fn))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -162,7 +169,8 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    fields = load_fchk(get_fn('o2_cc_pvtz_cart.fchk'))
+    with path('iodata.test.cached', 'o2_cc_pvtz_cart.fchk') as fn:
+        fields = load_fchk(str(fn))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -176,7 +184,8 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
 
 
 def test_load_fchk_water_sto3g_hf():
-    fields = load_fchk(get_fn('water_sto3g_hf_g03.fchk'))
+    with path('iodata.test.cached', 'water_sto3g_hf_g03.fchk') as fn:
+        fields = load_fchk(str(fn))
     obasis = fields['obasis']
     assert len(obasis["shell_types"]) == 5
     assert shells_to_nbasis(obasis["shell_types"]) == 7
@@ -205,7 +214,8 @@ def test_load_fchk_water_sto3g_hf():
 
 
 def test_load_fchk_lih_321g_hf():
-    fields = load_fchk(get_fn('li_h_3-21G_hf_g09.fchk'))
+    with path('iodata.test.cached', 'li_h_3-21G_hf_g09.fchk') as fn:
+        fields = load_fchk(str(fn))
     obasis = fields['obasis']
     assert len(obasis["shell_types"]) == 7
     assert shells_to_nbasis(obasis["shell_types"]) == 11
@@ -254,7 +264,8 @@ def test_load_fchk_lih_321g_hf():
 
 def test_load_fchk_ghost_atoms():
     # Load fchk file with ghost atoms
-    fields = load_fchk(get_fn('water_dimer_ghost.fchk'))
+    with path('iodata.test.cached', 'water_dimer_ghost.fchk') as fn:
+        fields = load_fchk(str(fn))
     numbers = fields['numbers']
     coordinates = fields['coordinates']
     mulliken_charges = fields['mulliken_charges']
@@ -269,7 +280,8 @@ def test_load_fchk_ghost_atoms():
 
 
 def test_load_fchk_ch3_rohf_g03():
-    fields = load_fchk(get_fn('ch3_rohf_sto3g_g03.fchk'))
+    with path('iodata.test.cached', 'ch3_rohf_sto3g_g03.fchk') as fn:
+        fields = load_fchk(str(fn))
     orb_alpha = fields['orb_alpha']
     orb_alpha_coeffs = fields['orb_alpha_coeffs']
     orb_alpha_occs = fields['orb_alpha_occs']
@@ -286,7 +298,8 @@ def test_load_fchk_ch3_rohf_g03():
 
 
 def check_load_azirine(key, numbers):
-    fields = load_fchk(get_fn('2h-azirine-%s.fchk') % key)
+    with path('iodata.test.cached', '2h-azirine-{}.fchk'.format(key)) as fn:
+        fields = load_fchk(str(fn))
     obasis = fields['obasis']
     assert shells_to_nbasis(obasis["shell_types"]) == 33
     dm_full = fields['dm_full_%s' % key]
@@ -311,7 +324,8 @@ def test_load_azirine_mp3():
 
 
 def check_load_nitrogen(key, numbers_full, numbers_spin):
-    fields = load_fchk(get_fn('nitrogen-%s.fchk') % key)
+    with path('iodata.test.cached', 'nitrogen-{}.fchk'.format(key)) as fn:
+        fields = load_fchk(str(fn))
     obasis = fields['obasis']
     assert shells_to_nbasis(obasis["shell_types"]) == 9
     dm_full = fields['dm_full_%s' % key]
@@ -340,7 +354,8 @@ def test_load_nitrogen_mp3():
 
 def check_normalization_dm_full_azirine(key):
     #TODO: replace with cached data
-    mol = IOData.from_file(get_fn('2h-azirine-%s.fchk') % key)
+    with path('iodata.test.cached', '2h-azirine-{}.fchk'.format(key)) as fn:
+        mol = IOData.from_file(str(fn))
     olp = compute_overlap(**mol.obasis)
     dm = getattr(mol, 'dm_full_%s' % key)
     check_dm(dm, olp, eps=1e-2, occ_max=2)
@@ -364,7 +379,8 @@ def test_normalization_dm_full_azirine_mp3():
 
 
 def test_load_water_hfs_321g():
-    mol = IOData.from_file(get_fn('water_hfs_321g.fchk'))
+    with path('iodata.test.cached', 'water_hfs_321g.fchk') as fn:
+        mol = IOData.from_file(str(fn))
     assert mol.polar[0, 0] == 7.23806684E+00
     assert mol.polar[1, 1] == 8.04213953E+00
     assert mol.polar[1, 2] == 1.20021770E-10
@@ -380,7 +396,8 @@ def test_load_water_hfs_321g():
 
 
 def test_load_monosilicic_acid_hf_lan():
-    mol = IOData.from_file(get_fn('monosilicic_acid_hf_lan.fchk'))
+    with path('iodata.test.cached', 'monosilicic_acid_hf_lan.fchk') as fn:
+        mol = IOData.from_file(str(fn))
     np.testing.assert_allclose(mol.dipole_moment, [
         -6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
     np.testing.assert_allclose(mol.quadrupole_moment, [
