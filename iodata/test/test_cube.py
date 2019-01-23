@@ -18,19 +18,25 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=invalid-name
 """Test iodata.cube module."""
 
 
 import numpy as np
 
-from . common import get_fn, tmpdir
+from . common import tmpdir
 
 from .. iodata import IOData
 
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
+
 
 def test_load_aelta():
-    fn_cube = get_fn('aelta.cube')
-    mol = IOData.from_file(fn_cube)
+    with path('iodata.test.cached', 'aelta.cube') as fn_cube:
+        mol = IOData.from_file(str(fn_cube))
     assert mol.title == 'Some random cube for testing (sort of) useless data'
     assert mol.natom == 72
     assert abs(mol.coordinates[5, 0] - 27.275511) < 1e-5
@@ -53,8 +59,8 @@ def test_load_aelta():
 
 
 def test_load_dump_load_aelta():
-    fn_cube1 = get_fn('aelta.cube')
-    mol1 = IOData.from_file(fn_cube1)
+    with path('iodata.test.cached', 'aelta.cube') as fn_cube1:
+        mol1 = IOData.from_file(str(fn_cube1))
 
     with tmpdir('io.test.test_cube.test_load_dump_load_aelta') as dn:
         fn_cube2 = '%s/%s' % (dn, 'aelta.cube')

@@ -18,16 +18,22 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=invalid-name
 """Test iodata.molpro module."""
 
 import numpy as np
 
-from .common import get_fn, tmpdir
+from .common import tmpdir
 from ..iodata import IOData
 
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
 
 def test_load_fcidump_psi4_h2():
-    mol = IOData.from_file(get_fn('FCIDUMP.psi4.h2'))
+    with path('iodata.test.cached', 'FCIDUMP.psi4.h2') as fn:
+        mol = IOData.from_file(str(fn))
     assert mol.core_energy == 0.7151043364864863E+00
     assert mol.nelec == 2
     assert mol.ms2 == 0
@@ -51,7 +57,8 @@ def test_load_fcidump_psi4_h2():
 
 
 def test_load_fcidump_molpro_h2():
-    mol = IOData.from_file(get_fn('FCIDUMP.molpro.h2'))
+    with path('iodata.test.cached', 'FCIDUMP.molpro.h2') as fn:
+        mol = IOData.from_file(str(fn))
     assert mol.core_energy == 0.7151043364864863E+00
     assert mol.nelec == 2
     assert mol.ms2 == 0
@@ -76,11 +83,14 @@ def test_load_fcidump_molpro_h2():
 
 def test_dump_load_fcidimp_consistency_ao():
     # Setup IOData
-    mol0 = IOData.from_file(get_fn('water.xyz'))
+    with path('iodata.test.cached', 'water.xyz') as fn:
+        mol0 = IOData.from_file(str(fn))
     mol0.nelec = 10
     mol0.ms2 = 1
-    mol0.one_mo = np.load(get_fn("psi4_h2_one.npy"))
-    mol0.two_mo = np.load(get_fn("psi4_h2_two.npy"))
+    with path('iodata.test.cached', 'psi4_h2_one.npy') as fn:
+        mol0.one_mo = np.load(str(fn))
+    with path('iodata.test.cached', 'psi4_h2_two.npy') as fn:
+        mol0.two_mo = np.load(str(fn))
 
     # Dump to a file and load it again
     with tmpdir('io.test.test_molpro.test_dump_load_fcidump_consistency_ao') as dn:

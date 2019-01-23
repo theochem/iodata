@@ -18,15 +18,19 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=invalid-name
 """Test iodata.vasp module."""
-
 
 import numpy as np
 
-from . common import get_fn, tmpdir, get_random_cell
+from . common import tmpdir, get_random_cell
 from .. utils import angstrom, electronvolt, volume
 from .. iodata import IOData
 from .. vasp import _unravel_counter
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
 
 
 def test_unravel_counter():
@@ -42,8 +46,8 @@ def test_unravel_counter():
 
 
 def test_load_chgcar_oxygen():
-    fn = get_fn('CHGCAR.oxygen')
-    mol = IOData.from_file(fn)
+    with path('iodata.test.cached', 'CHGCAR.oxygen') as fn:
+        mol = IOData.from_file(str(fn))
     assert (mol.numbers == [8]).all()
     assert abs(volume(mol.rvecs) - (10 * angstrom) ** 3) < 1e-10
     ugrid = mol.grid
@@ -58,8 +62,8 @@ def test_load_chgcar_oxygen():
 
 
 def test_load_chgcar_water():
-    fn = get_fn('CHGCAR.water')
-    mol = IOData.from_file(fn)
+    with path('iodata.test.cached', 'CHGCAR.water') as fn:
+        mol = IOData.from_file(str(fn))
     assert mol.title == 'unknown system'
     assert (mol.numbers == [8, 1, 1]).all()
     coords = np.array([0.074983 * 15 + 0.903122 * 1, 0.903122 * 15, 0.000000])
@@ -73,8 +77,8 @@ def test_load_chgcar_water():
 
 
 def test_load_locpot_oxygen():
-    fn = get_fn('LOCPOT.oxygen')
-    mol = IOData.from_file(fn)
+    with path('iodata.test.cached', 'LOCPOT.oxygen') as fn:
+        mol = IOData.from_file(str(fn))
     assert mol.title == 'O atom in a box'
     assert (mol.numbers[0] == [8]).all()
     assert abs(volume(mol.rvecs) - (10 * angstrom) ** 3) < 1e-10
@@ -90,8 +94,8 @@ def test_load_locpot_oxygen():
 
 
 def test_load_poscar_water():
-    fn = get_fn('POSCAR.water')
-    mol = IOData.from_file(fn)
+    with path('iodata.test.cached', 'POSCAR.water') as fn:
+        mol = IOData.from_file(str(fn))
     assert mol.title == 'Water molecule in a box'
     assert (mol.numbers == [8, 1, 1]).all()
     coords = np.array([0.074983 * 15, 0.903122 * 15, 0.000000])
@@ -100,8 +104,8 @@ def test_load_poscar_water():
 
 
 def test_load_poscar_cubicbn_cartesian():
-    fn = get_fn('POSCAR.cubicbn_cartesian')
-    mol = IOData.from_file(fn)
+    with path('iodata.test.cached', 'POSCAR.cubicbn_cartesian') as fn:
+        mol = IOData.from_file(str(fn))
     assert mol.title == 'Cubic BN'
     assert (mol.numbers == [5, 7]).all()
     assert abs(mol.coordinates[1] - np.array([0.25] * 3) * 3.57 * angstrom).max() < 1e-10
@@ -109,8 +113,8 @@ def test_load_poscar_cubicbn_cartesian():
 
 
 def test_load_poscar_cubicbn_direct():
-    fn = get_fn('POSCAR.cubicbn_direct')
-    mol = IOData.from_file(fn)
+    with path('iodata.test.cached', 'POSCAR.cubicbn_direct') as fn:
+        mol = IOData.from_file(str(fn))
     assert mol.title == 'Cubic BN'
     assert (mol.numbers == [5, 7]).all()
     assert abs(mol.coordinates[1] - np.array([0.25] * 3) * 3.57 * angstrom).max() < 1e-10
@@ -118,7 +122,8 @@ def test_load_poscar_cubicbn_direct():
 
 
 def test_load_dump_consistency():
-    mol0 = IOData.from_file(get_fn('water_element.xyz'))
+    with path('iodata.test.cached', 'water_element.xyz') as fn:
+        mol0 = IOData.from_file(str(fn))
     mol0.rvecs = get_random_cell(5.0, 3)
     mol0.gvecs = np.linalg.inv(mol0.rvecs).T
 

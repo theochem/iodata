@@ -18,12 +18,17 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=invalid-name
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
 import numpy as np
 from .. overlap import compute_overlap
 from iodata.overlap_accel import fac2, _binom
-from . common import get_fn
+
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
 
 
 def test_fac2():
@@ -49,7 +54,8 @@ def test_binom():
 
 
 def test_load_fchk_hf_sto3g_num():
-    ref = np.load(get_fn("load_fchk_hf_sto3g_num.npy"))
+    with path('iodata.test.cached', 'load_fchk_hf_sto3g_num.npy') as fn_npy:
+        ref = np.load(str(fn_npy))
     d = dict([('centers', np.array([[0., 0., 0.19048439],
                                     [0., 0., -1.71435955]])),
               ('shell_map', np.array([0, 0, 0, 1])),
@@ -66,7 +72,8 @@ def test_load_fchk_hf_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    ref = np.load(get_fn("load_fchk_o2_cc_pvtz_pure_num.npy"))
+    with path('iodata.test.cached', 'load_fchk_o2_cc_pvtz_pure_num.npy') as fn_npy:
+        ref = np.load(str(fn_npy))
     d = dict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                     [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (
                   'shell_map',
@@ -111,7 +118,8 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    ref = np.load(get_fn("load_fchk_o2_cc_pvtz_cart_num.npy"))
+    with path('iodata.test.cached', 'load_fchk_o2_cc_pvtz_cart_num.npy') as fn_npy:
+        ref = np.load(str(fn_npy))
     d = dict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                     [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (
                   'shell_map',

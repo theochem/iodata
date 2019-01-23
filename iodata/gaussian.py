@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order
+# pragma pylint: disable=wrong-import-order,invalid-name
 """Module for handling GAUSSIAN LOG and FCHK file formats."""
 
 
