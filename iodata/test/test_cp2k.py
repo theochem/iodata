@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=invalid-name
 """Test iodata.cp2k module."""
 
 from nose.tools import assert_raises

@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=invalid-name
 """Test iodata.wfn module."""
 
 
@@ -38,8 +39,10 @@ except ImportError:
 
 def test_load_wfn_low_he_s():
     with path('iodata.test.cached', 'he_s_orbital.wfn') as fn_wfn:
-        title, numbers, coordinates, centers, type_assignment, exponents, \
-        mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(str(fn_wfn))
+        data = load_wfn_low(str(fn_wfn))
+    # unpack data
+    title, numbers, coordinates, centers, type_assignment = data[:5]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'He atom - decontracted 6-31G basis set'
     assert numbers.shape == (1,)
     assert numbers == [2]
@@ -65,8 +68,10 @@ def test_load_wfn_low_he_s():
 
 def test_load_wfn_low_h2o():
     with path('iodata.test.cached', 'h2o_sto3g.wfn') as fn_wfn:
-        title, numbers, coordinates, centers, type_assignment, exponents, \
-        mo_count, occ_num, mo_energy, coefficients, energy = load_wfn_low(str(fn_wfn))
+        data = load_wfn_low(str(fn_wfn))
+    # unpack data
+    title, numbers, coordinates, centers, type_assignment = data[:5]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'H2O Optimization'
     assert numbers.shape == (3,)
     assert (numbers == np.array([8, 1, 1])).all()
