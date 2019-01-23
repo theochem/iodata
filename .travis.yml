@@ -63,7 +63,7 @@ branches:
     - /^[0-9]+\.[0-9]+(\.[0-9]+)?([ab][0-9]+)?$/
 
 before_install:
-- if ! [[ $TRAVIS_TAG || $TRAVIS_OS_NAME == "linux" && $MYCONDAPY == "3.6" ]]; then exit 0; fi
+# - if ! [[ $TRAVIS_TAG || $TRAVIS_OS_NAME == "linux" && $MYCONDAPY == "3.6" ]]; then exit 0; fi
 # Get miniconda. Take the right version, so re-installing python is hopefully not needed.
 - if test -e $HOME/miniconda/bin; then
     echo "miniconda already installed.";
