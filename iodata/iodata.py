@@ -313,10 +313,10 @@ class IOData:
                 from .poscar import load_poscar
                 result.update(load_poscar(filename))
             elif os.path.basename(filename)[:6] in ['CHGCAR', 'AECCAR']:
-                from .poscar import load_chgcar
+                from .chgcar import load_chgcar
                 result.update(load_chgcar(filename))
             elif os.path.basename(filename).startswith('LOCPOT'):
-                from .poscar import load_locpot
+                from .locpot import load_locpot
                 result.update(load_locpot(filename))
             elif filename.endswith('.cp2k.out'):
                 from .cp2k import load_atom_cp2k
