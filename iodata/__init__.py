@@ -32,7 +32,7 @@
 
 from . cp2k import *
 from . cube import *
-from . gaussian import *
+from . fchk import *
 from . iodata import *
 from . molden import *
 from . molekel import *

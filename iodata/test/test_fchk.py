@@ -26,7 +26,7 @@ import numpy as np
 
 from nose.tools import assert_raises
 
-from .. gaussian import load_operators_g09, load_fchk
+from .. fchk import load_operators_g09, load_fchk
 from .. iodata import IOData
 from .. utils import shells_to_nbasis, check_dm
 from .. overlap import compute_overlap

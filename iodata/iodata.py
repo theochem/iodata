@@ -292,10 +292,10 @@ class IOData:
                 from .xyz import load_xyz
                 result.update(load_xyz(filename))
             elif filename.endswith('.fchk'):
-                from .gaussian import load_fchk
+                from .fchk import load_fchk
                 result.update(load_fchk(filename))
             elif filename.endswith('.log'):
-                from .gaussian import load_operators_g09
+                from .fchk import load_operators_g09
                 result.update(load_operators_g09(filename))
             elif filename.endswith('.mkl'):
                 from .molekel import load_mkl
