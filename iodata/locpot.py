@@ -19,7 +19,7 @@
 #
 # --
 # pragma pylint: disable=invalid-name
-"""Module for handling VASP POSCAR, CHGCAR and POTCAR file formats."""
+"""Module for handling VASP LOCPOT file format."""
 
 
 from typing import Dict
