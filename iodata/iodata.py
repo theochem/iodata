@@ -295,7 +295,7 @@ class IOData:
                 from .fchk import load_fchk
                 result.update(load_fchk(filename))
             elif filename.endswith('.log'):
-                from .fchk import load_operators_g09
+                from .log import load_operators_g09
                 result.update(load_operators_g09(filename))
             elif filename.endswith('.mkl'):
                 from .molekel import load_mkl

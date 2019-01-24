@@ -32,6 +32,7 @@
 
 from . cp2k import *
 from . cube import *
+from . log import *
 from . fchk import *
 from . iodata import *
 from . molden import *
