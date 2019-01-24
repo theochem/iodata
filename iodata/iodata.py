@@ -310,13 +310,13 @@ class IOData:
                 from .wfn import load_wfn
                 result.update(load_wfn(filename))
             elif os.path.basename(filename).startswith('POSCAR'):
-                from .vasp import load_poscar
+                from .poscar import load_poscar
                 result.update(load_poscar(filename))
             elif os.path.basename(filename)[:6] in ['CHGCAR', 'AECCAR']:
-                from .vasp import load_chgcar
+                from .poscar import load_chgcar
                 result.update(load_chgcar(filename))
             elif os.path.basename(filename).startswith('LOCPOT'):
-                from .vasp import load_locpot
+                from .poscar import load_locpot
                 result.update(load_locpot(filename))
             elif filename.endswith('.cp2k.out'):
                 from .cp2k import load_atom_cp2k
@@ -393,7 +393,7 @@ class IOData:
             from .molden import dump_molden
             dump_molden(filename, self)
         elif os.path.basename(filename).startswith('POSCAR'):
-            from .vasp import dump_poscar
+            from .poscar import dump_poscar
             dump_poscar(filename, self)
         elif 'FCIDUMP' in os.path.basename(filename):
             from .molpro import dump_fcidump

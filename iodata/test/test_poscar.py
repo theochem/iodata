@@ -26,7 +26,7 @@ import numpy as np
 from . common import tmpdir, get_random_cell
 from .. utils import angstrom, electronvolt, volume
 from .. iodata import IOData
-from .. vasp import _unravel_counter
+from .. poscar import _unravel_counter
 try:
     from importlib_resources import path
 except ImportError:

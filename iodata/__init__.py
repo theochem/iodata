@@ -38,6 +38,6 @@ from . iodata import *
 from . molden import *
 from . molekel import *
 from . molpro import *
-from . vasp import *
+from . poscar import *
 from . wfn import *
 from . xyz import *
