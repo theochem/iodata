@@ -36,7 +36,7 @@ except ImportError:
     from importlib.resources import path
 
 
-#TODO: shells_to_nbasis(obasis["shell_types"]) replacement test
+# TODO: shells_to_nbasis(obasis["shell_types"]) replacement test
 
 
 def test_load_fchk_nonexistent():

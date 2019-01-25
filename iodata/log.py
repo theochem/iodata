@@ -107,8 +107,8 @@ def _load_twoindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
         nrow = nbasis - block_counter
         for i in range(nrow):
             words = next(f).split()[1:]
-            for j in range(len(words)):
-                value = float(words[j].replace('D', 'E'))
+            for j, word in enumerate(words):
+                value = float(word.replace('D', 'E'))
                 result[i + block_counter, j + block_counter] = value
                 result[j + block_counter, i + block_counter] = value
         block_counter += 5

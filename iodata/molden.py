@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order
+# pragma pylint: disable=wrong-import-order,invalid-name,too-many-branches
 """Module for handling MOLDEN file format."""
 
 
