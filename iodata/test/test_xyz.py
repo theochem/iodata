@@ -35,14 +35,14 @@ except ImportError:
 
 def test_load_water_number():
     # test xyz with atomic numbers
-    with path('iodata.test.cached', 'water_number.xyz') as fn_xyz:
+    with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
         mol = IOData.from_file(str(fn_xyz))
     check_water(mol)
 
 
 def test_load_water_element():
     # test xyz file with atomic symbols
-    with path('iodata.test.cached', 'water_element.xyz') as fn_xyz:
+    with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
         mol = IOData.from_file(str(fn_xyz))
     check_water(mol)
 
@@ -60,7 +60,7 @@ def check_water(mol):
 
 
 def test_load_dump_consistency():
-    with path('iodata.test.cached', 'ch3_hf_sto3g.fchk') as fn_fchk:
+    with path('iodata.test.data', 'ch3_hf_sto3g.fchk') as fn_fchk:
         mol0 = IOData.from_file(str(fn_fchk))
     # write xyz file in a temporary folder & then read it
     with tmpdir('io.test.test_xyz.test_load_dump_consistency') as dn:
@@ -73,7 +73,7 @@ def test_load_dump_consistency():
 
 
 def test_dump_xyz_water_element():
-    with path('iodata.test.cached', 'water_element.xyz') as fn_xyz:
+    with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
         mol0 = IOData.from_file(str(fn_xyz))
     with tmpdir('io.test.test_xyz.test_dump_xyz_water_element') as dn:
         mol0.to_file('%s/test.xyz' % dn)
@@ -85,7 +85,7 @@ def test_dump_xyz_water_element():
 
 
 def test_dump_xyz_water_number():
-    with path('iodata.test.cached', 'water_number.xyz') as fn_xyz:
+    with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
         mol0 = IOData.from_file(str(fn_xyz))
     with tmpdir('io.test.test_xyz.test_dump_xyz_water_number') as dn:
         mol0.to_file('%s/test.xyz' % dn)

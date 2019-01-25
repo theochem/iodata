@@ -38,7 +38,7 @@ except ImportError:
 
 
 def test_load_wfn_low_he_s():
-    with path('iodata.test.cached', 'he_s_orbital.wfn') as fn_wfn:
+    with path('iodata.test.data', 'he_s_orbital.wfn') as fn_wfn:
         data = load_wfn_low(str(fn_wfn))
     # unpack data
     title, numbers, coordinates, centers, type_assignment = data[:5]
@@ -67,7 +67,7 @@ def test_load_wfn_low_he_s():
 
 
 def test_load_wfn_low_h2o():
-    with path('iodata.test.cached', 'h2o_sto3g.wfn') as fn_wfn:
+    with path('iodata.test.data', 'h2o_sto3g.wfn') as fn_wfn:
         data = load_wfn_low(str(fn_wfn))
     # unpack data
     title, numbers, coordinates, centers, type_assignment = data[:5]
@@ -191,7 +191,7 @@ def test_get_mask():
 
 
 def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
-    with path('iodata.test.cached', fn_wfn) as file_wfn:
+    with path('iodata.test.data', fn_wfn) as file_wfn:
         mol = IOData.from_file(str(file_wfn))
     assert shells_to_nbasis(mol.obasis["shell_types"]) == nbasis
     olp = compute_overlap(**mol.obasis)
@@ -268,7 +268,7 @@ def test_load_wfn_li_sp_virtual():
 
 
 def test_load_wfn_li_sp():
-    with path('iodata.test.cached', 'li_sp_orbital.wfn') as fn_wfn:
+    with path('iodata.test.data', 'li_sp_orbital.wfn') as fn_wfn:
         mol = IOData.from_file(str(fn_wfn))
     assert mol.title == 'Li atom - using s & p orbitals'
     assert mol.orb_alpha[1] == 2

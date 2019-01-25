@@ -65,7 +65,7 @@ def test_unknown_format():
 
 
 def test_dm_water_sto3g_hf():
-    with path('iodata.test.cached', 'water_sto3g_hf_g03.fchk') as fn_fchk:
+    with path('iodata.test.data', 'water_sto3g_hf_g03.fchk') as fn_fchk:
         mol = IOData.from_file(str(fn_fchk))
     dm = mol.get_dm_full()
     assert abs(dm[0, 0] - 2.10503807) < 1e-7
@@ -78,7 +78,7 @@ def test_dm_water_sto3g_hf():
 
 
 def test_dm_lih_sto3g_hf():
-    with path('iodata.test.cached', 'li_h_3-21G_hf_g09.fchk') as fn_fchk:
+    with path('iodata.test.data', 'li_h_3-21G_hf_g09.fchk') as fn_fchk:
         mol = IOData.from_file(str(fn_fchk))
 
     dm_full = mol.get_dm_full()
@@ -103,7 +103,7 @@ def test_dm_lih_sto3g_hf():
 
 
 def test_dm_ch3_rohf_g03():
-    with path('iodata.test.cached', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
+    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
         mol = IOData.from_file(str(fn_fchk))
 
     olp = compute_overlap(**mol.obasis)

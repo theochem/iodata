@@ -34,7 +34,7 @@ except ImportError:
 
 
 def test_load_poscar_water():
-    with path('iodata.test.cached', 'POSCAR.water') as fn:
+    with path('iodata.test.data', 'POSCAR.water') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.title == 'Water molecule in a box'
     assert (mol.numbers == [8, 1, 1]).all()
@@ -44,7 +44,7 @@ def test_load_poscar_water():
 
 
 def test_load_poscar_cubicbn_cartesian():
-    with path('iodata.test.cached', 'POSCAR.cubicbn_cartesian') as fn:
+    with path('iodata.test.data', 'POSCAR.cubicbn_cartesian') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.title == 'Cubic BN'
     assert (mol.numbers == [5, 7]).all()
@@ -53,7 +53,7 @@ def test_load_poscar_cubicbn_cartesian():
 
 
 def test_load_poscar_cubicbn_direct():
-    with path('iodata.test.cached', 'POSCAR.cubicbn_direct') as fn:
+    with path('iodata.test.data', 'POSCAR.cubicbn_direct') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.title == 'Cubic BN'
     assert (mol.numbers == [5, 7]).all()
@@ -62,7 +62,7 @@ def test_load_poscar_cubicbn_direct():
 
 
 def test_load_dump_consistency():
-    with path('iodata.test.cached', 'water_element.xyz') as fn:
+    with path('iodata.test.data', 'water_element.xyz') as fn:
         mol0 = IOData.from_file(str(fn))
     mol0.rvecs = get_random_cell(5.0, 3)
     mol0.gvecs = np.linalg.inv(mol0.rvecs).T

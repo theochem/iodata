@@ -34,7 +34,7 @@ except ImportError:
 
 def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
-    with path('iodata.test.cached', 'water_sto3g_hf_g03.log') as fn:
+    with path('iodata.test.data', 'water_sto3g_hf_g03.log') as fn:
         result = load(str(fn))
 
     overlap = result['olp']
@@ -70,7 +70,7 @@ def test_load_operators_water_sto3g_hf_g03():
 
 def test_load_operators_water_ccpvdz_pure_hf_g03():
     eps = 1e-5
-    with path('iodata.test.cached', 'water_ccpvdz_pure_hf_g03.log') as fn:
+    with path('iodata.test.data', 'water_ccpvdz_pure_hf_g03.log') as fn:
         result = load(str(fn))
 
     overlap = result['olp']

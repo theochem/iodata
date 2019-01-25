@@ -54,7 +54,7 @@ def test_binom():
 
 
 def test_load_fchk_hf_sto3g_num():
-    with path('iodata.test.cached', 'load_fchk_hf_sto3g_num.npy') as fn_npy:
+    with path('iodata.test.data', 'load_fchk_hf_sto3g_num.npy') as fn_npy:
         ref = np.load(str(fn_npy))
     d = dict([('centers', np.array([[0., 0., 0.19048439],
                                     [0., 0., -1.71435955]])),
@@ -72,7 +72,7 @@ def test_load_fchk_hf_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    with path('iodata.test.cached', 'load_fchk_o2_cc_pvtz_pure_num.npy') as fn_npy:
+    with path('iodata.test.data', 'load_fchk_o2_cc_pvtz_pure_num.npy') as fn_npy:
         ref = np.load(str(fn_npy))
     d = dict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                     [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (
@@ -118,7 +118,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    with path('iodata.test.cached', 'load_fchk_o2_cc_pvtz_cart_num.npy') as fn_npy:
+    with path('iodata.test.data', 'load_fchk_o2_cc_pvtz_cart_num.npy') as fn_npy:
         ref = np.load(str(fn_npy))
     d = dict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                     [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (

@@ -34,7 +34,7 @@ except ImportError:
 
 
 def test_load_mkl_ethanol():
-    with path('iodata.test.cached', 'ethanol.mkl') as fn_mkl:
+    with path('iodata.test.data', 'ethanol.mkl') as fn_mkl:
         mol = IOData.from_file(str(fn_mkl))
 
     # Direct checks with mkl file
@@ -67,7 +67,7 @@ def test_load_mkl_ethanol():
 
 
 def test_load_mkl_li2():
-    with path('iodata.test.cached', 'li2.mkl') as fn_mkl:
+    with path('iodata.test.data', 'li2.mkl') as fn_mkl:
         mol = IOData.from_file(str(fn_mkl))
 
     # Check normalization
@@ -77,7 +77,7 @@ def test_load_mkl_li2():
 
 
 def test_load_mkl_h2():
-    with path('iodata.test.cached', 'h2_sto3g.mkl') as fn_mkl:
+    with path('iodata.test.data', 'h2_sto3g.mkl') as fn_mkl:
         mol = IOData.from_file(str(fn_mkl))
     olp = compute_overlap(**mol.obasis)
     check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)

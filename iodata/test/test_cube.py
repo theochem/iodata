@@ -35,7 +35,7 @@ except ImportError:
 
 
 def test_load_aelta():
-    with path('iodata.test.cached', 'aelta.cube') as fn_cube:
+    with path('iodata.test.data', 'aelta.cube') as fn_cube:
         mol = IOData.from_file(str(fn_cube))
     assert mol.title == 'Some random cube for testing (sort of) useless data'
     assert mol.natom == 72
@@ -59,7 +59,7 @@ def test_load_aelta():
 
 
 def test_load_dump_load_aelta():
-    with path('iodata.test.cached', 'aelta.cube') as fn_cube1:
+    with path('iodata.test.data', 'aelta.cube') as fn_cube1:
         mol1 = IOData.from_file(str(fn_cube1))
 
     with tmpdir('io.test.test_cube.test_load_dump_load_aelta') as dn:

@@ -31,7 +31,7 @@ except ImportError:
 
 
 def test_load_locpot_oxygen():
-    with path('iodata.test.cached', 'LOCPOT.oxygen') as fn:
+    with path('iodata.test.data', 'LOCPOT.oxygen') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.title == 'O atom in a box'
     assert (mol.numbers[0] == [8]).all()

@@ -43,7 +43,7 @@ def check_orthonormality(mol):
 
 
 def test_atom_si_uks():
-    with path('iodata.test.cached', 'atom_si.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'atom_si.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [14]).all()
     assert (mol.pseudo_numbers == [4]).all()
@@ -57,7 +57,7 @@ def test_atom_si_uks():
 
 
 def test_atom_o_rks():
-    with path('iodata.test.cached', 'atom_om2.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'atom_om2.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [8]).all()
     assert (mol.pseudo_numbers == [6]).all()
@@ -70,7 +70,7 @@ def test_atom_o_rks():
 
 
 def test_carbon_gs_ae_contracted():
-    with path('iodata.test.cached', 'carbon_gs_ae_contracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_gs_ae_contracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
@@ -85,7 +85,7 @@ def test_carbon_gs_ae_contracted():
 
 
 def test_carbon_gs_ae_uncontracted():
-    with path('iodata.test.cached', 'carbon_gs_ae_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_gs_ae_uncontracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
@@ -100,7 +100,7 @@ def test_carbon_gs_ae_uncontracted():
 
 
 def test_carbon_gs_pp_contracted():
-    with path('iodata.test.cached', 'carbon_gs_pp_contracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_gs_pp_contracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
@@ -113,7 +113,7 @@ def test_carbon_gs_pp_contracted():
 
 
 def test_carbon_gs_pp_uncontracted():
-    with path('iodata.test.cached', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
@@ -126,7 +126,7 @@ def test_carbon_gs_pp_uncontracted():
 
 
 def test_carbon_sc_ae_contracted():
-    with path('iodata.test.cached', 'carbon_sc_ae_contracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_sc_ae_contracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
@@ -139,7 +139,7 @@ def test_carbon_sc_ae_contracted():
 
 
 def test_carbon_sc_ae_uncontracted():
-    with path('iodata.test.cached', 'carbon_sc_ae_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_sc_ae_uncontracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [6]).all()
@@ -152,7 +152,7 @@ def test_carbon_sc_ae_uncontracted():
 
 
 def test_carbon_sc_pp_contracted():
-    with path('iodata.test.cached', 'carbon_sc_pp_contracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_sc_pp_contracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
@@ -164,7 +164,7 @@ def test_carbon_sc_pp_contracted():
 
 
 def test_carbon_sc_pp_uncontracted():
-    with path('iodata.test.cached', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
     assert (mol.numbers == [6]).all()
     assert (mol.pseudo_numbers == [4]).all()
@@ -176,7 +176,7 @@ def test_carbon_sc_pp_uncontracted():
 
 
 def test_errors():
-    with path('iodata.test.cached', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_test:
+    with path('iodata.test.data', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_test:
         with truncated_file('io.test.test_cp2k.test_errors', str(fn_test), 0, 0) as fn:
             with assert_raises(IOError):
                 IOData.from_file(fn)
@@ -189,7 +189,7 @@ def test_errors():
         with truncated_file('io.test.test_cp2k.test_errors', str(fn_test), 405, 10) as fn:
             with assert_raises(IOError):
                 IOData.from_file(fn)
-    with path('iodata.test.cached', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_test:
+    with path('iodata.test.data', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_test:
         with truncated_file('io.test.test_cp2k.test_errors', str(fn_test), 456, 10) as fn:
             with assert_raises(IOError):
                 IOData.from_file(fn)
