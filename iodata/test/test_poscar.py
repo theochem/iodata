@@ -24,7 +24,7 @@
 
 import numpy as np
 
-from . common import tmpdir, get_random_cell
+from . common import tmpdir
 from .. utils import angstrom, volume
 from .. iodata import IOData
 try:
@@ -64,7 +64,7 @@ def test_load_poscar_cubicbn_direct():
 def test_load_dump_consistency():
     with path('iodata.test.data', 'water_element.xyz') as fn:
         mol0 = IOData.from_file(str(fn))
-    mol0.rvecs = get_random_cell(5.0, 3)
+    mol0.rvecs = np.random.uniform(0, 5.0, (3, 3))
     mol0.gvecs = np.linalg.inv(mol0.rvecs).T
 
     with tmpdir('io.test.test_vasp.test_load_dump_consistency') as dn:

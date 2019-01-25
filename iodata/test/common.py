@@ -91,13 +91,6 @@ def truncated_file(name, fn_orig, nline, nadd):
         yield fn_truncated
 
 
-def _compare_dict_floats(d1, d2):
-    """Compare the float values in a dictionary"""
-    for k, v in d1.items():
-        assert abs(v - d2[k]).max() < 1e-8
-    assert len(d1) == len(d2)
-
-
 def compare_mols(mol1, mol2):
     """Compare two IOData objects"""
     assert (getattr(mol1, 'title') == getattr(mol2, 'title'))
@@ -105,7 +98,10 @@ def compare_mols(mol1, mol2):
     assert (mol1.coordinates == mol2.coordinates).all()
     # orbital basis
     if mol1.obasis is not None:
-        _compare_dict_floats(mol1.obasis, mol2.obasis)
+        # compare dictionaries
+        assert len(mol1.obasis) == len(mol2.obasis)
+        for k, v in mol1.obasis.items():
+            assert abs(v - mol2.obasis[k]).max() < 1.e-8
     else:
         assert mol2.obasis is None
     # wfn
@@ -128,15 +124,6 @@ def compare_mols(mol1, mol2):
             np.testing.assert_equal(getattr(mol1, key), getattr(mol2, key))
         else:
             assert not hasattr(mol2, key)
-
-
-def get_random_cell(a, nvec):
-    """Return a random cell"""
-    if nvec == 0:
-        return None
-    if a <= 0:
-        raise ValueError('The first argument must be strictly positive.')
-    return np.random.uniform(0, a, (nvec, 3))
 
 
 def check_orthonormal(occupations, coeffs, overlap, eps=1e-4):
