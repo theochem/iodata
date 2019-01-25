@@ -30,14 +30,4 @@
 """
 
 
-from . cp2k import *
-from . cube import *
-from . log import *
-from . fchk import *
-from . iodata import *
-from . molden import *
-from . molekel import *
-from . molpro import *
-from . poscar import *
-from . wfn import *
-from . xyz import *
+from .iodata import *

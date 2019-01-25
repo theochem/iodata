@@ -22,7 +22,7 @@
 """Test iodata.log module."""
 
 
-from .. log import load_operators_g09
+from .. log import load
 try:
     from importlib_resources import path
 except ImportError:
@@ -35,7 +35,7 @@ except ImportError:
 def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
     with path('iodata.test.cached', 'water_sto3g_hf_g03.log') as fn:
-        result = load_operators_g09(str(fn))
+        result = load(str(fn))
 
     overlap = result['olp']
     kinetic = result['kin']
@@ -71,7 +71,7 @@ def test_load_operators_water_sto3g_hf_g03():
 def test_load_operators_water_ccpvdz_pure_hf_g03():
     eps = 1e-5
     with path('iodata.test.cached', 'water_ccpvdz_pure_hf_g03.log') as fn:
-        result = load_operators_g09(str(fn))
+        result = load(str(fn))
 
     overlap = result['olp']
     kinetic = result['kin']

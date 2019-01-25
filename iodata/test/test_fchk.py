@@ -26,7 +26,7 @@ import numpy as np
 
 from nose.tools import assert_raises
 
-from .. fchk import load_fchk
+from .. fchk import load
 from .. iodata import IOData
 from .. utils import shells_to_nbasis, check_dm
 from .. overlap import compute_overlap
@@ -42,12 +42,12 @@ except ImportError:
 def test_load_fchk_nonexistent():
     with assert_raises(IOError):
         with path('iodata.test.cached', 'fubar_crap.fchk') as fn:
-            load_fchk(str(fn))
+            load(str(fn))
 
 
 def test_load_fchk_hf_sto3g_num():
     with path('iodata.test.cached', 'hf_sto3g.fchk') as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     assert fields['title'] == 'hf_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -67,7 +67,7 @@ def test_load_fchk_hf_sto3g_num():
 
 def test_load_fchk_h_sto3g_num():
     with path('iodata.test.cached', 'h_sto3g.fchk') as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     assert fields['title'] == 'h_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -84,7 +84,7 @@ def test_load_fchk_h_sto3g_num():
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
     with path('iodata.test.cached', 'o2_cc_pvtz_pure.fchk') as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -99,7 +99,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
     with path('iodata.test.cached', 'o2_cc_pvtz_cart.fchk') as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -114,7 +114,7 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
 
 def test_load_fchk_water_sto3g_hf():
     with path('iodata.test.cached', 'water_sto3g_hf_g03.fchk') as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     obasis = fields['obasis']
     assert len(obasis["shell_types"]) == 5
     assert shells_to_nbasis(obasis["shell_types"]) == 7
@@ -144,7 +144,7 @@ def test_load_fchk_water_sto3g_hf():
 
 def test_load_fchk_lih_321g_hf():
     with path('iodata.test.cached', 'li_h_3-21G_hf_g09.fchk') as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     obasis = fields['obasis']
     assert len(obasis["shell_types"]) == 7
     assert shells_to_nbasis(obasis["shell_types"]) == 11
@@ -194,7 +194,7 @@ def test_load_fchk_lih_321g_hf():
 def test_load_fchk_ghost_atoms():
     # Load fchk file with ghost atoms
     with path('iodata.test.cached', 'water_dimer_ghost.fchk') as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     numbers = fields['numbers']
     coordinates = fields['coordinates']
     mulliken_charges = fields['mulliken_charges']
@@ -210,7 +210,7 @@ def test_load_fchk_ghost_atoms():
 
 def test_load_fchk_ch3_rohf_g03():
     with path('iodata.test.cached', 'ch3_rohf_sto3g_g03.fchk') as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     orb_alpha = fields['orb_alpha']
     orb_alpha_coeffs = fields['orb_alpha_coeffs']
     orb_alpha_occs = fields['orb_alpha_occs']
@@ -228,7 +228,7 @@ def test_load_fchk_ch3_rohf_g03():
 
 def check_load_azirine(key, numbers):
     with path('iodata.test.cached', '2h-azirine-{}.fchk'.format(key)) as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     obasis = fields['obasis']
     assert shells_to_nbasis(obasis["shell_types"]) == 33
     dm_full = fields['dm_full_%s' % key]
@@ -254,7 +254,7 @@ def test_load_azirine_mp3():
 
 def check_load_nitrogen(key, numbers_full, numbers_spin):
     with path('iodata.test.cached', 'nitrogen-{}.fchk'.format(key)) as fn:
-        fields = load_fchk(str(fn))
+        fields = load(str(fn))
     obasis = fields['obasis']
     assert shells_to_nbasis(obasis["shell_types"]) == 9
     dm_full = fields['dm_full_%s' % key]

@@ -26,13 +26,15 @@ import numpy as np
 
 from typing import TextIO, Tuple, Dict, Union
 
-from .iodata import IOData
 from .periodic import sym2num, num2sym
 from .overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
 from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
 
 
-__all__ = ['load_molden', 'dump_molden']
+__all__ = ['load', 'dump']
+
+
+patterns = ['*.molden.input', '*.molden']
 
 
 def _get_molden_permutation(shell_types: np.ndarray, reverse=False) -> np.ndarray:
@@ -56,7 +58,7 @@ def _get_molden_permutation(shell_types: np.ndarray, reverse=False) -> np.ndarra
     return np.array(permutation, dtype=int)
 
 
-def load_molden(filename: str) -> dict:
+def load(filename: str) -> Dict:
     """Load data from a MOLDEN input file format.
 
     Parameters
@@ -591,7 +593,7 @@ def _fix_molden_from_buggy_codes(result: Dict, filename: str):
                    'can fix it.') % filename)
 
 
-def dump_molden(filename: str, data: IOData):
+def dump(filename: str, data: 'IOData'):
     """Write data into a MOLDEN input file format.
 
     Parameters

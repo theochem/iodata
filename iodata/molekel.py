@@ -30,10 +30,13 @@ from .molden import _fix_molden_from_buggy_codes
 from .utils import angstrom, str_to_shell_types, shells_to_nbasis
 
 
-__all__ = ['load_mkl']
+__all__ = ['load']
 
 
-def load_mkl(filename: str) -> Dict:
+patterns = ['*.mkl']
+
+
+def load(filename: str) -> Dict:
     """Load data from a MOLEKEL file format.
 
     Parameters

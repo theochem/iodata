@@ -28,10 +28,13 @@ from .utils import electronvolt
 from .chgcar import _load_vasp_grid
 
 
-__all__ = ['load_locpot']
+__all__ = ['load']
 
 
-def load_locpot(filename: str) -> Dict:
+patterns = ['LOCPOT*']
+
+
+def load(filename: str) -> Dict:
     """Load data from a VASP 5 LOCPOT file format.
 
     Parameters

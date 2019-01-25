@@ -27,7 +27,10 @@ import numpy as np
 from typing import Dict, TextIO, Set, List
 
 
-__all__ = ['FCHKFile', 'load_fchk']
+__all__ = ['FCHKFile', 'load']
+
+
+patterns = ['*.fchk']
 
 
 class FCHKFile(dict):
@@ -156,7 +159,7 @@ def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
     return result
 
 
-def load_fchk(filename: str) -> Dict:
+def load(filename: str) -> Dict:
     """Load data from a GAUSSIAN FCHK file format.
 
     Parameters

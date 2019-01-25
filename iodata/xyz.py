@@ -26,15 +26,17 @@ import numpy as np
 
 from typing import Dict
 
-from .iodata import IOData
 from .utils import angstrom
 from .periodic import sym2num, num2sym
 
 
-__all__ = ['load_xyz', 'dump_xyz']
+__all__ = ['load', 'dump']
 
 
-def load_xyz(filename: str) -> Dict:
+patterns = ['*.xyz']
+
+
+def load(filename: str) -> Dict:
     """Load molecular geometry from a XYZ file format.
 
     Parameters
@@ -49,7 +51,9 @@ def load_xyz(filename: str) -> Dict:
         and corresponding values.
 
     """
+    print('In Load ', filename)
     with open(filename, 'r') as f:
+        print('in here...')
         size = int(next(f))
         title = next(f).strip()
         coordinates = np.empty((size, 3), float)
@@ -63,6 +67,7 @@ def load_xyz(filename: str) -> Dict:
             coordinates[i, 0] = float(words[1]) * angstrom
             coordinates[i, 1] = float(words[2]) * angstrom
             coordinates[i, 2] = float(words[3]) * angstrom
+    print(title)
     return {
         'title': title,
         'coordinates': coordinates,
@@ -70,7 +75,7 @@ def load_xyz(filename: str) -> Dict:
     }
 
 
-def dump_xyz(filename: str, data: 'IOData'):
+def dump(filename: str, data: 'IOData'):
     """Write molecular geometry into a XYZ file format.
 
     Parameters

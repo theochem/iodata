@@ -29,10 +29,13 @@ from typing import Dict, TextIO
 from .utils import set_four_index_element
 
 
-__all__ = ['load_operators_g09']
+__all__ = ['load']
 
 
-def load_operators_g09(filename: str) -> Dict:
+patterns = ['*.log']
+
+
+def load(filename: str) -> Dict:
     """Load several two- and four-index operators from a GAUSSIAN09 LOG file format.
 
     Parameters

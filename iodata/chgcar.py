@@ -30,7 +30,10 @@ from .periodic import sym2num
 from .utils import angstrom, volume
 
 
-__all__ = ['load_chgcar']
+__all__ = ['load']
+
+
+patterns = ['CHGCAR*', 'AECCAR*']
 
 
 def _unravel_counter(counter, shape):
@@ -150,7 +153,7 @@ def _load_vasp_grid(filename: str) -> Dict:
     }
 
 
-def load_chgcar(filename: str) -> Dict:
+def load(filename: str) -> Dict:
     """Load data from a VASP 5 CHGCAR file format.
 
     Parameters

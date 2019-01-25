@@ -26,16 +26,18 @@ import numpy as np
 
 from typing import Dict
 
-from .iodata import IOData
 from .periodic import num2sym
 from .utils import angstrom
 from .chgcar import _load_vasp_header
 
 
-__all__ = ['load_poscar', 'dump_poscar']
+__all__ = ['load', 'dump']
 
 
-def load_poscar(filename: str) -> Dict:
+patterns = ['POSCAR*']
+
+
+def load(filename: str) -> Dict:
     """Load data from a VASP 5 POSCAR file format.
 
     Parameters
@@ -61,7 +63,7 @@ def load_poscar(filename: str) -> Dict:
         }
 
 
-def dump_poscar(filename: str, data: IOData):
+def dump(filename: str, data: 'IOData'):
     """Write data into a VASP 5 POSCAR file format.
 
     Parameters
