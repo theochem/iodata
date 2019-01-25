@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name,redefined-outer-name
+# pragma pylint: disable=wrong-import-order,invalid-name,redefined-outer-name,too-many-branches
 """Module for handling input/output from different file formats."""
 
 

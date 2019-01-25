@@ -51,9 +51,7 @@ def load(filename: str) -> Dict:
         and corresponding values.
 
     """
-    print('In Load ', filename)
     with open(filename, 'r') as f:
-        print('in here...')
         size = int(next(f))
         title = next(f).strip()
         coordinates = np.empty((size, 3), float)
@@ -67,7 +65,6 @@ def load(filename: str) -> Dict:
             coordinates[i, 0] = float(words[1]) * angstrom
             coordinates[i, 1] = float(words[2]) * angstrom
             coordinates[i, 2] = float(words[3]) * angstrom
-    print(title)
     return {
         'title': title,
         'coordinates': coordinates,

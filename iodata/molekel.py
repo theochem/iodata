@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name,too-many-branches
+# pragma pylint: disable=wrong-import-order,invalid-name,too-many-branches,too-many-statements
 """Module for handling MOLEKEL file format."""
 
 
