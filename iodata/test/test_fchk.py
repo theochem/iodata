@@ -283,7 +283,7 @@ def test_load_nitrogen_mp3():
 
 
 def check_normalization_dm_full_azirine(key):
-    #TODO: replace with data data
+    # TODO: replace with data data
     with path('iodata.test.data', '2h-azirine-{}.fchk'.format(key)) as fn:
         mol = IOData.from_file(str(fn))
     olp = compute_overlap(**mol.obasis)

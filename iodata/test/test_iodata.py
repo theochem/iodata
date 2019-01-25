@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
+# pragma pylint: disable=invalid-name,no-member
 """Test iodata.iodata module."""
 
 
