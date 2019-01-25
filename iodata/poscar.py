@@ -83,7 +83,7 @@ def dump(filename: str, data: 'IOData'):
         # Write cell vectors, each row is one vector in angstrom:
         rvecs = data.rvecs
         for rvec in rvecs:
-            r = rvec/angstrom
+            r = rvec / angstrom
             print(f'{r[0]: 21.16f} {r[1]: 21.16f} {r[2]: 21.16f}', file=f)
 
         # Construct list of elements to make sure the coordinates get written
