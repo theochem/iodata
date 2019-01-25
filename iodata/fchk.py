@@ -164,7 +164,7 @@ def load(filename: str) -> Dict:
 
     Parameters
     ----------
-    filename
+    filename : str
         The GAUSSIAN FCHK filename.
 
     Returns

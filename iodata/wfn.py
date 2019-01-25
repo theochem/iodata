@@ -198,7 +198,7 @@ def load(filename: str) -> Dict:
 
     Parameters
     ----------
-    filename
+    filename : str
         The WFN filename.
 
     Returns

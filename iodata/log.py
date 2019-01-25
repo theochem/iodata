@@ -40,7 +40,7 @@ def load(filename: str) -> Dict:
 
     Parameters
     ----------
-    filename
+    filename : str
         The GAUSSIAN09 LOG filename.
 
     Returns

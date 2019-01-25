@@ -361,7 +361,7 @@ def load(filename: str) -> Dict:
 
     Parameters
     ---------
-    filename
+    filename : str
         The CP2K (ATOM computation) filename.
 
     Returns

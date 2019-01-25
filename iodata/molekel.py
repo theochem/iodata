@@ -41,7 +41,7 @@ def load(filename: str) -> Dict:
 
     Parameters
     ----------
-    filename
+    filename : str
         The MKL filename.
 
     Returns

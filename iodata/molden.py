@@ -63,7 +63,7 @@ def load(filename: str) -> Dict:
 
     Parameters
     ----------
-    filename
+    filename : str
         The MOLDEN input filename.
 
     Returns
@@ -598,9 +598,9 @@ def dump(filename: str, data: 'IOData'):
 
     Parameters
     ----------
-    filename
+    filename : str
         The MOLDEN input filename.
-    data
+    data : IOData
         An IOData instance which must contain ```coordinates``, ``numbers``, ``obasis``
         & ``orb_alpha`` attributes. It may contain ```title``, ``pseudo_numbers``, ``orb_beta``
         attributes.

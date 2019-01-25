@@ -41,7 +41,7 @@ def load(filename: str) -> Dict:
 
     Parameters
     ----------
-    filename
+    filename : str
         The XYZ filename.
 
     Returns
@@ -80,11 +80,11 @@ def dump(filename: str, data: 'IOData'):
 
     Parameters
     ----------
-    filename
+    filename : str
         The XYZ filename.
-    data
+    data : IOData
         An IOData instance which must contain ``coordinates`` & ``numbers`` attributes.
-        If ``title`` attribute is not included, 'Created with IODATA module' is used.
+        If ``title`` attribute is not included, 'Created with IODATA module' is used as ``title``.
 
     """
     with open(filename, 'w') as f:

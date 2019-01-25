@@ -39,7 +39,7 @@ def load(filename: str) -> Dict:
 
     Parameters
     ----------
-    filename
+    filename : str
         The VASP 5 LOCPOT filename.
 
     Returns

@@ -272,7 +272,7 @@ class IOData:
             return len(self.pseudo_numbers)
 
     @classmethod
-    def from_file(cls, *filenames: str) -> "IOData":
+    def from_file(cls, *filenames: str) -> 'IOData':
         """Load data from a file.
 
         This routine uses the extension or prefix of the filename to
@@ -284,7 +284,7 @@ class IOData:
 
         Parameters
         ----------
-        filenames
+        filenames : str or sequence of str
             The files to load data from. When multiple files are given, data
             from the first file is overwritten by data from the second, etc.
             When one file contains sign and permutation changes for the
@@ -293,7 +293,7 @@ class IOData:
 
         Returns
         -------
-        IOData
+        out : IOData
             The instance of IOData with data loaded from the input files.
 
         """
@@ -358,8 +358,8 @@ class IOData:
 
         Parameters
         ----------
-        filename
-            The file to write the data to
+        filename : str
+            The file to write the data to.
 
         """
         basename = os.path.basename(filename)

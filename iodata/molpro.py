@@ -40,7 +40,7 @@ def load(filename: str) -> Dict:
 
     Parameters
     ----------
-    filename
+    filename : str
         The MOLPRO 2012 FCIDUMP filename.
 
     Returns
@@ -122,9 +122,9 @@ def dump(filename: str, data: 'IOData'):
 
     Parameters
     ----------
-    filename
+    filename : str
         The MOLPRO 2012 FCIDUMP filename.
-    data
+    data : IOData
         An IOData instance which must contain ``one_mo`` & ``two_mo`` attributes.
         It may contain ``core_energy``, ``nelec`` and ``ms`` attributes.
 

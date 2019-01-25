@@ -128,7 +128,7 @@ def load(filename: str) -> Dict[str, Union[str, np.ndarray, Dict]]:
 
     Parameters
     ----------
-    filename
+    filename : str
         The CUBE filename.
 
     Returns
@@ -183,9 +183,9 @@ def dump(filename: str, data: 'IOData'):
 
     Parameters
     ----------
-    filename
+    filename : str
         The CUBE filename.
-    data
+    data : IOData
         An IOData instance which must contain ``coordinates``, ``numbers``, ``grid`` &
         ``cube_data`` attributes. It may contain ``title``  & ``pseudo_numbers`` attributes.
 
