@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name
+# pragma pylint: disable=wrong-import-order,invalid-name,too-many-statements,too-many-branches
 """Module for handling CP2K file format."""
 
 
@@ -30,7 +30,10 @@ from scipy.special import factorialk
 from .utils import shells_to_nbasis, str_to_shell_types
 
 
-__all__ = ['load_atom_cp2k']
+__all__ = ['load']
+
+
+patterns = ['*.cp2k.out']
 
 
 def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) -> Union[
@@ -353,12 +356,12 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
             iorb += 1
 
 
-def load_atom_cp2k(filename: str) -> Dict:
+def load(filename: str) -> Dict:
     """Load data from a CP2K ATOM file format.
 
     Parameters
     ---------
-    filename
+    filename : str
         The CP2K (ATOM computation) filename.
 
     Returns

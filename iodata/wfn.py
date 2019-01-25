@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order
+# pragma pylint: disable=wrong-import-order,invalid-name
 """Module for handling GUASSIAN/GAMESS-US WNF file format."""
 
 
@@ -31,7 +31,10 @@ from .periodic import sym2num
 
 
 __all__ = ['load_wfn_low', 'get_permutation_orbital',
-           'get_permutation_basis', 'get_mask', 'load_wfn']
+           'get_permutation_basis', 'get_mask', 'load']
+
+
+patterns = ['*.wfn']
 
 
 def load_wfn_low(filename: str) -> Tuple:
@@ -190,12 +193,12 @@ def get_mask(type_assignment: np.ndarray) -> np.ndarray:
     return mask
 
 
-def load_wfn(filename: str) -> Dict:
+def load(filename: str) -> Dict:
     """Load data from a WFN file format.
 
     Parameters
     ----------
-    filename
+    filename : str
         The WFN filename.
 
     Returns

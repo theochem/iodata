@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=invalid-name
 """Module for handling GAUSSIAN CUBE file format."""
 
 
@@ -25,10 +26,11 @@ import numpy as np
 
 from typing import TextIO, Dict, Tuple, Union
 
-from .iodata import IOData
+
+__all__ = ['load', 'dump']
 
 
-__all__ = ['load_cube', 'dump_cube']
+patterns = ['*.cube']
 
 
 def _read_cube_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray,
@@ -122,12 +124,12 @@ def _read_cube_data(f: TextIO, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
     return data
 
 
-def load_cube(filename: str) -> Dict[str, Union[str, np.ndarray,Dict]]:
+def load(filename: str) -> Dict[str, Union[str, np.ndarray, Dict]]:
     """Load data from a CUBE file format.
 
     Parameters
     ----------
-    filename
+    filename : str
         The CUBE filename.
 
     Returns
@@ -177,14 +179,14 @@ def _write_cube_data(f: TextIO, cube_data: np.ndarray):
         counter += 1
 
 
-def dump_cube(filename: str, data: IOData):
+def dump(filename: str, data: 'IOData'):
     """Write data into a CUBE file format.
 
     Parameters
     ----------
-    filename
+    filename : str
         The CUBE filename.
-    data
+    data : IOData
         An IOData instance which must contain ``coordinates``, ``numbers``, ``grid`` &
         ``cube_data`` attributes. It may contain ``title``  & ``pseudo_numbers`` attributes.
 

@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=unused-import,wrong-import-order
+# pragma pylint: disable=wrong-import-order,invalid-name
 """Module for handling XYZ file format."""
 
 
@@ -26,20 +26,22 @@ import numpy as np
 
 from typing import Dict
 
-from .iodata import IOData
 from .utils import angstrom
 from .periodic import sym2num, num2sym
 
 
-__all__ = ['load_xyz', 'dump_xyz']
+__all__ = ['load', 'dump']
 
 
-def load_xyz(filename: str) -> Dict:
+patterns = ['*.xyz']
+
+
+def load(filename: str) -> Dict:
     """Load molecular geometry from a XYZ file format.
 
     Parameters
     ----------
-    filename
+    filename : str
         The XYZ filename.
 
     Returns
@@ -70,16 +72,16 @@ def load_xyz(filename: str) -> Dict:
     }
 
 
-def dump_xyz(filename: str, data: 'IOData'):
+def dump(filename: str, data: 'IOData'):
     """Write molecular geometry into a XYZ file format.
 
     Parameters
     ----------
-    filename
+    filename : str
         The XYZ filename.
-    data
+    data : IOData
         An IOData instance which must contain ``coordinates`` & ``numbers`` attributes.
-        If ``title`` attribute is not included, 'Created with IODATA module' is used.
+        If ``title`` attribute is not included, 'Created with IODATA module' is used as ``title``.
 
     """
     with open(filename, 'w') as f:

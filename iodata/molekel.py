@@ -18,7 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order
+# pragma pylint: disable=wrong-import-order,invalid-name,too-many-branches,too-many-statements
 """Module for handling MOLEKEL file format."""
 
 
@@ -30,15 +30,18 @@ from .molden import _fix_molden_from_buggy_codes
 from .utils import angstrom, str_to_shell_types, shells_to_nbasis
 
 
-__all__ = ['load_mkl']
+__all__ = ['load']
 
 
-def load_mkl(filename: str) -> Dict:
+patterns = ['*.mkl']
+
+
+def load(filename: str) -> Dict:
     """Load data from a MOLEKEL file format.
 
     Parameters
     ----------
-    filename
+    filename : str
         The MKL filename.
 
     Returns

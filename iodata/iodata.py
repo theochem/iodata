@@ -18,6 +18,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=wrong-import-order,invalid-name,redefined-outer-name,too-many-branches
 """Module for handling input/output from different file formats."""
 
 
@@ -25,9 +26,20 @@ import os
 import numpy as np
 
 from typing import List, Tuple, Type
+from fnmatch import fnmatch
+from pkgutil import iter_modules
+from importlib import import_module
 
 
 __all__ = ['IOData']
+
+
+format_modules = []
+for module_info in iter_modules(import_module('iodata').__path__):
+    if not module_info.ispkg:
+        format_module = import_module('iodata.' + module_info.name)
+        if hasattr(format_module, 'patterns'):
+            format_modules.append(format_module)
 
 
 class ArrayTypeCheckDescriptor:
@@ -261,7 +273,7 @@ class IOData:
             return len(self.pseudo_numbers)
 
     @classmethod
-    def from_file(cls, *filenames: str) -> "IOData":
+    def from_file(cls, *filenames: str) -> 'IOData':
         """Load data from a file.
 
         This routine uses the extension or prefix of the filename to
@@ -273,7 +285,7 @@ class IOData:
 
         Parameters
         ----------
-        filenames
+        filenames : str or sequence of str
             The files to load data from. When multiple files are given, data
             from the first file is overwritten by data from the second, etc.
             When one file contains sign and permutation changes for the
@@ -282,48 +294,17 @@ class IOData:
 
         Returns
         -------
-        IOData
+        out : IOData
             The instance of IOData with data loaded from the input files.
 
         """
         result = {}
         for filename in filenames:
-            if filename.endswith('.xyz'):
-                from .xyz import load_xyz
-                result.update(load_xyz(filename))
-            elif filename.endswith('.fchk'):
-                from .gaussian import load_fchk
-                result.update(load_fchk(filename))
-            elif filename.endswith('.log'):
-                from .gaussian import load_operators_g09
-                result.update(load_operators_g09(filename))
-            elif filename.endswith('.mkl'):
-                from .molekel import load_mkl
-                result.update(load_mkl(filename))
-            elif filename.endswith('.molden.input') or filename.endswith('.molden'):
-                from .molden import load_molden
-                result.update(load_molden(filename))
-            elif filename.endswith('.cube'):
-                from .cube import load_cube
-                result.update(load_cube(filename))
-            elif filename.endswith('.wfn'):
-                from .wfn import load_wfn
-                result.update(load_wfn(filename))
-            elif os.path.basename(filename).startswith('POSCAR'):
-                from .vasp import load_poscar
-                result.update(load_poscar(filename))
-            elif os.path.basename(filename)[:6] in ['CHGCAR', 'AECCAR']:
-                from .vasp import load_chgcar
-                result.update(load_chgcar(filename))
-            elif os.path.basename(filename).startswith('LOCPOT'):
-                from .vasp import load_locpot
-                result.update(load_locpot(filename))
-            elif filename.endswith('.cp2k.out'):
-                from .cp2k import load_atom_cp2k
-                result.update(load_atom_cp2k(filename))
-            elif 'FCIDUMP' in os.path.basename(filename):
-                from .molpro import load_fcidump
-                result.update(load_fcidump(filename))
+            basename = os.path.basename(filename)
+            for format_module in format_modules:
+                if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
+                    result.update(format_module.load(filename))
+                    break
             else:
                 raise ValueError('Unknown file format for reading: %s' % filename)
 
@@ -370,7 +351,7 @@ class IOData:
         return cls(**result)
 
     def to_file(self, filename: str):
-        """Write data to a file
+        """Write data to a file.
 
         This routine uses the extension or prefix of the filename to determine
         the file format. For each file format, a specialized function is
@@ -378,26 +359,15 @@ class IOData:
 
         Parameters
         ----------
-        filename
-            The file to write the data to
+        filename : str
+            The file to write the data to.
 
         """
-
-        if filename.endswith('.xyz'):
-            from .xyz import dump_xyz
-            dump_xyz(filename, self)
-        elif filename.endswith('.cube'):
-            from .cube import dump_cube
-            dump_cube(filename, self)
-        elif filename.endswith('.molden.input') or filename.endswith('.molden'):
-            from .molden import dump_molden
-            dump_molden(filename, self)
-        elif os.path.basename(filename).startswith('POSCAR'):
-            from .vasp import dump_poscar
-            dump_poscar(filename, self)
-        elif 'FCIDUMP' in os.path.basename(filename):
-            from .molpro import dump_fcidump
-            dump_fcidump(filename, self)
+        basename = os.path.basename(filename)
+        for format_module in format_modules:
+            if any(fnmatch(basename, pattern)for pattern in format_module.patterns):
+                format_module.dump(filename, self)
+                break
         else:
             raise ValueError('Unknown file format for writing: %s' % filename)
 

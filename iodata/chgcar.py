@@ -19,19 +19,21 @@
 #
 # --
 # pragma pylint: disable=invalid-name
-"""Module for handling VASP POSCAR, CHGCAR and POTCAR file formats."""
+"""Module for handling VASP CHGCAR file format."""
 
 
 import numpy as np
 
 from typing import TextIO, Tuple, Dict
 
-from .iodata import IOData
-from .periodic import num2sym, sym2num
-from .utils import angstrom, electronvolt, volume
+from .periodic import sym2num
+from .utils import angstrom, volume
 
 
-__all__ = ['load_chgcar', 'load_locpot', 'load_poscar', 'dump_poscar']
+__all__ = ['load']
+
+
+patterns = ['CHGCAR*', 'AECCAR*']
 
 
 def _unravel_counter(counter, shape):
@@ -151,12 +153,12 @@ def _load_vasp_grid(filename: str) -> Dict:
     }
 
 
-def load_chgcar(filename: str) -> Dict:
+def load(filename: str) -> Dict:
     """Load data from a VASP 5 CHGCAR file format.
 
     Parameters
     ----------
-    filename
+    filename : str
         The VASP 5 CHGCAR filename.
 
     Returns
@@ -170,89 +172,3 @@ def load_chgcar(filename: str) -> Dict:
     # renormalize electron density
     result['cube_data'] /= volume(result['rvecs'])
     return result
-
-
-def load_locpot(filename: str) -> Dict:
-    """Load data from a VASP 5 LOCPOT file format.
-
-    Parameters
-    ----------
-    filename
-        The VASP 5 LOCPOT filename.
-
-    Returns
-    -------
-    out : dict
-        Ouput dictionary containing ``title``, ``coordinates``, ``numbers``, ``rvecs``,
-        ``grid`` & ``cube_data`` keys and corresponding values.
-
-    """
-    result = _load_vasp_grid(filename)
-    # convert locpot to atomic units
-    result['cube_data'] *= electronvolt
-    return result
-
-
-def load_poscar(filename: str) -> Dict:
-    """Load data from a VASP 5 POSCAR file format.
-
-    Parameters
-    ----------
-    filename
-        The VASP 5 POSCAR filename.
-
-    Returns
-    -------
-    out : dict
-        Output dictionary containing ``title``, ``coordinates``, ``numbers`` & ``rvecs`` keys
-        and their corresponding values.
-
-    """
-    with open(filename) as f:
-        # Load header
-        title, rvecs, numbers, coordinates = _load_vasp_header(f)
-        return {
-            'title': title,
-            'coordinates': coordinates,
-            'numbers': numbers,
-            'rvecs': rvecs,
-        }
-
-
-def dump_poscar(filename: str, data: IOData):
-    """Write data into a VASP 5 POSCAR file format.
-
-    Parameters
-    ----------
-    filename
-        The VASP 5 POSCAR filename.
-
-    data
-        An IOData instance which must contain ``coordinates``, ``numbers``, ``rvecs`` &
-        ``cell_frac`` attributes. It may contain ``title`` attribute.
-
-    """
-    with open(filename, 'w') as f:
-        print(getattr(data, 'title', 'Created with HORTON'), file=f)
-        print('   1.00000000000000', file=f)
-
-        # Write cell vectors, each row is one vector in angstrom:
-        rvecs = data.rvecs
-        for rvec in rvecs:
-            r = rvec/angstrom
-            print(f'{r[0]: 21.16f} {r[1]: 21.16f} {r[2]: 21.16f}', file=f)
-
-        # Construct list of elements to make sure the coordinates get written
-        # in this order. Heaviest elements are put furst.
-        unumbers = sorted(np.unique(data.numbers))[::-1]
-        print(' '.join(f'{num2sym[unumber]:5s}' for unumber in unumbers), file=f)
-        print(' '.join(f'{(data.numbers == unumber).sum():5d}' for unumber in unumbers), file=f)
-        print('Selective dynamics', file=f)
-        print('Direct', file=f)
-
-        # Write the coordinates
-        for unumber in unumbers:
-            indexes = (data.numbers == unumber).nonzero()[0]
-            for index in indexes:
-                row = np.dot(data.gvecs, data.coordinates[index])
-                print(f'  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F', file=f)

@@ -26,19 +26,21 @@ import numpy as np
 
 from typing import Dict
 
-from .iodata import IOData
 from .utils import set_four_index_element
 
 
-__all__ = ['load_fcidump', 'dump_fcidump']
+__all__ = ['load', 'dump']
 
 
-def load_fcidump(filename: str) -> Dict:
+patterns = ['*FCIDUMP*']
+
+
+def load(filename: str) -> Dict:
     """Load one- and two-electron integrals from a MOLPRO 2012 FCIDUMP file format.
 
     Parameters
     ----------
-    filename
+    filename : str
         The MOLPRO 2012 FCIDUMP filename.
 
     Returns
@@ -115,14 +117,14 @@ def load_fcidump(filename: str) -> Dict:
     }
 
 
-def dump_fcidump(filename: str, data: IOData):
+def dump(filename: str, data: 'IOData'):
     """Write one- and two-electron integrals into a MOLPRO 2012 FCIDUMP file format.
 
     Parameters
     ----------
-    filename
+    filename : str
         The MOLPRO 2012 FCIDUMP filename.
-    data
+    data : IOData
         An IOData instance which must contain ``one_mo`` & ``two_mo`` attributes.
         It may contain ``core_energy``, ``nelec`` and ``ms`` attributes.
 

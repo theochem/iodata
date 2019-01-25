@@ -18,7 +18,38 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-"""Input and Output Module."""
+# pragma pylint: disable=invalid-name
+"""Module for handling VASP LOCPOT file format."""
 
 
-from .iodata import *
+from typing import Dict
+
+from .utils import electronvolt
+from .chgcar import _load_vasp_grid
+
+
+__all__ = ['load']
+
+
+patterns = ['LOCPOT*']
+
+
+def load(filename: str) -> Dict:
+    """Load data from a VASP 5 LOCPOT file format.
+
+    Parameters
+    ----------
+    filename : str
+        The VASP 5 LOCPOT filename.
+
+    Returns
+    -------
+    out : dict
+        Ouput dictionary containing ``title``, ``coordinates``, ``numbers``, ``rvecs``,
+        ``grid`` & ``cube_data`` keys and corresponding values.
+
+    """
+    result = _load_vasp_grid(filename)
+    # convert locpot to atomic units
+    result['cube_data'] *= electronvolt
+    return result
