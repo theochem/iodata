@@ -28,12 +28,28 @@ from os import path
 
 from .mulliken import get_mulliken_operators
 
-__all__ = ['compute_mulliken_charges']
+
+__all__ = ['compute_mulliken_charges', 'compute_1rdm']
 
 
-def compute_mulliken_charges(obasis, pseudo_numbers, dm):
+def compute_1rdm(iodata):
+    """Compute 1-RDM."""
+    coeffs, occs = iodata.orb_alpha_coeffs, iodata.orb_alpha_occs
+    dm = np.dot(coeffs * occs, coeffs.T)
+    if hasattr(iodata, 'orb_beta_coeffs'):
+        coeffs, occs = iodata.orb_beta_coeffs, iodata.orb_beta_occs
+        dm += np.dot(coeffs * occs, coeffs.T)
+    else:
+        dm *= 2
+    return dm
+
+
+def compute_mulliken_charges(iodata, pseudo_numbers=None):
     """Compute mulliken charges"""
-    operators = get_mulliken_operators(obasis)
+    if pseudo_numbers is None:
+        pseudo_numbers = iodata.pseudo_numbers
+    dm = compute_1rdm(iodata)
+    operators = get_mulliken_operators(iodata.obasis)
     populations = np.array([np.einsum('ab,ba', operator, dm) for operator in operators])
     assert pseudo_numbers.shape == populations.shape
     return pseudo_numbers - np.array(populations)

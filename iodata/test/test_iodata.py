@@ -27,6 +27,7 @@ import numpy as np
 
 from numpy.testing import assert_raises
 
+from . common import compute_1rdm
 from .. iodata import IOData
 from .. overlap import compute_overlap
 try:
@@ -68,53 +69,32 @@ def test_unknown_format():
 def test_dm_water_sto3g_hf():
     with path('iodata.test.data', 'water_sto3g_hf_g03.fchk') as fn_fchk:
         mol = IOData.from_file(str(fn_fchk))
-    dm = mol.get_dm_full()
+    dm = mol.dm_full_scf
     assert abs(dm[0, 0] - 2.10503807) < 1e-7
     assert abs(dm[0, 1] - -0.439115917) < 1e-7
     assert abs(dm[1, 1] - 1.93312061) < 1e-7
-    # Now remove the dm and reconstruct from the orbitals
-    del mol.dm_full_scf
-    dm2 = mol.get_dm_full()
-    np.testing.assert_allclose(dm, dm2)
 
 
 def test_dm_lih_sto3g_hf():
     with path('iodata.test.data', 'li_h_3-21G_hf_g09.fchk') as fn_fchk:
         mol = IOData.from_file(str(fn_fchk))
 
-    dm_full = mol.get_dm_full()
+    dm_full = mol.dm_full_scf
     assert abs(dm_full[0, 0] - 1.96589709) < 1e-7
     assert abs(dm_full[0, 1] - 0.122114249) < 1e-7
     assert abs(dm_full[1, 1] - 0.0133112081) < 1e-7
     assert abs(dm_full[10, 10] - 4.23924688E-01) < 1e-7
 
-    dm_spin = mol.get_dm_spin()
+    dm_spin = mol.dm_spin_scf
     assert abs(dm_spin[0, 0] - 1.40210760E-03) < 1e-9
     assert abs(dm_spin[0, 1] - -2.65370873E-03) < 1e-9
     assert abs(dm_spin[1, 1] - 5.38701212E-03) < 1e-9
     assert abs(dm_spin[10, 10] - 4.23889148E-01) < 1e-7
 
-    # Now remove the dms and reconstruct from the orbitals
-    del mol.dm_full_scf
-    del mol.dm_spin_scf
-    dm_full2 = mol.get_dm_full()
-    np.testing.assert_allclose(dm_full, dm_full2)
-    dm_spin2 = mol.get_dm_spin()
-    np.testing.assert_allclose(dm_spin, dm_spin2, atol=1e-7)
-
 
 def test_dm_ch3_rohf_g03():
     with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
         mol = IOData.from_file(str(fn_fchk))
-
     olp = compute_overlap(**mol.obasis)
-    dm = mol.get_dm_full()
+    dm = compute_1rdm(mol)
     assert abs(np.einsum('ab,ba', olp, dm) - 9) < 1e-6
-    dm = mol.get_dm_spin()
-    assert abs(np.einsum('ab,ba', olp, dm) - 1) < 1e-6
-
-
-def test_dms_empty():
-    mol = IOData()
-    assert mol.get_dm_full() is None
-    assert mol.get_dm_spin() is None
