@@ -29,7 +29,7 @@ from contextlib import contextmanager
 import numpy as np
 from os import path
 
-from .mulliken import get_mulliken_operators
+from ..overlap import compute_overlap, get_shell_nbasis
 
 
 __all__ = ['compute_mulliken_charges', 'compute_1rdm']
@@ -48,12 +48,22 @@ def compute_1rdm(iodata):
 
 
 def compute_mulliken_charges(iodata, pseudo_numbers=None):
-    """Compute mulliken charges"""
+    """Compute Mulliken charges."""
     if pseudo_numbers is None:
         pseudo_numbers = iodata.pseudo_numbers
     dm = compute_1rdm(iodata)
-    operators = get_mulliken_operators(iodata.obasis)
-    populations = np.array([np.einsum('ab,ba', operator, dm) for operator in operators])
+    ov = compute_overlap(**iodata.obasis)
+    # compute basis function population matrix
+    bp = np.sum(np.multiply(dm, ov), axis=1)
+    # find basis functions center
+    basis_center = []
+    for (ci, ti) in zip(iodata.obasis["shell_map"], iodata.obasis["shell_types"]):
+        basis_center.extend([ci] * get_shell_nbasis(ti))
+    basis_center = np.array(basis_center)
+    # compute atomic populations
+    populations = np.zeros(len(iodata.obasis["centers"]))
+    for index in range(len(iodata.obasis["centers"])):
+        populations[index] = np.sum(bp[basis_center == index])
     assert pseudo_numbers.shape == populations.shape
     return pseudo_numbers - np.array(populations)
 

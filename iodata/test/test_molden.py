@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
+# pragma pylint: disable=invalid-name,fixme
 """Test iodata.molden module."""
 
 
@@ -33,9 +33,6 @@ try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
-
-#TODO: optional import for obasis?
-#TODO: remove mulliken charges?
 
 
 def test_load_molden_li2_orca():

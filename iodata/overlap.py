@@ -151,8 +151,6 @@ def _split_data_by_prims(x: np.ndarray, nprims: np.ndarray) -> List[np.ndarray]:
     return [x[s:e] for s, e in zip(nprims, nprims[1:])]
 
 
-
-
 def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray) -> Tuple[
     np.ndarray, np.ndarray]:
     """
