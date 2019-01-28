@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-# HORTON: Helpful Open-source Research TOol for N-fermion systems.
-# Copyright (C) 2011-2017 The HORTON Development Team
+# IODATA is an input and output module for quantum chemistry.
 #
-# This file is part of HORTON.
+# Copyright (C) 2011-2019 The IODATA Development Team
 #
-# HORTON is free software; you can redistribute it and/or
+# This file is part of IODATA.
+#
+# IODATA is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 3
 # of the License, or (at your option) any later version.
 #
-# HORTON is distributed in the hope that it will be useful,
+# IODATA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -18,6 +19,9 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pragma pylint: disable=invalid-name
+
+
 import shutil
 import tempfile
 from contextlib import contextmanager
@@ -25,15 +29,41 @@ from contextlib import contextmanager
 import numpy as np
 from os import path
 
-from .mulliken import get_mulliken_operators
-
-__all__ = ['compute_mulliken_charges']
+from ..overlap import compute_overlap, get_shell_nbasis
 
 
-def compute_mulliken_charges(obasis, pseudo_numbers, dm):
-    """Compute mulliken charges"""
-    operators = get_mulliken_operators(obasis)
-    populations = np.array([np.einsum('ab,ba', operator, dm) for operator in operators])
+__all__ = ['compute_mulliken_charges', 'compute_1rdm']
+
+
+def compute_1rdm(iodata):
+    """Compute 1-RDM."""
+    coeffs, occs = iodata.orb_alpha_coeffs, iodata.orb_alpha_occs
+    dm = np.dot(coeffs * occs, coeffs.T)
+    if hasattr(iodata, 'orb_beta_coeffs'):
+        coeffs, occs = iodata.orb_beta_coeffs, iodata.orb_beta_occs
+        dm += np.dot(coeffs * occs, coeffs.T)
+    else:
+        dm *= 2
+    return dm
+
+
+def compute_mulliken_charges(iodata, pseudo_numbers=None):
+    """Compute Mulliken charges."""
+    if pseudo_numbers is None:
+        pseudo_numbers = iodata.pseudo_numbers
+    dm = compute_1rdm(iodata)
+    ov = compute_overlap(**iodata.obasis)
+    # compute basis function population matrix
+    bp = np.sum(np.multiply(dm, ov), axis=1)
+    # find basis functions center
+    basis_center = []
+    for (ci, ti) in zip(iodata.obasis["shell_map"], iodata.obasis["shell_types"]):
+        basis_center.extend([ci] * get_shell_nbasis(ti))
+    basis_center = np.array(basis_center)
+    # compute atomic populations
+    populations = np.zeros(len(iodata.obasis["centers"]))
+    for index in range(len(iodata.obasis["centers"])):
+        populations[index] = np.sum(bp[basis_center == index])
     assert pseudo_numbers.shape == populations.shape
     return pseudo_numbers - np.array(populations)
 
@@ -74,13 +104,6 @@ def truncated_file(name, fn_orig, nline, nadd):
         yield fn_truncated
 
 
-def _compare_dict_floats(d1, d2):
-    """Compare the float values in a dictionary"""
-    for k, v in d1.items():
-        assert abs(v - d2[k]).max() < 1e-8
-    assert len(d1) == len(d2)
-
-
 def compare_mols(mol1, mol2):
     """Compare two IOData objects"""
     assert (getattr(mol1, 'title') == getattr(mol2, 'title'))
@@ -88,7 +111,10 @@ def compare_mols(mol1, mol2):
     assert (mol1.coordinates == mol2.coordinates).all()
     # orbital basis
     if mol1.obasis is not None:
-        _compare_dict_floats(mol1.obasis, mol2.obasis)
+        # compare dictionaries
+        assert len(mol1.obasis) == len(mol2.obasis)
+        for k, v in mol1.obasis.items():
+            assert abs(v - mol2.obasis[k]).max() < 1.e-8
     else:
         assert mol2.obasis is None
     # wfn
@@ -111,15 +137,6 @@ def compare_mols(mol1, mol2):
             np.testing.assert_equal(getattr(mol1, key), getattr(mol2, key))
         else:
             assert not hasattr(mol2, key)
-
-
-def get_random_cell(a, nvec):
-    """Return a random cell"""
-    if nvec == 0:
-        return None
-    if a <= 0:
-        raise ValueError('The first argument must be strictly positive.')
-    return np.random.uniform(0, a, (nvec, 3))
 
 
 def check_orthonormal(occupations, coeffs, overlap, eps=1e-4):

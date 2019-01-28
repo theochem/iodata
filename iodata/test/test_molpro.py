@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-# HORTON: Helpful Open-source Research TOol for N-fermion systems.
-# Copyright (C) 2011-2017 The HORTON Development Team
+# IODATA is an input and output module for quantum chemistry.
 #
-# This file is part of HORTON.
+# Copyright (C) 2011-2019 The IODATA Development Team
 #
-# HORTON is free software; you can redistribute it and/or
+# This file is part of IODATA.
+#
+# IODATA is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 3
 # of the License, or (at your option) any later version.
 #
-# HORTON is distributed in the hope that it will be useful,
+# IODATA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -32,7 +33,7 @@ except ImportError:
     from importlib.resources import path
 
 def test_load_fcidump_psi4_h2():
-    with path('iodata.test.cached', 'FCIDUMP.psi4.h2') as fn:
+    with path('iodata.test.data', 'FCIDUMP.psi4.h2') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.core_energy == 0.7151043364864863E+00
     assert mol.nelec == 2
@@ -57,7 +58,7 @@ def test_load_fcidump_psi4_h2():
 
 
 def test_load_fcidump_molpro_h2():
-    with path('iodata.test.cached', 'FCIDUMP.molpro.h2') as fn:
+    with path('iodata.test.data', 'FCIDUMP.molpro.h2') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.core_energy == 0.7151043364864863E+00
     assert mol.nelec == 2
@@ -83,13 +84,13 @@ def test_load_fcidump_molpro_h2():
 
 def test_dump_load_fcidimp_consistency_ao():
     # Setup IOData
-    with path('iodata.test.cached', 'water.xyz') as fn:
+    with path('iodata.test.data', 'water.xyz') as fn:
         mol0 = IOData.from_file(str(fn))
     mol0.nelec = 10
     mol0.ms2 = 1
-    with path('iodata.test.cached', 'psi4_h2_one.npy') as fn:
+    with path('iodata.test.data', 'psi4_h2_one.npy') as fn:
         mol0.one_mo = np.load(str(fn))
-    with path('iodata.test.cached', 'psi4_h2_two.npy') as fn:
+    with path('iodata.test.data', 'psi4_h2_two.npy') as fn:
         mol0.two_mo = np.load(str(fn))
 
     # Dump to a file and load it again

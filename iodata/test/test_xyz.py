@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-# HORTON: Helpful Open-source Research TOol for N-fermion systems.
-# Copyright (C) 2011-2017 The HORTON Development Team
+# IODATA is an input and output module for quantum chemistry.
 #
-# This file is part of HORTON.
+# Copyright (C) 2011-2019 The IODATA Development Team
 #
-# HORTON is free software; you can redistribute it and/or
+# This file is part of IODATA.
+#
+# IODATA is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 3
 # of the License, or (at your option) any later version.
 #
-# HORTON is distributed in the hope that it will be useful,
+# IODATA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -35,14 +36,14 @@ except ImportError:
 
 def test_load_water_number():
     # test xyz with atomic numbers
-    with path('iodata.test.cached', 'water_number.xyz') as fn_xyz:
+    with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
         mol = IOData.from_file(str(fn_xyz))
     check_water(mol)
 
 
 def test_load_water_element():
     # test xyz file with atomic symbols
-    with path('iodata.test.cached', 'water_element.xyz') as fn_xyz:
+    with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
         mol = IOData.from_file(str(fn_xyz))
     check_water(mol)
 
@@ -60,7 +61,7 @@ def check_water(mol):
 
 
 def test_load_dump_consistency():
-    with path('iodata.test.cached', 'ch3_hf_sto3g.fchk') as fn_fchk:
+    with path('iodata.test.data', 'ch3_hf_sto3g.fchk') as fn_fchk:
         mol0 = IOData.from_file(str(fn_fchk))
     # write xyz file in a temporary folder & then read it
     with tmpdir('io.test.test_xyz.test_load_dump_consistency') as dn:
@@ -73,7 +74,7 @@ def test_load_dump_consistency():
 
 
 def test_dump_xyz_water_element():
-    with path('iodata.test.cached', 'water_element.xyz') as fn_xyz:
+    with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
         mol0 = IOData.from_file(str(fn_xyz))
     with tmpdir('io.test.test_xyz.test_dump_xyz_water_element') as dn:
         mol0.to_file('%s/test.xyz' % dn)
@@ -85,7 +86,7 @@ def test_dump_xyz_water_element():
 
 
 def test_dump_xyz_water_number():
-    with path('iodata.test.cached', 'water_number.xyz') as fn_xyz:
+    with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
         mol0 = IOData.from_file(str(fn_xyz))
     with tmpdir('io.test.test_xyz.test_dump_xyz_water_number') as dn:
         mol0.to_file('%s/test.xyz' % dn)

@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-# HORTON: Helpful Open-source Research TOol for N-fermion systems.
-# Copyright (C) 2011-2017 The HORTON Development Team
+# IODATA is an input and output module for quantum chemistry.
 #
-# This file is part of HORTON.
+# Copyright (C) 2011-2019 The IODATA Development Team
 #
-# HORTON is free software; you can redistribute it and/or
+# This file is part of IODATA.
+#
+# IODATA is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 3
 # of the License, or (at your option) any later version.
 #
-# HORTON is distributed in the hope that it will be useful,
+# IODATA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -41,12 +42,12 @@ except ImportError:
 
 def test_load_fchk_nonexistent():
     with assert_raises(IOError):
-        with path('iodata.test.cached', 'fubar_crap.fchk') as fn:
+        with path('iodata.test.data', 'fubar_crap.fchk') as fn:
             load(str(fn))
 
 
 def test_load_fchk_hf_sto3g_num():
-    with path('iodata.test.cached', 'hf_sto3g.fchk') as fn:
+    with path('iodata.test.data', 'hf_sto3g.fchk') as fn:
         fields = load(str(fn))
     assert fields['title'] == 'hf_sto3g'
     obasis = fields['obasis']
@@ -66,7 +67,7 @@ def test_load_fchk_hf_sto3g_num():
 
 
 def test_load_fchk_h_sto3g_num():
-    with path('iodata.test.cached', 'h_sto3g.fchk') as fn:
+    with path('iodata.test.data', 'h_sto3g.fchk') as fn:
         fields = load(str(fn))
     assert fields['title'] == 'h_sto3g'
     obasis = fields['obasis']
@@ -83,7 +84,7 @@ def test_load_fchk_h_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    with path('iodata.test.cached', 'o2_cc_pvtz_pure.fchk') as fn:
+    with path('iodata.test.data', 'o2_cc_pvtz_pure.fchk') as fn:
         fields = load(str(fn))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -98,7 +99,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    with path('iodata.test.cached', 'o2_cc_pvtz_cart.fchk') as fn:
+    with path('iodata.test.data', 'o2_cc_pvtz_cart.fchk') as fn:
         fields = load(str(fn))
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -113,7 +114,7 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
 
 
 def test_load_fchk_water_sto3g_hf():
-    with path('iodata.test.cached', 'water_sto3g_hf_g03.fchk') as fn:
+    with path('iodata.test.data', 'water_sto3g_hf_g03.fchk') as fn:
         fields = load(str(fn))
     obasis = fields['obasis']
     assert len(obasis["shell_types"]) == 5
@@ -143,7 +144,7 @@ def test_load_fchk_water_sto3g_hf():
 
 
 def test_load_fchk_lih_321g_hf():
-    with path('iodata.test.cached', 'li_h_3-21G_hf_g09.fchk') as fn:
+    with path('iodata.test.data', 'li_h_3-21G_hf_g09.fchk') as fn:
         fields = load(str(fn))
     obasis = fields['obasis']
     assert len(obasis["shell_types"]) == 7
@@ -193,7 +194,7 @@ def test_load_fchk_lih_321g_hf():
 
 def test_load_fchk_ghost_atoms():
     # Load fchk file with ghost atoms
-    with path('iodata.test.cached', 'water_dimer_ghost.fchk') as fn:
+    with path('iodata.test.data', 'water_dimer_ghost.fchk') as fn:
         fields = load(str(fn))
     numbers = fields['numbers']
     coordinates = fields['coordinates']
@@ -209,7 +210,7 @@ def test_load_fchk_ghost_atoms():
 
 
 def test_load_fchk_ch3_rohf_g03():
-    with path('iodata.test.cached', 'ch3_rohf_sto3g_g03.fchk') as fn:
+    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn:
         fields = load(str(fn))
     orb_alpha = fields['orb_alpha']
     orb_alpha_coeffs = fields['orb_alpha_coeffs']
@@ -227,7 +228,7 @@ def test_load_fchk_ch3_rohf_g03():
 
 
 def check_load_azirine(key, numbers):
-    with path('iodata.test.cached', '2h-azirine-{}.fchk'.format(key)) as fn:
+    with path('iodata.test.data', '2h-azirine-{}.fchk'.format(key)) as fn:
         fields = load(str(fn))
     obasis = fields['obasis']
     assert shells_to_nbasis(obasis["shell_types"]) == 33
@@ -253,7 +254,7 @@ def test_load_azirine_mp3():
 
 
 def check_load_nitrogen(key, numbers_full, numbers_spin):
-    with path('iodata.test.cached', 'nitrogen-{}.fchk'.format(key)) as fn:
+    with path('iodata.test.data', 'nitrogen-{}.fchk'.format(key)) as fn:
         fields = load(str(fn))
     obasis = fields['obasis']
     assert shells_to_nbasis(obasis["shell_types"]) == 9
@@ -282,8 +283,8 @@ def test_load_nitrogen_mp3():
 
 
 def check_normalization_dm_full_azirine(key):
-    #TODO: replace with cached data
-    with path('iodata.test.cached', '2h-azirine-{}.fchk'.format(key)) as fn:
+    # TODO: replace with data data
+    with path('iodata.test.data', '2h-azirine-{}.fchk'.format(key)) as fn:
         mol = IOData.from_file(str(fn))
     olp = compute_overlap(**mol.obasis)
     dm = getattr(mol, 'dm_full_%s' % key)
@@ -308,7 +309,7 @@ def test_normalization_dm_full_azirine_mp3():
 
 
 def test_load_water_hfs_321g():
-    with path('iodata.test.cached', 'water_hfs_321g.fchk') as fn:
+    with path('iodata.test.data', 'water_hfs_321g.fchk') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.polar[0, 0] == 7.23806684E+00
     assert mol.polar[1, 1] == 8.04213953E+00
@@ -325,7 +326,7 @@ def test_load_water_hfs_321g():
 
 
 def test_load_monosilicic_acid_hf_lan():
-    with path('iodata.test.cached', 'monosilicic_acid_hf_lan.fchk') as fn:
+    with path('iodata.test.data', 'monosilicic_acid_hf_lan.fchk') as fn:
         mol = IOData.from_file(str(fn))
     np.testing.assert_allclose(mol.dipole_moment, [
         -6.05823053E-01, -9.39656399E-03, 4.18948869E-01])

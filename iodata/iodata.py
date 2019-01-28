@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-# HORTON: Helpful Open-source Research TOol for N-fermion systems.
-# Copyright (C) 2011-2017 The HORTON Development Team
+# IODATA is an input and output module for quantum chemistry.
 #
-# This file is part of HORTON.
+# Copyright (C) 2011-2019 The IODATA Development Team
 #
-# HORTON is free software; you can redistribute it and/or
+# This file is part of IODATA.
+#
+# IODATA is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 3
 # of the License, or (at your option) any later version.
 #
-# HORTON is distributed in the hope that it will be useful,
+# IODATA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -370,48 +371,3 @@ class IOData:
                 break
         else:
             raise ValueError('Unknown file format for writing: %s' % filename)
-
-    def get_dm_full(self) -> np.ndarray:
-        """Return a spin-summed density matrix using available attributes"""
-        if hasattr(self, 'dm_full'):
-            return self.dm_full
-        if hasattr(self, 'dm_full_mp2'):
-            return self.dm_full_mp2
-        elif hasattr(self, 'dm_full_mp3'):
-            return self.dm_full_mp3
-        elif hasattr(self, 'dm_full_ci'):
-            return self.dm_full_ci
-        elif hasattr(self, 'dm_full_cc'):
-            return self.dm_full_cc
-        elif hasattr(self, 'dm_full_scf'):
-            return self.dm_full_scf
-        elif hasattr(self, 'orb_alpha_coeffs'):
-            dm_full = self._alpha_orbs_to_dm()
-            if hasattr(self, 'orb_beta_coeffs'):
-                dm_full += self._beta_orbs_to_dm()
-            else:
-                dm_full *= 2
-            return dm_full
-
-    def get_dm_spin(self) -> np.ndarray:
-        """Return a spin-difference density matrix using available attributes"""
-        if hasattr(self, 'dm_spin'):
-            return self.dm_spin
-        if hasattr(self, 'dm_spin_mp2'):
-            return self.dm_spin_mp2
-        elif hasattr(self, 'dm_spin_mp3'):
-            return self.dm_spin_mp3
-        elif hasattr(self, 'dm_spin_ci'):
-            return self.dm_spin_ci
-        elif hasattr(self, 'dm_spin_cc'):
-            return self.dm_spin_cc
-        elif hasattr(self, 'dm_spin_scf'):
-            return self.dm_spin_scf
-        elif hasattr(self, 'orb_alpha_coeffs') and hasattr(self, 'orb_beta_coeffs'):
-            return self._alpha_orbs_to_dm() - self._beta_orbs_to_dm()
-
-    def _alpha_orbs_to_dm(self) -> np.ndarray:
-        return np.dot(self.orb_alpha_coeffs * self.orb_alpha_occs, self.orb_alpha_coeffs.T)
-
-    def _beta_orbs_to_dm(self) -> np.ndarray:
-        return np.dot(self.orb_beta_coeffs * self.orb_beta_occs, self.orb_beta_coeffs.T)

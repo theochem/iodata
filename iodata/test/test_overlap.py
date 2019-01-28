@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-# HORTON: Helpful Open-source Research TOol for N-fermion systems.
-# Copyright (C) 2011-2017 The HORTON Development Team
+# IODATA is an input and output module for quantum chemistry.
 #
-# This file is part of HORTON.
+# Copyright (C) 2011-2019 The IODATA Development Team
 #
-# HORTON is free software; you can redistribute it and/or
+# This file is part of IODATA.
+#
+# IODATA is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 3
 # of the License, or (at your option) any later version.
 #
-# HORTON is distributed in the hope that it will be useful,
+# IODATA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -54,7 +55,7 @@ def test_binom():
 
 
 def test_load_fchk_hf_sto3g_num():
-    with path('iodata.test.cached', 'load_fchk_hf_sto3g_num.npy') as fn_npy:
+    with path('iodata.test.data', 'load_fchk_hf_sto3g_num.npy') as fn_npy:
         ref = np.load(str(fn_npy))
     d = dict([('centers', np.array([[0., 0., 0.19048439],
                                     [0., 0., -1.71435955]])),
@@ -72,7 +73,7 @@ def test_load_fchk_hf_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    with path('iodata.test.cached', 'load_fchk_o2_cc_pvtz_pure_num.npy') as fn_npy:
+    with path('iodata.test.data', 'load_fchk_o2_cc_pvtz_pure_num.npy') as fn_npy:
         ref = np.load(str(fn_npy))
     d = dict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                     [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (
@@ -118,7 +119,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    with path('iodata.test.cached', 'load_fchk_o2_cc_pvtz_cart_num.npy') as fn_npy:
+    with path('iodata.test.data', 'load_fchk_o2_cc_pvtz_cart_num.npy') as fn_npy:
         ref = np.load(str(fn_npy))
     d = dict([('centers', np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
                                     [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])), (

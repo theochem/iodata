@@ -46,7 +46,7 @@ def test_unravel_counter():
 
 
 def test_load_chgcar_oxygen():
-    with path('iodata.test.cached', 'CHGCAR.oxygen') as fn:
+    with path('iodata.test.data', 'CHGCAR.oxygen') as fn:
         mol = IOData.from_file(str(fn))
     assert (mol.numbers == [8]).all()
     assert abs(volume(mol.rvecs) - (10 * angstrom) ** 3) < 1e-10
@@ -62,7 +62,7 @@ def test_load_chgcar_oxygen():
 
 
 def test_load_chgcar_water():
-    with path('iodata.test.cached', 'CHGCAR.water') as fn:
+    with path('iodata.test.data', 'CHGCAR.water') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.title == 'unknown system'
     assert (mol.numbers == [8, 1, 1]).all()
