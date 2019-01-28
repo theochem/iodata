@@ -24,7 +24,7 @@
 
 
 import numpy as np
-from .common import compute_mulliken_charges, check_normalization
+from .common import compute_mulliken_charges, check_orthonormal
 from ..wfn import load_wfn_low, get_permutation_basis, get_permutation_orbital, get_mask
 from ..iodata import IOData
 from ..overlap import compute_overlap
@@ -197,11 +197,11 @@ def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
     assert shells_to_nbasis(mol.obasis["shell_types"]) == nbasis
     olp = compute_overlap(**mol.obasis)
     if restricted:
-        check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
+        check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
         assert not hasattr(mol, 'orb_beta')
     else:
-        check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
-        check_normalization(mol.orb_beta_coeffs, mol.orb_beta_occs, olp, 1e-5)
+        check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
+        check_orthonormal(mol.orb_beta_coeffs, olp, 1e-5)
     if energy is not None:
         assert abs(energy - mol.energy) < 1.e-5
     mycharges = compute_mulliken_charges(mol)

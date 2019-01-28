@@ -26,7 +26,7 @@
 import os
 import numpy as np
 
-from . common import compute_mulliken_charges, tmpdir, compare_mols, check_normalization
+from . common import compute_mulliken_charges, tmpdir, compare_mols, check_orthonormal
 from .. iodata import IOData
 from .. overlap import compute_overlap
 try:
@@ -44,8 +44,8 @@ def test_load_molden_li2_orca():
 
     # Check normalization
     olp = compute_overlap(**mol.obasis)
-    check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
-    check_normalization(mol.orb_beta_coeffs, mol.orb_beta_occs, olp, 1e-5)
+    check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
+    check_orthonormal(mol.orb_beta_coeffs, olp, 1e-5)
 
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
@@ -62,7 +62,7 @@ def test_load_molden_h2o_orca():
 
     # Check normalization
     olp = compute_overlap(**mol.obasis)
-    check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
+    check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
 
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
