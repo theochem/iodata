@@ -24,10 +24,11 @@
 
 import shutil
 import tempfile
-from contextlib import contextmanager
-
 import numpy as np
+
 from os import path
+from numpy.testing import assert_allclose
+from contextlib import contextmanager
 
 from ..overlap import compute_overlap, get_shell_nbasis
 
@@ -139,33 +140,23 @@ def compare_mols(mol1, mol2):
             assert not hasattr(mol2, key)
 
 
-def check_orthonormal(occupations, coeffs, overlap, eps=1e-4):
-    """Check that the occupied orbitals are orthogonal and normalized.
-
-    When the orbitals are not orthonormal, an AssertionError is raised.
+def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
+    """Check that molecular orbitals are orthogonal and normalized.
 
     Parameters
     ----------
-    occupations : np.ndarray, shape=(nfn, )
-        The orbital occupations.
-    coeffs : np.ndarray, shape=(nbasis, nfn)
-        The orbital coefficients.
-    overlap : np.ndarray, shape=(nbasis, nbasis)
-        The overlap matrix.
-    eps : float
-        The allowed deviation from unity, very loose by default.
+    mo_coeffs : np.ndarray, shape=(nbasis, mo_count)
+        Molecular orbital coefficients.
+    ao_overlap : np.ndarray, shape=(nbasis, nbasis)
+        Atomic orbital overlap matrix.
+    atol : float
+        Absolute tolerance in deviation from identity matrix.
     """
-    for i0 in range(occupations.size):
-        if occupations[i0] == 0:
-            continue
-        for i1 in range(i0 + 1):
-            if occupations[i1] == 0:
-                continue
-            dot = np.dot(coeffs[:, i0], np.dot(overlap, coeffs[:, i1]))
-            if i0 == i1:
-                assert abs(dot - 1) < eps
-            else:
-                assert abs(dot) < eps
+    # compute MO overlap & number of MO orbitals
+    mo_overlap = np.dot(mo_coeffs.T, np.dot(ao_overlap, mo_coeffs))
+    mo_count = mo_coeffs.shape[1]
+    message = 'Molecular orbitals are not orthonormal!'
+    assert_allclose(mo_overlap, np.eye(mo_count), rtol=0., atol=atol, err_msg=message)
 
 
 def check_normalization(coeffs, occupations, overlap, eps=1e-4):
