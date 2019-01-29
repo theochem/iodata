@@ -27,16 +27,44 @@ import numpy as np
 import scipy.constants as spc
 
 from scipy.linalg import eigh
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, NamedTuple
 
 from .overlap import get_shell_nbasis
 
 
-__all__ = ['set_four_index_element']
+__all__ = ['set_four_index_element', 'MolecularOrbitals']
 
 
 angstrom = spc.angstrom / spc.value(u'atomic unit of length')
 electronvolt = 1. / spc.value(u'hartree-electron volt relationship')
+
+
+class MolecularOrbitals(NamedTuple):
+    """
+    Attributes
+    ----------
+    type : str
+        Molecular orbital type; choose from 'restricted', 'unrestricted', or 'generalized'.
+    norb_a : int
+        Number of alpha molecular orbitals.
+    norb_b : int
+        Number of beta molecular orbitals.
+    occs : np.ndarray
+        Molecular orbital occupation numbers.
+    coeffs : np.ndarray
+        Molecular orbital basis coefficients.
+    irreps : np.ndarray
+        Irreducible representation.
+    energies : np.ndarray
+        Molecular orbital energies.
+    """
+    type: str
+    norb_a: int
+    norb_b: int
+    occs: np.ndarray
+    coeffs: np.ndarray
+    irreps: np.ndarray
+    energies: np.ndarray
 
 
 def str_to_shell_types(s: str, pure: bool = False) -> List[int]:
