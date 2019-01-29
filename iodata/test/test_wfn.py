@@ -195,6 +195,7 @@ def test_get_mask():
 
 
 def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
+    """Check that MO are orthonormal & energy and charges match expected values."""
     # load file
     with path('iodata.test.data', fn_wfn) as file_wfn:
         mol = IOData.from_file(str(file_wfn))

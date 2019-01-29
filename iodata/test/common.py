@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
+# pragma pylint: disable=invalid-name,wrong-import-order
 
 
 import shutil
@@ -155,6 +155,7 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
         Atomic orbital overlap matrix.
     atol : float
         Absolute tolerance in deviation from identity matrix.
+
     """
     # compute MO overlap & number of MO orbitals
     mo_overlap = np.dot(mo_coeffs.T, np.dot(ao_overlap, mo_coeffs))

@@ -218,7 +218,7 @@ def load(filename: str) -> Dict:
     type_assignment = type_assignment[permutation]
     mask = get_mask(type_assignment)
     reduced_size = np.array(mask, int).sum()
-    num_mo = coefficients.shape[1]
+    num = coefficients.shape[1]
     alphas = np.empty(reduced_size)
     alphas[:] = exponents[permutation][mask]
     assert (centers == centers[permutation]).all()
@@ -246,11 +246,11 @@ def load(filename: str) -> Dict:
         # open shell system
         mo_type = 'unrestricted'
         # counting the number of alpha and beta orbitals
-        na = 1
-        while na < num_mo and mo_energy[na] >= mo_energy[na - 1] and mo_count[na] == mo_count[na - 1] + 1:
-            na += 1
-        na_orb = na
-        nb_orb = len(mo_occ) - na
+        n = 1
+        while n < num and mo_energy[n] >= mo_energy[n - 1] and mo_count[n] == mo_count[n - 1] + 1:
+            n += 1
+        na_orb = n
+        nb_orb = len(mo_occ) - n
     # create a MO namedtuple
     mo = MolecularOrbitals(mo_type, na_orb, nb_orb, mo_occ, coefficients, None, mo_energy)
 

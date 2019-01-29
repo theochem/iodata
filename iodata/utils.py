@@ -40,7 +40,8 @@ electronvolt = 1. / spc.value(u'hartree-electron volt relationship')
 
 
 class MolecularOrbitals(NamedTuple):
-    """
+    """Molecular Orbitals Class.
+
     Attributes
     ----------
     type : str
@@ -57,7 +58,9 @@ class MolecularOrbitals(NamedTuple):
         Irreducible representation.
     energies : np.ndarray
         Molecular orbital energies.
+
     """
+
     type: str
     norb_a: int
     norb_b: int
