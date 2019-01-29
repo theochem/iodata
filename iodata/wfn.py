@@ -233,7 +233,6 @@ def load(filename: str) -> Dict:
     # build basis set
     obasis = {"centers": coordinates, "shell_map": shell_map, "nprims": nprims,
               "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
-    nbasis = coefficients.shape[0]
     coefficients = coefficients[permutation]
     scales, dummy = init_scales(obasis["alphas"], obasis["nprims"], obasis["shell_types"])
     coefficients /= scales.reshape(-1, 1)
