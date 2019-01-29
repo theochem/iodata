@@ -54,7 +54,7 @@ cache:
 
 before_cache:
 - if ! [[ $TRAVIS_TAG ]]; then rm -rf $HOME/miniconda/conda-bld; fi
-- rm -rf $HOME/miniconda/locks $HOME/miniconda/pkgs $HOME/miniconda/var $HOME/miniconda/conda-meta/history
+- rm -rf $HOME/miniconda/locks $HOME/miniconda/pkgs $HOME/miniconda/var
 - pip uninstall -y cardboardlint # Cardboardlint always installs even if no changes are made.
 
 branches:
