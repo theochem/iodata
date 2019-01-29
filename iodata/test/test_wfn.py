@@ -232,7 +232,7 @@ def test_load_wfn_h2o_sto3g():
 
 
 def test_load_wfn_li_sp_virtual():
-    mol = check_wfn('li_sp_virtual.wfn', 8, -3.712905542719, np.array([0.0, 0.0]))
+    mol = check_wfn('li_sp_virtual.wfn', 8, -3.712905542719, np.array([0.0]))
     assert abs(mol.mo.occs.sum() - 3.0) < 1.e-6
     assert (mol.mo.occs[:8] == [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).all()
     assert (mol.mo.occs[8:] == [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).all()
