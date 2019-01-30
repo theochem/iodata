@@ -19,16 +19,16 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name,wrong-import-order
+# pragma pylint: disable=invalid-name
 
 
 import shutil
 import tempfile
-import numpy as np
-
 from os import path
-from numpy.testing import assert_allclose
 from contextlib import contextmanager
+
+import numpy as np
+from numpy.testing import assert_allclose
 
 from ..overlap import compute_overlap, get_shell_nbasis
 
