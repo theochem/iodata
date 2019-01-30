@@ -29,6 +29,7 @@ from typing import Tuple, List, TextIO, Dict
 
 from .overlap import init_scales
 from .periodic import sym2num
+from .utils import MolecularOrbitals
 
 
 __all__ = ['load_wfn_low', 'get_permutation_orbital',
@@ -217,7 +218,7 @@ def load(filename: str) -> Dict:
     type_assignment = type_assignment[permutation]
     mask = get_mask(type_assignment)
     reduced_size = np.array(mask, int).sum()
-    num_mo = coefficients.shape[1]
+    num = coefficients.shape[1]
     alphas = np.empty(reduced_size)
     alphas[:] = exponents[permutation][mask]
     assert (centers == centers[permutation]).all()
@@ -232,48 +233,33 @@ def load(filename: str) -> Dict:
     # build basis set
     obasis = {"centers": coordinates, "shell_map": shell_map, "nprims": nprims,
               "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
-    nbasis = coefficients.shape[0]
     coefficients = coefficients[permutation]
     scales, dummy = init_scales(obasis["alphas"], obasis["nprims"], obasis["shell_types"])
     coefficients /= scales.reshape(-1, 1)
     # make the wavefunction
     if mo_occ.max() > 1.0:
         # close shell system
-        orb_alpha = (nbasis, coefficients.shape[1])
-        orb_alpha_coeffs = coefficients
-        orb_alpha_energies = mo_energy
-        orb_alpha_occs = mo_occ / 2
-        orb_beta = None
+        mo_type = 'restricted'
+        na_orb = len(mo_occ)
+        nb_orb = len(mo_occ)
     else:
         # open shell system
+        mo_type = 'unrestricted'
         # counting the number of alpha and beta orbitals
-        index = 1
-        while index < num_mo and mo_energy[index] >= mo_energy[index - 1] and mo_count[index] == \
-                        mo_count[index - 1] + 1:
-            index += 1
-        orb_alpha = (nbasis, index)
-        orb_alpha_coeffs = np.copy(coefficients[:, :index])
-        orb_alpha_energies = np.copy(mo_energy[:index])
-        orb_alpha_occs = np.copy(mo_occ[:index])
-        orb_beta = (nbasis, num_mo - index)
-        orb_beta_coeffs = np.copy(coefficients[:, index:])
-        orb_beta_energies = np.copy(mo_energy[index:])
-        orb_beta_occs = np.copy(mo_occ[index:])
+        n = 1
+        while n < num and mo_energy[n] >= mo_energy[n - 1] and mo_count[n] == mo_count[n - 1] + 1:
+            n += 1
+        na_orb = n
+        nb_orb = len(mo_occ) - n
+    # create a MO namedtuple
+    mo = MolecularOrbitals(mo_type, na_orb, nb_orb, mo_occ, coefficients, None, mo_energy)
 
     result = {
         'title': title,
         'coordinates': coordinates,
-        'orb_alpha': orb_alpha,
-        'orb_alpha_coeffs': orb_alpha_coeffs,
-        'orb_alpha_energies': orb_alpha_energies,
-        'orb_alpha_occs': orb_alpha_occs,
         'numbers': numbers,
         'obasis': obasis,
+        'mo': mo,
         'energy': energy,
     }
-    if orb_beta is not None:
-        result['orb_beta'] = orb_beta
-        result['orb_beta_coeffs'] = orb_beta_coeffs
-        result['orb_beta_energies'] = orb_beta_energies
-        result['orb_beta_occs'] = orb_beta_occs
     return result

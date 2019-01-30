@@ -19,11 +19,11 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
+# pragma pylint: disable=invalid-name,no-member
 """Test iodata.molekel module."""
 
 
-from . common import check_normalization
+from . common import check_orthonormal
 from .. iodata import IOData
 from .. utils import angstrom, shells_to_nbasis
 from .. overlap import compute_overlap
@@ -73,12 +73,12 @@ def test_load_mkl_li2():
 
     # Check normalization
     olp = compute_overlap(**mol.obasis)
-    check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
-    check_normalization(mol.orb_beta_coeffs, mol.orb_beta_occs, olp, 1e-5)
+    check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
+    check_orthonormal(mol.orb_beta_coeffs, olp, 1e-5)
 
 
 def test_load_mkl_h2():
     with path('iodata.test.data', 'h2_sto3g.mkl') as fn_mkl:
         mol = IOData.from_file(str(fn_mkl))
     olp = compute_overlap(**mol.obasis)
-    check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
+    check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)

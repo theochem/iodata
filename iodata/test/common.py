@@ -24,10 +24,11 @@
 
 import shutil
 import tempfile
+from os import path
 from contextlib import contextmanager
 
 import numpy as np
-from os import path
+from numpy.testing import assert_allclose
 
 from ..overlap import compute_overlap, get_shell_nbasis
 
@@ -37,13 +38,17 @@ __all__ = ['compute_mulliken_charges', 'compute_1rdm']
 
 def compute_1rdm(iodata):
     """Compute 1-RDM."""
-    coeffs, occs = iodata.orb_alpha_coeffs, iodata.orb_alpha_occs
-    dm = np.dot(coeffs * occs, coeffs.T)
-    if hasattr(iodata, 'orb_beta_coeffs'):
-        coeffs, occs = iodata.orb_beta_coeffs, iodata.orb_beta_occs
-        dm += np.dot(coeffs * occs, coeffs.T)
-    else:
-        dm *= 2
+    if hasattr(iodata, 'mo'):
+        coeffs, occs = iodata.mo.coeffs, iodata.mo.occs
+        dm = np.dot(coeffs * occs, coeffs.T)
+    if hasattr(iodata, 'orb_alpha_coeffs'):
+        coeffs, occs = iodata.orb_alpha_coeffs, iodata.orb_alpha_occs
+        dm = np.dot(coeffs * occs, coeffs.T)
+        if hasattr(iodata, 'orb_beta_coeffs'):
+            coeffs, occs = iodata.orb_beta_coeffs, iodata.orb_beta_occs
+            dm += np.dot(coeffs * occs, coeffs.T)
+        else:
+            dm *= 2
     return dm
 
 
@@ -139,54 +144,21 @@ def compare_mols(mol1, mol2):
             assert not hasattr(mol2, key)
 
 
-def check_orthonormal(occupations, coeffs, overlap, eps=1e-4):
-    """Check that the occupied orbitals are orthogonal and normalized.
-
-    When the orbitals are not orthonormal, an AssertionError is raised.
+def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
+    """Check that molecular orbitals are orthogonal and normalized.
 
     Parameters
     ----------
-    occupations : np.ndarray, shape=(nfn, )
-        The orbital occupations.
-    coeffs : np.ndarray, shape=(nbasis, nfn)
-        The orbital coefficients.
-    overlap : np.ndarray, shape=(nbasis, nbasis)
-        The overlap matrix.
-    eps : float
-        The allowed deviation from unity, very loose by default.
+    mo_coeffs : np.ndarray, shape=(nbasis, mo_count)
+        Molecular orbital coefficients.
+    ao_overlap : np.ndarray, shape=(nbasis, nbasis)
+        Atomic orbital overlap matrix.
+    atol : float
+        Absolute tolerance in deviation from identity matrix.
+
     """
-    for i0 in range(occupations.size):
-        if occupations[i0] == 0:
-            continue
-        for i1 in range(i0 + 1):
-            if occupations[i1] == 0:
-                continue
-            dot = np.dot(coeffs[:, i0], np.dot(overlap, coeffs[:, i1]))
-            if i0 == i1:
-                assert abs(dot - 1) < eps
-            else:
-                assert abs(dot) < eps
-
-
-def check_normalization(coeffs, occupations, overlap, eps=1e-4):
-    """Check that the occupied orbitals are normalized.
-
-    When the orbitals are not normalized, an AssertionError is raised.
-
-    Parameters
-    ----------
-    coeffs : np.ndarray, shape=(nbasis, nfn)
-        Orbital coefficients
-    occupations : np.ndarray, shape=(nfn, )
-        Orbital occupations
-    overlap : np.ndarray, shape=(nbasis, nbasis)
-        The overlap matrix.
-    eps : float
-        The allowed deviation from unity, very loose by default.
-    """
-    for i in range(occupations.size):
-        if occupations[i] == 0:
-            continue
-        norm = np.dot(coeffs[:, i], np.dot(overlap, coeffs[:, i]))
-        # print i, norm
-        assert abs(norm - 1) < eps, 'The orbitals are not normalized!'
+    # compute MO overlap & number of MO orbitals
+    mo_overlap = np.dot(mo_coeffs.T, np.dot(ao_overlap, mo_coeffs))
+    mo_count = mo_coeffs.shape[1]
+    message = 'Molecular orbitals are not orthonormal!'
+    assert_allclose(mo_overlap, np.eye(mo_count), rtol=0., atol=atol, err_msg=message)

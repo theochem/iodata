@@ -24,7 +24,10 @@
 
 
 import numpy as np
-from .common import compute_mulliken_charges, check_normalization
+
+from numpy.testing import assert_equal, assert_allclose
+
+from .common import compute_mulliken_charges, check_orthonormal
 from ..wfn import load_wfn_low, get_permutation_basis, get_permutation_orbital, get_mask
 from ..iodata import IOData
 from ..overlap import compute_overlap
@@ -191,115 +194,110 @@ def test_get_mask():
     assert (get_mask(np.array([11, 21, 36, 1])) == [True, True, True, True]).all()
 
 
-def check_wfn(fn_wfn, restricted, nbasis, energy, charges):
+def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
+    """Check that MO are orthonormal & energy and charges match expected values."""
+    # load file
     with path('iodata.test.data', fn_wfn) as file_wfn:
         mol = IOData.from_file(str(file_wfn))
-    assert shells_to_nbasis(mol.obasis["shell_types"]) == nbasis
+    # check number of basis functions
+    assert_equal(shells_to_nbasis(mol.obasis["shell_types"]), nbasis)
+    # check orthonormal mo
     olp = compute_overlap(**mol.obasis)
-    if restricted:
-        check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
-        assert not hasattr(mol, 'orb_beta')
-    else:
-        check_normalization(mol.orb_alpha_coeffs, mol.orb_alpha_occs, olp, 1e-5)
-        check_normalization(mol.orb_beta_coeffs, mol.orb_beta_occs, olp, 1e-5)
+    if mol.mo.type == 'restricted':
+        check_orthonormal(mol.mo.coeffs, olp, 1.e-5)
+    elif mol.mo.type == 'unrestricted':
+        check_orthonormal(mol.mo.coeffs[:, :mol.mo.norb_a], olp, 1.e-5)
+        check_orthonormal(mol.mo.coeffs[:, mol.mo.norb_a:], olp, 1.e-5)
+    # check energy & atomic charges
     if energy is not None:
-        assert abs(energy - mol.energy) < 1.e-5
-    mycharges = compute_mulliken_charges(mol)
-    assert (abs(charges - mycharges) < 1e-5).all()
+        assert_allclose(mol.energy, energy, rtol=0., atol=1.e-5)
+    if charges_mulliken is not None:
+        charges = compute_mulliken_charges(mol)
+        assert_allclose(charges_mulliken, charges, rtol=0., atol=1.e-5)
     return mol
 
 
 def test_load_wfn_h2o_sto3g_decontracted():
-    check_wfn('h2o_sto3g_decontracted.wfn', True, 21, -75.162231674351,
-              np.array([-0.546656, 0.273328, 0.273328]))
+    charges = np.array([-0.546656, 0.273328, 0.273328])
+    check_wfn('h2o_sto3g_decontracted.wfn', 21, -75.162231674351, charges)
 
 
 def test_load_wfn_h2_ccpvqz_virtual():
-    mol = check_wfn('h2_ccpvqz.wfn', True, 74, -1.133504568400, np.array([0.0, 0.0]))
-
+    mol = check_wfn('h2_ccpvqz.wfn', 74, -1.133504568400, np.array([0.0, 0.0]))
     expect = [82.64000, 12.41000, 2.824000, 0.7977000, 0.2581000]
-    assert (abs(mol.obasis['alphas'][:5] - expect) < 1.e-5).all()
+    assert_allclose(mol.obasis['alphas'][:5], expect, rtol=0., atol=1.e-6)
     expect = [-0.596838, 0.144565, 0.209605, 0.460401, 0.460401]
-    assert (mol.orb_alpha_energies[:5] == expect).all()
+    assert_allclose(mol.mo.energies[:5], expect, rtol=0., atol=1.e-6)
     expect = [12.859067, 13.017471, 16.405834, 25.824716, 26.100443]
-    assert (mol.orb_alpha_energies[-5:] == expect).all()
-    assert (mol.orb_alpha_occs[:5] == [1.0, 0.0, 0.0, 0.0, 0.0]).all()
-    assert abs(mol.orb_alpha_occs.sum() - 1.0) < 1.e-6
+    assert_allclose(mol.mo.energies[-5:], expect, rtol=0., atol=1.e-6)
+    assert_equal(mol.mo.occs[:5], [2, 0, 0, 0, 0])
+    assert_equal(mol.mo.occs.sum(), 2)
 
 
 def test_load_wfn_h2o_sto3g():
-    check_wfn('h2o_sto3g.wfn', True, 21, -74.96590121708, np.array([-0.330532, 0.165266, 0.165266]))
+    check_wfn('h2o_sto3g.wfn', 21, -74.96590121708, np.array([-0.330532, 0.165266, 0.165266]))
 
 
 def test_load_wfn_li_sp_virtual():
-    mol = check_wfn('li_sp_virtual.wfn', False, 8, -3.712905542719, np.array([0.0, 0.0]))
-    assert abs(mol.orb_alpha_occs.sum() - 2.0) < 1.e-6
-    assert abs(mol.orb_beta_occs.sum() - 1.0) < 1.e-6
-    assert (mol.orb_alpha_occs == [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).all()
-    assert (mol.orb_beta_occs == [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]).all()
+    mol = check_wfn('li_sp_virtual.wfn', 8, -3.712905542719, np.array([0.0]))
+    assert_equal(mol.mo.occs[:8], [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    assert_equal(mol.mo.occs[8:], [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     expect = [-0.087492, -0.080310, 0.158784, 0.158784, 1.078773, 1.090891, 1.090891, 49.643670]
-    assert (abs(mol.orb_alpha_energies - expect) < 1.e-6).all()
+    assert_allclose(mol.mo.energies[:8], expect, rtol=0., atol=1.e-6)
     expect = [-0.079905, 0.176681, 0.176681, 0.212494, 1.096631, 1.096631, 1.122821, 49.643827]
-    assert (abs(mol.orb_beta_energies - expect) < 1.e-6).all()
-    assert mol.orb_alpha_coeffs.shape == (8, 8)
-    assert mol.orb_beta_coeffs.shape == (8, 8)
+    assert_allclose(mol.mo.energies[8:], expect, rtol=0., atol=1.e-6)
+    assert_equal(mol.mo.coeffs.shape, (8, 16))
 
 
 def test_load_wfn_li_sp():
-    with path('iodata.test.data', 'li_sp_orbital.wfn') as fn_wfn:
-        mol = IOData.from_file(str(fn_wfn))
-    assert mol.title == 'Li atom - using s & p orbitals'
-    assert mol.orb_alpha[1] == 2
-    assert mol.orb_beta[1] == 1
-    assert abs(mol.energy - (-3.712905542719)) < 1.e-5
+    mol = check_wfn('li_sp_orbital.wfn', 8, -3.712905542719, None)
+    assert_equal(mol.title, 'Li atom - using s & p orbitals')
+    assert_equal([mol.mo.norb_a, mol.mo.norb_b], [2, 1])
+    assert_allclose(mol.mo.energies, [-0.087492, -0.080310, -0.079905], rtol=0., atol=1.e-6)
 
 
 def test_load_wfn_o2():
-    mol = check_wfn('o2_uhf.wfn', False, 72, -149.664140769678, np.array([0.0, 0.0]))
-    assert mol.orb_alpha[1] == 9
-    assert mol.orb_beta[1] == 7
+    mol = check_wfn('o2_uhf.wfn', 72, -149.664140769678, np.array([0.0, 0.0]))
+    assert_equal([mol.mo.norb_a, mol.mo.norb_b], [9, 7])
 
 
 def test_load_wfn_o2_virtual():
-    mol = check_wfn('o2_uhf_virtual.wfn', False, 72, -149.664140769678, np.array([0.0, 0.0]))
-    assert abs(mol.orb_alpha_occs.sum() - 9.0) < 1.e-6
-    assert abs(mol.orb_beta_occs.sum() - 7.0) < 1.e-6
-    assert mol.orb_alpha_occs.shape == (44,)
-    assert mol.orb_beta_occs.shape == (44,)
-    assert (mol.orb_alpha_occs[:9] == np.ones(9)).all()
-    assert (mol.orb_beta_occs[:7] == np.ones(7)).all()
-    assert (mol.orb_alpha_occs[9:] == np.zeros(35)).all()
-    assert (mol.orb_beta_occs[7:] == np.zeros(37)).all()
-    assert mol.orb_alpha_energies.shape == (44,)
-    assert mol.orb_beta_energies.shape == (44,)
-    assert mol.orb_alpha_energies[0] == -20.752000
-    assert mol.orb_alpha_energies[10] == 0.179578
-    assert mol.orb_alpha_energies[-1] == 51.503193
-    assert mol.orb_beta_energies[0] == -20.697027
-    assert mol.orb_beta_energies[15] == 0.322590
-    assert mol.orb_beta_energies[-1] == 51.535258
-    assert mol.orb_alpha_coeffs.shape == (72, 44)
-    assert mol.orb_beta_coeffs.shape == (72, 44)
+    mol = check_wfn('o2_uhf_virtual.wfn', 72, -149.664140769678, np.array([0.0, 0.0]))
+    # check MO occupation
+    assert_equal(mol.mo.occs.shape, (88,))
+    assert_equal(mol.mo.occs[:mol.mo.norb_a], [1.] * 9 + [0.] * 35)
+    assert_equal(mol.mo.occs[mol.mo.norb_a:], [1.] * 7 + [0.] * 37)
+    # check MO energies
+    assert_equal(mol.mo.energies.shape, (88,))
+    mo_energies_a = mol.mo.energies[:mol.mo.norb_a]
+    assert_allclose(mo_energies_a[0], -20.752000, rtol=0, atol=1.e-6)
+    assert_allclose(mo_energies_a[10], 0.179578, rtol=0, atol=1.e-6)
+    assert_allclose(mo_energies_a[-1], 51.503193, rtol=0, atol=1.e-6)
+    mo_energies_b = mol.mo.energies[mol.mo.norb_a:]
+    assert_allclose(mo_energies_b[0], -20.697027, rtol=0, atol=1.e-6)
+    assert_allclose(mo_energies_b[15], 0.322590, rtol=0, atol=1.e-6)
+    assert_allclose(mo_energies_b[-1], 51.535258, rtol=0, atol=1.e-6)
+    # check MO coefficients
+    assert_equal(mol.mo.coeffs.shape, (72, 88))
 
 
 def test_load_wfn_lif_fci():
-    mol = check_wfn('lif_fci.wfn', True, 44, None, np.array([-0.645282, 0.645282]))
-    assert mol.orb_alpha_occs.shape == (18,)
-    assert abs(mol.orb_alpha_occs.sum() - 6.0) < 1.e-6
-    assert mol.orb_alpha_occs[0] == 2.00000000 / 2
-    assert mol.orb_alpha_occs[10] == 0.00128021 / 2
-    assert mol.orb_alpha_occs[-1] == 0.00000054 / 2
-    assert mol.orb_alpha_energies.shape == (18,)
-    assert mol.orb_alpha_energies[0] == -26.09321253
-    assert mol.orb_alpha_energies[15] == 1.70096290
-    assert mol.orb_alpha_energies[-1] == 2.17434072
-    assert mol.orb_alpha_coeffs.shape == (44, 18)
-    assert abs(mol.energy - (-107.0575700853)) < 1.e-5  # FCI energy
+    mol = check_wfn('lif_fci.wfn', 44, -107.0575700853, np.array([-0.645282, 0.645282]))
+    assert_equal(mol.mo.occs.shape, (18,))
+    assert_allclose(mol.mo.occs.sum(), 12.0, rtol=0., atol=1.e-6)
+    assert_allclose(mol.mo.occs[0], 2.0, rtol=0., atol=1.e-6)
+    assert_allclose(mol.mo.occs[10], 0.00128021, rtol=0., atol=1.e-6)
+    assert_allclose(mol.mo.occs[-1], 0.00000054, rtol=0., atol=1.e-6)
+    assert_equal(mol.mo.energies.shape, (18,))
+    assert_allclose(mol.mo.energies[0], -26.09321253, rtol=0., atol=1.e-7)
+    assert_allclose(mol.mo.energies[15], 1.70096290, rtol=0., atol=1.e-7)
+    assert_allclose(mol.mo.energies[-1], 2.17434072, rtol=0., atol=1.e-7)
+    assert_equal(mol.mo.coeffs.shape, (44, 18))
 
 
 def test_load_wfn_lih_cation_fci():
-    mol = check_wfn('lih_cation_fci.wfn', True, 26, None, np.array([0.913206, 0.086794]))
-    assert (mol.numbers == [3, 1]).all()
-    assert mol.orb_alpha_occs.shape == (11,)
-    assert abs(mol.orb_alpha_occs.sum() - 1.5) < 1.e-6
-    assert abs(mol.energy - (-7.7214366383)) < 1.e-5  # FCI energy
+    mol = check_wfn('lih_cation_fci.wfn', 26, -7.7214366383, np.array([0.913206, 0.086794]))
+    assert_equal(mol.numbers, [3, 1])
+    assert_equal(mol.mo.occs.shape, (11,))
+    assert_allclose(mol.mo.occs.sum(), 3., rtol=0., atol=1.e-6)
+    # assert abs(mol.mo.occs[:mol.mo.norb_a].sum() - 1.5) < 1.e-6

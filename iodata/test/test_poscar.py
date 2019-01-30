@@ -64,7 +64,10 @@ def test_load_poscar_cubicbn_direct():
 def test_load_dump_consistency():
     with path('iodata.test.data', 'water_element.xyz') as fn:
         mol0 = IOData.from_file(str(fn))
-    mol0.rvecs = np.random.uniform(0, 5.0, (3, 3))
+    # random matrix generated from a uniform distribution on [0., 5.0)
+    mol0.rvecs = np.array([[2.05278155, 0.23284023, 1.59024118],
+                           [4.96430141, 4.73044423, 4.67590975],
+                           [3.48374425, 0.67931228, 0.66281160]])
     mol0.gvecs = np.linalg.inv(mol0.rvecs).T
 
     with tmpdir('io.test.test_vasp.test_load_dump_consistency') as dn:
