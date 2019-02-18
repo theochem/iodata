@@ -65,12 +65,12 @@ but the procedure is entirely unsupported.
 
 The following dependencies will be necessary for IOData to build properly,
 
-* Python >= 3.7
-* NumPy >= 1.9.1
-* Scipy
-* Nosetests
-* gcc/clang
+* Python >= 3.6: http://www.python.org/
+* SciPy >= 0.11.0: http://www.scipy.org/
+* NumPy >= 1.9.1: http://www.numpy.org/
+* pytest >= 4.2.0: https://docs.pytest.org/
 * Cython
+* gcc/clang
 
 
 Testing
@@ -81,7 +81,7 @@ them again on your own machine:
 
 .. code-block:: bash
 
-    $ nosetests -v iodata
+    $ pytest -v iodata
 
 Building Docs
 -------------

@@ -17,7 +17,8 @@ requirements:
     - numpy
     - cython >=0.24.1
     - setuptools
-    - nose
+    - pytest
+    - pytest-cov
   run:
     - python
     - scipy
@@ -25,10 +26,11 @@ requirements:
 test:
   requires:
     - python
-    - nose
+    - pytest
+    - pytest-cov
   commands:
     - conda inspect linkages iodata
-    - nosetests -v iodata
+    - pytest -v iodata
 
 about:
   home: https://github.com/theochem/iodata
