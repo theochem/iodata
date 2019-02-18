@@ -146,8 +146,8 @@ script:
 - if ! [[ $TRAVIS_TAG ]]; then
     python setup.py build_ext -i --define CYTHON_TRACE_NOGIL &&
     pytest ${PROJECT_NAME} -v --cov=${PROJECT_NAME} --cov-report xml
-           --cov-report term --cov-branch
-    codecov -f coverage.xml
+           --cov-report term --cov-branch &&
+    codecov -f coverage.xml;
   fi
 
 # Dynamic linting
