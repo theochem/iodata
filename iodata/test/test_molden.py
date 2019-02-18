@@ -169,6 +169,15 @@ def test_load_molden_nh3_turbomole():
 
 
 def check_load_dump_consistency(fn, tmpdir):
+    """Check if data is preserved after dumping and loading a Molden file.
+
+    Parameters
+    ----------
+    fn : str
+        The Molden filename to load
+    tmpdir : str
+        The temporary directory to dump and load the file.
+    """
     with path('iodata.test.data', fn) as file_name:
         mol1 = IOData.from_file(str(file_name))
     fn_tmp = os.path.join(tmpdir, 'foo.molden')
