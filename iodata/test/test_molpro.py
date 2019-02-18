@@ -22,9 +22,10 @@
 # pragma pylint: disable=invalid-name
 """Test iodata.molpro module."""
 
+import os
+
 import numpy as np
 
-from .common import tmpdir
 from ..iodata import IOData
 
 try:
@@ -82,7 +83,7 @@ def test_load_fcidump_molpro_h2():
     assert mol.two_mo[3, 3, 3, 3] == 0.7484308847738417E+00
 
 
-def test_dump_load_fcidimp_consistency_ao():
+def test_dump_load_fcidimp_consistency_ao(tmpdir):
     # Setup IOData
     with path('iodata.test.data', 'water.xyz') as fn:
         mol0 = IOData.from_file(str(fn))
@@ -94,9 +95,9 @@ def test_dump_load_fcidimp_consistency_ao():
         mol0.two_mo = np.load(str(fn))
 
     # Dump to a file and load it again
-    with tmpdir('io.test.test_molpro.test_dump_load_fcidump_consistency_ao') as dn:
-        mol0.to_file('%s/FCIDUMP' % dn)
-        mol1 = IOData.from_file('%s/FCIDUMP' % dn)
+    fn_tmp = os.path.join(tmpdir, 'FCIDUMP')
+    mol0.to_file(fn_tmp)
+    mol1 = IOData.from_file(fn_tmp)
 
     # Compare results
     np.testing.assert_equal(mol0.nelec, mol1.nelec)

@@ -25,8 +25,6 @@
 
 import numpy as np
 
-from . common import tmpdir
-
 from .. iodata import IOData
 
 try:
@@ -59,21 +57,20 @@ def test_load_aelta():
     assert abs(pn[-1] - mol.numbers[-1]) < 1e-10
 
 
-def test_load_dump_load_aelta():
+def test_load_dump_load_aelta(tmpdir):
     with path('iodata.test.data', 'aelta.cube') as fn_cube1:
         mol1 = IOData.from_file(str(fn_cube1))
 
-    with tmpdir('io.test.test_cube.test_load_dump_load_aelta') as dn:
-        fn_cube2 = '%s/%s' % (dn, 'aelta.cube')
-        mol1.to_file(fn_cube2)
-        mol2 = IOData.from_file(fn_cube2)
+    fn_cube2 = '%s/%s' % (tmpdir, 'aelta.cube')
+    mol1.to_file(fn_cube2)
+    mol2 = IOData.from_file(fn_cube2)
 
-        assert mol1.title == mol2.title
-        assert abs(mol1.coordinates - mol2.coordinates).max() < 1e-4
-        assert (mol1.numbers == mol2.numbers).all()
-        ugrid1 = mol1.grid
-        ugrid2 = mol2.grid
-        assert abs(ugrid1["grid_rvecs"] - ugrid2["grid_rvecs"]).max() < 1e-4
-        assert (ugrid1["shape"] == ugrid2["shape"]).all()
-        assert abs(mol1.cube_data - mol2.cube_data).max() < 1e-4
-        assert abs(mol1.pseudo_numbers - mol2.pseudo_numbers).max() < 1e-4
+    assert mol1.title == mol2.title
+    assert abs(mol1.coordinates - mol2.coordinates).max() < 1e-4
+    assert (mol1.numbers == mol2.numbers).all()
+    ugrid1 = mol1.grid
+    ugrid2 = mol2.grid
+    assert abs(ugrid1["grid_rvecs"] - ugrid2["grid_rvecs"]).max() < 1e-4
+    assert (ugrid1["shape"] == ugrid2["shape"]).all()
+    assert abs(mol1.cube_data - mol2.cube_data).max() < 1e-4
+    assert abs(mol1.pseudo_numbers - mol2.pseudo_numbers).max() < 1e-4

@@ -141,10 +141,8 @@ script:
     conda build -q tools/conda.recipe;
   else
     python setup.py build_ext -i --define CYTHON_TRACE_NOGIL &&
-    nosetests ${PROJECT_NAME}
-         -v --detailed-errors --with-coverage --cover-package=${PROJECT_NAME}
-         --cover-tests --cover-inclusive --cover-branches &&
-    coverage xml -i &&
+    pytest ${PROJECT_NAME} -v --cov=${PROJECT_NAME} --cov-report xml
+           --cov-report term --cov-branch
 
     if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
        cardboardlinter --refspec $TRAVIS_BRANCH -f 'dynamic';
