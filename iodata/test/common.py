@@ -74,13 +74,11 @@ def compute_mulliken_charges(iodata, pseudo_numbers=None):
 
 
 @contextmanager
-def truncated_file(name, fn_orig, nline, nadd, tmpdir):
+def truncated_file(fn_orig, nline, nadd, tmpdir):
     """Make a temporary truncated copy of a file.
 
     Parameters
     ----------
-    name : str
-        The name of test, used to make a unique temporary directory
     fn_orig : str
         The file to be truncated.
     nline : int

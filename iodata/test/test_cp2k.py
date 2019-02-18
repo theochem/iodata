@@ -178,19 +178,19 @@ def test_carbon_sc_pp_uncontracted():
 
 def test_errors(tmpdir):
     with path('iodata.test.data', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_test:
-        with truncated_file('io.test.test_cp2k.test_errors', str(fn_test), 0, 0, tmpdir) as fn:
+        with truncated_file(fn_test, 0, 0, tmpdir) as fn:
             with pytest.raises(IOError):
                 IOData.from_file(fn)
-        with truncated_file('io.test.test_cp2k.test_errors', str(fn_test), 107, 10, tmpdir) as fn:
+        with truncated_file(fn_test, 107, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 IOData.from_file(fn)
-        with truncated_file('io.test.test_cp2k.test_errors', str(fn_test), 357, 10, tmpdir) as fn:
+        with truncated_file(fn_test, 357, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 IOData.from_file(fn)
-        with truncated_file('io.test.test_cp2k.test_errors', str(fn_test), 405, 10, tmpdir) as fn:
+        with truncated_file(fn_test, 405, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 IOData.from_file(fn)
     with path('iodata.test.data', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_test:
-        with truncated_file('io.test.test_cp2k.test_errors', str(fn_test), 456, 10, tmpdir) as fn:
+        with truncated_file(fn_test, 456, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 IOData.from_file(fn)
