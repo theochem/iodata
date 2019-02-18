@@ -130,36 +130,37 @@ install:
 
 script:
 # Static linting
-# --------------
+# ~~~~~~~~~~~~~~
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
     cardboardlinter --refspec $TRAVIS_BRANCH -f static;
   fi
 
-# Unit tests and dynamic linting
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Conda package build
+# ~~~~~~~~~~
 - if [[ $TRAVIS_TAG ]]; then
     conda build -q tools/conda.recipe;
-  else
+  fi
+
+# Unit tests
+# ~~~~~~~~~~
+- if ! [[ $TRAVIS_TAG ]]; then
     python setup.py build_ext -i --define CYTHON_TRACE_NOGIL &&
     pytest ${PROJECT_NAME} -v --cov=${PROJECT_NAME} --cov-report xml
            --cov-report term --cov-branch
+    codecov -f coverage.xml
+  fi
 
-    if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-       cardboardlinter --refspec $TRAVIS_BRANCH -f 'dynamic';
-    fi
+# Dynamic linting
+# ~~~~~~~~~~~~~~~
+- if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+     cardboardlinter --refspec $TRAVIS_BRANCH -f 'dynamic';
   fi
 
 # Make CPP and PY source package for github deployment
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - if [[ $TRAVIS_TAG ]]; then
     python setup.py sdist;
   fi
-
-# Some other stuff
-# ----------------
-
-after_success:
-# Upload the coverage analysis
-- codecov -f coverage.xml
 
 before_deploy:
 # Try to set some env vars to configure deployment.
