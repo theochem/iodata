@@ -87,6 +87,7 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
         The number of empty lines to add.
     tmpdir : str
         A temporary directory where the truncated file is stored.
+
     """
     fn_truncated = '%s/truncated_%i_%s' % (tmpdir, nline, path.basename(fn_orig))
     with open(fn_orig) as f_orig, open(fn_truncated, 'w') as f_truncated:
