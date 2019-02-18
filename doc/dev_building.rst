@@ -108,7 +108,6 @@ C/C++ dependencies.
     - numpy
     - setuptools
     - pytest
-    - pytest-cov
 
 The ``run`` section is for installing dependencies on the user's machine. This is for Python
 dependencies. This is also for libraries which need to be dynamically linked. In theory the Conda
@@ -122,7 +121,6 @@ the process is not reliable. You are advised to add them in as well.
     - numpy
     - scipy
     - pytest
-    - pytest-cov
     - libint
 
 For details on the ``meta.yaml`` file, read the

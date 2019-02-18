@@ -18,7 +18,6 @@ requirements:
     - cython >=0.24.1
     - setuptools
     - pytest
-    - pytest-cov
   run:
     - python
     - scipy
@@ -27,7 +26,6 @@ test:
   requires:
     - python
     - pytest
-    - pytest-cov
   commands:
     - conda inspect linkages iodata
     - pytest -v iodata

@@ -117,8 +117,8 @@ install:
 # Install conda tools for packaging and uploading
 - conda install -q python=${MYCONDAPY} anaconda-client numpy setuptools cython
 - if ! [[ $TRAVIS_TAG ]]; then
-    conda install -q ${CONDA_DEPENDENCIES};
-    pip install --upgrade pylint codecov coverage pycodestyle pydocstyle;
+    conda install -q ${CONDA_DEPENDENCIES} pytest-cov;
+    pip install --upgrade pylint codecov pycodestyle pydocstyle;
   fi
 # Show conda info for debugging
 - conda info -a
