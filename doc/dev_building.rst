@@ -53,7 +53,7 @@ making sure your code complies with PEP-8, PEP-257, and so forth. Use the
 code refactoring features.
 
 You will also find that testing locally can save you some time.
-Run nosetests on your own machine before submitting your PR.
+Run pytest on your own machine before submitting your PR.
 
 Building with Conda on your own machine will emulate lots of the build
 tests and give you a virtualenv that will be more reliable.
@@ -107,7 +107,7 @@ C/C++ dependencies.
     - cython >=0.24.1
     - numpy
     - setuptools
-    - nose
+    - pytest
 
 The ``run`` section is for installing dependencies on the user's machine. This is for Python
 dependencies. This is also for libraries which need to be dynamically linked. In theory the Conda
@@ -120,7 +120,7 @@ the process is not reliable. You are advised to add them in as well.
     - python >=3
     - numpy
     - scipy
-    - nose
+    - pytest
     - libint
 
 For details on the ``meta.yaml`` file, read the

@@ -50,8 +50,9 @@ The following dependencies will be necessary for IOData to build properly,
 * Python >= 3.6: http://www.python.org/
 * SciPy >= 0.11.0: http://www.scipy.org/
 * NumPy >= 1.9.1: http://www.numpy.org/
-* Nosetests >= 1.1.2: http://readthedocs.org/docs/nose/en/latest/
+* pytest >= 4.2.0: https://docs.pytest.org/
 * Cython
+* gcc/clang
 
 
 Installation

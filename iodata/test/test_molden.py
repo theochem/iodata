@@ -26,7 +26,7 @@
 import os
 import numpy as np
 
-from . common import compute_mulliken_charges, tmpdir, compare_mols, check_orthonormal
+from . common import compute_mulliken_charges, compare_mols, check_orthonormal
 from .. iodata import IOData
 from .. overlap import compute_overlap
 try:
@@ -168,31 +168,40 @@ def test_load_molden_nh3_turbomole():
     assert abs(charges - molden_charges).max() < 1e-3
 
 
-def check_load_dump_consistency(fn):
+def check_load_dump_consistency(fn, tmpdir):
+    """Check if data is preserved after dumping and loading a Molden file.
+
+    Parameters
+    ----------
+    fn : str
+        The Molden filename to load
+    tmpdir : str
+        The temporary directory to dump and load the file.
+
+    """
     with path('iodata.test.data', fn) as file_name:
         mol1 = IOData.from_file(str(file_name))
-    with tmpdir('io.test.test_molden.check_load_dump_consistency.%s' % fn) as dn:
-        fn_tmp = os.path.join(dn, 'foo.molden')
-        mol1.to_file(fn_tmp)
-        mol2 = IOData.from_file(fn_tmp)
+    fn_tmp = os.path.join(tmpdir, 'foo.molden')
+    mol1.to_file(fn_tmp)
+    mol2 = IOData.from_file(fn_tmp)
     compare_mols(mol1, mol2)
 
 
-def test_load_dump_consistency_h2o():
-    check_load_dump_consistency('h2o.molden.input')
+def test_load_dump_consistency_h2o(tmpdir):
+    check_load_dump_consistency('h2o.molden.input', tmpdir)
 
 
-def test_load_dump_consistency_li2():
-    check_load_dump_consistency('li2.molden.input')
+def test_load_dump_consistency_li2(tmpdir):
+    check_load_dump_consistency('li2.molden.input', tmpdir)
 
 
-def test_load_dump_consistency_f():
-    check_load_dump_consistency('F.molden')
+def test_load_dump_consistency_f(tmpdir):
+    check_load_dump_consistency('F.molden', tmpdir)
 
 
-def test_load_dump_consistency_nh3_molden_pure():
-    check_load_dump_consistency('nh3_molden_pure.molden')
+def test_load_dump_consistency_nh3_molden_pure(tmpdir):
+    check_load_dump_consistency('nh3_molden_pure.molden', tmpdir)
 
 
-def test_load_dump_consistency_nh3_molden_cart():
-    check_load_dump_consistency('nh3_molden_cart.molden')
+def test_load_dump_consistency_nh3_molden_cart(tmpdir):
+    check_load_dump_consistency('nh3_molden_cart.molden', tmpdir)

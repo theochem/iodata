@@ -22,10 +22,10 @@
 # pragma pylint: disable=invalid-name,no-member
 """Test iodata.xyz module."""
 
+import os
 
 import numpy as np
 
-from .common import tmpdir
 from ..iodata import IOData
 from ..utils import angstrom
 try:
@@ -60,37 +60,37 @@ def check_water(mol):
     assert abs(np.linalg.norm(mol.coordinates[0] - mol.coordinates[2]) / angstrom - 1.568) < 1e-3
 
 
-def test_load_dump_consistency():
+def test_load_dump_consistency(tmpdir):
     with path('iodata.test.data', 'ch3_hf_sto3g.fchk') as fn_fchk:
         mol0 = IOData.from_file(str(fn_fchk))
     # write xyz file in a temporary folder & then read it
-    with tmpdir('io.test.test_xyz.test_load_dump_consistency') as dn:
-        mol0.to_file('%s/test.xyz' % dn)
-        mol1 = IOData.from_file('%s/test.xyz' % dn)
+    fn_tmp = os.path.join(tmpdir, 'test.xyz')
+    mol0.to_file(fn_tmp)
+    mol1 = IOData.from_file(fn_tmp)
     # check two xyz files
     assert mol0.title == mol1.title
     assert (mol0.numbers == mol1.numbers).all()
     assert abs(mol0.coordinates - mol1.coordinates).max() < 1e-5
 
 
-def test_dump_xyz_water_element():
+def test_dump_xyz_water_element(tmpdir):
     with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
         mol0 = IOData.from_file(str(fn_xyz))
-    with tmpdir('io.test.test_xyz.test_dump_xyz_water_element') as dn:
-        mol0.to_file('%s/test.xyz' % dn)
-        mol1 = IOData.from_file('%s/test.xyz' % dn)
+    fn_tmp = os.path.join(tmpdir, 'test.xyz')
+    mol0.to_file(fn_tmp)
+    mol1 = IOData.from_file(fn_tmp)
     # check two xyz file
     assert mol0.title == mol1.title
     assert (mol0.numbers == mol1.numbers).all()
     assert abs(mol0.coordinates - mol1.coordinates).max() < 1e-5
 
 
-def test_dump_xyz_water_number():
+def test_dump_xyz_water_number(tmpdir):
     with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
         mol0 = IOData.from_file(str(fn_xyz))
-    with tmpdir('io.test.test_xyz.test_dump_xyz_water_number') as dn:
-        mol0.to_file('%s/test.xyz' % dn)
-        mol1 = IOData.from_file('%s/test.xyz' % dn)
+    fn_tmp = os.path.join(tmpdir, 'test.xyz')
+    mol0.to_file(fn_tmp)
+    mol1 = IOData.from_file(fn_tmp)
     # check two xyz file
     assert mol0.title == mol1.title
     assert (mol0.numbers == mol1.numbers).all()

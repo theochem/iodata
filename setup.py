@@ -66,6 +66,6 @@ setup(
     ],
     zip_safe=False,
     setup_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy'],
-    install_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy', 'nose>=0.11',
+    install_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy', 'pytest>=4.2.0',
                       'importlib_resources; python_version < "3.7"'],
 )

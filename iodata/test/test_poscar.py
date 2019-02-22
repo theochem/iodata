@@ -22,9 +22,10 @@
 """Test iodata.poscar module."""
 
 
+import os
+
 import numpy as np
 
-from . common import tmpdir
 from .. utils import angstrom, volume
 from .. iodata import IOData
 try:
@@ -61,7 +62,7 @@ def test_load_poscar_cubicbn_direct():
     assert abs(volume(mol.rvecs) - (3.57 * angstrom) ** 3 / 4) < 1e-10
 
 
-def test_load_dump_consistency():
+def test_load_dump_consistency(tmpdir):
     with path('iodata.test.data', 'water_element.xyz') as fn:
         mol0 = IOData.from_file(str(fn))
     # random matrix generated from a uniform distribution on [0., 5.0)
@@ -70,9 +71,9 @@ def test_load_dump_consistency():
                            [3.48374425, 0.67931228, 0.66281160]])
     mol0.gvecs = np.linalg.inv(mol0.rvecs).T
 
-    with tmpdir('io.test.test_vasp.test_load_dump_consistency') as dn:
-        mol0.to_file('%s/POSCAR' % dn)
-        mol1 = IOData.from_file('%s/POSCAR' % dn)
+    fn_tmp = os.path.join(tmpdir, 'POSCAR')
+    mol0.to_file(fn_tmp)
+    mol1 = IOData.from_file(fn_tmp)
 
     assert mol0.title == mol1.title
     assert (mol1.numbers == [8, 1, 1]).all()

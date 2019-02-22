@@ -74,39 +74,30 @@ def compute_mulliken_charges(iodata, pseudo_numbers=None):
 
 
 @contextmanager
-def tmpdir(name):
-    dn = tempfile.mkdtemp(name)
-    try:
-        yield dn
-    finally:
-        shutil.rmtree(dn)
-
-
-@contextmanager
-def truncated_file(name, fn_orig, nline, nadd):
+def truncated_file(fn_orig, nline, nadd, tmpdir):
     """Make a temporary truncated copy of a file.
 
     Parameters
     ----------
-    name : str
-           The name of test, used to make a unique temporary directory
     fn_orig : str
-              The file to be truncated.
+        The file to be truncated.
     nline : int
-            The number of lines to retain.
+        The number of lines to retain.
     nadd : int
-           The number of empty lines to add.
+        The number of empty lines to add.
+    tmpdir : str
+        A temporary directory where the truncated file is stored.
+
     """
-    with tmpdir(name) as dn:
-        fn_truncated = '%s/truncated_%i_%s' % (dn, nline, path.basename(fn_orig))
-        with open(fn_orig) as f_orig, open(fn_truncated, 'w') as f_truncated:
-            for counter, line in enumerate(f_orig):
-                if counter >= nline:
-                    break
-                f_truncated.write(line)
-            for _ in range(nadd):
-                f_truncated.write('\n')
-        yield fn_truncated
+    fn_truncated = '%s/truncated_%i_%s' % (tmpdir, nline, path.basename(fn_orig))
+    with open(fn_orig) as f_orig, open(fn_truncated, 'w') as f_truncated:
+        for counter, line in enumerate(f_orig):
+            if counter >= nline:
+                break
+            f_truncated.write(line)
+        for _ in range(nadd):
+            f_truncated.write('\n')
+    yield fn_truncated
 
 
 def compare_mols(mol1, mol2):

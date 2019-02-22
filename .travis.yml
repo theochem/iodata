@@ -117,8 +117,8 @@ install:
 # Install conda tools for packaging and uploading
 - conda install -q python=${MYCONDAPY} anaconda-client numpy setuptools cython
 - if ! [[ $TRAVIS_TAG ]]; then
-    conda install -q ${CONDA_DEPENDENCIES};
-    pip install --upgrade pylint codecov coverage pycodestyle pydocstyle;
+    conda install -q ${CONDA_DEPENDENCIES} pytest-cov;
+    pip install --upgrade pylint codecov pycodestyle pydocstyle;
   fi
 # Show conda info for debugging
 - conda info -a
@@ -130,38 +130,37 @@ install:
 
 script:
 # Static linting
-# --------------
+# ~~~~~~~~~~~~~~
 - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
     cardboardlinter --refspec $TRAVIS_BRANCH -f static;
   fi
 
-# Unit tests and dynamic linting
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Conda package build
+# ~~~~~~~~~~
 - if [[ $TRAVIS_TAG ]]; then
     conda build -q tools/conda.recipe;
-  else
-    python setup.py build_ext -i --define CYTHON_TRACE_NOGIL &&
-    nosetests ${PROJECT_NAME}
-         -v --detailed-errors --with-coverage --cover-package=${PROJECT_NAME}
-         --cover-tests --cover-inclusive --cover-branches &&
-    coverage xml -i &&
+  fi
 
-    if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-       cardboardlinter --refspec $TRAVIS_BRANCH -f 'dynamic';
-    fi
+# Unit tests
+# ~~~~~~~~~~
+- if ! [[ $TRAVIS_TAG ]]; then
+    python setup.py build_ext -i --define CYTHON_TRACE_NOGIL &&
+    pytest ${PROJECT_NAME} -v --cov=${PROJECT_NAME} --cov-report xml
+           --cov-report term --cov-branch &&
+    codecov -f coverage.xml;
+  fi
+
+# Dynamic linting
+# ~~~~~~~~~~~~~~~
+- if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+     cardboardlinter --refspec $TRAVIS_BRANCH -f 'dynamic';
   fi
 
 # Make CPP and PY source package for github deployment
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - if [[ $TRAVIS_TAG ]]; then
     python setup.py sdist;
   fi
-
-# Some other stuff
-# ----------------
-
-after_success:
-# Upload the coverage analysis
-- codecov -f coverage.xml
 
 before_deploy:
 # Try to set some env vars to configure deployment.

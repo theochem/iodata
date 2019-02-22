@@ -25,7 +25,7 @@
 
 import numpy as np
 
-from nose.tools import assert_raises
+import pytest
 
 from .. fchk import load
 from .. iodata import IOData
@@ -41,7 +41,7 @@ except ImportError:
 
 
 def test_load_fchk_nonexistent():
-    with assert_raises(IOError):
+    with pytest.raises(IOError):
         with path('iodata.test.data', 'fubar_crap.fchk') as fn:
             load(str(fn))
 
