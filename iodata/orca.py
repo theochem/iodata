@@ -46,11 +46,8 @@ def load(filename: str) -> Dict:
     Returns
     -------
     out : dict
-        Output dictionary may contain ``olp``, ``kin``, ``na`` and/or ``er`` keys and
+        Output dictionary may contain ``numbers``, ``coordinates``, and ``total_energy`` and
         corresponding values.
-
-    Notes
-    -----
 
     """
     with open(filename) as f:
@@ -65,10 +62,10 @@ def load(filename: str) -> Dict:
                 result['numbers'], result['coordinates'] = _helper_geometry(f, natom)
             # The final SCF energy is obtained
             if line.startswith('FINAL SINGLE POINT ENERGY'):
-                words =line.split()
+                words = line.split()
                 result['energy'] = float(words[4])
             # read also the dipole moment (commented out until key is in iodata)
-            #if line.startswith('Total Dipole Moment'):
+            # if line.startswith('Total Dipole Moment'):
             #    dipole = np.zeros(3)
             #    dipole[0] = float(words[5])
             #    dipole[1] = float(words[6])
@@ -76,18 +73,19 @@ def load(filename: str) -> Dict:
             #    result['dipole'] = dipole
         return result
 
+
 def _helper_number_atoms(f: TextIO) -> int:
     """Load list of coordinates from an ORCA output file format.
 
-        Parameters
-        ----------
-        f
-            A ORCA file object (in read mode).
+    Parameters
+    ----------
+    f: TextIO
+       A ORCA file object (in read mode).
 
-        Returns
-        -------
-        out: int
-            Total number of atoms.
+    Returns
+    -------
+    out: int
+       Total number of atoms.
 
     """
     # skip the dashed line
@@ -97,7 +95,6 @@ def _helper_number_atoms(f: TextIO) -> int:
     while next(f).strip() != '':
         natom += 1
     return natom
-
 
 
 def _helper_geometry(f: TextIO, natom: int) -> (int, np.ndarray):
@@ -126,15 +123,15 @@ def _helper_geometry(f: TextIO, natom: int) -> (int, np.ndarray):
     for i in range(natom):
         words = next(f).split()
         numbers[i] = int(float(words[2]))
-        coordinates[i,0] = float(words[5])
-        coordinates[i,1] = float(words[6])
-        coordinates[i,2] = float(words[7])
+        coordinates[i, 0] = float(words[5])
+        coordinates[i, 1] = float(words[6])
+        coordinates[i, 2] = float(words[7])
     return (numbers, coordinates)
     # read in the atomic number and coordinates in a.u.
     for i in range(natom):
         words = next(f).split()
         numbers[i] = int(words[2])
-        coordinates[i,0] = float(words[5])
-        coordinates[i,1] = float(words[6])
-        coordinates[i,2] = float(words[7])
+        coordinates[i, 0] = float(words[5])
+        coordinates[i, 1] = float(words[6])
+        coordinates[i, 2] = float(words[7])
     return (numbers, coordinates)
