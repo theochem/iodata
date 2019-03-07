@@ -24,7 +24,7 @@
 import argparse
 import numpy as np
 
-from iodata import IOData, version
+from iodata import IOData
 
 # All, except underflows, is *not* fine.
 np.seterr(divide='raise', over='raise', invalid='raise')
@@ -36,7 +36,7 @@ def parse_args():
                                                  ' This only works if the input contains sufficient'
                                                  ' data for the output')
     parser.add_argument('-V', '--version', action='version',
-                        version="%%(prog)s (HORTON version %s)" % version.__version__)
+                        version="%%(prog)s (HORTON version 2.0)" )
 
     parser.add_argument('input',
                         help='The input file. Supported file types are: '
@@ -45,6 +45,7 @@ def parse_args():
                              '*.cp2k.out (Output from a CP2K atom computation), '
                              '*.cube (Gaussian cube file), '
                              '*.log (Gaussian log file), '
+                             '*.out (Orca output file), '
                              '*.fchk (Gaussian formatted checkpoint file), '
                              '*.molden.input (Molden wavefunction file), '
                              '*.mkl (Molekel wavefunction file), '
