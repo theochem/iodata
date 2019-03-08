@@ -113,19 +113,49 @@ def load_wfx_low(filename: str) -> Tuple:
 
         return dict_int
 
+    def helper_float(f_content: TextIO) -> Dict:
+        """Compute the float type values."""
+        float_label = {
+            'energy': ['<Energy = T + Vne + Vee + Vnn>',
+                       '</Energy = T + Vne + Vee + Vnn>'],
+            'virial_ratio': ['<Virial Ratio (-V/T)>', '</Virial Ratio (-V/T)>'],
+            'nuclear_viral': ['<Nuclear Virial of Energy-Gradient-Based '
+                              'Forces on Nuclei, W>',
+                              '</Nuclear Virial of Energy-Gradient-Based '
+                              'Forces on Nuclei, W>'],
+            'full_viral_ratio': ['<Full Virial Ratio, -(V - W)/T>',
+                                 '</Full Virial Ratio, -(V - W)/T>']
+        }
+        dict_float = {}
+        for key, val in float_label.items():
+            if f_content.find(val[0]) > 0:
+                float_info = f_content[f_content.find(val[0]) + len(val[0]) + 1
+                                       : f_content.find(val[1])]
+                dict_float[key] = float(float_info)
+            elif f_content.find(val[0]) == -1:
+                dict_float[key] = None
+            else:
+                continue
+
+        return dict_float
+
     with open(filename) as f:
         fc = f.read()
         # Check tag
         # check_tag(f_content=fc)
-        # string type variables
+        # string type properties
         title, keywords, model_name = helper_str(f_content=fc).values()
 
-        # int type variables
+        # int type properties
         num_atoms, num_primitives, num_occ_mo, num_perturbations, charge, \
         num_electrons, num_alpha_electron, num_beta_electron, num_spin_multi \
             = helper_int(f_content=fc).values()
+        # float type properties
+        energy, virial_ratio, nuclear_viral, full_viral_ratio = \
+            helper_float(f_content=fc).values()
 
     return \
         title, keywords, model_name, num_atoms, num_primitives, \
         num_occ_mo, num_perturbations, charge, num_electrons, \
-        num_alpha_electron, num_beta_electron, num_spin_multi
+        num_alpha_electron, num_beta_electron, num_spin_multi, energy, \
+        virial_ratio, nuclear_viral, full_viral_ratio
