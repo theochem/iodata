@@ -19,14 +19,12 @@
 #
 # --
 # pragma pylint: disable=wrong-import-order,invalid-name
-"""Module for handling GAUSSIAN LOG file format."""
+"""Module for handling ORCA OUT file format."""
 
 
 import numpy as np
 
 from typing import Dict, TextIO
-
-from .utils import set_four_index_element
 
 
 __all__ = ['load']
@@ -41,7 +39,7 @@ def load(filename: str) -> Dict:
     Parameters
     ----------
     filename : str
-        The ORCA LOG filename.
+        The ORCA OUT filename.
 
     Returns
     -------
@@ -123,14 +121,6 @@ def _helper_geometry(f: TextIO, natom: int) -> (int, np.ndarray):
     for i in range(natom):
         words = next(f).split()
         numbers[i] = int(float(words[2]))
-        coordinates[i, 0] = float(words[5])
-        coordinates[i, 1] = float(words[6])
-        coordinates[i, 2] = float(words[7])
-    return (numbers, coordinates)
-    # read in the atomic number and coordinates in a.u.
-    for i in range(natom):
-        words = next(f).split()
-        numbers[i] = int(words[2])
         coordinates[i, 0] = float(words[5])
         coordinates[i, 1] = float(words[6])
         coordinates[i, 2] = float(words[7])

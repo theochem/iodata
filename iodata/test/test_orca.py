@@ -20,9 +20,7 @@
 #
 # --
 # pragma pylint: disable=invalid-name,no-member
-"""Test iodata.xyz module."""
-
-import os
+"""Test iodata.orca module."""
 
 import numpy as np
 
@@ -35,32 +33,42 @@ except ImportError:
 
 
 def test_load_water_number():
-    # test xyz with atomic numbers
+    # test if IOData has atomic numbers
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
         mol = IOData.from_file(str(fn_xyz))
     check_water(mol)
 
 
 def test_load_water_element():
-    # test xyz file with atomic symbols
+    # test if IOData has atomic symbols
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
         mol = IOData.from_file(str(fn_xyz))
     check_water(mol)
 
 
 def test_load_scf_energy():
-    # test xyz file with atomic symbols
+    # test if IOData has the correct energy
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
         mol = IOData.from_file(str(fn_xyz))
     check_water(mol)
 
 
 def check_water(mol):
+    """Checks if atomic numbers and coordinates obtained from orca out file are correct.
+
+        Parameters
+        ----------
+        mol : IOData
+            IOdata dictionary.
+
+        Returns
+        -------
+        None
+    """
     assert mol.numbers[0] == 8
     assert mol.numbers[1] == 1
     assert mol.numbers[2] == 1
     # check bond length
-    print(np.linalg.norm(mol.coordinates[1] - mol.coordinates[2]) / angstrom)
     assert abs(np.linalg.norm(mol.coordinates[0] - mol.coordinates[1]) / angstrom - 0.9500) < 1e-5
     assert abs(np.linalg.norm(mol.coordinates[0] - mol.coordinates[2]) / angstrom - 0.9500) < 1e-5
     assert abs(np.linalg.norm(mol.coordinates[1] - mol.coordinates[2]) / angstrom - 1.5513) < 1e-4
@@ -69,7 +77,7 @@ def check_water(mol):
 
 
 def test_helper_number_atoms():
-    # Test if the number of atoms in a file is obtained correctly
+    # Test if the number of atoms in the ORCA out file is obtained correctly
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
         mol = IOData.from_file(str(fn_xyz))
-    assert (mol.natom == 3)
+    assert mol.natom == 3
