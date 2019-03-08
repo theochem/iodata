@@ -170,10 +170,36 @@ def load_wfx_low(filename: str) -> Tuple:
             start='<Molecular Orbital Spin Types>',
             end='</Molecular Orbital Spin Types>',
             line_break=True), dtype=np.unicode_).reshape(-1, 1)
+        coordinates = np.array(helper_section(
+            f_content=fc, start='<Nuclear Cartesian Coordinates>',
+            end='</Nuclear Cartesian Coordinates>', line_break=True),
+            dtype=np.float).reshape(-1, 3)
+        # TODO: mapping to Horton style for primitive centers
+        centers = np.array(helper_section(
+            f_content=fc, start='<Primitive Centers>',
+            end='</Primitive Centers>', line_break=True), dtype=np.int)
+        # primitive types
+        primitives_types = np.array(helper_section(
+            f_content=fc, start='<Primitive Types>',
+            end='</Primitive Types>', line_break=True), dtype=np.int)
+        # primitives exponents
+        exponent = np.array(helper_section(
+            f_content=fc,start='<Primitive Exponents>',
+            end='</Primitive Exponents>', line_break=True), dtype=np.float)
+        # molecular orbital
+        mo_occ = np.array(helper_section(
+            f_content=fc, line_break=True,
+            start='<Molecular Orbital Occupation Numbers>',
+            end='</Molecular Orbital Occupation Numbers>'), dtype=np.float)
+        mo_energy = np.array(helper_section(
+            f_content=fc, line_break=True,
+            start='<Molecular Orbital Energies>',
+            end='</Molecular Orbital Energies>'), dtype=np.float)
 
     return \
         title, keywords, model_name, num_atoms, num_primitives, \
-        num_occ_mo, num_perturbations, charge, num_electrons, \
-        num_alpha_electron, num_beta_electron, num_spin_multi, energy, \
+        num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
+        num_beta_electron, num_spin_multi, charge, energy, \
         virial_ratio, nuclear_viral, full_viral_ratio, atom_names, \
-        atom_numbers, mo_spin_type
+        atom_numbers, mo_spin_type, coordinates, centers, \
+        primitives_types, exponent, mo_occ, mo_energy
