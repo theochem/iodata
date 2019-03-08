@@ -55,7 +55,7 @@ def load_wfx_low(filename: str) -> Tuple:
                              re.DOTALL)
         section = [i.strip() for i in section]
         if line_break:
-            section = section[0].splitlines()
+            section = [i.split() for i in section]
 
         return section
 
@@ -105,11 +105,12 @@ def load_wfx_low(filename: str) -> Tuple:
                                       start=val[0],
                                       end=val[1])
             if len(int_info) != 0:
-                dict_int[key] = int(helper_section(f_content=f_content,
-                                                   start=val[0],
-                                                   end=val[1])[0])
+                dict_int[key] = np.array(helper_section(f_content=f_content,
+                                                        start=val[0],
+                                                        end=val[1])[0],
+                                         dtype=int)
             else:
-                dict_int[key] = None
+                dict_int[key] = np.array(None)
 
         return dict_int
 
@@ -131,9 +132,9 @@ def load_wfx_low(filename: str) -> Tuple:
             if f_content.find(val[0]) > 0:
                 float_info = f_content[f_content.find(val[0]) + len(val[0]) + 1
                                        : f_content.find(val[1])]
-                dict_float[key] = float(float_info)
+                dict_float[key] = np.array(float_info, dtype=float)
             elif f_content.find(val[0]) == -1:
-                dict_float[key] = None
+                dict_float[key] = np.array(None)
             else:
                 continue
 
@@ -153,9 +154,26 @@ def load_wfx_low(filename: str) -> Tuple:
         # float type properties
         energy, virial_ratio, nuclear_viral, full_viral_ratio = \
             helper_float(f_content=fc).values()
+        # list type properties
+        atom_names = np.array([i.split() for i in
+                               helper_section(f_content=fc,
+                                              start='<Nuclear Names>',
+                                              end='</Nuclear Names>')],
+                              dtype=np.unicode_)
+        atom_numbers = np.array(helper_section(f_content=fc,
+                                               start='<Atomic Numbers>',
+                                               end='</Atomic Numbers>',
+                                               line_break=True), dtype=int)
+        # TODO: not sure about the shape
+        mo_spin_type = np.array(helper_section(
+            f_content=fc,
+            start='<Molecular Orbital Spin Types>',
+            end='</Molecular Orbital Spin Types>',
+            line_break=True), dtype=np.unicode_).reshape(-1, 1)
 
     return \
         title, keywords, model_name, num_atoms, num_primitives, \
         num_occ_mo, num_perturbations, charge, num_electrons, \
         num_alpha_electron, num_beta_electron, num_spin_multi, energy, \
-        virial_ratio, nuclear_viral, full_viral_ratio
+        virial_ratio, nuclear_viral, full_viral_ratio, atom_names, \
+        atom_numbers, mo_spin_type
