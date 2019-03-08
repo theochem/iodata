@@ -88,6 +88,7 @@ def load_wfx_low(filename: str) -> Tuple:
                            '</Number of Occupied Molecular Orbitals>'],
             'num_perturbations': ['<Number of Perturbations>',
                                   '</Number of Perturbations>'],
+            'charge': ['<Net Charge>', '</Net Charge>'],
             'num_electrons': ['<Number of Electrons>',
                               '</Number of Electrons>'],
             'num_alpha_electron': ['<Number of Alpha Electrons>',
@@ -120,11 +121,11 @@ def load_wfx_low(filename: str) -> Tuple:
         title, keywords, model_name = helper_str(f_content=fc).values()
 
         # int type variables
-        num_atoms, num_primitives, num_occ_mo, num_perturbations, \
+        num_atoms, num_primitives, num_occ_mo, num_perturbations, charge, \
         num_electrons, num_alpha_electron, num_beta_electron, num_spin_multi \
             = helper_int(f_content=fc).values()
 
     return \
         title, keywords, model_name, num_atoms, num_primitives, \
-        num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
-        num_beta_electron, num_spin_multi
+        num_occ_mo, num_perturbations, charge, num_electrons, \
+        num_alpha_electron, num_beta_electron, num_spin_multi
