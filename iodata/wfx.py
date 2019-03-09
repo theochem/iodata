@@ -140,7 +140,7 @@ def load_wfx_low(filename: str) -> Tuple:
 
         return dict_float
 
-    def energy_gradient(f_content: TextIO) -> Dict:
+    def energy_gradient(f_content: TextIO) -> Tuple[np.ndarray, np.ndarray]:
         gradient_list = helper_section(
             f_content=f_content,
             start='<Nuclear Cartesian Energy Gradients>',
@@ -152,7 +152,8 @@ def load_wfx_low(filename: str) -> Tuple:
         gradient = gradient_mix[:, 1:].astype(float)
         return gradient_atoms, gradient
 
-    def helper_mo(f_content: TextIO, num_primitives: int) -> np.ndarray:
+    def helper_mo(f_content: TextIO, num_primitives: int) \
+            -> Tuple[List, np.ndarray]:
         mo = f_content[
              f_content.find('<Molecular Orbital Primitive Coefficients>') +
              len('<Molecular Orbital Primitive Coefficients>') + 1:
@@ -167,17 +168,75 @@ def load_wfx_low(filename: str) -> Tuple:
         mo_coefficients = np.transpose(mo_coefficients)
         return mo_count, mo_coefficients
 
+    def check_tag(f_content: str):
+        tags_header = re.findall(r'<(?!/)(.*?)>', f_content)
+        tags_tail = re.findall(r'</(.*?)>', f_content)
+        # Check if header or tail tags match
+        # head and tail tags of Molecular Orbital Primitive Coefficients are
+        # not matched paired because there are MO between
+        assert ('Molecular Orbital Primitive Coefficients' in tags_header) and \
+               ('Molecular Orbital Primitive Coefficients' in tags_tail), \
+            "Molecular Orbital Primitive Coefficients tags are not shown in " \
+            "WFX inputfile pairwise or both are missing."
+        # check others
+        tags_header_check = [i for i in tags_header if i !=
+                             'Molecular Orbital Primitive Coefficients']
+        tags_tail_check = [i for i in tags_tail if i !=
+                           'Molecular Orbital Primitive Coefficients']
+        for tag_header, tag_tail in zip(tags_header_check, tags_tail_check):
+            assert (tag_header == tag_tail), \
+                "Tag header %s and tail %s do not match." \
+                % (tag_header, tag_tail)
+        # Check if all required tags/fields are present
+        tags_required = ['Title',
+                         'Keywords',
+                         'Number of Nuclei',
+                         'Number of Primitives',
+                         'Number of Occupied Molecular Orbitals',
+                         'Number of Perturbations',
+                         'Nuclear Names',
+                         'Nuclear Charges',
+                         'Nuclear Cartesian Coordinates',
+                         'Net Charge',
+                         'Number of Electrons',
+                         'Number of Alpha Electrons',
+                         'Number of Beta Electrons',
+                         'Primitive Centers',
+                         'Primitive Types',
+                         'Primitive Exponents',
+                         'Molecular Orbital Occupation Numbers',
+                         'Molecular Orbital Energies',
+                         'Molecular Orbital Spin Types',
+                         'Molecular Orbital Primitive Coefficients',
+                         'MO Number',
+                         'Energy = T + Vne + Vee + Vnn',
+                         'Virial Ratio (-V/T)']
+        if set(tags_header).intersection(set(tags_required)) != \
+                set(tags_required):
+            diff = set(tags_required) - set(tags_header).intersection(
+                set(tags_required))
+            err_str = ', '.join(diff)
+            err_str += 'are/is required but not present in the WFX file.'
+            raise AssertionError(err_str)
+
     with open(filename) as f:
         fc = f.read()
         # Check tag
-        # check_tag(f_content=fc)
+        check_tag(f_content=fc)
         # string type properties
         title, keywords, model_name = helper_str(f_content=fc).values()
+        # Check keywords
+        assert (keywords in ['GTO', 'GIAO', 'CGST']), \
+            "The keywords should be one out of GTO, GIAO and CGST."
 
         # int type properties
         num_atoms, num_primitives, num_occ_mo, num_perturbations, charge, \
         num_electrons, num_alpha_electron, num_beta_electron, num_spin_multi \
             = helper_int(f_content=fc).values()
+        # Check number of perturbations, num_perturbations
+        perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
+        assert (num_perturbations == perturbation_check[keywords]), \
+            "Numbmer of perturbations is not equal to 0, 3 or 6."
         # float type properties
         energy, virial_ratio, nuclear_viral, full_viral_ratio = \
             helper_float(f_content=fc).values()
@@ -229,10 +288,10 @@ def load_wfx_low(filename: str) -> Tuple:
                                               num_primitives=num_primitives)
 
     return \
-        title, keywords, model_name, num_atoms, num_primitives, \
+        title, keywords, model_name, atom_names, num_atoms, num_primitives, \
         num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
         num_beta_electron, num_spin_multi, charge, energy, \
-        virial_ratio, nuclear_viral, full_viral_ratio, atom_names, \
+        virial_ratio, nuclear_viral, full_viral_ratio, mo_count, \
         atom_numbers, mo_spin_type, coordinates, centers, \
         primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
-        gradient, mo_count, mo_coefficients
+        gradient, mo_coefficients
