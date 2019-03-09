@@ -140,6 +140,18 @@ def load_wfx_low(filename: str) -> Tuple:
 
         return dict_float
 
+    def energy_gradient(f_content: TextIO) -> Dict:
+        gradient_list = helper_section(
+            f_content=f_content,
+            start='<Nuclear Cartesian Energy Gradients>',
+            end='</Nuclear Cartesian Energy Gradients>',
+            line_break=True)
+        # build structured array
+        gradient_mix = np.array(gradient_list[0]).reshape(-1, 4)
+        gradient_atoms = gradient_mix[:, 0].astype(np.unicode_)
+        gradient = gradient_mix[:, 1:].astype(float)
+        return gradient_atoms, gradient
+
     with open(filename) as f:
         fc = f.read()
         # Check tag
@@ -184,7 +196,7 @@ def load_wfx_low(filename: str) -> Tuple:
             end='</Primitive Types>', line_break=True), dtype=np.int)
         # primitives exponents
         exponent = np.array(helper_section(
-            f_content=fc,start='<Primitive Exponents>',
+            f_content=fc, start='<Primitive Exponents>',
             end='</Primitive Exponents>', line_break=True), dtype=np.float)
         # molecular orbital
         mo_occ = np.array(helper_section(
@@ -195,6 +207,8 @@ def load_wfx_low(filename: str) -> Tuple:
             f_content=fc, line_break=True,
             start='<Molecular Orbital Energies>',
             end='</Molecular Orbital Energies>'), dtype=np.float)
+        # energy gradient
+        gradient_atoms, gradient = energy_gradient(f_content=fc)
 
     return \
         title, keywords, model_name, num_atoms, num_primitives, \
@@ -202,4 +216,4 @@ def load_wfx_low(filename: str) -> Tuple:
         num_beta_electron, num_spin_multi, charge, energy, \
         virial_ratio, nuclear_viral, full_viral_ratio, atom_names, \
         atom_numbers, mo_spin_type, coordinates, centers, \
-        primitives_types, exponent, mo_occ, mo_energy
+        primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, gradient
