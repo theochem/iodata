@@ -26,14 +26,9 @@ import re
 
 import numpy as np
 
-from typing import Tuple, List, TextIO, Dict, Union
+from typing import Tuple, List, TextIO, Dict
 
-from .overlap import init_scales
-from .periodic import sym2num
-from .utils import MolecularOrbitals
-
-__all__ = ['load_wfx_low', 'get_permutation_orbital',
-           'get_mask', 'load']
+__all__ = ['load_wfx_low']
 
 patterns = ['*.wfx']
 
@@ -130,8 +125,8 @@ def load_wfx_low(filename: str) -> Tuple:
         dict_float = {}
         for key, val in float_label.items():
             if f_content.find(val[0]) > 0:
-                float_info = f_content[f_content.find(val[0]) + len(val[0]) + 1
-                                       : f_content.find(val[1])]
+                float_info = f_content[f_content.find(
+                    val[0]) + len(val[0]) + 1: f_content.find(val[1])]
                 dict_float[key] = np.array(float_info, dtype=float)
             elif f_content.find(val[0]) == -1:
                 dict_float[key] = np.array(None)
@@ -155,9 +150,9 @@ def load_wfx_low(filename: str) -> Tuple:
     def helper_mo(f_content: TextIO, num_primitives: int) \
             -> Tuple[List, np.ndarray]:
         mo = f_content[
-             f_content.find('<Molecular Orbital Primitive Coefficients>') +
-             len('<Molecular Orbital Primitive Coefficients>') + 1:
-             f_content.find('</Molecular Orbital Primitive Coefficients>')]
+            f_content.find('<Molecular Orbital Primitive Coefficients>')
+            + len('<Molecular Orbital Primitive Coefficients>')
+            + 1: f_content.find('</Molecular Orbital Primitive Coefficients>')]
         mo_count = [int(i) for i in
                     re.findall(r'<MO Number>\n(.*?)\n</MO Number>', mo, re.S)]
         # raw-primitive expansion coefficients for MO
@@ -179,10 +174,10 @@ def load_wfx_low(filename: str) -> Tuple:
             "Molecular Orbital Primitive Coefficients tags are not shown in " \
             "WFX inputfile pairwise or both are missing."
         # check others
-        tags_header_check = [i for i in tags_header if i !=
-                             'Molecular Orbital Primitive Coefficients']
-        tags_tail_check = [i for i in tags_tail if i !=
-                           'Molecular Orbital Primitive Coefficients']
+        tags_header_check = [i for i in tags_header
+                             if i != 'Molecular Orbital Primitive Coefficients']
+        tags_tail_check = [i for i in tags_tail
+                           if i != 'Molecular Orbital Primitive Coefficients']
         for tag_header, tag_tail in zip(tags_header_check, tags_tail_check):
             assert (tag_header == tag_tail), \
                 "Tag header %s and tail %s do not match." \
@@ -231,7 +226,7 @@ def load_wfx_low(filename: str) -> Tuple:
 
         # int type properties
         num_atoms, num_primitives, num_occ_mo, num_perturbations, charge, \
-        num_electrons, num_alpha_electron, num_beta_electron, num_spin_multi \
+            num_electrons, num_alpha_electron, num_beta_electron, num_spin_multi \
             = helper_int(f_content=fc).values()
         # Check number of perturbations, num_perturbations
         perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
@@ -256,9 +251,10 @@ def load_wfx_low(filename: str) -> Tuple:
             start='<Molecular Orbital Spin Types>',
             end='</Molecular Orbital Spin Types>',
             line_break=True), dtype=np.unicode_).reshape(-1, 1)
-        coordinates = np.array(helper_section(
-            f_content=fc, start='<Nuclear Cartesian Coordinates>',
-            end='</Nuclear Cartesian Coordinates>', line_break=True),
+        coordinates = np.array(
+            helper_section(
+                f_content=fc, start='<Nuclear Cartesian Coordinates>',
+                end='</Nuclear Cartesian Coordinates>', line_break=True),
             dtype=np.float).reshape(-1, 3)
         # TODO: mapping to Horton style for primitive centers
         centers = np.array(helper_section(

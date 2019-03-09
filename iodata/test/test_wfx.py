@@ -24,14 +24,7 @@
 
 import numpy as np
 
-from numpy.testing import assert_equal, assert_allclose
-
-from .common import compute_mulliken_charges, check_orthonormal
-from ..wfx import load_wfx_low \
-    # , get_permutation_basis, get_permutation_orbital, get_mask
-from ..iodata import IOData
-from ..overlap import compute_overlap
-from ..utils import shells_to_nbasis
+from ..wfx import load_wfx_low
 
 try:
     from importlib_resources import path
@@ -45,12 +38,12 @@ def test_load_wfx_low_h2():
         data = load_wfx_low(str(fn_wfx))
     # unpack data
     title, keywords, model_name, atom_names, num_atoms, num_primitives, \
-    num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
-    num_beta_electron, num_spin_multi, charge, energy, \
-    virial_ratio, nuclear_viral, full_viral_ratio, mo_count, \
-    atom_numbers, mo_spin_type, coordinates, centers, \
-    primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
-    gradient, mo_coefficients = data
+        num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
+        num_beta_electron, num_spin_multi, charge, energy, \
+        virial_ratio, nuclear_viral, full_viral_ratio, mo_count, \
+        atom_numbers, mo_spin_type, coordinates, centers, \
+        primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
+        gradient, mo_coefficients = data
 
     assert title == 'h2 ub3lyp/cc-pvtz opt-stable-freq'
     assert keywords == 'GTO'
@@ -70,17 +63,15 @@ def test_load_wfx_low_h2():
     assert full_viral_ratio == [2.036441992623e+00]
     assert (atom_names == ['H1', 'H2']).all()
     assert (atom_numbers == [1, 1]).all()
-    assert (mo_spin_type ==
-            np.array(
-                [['Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
-                  'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
-                  'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
-                  'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
-                  'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
-                  'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
-                  'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
-                  'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', ]]
-            ).T).all()
+    assert (mo_spin_type == np.array(
+        [['Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
+          'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
+          'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
+          'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
+          'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
+          'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
+          'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
+          'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', ]]).T).all()
     assert (coordinates[0] == [0., 0., 0.7019452462164]).all()
     assert (coordinates[1] == [0., 0., -0.7019452462164]).all()
     assert (centers == [1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -93,53 +84,56 @@ def test_load_wfx_low_h2():
                                  1, 1, 1, 1, 2, 3,
                                  4, 2, 3, 4, 5, 6,
                                  7, 8, 9, 10]).all()
-    assert (exponent ==
-            [3.387000000000e+01, 5.095000000000e+00, 1.159000000000e+00,
-             3.258000000000e-01, 1.027000000000e-01, 1.407000000000e+00,
-             1.407000000000e+00, 1.407000000000e+00, 3.880000000000e-01,
-             3.880000000000e-01, 3.880000000000e-01, 1.057000000000e+00,
-             1.057000000000e+00, 1.057000000000e+00, 1.057000000000e+00,
-             1.057000000000e+00, 1.057000000000e+00, 3.387000000000e+01,
-             5.095000000000e+00, 1.159000000000e+00, 3.258000000000e-01,
-             1.027000000000e-01, 1.407000000000e+00, 1.407000000000e+00,
-             1.407000000000e+00, 3.880000000000e-01, 3.880000000000e-01,
-             3.880000000000e-01, 1.057000000000e+00, 1.057000000000e+00,
-             1.057000000000e+00, 1.057000000000e+00, 1.057000000000e+00,
-             1.057000000000e+00]).all()
+    assert (exponent == [3.387000000000e+01, 5.095000000000e+00,
+                         1.159000000000e+00, 3.258000000000e-01,
+                         1.027000000000e-01, 1.407000000000e+00,
+                         1.407000000000e+00, 1.407000000000e+00,
+                         3.880000000000e-01, 3.880000000000e-01,
+                         3.880000000000e-01, 1.057000000000e+00,
+                         1.057000000000e+00, 1.057000000000e+00,
+                         1.057000000000e+00, 1.057000000000e+00,
+                         1.057000000000e+00, 3.387000000000e+01,
+                         5.095000000000e+00, 1.159000000000e+00,
+                         3.258000000000e-01, 1.027000000000e-01,
+                         1.407000000000e+00, 1.407000000000e+00,
+                         1.407000000000e+00, 3.880000000000e-01,
+                         3.880000000000e-01, 3.880000000000e-01,
+                         1.057000000000e+00, 1.057000000000e+00,
+                         1.057000000000e+00, 1.057000000000e+00,
+                         1.057000000000e+00, 1.057000000000e+00]).all()
     assert (mo_occ == [1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
                        0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.,
                        0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
                        0., 0., 0., 0., 0., 0., 0., 0.]).all()
-    assert (mo_energy ==
-            [-4.340830854172e-01, 5.810590098068e-02,
-             1.957476339319e-01, 4.705943952631e-01,
-             5.116003517961e-01, 5.116003517961e-01,
-             9.109680450208e-01, 9.372078887497e-01,
-             9.372078887497e-01, 1.367198523024e+00,
-             2.035656924620e+00, 2.093459617091e+00,
-             2.882582109554e+00, 2.882582109559e+00,
-             3.079758295551e+00, 3.079758295551e+00,
-             3.356387932344e+00, 3.600856684661e+00,
-             3.600856684661e+00, 3.793185027287e+00,
-             3.793185027400e+00, 3.807665977092e+00,
-             3.807665977092e+00, 4.345665616275e+00,
-             5.386560784523e+00, 5.386560784523e+00,
-             5.448122593462e+00, 6.522366660004e+00,
-             -4.340830854172e-01, 5.810590098068e-02,
-             1.957476339319e-01, 4.705943952631e-01,
-             5.116003517961e-01, 5.116003517961e-01,
-             9.109680450208e-01, 9.372078887497e-01,
-             9.372078887497e-01, 1.367198523024e+00,
-             2.035656924620e+00, 2.093459617091e+00,
-             2.882582109554e+00, 2.882582109559e+00,
-             3.079758295551e+00, 3.079758295551e+00,
-             3.356387932344e+00, 3.600856684661e+00,
-             3.600856684661e+00, 3.793185027287e+00,
-             3.793185027400e+00, 3.807665977092e+00,
-             3.807665977092e+00, 4.345665616275e+00,
-             5.386560784523e+00, 5.386560784523e+00,
-             5.448122593462e+00, 6.522366660004e+00]).all()
+    assert (mo_energy == [-4.340830854172e-01, 5.810590098068e-02,
+                          1.957476339319e-01, 4.705943952631e-01,
+                          5.116003517961e-01, 5.116003517961e-01,
+                          9.109680450208e-01, 9.372078887497e-01,
+                          9.372078887497e-01, 1.367198523024e+00,
+                          2.035656924620e+00, 2.093459617091e+00,
+                          2.882582109554e+00, 2.882582109559e+00,
+                          3.079758295551e+00, 3.079758295551e+00,
+                          3.356387932344e+00, 3.600856684661e+00,
+                          3.600856684661e+00, 3.793185027287e+00,
+                          3.793185027400e+00, 3.807665977092e+00,
+                          3.807665977092e+00, 4.345665616275e+00,
+                          5.386560784523e+00, 5.386560784523e+00,
+                          5.448122593462e+00, 6.522366660004e+00,
+                          -4.340830854172e-01, 5.810590098068e-02,
+                          1.957476339319e-01, 4.705943952631e-01,
+                          5.116003517961e-01, 5.116003517961e-01,
+                          9.109680450208e-01, 9.372078887497e-01,
+                          9.372078887497e-01, 1.367198523024e+00,
+                          2.035656924620e+00, 2.093459617091e+00,
+                          2.882582109554e+00, 2.882582109559e+00,
+                          3.079758295551e+00, 3.079758295551e+00,
+                          3.356387932344e+00, 3.600856684661e+00,
+                          3.600856684661e+00, 3.793185027287e+00,
+                          3.793185027400e+00, 3.807665977092e+00,
+                          3.807665977092e+00, 4.345665616275e+00,
+                          5.386560784523e+00, 5.386560784523e+00,
+                          5.448122593462e+00, 6.522366660004e+00]).all()
     assert (gradient_atoms == ['H1', 'H2']).all()
     assert (gradient[0, :] == [9.744384163503e-17,
                                -2.088844408785e-16,
