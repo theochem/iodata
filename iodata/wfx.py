@@ -152,6 +152,21 @@ def load_wfx_low(filename: str) -> Tuple:
         gradient = gradient_mix[:, 1:].astype(float)
         return gradient_atoms, gradient
 
+    def helper_mo(f_content: TextIO, num_primitives: int) -> np.ndarray:
+        mo = f_content[
+             f_content.find('<Molecular Orbital Primitive Coefficients>') +
+             len('<Molecular Orbital Primitive Coefficients>') + 1:
+             f_content.find('</Molecular Orbital Primitive Coefficients>')]
+        mo_count = [int(i) for i in
+                    re.findall(r'<MO Number>\n(.*?)\n</MO Number>', mo, re.S)]
+        # raw-primitive expansion coefficients for MO
+        coefficient_all = re.findall(
+            r'[-+]?\d+.\d+[E,e][+-]\d+', mo, flags=re.MULTILINE)
+        mo_coefficients = np.array(
+            coefficient_all, dtype=np.float).reshape(-1, num_primitives)
+        mo_coefficients = np.transpose(mo_coefficients)
+        return mo_count, mo_coefficients
+
     with open(filename) as f:
         fc = f.read()
         # Check tag
@@ -209,6 +224,9 @@ def load_wfx_low(filename: str) -> Tuple:
             end='</Molecular Orbital Energies>'), dtype=np.float)
         # energy gradient
         gradient_atoms, gradient = energy_gradient(f_content=fc)
+        # molecular orbital
+        mo_count, mo_coefficients = helper_mo(f_content=fc,
+                                              num_primitives=num_primitives)
 
     return \
         title, keywords, model_name, num_atoms, num_primitives, \
@@ -216,4 +234,5 @@ def load_wfx_low(filename: str) -> Tuple:
         num_beta_electron, num_spin_multi, charge, energy, \
         virial_ratio, nuclear_viral, full_viral_ratio, atom_names, \
         atom_numbers, mo_spin_type, coordinates, centers, \
-        primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, gradient
+        primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
+        gradient, mo_count, mo_coefficients
