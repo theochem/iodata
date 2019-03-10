@@ -34,14 +34,7 @@ patterns = ['*.wfx']
 
 
 def load_wfx_low(filename: str) -> Tuple:
-    """Load data from a WFX file into arrays.
-
-    Parameters
-    ----------
-
-    filename
-        The filename of the wfx file.
-    """
+    """Load data from a WFX file into arrays."""
     def helper_section(f_content: TextIO, start: str, end: str,
                        line_break: bool = False) -> Dict:
         """Extract the information based on the given name."""
