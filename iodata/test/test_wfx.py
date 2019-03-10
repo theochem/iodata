@@ -22,11 +22,11 @@
 # pragma pylint: disable=invalid-name,no-member
 """Test iodata.wfn module."""
 
+import pytest
+
 import numpy as np
 
 from ..wfx import load_wfx_low
-
-import pytest
 
 try:
     from importlib_resources import path
@@ -35,7 +35,7 @@ except ImportError:
 
 
 def test_load_wfx_low_h2():
-    """Test load_wfx_low with h2_ub3lyp_ccpvtz.wfx"""
+    """Test load_wfx_low with h2_ub3lyp_ccpvtz.wfx."""
     with path('iodata.test.data', 'h2_ub3lyp_ccpvtz.wfx') as fn_wfx:
         data = load_wfx_low(str(fn_wfx))
     # unpack data
