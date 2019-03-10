@@ -38,11 +38,10 @@ def load_wfx_low(filename: str) -> Tuple:
 
     Parameters
     ----------
+
     filename
         The filename of the wfx file.
     """
-
-    # TODO: Add ECP and EDF support
     def helper_section(f_content: TextIO, start: str, end: str,
                        line_break: bool = False) -> Dict:
         """Extract the information based on the given name."""
@@ -149,10 +148,10 @@ def load_wfx_low(filename: str) -> Tuple:
 
     def helper_mo(f_content: TextIO, num_primitives: int) \
             -> Tuple[List, np.ndarray]:
-        mo = f_content[
-            f_content.find('<Molecular Orbital Primitive Coefficients>')
-            + len('<Molecular Orbital Primitive Coefficients>')
-            + 1: f_content.find('</Molecular Orbital Primitive Coefficients>')]
+        str_idx1 = f_content.find('<Molecular Orbital Primitive Coefficients>')
+        str_idx2 = f_content.find('</Molecular Orbital Primitive Coefficients>')
+        mo = f_content[str_idx1 + 1 + len('<Molecular Orbital Primitive '
+                                          'Coefficients>'): str_idx2]
         mo_count = [int(i) for i in
                     re.findall(r'<MO Number>\n(.*?)\n</MO Number>', mo, re.S)]
         # raw-primitive expansion coefficients for MO
@@ -245,7 +244,6 @@ def load_wfx_low(filename: str) -> Tuple:
                                                start='<Atomic Numbers>',
                                                end='</Atomic Numbers>',
                                                line_break=True), dtype=int)
-        # TODO: not sure about the shape
         mo_spin_type = np.array(helper_section(
             f_content=fc,
             start='<Molecular Orbital Spin Types>',
@@ -256,7 +254,6 @@ def load_wfx_low(filename: str) -> Tuple:
                 f_content=fc, start='<Nuclear Cartesian Coordinates>',
                 end='</Nuclear Cartesian Coordinates>', line_break=True),
             dtype=np.float).reshape(-1, 3)
-        # TODO: mapping to Horton style for primitive centers
         centers = np.array(helper_section(
             f_content=fc, start='<Primitive Centers>',
             end='</Primitive Centers>', line_break=True), dtype=np.int)
