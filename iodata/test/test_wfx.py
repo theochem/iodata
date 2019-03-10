@@ -26,6 +26,8 @@ import numpy as np
 
 from ..wfx import load_wfx_low
 
+import pytest
+
 try:
     from importlib_resources import path
 except ImportError:
@@ -165,3 +167,9 @@ def test_load_wfx_low_h2():
     assert mo_coefficients[2, 9] == 1.779549601504e-02
     assert mo_coefficients[19, 14] == -1.027984391469e-15
     assert mo_coefficients[26, 36] == -5.700424557682e-01
+
+
+def test_load_wfx_low_missing_tag_h2():
+    """Test load_wfx_low with h2_ub3lyp_ccpvtz.wfx with missing tag."""
+    with pytest.raises(AssertionError):
+        load_wfx_low(filename='iodata/test/data/h2o_error.wfx')
