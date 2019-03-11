@@ -36,8 +36,10 @@ def parse_args():
                                                  ' This only works if the input contains sufficient'
                                                  ' data for the output')
     parser.add_argument('-V', '--version', action='version',
-                        version="%%(prog)s (HORTON version 2.0)" )
-
+                        try:
+                            version="%%(prog)s (HORTON version %s)" % version.__version__
+                        except ImportError:
+                            raise ImportError('No version.py file found'))
     parser.add_argument('input',
                         help='The input file. Supported file types are: '
                              '*.h5 (HORTON\'s native format), '
