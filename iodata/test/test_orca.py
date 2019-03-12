@@ -54,7 +54,7 @@ def test_load_scf_energy():
 
 
 def check_water(mol):
-    """Checks if atomic numbers and coordinates obtained from orca out file are correct.
+    """Check if atomic numbers and coordinates obtained from orca out file are correct.
 
     Parameters
     ----------
