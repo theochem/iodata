@@ -22,7 +22,7 @@
 """Test iodata.log module."""
 
 
-from .. log import load
+from .. gaussianlog import load
 try:
     from importlib_resources import path
 except ImportError:
