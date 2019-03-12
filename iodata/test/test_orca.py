@@ -35,39 +35,34 @@ except ImportError:
 def test_load_water_number():
     # test if IOData has atomic numbers
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = IOData.from_file(str(fn_xyz))
+        mol = IOData.from_file(fn_xyz)
     check_water(mol)
 
 
 def test_load_water_element():
     # test if IOData has atomic symbols
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = IOData.from_file(str(fn_xyz))
+        mol = IOData.from_file(fn_xyz)
     check_water(mol)
 
 
 def test_load_scf_energy():
     # test if IOData has the correct energy
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = IOData.from_file(str(fn_xyz))
+        mol = IOData.from_file(fn_xyz)
     check_water(mol)
 
 
 def check_water(mol):
     """Checks if atomic numbers and coordinates obtained from orca out file are correct.
 
-        Parameters
-        ----------
-        mol : IOData
-            IOdata dictionary.
+    Parameters
+    ----------
+    mol : IOData
+        IOdata dictionary.
 
-        Returns
-        -------
-        None
     """
-    assert mol.numbers[0] == 8
-    assert mol.numbers[1] == 1
-    assert mol.numbers[2] == 1
+    np.testing.assert_equal(mol.numbers, [8, 1, 1])
     # check bond length
     assert abs(np.linalg.norm(mol.coordinates[0] - mol.coordinates[1]) / angstrom - 0.9500) < 1e-5
     assert abs(np.linalg.norm(mol.coordinates[0] - mol.coordinates[2]) / angstrom - 0.9500) < 1e-5

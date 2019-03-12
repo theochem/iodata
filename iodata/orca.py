@@ -82,7 +82,7 @@ def _helper_number_atoms(f: TextIO) -> int:
 
     Returns
     -------
-    out: int
+    natom: int
        Total number of atoms.
 
     """
