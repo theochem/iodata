@@ -41,6 +41,7 @@ User Documentation
 
    install
    getting_started
+   formats
    changelog
 
 Developer Documentation
@@ -49,9 +50,7 @@ Developer Documentation
 .. toctree::
    :maxdepth: 2
 
-   developers
-   dev_building
-   formats
+   contributing
 
 API Reference
 ^^^^^^^^^^^^^

@@ -148,8 +148,7 @@ Github work flow
    Mention in the corresponding issue when you are working on it. "Claim" the
    issue to avoid duplicate efforts.
 
-2. [TODO: Roberto is not final yet.]
-   Install Roberto, which is the driver for our CI setup. It can also replicate
+2. Install Roberto, which is the driver for our CI setup. It can also replicate
    the continuous integration on your local machine, which makes it easier to
    prepare a passable pull request. See https://theochem.github.io/roberto/
 
@@ -192,8 +191,7 @@ Github work flow
    If you feel the summary line is too short to describe what you did, it
    may be better to split your changes into multiple commits.
 
-9. [TODO: Make this work!]
-   Run Roberto and fix all problems it reports. Either one of the following
+9. Run Roberto and fix all problems it reports. Either one of the following
    should work
 
    .. code-block:: bash
