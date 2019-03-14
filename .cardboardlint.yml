@@ -9,3 +9,4 @@ linters:
     config: .pycodestylerc
 - pydocstyle:
 - whitespace:
+    filefilter: ['- iodata/test/data/*']
