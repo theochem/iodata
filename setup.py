@@ -49,7 +49,7 @@ setup(
     author_email='horton.chemtools@gmail.com',
     url='https://github.com/theochem/iodata',
     package_dir={'iodata': 'iodata'},
-    packages=['iodata', 'iodata.test'],
+    packages=['iodata', 'iodata.test', 'iodata.test.data'],
     cmdclass={'build_ext': Cython.Build.build_ext},
     ext_modules=[Extension("iodata.overlap_accel",
                            sources=['iodata/overlap_accel.pyx'],
@@ -65,7 +65,7 @@ setup(
         'Intended Audience :: Science/Research',
     ],
     zip_safe=False,
-    setup_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy'],
+    setup_requires=['numpy>=1.0', 'cython>=0.24.1'],
     install_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy', 'pytest>=4.2.0',
                       'importlib_resources; python_version < "3.7"'],
 )

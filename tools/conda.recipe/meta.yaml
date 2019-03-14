@@ -7,14 +7,15 @@ source:
 
 build:
   number: 0
-  script: python setup.py install
+  string: py{{ CONDA_PY }}_1
+  script: python setup.py install --single-version-externally-managed --record=record.txt
 
 requirements:
   build:
     - {{ compiler("c") }}
   host:
-    - python ={{ MYCONDAPY }}
-    - numpy
+    - python
+    - numpy >=1.0
     - cython >=0.24.1
     - setuptools
     - pytest
@@ -28,7 +29,7 @@ test:
     - pytest
   commands:
     - conda inspect linkages iodata
-    - pytest -v iodata
+    - pytest --pyargs iodata
 
 about:
   home: https://github.com/theochem/iodata
