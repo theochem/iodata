@@ -24,6 +24,8 @@
 
 import re
 
+# import warnings
+
 import numpy as np
 
 from typing import Tuple, List, TextIO, Dict
@@ -46,15 +48,15 @@ def load_wfx_low(filename: str) -> Tuple:
             "The keywords should be one out of GTO, GIAO and CGST."
 
         # int type properties
-        num_atoms, num_primitives, num_occ_mo, num_perturbations, charge, \
-            num_electrons, num_alpha_electron, num_beta_electron, num_spin_multi \
-            = _helper_int(f_content=fc).values()
+        num_atoms, num_primitives, num_occ_mo, num_perturbations, \
+            num_electrons, num_alpha_electron, num_beta_electron, \
+            num_spin_multi = _helper_int(f_content=fc).values()
         # Check number of perturbations, num_perturbations
         perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
         assert (num_perturbations == perturbation_check[keywords]), \
             "Numbmer of perturbations is not equal to 0, 3 or 6."
         # float type properties
-        energy, virial_ratio, nuclear_viral, full_viral_ratio = \
+        charge, energy, virial_ratio, nuclear_virial, full_virial_ratio = \
             _helper_float(f_content=fc).values()
         # list type properties
         atom_names = np.array([i.split() for i in
@@ -65,12 +67,14 @@ def load_wfx_low(filename: str) -> Tuple:
         atom_numbers = np.array(_helper_section(f_content=fc,
                                                 start='<Atomic Numbers>',
                                                 end='</Atomic Numbers>',
-                                                line_break=True), dtype=int)
-        mo_spin_type = np.array(_helper_section(
+                                                line_break=True), dtype=np.int)
+        mo_spin_list = _helper_section(
             f_content=fc,
             start='<Molecular Orbital Spin Types>',
             end='</Molecular Orbital Spin Types>',
-            line_break=True), dtype=np.unicode_).reshape(-1, 1)
+            line_break=True)[0]
+        mo_spin_list = [i for i in mo_spin_list if i != 'and']
+        mo_spin_type = np.array(mo_spin_list, dtype=np.unicode_).reshape(-1, 1)
         coordinates = np.array(
             _helper_section(
                 f_content=fc, start='<Nuclear Cartesian Coordinates>',
@@ -106,16 +110,16 @@ def load_wfx_low(filename: str) -> Tuple:
         title, keywords, model_name, atom_names, num_atoms, num_primitives, \
         num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
         num_beta_electron, num_spin_multi, charge, energy, \
-        virial_ratio, nuclear_viral, full_viral_ratio, mo_count, \
+        virial_ratio, nuclear_virial, full_virial_ratio, mo_count, \
         atom_numbers, mo_spin_type, coordinates, centers, \
         primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
         gradient, mo_coefficients
 
 
 def _helper_section(f_content: TextIO, start: str, end: str,
-                    line_break: bool = False) -> Dict:
+                    line_break: bool = False) -> list:
     """Extract the information based on the given name."""
-    section = re.findall(start + '\n\\s+(.*?)\n' + end, f_content,
+    section = re.findall(start + '\n(.*?)\n' + end, f_content,
                          re.DOTALL)
     section = [i.strip() for i in section]
     if line_break:
@@ -154,7 +158,6 @@ def _helper_int(f_content: TextIO) -> Dict:
                        '</Number of Occupied Molecular Orbitals>'],
         'num_perturbations': ['<Number of Perturbations>',
                               '</Number of Perturbations>'],
-        'charge': ['<Net Charge>', '</Net Charge>'],
         'num_electrons': ['<Number of Electrons>',
                           '</Number of Electrons>'],
         'num_alpha_electron': ['<Number of Alpha Electrons>',
@@ -171,10 +174,7 @@ def _helper_int(f_content: TextIO) -> Dict:
                                    start=val[0],
                                    end=val[1])
         if len(int_info) != 0:
-            dict_int[key] = np.array(_helper_section(f_content=f_content,
-                                                     start=val[0],
-                                                     end=val[1])[0],
-                                     dtype=int)
+            dict_int[key] = np.array(int_info[0], dtype=np.int)
         else:
             dict_int[key] = np.array(None)
 
@@ -184,6 +184,7 @@ def _helper_int(f_content: TextIO) -> Dict:
 def _helper_float(f_content: TextIO) -> Dict:
     """Compute the float type values."""
     float_label = {
+        'charge': ['<Net Charge>', '</Net Charge>'],
         'energy': ['<Energy = T + Vne + Vee + Vnn>',
                    '</Energy = T + Vne + Vee + Vnn>'],
         'virial_ratio': ['<Virial Ratio (-V/T)>', '</Virial Ratio (-V/T)>'],
@@ -191,8 +192,8 @@ def _helper_float(f_content: TextIO) -> Dict:
                           'Forces on Nuclei, W>',
                           '</Nuclear Virial of Energy-Gradient-Based '
                           'Forces on Nuclei, W>'],
-        'full_viral_ratio': ['<Full Virial Ratio, -(V - W)/T>',
-                             '</Full Virial Ratio, -(V - W)/T>']
+        'full_virial_ratio': ['<Full Virial Ratio, -(V - W)/T>',
+                              '</Full Virial Ratio, -(V - W)/T>']
     }
     dict_float = {}
     for key, val in float_label.items():
@@ -200,10 +201,9 @@ def _helper_float(f_content: TextIO) -> Dict:
             float_info = f_content[f_content.find(
                 val[0]) + len(val[0]) + 1: f_content.find(val[1])]
             dict_float[key] = np.array(float_info, dtype=float)
+        # case for when string not find in the file
         elif f_content.find(val[0]) == -1:
             dict_float[key] = np.array(None)
-        else:
-            continue
 
     return dict_float
 
@@ -235,7 +235,7 @@ def _helper_mo(f_content: TextIO, num_primitives: int) \
     mo_coefficients = np.array(
         coefficient_all, dtype=np.float).reshape(-1, num_primitives)
     mo_coefficients = np.transpose(mo_coefficients)
-    return mo_count, mo_coefficients
+    return np.array(mo_count, np.int), mo_coefficients
 
 
 def _check_tag(f_content: str):
@@ -248,15 +248,6 @@ def _check_tag(f_content: str):
            ('Molecular Orbital Primitive Coefficients' in tags_tail), \
         "Molecular Orbital Primitive Coefficients tags are not shown in " \
         "WFX inputfile pairwise or both are missing."
-    # check others
-    tags_header_check = [i for i in tags_header
-                         if i != 'Molecular Orbital Primitive Coefficients']
-    tags_tail_check = [i for i in tags_tail
-                       if i != 'Molecular Orbital Primitive Coefficients']
-    for tag_header, tag_tail in zip(tags_header_check, tags_tail_check):
-        assert (tag_header == tag_tail), \
-            "Tag header %s and tail %s do not match." \
-            % (tag_header, tag_tail)
     # Check if all required tags/fields are present
     tags_required = ['Title',
                      'Keywords',
@@ -285,6 +276,16 @@ def _check_tag(f_content: str):
             set(tags_required):
         diff = set(tags_required) - set(tags_header).intersection(
             set(tags_required))
-        err_str = ', '.join(diff)
-        err_str += 'are/is required but not present in the WFX file.'
-        raise AssertionError(err_str)
+        error_str = ', '.join(diff)
+        error_str += 'are/is required but not present in the WFX file.'
+        raise AssertionError(error_str)
+        # warnings.warn(error_str)
+    # check others
+    tags_header_check = [i for i in tags_header
+                         if i != 'Molecular Orbital Primitive Coefficients']
+    tags_tail_check = [i for i in tags_tail
+                       if i != 'Molecular Orbital Primitive Coefficients']
+    for tag_header, tag_tail in zip(tags_header_check, tags_tail_check):
+        assert (tag_header == tag_tail), \
+            "Tag header %s and tail %s do not match." \
+            % (tag_header, tag_tail)
