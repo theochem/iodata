@@ -1,9 +1,12 @@
+<Title>
+H2O HF/STO-3G//HF/STO-3G
+</Title>
 <Keywords>
 GTO
 </Keywords>
 <Number of Nuclei>
 3
-
+</Number of Nuclei>
 <Number of Primitives>
 21
 </Number of Primitives>
@@ -45,9 +48,6 @@ H3
 <Number of Beta Electrons>
 5
 </Number of Beta Electrons>
-<Electronic Spin Multiplicity>
-1
-</Electronic Spin Multiplicity>
 <Model>
 Restricted HF
 </Model>
@@ -148,9 +148,6 @@ O1         6.09070231000000E-016 -5.55187875000000E-016 -2.29270172000000E-004
 H2         -2.46849911000000E-016 -1.18355659000000E-004 1.14635086000000E-004
 H3         -3.62220320000000E-016 1.18355659000000E-004 1.14635086000000E-004
 </Nuclear Cartesian Energy Gradients>
-<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>
-6.14477996016389E-004
-</Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>
 <Full Virial Ratio, -(V - W)/T>
 2.00600662884992E+000
 </Full Virial Ratio, -(V - W)/T>
