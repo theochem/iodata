@@ -278,7 +278,7 @@ def _check_tag(f_content: str):
             set(tags_required))
         error_str = ', '.join(diff)
         error_str += 'are/is required but not present in the WFX file.'
-        raise AssertionError(error_str)
+        raise IOError(error_str)
         # warnings.warn(error_str)
     # check others
     tags_header_check = [i for i in tags_header

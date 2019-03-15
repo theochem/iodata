@@ -280,7 +280,7 @@ def test_load_wfx_low_water():
 
 def test_load_wfx_low_missing_tag_h2o():
     """Test load_wfx_low with h2o_error.wfx with missing tag."""
-    with pytest.raises(AssertionError):
+    with pytest.raises(IOError):
         load_wfx_low(filename='iodata/test/data/h2o_error.wfx')
 
 
