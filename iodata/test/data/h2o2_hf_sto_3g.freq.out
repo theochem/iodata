@@ -1,0 +1,411 @@
+mFile = /v/bigbox6/home/yihan/qchem/qchem.mbh6/bin/mpi/machines
+Parallel job running on 4 processors.
+64 in progman.main
+Parallel job running on 4 processors.
+64 in progman.main
+Parallel job running on 4 processors.
+64 in progman.main
+Parallel job running on 4 processors.
+64 in progman.main
+                  Welcome to Q-Chem
+     A Quantum Leap Into The Future Of Chemistry
+
+ Y. Shao, L. Fusti-Molnar, Y. Jung, J. Kussmann, C. Ochsenfeld,
+ S. T. Brown, A. T. B. Gilbert, L. V. Slipchenko,S. V. Levchenko,
+ D. P. O'Neill, R. A. DiStasio Jr., R. C. Lochan, T. Wang,
+ G. J. O. Beran, N. A. Besley, J. M. Herbert, C. Y. Lin,
+ T. Van Voorhis, S. H. Chien, A. Sodt, R. P. Steele, 
+ V. A. Rassolov, P. E. Maslen, P. P. Korambath, R. D. Adamson,
+ B. Austin, J. Baker, E. F. C. Byrd, H. Dachsel, R. J. Doerksen,
+ A. Dreuw, B. D. Dunietz, A. D. Dutoi, T. R. Furlani,
+ S. R. Gwaltney, A. Heyden, S. Hirata, C.-P. Hsu, G. Kedziora,
+ R. Z. Khaliullin, P. Klunzinger, A. M. Lee, M. S. Lee, W. Liang,
+ I. Lotan, N. Nair, B. Peters, E. I. Proynov, P. A. Pieniazek, 
+ Y. M. Rhee, J. Ritchie, E. Rosta, C. D. Sherrill, 
+ A. C. Simmonett, J. E. Subotnik, H. L. Woodcock III,
+ W. Zhang, A. T. Bell, A. K. Chakraborty, D. M. Chipman,
+ F. J. Keil, A. Warshel, W. J. Hehre, H. F. Schaefer III,
+ J. Kong, A. I. Krylov, P. M. W. Gill, M. Head-Gordon,
+ Q-Chem, Version 3.1, Q-Chem, Inc., Pittsburgh, PA (2007).
+
+ Additional authors for Version 3.1: 
+ Z. Gan, Y. Zhao, N. E. Schultz, D. Truhlar, E. Epifanovsky and M. Oana.
+
+ Additional authors for Version 3.2: 
+ R. Baer, B. R. Brooks, D. Casanova, J.-D. Chai, C.-L. Cheng, 
+ C. Cramer, D. Crittenden, A. Ghysels, G. Hawkins, E. G. Hohenstein, 
+ C. Kelley, W. Kurlancheek, D. Liotard, E. Livshits, P. Manohar, 
+ A. Marenich, D. Neuhauser, R. Olson, M. A. Rohrdanz, K. S. Thanthiriwatte, 
+ A. J. W. Thom, V. Vanovschi, C. F. Williams, Q. Wu and Z.-Q. You. 
+
+
+ Intel X86 Linux Version
+
+ Q-chem begins on Sat Nov 21 00:03:37 2009  
+
+ Parallel job on  4  processors
+
+theFileMan(): MAXOPENFILES=974 MAX_SUB_FILE_NUM=16
+Maximum size of a physical file is 2.0 GB, maximum size of a tmp-file is 32.0 GB
+
+
+--------------------------------------------------------------
+User input:
+--------------------------------------------------------------
+$comment
+H2O2 peroxide  gas phase  Energy minimization
+$end
+
+$molecule
+ read  h2o2.hf.sto-3g.out.qchem.xyz
+$end
+
+$rem
+jobtype            freq
+EXCHANGE           HF       Exact exchange
+BASIS              sto-3g   Basis Set
+SKIP_PROJTRM      0
+new_drvman        1
+$end
+--------------------------------------------------------------
+ Writing REM_CC_EA            0
+ ----------------------------------------------------
+       Standard Nuclear Orientation (Angstroms)
+    I     Atom         X            Y            Z
+ ----------------------------------------------------
+    1      H       1.038130     0.688720    -0.404711
+    2      O      -0.685837     0.130312     0.050589
+    3      H      -1.038130    -0.688720    -0.404711
+    4      O       0.685837    -0.130312     0.050589
+ ----------------------------------------------------
+ Molecular Point Group                 C2    NOp =  2
+ Largest Abelian Subgroup              C2    NOp =  2
+ Nuclear Repulsion Energy =    37.4577990233 hartrees
+ There are        9 alpha and        9 beta electrons
+ Requested basis set is STO-3G
+ There are 6 shells and 12 basis functions
+
+Total QAlloc Memory Limit   2000 MB
+Mega-Array Size        61 MB
+MEM_STATIC part        62 MB
+
+                       Distance Matrix (Angstroms)
+             H (  1)   O (  2)   H (  3)
+   O (  2)  1.868470
+   H (  3)  2.491625  1.001110
+   O (  4)  1.001110  1.396215  1.868470
+ 
+ A cutoff of  1.0D-11 yielded     21 shell pairs
+ There are     90 function pairs
+Evaluating contribution to one-electron hamiltonian from nuclear
+ Smallest overlap matrix eigenvalue = 3.79E-01
+ Multipole matrices computed through 2nd order
+ Guess from superposition of atomic densities
+ Warning:  Energy on first SCF cycle will be non-variational
+ A restricted Hartree-Fock SCF calculation will be
+ performed using Pulay DIIS extrapolation
+ SCF converges when DIIS error is below 1.0E-08
+ ---------------------------------------
+  Cycle       Energy         DIIS Error
+ ---------------------------------------
+    1    -148.2306458938      2.80E-01
+    2    -148.7427318263      2.63E-02
+    3    -148.7643852533      4.24E-03
+    4    -148.7649744205      8.10E-04
+    5    -148.7649961096      8.44E-05
+    6    -148.7649965574      2.45E-05
+    7    -148.7649966027      5.82E-06
+    8    -148.7649966056      1.28E-06
+    9    -148.7649966058      1.17E-07
+   10    -148.7649966058      2.17E-08
+   11    -148.7649966058      3.05E-09 Convergence criterion met
+ ---------------------------------------
+ SCF time:  CPU 0.02 s  wall 0.12 s
+ Analysis of SCF Wavefunction
+ 
+ --------------------------------------------------------------
+             Orbital Energies (a.u.) and Symmetries
+ --------------------------------------------------------------
+ 
+ Alpha MOs, Restricted
+ -- Occupied --                  
+-20.317 -20.316  -1.409  -1.104  -0.598  -0.598  -0.501  -0.393
+  1 B     1 A     2 A     2 B     3 B     3 A     4 A     5 A                  
+ -0.349
+  4 B                                                                          
+ -- Virtual --                   
+  0.509   0.592   0.615
+  5 B     6 A     6 B                                                          
+ 
+ Beta MOs, Restricted
+ -- Occupied --                  
+-20.317 -20.316  -1.409  -1.104  -0.598  -0.598  -0.501  -0.393
+  1 B     1 A     2 A     2 B     3 B     3 A     4 A     5 A                  
+ -0.349
+  4 B                                                                          
+ -- Virtual --                   
+  0.509   0.592   0.615
+  5 B     6 A     6 B                                                          
+ --------------------------------------------------------------
+ 
+          Ground-State Mulliken Net Atomic Charges
+
+     Atom                 Charge (a.u.)
+  ----------------------------------------
+      1 H                     0.189351
+      2 O                    -0.189351
+      3 H                     0.189351
+      4 O                    -0.189351
+  ----------------------------------------
+  Sum of atomic charges =     0.000000
+
+ -----------------------------------------------------------------
+                    Cartesian Multipole Moments
+ -----------------------------------------------------------------
+    Charge (ESU x 10^10)
+                 0.0000
+    Dipole Moment (Debye)
+         X       0.0000      Y       0.0000      Z      -1.3098
+       Tot       1.3098
+    Quadrupole Moments (Debye-Ang)
+        XX      -9.4529     XY       2.4417     YY      -9.2540
+        XZ       0.0000     YZ       0.0000     ZZ     -10.2171
+    Octapole Moments (Debye-Ang^2)
+       XXX       0.0000    XXY       0.0000    XYY       0.0000
+       YYY       0.0000    XXZ      -1.3362    XYZ      -0.7964
+       YYZ      -0.3679    XZZ       0.0000    YZZ       0.0000
+       ZZZ      -0.0567
+    Hexadecapole Moments (Debye-Ang^3)
+      XXXX     -35.6509   XXXY       1.7995   XXYY      -7.0150
+      XYYY       0.7230   YYYY      -8.9615   XXXZ       0.0000
+      XXYZ       0.0000   XYYZ       0.0000   YYYZ       0.0000
+      XXZZ      -7.4827   XYZZ       0.2599   YYZZ      -2.4960
+      XZZZ       0.0000   YZZZ       0.0000   ZZZZ      -6.7163
+ -----------------------------------------------------------------
+NBlocks: 0
+ New QAlloc stats:
+    Allocs:  992   Frees:  940
+    MB in use:      64.80   Max MB in use:      65.98
+ CPSCF will be done in 4 segments to save memory and/or to run in parallel.
+i: 0 AtomOff: 1 AtomCount: 1 LagOff: 1 LagCount: 3
+i: 1 AtomOff: 2 AtomCount: 1 LagOff: 4 LagCount: 3
+i: 2 AtomOff: 3 AtomCount: 1 LagOff: 7 LagCount: 3
+i: 3 AtomOff: 4 AtomCount: 1 LagOff: 10 LagCount: 3
+compute_lagrangian, IstLag: 0 LstLag: 2
+i: 0 AtomOff: 1 AtomCount: 1 LagOff: 1 LagCount: 3
+i: 1 AtomOff: 2 AtomCount: 1 LagOff: 4 LagCount: 3
+i: 2 AtomOff: 3 AtomCount: 1 LagOff: 7 LagCount: 3
+i: 3 AtomOff: 4 AtomCount: 2 LagOff: 10 LagCount: 6
+guess_response, IstLag: 0 LstLag: 2
+solve_cpscf, IstLag: 0 LstLag: 2
+ ISub=           3
+ calling setfozp
+ after calling setfozp
+ calling ssmatp and ssvecp
+ after calling ssmatp and ssvecp
+ before calling cpconvp
+ after calling cpconvp
+   1         0           3      0.013645    0.005785
+ moving onto next iteration
+ ISub=           6
+ calling setfozp
+ after calling setfozp
+ calling ssmatp and ssvecp
+ after calling ssmatp and ssvecp
+ before calling cpconvp
+ after calling cpconvp
+   2         0           3      0.003155    0.001261
+ moving onto next iteration
+ ISub=           9
+ calling setfozp
+ after calling setfozp
+ calling ssmatp and ssvecp
+ after calling ssmatp and ssvecp
+ before calling cpconvp
+ after calling cpconvp
+   3         0           3      0.000515    0.000198
+ moving onto next iteration
+ ISub=          12
+ calling setfozp
+ after calling setfozp
+ calling ssmatp and ssvecp
+ after calling ssmatp and ssvecp
+ before calling cpconvp
+ after calling cpconvp
+   4         0           3      0.000089    0.000036
+ moving onto next iteration
+ ISub=          15
+ calling setfozp
+ after calling setfozp
+ calling ssmatp and ssvecp
+ after calling ssmatp and ssvecp
+ before calling cpconvp
+ after calling cpconvp
+   5         0           3      0.000010    0.000006
+ moving onto next iteration
+ ISub=          18
+ calling setfozp
+ after calling setfozp
+ calling ssmatp and ssvecp
+ after calling ssmatp and ssvecp
+ before calling cpconvp
+ after calling cpconvp
+   6         3           0      0.000000    0.000000    Roots Converged
+ itype=           5
+ IQMorPC=           1 length=                   162 LOffTmp=
+                     0
+ IQMorPC=           1 length=                   162 LOffTmp=
+                   162
+ IQMorPC=           1 length=                   162 LOffTmp=
+                   324
+ IQMorPC=           1 length=                   324 LOffTmp=
+                   486
+make_fx, IstLag: 0 LstLag: 2
+IstLag: 0 LstLag: 2 NPeLag: 3
+ Polarizability Matrix (a.u.)
+            1           2           3
+    1  -9.4103236  -3.1111903  -0.0000000
+    2  -3.1111903  -5.2719873  -0.0000000
+    3  -0.0000000  -0.0000000  -1.7166708
+i: 0 AtomOff: 1 AtomCount: 1 LagOff: 1 LagCount: 3
+i: 1 AtomOff: 2 AtomCount: 1 LagOff: 4 LagCount: 3
+i: 2 AtomOff: 3 AtomCount: 1 LagOff: 7 LagCount: 3
+i: 3 AtomOff: 4 AtomCount: 1 LagOff: 10 LagCount: 3
+311 in scf_hess
+IstLag: 0 LstLag: 2
+ 
+ Direct stationary perturbation theory relativistic correction:
+ 
+ rels  =       0.062660370087
+ relv  =      -0.204357931871
+ rel2e =       0.057053529600
+ E_rel =      -0.084644032183
+ 
+i'm in write hessian test
+ Hessian of the SCF Energy
+            1           2           3           4           5           6
+    1   0.1627798   0.1488185  -0.0873559  -0.0379552  -0.0571184   0.0225419
+    2   0.1488185   0.4239610  -0.2309311   0.0247640   0.0171600  -0.0108240
+    3  -0.0873559  -0.2309311   0.1271814  -0.0004128  -0.0076820   0.0033761
+    4  -0.0379552   0.0247640  -0.0004128   0.7761933   0.0542352   0.0652259
+    5  -0.0571184   0.0171600  -0.0076820   0.0542352   0.5434599   0.2494368
+    6   0.0225419  -0.0108240   0.0033761   0.0652259   0.2494368   0.1512221
+    7  -0.0087315   0.0014284  -0.0048976  -0.1160930  -0.0931285  -0.0599161
+    8   0.0014284  -0.0009992  -0.0011012  -0.1750109  -0.4401220  -0.2406536
+    9   0.0048976   0.0011012  -0.0010603  -0.0926664  -0.2397143  -0.1294974
+   10  -0.1160929  -0.1750110   0.0926663  -0.6221455   0.0960119  -0.0278515
+   11  -0.0931285  -0.4401220   0.2397143   0.0960115  -0.1204975   0.0020407
+   12   0.0599159   0.2406536  -0.1294975   0.0278520  -0.0020406  -0.0251007
+            7           8           9          10          11          12
+    1  -0.0087315   0.0014284   0.0048976  -0.1160929  -0.0931285   0.0599159
+    2   0.0014284  -0.0009992   0.0011012  -0.1750110  -0.4401220   0.2406536
+    3  -0.0048976  -0.0011012  -0.0010603   0.0926663   0.2397143  -0.1294975
+    4  -0.1160930  -0.1750109  -0.0926664  -0.6221455   0.0960115   0.0278520
+    5  -0.0931285  -0.4401220  -0.2397143   0.0960119  -0.1204975  -0.0020406
+    6  -0.0599161  -0.2406536  -0.1294974  -0.0278515   0.0020407  -0.0251007
+    7   0.1627798   0.1488185   0.0873559  -0.0379551  -0.0571182  -0.0225421
+    8   0.1488185   0.4239610   0.2309311   0.0247640   0.0171600   0.0108239
+    9   0.0873559   0.2309311   0.1271814   0.0004128   0.0076820   0.0033762
+   10  -0.0379551   0.0247640   0.0004128   0.7761933   0.0542352  -0.0652259
+   11  -0.0571182   0.0171600   0.0076820   0.0542352   0.5434599  -0.2494368
+   12  -0.0225421   0.0108239   0.0033762  -0.0652259  -0.2494368   0.1512221
+ New QAlloc stats:
+    Allocs:  4390   Frees:  4323
+    MB in use:      64.80   Max MB in use:      65.98
+not doing much in drv_exit
+ ------------------------------------------------------------------------------
+                     drvman        : Timing summary (seconds)
+ ------------------------------------------------------------------------------
+     job step          cpu (% of tot)      sys (% of tot)     wall (% of tot)
+ ------------------------------------------------------------------------------
+  cpscf_lag         0.1100E-01 (10.7)   0.1000E-05 (50.0)   0.4183E-01 (18.2)
+  cpscf_ges         0.0000E+00 ( 0.0)   0.0000E+00 ( 0.0)   0.3887E-02 ( 1.7)
+  solve_cpscf       0.3199E-01 (31.1)   0.0000E+00 ( 0.0)   0.9143E-01 (39.8)
+  SetFoz Aoints     0.2999E-01 (29.1)   0.0000E+00 ( 0.0)   0.6614E-01 (28.8)
+  SetFoz dft        0.0000E+00 ( 0.0)   0.0000E+00 ( 0.0)   0.9775E-05 ( 0.0)
+  make_fx           0.6000E-02 ( 5.8)   0.1000E-05 (50.0)   0.1363E-01 ( 5.9)
+  assemble_hess     0.5399E-01 (52.4)   0.0000E+00 ( 0.0)   0.7858E-01 (34.2)
+ ------------------------------------------------------------------------------
+   Grand Totals     0.1030E+00          0.2000E-05          0.2295E+00
+ ------------------------------------------------------------------------------
+ **********************************************************************
+ **                                                                  **
+ **                       VIBRATIONAL ANALYSIS                       **
+ **                       --------------------                       **
+ **                                                                  **
+ **        VIBRATIONAL FREQUENCIES (CM**-1) AND NORMAL MODES         **
+ **     FORCE CONSTANTS (mDYN/ANGSTROM) AND REDUCED MASSES (AMU)     **
+ **                  INFRARED INTENSITIES (KM/MOL)                   **
+ **                                                                  **
+ **********************************************************************
+ 
+
+ Mode:                 1                      2                      3
+ Frequency:       186.09                1486.88                1590.29
+ Force Cnst:      0.0220                13.7270                 1.6383
+ Red. Mass:       1.0787                10.5384                 1.0995
+ IR Active:          YES                    YES                    YES
+ IR Intens:      133.840                  0.017                 46.009
+ Raman Active:       YES                    YES                    YES
+               X      Y      Z        X      Y      Z        X      Y      Z
+ H          0.043  0.318  0.628    0.414 -0.027 -0.100    0.661 -0.238  0.058
+ O         -0.003  0.028 -0.040   -0.559  0.077  0.006   -0.042  0.015  0.033
+ H         -0.043 -0.318  0.628   -0.414  0.027 -0.100    0.661 -0.238 -0.058
+ O          0.003 -0.028 -0.040    0.559 -0.077  0.006   -0.042  0.015 -0.033
+ TransDip   0.000  0.000  0.370    0.000  0.000 -0.004    0.217 -0.008  0.000
+
+ Mode:                 4                      5                      6
+ Frequency:      1780.33                4140.82                4148.14
+ Force Cnst:      2.1401                10.8146                10.8181
+ Red. Mass:       1.1460                 1.0705                 1.0671
+ IR Active:          YES                    YES                    YES
+ IR Intens:        2.083                 12.825                 30.335
+ Raman Active:       YES                    YES                    YES
+               X      Y      Z        X      Y      Z        X      Y      Z
+ H          0.676 -0.178  0.085   -0.241 -0.583  0.317    0.249  0.577 -0.321
+ O          0.022 -0.064 -0.005   -0.018 -0.037 -0.020   -0.016 -0.036 -0.020
+ H         -0.676  0.178  0.085    0.241  0.583  0.317    0.249  0.577  0.321
+ O         -0.022  0.064 -0.005    0.018  0.037 -0.020   -0.016 -0.036  0.020
+ TransDip   0.000  0.000 -0.046    0.000  0.000 -0.115    0.005 -0.176  0.000
+
+ STANDARD THERMODYNAMIC QUANTITIES AT   298.18 K  AND     1.00 ATM
+
+   This Molecule has  0 Imaginary Frequencies
+   Zero point vibrational energy:       19.060 kcal/mol
+
+   Atom    1 Element H  Has Mass    1.00783
+   Atom    2 Element O  Has Mass   15.99491
+   Atom    3 Element H  Has Mass    1.00783
+   Atom    4 Element O  Has Mass   15.99491
+   Molecular Mass:    34.005480 amu
+   Principal axes and moments of inertia in atomic units:
+                             1           2           3
+    Eigenvalues --        6.30486    63.34846    66.84593
+          X               0.99602     0.08912     0.00000
+          Y              -0.08912     0.99602     0.00000
+          Z               0.00000     0.00000     1.00000
+   Rotational Symmetry Number is   2
+   The Molecule is an Asymmetric Top
+   Translational Enthalpy:        0.889 kcal/mol
+   Rotational Enthalpy:           0.889 kcal/mol
+   Vibrational Enthalpy:         19.432 kcal/mol
+   gas constant (RT):             0.593 kcal/mol
+   Translational Entropy:        36.503  cal/mol.K
+   Rotational Entropy:           16.553  cal/mol.K
+   Vibrational Entropy:           2.291  cal/mol.K
+
+   Total Enthalpy:               21.802 kcal/mol
+   Total Entropy:                55.347  cal/mol.K
+Archival summary:
+1\1\c17.lobos.nih.gov\FREQ\HF\STO-3G\O2H2\an\21Nov2009\0\\#,FREQ,HF,STO-3G,\\0,1\O\H,1,1.00111\O,1,1.39621,2,101.128\H,3,1.00111,1,101.128,2,-124.772,0\\HF=-148.764997\\@
+
+ Total job time:  0.51s(wall), 0.18s(cpu) 
+ Sat Nov 21 00:03:37 2009
+
+        *************************************************************
+        *                                                           *
+        *  Thank you very much for using Q-Chem.  Have a nice day.  *
+        *                                                           *
+        *************************************************************
+
+
