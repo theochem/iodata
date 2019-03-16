@@ -19,14 +19,14 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name, too-many-branches
+# pragma pylint: disable=invalid-name, too-many-branches, too-many-statements
 """Module for handling Q-Chem computation output."""
 
 import re
 
-import numpy as np
-
 from typing import Tuple
+
+import numpy as np
 
 from .periodic import sym2num
 from .utils import angstrom, amu, calorie, avogadro
@@ -38,8 +38,6 @@ patterns = ['*.freq.out']
 
 def load_qchem_low(filename: str, hessfile: str = None) -> Tuple:
     """Load a molecule from a Q-Chem frequency output."""
-    # TODO: fix is_periodic problem
-    # TODO: multiplicity: int = 1?
     with open(filename) as f:
         # f = open(filename)
         for line in f:
@@ -85,7 +83,6 @@ def load_qchem_low(filename: str, hessfile: str = None) -> Tuple:
                 break
         num_alpha_electron = np.array(line.split()[2], dtype=np.int)
         num_beta_electron = np.array(line.split()[5], dtype=np.int)
-        # TODO: Distance Matrix (Angstroms)?
 
         # grep the SCF energy
         energy = None

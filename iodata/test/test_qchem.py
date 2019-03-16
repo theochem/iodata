@@ -22,8 +22,6 @@
 # pragma pylint: disable=invalid-name,no-member
 """Test iodata.qchem module."""
 
-import pytest
-
 import numpy as np
 from numpy.testing import assert_almost_equal
 
