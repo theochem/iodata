@@ -49,23 +49,23 @@ def test_load_wfn_low_he_s():
     title, numbers, coordinates, centers, type_assignment = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'He atom - decontracted 6-31G basis set'
-    assert numbers.shape == (1,)
-    assert numbers == [2]
-    assert coordinates.shape == (1, 3)
-    assert (coordinates == [0.00, 0.00, 0.00]).all()
-    assert centers.shape == (4,)
-    assert (centers == [0, 0, 0, 0]).all()
-    assert type_assignment.shape == (4,)
-    assert (type_assignment == [1, 1, 1, 1]).all()
-    assert exponents.shape == (4,)
-    assert mo_count.shape == (1,)
-    assert mo_count == [1]
-    assert occ_num.shape == (1,)
-    assert mo_energy.shape == (1,)
-    assert coefficients.shape == (4, 1)
+    assert_equal(numbers.shape, (1,))
+    assert_equal(numbers, [2])
+    assert_equal(coordinates.shape, (1, 3))
+    assert_equal(centers.shape, (4,))
+    assert_equal(type_assignment.shape, (4,))
+    assert_equal(exponents.shape, (4,))
+    assert_equal(mo_count.shape, (1,))
+    assert_equal(mo_count, [1])
+    assert_equal(occ_num.shape, (1,))
+    assert_equal(mo_energy.shape, (1,))
+    assert_equal(coefficients.shape, (4, 1))
+    assert_equal(type_assignment, [1, 1, 1, 1])
+    assert_equal(centers, [0, 0, 0, 0])
+    assert_equal(occ_num, [2.0])
+    assert_allclose(coordinates, np.array([[0.00, 0.00, 0.00]]))
     assert_allclose(exponents, [0.3842163E+02, 0.5778030E+01,
                                 0.1241774E+01, 0.2979640E+00])
-    assert_allclose(occ_num, [2.0])
     assert_allclose(mo_energy, [-0.914127])
     expected = np.array([0.26139500E+00, 0.41084277E+00,
                          0.39372947E+00, 0.14762025E+00])
@@ -80,26 +80,29 @@ def test_load_wfn_low_h2o():
     title, numbers, coordinates, centers, type_assignment = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'H2O Optimization'
-    assert numbers.shape == (3,)
-    assert (numbers == np.array([8, 1, 1])).all()
-    assert coordinates.shape == (3, 3)
-    assert centers.shape == (21,)
-    assert type_assignment.shape == (21,)
-    assert exponents.shape == (21,)
-    assert mo_count.shape == (5,)
-    assert occ_num.shape == (5,)
-    assert mo_energy.shape == (5,)
-    assert coefficients.shape == (21, 5)
+    assert_equal(numbers.shape, (3,))
+    assert_equal(coordinates.shape, (3, 3))
+    assert_equal(centers.shape, (21,))
+    assert_equal(type_assignment.shape, (21,))
+    assert_equal(exponents.shape, (21,))
+    assert_equal(mo_count.shape, (5,))
+    assert_equal(occ_num.shape, (5,))
+    assert_equal(mo_energy.shape, (5,))
+    assert_equal(coefficients.shape, (21, 5))
+    assert_equal(numbers, np.array([8, 1, 1]))
+    assert_equal(centers[:15], np.zeros(15, int))
+    assert_equal(centers[15:], np.array([1, 1, 1, 2, 2, 2]))
+    assert_equal(type_assignment[:6], np.ones(6))
+    assert_equal(type_assignment[6:15], np.array(
+        [2, 2, 2, 3, 3, 3, 4, 4, 4]))
+    assert_equal(type_assignment[15:], np.ones(6))
+    assert_equal(mo_count, [1, 2, 3, 4, 5])
+    assert_equal(np.sum(occ_num), 10.0)
+    assert_equal(occ_num, [2.0, 2.0, 2.0, 2.0, 2.0])
     assert_allclose(coordinates, np.array([
         [-4.44734101, 3.39697999, 0.00000000],
         [-2.58401495, 3.55136194, 0.00000000],
         [-4.92380519, 5.20496220, 0.00000000]]))
-    assert_allclose(centers[:15], np.zeros(15, int))
-    assert_allclose(centers[15:], np.array([1, 1, 1, 2, 2, 2]))
-    assert_allclose(type_assignment[:6], np.ones(6))
-    assert_allclose(type_assignment[6:15], np.array(
-        [2, 2, 2, 3, 3, 3, 4, 4, 4]))
-    assert_allclose(type_assignment[15:], np.ones(6))
     assert_allclose(exponents[:3],
                     [0.1307093E+03, 0.2380887E+02, 0.6443608E+01])
     assert_allclose(exponents[5:8],
@@ -107,9 +110,6 @@ def test_load_wfn_low_h2o():
     assert_allclose(exponents[13:16],
                     [0.1169596E+01, 0.3803890E+00, 0.3425251E+01])
     assert_allclose(exponents[-1], 0.1688554E+00)
-    assert_allclose(mo_count, [1, 2, 3, 4, 5])
-    assert_allclose(np.sum(occ_num), 10.0)
-    assert_allclose(occ_num, [2.0, 2.0, 2.0, 2.0, 2.0])
     assert_allclose(mo_energy, np.sort(mo_energy))
     assert_allclose(mo_energy[:3], [-20.251576, -1.257549, -0.593857])
     assert_allclose(mo_energy[3:], [-0.459729, -0.392617])
@@ -125,99 +125,98 @@ def test_load_wfn_low_h2o():
 
 
 def test_get_permutation_orbital():
-    assert_allclose(get_permutation_orbital(
+    assert_equal(get_permutation_orbital(
         np.array([1, 1, 2, 3, 4])), [0, 1, 2, 3, 4])
-    assert_allclose(get_permutation_orbital(np.array([2, 3, 4])), [0, 1, 2])
-    assert_allclose(get_permutation_orbital(
+    assert_equal(get_permutation_orbital(np.array([2, 3, 4])), [0, 1, 2])
+    assert_equal(get_permutation_orbital(
         np.array([2, 2, 3, 3, 4, 4])), [0, 2, 4, 1, 3, 5])
     assign = np.array([1, 1, 2, 2, 3, 3, 4, 4, 1])
     expect = [0, 1, 2, 4, 6, 3, 5, 7, 8]
-    assert_allclose(get_permutation_orbital(assign), expect)
+    assert_equal(get_permutation_orbital(assign), expect)
     assign = np.array([1, 5, 6, 7, 8, 9, 10, 1])
     expect = [0, 1, 2, 3, 4, 5, 6, 7]
-    assert_allclose(get_permutation_orbital(assign), expect)
+    assert_equal(get_permutation_orbital(assign), expect)
     assign = np.array([5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10])
     expect = [0, 2, 4, 6, 8, 10, 1, 3, 5, 7, 9, 11]
-    assert_allclose(get_permutation_orbital(assign), expect)
+    assert_equal(get_permutation_orbital(assign), expect)
     assign = np.array([1, 2, 2, 3, 3, 4, 4, 5, 6, 7, 8, 9, 10])
     expect = [0, 1, 3, 5, 2, 4, 6, 7, 8, 9, 10, 11, 12]
-    assert_allclose(get_permutation_orbital(assign), expect)
+    assert_equal(get_permutation_orbital(assign), expect)
     # f orbitals
     assign = np.array([11, 12, 13, 17, 14, 15, 18, 19, 16, 20])
-    assert_allclose(get_permutation_orbital(assign), list(range(10)))
+    assert_equal(get_permutation_orbital(assign), list(range(10)))
     # g orbitals
     assign = np.array([23, 29, 32, 27, 22, 28, 35,
                        34, 26, 31, 33, 30, 25, 24, 21])
-    assert_allclose(get_permutation_orbital(assign), list(range(15)))
+    assert_equal(get_permutation_orbital(assign), list(range(15)))
     # g orbitals
     assign = np.array([23, 29, 32, 27, 22, 28, 35,
                        34, 26, 31, 33, 30, 25, 24, 21])
-    assert_allclose(get_permutation_orbital(assign), list(range(15)))
+    assert_equal(get_permutation_orbital(assign), list(range(15)))
     # h orbitals
-    assert_allclose(get_permutation_orbital(
+    assert_equal(get_permutation_orbital(
         np.arange(36, 57)), list(range(21)))
     assign = np.array([1, 1, 11, 12, 13, 17, 14, 15, 18, 19, 16, 20])
-    assert_allclose(get_permutation_orbital(assign), list(range(12)))
+    assert_equal(get_permutation_orbital(assign), list(range(12)))
     assign = np.array([2, 3, 4, 11, 12, 13, 17, 14, 15, 18, 19, 16, 20, 1, 1])
-    assert_allclose(get_permutation_orbital(assign), list(range(15)))
+    assert_equal(get_permutation_orbital(assign), list(range(15)))
 
 
 def test_get_permutation_basis():
-    assert_allclose(get_permutation_basis(np.array([1, 1, 1])), [0, 1, 2])
-    assert_allclose(get_permutation_basis(
+    assert_equal(get_permutation_basis(np.array([1, 1, 1])), [0, 1, 2])
+    assert_equal(get_permutation_basis(
         np.array([2, 2, 3, 3, 4, 4])), [0, 2, 4, 1, 3, 5])
-    assert_allclose(get_permutation_basis(
+    assert_equal(get_permutation_basis(
         np.array([1, 2, 3, 4, 1])), [0, 1, 2, 3, 4])
-    assert_allclose(get_permutation_basis(
+    assert_equal(get_permutation_basis(
         np.array([5, 6, 7, 8, 9, 10])), [0, 3, 4, 1, 5, 2])
     assign = np.repeat([5, 6, 7, 8, 9, 10], 2)
     expect = [0, 6, 8, 2, 10, 4, 1, 7, 9, 3, 11, 5]
-    assert_allclose(get_permutation_basis(assign), expect)
-    assert_allclose(get_permutation_basis(np.arange(1, 11)),
-                    [0, 1, 2, 3, 4, 7, 8, 5, 9, 6])
+    assert_equal(get_permutation_basis(assign), expect)
+    assert_equal(get_permutation_basis(np.arange(1, 11)),
+                 [0, 1, 2, 3, 4, 7, 8, 5, 9, 6])
     assign = np.array([1, 5, 6, 7, 8, 9, 10, 1])
     expect = [0, 1, 4, 5, 2, 6, 3, 7]
-    assert_allclose(get_permutation_basis(assign), expect)
+    assert_equal(get_permutation_basis(assign), expect)
     assign = np.array([11, 12, 13, 17, 14, 15, 18, 19, 16, 20])
     expect = [0, 4, 5, 3, 9, 6, 1, 8, 7, 2]
-    assert_allclose(get_permutation_basis(assign), expect)
+    assert_equal(get_permutation_basis(assign), expect)
     assign = np.array([1, 11, 12, 13, 17, 14, 15, 18, 19, 16, 20, 1])
     expect = [0, 1, 5, 6, 4, 10, 7, 2, 9, 8, 3, 11]
-    assert_allclose(get_permutation_basis(assign), expect)
+    assert_equal(get_permutation_basis(assign), expect)
     assign = np.array([1, 11, 12, 13, 17, 14, 15, 18,
                        19, 16, 20, 2, 2, 3, 3, 4, 4])
     expect = [0, 1, 5, 6, 4, 10, 7, 2, 9, 8, 3, 11, 13, 15, 12, 14, 16]
-    assert_allclose(get_permutation_basis(assign), expect)
+    assert_equal(get_permutation_basis(assign), expect)
     assign = [1, 11, 12, 13, 17, 14, 15, 18,
               19, 16, 20, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     expect = np.array([0, 1, 5, 6, 4, 10, 7, 2, 9, 8, 3,
                        11, 12, 13, 14, 17, 18, 15, 19, 16])
-    assert_allclose(get_permutation_basis(np.array(assign)), expect)
-    assert_allclose(get_permutation_basis(np.arange(36, 57)),
-                    np.arange(21)[::-1])
+    assert_equal(get_permutation_basis(np.array(assign)), expect)
+    assert_equal(get_permutation_basis(np.arange(36, 57)),
+                 np.arange(21)[::-1])
     assign = [23, 29, 32, 27, 22, 28, 35, 34, 26, 31, 33, 30, 25, 24, 21]
     expect = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
-    assert_allclose(get_permutation_basis(np.array(assign)), expect)
-    assert_allclose(get_permutation_basis(np.arange(36, 57)),
-                    list(range(21))[::-1])
+    assert_equal(get_permutation_basis(np.array(assign)), expect)
+    assert_equal(get_permutation_basis(np.arange(36, 57)),
+                 list(range(21))[::-1])
 
 
 def test_get_mask():
-    assert_allclose(get_mask(np.array([2, 3, 4])), [True, False, False])
+    assert_equal(get_mask(np.array([2, 3, 4])), [True, False, False])
     expected = [True, True, False, False, True, True, False, False]
-    assert_allclose(get_mask(np.array([1, 2, 3, 4, 1, 2, 3, 4])), expected)
+    assert_equal(get_mask(np.array([1, 2, 3, 4, 1, 2, 3, 4])), expected)
     expected = [True, False, False, False, False, False]
-    assert_allclose(get_mask(np.array([5, 6, 7, 8, 9, 10])), expected)
+    assert_equal(get_mask(np.array([5, 6, 7, 8, 9, 10])), expected)
     expected = [True, False, False, True, True,
                 False, False, False, False, False]
-    assert_allclose(
+    assert_equal(
         get_mask(np.array([2, 3, 4, 1, 5, 6, 7, 8, 9, 10])), expected)
     expected = [True, False, False, False, False,
                 False, False, False, False, False]
-    assert_allclose(get_mask(np.arange(11, 21)), expected)
-    assert_allclose(get_mask(np.array([21, 24, 25])), [True, False, False])
-    assert_allclose(get_mask(np.array([11, 21, 36, 1])),
-                    [True, True, True, True])
+    assert_equal(get_mask(np.arange(11, 21)), expected)
+    assert_equal(get_mask(np.array([21, 24, 25])), [True, False, False])
+    assert_equal(get_mask(np.array([11, 21, 36, 1])), [True, True, True, True])
 
 
 def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
@@ -256,8 +255,8 @@ def test_load_wfn_h2_ccpvqz_virtual():
     assert_allclose(mol.mo.energies[:5], expect, rtol=0., atol=1.e-6)
     expect = [12.859067, 13.017471, 16.405834, 25.824716, 26.100443]
     assert_allclose(mol.mo.energies[-5:], expect, rtol=0., atol=1.e-6)
-    assert_allclose(mol.mo.occs[:5], [2, 0, 0, 0, 0])
-    assert_allclose(mol.mo.occs.sum(), 2)
+    assert_equal(mol.mo.occs[:5], [2, 0, 0, 0, 0])
+    assert_equal(mol.mo.occs.sum(), 2)
 
 
 def test_load_wfn_h2o_sto3g():
@@ -267,39 +266,39 @@ def test_load_wfn_h2o_sto3g():
 
 def test_load_wfn_li_sp_virtual():
     mol = check_wfn('li_sp_virtual.wfn', 8, -3.712905542719, np.array([0.0]))
-    assert_allclose(mol.mo.occs[:8], [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-    assert_allclose(mol.mo.occs[8:], [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    assert_equal(mol.mo.occs[:8], [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    assert_equal(mol.mo.occs[8:], [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     expect = [-0.087492, -0.080310, 0.158784, 0.158784,
               1.078773, 1.090891, 1.090891, 49.643670]
     assert_allclose(mol.mo.energies[:8], expect, rtol=0., atol=1.e-6)
     expect = [-0.079905, 0.176681, 0.176681, 0.212494,
               1.096631, 1.096631, 1.122821, 49.643827]
     assert_allclose(mol.mo.energies[8:], expect, rtol=0., atol=1.e-6)
-    assert_allclose(mol.mo.coeffs.shape, (8, 16))
+    assert_equal(mol.mo.coeffs.shape, (8, 16))
 
 
 def test_load_wfn_li_sp():
     mol = check_wfn('li_sp_orbital.wfn', 8, -3.712905542719, None)
-    assert_equal(mol.title, 'Li atom - using s & p orbitals')
-    assert_allclose([mol.mo.norb_a, mol.mo.norb_b], [2, 1])
+    assert mol.title == 'Li atom - using s & p orbitals'
+    assert_equal([mol.mo.norb_a, mol.mo.norb_b], [2, 1])
     assert_allclose(mol.mo.energies,
                     [-0.087492, -0.080310, -0.079905], rtol=0., atol=1.e-6)
 
 
 def test_load_wfn_o2():
     mol = check_wfn('o2_uhf.wfn', 72, -149.664140769678, np.array([0.0, 0.0]))
-    assert_allclose([mol.mo.norb_a, mol.mo.norb_b], [9, 7])
+    assert_equal([mol.mo.norb_a, mol.mo.norb_b], [9, 7])
 
 
 def test_load_wfn_o2_virtual():
     mol = check_wfn('o2_uhf_virtual.wfn', 72,
                     -149.664140769678, np.array([0.0, 0.0]))
     # check MO occupation
-    assert_allclose(mol.mo.occs.shape, (88,))
+    assert_equal(mol.mo.occs.shape, (88,))
     assert_allclose(mol.mo.occs[:mol.mo.norb_a], [1.] * 9 + [0.] * 35)
     assert_allclose(mol.mo.occs[mol.mo.norb_a:], [1.] * 7 + [0.] * 37)
     # check MO energies
-    assert_allclose(mol.mo.energies.shape, (88,))
+    assert_equal(mol.mo.energies.shape, (88,))
     mo_energies_a = mol.mo.energies[:mol.mo.norb_a]
     assert_allclose(mo_energies_a[0], -20.752000, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_a[10], 0.179578, rtol=0, atol=1.e-6)
@@ -309,28 +308,28 @@ def test_load_wfn_o2_virtual():
     assert_allclose(mo_energies_b[15], 0.322590, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_b[-1], 51.535258, rtol=0, atol=1.e-6)
     # check MO coefficients
-    assert_allclose(mol.mo.coeffs.shape, (72, 88))
+    assert_equal(mol.mo.coeffs.shape, (72, 88))
 
 
 def test_load_wfn_lif_fci():
     mol = check_wfn('lif_fci.wfn', 44, -107.0575700853,
                     np.array([-0.645282, 0.645282]))
-    assert_allclose(mol.mo.occs.shape, (18,))
+    assert_equal(mol.mo.occs.shape, (18,))
     assert_allclose(mol.mo.occs.sum(), 12.0, rtol=0., atol=1.e-6)
     assert_allclose(mol.mo.occs[0], 2.0, rtol=0., atol=1.e-6)
     assert_allclose(mol.mo.occs[10], 0.00128021, rtol=0., atol=1.e-6)
     assert_allclose(mol.mo.occs[-1], 0.00000054, rtol=0., atol=1.e-6)
-    assert_allclose(mol.mo.energies.shape, (18,))
+    assert_equal(mol.mo.energies.shape, (18,))
     assert_allclose(mol.mo.energies[0], -26.09321253, rtol=0., atol=1.e-7)
     assert_allclose(mol.mo.energies[15], 1.70096290, rtol=0., atol=1.e-7)
     assert_allclose(mol.mo.energies[-1], 2.17434072, rtol=0., atol=1.e-7)
-    assert_allclose(mol.mo.coeffs.shape, (44, 18))
+    assert_equal(mol.mo.coeffs.shape, (44, 18))
 
 
 def test_load_wfn_lih_cation_fci():
     mol = check_wfn('lih_cation_fci.wfn', 26, -7.7214366383,
                     np.array([0.913206, 0.086794]))
-    assert_allclose(mol.numbers, [3, 1])
-    assert_allclose(mol.mo.occs.shape, (11,))
+    assert_equal(mol.numbers, [3, 1])
+    assert_equal(mol.mo.occs.shape, (11,))
     assert_allclose(mol.mo.occs.sum(), 3., rtol=0., atol=1.e-6)
     # assert abs(mol.mo.occs[:mol.mo.norb_a].sum() - 1.5) < 1.e-6
