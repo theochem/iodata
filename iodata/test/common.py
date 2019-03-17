@@ -33,7 +33,8 @@ from numpy.testing import assert_allclose
 from ..overlap import compute_overlap, get_shell_nbasis
 
 
-__all__ = ['compute_mulliken_charges', 'compute_1rdm']
+__all__ = ['compute_mulliken_charges', 'compute_1rdm',
+           'compare_mols', 'check_orthonormal']
 
 
 def compute_1rdm(iodata):
