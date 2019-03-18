@@ -22,13 +22,14 @@
 # pragma pylint: disable=invalid-name,no-member
 """Test iodata.molden module."""
 
-
 import os
 import numpy as np
+from numpy.testing import assert_allclose
 
-from . common import compute_mulliken_charges, compare_mols, check_orthonormal
-from .. iodata import IOData
-from .. overlap import compute_overlap
+from .common import compute_mulliken_charges, compare_mols, check_orthonormal
+from ..iodata import IOData
+from ..overlap import compute_overlap
+
 try:
     from importlib_resources import path
 except ImportError:
@@ -50,7 +51,7 @@ def test_load_molden_li2_orca():
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
     expected_charges = np.array([0.5, 0.5])
-    assert abs(charges - expected_charges).max() < 1e-5
+    assert_allclose(charges, expected_charges, atol=1.e-5)
 
 
 def test_load_molden_h2o_orca():
@@ -67,7 +68,7 @@ def test_load_molden_h2o_orca():
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
     expected_charges = np.array([-0.816308, 0.408154, 0.408154])
-    assert abs(charges - expected_charges).max() < 1e-5
+    assert_allclose(charges, expected_charges, atol=1.e-5)
 
 
 def test_load_molden_nh3_molden_pure():
@@ -75,10 +76,11 @@ def test_load_molden_nh3_molden_pure():
     # properly without altering normalization and sign conventions.
     with path('iodata.test.data', 'nh3_molden_pure.molden') as fn_molden:
         mol = IOData.from_file(str(fn_molden))
-    # Check Mulliken charges. Comparison with numbers from the Molden program output.
+    # Check Mulliken charges.
+    # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert abs(charges - molden_charges).max() < 1e-3
+    assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
 def test_load_molden_nh3_molden_cart():
@@ -86,10 +88,11 @@ def test_load_molden_nh3_molden_cart():
     # properly without altering normalization and sign conventions.
     with path('iodata.test.data', 'nh3_molden_cart.molden') as fn_molden:
         mol = IOData.from_file(str(fn_molden))
-    # Check Mulliken charges. Comparison with numbers from the Molden program output.
+    # Check Mulliken charges.
+    # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.3138, -0.4300, -0.0667, 0.1829])
-    assert abs(charges - molden_charges).max() < 1e-3
+    assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
 def test_load_molden_nh3_orca():
@@ -97,10 +100,11 @@ def test_load_molden_nh3_orca():
     # properly by altering normalization and sign conventions.
     with path('iodata.test.data', 'nh3_orca.molden') as fn_molden:
         mol = IOData.from_file(str(fn_molden))
-    # Check Mulliken charges. Comparison with numbers from the Molden program output.
+    # Check Mulliken charges.
+    # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert abs(charges - molden_charges).max() < 1e-3
+    assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
 def test_load_molden_nh3_psi4():
@@ -108,48 +112,53 @@ def test_load_molden_nh3_psi4():
     # properly by altering normalization conventions.
     with path('iodata.test.data', 'nh3_psi4_1.0.molden') as fn_molden:
         mol = IOData.from_file(str(fn_molden))
-    # Check Mulliken charges. Comparison with numbers from the Molden program output.
+    # Check Mulliken charges.
+    # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert abs(charges - molden_charges).max() < 1e-3
+    assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
 def test_load_molden_nh3_psi4_1():
-    # The file tested here is created with PSI4 (version 1.0). It should be read in
-    # properly by renormalizing the contractions.
+    # The file tested here is created with PSI4 (version 1.0).
+    # It should be read in properly by renormalizing the contractions.
     with path('iodata.test.data', 'nh3_psi4_1.0.molden') as fn_molden:
         mol = IOData.from_file(str(fn_molden))
-    # Check Mulliken charges. Comparison with numbers from the Molden program output.
+    # Check Mulliken charges.
+    # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert abs(charges - molden_charges).max() < 1e-3
+    assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
 def test_load_molden_he2_ghost_psi4_1():
-    # The file tested here is created with PSI4 (version 1.0). It should be read in
-    # properly by ignoring the ghost atoms.
+    # The file tested here is created with PSI4 (version 1.0).
+    # It should be read in properly by ignoring the ghost atoms.
     with path('iodata.test.data', 'he2_ghost_psi4_1.0.molden') as fn_molden:
         mol = IOData.from_file(str(fn_molden))
     np.testing.assert_equal(mol.pseudo_numbers, np.array([2.0]))
-    # Check Mulliken charges. Comparison with numbers from the Molden program output.
+    # Check Mulliken charges.
+    # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol, np.array([0.0, 2.0]))
     molden_charges = np.array([-0.0041, 0.0041])
-    assert abs(charges - molden_charges).max() < 5e-4
+    assert_allclose(charges, molden_charges, atol=5e-4)
 
 
 def test_load_molden_nh3_molpro2012():
     # The file tested here is created with MOLPRO2012.
     with path('iodata.test.data', 'nh3_molpro2012.molden') as fn_molden:
         mol = IOData.from_file(str(fn_molden))
-    # Check Mulliken charges. Comparison with numbers from the Molden program output.
+    # Check Mulliken charges.
+    # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert abs(charges - molden_charges).max() < 1e-3
+    assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
 def test_load_molden_neon_turbomole():
     # The file tested here is created with Turbomole 7.1.
-    with path('iodata.test.data', 'neon_turbomole_def2-qzvp.molden') as fn_molden:
+    with path('iodata.test.data',
+              'neon_turbomole_def2-qzvp.molden') as fn_molden:
         mol = IOData.from_file(str(fn_molden))
     # Check Mulliken charges.
     charges = compute_mulliken_charges(mol)
@@ -160,12 +169,13 @@ def test_load_molden_nh3_turbomole():
     # The file tested here is created with Turbomole 7.1
     with path('iodata.test.data', 'nh3_turbomole.molden') as fn_molden:
         mol = IOData.from_file(str(fn_molden))
-    # Check Mulliken charges. Comparison with numbers from the Turbomole output. These
-    # are slightly different than in the other tests because we are using Cartesian
-    # functions.
+    # Check Mulliken charges.
+    # Comparison with numbers from the Turbomole output.
+    # These are slightly different than in the other tests because we are using
+    # Cartesian functions.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.03801, -0.27428, 0.01206, 0.22421])
-    assert abs(charges - molden_charges).max() < 1e-3
+    assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
 def check_load_dump_consistency(fn, tmpdir):
