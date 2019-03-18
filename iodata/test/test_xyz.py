@@ -25,7 +25,7 @@
 import os
 
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_allclose
 
 from ..iodata import IOData
 from ..utils import angstrom
@@ -54,12 +54,12 @@ def check_water(mol):
     assert_equal(mol.numbers, [1, 8, 1])
     # check bond length
     print(np.linalg.norm(mol.coordinates[0] - mol.coordinates[2]) / angstrom)
-    assert abs(np.linalg.norm(
-        mol.coordinates[0] - mol.coordinates[1]) / angstrom - 0.960) < 1e-5
-    assert abs(np.linalg.norm(
-        mol.coordinates[2] - mol.coordinates[1]) / angstrom - 0.960) < 1e-5
-    assert abs(np.linalg.norm(
-        mol.coordinates[0] - mol.coordinates[2]) / angstrom - 1.568) < 1e-3
+    assert_allclose(np.linalg.norm(
+        mol.coordinates[0] - mol.coordinates[1]) / angstrom, 0.960, atol=1.e-5)
+    assert_allclose(np.linalg.norm(
+        mol.coordinates[2] - mol.coordinates[1]) / angstrom, 0.960, atol=1.e-5)
+    assert_allclose(np.linalg.norm(
+        mol.coordinates[0] - mol.coordinates[2]) / angstrom, 1.568, atol=1.e-3)
 
 
 def test_load_dump_consistency(tmpdir):
@@ -72,7 +72,7 @@ def test_load_dump_consistency(tmpdir):
     # check two xyz files
     assert mol0.title == mol1.title
     assert_equal(mol0.numbers, mol1.numbers)
-    assert abs(mol0.coordinates - mol1.coordinates).max() < 1e-5
+    assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)
 
 
 def test_dump_xyz_water_element(tmpdir):
@@ -84,7 +84,7 @@ def test_dump_xyz_water_element(tmpdir):
     # check two xyz file
     assert mol0.title == mol1.title
     assert_equal(mol0.numbers, mol1.numbers)
-    assert abs(mol0.coordinates - mol1.coordinates).max() < 1e-5
+    assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)
 
 
 def test_dump_xyz_water_number(tmpdir):
@@ -96,4 +96,4 @@ def test_dump_xyz_water_number(tmpdir):
     # check two xyz file
     assert mol0.title == mol1.title
     assert_equal(mol0.numbers, mol1.numbers)
-    assert abs(mol0.coordinates - mol1.coordinates).max() < 1e-5
+    assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)
