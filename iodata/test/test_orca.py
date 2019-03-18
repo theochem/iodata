@@ -23,9 +23,11 @@
 """Test iodata.orca module."""
 
 import numpy as np
+from numpy.testing import assert_equal, assert_allclose
 
 from ..iodata import IOData
 from ..utils import angstrom
+
 try:
     from importlib_resources import path
 except ImportError:
@@ -64,15 +66,19 @@ def check_water(mol):
     """
     np.testing.assert_equal(mol.numbers, [8, 1, 1])
     # check bond length
-    assert abs(np.linalg.norm(mol.coordinates[0] - mol.coordinates[1]) / angstrom - 0.9500) < 1e-5
-    assert abs(np.linalg.norm(mol.coordinates[0] - mol.coordinates[2]) / angstrom - 0.9500) < 1e-5
-    assert abs(np.linalg.norm(mol.coordinates[1] - mol.coordinates[2]) / angstrom - 1.5513) < 1e-4
+
+    assert_allclose(np.linalg.norm(
+        mol.coordinates[0] - mol.coordinates[1]) / angstrom, 0.9500, atol=1.e-5)
+    assert_allclose(np.linalg.norm(
+        mol.coordinates[0] - mol.coordinates[2]) / angstrom, 0.9500, atol=1.e-5)
+    assert_allclose(np.linalg.norm(
+        mol.coordinates[1] - mol.coordinates[2]) / angstrom, 1.5513, atol=1.e-4)
     # check scf energy
-    assert abs(mol.energy - (-74.959292304818)) < 1e-8
+    assert_allclose(mol.energy, -74.959292304818, atol=1e-8)
 
 
 def test_helper_number_atoms():
     # Test if the number of atoms in the ORCA out file is obtained correctly
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
         mol = IOData.from_file(str(fn_xyz))
-    assert mol.natom == 3
+    assert_equal(mol.natom, 3)
