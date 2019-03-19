@@ -27,7 +27,7 @@ import os
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..iodata import IOData
+from ..iodata import load_one, dump_one
 
 try:
     from importlib_resources import path
@@ -37,7 +37,7 @@ except ImportError:
 
 def test_load_fcidump_psi4_h2():
     with path('iodata.test.data', 'FCIDUMP.psi4.h2') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert_allclose(mol.core_energy, 0.7151043364864863E+00)
     assert_equal(mol.nelec, 2)
     assert_equal(mol.ms2, 0)
@@ -62,7 +62,7 @@ def test_load_fcidump_psi4_h2():
 
 def test_load_fcidump_molpro_h2():
     with path('iodata.test.data', 'FCIDUMP.molpro.h2') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert_allclose(mol.core_energy, 0.7151043364864863E+00)
     assert_equal(mol.nelec, 2)
     assert_equal(mol.ms2, 0)
@@ -88,7 +88,7 @@ def test_load_fcidump_molpro_h2():
 def test_dump_load_fcidimp_consistency_ao(tmpdir):
     # Setup IOData
     with path('iodata.test.data', 'water.xyz') as fn:
-        mol0 = IOData.from_file(str(fn))
+        mol0 = load_one(str(fn))
     mol0.nelec = 10
     mol0.ms2 = 1
     with path('iodata.test.data', 'psi4_h2_one.npy') as fn:
@@ -98,8 +98,8 @@ def test_dump_load_fcidimp_consistency_ao(tmpdir):
 
     # Dump to a file and load it again
     fn_tmp = os.path.join(tmpdir, 'FCIDUMP')
-    mol0.to_file(fn_tmp)
-    mol1 = IOData.from_file(fn_tmp)
+    dump_one(mol0, fn_tmp)
+    mol1 = load_one(fn_tmp)
 
     # Compare results
     assert_equal(mol0.nelec, mol1.nelec)

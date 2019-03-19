@@ -26,7 +26,7 @@
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from .. iodata import IOData
+from ..iodata import load_one, dump_one
 
 try:
     from importlib_resources import path
@@ -36,7 +36,7 @@ except ImportError:
 
 def test_load_aelta():
     with path('iodata.test.data', 'aelta.cube') as fn_cube:
-        mol = IOData.from_file(str(fn_cube))
+        mol = load_one(str(fn_cube))
     assert mol.title == 'Some random cube for testing (sort of) useless data'
     assert_equal(mol.natom, 72)
     assert_allclose(mol.coordinates[5, 0], 27.275511, atol=1.e-5)
@@ -65,11 +65,11 @@ def test_load_aelta():
 
 def test_load_dump_load_aelta(tmpdir):
     with path('iodata.test.data', 'aelta.cube') as fn_cube1:
-        mol1 = IOData.from_file(str(fn_cube1))
+        mol1 = load_one(str(fn_cube1))
 
     fn_cube2 = '%s/%s' % (tmpdir, 'aelta.cube')
-    mol1.to_file(fn_cube2)
-    mol2 = IOData.from_file(fn_cube2)
+    dump_one(mol1, fn_cube2)
+    mol2 = load_one(fn_cube2)
 
     assert mol1.title == mol2.title
     assert_allclose(mol1.coordinates, mol2.coordinates, atol=1.e-4)

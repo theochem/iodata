@@ -27,9 +27,9 @@ import numpy as np
 
 from numpy.testing import assert_raises, assert_allclose
 
-from . common import compute_1rdm
-from .. iodata import IOData
-from .. overlap import compute_overlap
+from .common import compute_1rdm
+from ..iodata import load_one, IOData
+from ..overlap import compute_overlap
 try:
     from importlib_resources import path
 except ImportError:
@@ -66,12 +66,12 @@ def test_typecheck_raises():
 
 
 def test_unknown_format():
-    assert_raises(ValueError, IOData.from_file, 'foo.unknown_file_extension')
+    assert_raises(ValueError, load_one, 'foo.unknown_file_extension')
 
 
 def test_dm_water_sto3g_hf():
     with path('iodata.test.data', 'water_sto3g_hf_g03.fchk') as fn_fchk:
-        mol = IOData.from_file(str(fn_fchk))
+        mol = load_one(str(fn_fchk))
     dm = mol.dm_full_scf
     assert_allclose(dm[0, 0], 2.10503807, atol=1.e-7)
     assert_allclose(dm[0, 1], -0.439115917, atol=1.e-7)
@@ -80,7 +80,7 @@ def test_dm_water_sto3g_hf():
 
 def test_dm_lih_sto3g_hf():
     with path('iodata.test.data', 'li_h_3-21G_hf_g09.fchk') as fn_fchk:
-        mol = IOData.from_file(str(fn_fchk))
+        mol = load_one(str(fn_fchk))
 
     dm_full = mol.dm_full_scf
     assert_allclose(dm_full[0, 0], 1.96589709, atol=1.e-7)
@@ -97,7 +97,7 @@ def test_dm_lih_sto3g_hf():
 
 def test_dm_ch3_rohf_g03():
     with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
-        mol = IOData.from_file(str(fn_fchk))
+        mol = load_one(str(fn_fchk))
     olp = compute_overlap(**mol.obasis)
     dm = compute_1rdm(mol)
     assert_allclose(np.einsum('ab,ba', olp, dm), 9, atol=1.e-6)

@@ -25,7 +25,7 @@
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..iodata import IOData
+from ..iodata import load_one
 from ..utils import angstrom
 
 try:
@@ -37,21 +37,21 @@ except ImportError:
 def test_load_water_number():
     # test if IOData has atomic numbers
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = IOData.from_file(fn_xyz)
+        mol = load_one(fn_xyz)
     check_water(mol)
 
 
 def test_load_water_element():
     # test if IOData has atomic symbols
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = IOData.from_file(fn_xyz)
+        mol = load_one(fn_xyz)
     check_water(mol)
 
 
 def test_load_scf_energy():
     # test if IOData has the correct energy
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = IOData.from_file(fn_xyz)
+        mol = load_one(fn_xyz)
     check_water(mol)
 
 
@@ -80,5 +80,5 @@ def check_water(mol):
 def test_helper_number_atoms():
     # Test if the number of atoms in the ORCA out file is obtained correctly
     with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = IOData.from_file(str(fn_xyz))
+        mol = load_one(str(fn_xyz))
     assert_equal(mol.natom, 3)

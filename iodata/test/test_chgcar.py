@@ -25,7 +25,7 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from ..utils import angstrom, volume
-from ..iodata import IOData
+from ..iodata import load_one
 from ..chgcar import _unravel_counter
 
 try:
@@ -48,7 +48,7 @@ def test_unravel_counter():
 
 def test_load_chgcar_oxygen():
     with path('iodata.test.data', 'CHGCAR.oxygen') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert_equal(mol.numbers, 8)
     assert_allclose(volume(mol.rvecs), (10 * angstrom) ** 3, atol=1.e-10)
     ugrid = mol.grid
@@ -65,7 +65,7 @@ def test_load_chgcar_oxygen():
 
 def test_load_chgcar_water():
     with path('iodata.test.data', 'CHGCAR.water') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert mol.title == 'unknown system'
     assert_equal(mol.numbers, [8, 1, 1])
     coords = np.array(

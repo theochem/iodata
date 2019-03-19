@@ -27,7 +27,7 @@ import os
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..iodata import IOData
+from ..iodata import load_one, dump_one
 from ..utils import angstrom
 try:
     from importlib_resources import path
@@ -38,14 +38,14 @@ except ImportError:
 def test_load_water_number():
     # test xyz with atomic numbers
     with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
-        mol = IOData.from_file(str(fn_xyz))
+        mol = load_one(str(fn_xyz))
     check_water(mol)
 
 
 def test_load_water_element():
     # test xyz file with atomic symbols
     with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
-        mol = IOData.from_file(str(fn_xyz))
+        mol = load_one(str(fn_xyz))
     check_water(mol)
 
 
@@ -62,38 +62,29 @@ def check_water(mol):
         mol.coordinates[0] - mol.coordinates[2]) / angstrom, 1.568, atol=1.e-3)
 
 
-def test_load_dump_consistency(tmpdir):
-    with path('iodata.test.data', 'ch3_hf_sto3g.fchk') as fn_fchk:
-        mol0 = IOData.from_file(str(fn_fchk))
+def check_load_dump_consistency(tmpdir, fn):
+    """Check if dumping and loading an XYZ file results in the same data."""
+    mol0 = load_one(str(fn))
     # write xyz file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test.xyz')
-    mol0.to_file(fn_tmp)
-    mol1 = IOData.from_file(fn_tmp)
+    dump_one(mol0, fn_tmp)
+    mol1 = load_one(fn_tmp)
     # check two xyz files
     assert mol0.title == mol1.title
     assert_equal(mol0.numbers, mol1.numbers)
     assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)
 
 
+def test_load_dump_consistency(tmpdir):
+    with path('iodata.test.data', 'ch3_hf_sto3g.fchk') as fn_fchk:
+        check_load_dump_consistency(tmpdir, fn_fchk)
+
+
 def test_dump_xyz_water_element(tmpdir):
     with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
-        mol0 = IOData.from_file(str(fn_xyz))
-    fn_tmp = os.path.join(tmpdir, 'test.xyz')
-    mol0.to_file(fn_tmp)
-    mol1 = IOData.from_file(fn_tmp)
-    # check two xyz file
-    assert mol0.title == mol1.title
-    assert_equal(mol0.numbers, mol1.numbers)
-    assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)
+        check_load_dump_consistency(tmpdir, fn_xyz)
 
 
 def test_dump_xyz_water_number(tmpdir):
     with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
-        mol0 = IOData.from_file(str(fn_xyz))
-    fn_tmp = os.path.join(tmpdir, 'test.xyz')
-    mol0.to_file(fn_tmp)
-    mol1 = IOData.from_file(fn_tmp)
-    # check two xyz file
-    assert mol0.title == mol1.title
-    assert_equal(mol0.numbers, mol1.numbers)
-    assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)
+        check_load_dump_consistency(tmpdir, fn_xyz)

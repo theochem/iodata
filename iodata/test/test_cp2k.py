@@ -28,7 +28,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 from .common import truncated_file, check_orthonormal
 
-from ..iodata import IOData
+from ..iodata import load_one
 from ..overlap import compute_overlap
 
 try:
@@ -50,7 +50,7 @@ def check_orthonormality(mol):
 
 def test_atom_si_uks():
     with path('iodata.test.data', 'atom_si.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [14])
     assert_equal(mol.pseudo_numbers, [4])
     assert_equal(mol.orb_alpha_occs, [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
@@ -66,7 +66,7 @@ def test_atom_si_uks():
 
 def test_atom_o_rks():
     with path('iodata.test.data', 'atom_om2.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [8])
     assert_equal(mol.pseudo_numbers, [6])
     assert_equal(mol.orb_alpha_occs, [1, 1, 1, 1])
@@ -79,7 +79,7 @@ def test_atom_o_rks():
 
 def test_carbon_gs_ae_contracted():
     with path('iodata.test.data', 'carbon_gs_ae_contracted.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
     assert_allclose(mol.orb_alpha_occs,
@@ -96,7 +96,7 @@ def test_carbon_gs_ae_contracted():
 def test_carbon_gs_ae_uncontracted():
     with path('iodata.test.data',
               'carbon_gs_ae_uncontracted.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
     assert_allclose(mol.orb_alpha_occs,
@@ -112,7 +112,7 @@ def test_carbon_gs_ae_uncontracted():
 
 def test_carbon_gs_pp_contracted():
     with path('iodata.test.data', 'carbon_gs_pp_contracted.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
     assert_allclose(mol.orb_alpha_occs, [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
@@ -128,7 +128,7 @@ def test_carbon_gs_pp_contracted():
 def test_carbon_gs_pp_uncontracted():
     with path('iodata.test.data',
               'carbon_gs_pp_uncontracted.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
 
@@ -144,7 +144,7 @@ def test_carbon_gs_pp_uncontracted():
 
 def test_carbon_sc_ae_contracted():
     with path('iodata.test.data', 'carbon_sc_ae_contracted.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
     assert_allclose(mol.orb_alpha_occs,
@@ -159,7 +159,7 @@ def test_carbon_sc_ae_contracted():
 def test_carbon_sc_ae_uncontracted():
     with path('iodata.test.data',
               'carbon_sc_ae_uncontracted.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
 
@@ -174,7 +174,7 @@ def test_carbon_sc_ae_uncontracted():
 
 def test_carbon_sc_pp_contracted():
     with path('iodata.test.data', 'carbon_sc_pp_contracted.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
 
@@ -189,7 +189,7 @@ def test_carbon_sc_pp_contracted():
 def test_carbon_sc_pp_uncontracted():
     with path('iodata.test.data',
               'carbon_sc_pp_uncontracted.cp2k.out') as fn_out:
-        mol = IOData.from_file(str(fn_out))
+        mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
     assert_allclose(mol.orb_alpha_occs, [1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
@@ -205,18 +205,18 @@ def test_errors(tmpdir):
               'carbon_sc_pp_uncontracted.cp2k.out') as fn_test:
         with truncated_file(fn_test, 0, 0, tmpdir) as fn:
             with pytest.raises(IOError):
-                IOData.from_file(fn)
+                load_one(fn)
         with truncated_file(fn_test, 107, 10, tmpdir) as fn:
             with pytest.raises(IOError):
-                IOData.from_file(fn)
+                load_one(fn)
         with truncated_file(fn_test, 357, 10, tmpdir) as fn:
             with pytest.raises(IOError):
-                IOData.from_file(fn)
+                load_one(fn)
         with truncated_file(fn_test, 405, 10, tmpdir) as fn:
             with pytest.raises(IOError):
-                IOData.from_file(fn)
+                load_one(fn)
     with path('iodata.test.data',
               'carbon_gs_pp_uncontracted.cp2k.out') as fn_test:
         with truncated_file(fn_test, 456, 10, tmpdir) as fn:
             with pytest.raises(IOError):
-                IOData.from_file(fn)
+                load_one(fn)

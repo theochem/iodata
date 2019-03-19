@@ -28,7 +28,7 @@ from numpy.testing import assert_equal, assert_allclose
 import pytest
 
 from ..fchk import load
-from ..iodata import IOData
+from ..iodata import load_one
 from ..utils import shells_to_nbasis, check_dm
 from ..overlap import compute_overlap
 
@@ -291,7 +291,7 @@ def test_load_nitrogen_mp3():
 def check_normalization_dm_full_azirine(key):
     # TODO: replace with data data
     with path('iodata.test.data', '2h-azirine-{}.fchk'.format(key)) as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     olp = compute_overlap(**mol.obasis)
     dm = getattr(mol, 'dm_full_%s' % key)
     check_dm(dm, olp, eps=1e-2, occ_max=2)
@@ -316,7 +316,7 @@ def test_normalization_dm_full_azirine_mp3():
 
 def test_load_water_hfs_321g():
     with path('iodata.test.data', 'water_hfs_321g.fchk') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert_allclose(mol.polar[0, 0], 7.23806684E+00)
     assert_allclose(mol.polar[1, 1], 8.04213953E+00)
     assert_allclose(mol.polar[1, 2], 1.20021770E-10)
@@ -333,7 +333,7 @@ def test_load_water_hfs_321g():
 
 def test_load_monosilicic_acid_hf_lan():
     with path('iodata.test.data', 'monosilicic_acid_hf_lan.fchk') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert_allclose(mol.dipole_moment,
                     [-6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
     assert_allclose(mol.quadrupole_moment,

@@ -273,101 +273,104 @@ class IOData:
         elif hasattr(self, 'pseudo_numbers'):
             return len(self.pseudo_numbers)
 
-    @classmethod
-    def from_file(cls, *filenames: str) -> 'IOData':
-        """Load data from a file.
 
-        This routine uses the extension or prefix of the filename to
-        determine the file format. It returns a dictionary with data loaded
-        from the file.
+def load_one(*filenames: str) -> 'IOData':
+    """Load data from a file.
 
-        For each file format, a specialized function is called that returns a
-        dictionary with data from the file.
+    This routine uses the extension or prefix of the filename to
+    determine the file format. It returns a dictionary with data loaded
+    from the file.
 
-        Parameters
-        ----------
-        filenames : str or sequence of str
-            The files to load data from. When multiple files are given, data
-            from the first file is overwritten by data from the second, etc.
-            When one file contains sign and permutation changes for the
-            orbital basis, these changes will be applied to data from all
-            other files.
+    For each file format, a specialized function is called that returns a
+    dictionary with data from the file.
 
-        Returns
-        -------
-        out : IOData
-            The instance of IOData with data loaded from the input files.
+    Parameters
+    ----------
+    filenames : str or sequence of str
+        The files to load data from. When multiple files are given, data
+        from the first file is overwritten by data from the second, etc.
+        When one file contains sign and permutation changes for the
+        orbital basis, these changes will be applied to data from all
+        other files.
 
-        """
-        result = {}
-        for filename in filenames:
-            basename = os.path.basename(filename)
-            for format_module in format_modules:
-                if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
-                    result.update(format_module.load(filename))
-                    break
-            else:
-                raise ValueError('Unknown file format for reading: %s' % filename)
+    Returns
+    -------
+    out : IOData
+        The instance of IOData with data loaded from the input files.
 
-        # Apply changes in atomic orbital basis order
-        permutation = result.get('permutation')
-        if permutation is not None:
-            for name in cls.two_index_names:
-                value = result.get(name)
-                if value is not None:
-                    value[:] = value[permutation][:, permutation]
-            er = result.get('er')
-            if er is not None:
-                er[:] = er[permutation][:, permutation][:, :, permutation][:, :, :, permutation]
-            orb_alpha_coeffs = result.get('orb_alpha_coeffs')
-            if orb_alpha_coeffs is not None:
-                orb_alpha_coeffs[:] = orb_alpha_coeffs[permutation]
-            orb_beta_coeffs = result.get('orb_beta_coeffs')
-            if orb_beta_coeffs is not None:
-                orb_beta_coeffs[:] = orb_beta_coeffs[permutation]
-            del result['permutation']
-
-        # Apply changes in atomic orbital basis sign conventions
-        signs = result.get('signs')
-        if signs is not None:
-            for name in cls.two_index_names:
-                value = result.get(name)
-                if value is not None:
-                    value *= signs
-                    value *= signs.reshape(-1, 1)
-            er = result.get('er')
-            if er is not None:
-                er *= signs
-                er *= signs.reshape(-1, 1)
-                er *= signs.reshape(-1, 1, 1)
-                er *= signs.reshape(-1, 1, 1, 1)
-            orb_alpha_coeffs = result.get('orb_alpha_coeffs')
-            if orb_alpha_coeffs is not None:
-                orb_alpha_coeffs *= signs.reshape(-1, 1)
-            orb_beta_coeffs = result.get('orb_beta_coeffs')
-            if orb_beta_coeffs is not None:
-                orb_beta_coeffs *= signs.reshape(-1, 1)
-            del result['signs']
-
-        return cls(**result)
-
-    def to_file(self, filename: str):
-        """Write data to a file.
-
-        This routine uses the extension or prefix of the filename to determine
-        the file format. For each file format, a specialized function is
-        called that does the real work.
-
-        Parameters
-        ----------
-        filename : str
-            The file to write the data to.
-
-        """
+    """
+    result = {}
+    for filename in filenames:
         basename = os.path.basename(filename)
         for format_module in format_modules:
-            if any(fnmatch(basename, pattern)for pattern in format_module.patterns):
-                format_module.dump(filename, self)
+            if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
+                result.update(format_module.load(filename))
                 break
         else:
-            raise ValueError('Unknown file format for writing: %s' % filename)
+            raise ValueError('Unknown file format for reading: %s' % filename)
+
+    # Apply changes in atomic orbital basis order
+    permutation = result.get('permutation')
+    if permutation is not None:
+        for name in IOData.two_index_names:
+            value = result.get(name)
+            if value is not None:
+                value[:] = value[permutation][:, permutation]
+        er = result.get('er')
+        if er is not None:
+            er[:] = er[permutation][:, permutation][:, :, permutation][:, :, :, permutation]
+        orb_alpha_coeffs = result.get('orb_alpha_coeffs')
+        if orb_alpha_coeffs is not None:
+            orb_alpha_coeffs[:] = orb_alpha_coeffs[permutation]
+        orb_beta_coeffs = result.get('orb_beta_coeffs')
+        if orb_beta_coeffs is not None:
+            orb_beta_coeffs[:] = orb_beta_coeffs[permutation]
+        del result['permutation']
+
+    # Apply changes in atomic orbital basis sign conventions
+    signs = result.get('signs')
+    if signs is not None:
+        for name in IOData.two_index_names:
+            value = result.get(name)
+            if value is not None:
+                value *= signs
+                value *= signs.reshape(-1, 1)
+        er = result.get('er')
+        if er is not None:
+            er *= signs
+            er *= signs.reshape(-1, 1)
+            er *= signs.reshape(-1, 1, 1)
+            er *= signs.reshape(-1, 1, 1, 1)
+        orb_alpha_coeffs = result.get('orb_alpha_coeffs')
+        if orb_alpha_coeffs is not None:
+            orb_alpha_coeffs *= signs.reshape(-1, 1)
+        orb_beta_coeffs = result.get('orb_beta_coeffs')
+        if orb_beta_coeffs is not None:
+            orb_beta_coeffs *= signs.reshape(-1, 1)
+        del result['signs']
+
+    return IOData(**result)
+
+
+def dump_one(iodata: IOData, filename: str):
+    """Write data to a file.
+
+    This routine uses the extension or prefix of the filename to determine
+    the file format. For each file format, a specialized function is
+    called that does the real work.
+
+    Parameters
+    ----------
+    iodata
+        The object containing the data to be written.
+    filename : str
+        The file to write the data to.
+
+    """
+    basename = os.path.basename(filename)
+    for format_module in format_modules:
+        if any(fnmatch(basename, pattern)for pattern in format_module.patterns):
+            format_module.dump(filename, iodata)
+            break
+    else:
+        raise ValueError('Unknown file format for writing: %s' % filename)

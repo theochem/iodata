@@ -27,7 +27,7 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from ..utils import angstrom, volume
-from ..iodata import IOData
+from ..iodata import load_one, dump_one
 
 try:
     from importlib_resources import path
@@ -37,7 +37,7 @@ except ImportError:
 
 def test_load_poscar_water():
     with path('iodata.test.data', 'POSCAR.water') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert mol.title == 'Water molecule in a box'
     assert_equal(mol.numbers, [8, 1, 1])
     coords = np.array([0.074983 * 15, 0.903122 * 15, 0.000000])
@@ -47,7 +47,7 @@ def test_load_poscar_water():
 
 def test_load_poscar_cubicbn_cartesian():
     with path('iodata.test.data', 'POSCAR.cubicbn_cartesian') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert mol.title == 'Cubic BN'
     assert_equal(mol.numbers, [5, 7])
     assert_allclose(mol.coordinates[1],
@@ -57,7 +57,7 @@ def test_load_poscar_cubicbn_cartesian():
 
 def test_load_poscar_cubicbn_direct():
     with path('iodata.test.data', 'POSCAR.cubicbn_direct') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert mol.title == 'Cubic BN'
     assert_equal(mol.numbers, [5, 7])
     assert_allclose(mol.coordinates[1],
@@ -67,7 +67,7 @@ def test_load_poscar_cubicbn_direct():
 
 def test_load_dump_consistency(tmpdir):
     with path('iodata.test.data', 'water_element.xyz') as fn:
-        mol0 = IOData.from_file(str(fn))
+        mol0 = load_one(str(fn))
     # random matrix generated from a uniform distribution on [0., 5.0)
     mol0.rvecs = np.array([[2.05278155, 0.23284023, 1.59024118],
                            [4.96430141, 4.73044423, 4.67590975],
@@ -75,8 +75,8 @@ def test_load_dump_consistency(tmpdir):
     mol0.gvecs = np.linalg.inv(mol0.rvecs).T
 
     fn_tmp = os.path.join(tmpdir, 'POSCAR')
-    mol0.to_file(fn_tmp)
-    mol1 = IOData.from_file(fn_tmp)
+    dump_one(mol0, fn_tmp)
+    mol1 = load_one(fn_tmp)
 
     assert mol0.title == mol1.title
     assert_equal(mol1.numbers, [8, 1, 1])

@@ -23,8 +23,8 @@
 
 from numpy.testing import assert_equal, assert_allclose
 
-from .. utils import angstrom, electronvolt, volume
-from .. iodata import IOData
+from ..utils import angstrom, electronvolt, volume
+from ..iodata import load_one
 try:
     from importlib_resources import path
 except ImportError:
@@ -33,7 +33,7 @@ except ImportError:
 
 def test_load_locpot_oxygen():
     with path('iodata.test.data', 'LOCPOT.oxygen') as fn:
-        mol = IOData.from_file(str(fn))
+        mol = load_one(str(fn))
     assert mol.title == 'O atom in a box'
     assert_equal(mol.numbers[0], 8)
     assert_allclose(volume(mol.rvecs), (10 * angstrom) ** 3, atol=1.e-10)
