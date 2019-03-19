@@ -25,7 +25,7 @@
 from numpy.testing import assert_equal, assert_allclose
 
 from . common import check_orthonormal
-from .. iodata import IOData
+from .. iodata import load_one
 from .. utils import angstrom, shells_to_nbasis
 from .. overlap import compute_overlap
 
@@ -37,7 +37,7 @@ except ImportError:
 
 def test_load_mkl_ethanol():
     with path('iodata.test.data', 'ethanol.mkl') as fn_mkl:
-        mol = IOData.from_file(str(fn_mkl))
+        mol = load_one(str(fn_mkl))
 
     # Direct checks with mkl file
     assert_equal(mol.numbers.shape, (9,))
@@ -70,7 +70,7 @@ def test_load_mkl_ethanol():
 
 def test_load_mkl_li2():
     with path('iodata.test.data', 'li2.mkl') as fn_mkl:
-        mol = IOData.from_file(str(fn_mkl))
+        mol = load_one(str(fn_mkl))
 
     # Check normalization
     olp = compute_overlap(**mol.obasis)
@@ -80,6 +80,6 @@ def test_load_mkl_li2():
 
 def test_load_mkl_h2():
     with path('iodata.test.data', 'h2_sto3g.mkl') as fn_mkl:
-        mol = IOData.from_file(str(fn_mkl))
+        mol = load_one(str(fn_mkl))
     olp = compute_overlap(**mol.obasis)
     check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)

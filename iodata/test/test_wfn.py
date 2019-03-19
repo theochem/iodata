@@ -30,7 +30,7 @@ from numpy.testing import assert_equal, assert_allclose
 from .common import compute_mulliken_charges, check_orthonormal
 from ..wfn import (load_wfn_low, get_permutation_basis,
                    get_permutation_orbital, get_mask)
-from ..iodata import IOData
+from ..iodata import load_one
 from ..overlap import compute_overlap
 from ..utils import shells_to_nbasis
 
@@ -223,7 +223,7 @@ def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
     """Check that MO are orthonormal & energy and charges match expected values."""
     # load file
     with path('iodata.test.data', fn_wfn) as file_wfn:
-        mol = IOData.from_file(str(file_wfn))
+        mol = load_one(str(file_wfn))
     # check number of basis functions
     assert_allclose(shells_to_nbasis(mol.obasis["shell_types"]), nbasis)
     # check orthonormal mo
