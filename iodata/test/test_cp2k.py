@@ -19,19 +19,24 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
+# pragma pylint: disable=invalid-name, no-member
 """Test iodata.cp2k module."""
 
 import pytest
 
-from . common import truncated_file, check_orthonormal
+from numpy.testing import assert_equal, assert_allclose
 
-from .. iodata import IOData
-from .. overlap import compute_overlap
+from .common import truncated_file, check_orthonormal
+
+from ..iodata import IOData
+from ..overlap import compute_overlap
+
 try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
+
+
 # TODO: add more obasis tests?
 
 
@@ -46,138 +51,158 @@ def check_orthonormality(mol):
 def test_atom_si_uks():
     with path('iodata.test.data', 'atom_si.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [14]).all()
-    assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
-    assert (mol.orb_beta_occs == [1, 0, 0, 0]).all()
-    assert abs(mol.orb_alpha_energies - [-0.398761, -0.154896, -0.154896, -0.154896]).max() < 1e-4
-    assert abs(mol.orb_beta_energies - [-0.334567, -0.092237, -0.092237, -0.092237]).max() < 1e-4
-    assert abs(mol.energy - -3.761587698067) < 1e-10
-    assert (mol.obasis["shell_types"] == [0, 0, 1, 1, -2]).all()
+    assert_equal(mol.numbers, [14])
+    assert_equal(mol.pseudo_numbers, [4])
+    assert_equal(mol.orb_alpha_occs, [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
+    assert_equal(mol.orb_beta_occs, [1, 0, 0, 0])
+    assert_allclose(mol.orb_alpha_energies,
+                    [-0.398761, -0.154896, -0.154896, -0.154896], atol=1.e-4)
+    assert_allclose(mol.orb_beta_energies,
+                    [-0.334567, -0.092237, -0.092237, -0.092237], atol=1.e-4)
+    assert_allclose(mol.energy, -3.761587698067, atol=1.e-10)
+    assert_equal(mol.obasis["shell_types"], [0, 0, 1, 1, -2])
     check_orthonormality(mol)
 
 
 def test_atom_o_rks():
     with path('iodata.test.data', 'atom_om2.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [8]).all()
-    assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.orb_alpha_occs == [1, 1, 1, 1]).all()
-    assert abs(mol.orb_alpha_energies - [0.102709, 0.606458, 0.606458, 0.606458]).max() < 1e-4
-    assert not hasattr(mol, 'orb_beta')
-    assert abs(mol.energy - -15.464982778766) < 1e-10
-    assert (mol.obasis["shell_types"] == [0, 0, 1, 1, -2]).all()
+    assert_equal(mol.numbers, [8])
+    assert_equal(mol.pseudo_numbers, [6])
+    assert_equal(mol.orb_alpha_occs, [1, 1, 1, 1])
+    assert_allclose(mol.orb_alpha_energies,
+                    [0.102709, 0.606458, 0.606458, 0.606458], atol=1.e-4)
+    assert_allclose(mol.energy, -15.464982778766, atol=1.e-10)
+    assert_equal(mol.obasis["shell_types"], [0, 0, 1, 1, -2])
     check_orthonormality(mol)
 
 
 def test_carbon_gs_ae_contracted():
     with path('iodata.test.data', 'carbon_gs_ae_contracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [6]).all()
-    assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.orb_alpha_occs == [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
-    assert (mol.orb_alpha_energies == [-10.058194, -0.526244, -0.214978,
-                                       -0.214978, -0.214978]).all()
-    assert (mol.orb_beta_occs == [1, 1, 0, 0, 0]).all()
-    assert (mol.orb_beta_energies == [-10.029898, -0.434300, -0.133323,
-                                      -0.133323, -0.133323]).all()
-    assert mol.energy == -37.836423363057
+    assert_equal(mol.numbers, [6])
+    assert_equal(mol.pseudo_numbers, [6])
+    assert_allclose(mol.orb_alpha_occs,
+                    [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
+    assert_allclose(mol.orb_alpha_energies,
+                    [-10.058194, -0.526244, -0.214978, -0.214978, -0.214978])
+    assert_allclose(mol.orb_beta_occs, [1, 1, 0, 0, 0])
+    assert_allclose(mol.orb_beta_energies,
+                    [-10.029898, -0.434300, -0.133323, -0.133323, -0.133323])
+    assert_allclose(mol.energy, -37.836423363057)
     check_orthonormality(mol)
 
 
 def test_carbon_gs_ae_uncontracted():
-    with path('iodata.test.data', 'carbon_gs_ae_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data',
+              'carbon_gs_ae_uncontracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [6]).all()
-    assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.orb_alpha_occs == [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
-    assert (mol.orb_alpha_energies == [-10.050076, -0.528162, -0.217626,
-                                       -0.217626, -0.217626]).all()
-    assert (mol.orb_beta_occs == [1, 1, 0, 0, 0]).all()
-    assert (mol.orb_beta_energies == [-10.022715, -0.436340, -0.137135,
-                                      -0.137135, -0.137135]).all()
-    assert mol.energy == -37.842552743398
+    assert_equal(mol.numbers, [6])
+    assert_equal(mol.pseudo_numbers, [6])
+    assert_allclose(mol.orb_alpha_occs,
+                    [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
+    assert_allclose(mol.orb_alpha_energies,
+                    [-10.050076, -0.528162, -0.217626, -0.217626, -0.217626])
+    assert_allclose(mol.orb_beta_occs, [1, 1, 0, 0, 0])
+    assert_allclose(mol.orb_beta_energies,
+                    [-10.022715, -0.436340, -0.137135, -0.137135, -0.137135])
+    assert_allclose(mol.energy, -37.842552743398)
     check_orthonormality(mol)
 
 
 def test_carbon_gs_pp_contracted():
     with path('iodata.test.data', 'carbon_gs_pp_contracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [6]).all()
-    assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
-    assert (mol.orb_alpha_energies == [-0.528007, -0.219974, -0.219974, -0.219974]).all()
-    assert (mol.orb_beta_occs == [1, 0, 0, 0]).all()
-    assert (mol.orb_beta_energies == [-0.429657, -0.127060, -0.127060, -0.127060]).all()
-    assert mol.energy == -5.399938535844
+    assert_equal(mol.numbers, [6])
+    assert_equal(mol.pseudo_numbers, [4])
+    assert_allclose(mol.orb_alpha_occs, [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
+    assert_allclose(mol.orb_alpha_energies,
+                    [-0.528007, -0.219974, -0.219974, -0.219974])
+    assert_allclose(mol.orb_beta_occs, [1, 0, 0, 0])
+    assert_allclose(mol.orb_beta_energies,
+                    [-0.429657, -0.127060, -0.127060, -0.127060])
+    assert_allclose(mol.energy, -5.399938535844)
     check_orthonormality(mol)
 
 
 def test_carbon_gs_pp_uncontracted():
-    with path('iodata.test.data', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data',
+              'carbon_gs_pp_uncontracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [6]).all()
-    assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0]).all()
-    assert (mol.orb_alpha_energies == [-0.528146, -0.219803, -0.219803, -0.219803]).all()
-    assert (mol.orb_beta_occs == [1, 0, 0, 0]).all()
-    assert (mol.orb_beta_energies == [-0.429358, -0.126411, -0.126411, -0.126411]).all()
-    assert mol.energy == -5.402288849332
+    assert_equal(mol.numbers, [6])
+    assert_equal(mol.pseudo_numbers, [4])
+
+    assert_allclose(mol.orb_alpha_occs, [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
+    assert_allclose(mol.orb_alpha_energies,
+                    [-0.528146, -0.219803, -0.219803, -0.219803])
+    assert_allclose(mol.orb_beta_occs, [1, 0, 0, 0])
+    assert_allclose(mol.orb_beta_energies,
+                    [-0.429358, -0.126411, -0.126411, -0.126411])
+    assert_allclose(mol.energy, -5.402288849332)
     check_orthonormality(mol)
 
 
 def test_carbon_sc_ae_contracted():
     with path('iodata.test.data', 'carbon_sc_ae_contracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [6]).all()
-    assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.orb_alpha_occs == [1, 1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]).all()
-    assert (mol.orb_alpha_energies == [-10.067251, -0.495823, -0.187878,
-                                       -0.187878, -0.187878]).all()
+    assert_equal(mol.numbers, [6])
+    assert_equal(mol.pseudo_numbers, [6])
+    assert_allclose(mol.orb_alpha_occs,
+                    [1, 1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
+    assert_allclose(mol.orb_alpha_energies,
+                    [-10.067251, -0.495823, -0.187878, -0.187878, -0.187878])
     assert not hasattr(mol, 'orb_beta')
-    assert mol.energy == -37.793939631890
+    assert_allclose(mol.energy, -37.793939631890)
     check_orthonormality(mol)
 
 
 def test_carbon_sc_ae_uncontracted():
-    with path('iodata.test.data', 'carbon_sc_ae_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data',
+              'carbon_sc_ae_uncontracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [6]).all()
-    assert (mol.pseudo_numbers == [6]).all()
-    assert (mol.orb_alpha_occs == [1, 1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]).all()
-    assert (mol.orb_alpha_energies == [-10.062206, -0.499716, -0.192580,
-                                       -0.192580, -0.192580]).all()
+    assert_equal(mol.numbers, [6])
+    assert_equal(mol.pseudo_numbers, [6])
+
+    assert_allclose(mol.orb_alpha_occs,
+                    [1, 1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
+    assert_allclose(mol.orb_alpha_energies,
+                    [-10.062206, -0.499716, -0.192580, -0.192580, -0.192580])
     assert not hasattr(mol, 'orb_beta')
-    assert mol.energy == -37.800453482378
+    assert_allclose(mol.energy, -37.800453482378)
     check_orthonormality(mol)
 
 
 def test_carbon_sc_pp_contracted():
     with path('iodata.test.data', 'carbon_sc_pp_contracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [6]).all()
-    assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]).all()
-    assert (mol.orb_alpha_energies == [-0.500732, -0.193138, -0.193138, -0.193138]).all()
+    assert_equal(mol.numbers, [6])
+    assert_equal(mol.pseudo_numbers, [4])
+
+    assert_allclose(mol.orb_alpha_occs, [1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
+    assert_allclose(mol.orb_alpha_energies,
+                    [-0.500732, -0.193138, -0.193138, -0.193138])
     assert not hasattr(mol, 'orb_beta')
-    assert mol.energy == -5.350765755382
+    assert_allclose(mol.energy, -5.350765755382)
     check_orthonormality(mol)
 
 
 def test_carbon_sc_pp_uncontracted():
-    with path('iodata.test.data', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data',
+              'carbon_sc_pp_uncontracted.cp2k.out') as fn_out:
         mol = IOData.from_file(str(fn_out))
-    assert (mol.numbers == [6]).all()
-    assert (mol.pseudo_numbers == [4]).all()
-    assert (mol.orb_alpha_occs == [1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]).all()
-    assert (mol.orb_alpha_energies == [-0.500238, -0.192365, -0.192365, -0.192365]).all()
+    assert_equal(mol.numbers, [6])
+    assert_equal(mol.pseudo_numbers, [4])
+    assert_allclose(mol.orb_alpha_occs, [1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
+    assert_allclose(mol.orb_alpha_energies,
+                    [-0.500238, -0.192365, -0.192365, -0.192365])
     assert not hasattr(mol, 'orb_beta')
-    assert mol.energy == -5.352864672201
+    assert_allclose(mol.energy, -5.352864672201)
     check_orthonormality(mol)
 
 
 def test_errors(tmpdir):
-    with path('iodata.test.data', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_test:
+    with path('iodata.test.data',
+              'carbon_sc_pp_uncontracted.cp2k.out') as fn_test:
         with truncated_file(fn_test, 0, 0, tmpdir) as fn:
             with pytest.raises(IOError):
                 IOData.from_file(fn)
@@ -190,7 +215,8 @@ def test_errors(tmpdir):
         with truncated_file(fn_test, 405, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 IOData.from_file(fn)
-    with path('iodata.test.data', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_test:
+    with path('iodata.test.data',
+              'carbon_gs_pp_uncontracted.cp2k.out') as fn_test:
         with truncated_file(fn_test, 456, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 IOData.from_file(fn)

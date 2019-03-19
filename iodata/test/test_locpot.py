@@ -21,6 +21,7 @@
 # pragma pylint: disable=invalid-name,no-member
 """Test iodata.locpot module."""
 
+from numpy.testing import assert_equal, assert_allclose
 
 from .. utils import angstrom, electronvolt, volume
 from .. iodata import IOData
@@ -34,14 +35,14 @@ def test_load_locpot_oxygen():
     with path('iodata.test.data', 'LOCPOT.oxygen') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.title == 'O atom in a box'
-    assert (mol.numbers[0] == [8]).all()
-    assert abs(volume(mol.rvecs) - (10 * angstrom) ** 3) < 1e-10
+    assert_equal(mol.numbers[0], 8)
+    assert_allclose(volume(mol.rvecs), (10 * angstrom) ** 3, atol=1.e-10)
     ugrid = mol.grid
-    assert len(ugrid['shape']) == 3
-    assert (ugrid['shape'] == [1, 4, 2]).all()
+    assert_equal(len(ugrid['shape']), 3)
+    assert_equal(ugrid['shape'], [1, 4, 2])
     assert abs(ugrid['origin']).max() < 1e-10
     d = mol.cube_data
-    assert abs(d[0, 0, 0] / electronvolt - 0.35046350435E+01) < 1e-10
-    assert abs(d[0, 1, 0] / electronvolt - 0.213732132354E+01) < 1e-10
-    assert abs(d[0, 2, 0] / electronvolt - -.65465465497E+01) < 1e-10
-    assert abs(d[0, 2, 1] / electronvolt - -.546876467887E+01) < 1e-10
+    assert_allclose(d[0, 0, 0] / electronvolt, 0.35046350435E+01, 1.e-10)
+    assert_allclose(d[0, 1, 0] / electronvolt, 0.213732132354E+01, 1.e-10)
+    assert_allclose(d[0, 2, 0] / electronvolt, -.65465465497E+01, 1.e-10)
+    assert_allclose(d[0, 2, 1] / electronvolt, -.546876467887E+01, 1.e-10)

@@ -25,7 +25,7 @@
 
 import numpy as np
 
-from numpy.testing import assert_raises
+from numpy.testing import assert_raises, assert_allclose
 
 from . common import compute_1rdm
 from .. iodata import IOData
@@ -54,12 +54,15 @@ def test_typecheck_raises():
     assert_raises(TypeError, IOData, coordinates=np.array([[1, 2], [2, 3]]))
     assert_raises(TypeError, IOData, numbers=np.array([[1, 2], [2, 3]]))
     # check inconsistency between various attributes
-    numbers, pseudo_numbers, coordinates = np.array([2, 3]), np.array([1]), np.array([[1, 2, 3]])
-    assert_raises(TypeError, IOData, numbers=numbers, pseudo_numbers=pseudo_numbers)
+    numbers, pseudo_numbers, coordinates = np.array(
+        [2, 3]), np.array([1]), np.array([[1, 2, 3]])
+    assert_raises(TypeError, IOData, numbers=numbers,
+                  pseudo_numbers=pseudo_numbers)
     assert_raises(TypeError, IOData, numbers=numbers, coordinates=coordinates)
     assert_raises(TypeError, IOData, cube_data=np.array([1, 2]))
     cube_data = np.array([[1, 2], [2, 3], [3, 2]])
-    assert_raises(TypeError, IOData, coordinates=coordinates, cube_data=cube_data)
+    assert_raises(TypeError, IOData, coordinates=coordinates,
+                  cube_data=cube_data)
 
 
 def test_unknown_format():
@@ -70,9 +73,9 @@ def test_dm_water_sto3g_hf():
     with path('iodata.test.data', 'water_sto3g_hf_g03.fchk') as fn_fchk:
         mol = IOData.from_file(str(fn_fchk))
     dm = mol.dm_full_scf
-    assert abs(dm[0, 0] - 2.10503807) < 1e-7
-    assert abs(dm[0, 1] - -0.439115917) < 1e-7
-    assert abs(dm[1, 1] - 1.93312061) < 1e-7
+    assert_allclose(dm[0, 0], 2.10503807, atol=1.e-7)
+    assert_allclose(dm[0, 1], -0.439115917, atol=1.e-7)
+    assert_allclose(dm[1, 1], 1.93312061, atol=1.e-7)
 
 
 def test_dm_lih_sto3g_hf():
@@ -80,16 +83,16 @@ def test_dm_lih_sto3g_hf():
         mol = IOData.from_file(str(fn_fchk))
 
     dm_full = mol.dm_full_scf
-    assert abs(dm_full[0, 0] - 1.96589709) < 1e-7
-    assert abs(dm_full[0, 1] - 0.122114249) < 1e-7
-    assert abs(dm_full[1, 1] - 0.0133112081) < 1e-7
-    assert abs(dm_full[10, 10] - 4.23924688E-01) < 1e-7
+    assert_allclose(dm_full[0, 0], 1.96589709, atol=1.e-7)
+    assert_allclose(dm_full[0, 1], 0.122114249, atol=1.e-7)
+    assert_allclose(dm_full[1, 1], 0.0133112081, atol=1.e-7)
+    assert_allclose(dm_full[10, 10], 4.23924688E-01, atol=1.e-7)
 
     dm_spin = mol.dm_spin_scf
-    assert abs(dm_spin[0, 0] - 1.40210760E-03) < 1e-9
-    assert abs(dm_spin[0, 1] - -2.65370873E-03) < 1e-9
-    assert abs(dm_spin[1, 1] - 5.38701212E-03) < 1e-9
-    assert abs(dm_spin[10, 10] - 4.23889148E-01) < 1e-7
+    assert_allclose(dm_spin[0, 0], 1.40210760E-03, atol=1.e-9)
+    assert_allclose(dm_spin[0, 1], -2.65370873E-03, atol=1.e-9)
+    assert_allclose(dm_spin[1, 1], 5.38701212E-03, atol=1.e-9)
+    assert_allclose(dm_spin[10, 10], 4.23889148E-01, atol=1.e-7)
 
 
 def test_dm_ch3_rohf_g03():
@@ -97,4 +100,4 @@ def test_dm_ch3_rohf_g03():
         mol = IOData.from_file(str(fn_fchk))
     olp = compute_overlap(**mol.obasis)
     dm = compute_1rdm(mol)
-    assert abs(np.einsum('ab,ba', olp, dm) - 9) < 1e-6
+    assert_allclose(np.einsum('ab,ba', olp, dm), 9, atol=1.e-6)

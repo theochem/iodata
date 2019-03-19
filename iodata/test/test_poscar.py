@@ -21,13 +21,14 @@
 # pragma pylint: disable=invalid-name
 """Test iodata.poscar module."""
 
-
 import os
 
 import numpy as np
+from numpy.testing import assert_equal, assert_allclose
 
-from .. utils import angstrom, volume
-from .. iodata import IOData
+from ..utils import angstrom, volume
+from ..iodata import IOData
+
 try:
     from importlib_resources import path
 except ImportError:
@@ -38,28 +39,30 @@ def test_load_poscar_water():
     with path('iodata.test.data', 'POSCAR.water') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.title == 'Water molecule in a box'
-    assert (mol.numbers == [8, 1, 1]).all()
+    assert_equal(mol.numbers, [8, 1, 1])
     coords = np.array([0.074983 * 15, 0.903122 * 15, 0.000000])
-    assert abs(mol.coordinates[1] - coords).max() < 1e-7
-    assert abs(volume(mol.rvecs) - 15 ** 3) < 1e-4
+    assert_allclose(mol.coordinates[1], coords, atol=1e-7)
+    assert_allclose(volume(mol.rvecs), 15 ** 3, atol=1.e-4)
 
 
 def test_load_poscar_cubicbn_cartesian():
     with path('iodata.test.data', 'POSCAR.cubicbn_cartesian') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.title == 'Cubic BN'
-    assert (mol.numbers == [5, 7]).all()
-    assert abs(mol.coordinates[1] - np.array([0.25] * 3) * 3.57 * angstrom).max() < 1e-10
-    assert abs(volume(mol.rvecs) - (3.57 * angstrom) ** 3 / 4) < 1e-10
+    assert_equal(mol.numbers, [5, 7])
+    assert_allclose(mol.coordinates[1],
+                    np.array([0.25] * 3) * 3.57 * angstrom, atol=1.e-10)
+    assert_allclose(volume(mol.rvecs), (3.57 * angstrom) ** 3 / 4, atol=1.e-10)
 
 
 def test_load_poscar_cubicbn_direct():
     with path('iodata.test.data', 'POSCAR.cubicbn_direct') as fn:
         mol = IOData.from_file(str(fn))
     assert mol.title == 'Cubic BN'
-    assert (mol.numbers == [5, 7]).all()
-    assert abs(mol.coordinates[1] - np.array([0.25] * 3) * 3.57 * angstrom).max() < 1e-10
-    assert abs(volume(mol.rvecs) - (3.57 * angstrom) ** 3 / 4) < 1e-10
+    assert_equal(mol.numbers, [5, 7])
+    assert_allclose(mol.coordinates[1],
+                    np.array([0.25] * 3) * 3.57 * angstrom, atol=1.e-10)
+    assert_allclose(volume(mol.rvecs), (3.57 * angstrom) ** 3 / 4, 1.e-10)
 
 
 def test_load_dump_consistency(tmpdir):
@@ -76,8 +79,8 @@ def test_load_dump_consistency(tmpdir):
     mol1 = IOData.from_file(fn_tmp)
 
     assert mol0.title == mol1.title
-    assert (mol1.numbers == [8, 1, 1]).all()
-    assert abs(mol0.coordinates[1] - mol1.coordinates[0]).max() < 1e-10
-    assert abs(mol0.coordinates[0] - mol1.coordinates[1]).max() < 1e-10
-    assert abs(mol0.coordinates[2] - mol1.coordinates[2]).max() < 1e-10
-    assert abs(mol0.rvecs - mol1.rvecs).max() < 1e-10
+    assert_equal(mol1.numbers, [8, 1, 1])
+    assert_allclose(mol0.coordinates[1], mol1.coordinates[0], atol=1.e-10)
+    assert_allclose(mol0.coordinates[0], mol1.coordinates[1], atol=1.e-10)
+    assert_allclose(mol0.coordinates[2], mol1.coordinates[2], atol=1.e-10)
+    assert_allclose(mol0.rvecs, mol1.rvecs, atol=1.e-10)

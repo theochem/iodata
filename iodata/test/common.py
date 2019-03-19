@@ -22,18 +22,16 @@
 # pragma pylint: disable=invalid-name
 
 
-import shutil
-import tempfile
 from os import path
 from contextlib import contextmanager
 
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_equal, assert_allclose
 
 from ..overlap import compute_overlap, get_shell_nbasis
 
-
-__all__ = ['compute_mulliken_charges', 'compute_1rdm']
+__all__ = ['compute_mulliken_charges', 'compute_1rdm',
+           'compare_mols', 'check_orthonormal']
 
 
 def compute_1rdm(iodata):
@@ -62,14 +60,15 @@ def compute_mulliken_charges(iodata, pseudo_numbers=None):
     bp = np.sum(np.multiply(dm, ov), axis=1)
     # find basis functions center
     basis_center = []
-    for (ci, ti) in zip(iodata.obasis["shell_map"], iodata.obasis["shell_types"]):
+    for (ci, ti) in zip(iodata.obasis["shell_map"],
+                        iodata.obasis["shell_types"]):
         basis_center.extend([ci] * get_shell_nbasis(ti))
     basis_center = np.array(basis_center)
     # compute atomic populations
     populations = np.zeros(len(iodata.obasis["centers"]))
     for index in range(len(iodata.obasis["centers"])):
         populations[index] = np.sum(bp[basis_center == index])
-    assert pseudo_numbers.shape == populations.shape
+    assert_equal(pseudo_numbers.shape, populations.shape)
     return pseudo_numbers - np.array(populations)
 
 
@@ -89,7 +88,8 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
         A temporary directory where the truncated file is stored.
 
     """
-    fn_truncated = '%s/truncated_%i_%s' % (tmpdir, nline, path.basename(fn_orig))
+    fn_truncated = '%s/truncated_%i_%s' % (
+        tmpdir, nline, path.basename(fn_orig))
     with open(fn_orig) as f_orig, open(fn_truncated, 'w') as f_truncated:
         for counter, line in enumerate(f_orig):
             if counter >= nline:
@@ -103,26 +103,26 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
 def compare_mols(mol1, mol2):
     """Compare two IOData objects"""
     assert (getattr(mol1, 'title') == getattr(mol2, 'title'))
-    assert (mol1.numbers == mol2.numbers).all()
-    assert (mol1.coordinates == mol2.coordinates).all()
+    assert_equal(mol1.numbers, mol2.numbers)
+    assert_allclose(mol1.coordinates, mol2.coordinates)
     # orbital basis
     if mol1.obasis is not None:
         # compare dictionaries
-        assert len(mol1.obasis) == len(mol2.obasis)
+        assert_equal(len(mol1.obasis), len(mol2.obasis))
         for k, v in mol1.obasis.items():
-            assert abs(v - mol2.obasis[k]).max() < 1.e-8
+            assert_allclose(v, mol2.obasis[k], atol=1.e-8)
     else:
         assert mol2.obasis is None
     # wfn
-    assert mol1.orb_alpha == mol2.orb_alpha
-    assert (mol1.orb_alpha_coeffs == mol2.orb_alpha_coeffs).all()
-    assert (mol1.orb_alpha_energies == mol2.orb_alpha_energies).all()
-    assert (mol1.orb_alpha_occs == mol2.orb_alpha_occs).all()
+    assert_allclose(mol1.orb_alpha, mol2.orb_alpha)
+    assert_allclose(mol1.orb_alpha_coeffs, mol2.orb_alpha_coeffs)
+    assert_allclose(mol1.orb_alpha_energies, mol2.orb_alpha_energies)
+    assert_allclose(mol1.orb_alpha_occs, mol2.orb_alpha_occs)
     if hasattr(mol1, "orb_beta"):
-        assert mol1.orb_beta == mol2.orb_beta
-        assert (mol1.orb_beta_coeffs == mol2.orb_beta_coeffs).all()
-        assert (mol1.orb_beta_energies == mol2.orb_beta_energies).all()
-        assert (mol1.orb_beta_occs == mol2.orb_beta_occs).all()
+        assert_allclose(mol1.orb_beta, mol2.orb_beta)
+        assert_allclose(mol1.orb_beta_coeffs, mol2.orb_beta_coeffs)
+        assert_allclose(mol1.orb_beta_energies, mol2.orb_beta_energies)
+        assert_allclose(mol1.orb_beta_occs, mol2.orb_beta_occs)
 
     # operators
     for key in 'olp', 'kin', 'na', 'er', 'dm_full_mp2', 'dm_spin_mp2', \
@@ -152,4 +152,5 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
     mo_overlap = np.dot(mo_coeffs.T, np.dot(ao_overlap, mo_coeffs))
     mo_count = mo_coeffs.shape[1]
     message = 'Molecular orbitals are not orthonormal!'
-    assert_allclose(mo_overlap, np.eye(mo_count), rtol=0., atol=atol, err_msg=message)
+    assert_allclose(mo_overlap, np.eye(mo_count),
+                    rtol=0., atol=atol, err_msg=message)
