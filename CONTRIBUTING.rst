@@ -86,7 +86,8 @@ Github work flow
    Mention in the corresponding issue when you are working on it. "Claim" the
    issue to avoid duplicate efforts.
 
-2. Install Roberto, which is the driver for our CI setup. It can also replicate
+2. TODO: Roberto needs more testing.
+   Install Roberto, which is the driver for our CI setup. It can also replicate
    the continuous integration on your local machine, which makes it easier to
    prepare a passable pull request. See TODO FIX URL.
 
@@ -96,15 +97,15 @@ Github work flow
 
    .. code-block:: bash
 
-    git clone git@github.com:theochem/cardboardlint.git
-    cd cardboardlint
+    git clone git@github.com:theochem/iodata.git
+    cd iodata
 
 5. Add your fork as a second remote to your local repository, for which we will
    use the short name `mine` below, but any short name is fine:
 
    .. code-block:: bash
 
-    git remote add mine git@github.com:<your-github-account>/cardboardlint.git
+    git remote add mine git@github.com:<your-github-account>/iodata.git
 
 6. Make a new branch, with a name that hints at the purpose of your
    modification:
