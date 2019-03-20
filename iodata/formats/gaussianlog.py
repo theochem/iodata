@@ -60,8 +60,7 @@ def load(lit: LineIterator) -> Dict:
 
     """
     # First get the line with the number of orbital basis functions
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith('    NBasis ='):
             nbasis = int(line[12:18])
             break
@@ -140,8 +139,7 @@ def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
         next(lit)
     # Start reading elements until a line is encountered that does not start
     # with ' I='
-    while True:
-        line = next(lit)
+    for line in lit:
         if not line.startswith(' I='):
             break
         # print line[3:7], line[9:13], line[15:19], line[21:25], line[28:].replace('D', 'E')

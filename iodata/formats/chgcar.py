@@ -84,12 +84,9 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
 
     # read the coordinates
     coordinates = []
-    while True:
+    for iatom in range(len(numbers)):
         line = next(lit)
         coordinates.append([float(w) for w in line.split()[:3]])
-        # check if all coordinates are read
-        if (len(line.strip()) == 0) or (len(coordinates) == numbers.shape[0]):
-            break
     if cartesian:
         coordinates = np.array(coordinates) * angstrom * scaling
     else:
@@ -117,8 +114,8 @@ def _load_vasp_grid(lit: LineIterator) -> Dict:
     title, rvecs, numbers, coordinates = _load_vasp_header(lit)
 
     # read the shape of the data
-    while True:
-        shape = np.array([int(w) for w in next(lit).split()])
+    for line in lit:
+        shape = np.array([int(w) for w in line.split()])
         if len(shape) == 3:
             break
 

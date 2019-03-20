@@ -51,12 +51,73 @@ function with the following signature:
 
 
 The ``LineIterator`` instance provides a convenient interface for reading files
-and can be found in ``iodata.utils``. Always use ``next(lit)`` to read a new
-line from the file.
+and can be found in ``iodata.utils``. As a rule of thumb, always use
+``next(lit)`` to read a new line from the file. You can use this iterator in
+a few ways:
+
+.. code-block:: python
+
+    # When you need to read one line.
+    line = next(lit)
+
+    # When section appear in a file in fixed order, you can use helper functions.
+    data1 = _load_helper_section1(lit)
+    data2 = _load_helper_section2(lit)
+
+    # When you intend to read everything in a file (not for trajectories).
+    for line in lit:
+        # do something with line.
+
+    # When you just need to read a section.
+    for line in lit:
+        # do something with line
+        if done_with_section:
+            break
+
+    # When you need a fixed numbers of lines, say 10.
+    for i in range(10):
+        line = next(lit)
+
+    # More complex example, in which you detect several sections and call other
+    # functions to parse those sections. The code is not sensitive to the
+    # order of the sections.
+    while True:
+        line = next(lit)
+        if end_pattern in line:
+            break
+        elif line == 'section1':
+            data1 = _load_helper_section1(lit)
+        elif line == 'section2':
+            data2 = _load_helper_section2(lit)
+
+    # Same as above, but reading till end of file. You cannot use a for loop
+    # when multiple lines must be read in one iteration.
+    while True:
+        try:
+            line = next(lit)
+        except StopIteration:
+            break
+        if end_pattern in line:
+            break
+        elif line == 'section1':
+            data1 = _load_helper_section1(lit)
+        elif line == 'section2':
+            data2 = _load_helper_section2(lit)
+
 
 In some cases, one may have to push back a line because it was read to early.
 For example. in the Molden format, that is sometimes unavoidable. Then you
 can *push back* the line for later reading with ``lit.back(line)``.
+
+.. code-block:: python
+
+    # When you just need to read a section
+    for line in lit:
+        # do something with line
+        if done_with_section:
+            # only now it becomes clear that you've read one line to far
+            lit.back(line)
+            break
 
 When you encounter a file-format error while reading the file, call
 ``lit.error(msg)``, where ``msg`` is a short message describing the problem.

@@ -44,8 +44,7 @@ def _load_helper_char_mult(lit: LineIterator) -> List[int]:
 def _load_helper_coordinates(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]:
     numbers = []
     coordinates = []
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.strip() == '$END':
             break
         words = line.split()
@@ -66,8 +65,8 @@ def _load_helper_obasis(lit: LineIterator, coordinates: np.ndarray) -> Tuple[Dic
     center_counter = 0
     in_shell = False
     nprim = None
-    while True:
-        line = next(lit).strip()
+    for line in lit:
+        line = line.strip()
         if line == '$END':
             break
         if len(line) == 0:
@@ -113,8 +112,8 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> np.ndarray:
     energies = []
 
     in_orb = 0
-    while True:
-        line = next(lit).strip()
+    for line in lit:
+        line = line.strip()
         if line == '$END':
             break
         if in_orb == 0:
@@ -150,8 +149,8 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> np.ndarray:
 
 def _load_helper_occ(lit: LineIterator) -> np.ndarray:
     occs = []
-    while True:
-        line = next(lit).strip()
+    for line in lit:
+        line = line.strip()
         if line == '$END':
             break
         for word in line.split():

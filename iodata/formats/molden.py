@@ -66,8 +66,7 @@ def _load_helper_coordinates(lit: LineIterator, cunit: float) -> \
     numbers = []
     pseudo_numbers = []
     coordinates = []
-    while True:
-        line = next(lit)
+    for line in lit:
         if len(line.strip()) == 0:
             break
         words = line.split()
@@ -75,10 +74,9 @@ def _load_helper_coordinates(lit: LineIterator, cunit: float) -> \
             # Go back to previous line and stop
             lit.back(line)
             break
-        else:
-            numbers.append(sym2num[words[0].title()])
-            pseudo_numbers.append(float(words[2]))
-            coordinates.append([float(words[3]), float(words[4]), float(words[5])])
+        numbers.append(sym2num[words[0].title()])
+        pseudo_numbers.append(float(words[2]))
+        coordinates.append([float(words[3]), float(words[4]), float(words[5])])
     numbers = np.array(numbers, int)
     pseudo_numbers = np.array(pseudo_numbers)
     coordinates = np.array(coordinates) * cunit
@@ -96,6 +94,8 @@ def _load_helper_obasis(lit: LineIterator, coordinates: np.ndarray) -> Tuple[Dic
     icenter = 0
     in_atom = False
     in_shell = False
+    # Don't take this code as a good example. The structure with in_shell and
+    # in_atom flags is not very transparent.
     while True:
         line = next(lit)
         words = line.split()
@@ -143,7 +143,6 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
     ener_beta = []
     occ_beta = []
 
-    new_orb = None
     while True:
         try:
             line = next(lit).lower().strip()
@@ -161,32 +160,36 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
             lit.back(line)
             break
         # prepare array with orbital coefficients
-        if '=' in line:
-            if line.startswith('ene='):
-                energy = float(line[5:])
-            elif line.startswith('spin='):
-                spin = line[6:].strip()
-            elif line.startswith('occup='):
-                occ = float(line[7:])
-            new_orb = True
+        info = {}
+        lit.back(line)
+        for line in lit:
+            if line.count('=') != 1:
+                lit.back(line)
+                break
+            key, value = line.split('=')
+            info[key.strip().lower()] = value
+        energy = float(info['ene'])
+        occ = float(info['occup'])
+        col = []
+        # store column of coefficients, i.e. one orbital, energy and occ
+        if info['spin'].strip().lower() == 'alpha':
+            coeff_alpha.append(col)
+            ener_alpha.append(energy)
+            occ_alpha.append(occ)
         else:
-            if new_orb is None:
-                lit.error("Incorrect format of orbitals.")
-            if new_orb:
-                # store col, energy and occ
-                col = []
-                if spin.lower() == 'alpha':
-                    coeff_alpha.append(col)
-                    ener_alpha.append(energy)
-                    occ_alpha.append(occ)
-                else:
-                    coeff_beta.append(col)
-                    ener_beta.append(energy)
-                    occ_beta.append(occ)
-                new_orb = False
+            coeff_beta.append(col)
+            ener_beta.append(energy)
+            occ_beta.append(occ)
+        for line in lit:
             words = line.split()
+            if len(words) != 2 or not words[0].isdigit():
+                # The line does not look like an index with an orbital coefficient.
+                # Time to stop and put the line back
+                lit.back(line)
+                break
             col.append(float(words[1]))
 
+    print(coeff_alpha)
     coeff_alpha = np.array(coeff_alpha).T
     ener_alpha = np.array(ener_alpha)
     occ_alpha = np.array(occ_alpha)

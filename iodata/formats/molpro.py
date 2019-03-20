@@ -76,8 +76,8 @@ def load(lit: LineIterator) -> Dict:
     ms2 = int(header_info['MS2'])
 
     # skip rest of header
-    while True:
-        words = next(lit).split()
+    for line in lit:
+        words = line.split()
         if words[0] == "&END" or words[0] == "/END" or words[0] == "/":
             break
 
@@ -86,13 +86,8 @@ def load(lit: LineIterator) -> Dict:
     two_mo = np.zeros((nbasis, nbasis, nbasis, nbasis))
     core_energy = 0.0
 
-    while True:
-        try:
-            words = next(lit).split()
-        except StopIteration:
-            # The FCIDUMP file has no clear end-marker. We just read until the
-            # end of the file.
-            break
+    for line in lit:
+        words = line.split()
         if len(words) != 5:
             lit.error('Expecting 5 fields on each data line in FCIDUMP')
         value = float(words[0])

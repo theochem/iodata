@@ -81,8 +81,7 @@ def _read_cp2k_contracted_obasis(lit: LineIterator) -> Dict:
     """
     # Load the relevant data from the file
     basis_desc = []
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith(' *******************'):
             break
         elif line[3:12] == 'Functions':
@@ -146,8 +145,7 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> Dict:
     # Load the relevant data from the file
     basis_desc = []
     shell_type = None
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith(' *******************'):
             break
         elif line[3:13] == 'Exponents:':
@@ -281,8 +279,7 @@ def _read_cp2k_orbital_coeffs(lit: LineIterator, oe: List[Tuple[int, int, float,
         l = int(words[3])
         s = int(words[6])
         c = []
-        while True:
-            line = next(lit)
+        for line in lit:
             if len(line.strip()) == 0:
                 break
             c.append(float(line))
@@ -394,30 +391,26 @@ def load(lit: LineIterator) -> Dict:
     """
     # Find the element number
     number = None
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith(' Atomic Energy Calculation'):
             number = int(line[-5:-1])
             break
 
     # Go to the all-electron basis set and read it.
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith(' All Electron Basis'):
             break
     ae_obasis = _read_cp2k_obasis(lit)
 
     # Go to the pseudo basis set and read it.
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith(' Pseudopotential Basis'):
             break
     pp_obasis = _read_cp2k_obasis(lit)
 
     # Search for (un)restricted
     restricted = None
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith(' METHOD    |'):
             if 'U' in line:
                 restricted = False
@@ -428,8 +421,7 @@ def load(lit: LineIterator) -> Dict:
 
     # Search for the core charge (pseudo number)
     pseudo_number = None
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith('          Core Charge'):
             pseudo_number = float(line[70:])
             assert pseudo_number == int(pseudo_number)
@@ -445,15 +437,13 @@ def load(lit: LineIterator) -> Dict:
         obasis = pp_obasis
 
     # Search for energy
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith(' Energy components [Hartree]           Total Energy ::'):
             energy = float(line[60:])
             break
 
     # Read orbital energies and occupations
-    while True:
-        line = next(lit)
+    for line in lit:
         if line.startswith(' Orbital energies'):
             break
     next(lit)
