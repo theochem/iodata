@@ -28,7 +28,7 @@ import numpy as np
 from typing import TextIO, Dict, Union, List, Tuple
 from scipy.special import factorialk
 
-from .utils import shells_to_nbasis, str_to_shell_types
+from ..utils import shells_to_nbasis, str_to_shell_types, LineIterator
 
 
 __all__ = ['load']
@@ -65,13 +65,13 @@ def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) -> Unio
     return zeta ** expzet / prefac
 
 
-def _read_cp2k_contracted_obasis(f: TextIO) -> Dict:
+def _read_cp2k_contracted_obasis(lit: LineIterator) -> Dict:
     """Read a contracted basis set from an open CP2K ATOM output file.
 
     Parameters
     ----------
-    f
-        An open readable file object.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -81,7 +81,8 @@ def _read_cp2k_contracted_obasis(f: TextIO) -> Dict:
     """
     # Load the relevant data from the file
     basis_desc = []
-    for line in f:
+    while True:
+        line = next(lit)
         if line.startswith(' *******************'):
             break
         elif line[3:12] == 'Functions':
@@ -128,13 +129,13 @@ def _read_cp2k_contracted_obasis(f: TextIO) -> Dict:
     return obasis
 
 
-def _read_cp2k_uncontracted_obasis(f: TextIO) -> Dict:
+def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> Dict:
     """Read an uncontracted basis set from an open CP2K ATOM output file.
 
     Parameters
     ----------
-    f
-        An open readable file object.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -145,7 +146,8 @@ def _read_cp2k_uncontracted_obasis(f: TextIO) -> Dict:
     # Load the relevant data from the file
     basis_desc = []
     shell_type = None
-    for line in f:
+    while True:
+        line = next(lit)
         if line.startswith(' *******************'):
             break
         elif line[3:13] == 'Exponents:':
@@ -185,13 +187,14 @@ def _read_cp2k_uncontracted_obasis(f: TextIO) -> Dict:
     return obasis
 
 
-def _read_cp2k_obasis(f: TextIO) -> Dict:
+# pylint: disable=inconsistent-return-statements
+def _read_cp2k_obasis(lit: LineIterator) -> Dict:
     """Read atomic orbital basis set from a CP2K ATOM file object.
 
     Parameters
     ----------
-    f
-        A CP2K ATOM file object.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -199,26 +202,26 @@ def _read_cp2k_obasis(f: TextIO) -> Dict:
         The atomic orbital basis data which can be used to initialize a ``GOBasis`` class.
 
     """
-    next(f)  # Skip empty line
-    line = next(f)  # Check for contracted versus uncontracted
+    next(lit)  # Skip empty line
+    line = next(lit)  # Check for contracted versus uncontracted
     if line == ' ********************** Contracted Gaussian Type Orbitals ' \
                '**********************\n':
-        return _read_cp2k_contracted_obasis(f)
+        return _read_cp2k_contracted_obasis(lit)
     elif line == ' ********************* Uncontracted Gaussian Type Orbitals ' \
                  '*********************\n':
-        return _read_cp2k_uncontracted_obasis(f)
+        return _read_cp2k_uncontracted_obasis(lit)
     else:
-        raise IOError('Could not find basis set in CP2K ATOM output.')
+        lit.error('Could not find basis set in CP2K ATOM output.')
 
 
-def _read_cp2k_occupations_energies(f: TextIO,
+def _read_cp2k_occupations_energies(lit: LineIterator,
                                     restricted: bool) -> List[Tuple[int, int, float, float]]:
     """Read orbital occupation numbers and energies from a CP2K ATOM file object.
 
     Parameters
     ----------
-    f
-        A CP2K ATOM file object.
+    lit
+        LineIterator
     restricted
         If ``True`` the wave-function is considered to be restricted. If ``False`` the unrestricted
         wave-function is assumed.
@@ -235,7 +238,7 @@ def _read_cp2k_occupations_energies(f: TextIO,
     oe_beta = []
     empty = 0
     while empty < 2:
-        line = next(f)
+        line = next(lit)
         words = line.split()
         if len(words) == 0:
             empty += 1
@@ -252,14 +255,14 @@ def _read_cp2k_occupations_energies(f: TextIO,
     return oe_alpha, oe_beta
 
 
-def _read_cp2k_orbital_coeffs(f: TextIO, oe: List[Tuple[int, int, float, float]]) -> Dict[
+def _read_cp2k_orbital_coeffs(lit: LineIterator, oe: List[Tuple[int, int, float, float]]) -> Dict[
     Tuple[int, int], np.ndarray]:
     """Read the expansion coefficients of the orbital from an open CP2K ATOM output.
 
     Parameters
     ----------
-    f
-        An open readable file object.
+    lit
+        The line iterator to read the data from.
     oe
         The orbital occupation numbers and energies read with
         ``_read_cp2k_occupations_energies``.
@@ -270,16 +273,16 @@ def _read_cp2k_orbital_coeffs(f: TextIO, oe: List[Tuple[int, int, float, float]]
         Key is an (l, s) pair and value is an array with orbital coefficients.
     """
     coeffs = {}
-    next(f)
+    next(lit)
     while len(coeffs) < len(oe):
-        line = next(f)
+        line = next(lit)
         assert line.startswith("    ORBITAL      L =")
         words = line.split()
         l = int(words[3])
         s = int(words[6])
         c = []
         while True:
-            line = next(f)
+            line = next(lit)
             if len(line.strip()) == 0:
                 break
             c.append(float(line))
@@ -357,13 +360,13 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
             iorb += 1
 
 
-def load(filename: str) -> Dict:
+def load(lit: LineIterator) -> Dict:
     """Load data from a CP2K ATOM file format.
 
     Parameters
     ---------
-    filename : str
-        The CP2K (ATOM computation) filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -389,115 +392,114 @@ def load(filename: str) -> Dict:
       &END PRINT
 
     """
-    with open(filename) as f:
-        # Find the element number
-        number = None
-        for line in f:
-            if line.startswith(' Atomic Energy Calculation'):
-                number = int(line[-5:-1])
+    # Find the element number
+    number = None
+    while True:
+        line = next(lit)
+        if line.startswith(' Atomic Energy Calculation'):
+            number = int(line[-5:-1])
+            break
+
+    # Go to the all-electron basis set and read it.
+    while True:
+        line = next(lit)
+        if line.startswith(' All Electron Basis'):
+            break
+    ae_obasis = _read_cp2k_obasis(lit)
+
+    # Go to the pseudo basis set and read it.
+    while True:
+        line = next(lit)
+        if line.startswith(' Pseudopotential Basis'):
+            break
+    pp_obasis = _read_cp2k_obasis(lit)
+
+    # Search for (un)restricted
+    restricted = None
+    while True:
+        line = next(lit)
+        if line.startswith(' METHOD    |'):
+            if 'U' in line:
+                restricted = False
                 break
-        if number is None:
-            raise IOError(f'Could not find atomic number in CP2K ATOM output: {filename}.')
-
-        # Go to the all-electron basis set and read it.
-        for line in f:
-            if line.startswith(' All Electron Basis'):
-                break
-        ae_obasis = _read_cp2k_obasis(f)
-
-        # Go to the pseudo basis set and read it.
-        for line in f:
-            if line.startswith(' Pseudopotential Basis'):
-                break
-        pp_obasis = _read_cp2k_obasis(f)
-
-        # Search for (un)restricted
-        restricted = None
-        for line in f:
-            if line.startswith(' METHOD    |'):
-                if 'U' in line:
-                    restricted = False
-                    break
-                elif 'R' in line:
-                    restricted = True
-                    break
-
-        # Search for the core charge (pseudo number)
-        pseudo_number = None
-        for line in f:
-            if line.startswith('          Core Charge'):
-                pseudo_number = float(line[70:])
-                assert pseudo_number == int(pseudo_number)
-                break
-            elif line.startswith(' Electronic structure'):
-                pseudo_number = float(number)
-                break
-        if pseudo_number is None:
-            raise IOError('Could not find effective core charge in CP2K ATOM output:'
-                          f' {filename}')
-
-        # Select the correct basis
-        if pseudo_number == number:
-            obasis = ae_obasis
-        else:
-            obasis = pp_obasis
-
-        # Search for energy
-        for line in f:
-            if line.startswith(' Energy components [Hartree]           Total Energy ::'):
-                energy = float(line[60:])
+            elif 'R' in line:
+                restricted = True
                 break
 
-        # Read orbital energies and occupations
-        for line in f:
-            if line.startswith(' Orbital energies'):
-                break
-        next(f)
-        oe_alpha, oe_beta = _read_cp2k_occupations_energies(f, restricted)
+    # Search for the core charge (pseudo number)
+    pseudo_number = None
+    while True:
+        line = next(lit)
+        if line.startswith('          Core Charge'):
+            pseudo_number = float(line[70:])
+            assert pseudo_number == int(pseudo_number)
+            break
+        elif line.startswith(' Electronic structure'):
+            pseudo_number = float(number)
+            break
 
-        # Read orbital expansion coefficients
-        line = next(f)
-        if (line != " Atomic orbital expansion coefficients [Alpha]\n") and \
-                (line != " Atomic orbital expansion coefficients []\n"):
-            raise IOError('Could not find orbital coefficients in CP2K ATOM output: '
-                          f'{filename}')
-        coeffs_alpha = _read_cp2k_orbital_coeffs(f, oe_alpha)
+    # Select the correct basis
+    if pseudo_number == number:
+        obasis = ae_obasis
+    else:
+        obasis = pp_obasis
 
-        if not restricted:
-            line = next(f)
-            if line != " Atomic orbital expansion coefficients [Beta]\n":
-                raise IOError('Could not find beta orbital coefficient in CP2K ATOM '
-                              f'output: {filename}')
-            coeffs_beta = _read_cp2k_orbital_coeffs(f, oe_beta)
+    # Search for energy
+    while True:
+        line = next(lit)
+        if line.startswith(' Energy components [Hartree]           Total Energy ::'):
+            energy = float(line[60:])
+            break
 
-        # Turn orbital data into a HORTON orbital expansions
-        nbasis = shells_to_nbasis(obasis['shell_types'])
-        if restricted:
-            norb, nel = _get_norb_nel(oe_alpha)
-            assert nel % 2 == 0
-            orb_alpha = (nbasis, norb)
-            orb_beta = None
-            orb_alpha_coeffs = np.zeros([nbasis, norb])
-            orb_alpha_energies = np.zeros(norb)
-            orb_alpha_occs = np.zeros(norb)
-            _fill_orbitals(orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs,
-                           oe_alpha, coeffs_alpha, obasis["shell_types"], restricted)
-        else:
-            norb_alpha = _get_norb_nel(oe_alpha)[0]
-            norb_beta = _get_norb_nel(oe_beta)[0]
-            assert norb_alpha == norb_beta
-            orb_alpha = (nbasis, norb_alpha)
-            orb_alpha_coeffs = np.zeros([nbasis, norb_alpha])
-            orb_alpha_energies = np.zeros(norb_alpha)
-            orb_alpha_occs = np.zeros(norb_alpha)
-            orb_beta = (nbasis, norb_beta)
-            orb_beta_coeffs = np.zeros([nbasis, norb_beta])
-            orb_beta_energies = np.zeros(norb_beta)
-            orb_beta_occs = np.zeros(norb_beta)
-            _fill_orbitals(orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs,
-                           oe_alpha, coeffs_alpha, obasis["shell_types"], restricted)
-            _fill_orbitals(orb_beta_coeffs, orb_beta_energies, orb_beta_occs,
-                           oe_beta, coeffs_beta, obasis["shell_types"], restricted)
+    # Read orbital energies and occupations
+    while True:
+        line = next(lit)
+        if line.startswith(' Orbital energies'):
+            break
+    next(lit)
+    oe_alpha, oe_beta = _read_cp2k_occupations_energies(lit, restricted)
+
+    # Read orbital expansion coefficients
+    line = next(lit)
+    if line not in [" Atomic orbital expansion coefficients [Alpha]\n",
+                    " Atomic orbital expansion coefficients []\n"]:
+        lit.error('Could not find orbital coefficients in CP2K ATOM output.')
+    coeffs_alpha = _read_cp2k_orbital_coeffs(lit, oe_alpha)
+
+    if not restricted:
+        line = next(lit)
+        if line != " Atomic orbital expansion coefficients [Beta]\n":
+            lit.error('Could not find beta orbital coefficient in CP2K ATOM output.')
+        coeffs_beta = _read_cp2k_orbital_coeffs(lit, oe_beta)
+
+    # Turn orbital data into a HORTON orbital expansions
+    nbasis = shells_to_nbasis(obasis['shell_types'])
+    if restricted:
+        norb, nel = _get_norb_nel(oe_alpha)
+        assert nel % 2 == 0
+        orb_alpha = (nbasis, norb)
+        orb_beta = None
+        orb_alpha_coeffs = np.zeros([nbasis, norb])
+        orb_alpha_energies = np.zeros(norb)
+        orb_alpha_occs = np.zeros(norb)
+        _fill_orbitals(orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs,
+                       oe_alpha, coeffs_alpha, obasis["shell_types"], restricted)
+    else:
+        norb_alpha = _get_norb_nel(oe_alpha)[0]
+        norb_beta = _get_norb_nel(oe_beta)[0]
+        assert norb_alpha == norb_beta
+        orb_alpha = (nbasis, norb_alpha)
+        orb_alpha_coeffs = np.zeros([nbasis, norb_alpha])
+        orb_alpha_energies = np.zeros(norb_alpha)
+        orb_alpha_occs = np.zeros(norb_alpha)
+        orb_beta = (nbasis, norb_beta)
+        orb_beta_coeffs = np.zeros([nbasis, norb_beta])
+        orb_beta_energies = np.zeros(norb_beta)
+        orb_beta_occs = np.zeros(norb_beta)
+        _fill_orbitals(orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs,
+                       oe_alpha, coeffs_alpha, obasis["shell_types"], restricted)
+        _fill_orbitals(orb_beta_coeffs, orb_beta_energies, orb_beta_occs,
+                       oe_beta, coeffs_beta, obasis["shell_types"], restricted)
 
     result = {
         'obasis': obasis,

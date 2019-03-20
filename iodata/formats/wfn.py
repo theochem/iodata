@@ -27,9 +27,9 @@ import numpy as np
 
 from typing import Tuple, List, TextIO, Dict
 
-from .overlap import init_scales
-from .periodic import sym2num
-from .utils import MolecularOrbitals
+from ..overlap import init_scales
+from ..periodic import sym2num
+from ..utils import MolecularOrbitals, LineIterator
 
 
 __all__ = ['load_wfn_low', 'get_permutation_orbital',
@@ -39,78 +39,88 @@ __all__ = ['load_wfn_low', 'get_permutation_orbital',
 patterns = ['*.wfn']
 
 
-def load_wfn_low(filename: str) -> Tuple:
+def _load_helper_num(lit: LineIterator) -> List[int]:
+    """Read number of orbitals, primitives and atoms."""
+    line = next(lit)
+    if not line.startswith('GAUSSIAN'):
+        lit.error("Expecting line to start with GAUSSIAN.")
+    return [int(i) for i in line.split() if i.isdigit()]
+
+
+def _load_helper_coordinates(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
+    """Read the coordiantes of the atoms."""
+    numbers = np.empty(num_atoms, int)
+    coordinates = np.empty((num_atoms, 3), float)
+    for atom in range(num_atoms):
+        words = next(lit).split()
+        numbers[atom] = sym2num[words[0].title()]
+        coordinates[atom, :] = [words[4], words[5], words[6]]
+    return numbers, coordinates
+
+
+def _load_helper_section(lit: LineIterator, num_primitives: int, start: str, skip: int) -> List:
+    """Read CENTRE ASSIGNMENTS, TYPE ASSIGNMENTS, and EXPONENTS sections."""
+    section = []
+    while len(section) < num_primitives:
+        line = next(lit)
+        assert line.startswith(start)
+        words = line.split()
+        section.extend(words[skip:])
+    assert len(section) == num_primitives
+    return section
+
+
+def _load_helper_mo(lit: LineIterator, num_primitives: int) -> Tuple[str, str, str, List[str]]:
+    """Read one section of MO information."""
+    line = next(lit)
+    assert line.startswith('MO')
+    words = line.split()
+    count = words[1]
+    occ, energy = words[-5], words[-1]
+    coeffs = _load_helper_section(lit, num_primitives, ' ', 0)
+    coeffs = [i.replace('D', 'E') for i in coeffs]
+    return count, occ, energy, coeffs
+
+
+def _load_helper_energy(lit: LineIterator) -> float:
+    """Read energy."""
+    line = next(lit).lower()
+    while 'energy' not in line and line is not None:
+        line = next(lit).lower()
+    energy = float(line.split('energy =')[1].split()[0])
+    return energy
+
+
+def load_wfn_low(lit: LineIterator) -> Tuple:
     """Load data from a WFN file into arrays.
 
     Parameters
     ----------
-    filename
-        The filename of the wfn file.
+    lit
+        The line iterator to read the data from.
     """
-
-    def helper_num(f: TextIO) -> List[int]:
-        """Read number of orbitals, primitives and atoms."""
-        line = f.readline()
-        assert line.startswith('GAUSSIAN')
-        return [int(i) for i in line.split() if i.isdigit()]
-
-    def helper_coordinates(f: TextIO) -> Tuple[np.ndarray, np.ndarray]:
-        """Read the coordiantes of the atoms."""
-        numbers = np.empty(num_atoms, int)
-        coordinates = np.empty((num_atoms, 3), float)
-        for atom in range(num_atoms):
-            line = f.readline()
-            line = line.split()
-            numbers[atom] = sym2num[line[0].title()]
-            coordinates[atom, :] = [line[4], line[5], line[6]]
-        return numbers, coordinates
-
-    def helper_section(f: TextIO, start:str, skip:int)-> List:
-        """Read CENTRE ASSIGNMENTS, TYPE ASSIGNMENTS, and EXPONENTS sections."""
-        section = []
-        while len(section) < num_primitives:
-            line = f.readline()
-            assert line.startswith(start)
-            line = line.split()
-            section.extend(line[skip:])
-        assert len(section) == num_primitives
-        return section
-
-    def helper_mo(f: TextIO) -> Tuple[str, str, str, List[str]]:
-        """Read one section of MO information."""
-        line = f.readline()
-        assert line.startswith('MO')
-        line = line.split()
-        count = line[1]
-        occ, energy = line[-5], line[-1]
-        coeffs = helper_section(f, ' ', 0)
-        coeffs = [i.replace('D', 'E') for i in coeffs]
-        return count, occ, energy, coeffs
-
-    def helper_energy(f: TextIO) -> float:
-        """Read energy."""
-        line = f.readline().lower()
-        while 'energy' not in line and line is not None:
-            line = f.readline().lower()
-        energy = float(line.split('energy =')[1].split()[0])
-        return energy
-
     # read sections of wfn file
-    with open(filename) as f:
-        title = f.readline().strip()
-        num_mo, num_primitives, num_atoms = helper_num(f)
-        numbers, coordinates = helper_coordinates(f)
-        # centers are indexed from zero in HORTON
-        centers = np.array([int(i) - 1 for i in helper_section(f, 'CENTRE ASSIGNMENTS', 2)])
-        type_assignment = np.array([int(i) for i in helper_section(f, 'TYPE ASSIGNMENTS', 2)])
-        exponent = np.array([float(i.replace('D', 'E')) for i in helper_section(f, 'EXPONENTS', 1)])
-        mo_count = np.empty(num_mo, int)
-        mo_occ = np.empty(num_mo, float)
-        mo_energy = np.empty(num_mo, float)
-        coefficients = np.empty([num_primitives, num_mo], float)
-        for mo in range(num_mo):
-            mo_count[mo], mo_occ[mo], mo_energy[mo], coefficients[:, mo] = helper_mo(f)
-        energy = helper_energy(f)
+    title = next(lit).strip()
+    num_mo, num_primitives, num_atoms = _load_helper_num(lit)
+    numbers, coordinates = _load_helper_coordinates(lit, num_atoms)
+    # centers are indexed from zero in HORTON
+    centers = np.array([
+        int(i) - 1 for i in
+        _load_helper_section(lit, num_primitives, 'CENTRE ASSIGNMENTS', 2)])
+    type_assignment = np.array([
+        int(i) for i in
+        _load_helper_section(lit, num_primitives, 'TYPE ASSIGNMENTS', 2)])
+    exponent = np.array([
+        float(i.replace('D', 'E')) for i in
+        _load_helper_section(lit, num_primitives, 'EXPONENTS', 1)])
+    mo_count = np.empty(num_mo, int)
+    mo_occ = np.empty(num_mo, float)
+    mo_energy = np.empty(num_mo, float)
+    coefficients = np.empty([num_primitives, num_mo], float)
+    for mo in range(num_mo):
+        mo_count[mo], mo_occ[mo], mo_energy[mo], coefficients[:, mo] = \
+            _load_helper_mo(lit, num_primitives)
+    energy = _load_helper_energy(lit)
     return title, numbers, coordinates, centers, type_assignment, exponent, \
            mo_count, mo_occ, mo_energy, coefficients, energy
 
@@ -195,13 +205,13 @@ def get_mask(type_assignment: np.ndarray) -> np.ndarray:
     return mask
 
 
-def load(filename: str) -> Dict:
+def load(lit: LineIterator) -> Dict:
     """Load data from a WFN file format.
 
     Parameters
     ----------
-    filename : str
-        The WFN filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -211,8 +221,8 @@ def load(filename: str) -> Dict:
         ``orb_beta`` key and its value as well.
 
     """
-    title, numbers, coordinates, centers, type_assignment, exponents, \
-    mo_count, mo_occ, mo_energy, coefficients, energy = load_wfn_low(filename)
+    (title, numbers, coordinates, centers, type_assignment, exponents,
+     mo_count, mo_occ, mo_energy, coefficients, energy) = load_wfn_low(lit)
     permutation = get_permutation_basis(type_assignment)
     # permute arrays containing wfn data
     type_assignment = type_assignment[permutation]

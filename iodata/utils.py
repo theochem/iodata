@@ -32,11 +32,56 @@ from typing import List, Dict, Tuple, NamedTuple
 from .overlap import get_shell_nbasis
 
 
-__all__ = ['set_four_index_element', 'MolecularOrbitals']
+__all__ = ['LineIterator', 'set_four_index_element', 'MolecularOrbitals']
 
 
 angstrom = spc.angstrom / spc.value(u'atomic unit of length')
 electronvolt = 1. / spc.value(u'hartree-electron volt relationship')
+
+
+class LineIterator:
+    """Iterator class for looping over lines and keeping track of the line number."""
+
+    def __init__(self, filename: str):
+        """Initialize a LineIterator.
+
+        Parameters
+        ----------
+        filename
+            The file that will be read.
+
+        """
+        self.filename = filename
+        self._f = open(filename)
+        self.lineno = 0
+        self.stack = []
+
+    def __del__(self):
+        self._f.close()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        """Get the next line, will also increase the lineno attribute."""
+        if len(self.stack) > 0:
+            line = self.stack.pop()
+        else:
+            line = next(self._f)
+        self.lineno += 1
+        return line
+
+    def error(self, msg):
+        """Raise an error while reading a file.
+
+        Filename and line number are added to the message.
+        """
+        raise IOError("{}:{} {}".format(self.filename, self.lineno, msg))
+
+    def back(self, line):
+        """Push one line back, which will be read again when next(lit) is called."""
+        self.stack.append(line)
+        self.lineno -= 1
 
 
 class MolecularOrbitals(NamedTuple):

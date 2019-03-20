@@ -27,6 +27,8 @@ import numpy as np
 
 from typing import TextIO, Dict, Tuple, Union
 
+from ..utils import LineIterator
+
 
 __all__ = ['load', 'dump']
 
@@ -34,14 +36,14 @@ __all__ = ['load', 'dump']
 patterns = ['*.cube']
 
 
-def _read_cube_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray,
-                                          Dict[str, np.ndarray], np.ndarray]:
+def _read_cube_header(lit: LineIterator) \
+        -> Tuple[str, np.ndarray, np.ndarray, np.ndarray, Dict[str, np.ndarray], np.ndarray]:
     """Load header data from a CUBE file object.
 
     Parameters
     ----------
-    f
-        A CUBE file object (in read mode).
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -50,9 +52,9 @@ def _read_cube_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarra
 
     """
     # Read the title
-    title = f.readline().strip()
+    title = next(lit).strip()
     # skip the second line
-    f.readline()
+    next(lit)
 
     def read_grid_line(line: str) -> Tuple[int, np.ndarray]:
         """Read a grid line from the cube file"""
@@ -64,11 +66,11 @@ def _read_cube_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarra
         )
 
     # number of atoms and origin of the grid
-    natom, origin = read_grid_line(f.readline())
+    natom, origin = read_grid_line(next(lit))
     # numer of grid points in A direction and step vector A, and so on
-    shape0, axis0 = read_grid_line(f.readline())
-    shape1, axis1 = read_grid_line(f.readline())
-    shape2, axis2 = read_grid_line(f.readline())
+    shape0, axis0 = read_grid_line(next(lit))
+    shape1, axis1 = read_grid_line(next(lit))
+    shape2, axis2 = read_grid_line(next(lit))
     shape = np.array([shape0, shape1, shape2], int)
     axes = np.array([axis0, axis1, axis2])
 
@@ -88,7 +90,7 @@ def _read_cube_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarra
     pseudo_numbers = np.zeros(natom, float)
     coordinates = np.zeros((natom, 3), float)
     for i in range(natom):
-        numbers[i], pseudo_numbers[i], coordinates[i] = read_coordinate_line(f.readline())
+        numbers[i], pseudo_numbers[i], coordinates[i] = read_coordinate_line(next(lit))
         # If the pseudo_number field is zero, we assume that no effective core
         # potentials were used.
         if pseudo_numbers[i] == 0.0:
@@ -97,13 +99,13 @@ def _read_cube_header(f: TextIO) -> Tuple[str, np.ndarray, np.ndarray, np.ndarra
     return title, coordinates, numbers, cell, ugrid, pseudo_numbers
 
 
-def _read_cube_data(f: TextIO, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
+def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
     """Load cube data from a CUBE file object.
 
     Parameters
     ----------
-    f
-        A CUBE file object (in read mode).
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -114,24 +116,22 @@ def _read_cube_data(f: TextIO, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
     data = np.zeros(tuple(ugrid["shape"]), float)
     tmp = data.ravel()
     counter = 0
-    while True:
-        line = f.readline()
-        if len(line) == 0:
-            break
-        words = line.split()
-        for word in words:
-            tmp[counter] = float(word)
-            counter += 1
+    words = []
+    while counter < tmp.size:
+        if len(words) == 0:
+            words = next(lit).split()
+        tmp[counter] = float(words.pop(0))
+        counter += 1
     return data
 
 
-def load(filename: str) -> Dict[str, Union[str, np.ndarray, Dict]]:
+def load(lit: LineIterator) -> Dict[str, Union[str, np.ndarray, Dict]]:
     """Load data from a CUBE file format.
 
     Parameters
     ----------
-    filename : str
-        The CUBE filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -140,18 +140,17 @@ def load(filename: str) -> Dict[str, Union[str, np.ndarray, Dict]]:
         ``cell``, ``cube_data`` & ``grid`` keys and their corresponding values.
 
     """
-    with open(filename) as f:
-        title, coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(f)
-        data = _read_cube_data(f, ugrid)
-        return {
-            'title': title,
-            'coordinates': coordinates,
-            'numbers': numbers,
-            'cell': cell,
-            'cube_data': data,
-            'grid': ugrid,
-            'pseudo_numbers': pseudo_numbers,
-        }
+    title, coordinates, numbers, cell, ugrid, pseudo_numbers = _read_cube_header(lit)
+    data = _read_cube_data(lit, ugrid)
+    return {
+        'title': title,
+        'coordinates': coordinates,
+        'numbers': numbers,
+        'cell': cell,
+        'cube_data': data,
+        'grid': ugrid,
+        'pseudo_numbers': pseudo_numbers,
+    }
 
 
 def _write_cube_header(f: TextIO, title: str, coordinates: np.ndarray, numbers: np.ndarray,

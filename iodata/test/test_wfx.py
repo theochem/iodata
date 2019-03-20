@@ -27,7 +27,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..wfx import load_wfx_low
+from ..formats.wfx import load_wfx_low
 
 try:
     from importlib_resources import path

@@ -24,9 +24,9 @@
 
 import numpy as np
 
-from typing import Dict, TextIO
+from typing import Dict
 
-from .utils import set_four_index_element
+from ..utils import set_four_index_element, LineIterator
 
 
 __all__ = ['load']
@@ -35,13 +35,13 @@ __all__ = ['load']
 patterns = ['*.log']
 
 
-def load(filename: str) -> Dict:
+def load(lit: LineIterator) -> Dict:
     """Load several two- and four-index operators from a GAUSSIAN09 LOG file format.
 
     Parameters
     ----------
-    filename : str
-        The GAUSSIAN09 LOG filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -59,36 +59,39 @@ def load(filename: str) -> Dict:
        ```scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)```
 
     """
-    with open(filename) as f:
-        # First get the line with the number of orbital basis functions
-        for line in f:
-            if line.startswith('    NBasis ='):
-                nbasis = int(line[12:18])
-                break
+    # First get the line with the number of orbital basis functions
+    while True:
+        line = next(lit)
+        if line.startswith('    NBasis ='):
+            nbasis = int(line[12:18])
+            break
 
-        # Then load the two- and four-index operators. This part is written such
-        # that it does not make any assumptions about the order in which these
-        # operators are printed.
-        result = {}
-        for line in f:
-            if line.startswith(' *** Overlap ***'):
-                result['olp'] = _load_twoindex_g09(f, nbasis)
-            elif line.startswith(' *** Kinetic Energy ***'):
-                result['kin'] = _load_twoindex_g09(f, nbasis)
-            elif line.startswith(' ***** Potential Energy *****'):
-                result['na'] = _load_twoindex_g09(f, nbasis)
-            elif line.startswith(' *** Dumping Two-Electron integrals ***'):
-                result['er'] = _load_fourindex_g09(f, nbasis)
-        return result
+    # Then load the two- and four-index operators. This part is written such
+    # that it does not make any assumptions about the order in which these
+    # operators are printed.
+    result = {}
+    while True:
+        line = next(lit)
+        if line.startswith(" Normal termination of Gaussian"):
+            break
+        elif line.startswith(' *** Overlap ***'):
+            result['olp'] = _load_twoindex_g09(lit, nbasis)
+        elif line.startswith(' *** Kinetic Energy ***'):
+            result['kin'] = _load_twoindex_g09(lit, nbasis)
+        elif line.startswith(' ***** Potential Energy *****'):
+            result['na'] = _load_twoindex_g09(lit, nbasis)
+        elif line.startswith(' *** Dumping Two-Electron integrals ***'):
+            result['er'] = _load_fourindex_g09(lit, nbasis)
+    return result
 
 
-def _load_twoindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
+def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
     """Load a two-index operator from a GAUSSIAN LOG file format.
 
     Parameters
     ----------
-    f
-        A GAUSSIAN LOG file object (in read mode).
+    lit
+        The line iterator to read the data from.
     nbasis
         The number of atomic orbital basis functions.
 
@@ -102,11 +105,11 @@ def _load_twoindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
     block_counter = 0
     while block_counter < nbasis:
         # skip the header line
-        next(f)
+        next(lit)
         # determine the number of rows in this part
         nrow = nbasis - block_counter
         for i in range(nrow):
-            words = next(f).split()[1:]
+            words = next(lit).split()[1:]
             for j, word in enumerate(words):
                 value = float(word.replace('D', 'E'))
                 result[i + block_counter, j + block_counter] = value
@@ -115,13 +118,13 @@ def _load_twoindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
     return result
 
 
-def _load_fourindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
+def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
     """Load a four-index operator from a GAUSSIAN LOG file.
 
     Parameters
     ----------
-    f
-        A GAUSSIAN LOG file object (in read mode).
+    lit
+        The line iterator to read the data from.
     nbasis
         The number of atomic orbital basis functions.
 
@@ -134,11 +137,11 @@ def _load_fourindex_g09(f: TextIO, nbasis: int) -> np.ndarray:
     result = np.zeros((nbasis, nbasis, nbasis, nbasis))
     # Skip first six lines
     for i in range(6):
-        next(f)
+        next(lit)
     # Start reading elements until a line is encountered that does not start
     # with ' I='
     while True:
-        line = next(f)
+        line = next(lit)
         if not line.startswith(' I='):
             break
         # print line[3:7], line[9:13], line[15:19], line[21:25], line[28:].replace('D', 'E')

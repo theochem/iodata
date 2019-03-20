@@ -27,9 +27,10 @@ import numpy as np
 
 from typing import TextIO, Tuple, Dict, Union
 
-from .periodic import sym2num, num2sym
-from .overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
-from .utils import angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis
+from ..periodic import sym2num, num2sym
+from ..overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
+from ..utils import (angstrom, str_to_shell_types, shell_type_to_str, shells_to_nbasis,
+                     LineIterator)
 
 
 __all__ = ['load', 'dump']
@@ -59,13 +60,154 @@ def _get_molden_permutation(shell_types: np.ndarray, reverse=False) -> np.ndarra
     return np.array(permutation, dtype=int)
 
 
-def load(filename: str) -> Dict:
+def _load_helper_coordinates(lit: LineIterator, cunit: float) -> \
+        Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Load element numbers and coordinates."""
+    numbers = []
+    pseudo_numbers = []
+    coordinates = []
+    while True:
+        line = next(lit)
+        if len(line.strip()) == 0:
+            break
+        words = line.split()
+        if len(words) != 6:
+            # Go back to previous line and stop
+            lit.back(line)
+            break
+        else:
+            numbers.append(sym2num[words[0].title()])
+            pseudo_numbers.append(float(words[2]))
+            coordinates.append([float(words[3]), float(words[4]), float(words[5])])
+    numbers = np.array(numbers, int)
+    pseudo_numbers = np.array(pseudo_numbers)
+    coordinates = np.array(coordinates) * cunit
+    return numbers, pseudo_numbers, coordinates
+
+
+def _load_helper_obasis(lit: LineIterator, coordinates: np.ndarray) -> Tuple[Dict, int]:
+    """Load the orbital basis."""
+    shell_labels = []
+    shell_map = []
+    nprims = []
+    alphas = []
+    con_coeffs = []
+
+    icenter = 0
+    in_atom = False
+    in_shell = False
+    while True:
+        line = next(lit)
+        words = line.split()
+        if len(words) == 0:
+            in_atom = False
+            in_shell = False
+        elif len(words) == 2 and not in_atom:
+            icenter = int(words[0]) - 1
+            in_atom = True
+            in_shell = False
+        elif len(words) == 3:
+            in_shell = True
+            shell_map.append(icenter)
+            shell_label = words[0].lower()
+            shell_labels.append(shell_label)
+            nprims.append(int(words[1]))
+        elif len(words) == 2 and in_atom:
+            assert in_shell
+            alpha = float(words[0].replace('D', 'E'))
+            alphas.append(alpha)
+            con_coeff = float(words[1].replace('D', 'E'))
+            con_coeffs.append(con_coeff)
+        else:
+            # done, go back one line
+            lit.back(line)
+            break
+
+    shell_map = np.array(shell_map)
+    nprims = np.array(nprims)
+    alphas = np.array(alphas)
+    con_coeffs = np.array(con_coeffs)
+
+    obasis = {"centers": coordinates, "shell_map": shell_map, "nprims": nprims,
+              "shell_labels": shell_labels, "alphas": alphas, "con_coeffs": con_coeffs}
+
+    return obasis
+
+
+def _load_helper_coeffs(lit: LineIterator) -> Tuple:
+    """Load the orbital coefficients."""
+    coeff_alpha = []
+    ener_alpha = []
+    occ_alpha = []
+    coeff_beta = []
+    ener_beta = []
+    occ_beta = []
+
+    new_orb = None
+    while True:
+        try:
+            line = next(lit).lower().strip()
+        except StopIteration:
+            # We have no proper way to check when a Molden file has ended, so
+            # we must anticipate for it here.
+            break
+        # An empty line means we are done
+        if len(line.strip()) == 0:
+            break
+        # An bracket also means we are done and a new section has started.
+        # Other parts of the parser may need this section line, so we push it
+        # back.
+        if '[' in line:
+            lit.back(line)
+            break
+        # prepare array with orbital coefficients
+        if '=' in line:
+            if line.startswith('ene='):
+                energy = float(line[5:])
+            elif line.startswith('spin='):
+                spin = line[6:].strip()
+            elif line.startswith('occup='):
+                occ = float(line[7:])
+            new_orb = True
+        else:
+            if new_orb is None:
+                lit.error("Incorrect format of orbitals.")
+            if new_orb:
+                # store col, energy and occ
+                col = []
+                if spin.lower() == 'alpha':
+                    coeff_alpha.append(col)
+                    ener_alpha.append(energy)
+                    occ_alpha.append(occ)
+                else:
+                    coeff_beta.append(col)
+                    ener_beta.append(energy)
+                    occ_beta.append(occ)
+                new_orb = False
+            words = line.split()
+            col.append(float(words[1]))
+
+    coeff_alpha = np.array(coeff_alpha).T
+    ener_alpha = np.array(ener_alpha)
+    occ_alpha = np.array(occ_alpha)
+    if len(coeff_beta) == 0:
+        coeff_beta = None
+        ener_beta = None
+        occ_beta = None
+    else:
+        coeff_beta = np.array(coeff_beta).T
+        ener_beta = np.array(ener_beta)
+        occ_beta = np.array(occ_beta)
+    return (coeff_alpha, ener_alpha, occ_alpha), (coeff_beta, ener_beta, occ_beta)
+
+
+def load(lit: LineIterator) -> Dict:
     """Load data from a MOLDEN input file format.
 
     Parameters
     ----------
-    filename : str
-        The MOLDEN input filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -75,165 +217,7 @@ def load(filename: str) -> Dict:
         ``title`` and ``orb_beta`` keys and their values as well.
 
     """
-    def helper_coordinates(f: TextIO, cunit: float) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Load element numbers and coordinates"""
-        numbers = []
-        pseudo_numbers = []
-        coordinates = []
-        while True:
-            last_pos = f.tell()
-            line = f.readline()
-            if len(line) == 0:
-                break
-            words = line.split()
-            if len(words) != 6:
-                # Go back to previous line and stop
-                f.seek(last_pos)
-                break
-            else:
-                numbers.append(sym2num[words[0].title()])
-                pseudo_numbers.append(float(words[2]))
-                coordinates.append([float(words[3]), float(words[4]), float(words[5])])
-        numbers = np.array(numbers, int)
-        pseudo_numbers = np.array(pseudo_numbers)
-        coordinates = np.array(coordinates) * cunit
-        return numbers, pseudo_numbers, coordinates
-
-    def helper_obasis(f: TextIO, coordinates: np.ndarray, pure: Dict[str, bool]) -> Tuple[
-        Dict, int]:
-        """Load the orbital basis"""
-        shell_types = []
-        shell_map = []
-        nprims = []
-        alphas = []
-        con_coeffs = []
-
-        icenter = 0
-        in_atom = False
-        in_shell = False
-        while True:
-            last_pos = f.tell()
-            line = f.readline()
-            if len(line) == 0:
-                break
-            words = line.split()
-            if len(words) == 0:
-                in_atom = False
-                in_shell = False
-            elif len(words) == 2 and not in_atom:
-                icenter = int(words[0]) - 1
-                in_atom = True
-                in_shell = False
-            elif len(words) == 3:
-                in_shell = True
-                shell_map.append(icenter)
-                shell_label = words[0].lower()
-                shell_type = str_to_shell_types(shell_label, pure.get(shell_label, False))[0]
-                shell_types.append(shell_type)
-                nprims.append(int(words[1]))
-            elif len(words) == 2 and in_atom:
-                assert in_shell
-                alpha = float(words[0].replace('D', 'E'))
-                alphas.append(alpha)
-                con_coeff = float(words[1].replace('D', 'E'))
-                con_coeffs.append(con_coeff)
-            else:
-                # done, go back one line
-                f.seek(last_pos)
-                break
-
-        shell_map = np.array(shell_map)
-        nprims = np.array(nprims)
-        shell_types = np.array(shell_types)
-        alphas = np.array(alphas)
-        con_coeffs = np.array(con_coeffs)
-
-        obasis = {"centers": coordinates, "shell_map": shell_map, "nprims": nprims,
-                  "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
-
-        nbasis = shells_to_nbasis(shell_types)
-        return obasis, nbasis
-
-    def helper_coeffs(f: TextIO, nbasis: int) -> Tuple:
-        """Load the orbital coefficients"""
-        coeff_alpha = []
-        ener_alpha = []
-        occ_alpha = []
-        coeff_beta = []
-        ener_beta = []
-        occ_beta = []
-
-        new_orb = True
-        icoeff = nbasis
-        while True:
-            line = f.readline()
-            if len(line) == 0 or '[' in line:
-                break
-            # prepare array with orbital coefficients
-            if '=' in line:
-                if line.startswith(' Ene='):
-                    energy = float(line[5:])
-                elif line.startswith(' Spin='):
-                    spin = line[6:].strip()
-                elif line.startswith(' Occup='):
-                    occ = float(line[7:])
-                new_orb = True
-            else:
-                if new_orb:
-                    # store col, energy and occ
-                    col = np.zeros((nbasis, 1))
-                    if spin.lower() == 'alpha':
-                        coeff_alpha.append(col)
-                        ener_alpha.append(energy)
-                        occ_alpha.append(occ)
-                    else:
-                        coeff_beta.append(col)
-                        ener_beta.append(energy)
-                        occ_beta.append(occ)
-                    new_orb = False
-                    if icoeff < nbasis:
-                        raise IOError(
-                            'Too little expansions coefficients in one orbital in molden file.')
-                    icoeff = 0
-                words = line.split()
-                if icoeff >= nbasis:
-                    raise IOError('Too many expansions coefficients in one orbital in molden file.')
-                col[icoeff] = float(words[1])
-                icoeff += 1
-                assert int(words[0]) == icoeff
-
-        coeff_alpha = np.hstack(coeff_alpha)
-        ener_alpha = np.array(ener_alpha)
-        occ_alpha = np.array(occ_alpha)
-        if len(coeff_beta) == 0:
-            coeff_beta = None
-            ener_beta = None
-            occ_beta = None
-        else:
-            coeff_beta = np.hstack(coeff_beta)
-            ener_beta = np.array(ener_beta)
-            occ_beta = np.array(occ_beta)
-        return (coeff_alpha, ener_alpha, occ_alpha), (coeff_beta, ener_beta, occ_beta)
-
-    # First pass: scan the file for pure/cartesian modifiers.
-    # Unfortunately, some program put this information _AFTER_ the basis
-    # set specification.
     pure = {'d': False, 'f': False, 'g': False}
-    with open(filename) as f:
-        for line in f:
-            line = line.lower()
-            if line.startswith('[5d]') or line.startswith('[5d7f]'):
-                pure['d'] = True
-                pure['f'] = True
-            elif line.lower().startswith('[7f]'):
-                pure['f'] = True
-            elif line.lower().startswith('[5d10f]'):
-                pure['d'] = True
-                pure['f'] = False
-            elif line.lower().startswith('[9g]'):
-                pure['g'] = True
-
-    # Second pass: read all the other info.
     numbers = None
     coordinates = None
     obasis = None
@@ -244,49 +228,65 @@ def load(filename: str) -> Dict:
     ener_beta = None
     occ_beta = None
     title = None
-    with open(filename) as f:
-        line = f.readline()
-        if line != '[Molden Format]\n':
-            raise IOError('Molden header not found')
-        while True:
-            line = f.readline()
-            if len(line) == 0:
-                break
-            line = line.strip()
-            if line == '[Title]':
-                title = f.readline().strip()
-            elif line.startswith('[Atoms]'):
-                if 'au' in line.lower():
-                    cunit = 1.0
-                elif 'angs' in line.lower():
-                    cunit = angstrom
-                numbers, pseudo_numbers, coordinates = helper_coordinates(f, cunit)
-            elif line == '[GTO]':
-                obasis, nbasis = helper_obasis(f, coordinates, pure)
-            elif line == '[STO]':
-                raise NotImplementedError('Slater-type orbitals are not supported in HORTON.')
-            elif line == '[MO]':
-                data_alpha, data_beta = helper_coeffs(f, nbasis)
-                coeff_alpha, ener_alpha, occ_alpha = data_alpha
-                coeff_beta, ener_beta, occ_beta = data_beta
 
-    if coordinates is None:
-        raise IOError('Coordinates not found in molden input file.')
-    if obasis is None:
-        raise IOError('Orbital basis not found in molden input file.')
-    if coeff_alpha is None:
-        raise IOError('Alpha orbitals not found in molden input file.')
+    line = next(lit)
+    if line != '[Molden Format]\n':
+        lit.error('Molden header not found')
+    while True:
+        try:
+            line = next(lit).lower().strip()
+        except StopIteration:
+            # This means we continue reading till the end of the file.
+            # There is no real way to know when a Molden file has ended, other
+            # than reaching the end of the file.
+            break
+        if line.startswith('[5d]') or line.startswith('[5d7f]'):
+            pure['d'] = True
+            pure['f'] = True
+        elif line.lower().startswith('[7f]'):
+            pure['f'] = True
+        elif line.lower().startswith('[5d10f]'):
+            pure['d'] = True
+            pure['f'] = False
+        elif line.lower().startswith('[9g]'):
+            pure['g'] = True
+        elif line == '[title]':
+            title = next(lit).strip()
+        elif line.startswith('[atoms]'):
+            if 'au' in line:
+                cunit = 1.0
+            elif 'angs' in line:
+                cunit = angstrom
+            numbers, pseudo_numbers, coordinates = _load_helper_coordinates(lit, cunit)
+        elif line == '[gto]':
+            obasis = _load_helper_obasis(lit, coordinates)
+        elif line == '[sto]':
+            lit.error('Slater-type orbitals are not supported by IODATA.')
+        elif line == '[mo]':
+            data_alpha, data_beta = _load_helper_coeffs(lit)
+            coeff_alpha, ener_alpha, occ_alpha = data_alpha
+            coeff_beta, ener_beta, occ_beta = data_beta
+
+    # Convert shell_labels to shell_types.
+    # This needs to be done after reading because the tags for pure functions
+    # may come at the end.
+    obasis['shell_types'] = np.array([
+        str_to_shell_types(shell_label, pure.get(shell_label, False))[0]
+        for shell_label in obasis['shell_labels']])
+    del obasis['shell_labels']
+    nbasis = shells_to_nbasis(obasis['shell_types'])
 
     if coeff_beta is None:
+        if coeff_alpha.shape[0] != nbasis:
+            lit.error("Number of alpha orbital coefficients does not match the size of the basis.")
         orb_alpha = (nbasis, coeff_alpha.shape[1])
         orb_alpha_coeffs = coeff_alpha
         orb_alpha_energies = ener_alpha
         orb_alpha_occs = occ_alpha / 2
         orb_beta = None
     else:
-        assert coeff_alpha.shape == coeff_beta.shape
-        assert ener_alpha.shape == ener_beta.shape
-        assert occ_alpha.shape == occ_beta.shape
+        if coeff_beta.shape[0] != nbasis:
+            lit.error("Number of beta orbital coefficients does not match the size of the basis.")
         orb_alpha = (nbasis, coeff_alpha.shape[1])
         orb_alpha_coeffs = coeff_alpha
         orb_alpha_energies = ener_alpha
@@ -323,8 +323,7 @@ def load(filename: str) -> Dict:
         result['orb_beta_energies'] = orb_beta_energies
         result['orb_beta_occs'] = orb_beta_occs
 
-    _fix_molden_from_buggy_codes(result, filename)
-
+    _fix_molden_from_buggy_codes(result, lit.filename)
     return result
 
 

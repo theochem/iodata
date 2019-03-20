@@ -28,11 +28,11 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from .common import compute_mulliken_charges, check_orthonormal
-from ..wfn import (load_wfn_low, get_permutation_basis,
+from ..formats.wfn import (load_wfn_low, get_permutation_basis,
                    get_permutation_orbital, get_mask)
 from ..iodata import load_one
 from ..overlap import compute_overlap
-from ..utils import shells_to_nbasis
+from ..utils import shells_to_nbasis, LineIterator
 
 try:
     from importlib_resources import path
@@ -42,9 +42,15 @@ except ImportError:
 # TODO: removed density, kin, nucnuc checks
 
 
+def helper_load_wfn_low(fn_wfn):
+    """Load a testing Gaussian log file with iodata.formats.wfn.load_wfn_low."""
+    with path('iodata.test.data', fn_wfn) as fn:
+        lit = LineIterator(str(fn))
+        return load_wfn_low(lit)
+
+
 def test_load_wfn_low_he_s():
-    with path('iodata.test.data', 'he_s_orbital.wfn') as fn_wfn:
-        data = load_wfn_low(str(fn_wfn))
+    data = helper_load_wfn_low('he_s_orbital.wfn')
     # unpack data
     title, numbers, coordinates, centers, type_assignment = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
@@ -74,8 +80,7 @@ def test_load_wfn_low_he_s():
 
 
 def test_load_wfn_low_h2o():
-    with path('iodata.test.data', 'h2o_sto3g.wfn') as fn_wfn:
-        data = load_wfn_low(str(fn_wfn))
+    data = helper_load_wfn_low('h2o_sto3g.wfn')
     # unpack data
     title, numbers, coordinates, centers, type_assignment = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]

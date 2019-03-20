@@ -23,7 +23,8 @@
 
 from numpy.testing import assert_equal, assert_allclose
 
-from ..gaussianlog import load
+from ..formats.gaussianlog import load
+from ..utils import LineIterator
 
 try:
     from importlib_resources import path
@@ -34,10 +35,16 @@ except ImportError:
 # TODO: shells_to_nbasis(obasis["shell_types"]) replacement test
 
 
+def load_log_helper(fn_log):
+    """Load a testing Gaussian log file with iodata.formats.gaussianlog.load."""
+    with path('iodata.test.data', fn_log) as fn:
+        lit = LineIterator(str(fn))
+        return load(lit)
+
+
 def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
-    with path('iodata.test.data', 'water_sto3g_hf_g03.log') as fn:
-        result = load(str(fn))
+    result = load_log_helper('water_sto3g_hf_g03.log')
 
     overlap = result['olp']
     kinetic = result['kin']
@@ -74,8 +81,7 @@ def test_load_operators_water_sto3g_hf_g03():
 
 def test_load_operators_water_ccpvdz_pure_hf_g03():
     eps = 1e-5
-    with path('iodata.test.data', 'water_ccpvdz_pure_hf_g03.log') as fn:
-        result = load(str(fn))
+    result = load_log_helper('water_ccpvdz_pure_hf_g03.log')
 
     overlap = result['olp']
     kinetic = result['kin']
