@@ -84,7 +84,7 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
 
     # read the coordinates
     coordinates = []
-    for iatom in range(len(numbers)):
+    for _iatom in range(len(numbers)):
         line = next(lit)
         coordinates.append([float(w) for w in line.split()[:3]])
     if cartesian:

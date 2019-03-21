@@ -7,7 +7,7 @@ General recommendations
 - Please, be careful with tools like autopep8, black or yapf. They may result in
   a massive number of changes, making pull requests harder to review. Also, when
   using them, use a maximum line length of 100. To avoid confusion, only clean
-  up the code you are working.
+  up the code you are working on.
 
 
 Adding new file formats
@@ -19,8 +19,8 @@ These modules all follow the same API. The following must always be present
 .. code-block :: python
 
     # A list of glob patterns used to recognize file formats from the file names.
-    # This is used to use the correct module in ``iodata.formats`` when
-    # using the ``load_one`` and ``dump_one`` functions.
+    # This is used to select the correct module in ``iodata.formats`` in the
+    # ``load_one`` and ``dump_one`` functions.
     patterns = [ ... ]
 
 
@@ -43,7 +43,7 @@ function with the following signature:
         Returns
         -------
         out : dict
-            Output dictionary contain keys ...
+            Output dictionary contains keys ...
             Output dictionary may contain keys ...
 
         """
@@ -60,7 +60,7 @@ a few ways:
     # When you need to read one line.
     line = next(lit)
 
-    # When section appear in a file in fixed order, you can use helper functions.
+    # When sections appear in a file in fixed order, you can use helper functions.
     data1 = _load_helper_section1(lit)
     data2 = _load_helper_section2(lit)
 
@@ -105,9 +105,9 @@ a few ways:
             data2 = _load_helper_section2(lit)
 
 
-In some cases, one may have to push back a line because it was read to early.
-For example. in the Molden format, that is sometimes unavoidable. Then you
-can *push back* the line for later reading with ``lit.back(line)``.
+In some cases, one may have to push back a line because it was read too early.
+For example, in the Molden format, this is sometimes unavoidable. When needed
+you can *push back* the line for later reading with ``lit.back(line)``.
 
 .. code-block:: python
 
@@ -121,7 +121,8 @@ can *push back* the line for later reading with ``lit.back(line)``.
 
 When you encounter a file-format error while reading the file, call
 ``lit.error(msg)``, where ``msg`` is a short message describing the problem.
-The error appearing on screen will automatically also contain the
+The error appearing on screen will automatically also contain the filename
+and line number.
 
 
 `dump` functions: writing to files
@@ -147,10 +148,10 @@ Github work flow
    Mention in the corresponding issue when you are working on it. "Claim" the
    issue to avoid duplicate efforts.
 
-2. TODO: Roberto needs more testing.
+2. [TODO: Roberto is not final yet.]
    Install Roberto, which is the driver for our CI setup. It can also replicate
    the continuous integration on your local machine, which makes it easier to
-   prepare a passable pull request. See TODO FIX URL.
+   prepare a passable pull request. See https://theochem.github.io/roberto/
 
 3. Make a fork of the project, using the Github "fork" feature.
 
@@ -162,7 +163,7 @@ Github work flow
     cd iodata
 
 5. Add your fork as a second remote to your local repository, for which we will
-   use the short name `mine` below, but any short name is fine:
+   use the short name ``mine`` below, but any short name is fine:
 
    .. code-block:: bash
 
@@ -191,7 +192,7 @@ Github work flow
    If you feel the summary line is too short to describe what you did, it
    may be better to split your changes into multiple commits.
 
-9. TODO: MAKE THIS WORK!
+9. [TODO: Make this work!]
    Run Roberto and fix all problems it reports. Either one of the following
    should work
 
