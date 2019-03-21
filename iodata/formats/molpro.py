@@ -27,7 +27,7 @@ import numpy as np
 
 from typing import Dict
 
-from .utils import set_four_index_element
+from ..utils import set_four_index_element, LineIterator
 
 
 __all__ = ['load', 'dump']
@@ -36,13 +36,13 @@ __all__ = ['load', 'dump']
 patterns = ['*FCIDUMP*']
 
 
-def load(filename: str) -> Dict:
+def load(lit: LineIterator) -> Dict:
     """Load one- and two-electron integrals from a MOLPRO 2012 FCIDUMP file format.
 
     Parameters
     ----------
-    filename : str
-        The MOLPRO 2012 FCIDUMP filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -59,55 +59,54 @@ def load(filename: str) -> Dict:
        older versions are not supported.
 
     """
-    with open(filename) as f:
-        # check header
-        line = next(f)
-        if not line.startswith(' &FCI NORB='):
-            raise IOError('Error in FCIDUMP file header')
+    # check header
+    line = next(lit)
+    if not line.startswith(' &FCI NORB='):
+        lit.error('Incorrect file header')
 
-        # read info from header
-        words = line[5:].split(',')
-        header_info = {}
-        for word in words:
-            if word.count('=') == 1:
-                key, value = word.split('=')
-                header_info[key.strip()] = value.strip()
-        nbasis = int(header_info['NORB'])
-        nelec = int(header_info['NELEC'])
-        ms2 = int(header_info['MS2'])
+    # read info from header
+    words = line[5:].split(',')
+    header_info = {}
+    for word in words:
+        if word.count('=') == 1:
+            key, value = word.split('=')
+            header_info[key.strip()] = value.strip()
+    nbasis = int(header_info['NORB'])
+    nelec = int(header_info['NELEC'])
+    ms2 = int(header_info['MS2'])
 
-        # skip rest of header
-        for line in f:
-            words = line.split()
-            if words[0] == "&END" or words[0] == "/END" or words[0] == "/":
-                break
+    # skip rest of header
+    for line in lit:
+        words = line.split()
+        if words[0] == "&END" or words[0] == "/END" or words[0] == "/":
+            break
 
-        # read the integrals
-        one_mo = np.zeros((nbasis, nbasis))
-        two_mo = np.zeros((nbasis, nbasis, nbasis, nbasis))
-        core_energy = 0.0
+    # read the integrals
+    one_mo = np.zeros((nbasis, nbasis))
+    two_mo = np.zeros((nbasis, nbasis, nbasis, nbasis))
+    core_energy = 0.0
 
-        for line in f:
-            words = line.split()
-            if len(words) != 5:
-                raise IOError('Expecting 5 fields on each data line in FCIDUMP')
-            value = float(words[0])
-            if words[3] != '0':
-                ii = int(words[1]) - 1
-                ij = int(words[2]) - 1
-                ik = int(words[3]) - 1
-                il = int(words[4]) - 1
-                # Uncomment the following line if you want to assert that the
-                # FCIDUMP file does not contain duplicate 4-index entries.
-                # assert two_mo.get_element(ii,ik,ij,il) == 0.0
-                set_four_index_element(two_mo, ii, ik, ij, il, value)
-            elif words[1] != '0':
-                ii = int(words[1]) - 1
-                ij = int(words[2]) - 1
-                one_mo[ii, ij] = value
-                one_mo[ij, ii] = value
-            else:
-                core_energy = value
+    for line in lit:
+        words = line.split()
+        if len(words) != 5:
+            lit.error('Expecting 5 fields on each data line in FCIDUMP')
+        value = float(words[0])
+        if words[3] != '0':
+            ii = int(words[1]) - 1
+            ij = int(words[2]) - 1
+            ik = int(words[3]) - 1
+            il = int(words[4]) - 1
+            # Uncomment the following line if you want to assert that the
+            # FCIDUMP file does not contain duplicate 4-index entries.
+            # assert two_mo.get_element(ii,ik,ij,il) == 0.0
+            set_four_index_element(two_mo, ii, ik, ij, il, value)
+        elif words[1] != '0':
+            ii = int(words[1]) - 1
+            ij = int(words[2]) - 1
+            one_mo[ii, ij] = value
+            one_mo[ij, ii] = value
+        else:
+            core_energy = value
 
     return {
         'nelec': nelec,

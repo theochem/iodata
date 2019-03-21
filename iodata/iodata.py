@@ -31,14 +31,16 @@ from fnmatch import fnmatch
 from pkgutil import iter_modules
 from importlib import import_module
 
+from .utils import LineIterator
+
 
 __all__ = ['IOData']
 
 
 format_modules = []
-for module_info in iter_modules(import_module('iodata').__path__):
+for module_info in iter_modules(import_module('iodata.formats').__path__):
     if not module_info.ispkg:
-        format_module = import_module('iodata.' + module_info.name)
+        format_module = import_module('iodata.formats.' + module_info.name)
         if hasattr(format_module, 'patterns'):
             format_modules.append(format_module)
 
@@ -274,7 +276,7 @@ class IOData:
             return len(self.pseudo_numbers)
 
 
-def load_one(*filenames: str) -> 'IOData':
+def load_one(*filenames: str) -> IOData:
     """Load data from a file.
 
     This routine uses the extension or prefix of the filename to
@@ -304,7 +306,11 @@ def load_one(*filenames: str) -> 'IOData':
         basename = os.path.basename(filename)
         for format_module in format_modules:
             if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
-                result.update(format_module.load(filename))
+                lit = LineIterator(filename)
+                try:
+                    result.update(format_module.load(lit))
+                except StopIteration:
+                    raise lit.error("File ended before all data was read.")
                 break
         else:
             raise ValueError('Unknown file format for reading: %s' % filename)

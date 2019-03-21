@@ -27,9 +27,9 @@ from numpy.testing import assert_equal, assert_allclose
 
 import pytest
 
-from ..fchk import load
 from ..iodata import load_one
-from ..utils import shells_to_nbasis, check_dm
+from ..formats.fchk import load as load_fchk
+from ..utils import shells_to_nbasis, check_dm, LineIterator
 from ..overlap import compute_overlap
 
 try:
@@ -44,12 +44,24 @@ except ImportError:
 def test_load_fchk_nonexistent():
     with pytest.raises(IOError):
         with path('iodata.test.data', 'fubar_crap.fchk') as fn:
-            load(str(fn))
+            load_one(str(fn))
+
+
+def load_fchk_helper_internal(fn_fchk):
+    """Load a testing fchk file with iodata.formats.fchk.load directly."""
+    with path('iodata.test.data', fn_fchk) as fn:
+        lit = LineIterator(fn)
+        return load_fchk(lit)
+
+
+def load_fchk_helper(fn_fchk):
+    """Load a testing fchk file with iodata.iodata.load_one."""
+    with path('iodata.test.data', fn_fchk) as fn:
+        return load_one(fn)
 
 
 def test_load_fchk_hf_sto3g_num():
-    with path('iodata.test.data', 'hf_sto3g.fchk') as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('hf_sto3g.fchk')
     assert fields['title'] == 'hf_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -71,8 +83,7 @@ def test_load_fchk_hf_sto3g_num():
 
 
 def test_load_fchk_h_sto3g_num():
-    with path('iodata.test.data', 'h_sto3g.fchk') as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('h_sto3g.fchk')
     assert fields['title'] == 'h_sto3g'
     obasis = fields['obasis']
     coordinates = fields['coordinates']
@@ -88,8 +99,7 @@ def test_load_fchk_h_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    with path('iodata.test.data', 'o2_cc_pvtz_pure.fchk') as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('o2_cc_pvtz_pure.fchk')
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -103,8 +113,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    with path('iodata.test.data', 'o2_cc_pvtz_cart.fchk') as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('o2_cc_pvtz_cart.fchk')
     obasis = fields['obasis']
     coordinates = fields['coordinates']
     numbers = fields['numbers']
@@ -118,8 +127,7 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
 
 
 def test_load_fchk_water_sto3g_hf():
-    with path('iodata.test.data', 'water_sto3g_hf_g03.fchk') as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('water_sto3g_hf_g03.fchk')
     obasis = fields['obasis']
     assert_equal(len(obasis["shell_types"]), 5)
     assert_equal(shells_to_nbasis(obasis["shell_types"]), 7)
@@ -148,8 +156,7 @@ def test_load_fchk_water_sto3g_hf():
 
 
 def test_load_fchk_lih_321g_hf():
-    with path('iodata.test.data', 'li_h_3-21G_hf_g09.fchk') as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('li_h_3-21G_hf_g09.fchk')
     obasis = fields['obasis']
     assert_equal(len(obasis["shell_types"]), 7)
     assert_equal(shells_to_nbasis(obasis["shell_types"]), 11)
@@ -196,8 +203,7 @@ def test_load_fchk_lih_321g_hf():
 
 def test_load_fchk_ghost_atoms():
     # Load fchk file with ghost atoms
-    with path('iodata.test.data', 'water_dimer_ghost.fchk') as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('water_dimer_ghost.fchk')
     numbers = fields['numbers']
     coordinates = fields['coordinates']
     mulliken_charges = fields['mulliken_charges']
@@ -212,8 +218,7 @@ def test_load_fchk_ghost_atoms():
 
 
 def test_load_fchk_ch3_rohf_g03():
-    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('ch3_rohf_sto3g_g03.fchk')
     orb_alpha = fields['orb_alpha']
     orb_alpha_coeffs = fields['orb_alpha_coeffs']
     orb_alpha_occs = fields['orb_alpha_occs']
@@ -230,8 +235,7 @@ def test_load_fchk_ch3_rohf_g03():
 
 
 def check_load_azirine(key, numbers):
-    with path('iodata.test.data', '2h-azirine-{}.fchk'.format(key)) as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('2h-azirine-{}.fchk'.format(key))
     obasis = fields['obasis']
     assert_equal(shells_to_nbasis(obasis["shell_types"]), 33)
     dm_full = fields['dm_full_%s' % key]
@@ -256,8 +260,7 @@ def test_load_azirine_mp3():
 
 
 def check_load_nitrogen(key, numbers_full, numbers_spin):
-    with path('iodata.test.data', 'nitrogen-{}.fchk'.format(key)) as fn:
-        fields = load(str(fn))
+    fields = load_fchk_helper_internal('nitrogen-{}.fchk'.format(key))
     obasis = fields['obasis']
     assert_equal(shells_to_nbasis(obasis["shell_types"]), 9)
     dm_full = fields['dm_full_%s' % key]
@@ -289,9 +292,7 @@ def test_load_nitrogen_mp3():
 
 
 def check_normalization_dm_full_azirine(key):
-    # TODO: replace with data data
-    with path('iodata.test.data', '2h-azirine-{}.fchk'.format(key)) as fn:
-        mol = load_one(str(fn))
+    mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
     olp = compute_overlap(**mol.obasis)
     dm = getattr(mol, 'dm_full_%s' % key)
     check_dm(dm, olp, eps=1e-2, occ_max=2)
@@ -315,8 +316,7 @@ def test_normalization_dm_full_azirine_mp3():
 
 
 def test_load_water_hfs_321g():
-    with path('iodata.test.data', 'water_hfs_321g.fchk') as fn:
-        mol = load_one(str(fn))
+    mol = load_fchk_helper('water_hfs_321g.fchk')
     assert_allclose(mol.polar[0, 0], 7.23806684E+00)
     assert_allclose(mol.polar[1, 1], 8.04213953E+00)
     assert_allclose(mol.polar[1, 2], 1.20021770E-10)
@@ -332,8 +332,7 @@ def test_load_water_hfs_321g():
 
 
 def test_load_monosilicic_acid_hf_lan():
-    with path('iodata.test.data', 'monosilicic_acid_hf_lan.fchk') as fn:
-        mol = load_one(str(fn))
+    mol = load_fchk_helper('monosilicic_acid_hf_lan.fchk')
     assert_allclose(mol.dipole_moment,
                     [-6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
     assert_allclose(mol.quadrupole_moment,

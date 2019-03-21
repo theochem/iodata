@@ -27,8 +27,8 @@ import numpy as np
 
 from typing import Dict
 
-from .utils import angstrom
-from .periodic import sym2num, num2sym
+from ..utils import angstrom, LineIterator
+from ..periodic import sym2num, num2sym
 
 
 __all__ = ['load', 'dump']
@@ -37,13 +37,13 @@ __all__ = ['load', 'dump']
 patterns = ['*.xyz']
 
 
-def load(filename: str) -> Dict:
+def load(lit: LineIterator) -> Dict:
     """Load molecular geometry from a XYZ file format.
 
     Parameters
     ----------
-    filename : str
-        The XYZ filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -52,20 +52,19 @@ def load(filename: str) -> Dict:
         and corresponding values.
 
     """
-    with open(filename, 'r') as f:
-        size = int(next(f))
-        title = next(f).strip()
-        coordinates = np.empty((size, 3), float)
-        numbers = np.empty(size, int)
-        for i in range(size):
-            words = next(f).split()
-            try:
-                numbers[i] = sym2num[words[0].title()]
-            except KeyError:
-                numbers[i] = int(words[0])
-            coordinates[i, 0] = float(words[1]) * angstrom
-            coordinates[i, 1] = float(words[2]) * angstrom
-            coordinates[i, 2] = float(words[3]) * angstrom
+    size = int(next(lit))
+    title = next(lit).strip()
+    coordinates = np.empty((size, 3), float)
+    numbers = np.empty(size, int)
+    for i in range(size):
+        words = next(lit).split()
+        try:
+            numbers[i] = sym2num[words[0].title()]
+        except KeyError:
+            numbers[i] = int(words[0])
+        coordinates[i, 0] = float(words[1]) * angstrom
+        coordinates[i, 1] = float(words[2]) * angstrom
+        coordinates[i, 2] = float(words[3]) * angstrom
     return {
         'title': title,
         'coordinates': coordinates,

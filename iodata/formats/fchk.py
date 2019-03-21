@@ -25,7 +25,9 @@
 
 import numpy as np
 
-from typing import Dict, TextIO, Set, List
+from typing import Dict, List, Tuple
+
+from ..utils import LineIterator
 
 
 __all__ = ['FCHKFile', 'load']
@@ -34,139 +36,13 @@ __all__ = ['FCHKFile', 'load']
 patterns = ['*.fchk']
 
 
-class FCHKFile(dict):
-    """Reader for Formatted checkpoint files
-
-       After initialization, the data from the file is available in the fields
-       dictionary. Also the following attributes are read from the file: title,
-       command, lot (level of theory) and basis.
-    """
-
-    def __init__(self, filename: str, field_labels: List[str] = None):
-        """
-        Parameters
-        ----------
-        filename
-            The GAUSSIAN FCHK filename.
-        field_labels
-            When provided, only these fields are read from the formatted
-            checkpoint file which can make loading the file faster.
-        """
-        dict.__init__(self, [])
-        self.filename = filename
-        self._read(filename, set(field_labels))
-
-    def _read(self, filename: str, field_labels: Set[str] = None):
-        """Read all the requested fields and populates instance"""
-
-        # if fields is None, all fields are read
-        def read_field(f: TextIO) -> bool:
-            """Read a single field"""
-            datatype = None
-            while datatype is None:
-                # find a sane header line
-                line = f.readline()
-                if line == "":
-                    return False
-
-                label = line[:43].strip()
-                if field_labels is not None:
-                    if len(field_labels) == 0:
-                        return False
-                    elif label not in field_labels:
-                        return True
-                    else:
-                        field_labels.discard(label)
-                line = line[43:]
-                words = line.split()
-                if len(words) == 0:
-                    return True
-
-                if words[0] == 'I':
-                    datatype = int
-                elif words[0] == 'R':
-                    datatype = float
-
-            if len(words) == 2:
-                try:
-                    value = datatype(words[1])
-                except ValueError:
-                    return True
-            elif len(words) == 3:
-                if words[1] != "N=":
-                    raise IOError(f"Unexpected line in formatted checkpoint file {filename}\n"
-                                  f"{line[:-1]}")
-                length = int(words[2])
-                value = np.zeros(length, datatype)
-                counter = 0
-                try:
-                    while counter < length:
-                        line = f.readline()
-                        if line == "":
-                            raise IOError(f"Unexpected end of formatted checkpoint file {filename}")
-                        for word in line.split():
-                            try:
-                                value[counter] = datatype(word)
-                            except (ValueError, OverflowError) as e:
-                                raise IOError(f'Could not interpret word while reading {word}: '
-                                              f'{filename}')
-                            counter += 1
-                except ValueError:
-                    return True
-            else:
-                raise IOError(f"Unexpected line in formatted checkpoint file "
-                              f"{filename}\n{line[:-1]}")
-
-            self[label] = value
-            return True
-
-        with open(filename, 'r') as f:
-            self.title = f.readline()[:-1].strip()
-            words = f.readline().split()
-            if len(words) == 3:
-                self.command, self.lot, self.obasis = words
-            elif len(words) == 2:
-                self.command, self.lot = words
-            else:
-                raise IOError('The second line of the FCHK file should contain two or three words.')
-
-            while read_field(f):
-                pass
-
-
-def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
-    """Convert a symmetric matrix in triangular storage to a dense square matrix.
-
-    Parameters
-    ----------
-    triangle
-        A row vector containing all the unique matrix elements of symmetric
-        matrix. (Either the lower-triangular part in row major-order or the
-        upper-triangular part in column-major order.)
-
-    Returns
-    -------
-    ndarray
-        a square symmetric matrix.
-    """
-    nrow = int(np.round((np.sqrt(1 + 8 * len(triangle)) - 1) / 2))
-    result = np.zeros((nrow, nrow))
-    begin = 0
-    for irow in range(nrow):
-        end = begin + irow + 1
-        result[irow, :irow + 1] = triangle[begin:end]
-        result[:irow + 1, irow] = triangle[begin:end]
-        begin = end
-    return result
-
-
-def load(filename: str) -> Dict:
+def load(lit: LineIterator) -> Dict:
     """Load data from a GAUSSIAN FCHK file format.
 
     Parameters
     ----------
-    filename : str
-        The GAUSSIAN FCHK filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -179,7 +55,7 @@ def load(filename: str) -> Dict:
         ``polar``, ``dipole_moment`` & ``quadrupole_moment`` keys and their values as well.
 
     """
-    fchk = FCHKFile(filename, [
+    fchk = _load_fchk_low(lit, [
         "Number of electrons", "Number of basis functions",
         "Number of independant functions",
         "Number of independent functions",
@@ -285,7 +161,7 @@ def load(filename: str) -> Dict:
     permutation = np.array(permutation, dtype=int)
 
     result = {
-        'title': fchk.title,
+        'title': fchk['title'],
         'coordinates': system_coordinates,
         'numbers': numbers,
         'obasis': obasis,
@@ -293,7 +169,7 @@ def load(filename: str) -> Dict:
         'pseudo_numbers': pseudo_numbers,
     }
 
-    nbasis = fchk.get("Number of basis functions")
+    nbasis = fchk["Number of basis functions"]
 
     # C) Load density matrices
     def load_dm(label):
@@ -318,10 +194,7 @@ def load(filename: str) -> Dict:
 
     # D) Load the wavefunction
     # Handle small difference in fchk files from g03 and g09
-    nbasis_indep = fchk.get("Number of independant functions") or \
-                   fchk.get("Number of independent functions")
-    if nbasis_indep is None:
-        nbasis_indep = nbasis
+    nbasis_indep = fchk.get("Number of independant functions", nbasis)
 
     # Load orbitals
     nalpha = fchk['Number of alpha electrons']
@@ -376,4 +249,100 @@ def load(filename: str) -> Dict:
     if 'NPA Charges' in fchk:
         result['npa_charges'] = fchk['NPA Charges'][mask]
 
+    return result
+
+
+def _load_fchk_low(lit: LineIterator, labels: List[str] = None) -> Dict:
+    """Read selected fields from a formatted checkpoint file."""
+    result = {}
+    # Read the two-line header
+    result['title'] = next(lit).strip()
+    words = next(lit).split()
+    if len(words) == 3:
+        result['command'], result['lot'], result['obasis'] = words
+    elif len(words) == 2:
+        result['command'], result['lot'] = words
+    else:
+        lit.error('The second line of the FCHK file should contain two or three words.')
+
+    # Read all fields, go all they way until the until unless all requested
+    # labels are used.
+    if labels is not None:
+        labels = set(labels)
+    while labels is None or len(labels) > 0:
+        try:
+            label, value = _load_fchk_field(lit, labels)
+        except StopIteration:
+            # We read the whole file, this happens when more labels are given
+            # than those present in the file, which should be allowed.
+            break
+        result[label] = value
+    return result
+
+
+def _load_fchk_field(lit: LineIterator, labels: List[str]) -> Tuple[str, object]:
+    """Read a single field with one of the given labels."""
+    while True:
+        # find a sane header line
+        line = next(lit)
+        label = line[:43].strip()
+        words = line[43:].split()
+        if len(words) == 0:
+            continue
+        if words[0] == 'I':
+            datatype = int
+        elif words[0] == 'R':
+            datatype = float
+        else:
+            continue
+        if labels is not None and label not in labels:
+            continue
+        if len(words) == 2:
+            try:
+                return label, datatype(words[1])
+            except ValueError:
+                lit.error("Could not interpret: {}".format(words[1]))
+        elif len(words) == 3:
+            if words[1] != "N=":
+                lit.error("Expected N= not found.")
+            length = int(words[2])
+            value = np.zeros(length, datatype)
+            counter = 0
+            words = []
+            while counter < length:
+                if len(words) == 0:
+                    words = next(lit).split()
+                word = words.pop(0)
+                try:
+                    value[counter] = datatype(word)
+                except (ValueError, OverflowError):
+                    lit.error('Could not interpret: {}'.format(word))
+                counter += 1
+            return label, value
+
+
+def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
+    """Convert a symmetric matrix in triangular storage to a dense square matrix.
+
+    Parameters
+    ----------
+    triangle
+        A row vector containing all the unique matrix elements of symmetric
+        matrix. (Either the lower-triangular part in row major-order or the
+        upper-triangular part in column-major order.)
+
+    Returns
+    -------
+    ndarray
+        a square symmetric matrix.
+
+    """
+    nrow = int(np.round((np.sqrt(1 + 8 * len(triangle)) - 1) / 2))
+    result = np.zeros((nrow, nrow))
+    begin = 0
+    for irow in range(nrow):
+        end = begin + irow + 1
+        result[irow, :irow + 1] = triangle[begin:end]
+        result[:irow + 1, irow] = triangle[begin:end]
+        begin = end
     return result

@@ -26,8 +26,8 @@ import numpy as np
 
 from typing import Dict
 
-from .periodic import num2sym
-from .utils import angstrom
+from ..periodic import num2sym
+from ..utils import angstrom, LineIterator
 from .chgcar import _load_vasp_header
 
 
@@ -37,13 +37,13 @@ __all__ = ['load', 'dump']
 patterns = ['POSCAR*']
 
 
-def load(filename: str) -> Dict:
+def load(lit: LineIterator) -> Dict:
     """Load data from a VASP 5 POSCAR file format.
 
     Parameters
     ----------
-    filename
-        The VASP 5 POSCAR filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -52,15 +52,14 @@ def load(filename: str) -> Dict:
         and their corresponding values.
 
     """
-    with open(filename) as f:
-        # Load header
-        title, rvecs, numbers, coordinates = _load_vasp_header(f)
-        return {
-            'title': title,
-            'coordinates': coordinates,
-            'numbers': numbers,
-            'rvecs': rvecs,
-        }
+    # Load header
+    title, rvecs, numbers, coordinates = _load_vasp_header(lit)
+    return {
+        'title': title,
+        'coordinates': coordinates,
+        'numbers': numbers,
+        'rvecs': rvecs,
+    }
 
 
 def dump(filename: str, data: 'IOData'):

@@ -26,24 +26,11 @@ from numpy.testing import assert_equal, assert_allclose
 
 from ..utils import angstrom, volume
 from ..iodata import load_one
-from ..chgcar import _unravel_counter
 
 try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
-
-
-def test_unravel_counter():
-    assert_equal(_unravel_counter(0, [3, 3, 3]), [0, 0, 0])
-    assert_equal(_unravel_counter(0, [2, 4, 3]), [0, 0, 0])
-    assert_equal(_unravel_counter(1, [2, 4, 3]), [1, 0, 0])
-    assert_equal(_unravel_counter(2, [2, 4, 3]), [0, 1, 0])
-    assert_equal(_unravel_counter(3, [2, 4, 3]), [1, 1, 0])
-    assert_equal(_unravel_counter(8, [2, 4, 3]), [0, 0, 1])
-    assert_equal(_unravel_counter(9, [2, 4, 3]), [1, 0, 1])
-    assert_equal(_unravel_counter(11, [2, 4, 3]), [1, 1, 1])
-    assert_equal(_unravel_counter(24, [2, 4, 3]), [0, 0, 0])
 
 
 def test_load_chgcar_oxygen():

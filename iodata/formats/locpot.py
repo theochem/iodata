@@ -24,7 +24,7 @@
 
 from typing import Dict
 
-from .utils import electronvolt
+from ..utils import electronvolt, LineIterator
 from .chgcar import _load_vasp_grid
 
 
@@ -34,13 +34,13 @@ __all__ = ['load']
 patterns = ['LOCPOT*']
 
 
-def load(filename: str) -> Dict:
+def load(lit: LineIterator) -> Dict:
     """Load data from a VASP 5 LOCPOT file format.
 
     Parameters
     ----------
-    filename : str
-        The VASP 5 LOCPOT filename.
+    lit
+        The line iterator to read the data from.
 
     Returns
     -------
@@ -49,7 +49,7 @@ def load(filename: str) -> Dict:
         ``grid`` & ``cube_data`` keys and corresponding values.
 
     """
-    result = _load_vasp_grid(filename)
+    result = _load_vasp_grid(lit)
     # convert locpot to atomic units
     result['cube_data'] *= electronvolt
     return result
