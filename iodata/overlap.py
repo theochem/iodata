@@ -39,7 +39,7 @@ def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarr
                     shell_types: np.ndarray, alphas: np.ndarray,
                     con_coeffs: np.ndarray) -> np.ndarray:
     r"""
-    Computes overlap matrix. Follows same parameter convention as horton.GOBasis
+    Compute overlap matrix. Follows same parameter convention as horton.GOBasis.
 
     .. math::
         \braket{\psi_{i}}{\psi_{j}}
@@ -72,7 +72,7 @@ def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarr
     Returns
     -------
     np.ndarray
-        The overlap integral
+        The overlap integral.
 
     """
     # compute total number of shells
@@ -99,8 +99,8 @@ def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarr
                           shell_offsets[1:],
                           alphas_split, con_coeffs_split, scales_offsets_split):
 
-        ishell0, center0, shell_type0, start0, \
-        end0, alphas0, con_coeffs0, scales_offsets0 = big_tuple0
+        (ishell0, center0, shell_type0, start0,
+         end0, alphas0, con_coeffs0, scales_offsets0) = big_tuple0
 
         r0 = centers[center0, :]
 
@@ -145,16 +145,16 @@ def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarr
 
 
 def _split_data_by_prims(x: np.ndarray, nprims: np.ndarray) -> List[np.ndarray]:
-    """Returns nested lists according to the number of primitives per shell"""
+    """Return nested lists according to the number of primitives per shell."""
     nprims = np.insert(nprims, 0, 0)
     nprims = np.cumsum(nprims)
     return [x[s:e] for s, e in zip(nprims, nprims[1:])]
 
 
-def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray) -> Tuple[
-    np.ndarray, np.ndarray]:
+def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray) \
+        -> Tuple[np.ndarray, np.ndarray]:
     """
-    Returns normalization constants and offsets per shell
+    Return normalization constants and offsets per shell.
 
     Parameters
     ----------
@@ -189,8 +189,7 @@ def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray)
 
 
 def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # from utils
-    """
-    Check normalization of exponents
+    """Check normalization of exponent.
 
     Parameters
     ----------
@@ -210,8 +209,8 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # f
 
 
 def get_shell_nbasis(shell: int) -> int:
-    """
-    Returns number of basis functions within a shell.
+    """Return number of basis functions within a shell.
+
     Negative shell numbers refer to pure functions.
 
     Parameters
@@ -234,8 +233,11 @@ def get_shell_nbasis(shell: int) -> int:
 
 
 def _get_iter_pow(n: int) -> np.ndarray:
-    """Gives the ordering within shells.
-    See http://theochem.github.io/horton/2.1.0b1/tech_ref_gaussian_basis.html for details."""
+    """Give the ordering within shells.
+
+    See http://theochem.github.io/horton/2.1.0b1/tech_ref_gaussian_basis.html
+    for details.
+    """
     for nx in range(n, -1, -1):
         for ny in range(n - nx, -1, -1):
             nz = n - nx - ny

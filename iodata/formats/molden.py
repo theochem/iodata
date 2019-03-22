@@ -333,7 +333,7 @@ def load(lit: LineIterator) -> Dict:
 def _is_normalized_properly(obasis: Dict, permutation: np.ndarray, orb_alpha: np.ndarray,
                             orb_beta: np.ndarray, signs: np.ndarray = None,
                             threshold: float = 1e-4):
-    """Test the normalization of the occupied and virtual orbitals
+    """Test the normalization of the occupied and virtual orbitals.
 
     Parameters
     ----------
@@ -351,6 +351,7 @@ def _is_normalized_properly(obasis: Dict, permutation: np.ndarray, orb_alpha: np
     threshold
         When the maximal error on the norm is large than the threshold,
         the function returns False. True is returned otherwise.
+
     """
     # Set default value for signs
     if signs is None:
@@ -392,10 +393,16 @@ def _is_normalized_properly(obasis: Dict, permutation: np.ndarray, orb_alpha: np
 def _get_orca_signs(shell_types: np.ndarray) -> np.ndarray:
     """Return an array with sign corrections for orbitals read from ORCA.
 
-       **Arguments:**
+    Parameters
+    ----------
+    shell_types
+        An array with integer shell types.
 
-       obasis
-            An instance of GOBasis.
+    Returns
+    -------
+    signs
+        An array with sign flips.
+
     """
     sign_rules = {
         -4: [1, 1, 1, 1, 1, -1, -1, -1, -1],
@@ -416,6 +423,7 @@ def _get_orca_signs(shell_types: np.ndarray) -> np.ndarray:
 def _get_fixed_con_coeffs(nprims: np.ndarray, shell_types: np.ndarray, alphas: np.ndarray,
                           con_coeffs: np.ndarray, code: str) -> Union[np.ndarray, None]:
     """Return corrected contraction coefficients, assuming they came from a broken QC code.
+
     The arguments here are the same as the ones that are given from ``helper_obasis``.
 
     Parameters
@@ -435,6 +443,7 @@ def _get_fixed_con_coeffs(nprims: np.ndarray, shell_types: np.ndarray, alphas: n
     -------
     fixed_con_coeffs
         Corrected contraction coefficients, or None if corrections were not applicable.
+
     """
     assert code in ['orca', 'psi4', 'turbomole']
     fixed_con_coeffs = con_coeffs.copy()
@@ -522,7 +531,7 @@ def _fix_molden_from_buggy_codes(result: Dict, filename: str):
     filename
         The name of the molden/mkl/... file.
 
-   """
+    """
     obasis_dict = result['obasis']
     permutation = result.get('permutation', None)
     if _is_normalized_properly(obasis_dict, permutation, result['orb_alpha_coeffs'],
@@ -604,9 +613,9 @@ def dump(filename: str, data: 'IOData'):
     filename : str
         The MOLDEN input filename.
     data : IOData
-        An IOData instance which must contain ```coordinates``, ``numbers``, ``obasis``
-        & ``orb_alpha`` attributes. It may contain ```title``, ``pseudo_numbers``, ``orb_beta``
-        attributes.
+        An IOData instance which must contain ```coordinates``, ``numbers``,
+        ``obasis`` & ``orb_alpha`` attributes. It may contain ```title``,
+        ``pseudo_numbers``, ``orb_beta`` attributes.
 
     """
     with open(filename, 'w') as f:

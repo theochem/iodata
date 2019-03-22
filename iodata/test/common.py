@@ -101,7 +101,7 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
 
 
 def compare_mols(mol1, mol2):
-    """Compare two IOData objects"""
+    """Compare two IOData objects."""
     assert (getattr(mol1, 'title') == getattr(mol2, 'title'))
     assert_equal(mol1.numbers, mol2.numbers)
     assert_allclose(mol1.coordinates, mol2.coordinates)

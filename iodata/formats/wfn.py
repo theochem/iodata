@@ -98,6 +98,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
     ----------
     lit
         The line iterator to read the data from.
+
     """
     # read sections of wfn file
     title = next(lit).strip()
@@ -122,7 +123,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
             _load_helper_mo(lit, num_primitives)
     energy = _load_helper_energy(lit)
     return title, numbers, coordinates, centers, type_assignment, exponent, \
-           mo_count, mo_occ, mo_energy, coefficients, energy
+        mo_count, mo_occ, mo_energy, coefficients, energy
 
 
 def get_permutation_orbital(type_assignment: np.ndarray) -> np.ndarray:

@@ -29,7 +29,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 from .common import compute_mulliken_charges, check_orthonormal
 from ..formats.wfn import (load_wfn_low, get_permutation_basis,
-                   get_permutation_orbital, get_mask)
+                           get_permutation_orbital, get_mask)
 from ..iodata import load_one
 from ..overlap import compute_overlap
 from ..utils import shells_to_nbasis, LineIterator

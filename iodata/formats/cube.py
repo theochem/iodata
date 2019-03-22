@@ -48,7 +48,8 @@ def _read_cube_header(lit: LineIterator) \
     Returns
     -------
     out : tuple
-        The output tuple contains title, coordinates, numbers, cell, ugrid & pseudo_numbers.
+        The output tuple contains title, coordinates, numbers, cell, ugrid &
+        pseudo_numbers.
 
     """
     # Read the title
@@ -57,7 +58,7 @@ def _read_cube_header(lit: LineIterator) \
     next(lit)
 
     def read_grid_line(line: str) -> Tuple[int, np.ndarray]:
-        """Read a grid line from the cube file"""
+        """Read a grid line from the cube file."""
         words = line.split()
         return (
             int(words[0]),
@@ -78,7 +79,7 @@ def _read_cube_header(lit: LineIterator) \
     ugrid = {"origin": origin, 'grid_rvecs': axes, 'shape': shape, 'pbc': np.ones(3, int)}
 
     def read_coordinate_line(line: str) -> Tuple[int, float, np.ndarray]:
-        """Read an atom number and coordinate from the cube file"""
+        """Read an atom number and coordinate from the cube file."""
         words = line.split()
         return (
             int(words[0]), float(words[1]),
