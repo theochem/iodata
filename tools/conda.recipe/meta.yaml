@@ -8,7 +8,10 @@ source:
 build:
   number: 0
   string: py{{ CONDA_PY }}_1
-  script: python setup.py install --single-version-externally-managed --record=record.txt
+  script:
+    - export CFLAGS="${CFLAGS} -isysroot ${CONDA_BUILD_SYSROOT}"  # [osx]
+    - python setup.py build_ext -I {{ PREFIX }}/include
+    - python setup.py install --single-version-externally-managed --record=record.txt
 
 requirements:
   build:
@@ -18,18 +21,21 @@ requirements:
     - numpy >=1.0
     - cython >=0.24.1
     - setuptools
-    - pytest
   run:
     - python
     - scipy
-    - importlib_resources
+    - importlib_resources  # [py<37]
+
 test:
   requires:
     - python
     - pytest
+    - pytest-xdist
+  imports:
+    - iodata
   commands:
     - conda inspect linkages iodata
-    - pytest --pyargs iodata
+    - pytest --pyargs iodata -v -n auto
 
 about:
   home: https://github.com/theochem/iodata

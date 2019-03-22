@@ -20,36 +20,9 @@
     :
     : --
 
+.. _contributing:
 
-Installation
+Contributing
 ============
 
-Python 3 (>=3.6) must be installed. Other dependencies will be pulled in with
-the instructions below.
-
-IOData can be installed with conda:
-
-.. code-block:: bash
-
-    conda install theochem::iodata
-
-It can also be installed with pip. One of the following is fine, whichever you
-prefer:
-
-.. code-block:: bash
-
-    pip install iodata
-    pip install iodata --user
-    python3 -m pip install iodata
-    python3 -m pip install iodata --user
-
-
-Testing
--------
-
-The tests are automatically run when building with conda, but you may try
-them again on your own machine after installation:
-
-.. code-block:: bash
-
-    $ pytest --pyargs iodata
+.. include:: ../CONTRIBUTING.rst

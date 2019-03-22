@@ -1,0 +1,16 @@
+project:
+  name: iodata
+  packages:
+    - conda_name: iodata
+      tools:
+        - write-py-version
+        - cardboardlint-static
+        - build-py-inplace
+        - cardboardlint-dynamic
+        - pytest
+        - build-sphinx-doc
+        - build-py-source
+        - build-conda
+        - deploy-pypi
+        - deploy-conda
+        - deploy-github

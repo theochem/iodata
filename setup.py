@@ -64,8 +64,7 @@ setup(
         'Topic :: Scientific/Engineering :: Chemistry',
         'Intended Audience :: Science/Research',
     ],
-    zip_safe=False,
     setup_requires=['numpy>=1.0', 'cython>=0.24.1'],
-    install_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy', 'pytest>=4.2.0',
+    install_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy',
                       'importlib_resources; python_version < "3.7"'],
 )

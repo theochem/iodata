@@ -1,5 +1,6 @@
-coverage*.xml
+activate-*-dev*.sh
 .pytest_cache
+coverage*.xml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
