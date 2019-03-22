@@ -28,11 +28,10 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from .common import compute_mulliken_charges, check_orthonormal
-from ..formats.wfn import (load_wfn_low, get_permutation_basis,
-                           get_permutation_orbital, get_mask)
+from ..formats.wfn import load_wfn_low
 from ..iodata import load_one
 from ..overlap import compute_overlap
-from ..utils import shells_to_nbasis, LineIterator
+from ..utils import LineIterator
 
 try:
     from importlib_resources import path
@@ -52,21 +51,21 @@ def helper_load_wfn_low(fn_wfn):
 def test_load_wfn_low_he_s():
     data = helper_load_wfn_low('he_s_orbital.wfn')
     # unpack data
-    title, numbers, coordinates, centers, type_assignment = data[:5]
+    title, numbers, coordinates, centers, type_assignments = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'He atom - decontracted 6-31G basis set'
     assert_equal(numbers.shape, (1,))
     assert_equal(numbers, [2])
     assert_equal(coordinates.shape, (1, 3))
     assert_equal(centers.shape, (4,))
-    assert_equal(type_assignment.shape, (4,))
+    assert_equal(type_assignments.shape, (4,))
     assert_equal(exponents.shape, (4,))
     assert_equal(mo_count.shape, (1,))
     assert_equal(mo_count, [1])
     assert_equal(occ_num.shape, (1,))
     assert_equal(mo_energy.shape, (1,))
     assert_equal(coefficients.shape, (4, 1))
-    assert_equal(type_assignment, [1, 1, 1, 1])
+    assert_equal(type_assignments, [0, 0, 0, 0])
     assert_equal(centers, [0, 0, 0, 0])
     assert_equal(occ_num, [2.0])
     assert_allclose(coordinates, np.array([[0.00, 0.00, 0.00]]))
@@ -82,13 +81,13 @@ def test_load_wfn_low_he_s():
 def test_load_wfn_low_h2o():
     data = helper_load_wfn_low('h2o_sto3g.wfn')
     # unpack data
-    title, numbers, coordinates, centers, type_assignment = data[:5]
+    title, numbers, coordinates, centers, type_assignments = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'H2O Optimization'
     assert_equal(numbers.shape, (3,))
     assert_equal(coordinates.shape, (3, 3))
     assert_equal(centers.shape, (21,))
-    assert_equal(type_assignment.shape, (21,))
+    assert_equal(type_assignments.shape, (21,))
     assert_equal(exponents.shape, (21,))
     assert_equal(mo_count.shape, (5,))
     assert_equal(occ_num.shape, (5,))
@@ -97,10 +96,10 @@ def test_load_wfn_low_h2o():
     assert_equal(numbers, np.array([8, 1, 1]))
     assert_equal(centers[:15], np.zeros(15, int))
     assert_equal(centers[15:], np.array([1, 1, 1, 2, 2, 2]))
-    assert_equal(type_assignment[:6], np.ones(6))
-    assert_equal(type_assignment[6:15], np.array(
-        [2, 2, 2, 3, 3, 3, 4, 4, 4]))
-    assert_equal(type_assignment[15:], np.ones(6))
+    assert_equal(type_assignments[:6], np.zeros(6))
+    assert_equal(type_assignments[6:15], np.array(
+        [1, 1, 1, 2, 2, 2, 3, 3, 3]))
+    assert_equal(type_assignments[15:], np.zeros(6))
     assert_equal(mo_count, [1, 2, 3, 4, 5])
     assert_equal(np.sum(occ_num), 10.0)
     assert_equal(occ_num, [2.0, 2.0, 2.0, 2.0, 2.0])
@@ -129,110 +128,15 @@ def test_load_wfn_low_h2o():
     assert_allclose(energy, -74.965901217080, atol=1.e-6)
 
 
-def test_get_permutation_orbital():
-    assert_equal(get_permutation_orbital(
-        np.array([1, 1, 2, 3, 4])), [0, 1, 2, 3, 4])
-    assert_equal(get_permutation_orbital(np.array([2, 3, 4])), [0, 1, 2])
-    assert_equal(get_permutation_orbital(
-        np.array([2, 2, 3, 3, 4, 4])), [0, 2, 4, 1, 3, 5])
-    assign = np.array([1, 1, 2, 2, 3, 3, 4, 4, 1])
-    expect = [0, 1, 2, 4, 6, 3, 5, 7, 8]
-    assert_equal(get_permutation_orbital(assign), expect)
-    assign = np.array([1, 5, 6, 7, 8, 9, 10, 1])
-    expect = [0, 1, 2, 3, 4, 5, 6, 7]
-    assert_equal(get_permutation_orbital(assign), expect)
-    assign = np.array([5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10])
-    expect = [0, 2, 4, 6, 8, 10, 1, 3, 5, 7, 9, 11]
-    assert_equal(get_permutation_orbital(assign), expect)
-    assign = np.array([1, 2, 2, 3, 3, 4, 4, 5, 6, 7, 8, 9, 10])
-    expect = [0, 1, 3, 5, 2, 4, 6, 7, 8, 9, 10, 11, 12]
-    assert_equal(get_permutation_orbital(assign), expect)
-    # f orbitals
-    assign = np.array([11, 12, 13, 17, 14, 15, 18, 19, 16, 20])
-    assert_equal(get_permutation_orbital(assign), list(range(10)))
-    # g orbitals
-    assign = np.array([23, 29, 32, 27, 22, 28, 35,
-                       34, 26, 31, 33, 30, 25, 24, 21])
-    assert_equal(get_permutation_orbital(assign), list(range(15)))
-    # g orbitals
-    assign = np.array([23, 29, 32, 27, 22, 28, 35,
-                       34, 26, 31, 33, 30, 25, 24, 21])
-    assert_equal(get_permutation_orbital(assign), list(range(15)))
-    # h orbitals
-    assert_equal(get_permutation_orbital(
-        np.arange(36, 57)), list(range(21)))
-    assign = np.array([1, 1, 11, 12, 13, 17, 14, 15, 18, 19, 16, 20])
-    assert_equal(get_permutation_orbital(assign), list(range(12)))
-    assign = np.array([2, 3, 4, 11, 12, 13, 17, 14, 15, 18, 19, 16, 20, 1, 1])
-    assert_equal(get_permutation_orbital(assign), list(range(15)))
-
-
-def test_get_permutation_basis():
-    assert_equal(get_permutation_basis(np.array([1, 1, 1])), [0, 1, 2])
-    assert_equal(get_permutation_basis(
-        np.array([2, 2, 3, 3, 4, 4])), [0, 2, 4, 1, 3, 5])
-    assert_equal(get_permutation_basis(
-        np.array([1, 2, 3, 4, 1])), [0, 1, 2, 3, 4])
-    assert_equal(get_permutation_basis(
-        np.array([5, 6, 7, 8, 9, 10])), [0, 3, 4, 1, 5, 2])
-    assign = np.repeat([5, 6, 7, 8, 9, 10], 2)
-    expect = [0, 6, 8, 2, 10, 4, 1, 7, 9, 3, 11, 5]
-    assert_equal(get_permutation_basis(assign), expect)
-    assert_equal(get_permutation_basis(np.arange(1, 11)),
-                 [0, 1, 2, 3, 4, 7, 8, 5, 9, 6])
-    assign = np.array([1, 5, 6, 7, 8, 9, 10, 1])
-    expect = [0, 1, 4, 5, 2, 6, 3, 7]
-    assert_equal(get_permutation_basis(assign), expect)
-    assign = np.array([11, 12, 13, 17, 14, 15, 18, 19, 16, 20])
-    expect = [0, 4, 5, 3, 9, 6, 1, 8, 7, 2]
-    assert_equal(get_permutation_basis(assign), expect)
-    assign = np.array([1, 11, 12, 13, 17, 14, 15, 18, 19, 16, 20, 1])
-    expect = [0, 1, 5, 6, 4, 10, 7, 2, 9, 8, 3, 11]
-    assert_equal(get_permutation_basis(assign), expect)
-    assign = np.array([1, 11, 12, 13, 17, 14, 15, 18,
-                       19, 16, 20, 2, 2, 3, 3, 4, 4])
-    expect = [0, 1, 5, 6, 4, 10, 7, 2, 9, 8, 3, 11, 13, 15, 12, 14, 16]
-    assert_equal(get_permutation_basis(assign), expect)
-    assign = [1, 11, 12, 13, 17, 14, 15, 18,
-              19, 16, 20, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    expect = np.array([0, 1, 5, 6, 4, 10, 7, 2, 9, 8, 3,
-                       11, 12, 13, 14, 17, 18, 15, 19, 16])
-    assert_equal(get_permutation_basis(np.array(assign)), expect)
-    assert_equal(get_permutation_basis(np.arange(36, 57)),
-                 np.arange(21)[::-1])
-    assign = [23, 29, 32, 27, 22, 28, 35, 34, 26, 31, 33, 30, 25, 24, 21]
-    expect = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
-    assert_equal(get_permutation_basis(np.array(assign)), expect)
-    assert_equal(get_permutation_basis(np.arange(36, 57)),
-                 list(range(21))[::-1])
-
-
-def test_get_mask():
-    assert_equal(get_mask(np.array([2, 3, 4])), [True, False, False])
-    expected = [True, True, False, False, True, True, False, False]
-    assert_equal(get_mask(np.array([1, 2, 3, 4, 1, 2, 3, 4])), expected)
-    expected = [True, False, False, False, False, False]
-    assert_equal(get_mask(np.array([5, 6, 7, 8, 9, 10])), expected)
-    expected = [True, False, False, True, True,
-                False, False, False, False, False]
-    assert_equal(
-        get_mask(np.array([2, 3, 4, 1, 5, 6, 7, 8, 9, 10])), expected)
-    expected = [True, False, False, False, False,
-                False, False, False, False, False]
-    assert_equal(get_mask(np.arange(11, 21)), expected)
-    assert_equal(get_mask(np.array([21, 24, 25])), [True, False, False])
-    assert_equal(get_mask(np.array([11, 21, 36, 1])), [True, True, True, True])
-
-
 def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
     """Check that MO are orthonormal & energy and charges match expected values."""
     # load file
     with path('iodata.test.data', fn_wfn) as file_wfn:
         mol = load_one(str(file_wfn))
     # check number of basis functions
-    assert_allclose(shells_to_nbasis(mol.obasis["shell_types"]), nbasis)
+    assert mol.obasis.nbasis == nbasis
     # check orthonormal mo
-    olp = compute_overlap(**mol.obasis)
+    olp = compute_overlap(mol.obasis)
     if mol.mo.type == 'restricted':
         check_orthonormal(mol.mo.coeffs, olp, 1.e-5)
     elif mol.mo.type == 'unrestricted':
@@ -255,7 +159,8 @@ def test_load_wfn_h2o_sto3g_decontracted():
 def test_load_wfn_h2_ccpvqz_virtual():
     mol = check_wfn('h2_ccpvqz.wfn', 74, -1.133504568400, np.array([0.0, 0.0]))
     expect = [82.64000, 12.41000, 2.824000, 0.7977000, 0.2581000]
-    assert_allclose(mol.obasis['alphas'][:5], expect, rtol=0., atol=1.e-6)
+    assert_allclose([shell.exponents[0] for shell in mol.obasis.shells[:5]],
+                    expect, rtol=0., atol=1.e-6)
     expect = [-0.596838, 0.144565, 0.209605, 0.460401, 0.460401]
     assert_allclose(mol.mo.energies[:5], expect, rtol=0., atol=1.e-6)
     expect = [12.859067, 13.017471, 16.405834, 25.824716, 26.100443]

@@ -26,6 +26,8 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from ..basis import MolecularBasis, Shell
+from ..overlap import OVERLAP_CONVENTIONS
 from ..utils import LineIterator
 
 
@@ -33,6 +35,28 @@ __all__ = ['load']
 
 
 patterns = ['*.fchk']
+
+
+CONVENTIONS = {
+    (9, 'p'): OVERLAP_CONVENTIONS[(9, 'p')],
+    (8, 'p'): OVERLAP_CONVENTIONS[(8, 'p')],
+    (7, 'p'): OVERLAP_CONVENTIONS[(7, 'p')],
+    (6, 'p'): OVERLAP_CONVENTIONS[(6, 'p')],
+    (5, 'p'): OVERLAP_CONVENTIONS[(5, 'p')],
+    (4, 'p'): OVERLAP_CONVENTIONS[(4, 'p')],
+    (3, 'p'): OVERLAP_CONVENTIONS[(3, 'p')],
+    (2, 'p'): OVERLAP_CONVENTIONS[(2, 'p')],
+    (0, 'c'): ['1'],
+    (1, 'c'): ['x', 'y', 'z'],
+    (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'yz', 'xz'],
+    (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
+    (4, 'c'): OVERLAP_CONVENTIONS[(4, 'c')][::-1],
+    (5, 'c'): OVERLAP_CONVENTIONS[(5, 'c')][::-1],
+    (6, 'c'): OVERLAP_CONVENTIONS[(6, 'c')][::-1],
+    (7, 'c'): OVERLAP_CONVENTIONS[(7, 'c')][::-1],
+    (8, 'c'): OVERLAP_CONVENTIONS[(8, 'c')][::-1],
+    (9, 'c'): OVERLAP_CONVENTIONS[(9, 'c')][::-1],
+}
 
 
 # pylint: disable=too-many-branches,too-many-statements
@@ -48,7 +72,7 @@ def load(lit: LineIterator) -> Dict:
     -------
     out : dict
         Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``pseudo_numbers``,
-        ``obasis``, ``orb_alpha``, ``permutation``, ``energy`` & ``mulliken_charges`` keys and
+        ``obasis``, ``orb_alpha``, ``energy`` & ``mulliken_charges`` keys and
         corresponding values. It may also contain ``npa_charges``, ``esp_charges``, ``orb_beta``,
         ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
         ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``, ``dm_spin_scf``,
@@ -91,81 +115,45 @@ def load(lit: LineIterator) -> Dict:
     shell_types = fchk["Shell types"]
     shell_map = fchk["Shell to atom map"] - 1
     nprims = fchk["Number of primitives per shell"]
-    alphas = fchk["Primitive exponents"]
+    exponents = fchk["Primitive exponents"]
     ccoeffs_level1 = fchk["Contraction coefficients"]
     ccoeffs_level2 = fchk.get("P(S=P) Contraction coefficients")
 
-    my_shell_types = []
-    my_shell_map = []
-    my_nprims = []
-    my_alphas = []
-    con_coeffs = []
+    shells = []
     counter = 0
+    # First loop over all shells
     for i, n in enumerate(nprims):
         if shell_types[i] == -1:
             # Special treatment for SP shell type
-            my_shell_types.append(0)
-            my_shell_types.append(1)
-            my_shell_map.append(shell_map[i])
-            my_shell_map.append(shell_map[i])
-            my_nprims.append(nprims[i])
-            my_nprims.append(nprims[i])
-            my_alphas.append(alphas[counter:counter + n])
-            my_alphas.append(alphas[counter:counter + n])
-            con_coeffs.append(ccoeffs_level1[counter:counter + n])
-            con_coeffs.append(ccoeffs_level2[counter:counter + n])
+            shells.append(Shell(
+                shell_map[i],
+                [0, 1],
+                ['c', 'c'],
+                exponents[counter:counter + n],
+                np.stack([ccoeffs_level1[counter:counter + n],
+                          ccoeffs_level2[counter:counter + n]], axis=1)
+            ))
         else:
-            my_shell_types.append(shell_types[i])
-            my_shell_map.append(shell_map[i])
-            my_nprims.append(nprims[i])
-            my_alphas.append(alphas[counter:counter + n])
-            con_coeffs.append(ccoeffs_level1[counter:counter + n])
+            shells.append(Shell(
+                shell_map[i],
+                [abs(shell_types[i])],
+                ['p' if shell_types[i] < 0 else 'c'],
+                exponents[counter:counter + n],
+                ccoeffs_level1[counter:counter + n][:, np.newaxis]
+            ))
         counter += n
-    my_shell_types = np.array(my_shell_types)
-    my_shell_map = np.array(my_shell_map)
-    my_nprims = np.array(my_nprims)
-    my_alphas = np.concatenate(my_alphas)
-    con_coeffs = np.concatenate(con_coeffs)
     del shell_map
     del shell_types
     del nprims
-    del alphas
+    del exponents
 
-    obasis = {"centers": coordinates, "shell_map": my_shell_map, "nprims": my_nprims,
-              "shell_types": my_shell_types, "alphas": my_alphas, "con_coeffs": con_coeffs}
-
-    # permutation of the orbital basis functions
-    permutation_rules = {
-        -9: np.arange(19),
-        -8: np.arange(17),
-        -7: np.arange(15),
-        -6: np.arange(13),
-        -5: np.arange(11),
-        -4: np.arange(9),
-        -3: np.arange(7),
-        -2: np.arange(5),
-        0: np.array([0]),
-        1: np.arange(3),
-        2: np.array([0, 3, 4, 1, 5, 2]),
-        3: np.array([0, 4, 5, 3, 9, 6, 1, 8, 7, 2]),
-        4: np.arange(15)[::-1],
-        5: np.arange(21)[::-1],
-        6: np.arange(28)[::-1],
-        7: np.arange(36)[::-1],
-        8: np.arange(45)[::-1],
-        9: np.arange(55)[::-1],
-    }
-    permutation = []
-    for shell_type in my_shell_types:
-        permutation.extend(permutation_rules[shell_type] + len(permutation))
-    permutation = np.array(permutation, dtype=int)
+    obasis = MolecularBasis(coordinates, shells, CONVENTIONS, 'L2')
 
     result = {
         'title': fchk['title'],
         'coordinates': system_coordinates,
         'numbers': numbers,
         'obasis': obasis,
-        'permutation': permutation,
         'pseudo_numbers': pseudo_numbers,
     }
 

@@ -22,13 +22,11 @@
 """Utility functions module."""
 
 
-from typing import List, Dict, Tuple, NamedTuple
+from typing import Tuple, NamedTuple
 
 import numpy as np
 import scipy.constants as spc
 from scipy.linalg import eigh
-
-from .overlap import get_shell_nbasis
 
 
 __all__ = ['LineIterator', 'set_four_index_element', 'MolecularOrbitals']
@@ -97,7 +95,7 @@ class MolecularOrbitals(NamedTuple):
     occs : np.ndarray
         Molecular orbital occupation numbers.
     coeffs : np.ndarray
-        Molecular orbital basis coefficients.
+        Molecular orbital basis coefficients. shape = (nbasis, norb_a + norb_b)
     irreps : np.ndarray
         Irreducible representation.
     energies : np.ndarray
@@ -112,20 +110,6 @@ class MolecularOrbitals(NamedTuple):
     coeffs: np.ndarray
     irreps: np.ndarray
     energies: np.ndarray
-
-
-def str_to_shell_types(s: str, pure: bool = False) -> List[int]:
-    """Convert a string into a list of contraction types."""
-    if pure:
-        d = {'s': 0, 'p': 1, 'd': -2, 'f': -3, 'g': -4, 'h': -5, 'i': -6}
-    else:
-        d = {'s': 0, 'p': 1, 'd': 2, 'f': 3, 'g': 4, 'h': 5, 'i': 6}
-    return [d[c] for c in s.lower()]
-
-
-def shell_type_to_str(shell_type: np.ndarray) -> Dict:
-    """Convert a shell type into a character."""
-    return {0: 's', 1: 'p', 2: 'd', 3: 'f', 4: 'g', 5: 'h', 6: 'i'}[abs(shell_type)]
 
 
 def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int, l: int,
@@ -153,12 +137,6 @@ def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int
     four_index_object[l, k, j, i] = value
     four_index_object[j, k, l, i] = value
     four_index_object[l, i, j, k] = value
-
-
-def shells_to_nbasis(shell_types: np.ndarray) -> int:
-    """Compute the number of basis functions for a given list of shell_types."""
-    nbasis_shell = [get_shell_nbasis(i) for i in shell_types]
-    return sum(nbasis_shell)
 
 
 def volume(rvecs: np.ndarray) -> float:

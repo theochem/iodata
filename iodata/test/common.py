@@ -27,7 +27,8 @@ from contextlib import contextmanager
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..overlap import compute_overlap, get_shell_nbasis
+from ..overlap import compute_overlap
+from ..basis import convert_conventions
 
 __all__ = ['compute_mulliken_charges', 'compute_1rdm',
            'compare_mols', 'check_orthonormal']
@@ -54,18 +55,17 @@ def compute_mulliken_charges(iodata, pseudo_numbers=None):
     if pseudo_numbers is None:
         pseudo_numbers = iodata.pseudo_numbers
     dm = compute_1rdm(iodata)
-    ov = compute_overlap(**iodata.obasis)
+    ov = compute_overlap(iodata.obasis)
     # compute basis function population matrix
     bp = np.sum(np.multiply(dm, ov), axis=1)
     # find basis functions center
     basis_center = []
-    for (ci, ti) in zip(iodata.obasis["shell_map"],
-                        iodata.obasis["shell_types"]):
-        basis_center.extend([ci] * get_shell_nbasis(ti))
+    for shell in iodata.obasis.shells:
+        basis_center.extend([shell.icenter] * shell.nbasis)
     basis_center = np.array(basis_center)
     # compute atomic populations
-    populations = np.zeros(len(iodata.obasis["centers"]))
-    for index in range(len(iodata.obasis["centers"])):
+    populations = np.zeros(len(iodata.obasis.centers))
+    for index in range(len(iodata.obasis.centers)):
         populations[index] = np.sum(bp[basis_center == index])
     assert_equal(pseudo_numbers.shape, populations.shape)
     return pseudo_numbers - np.array(populations)
@@ -107,19 +107,33 @@ def compare_mols(mol1, mol2):
     # orbital basis
     if mol1.obasis is not None:
         # compare dictionaries
-        assert_equal(len(mol1.obasis), len(mol2.obasis))
-        for k, v in mol1.obasis.items():
-            assert_allclose(v, mol2.obasis[k], atol=1.e-8)
+        assert_allclose(mol1.obasis.centers, mol2.obasis.centers)
+        assert len(mol1.obasis.shells) == len(mol2.obasis.shells)
+        for shell1, shell2 in zip(mol1.obasis.shells, mol2.obasis.shells):
+            assert shell1.icenter == shell2.icenter
+            assert_equal(shell1.angmoms, shell2.angmoms)
+            assert shell1.kinds == shell2.kinds
+            assert_allclose(shell1.exponents, shell2.exponents, atol=1e-8)
+            assert_allclose(shell1.coeffs, shell2.coeffs, atol=1e-8)
+        assert len(mol1.obasis.conventions) == len(mol2.obasis.conventions)
+        for key, conv in mol1.obasis.conventions.items():
+            s1 = set(word.lstrip('-') for word in conv)
+            s2 = set(word.lstrip('-') for word in mol2.obasis.conventions[key])
+            assert s1 == s2, (s1, s2)
+        assert mol1.obasis.primitive_normalization == mol2.obasis.primitive_normalization
     else:
         assert mol2.obasis is None
     # wfn
+    permutation, signs = convert_conventions(mol1.obasis, mol2.obasis.conventions)
     assert_allclose(mol1.orb_alpha, mol2.orb_alpha)
-    assert_allclose(mol1.orb_alpha_coeffs, mol2.orb_alpha_coeffs)
+    assert_allclose(mol1.orb_alpha_coeffs[permutation] * signs.reshape(-1, 1),
+                    mol2.orb_alpha_coeffs, atol=1e-8)
     assert_allclose(mol1.orb_alpha_energies, mol2.orb_alpha_energies)
     assert_allclose(mol1.orb_alpha_occs, mol2.orb_alpha_occs)
     if hasattr(mol1, "orb_beta"):
         assert_allclose(mol1.orb_beta, mol2.orb_beta)
-        assert_allclose(mol1.orb_beta_coeffs, mol2.orb_beta_coeffs)
+        assert_allclose(mol1.orb_beta_coeffs[permutation] * signs.reshape(-1, 1),
+                        mol2.orb_beta_coeffs, atol=1e-8)
         assert_allclose(mol1.orb_beta_energies, mol2.orb_beta_energies)
         assert_allclose(mol1.orb_beta_occs, mol2.orb_beta_occs)
 
@@ -129,7 +143,11 @@ def compare_mols(mol1, mol2):
                'dm_full_cc', 'dm_spin_cc', 'dm_full_scf', 'dm_spin_scf':
         if hasattr(mol1, key):
             assert hasattr(mol2, key)
-            np.testing.assert_equal(getattr(mol1, key), getattr(mol2, key))
+            matrix1 = getattr(mol1, key)
+            matrix1 = matrix1[permutation] * signs.reshape(-1, 1)
+            matrix1 = matrix1[:, permutation] * signs
+            matrix2 = getattr(mol2, key)
+            np.testing.assert_equal(matrix1, matrix2)
         else:
             assert not hasattr(mol2, key)
 

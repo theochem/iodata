@@ -26,8 +26,9 @@ from typing import Dict, Tuple, List
 
 import numpy as np
 
-from .molden import _fix_molden_from_buggy_codes
-from ..utils import angstrom, str_to_shell_types, shells_to_nbasis, LineIterator
+from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
+from ..basis import angmom_sti, MolecularBasis, Shell
+from ..utils import angstrom, LineIterator
 
 
 __all__ = ['load']
@@ -54,56 +55,41 @@ def _load_helper_coordinates(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]
     return numbers, coordinates
 
 
-def _load_helper_obasis(lit: LineIterator, coordinates: np.ndarray) -> Tuple[Dict, int]:
-    shell_types = []
-    shell_map = []
-    nprims = []
-    alphas = []
-    con_coeffs = []
-
-    center_counter = 0
-    in_shell = False
-    nprim = None
-    for line in lit:
-        line = line.strip()
+def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
+    shells = []
+    icenter = 0
+    while True:
+        line = next(lit).strip()
         if line == '$END':
             break
         if line == "":
             continue
         if line == '$$':
-            center_counter += 1
-            in_shell = False
+            icenter += 1
+            continue
+        # Shell header, always assuming pure functions
+        words = line.split()
+        angmom = angmom_sti(words[1])
+        nbasis_shell = int(words[0])
+        if nbasis_shell == len(CONVENTIONS[(angmom, 'c')]):
+            kind = 'c'
+        elif nbasis_shell == len(CONVENTIONS[(angmom, 'p')]):
+            kind = 'p'
         else:
+            lit.error('Cannot interpret angmom={} with nbasis_shell={}'.format(
+                angmom, nbasis_shell))
+        exponents = []
+        coeffs = []
+        for line in lit:
             words = line.split()
-            if len(words) == 2:
-                assert in_shell
-                alpha = float(words[0])
-                alphas.append(alpha)
-                con_coeffs.append(float(words[1]))
-                nprim += 1
-            else:
-                if nprim is not None:
-                    nprims.append(nprim)
-                shell_map.append(center_counter)
-                # always assume pure basis functions
-                shell_type = str_to_shell_types(words[1], pure=True)[0]
-                shell_types.append(shell_type)
-                in_shell = True
-                nprim = 0
-    if nprim is not None:
-        nprims.append(nprim)
-
-    shell_map = np.array(shell_map)
-    nprims = np.array(nprims)
-    shell_types = np.array(shell_types)
-    alphas = np.array(alphas)
-    con_coeffs = np.array(con_coeffs)
-
-    obasis = {"centers": coordinates, "shell_map": shell_map, "nprims": nprims,
-              "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
-
-    nbasis = shells_to_nbasis(shell_types)
-    return obasis, nbasis
+            if len(words) != 2:
+                lit.back(line)
+                break
+            exponents.append(float(words[0]))
+            coeffs.append([float(words[1])])
+        shells.append(Shell(icenter, [angmom], [kind], np.array(exponents),
+                            np.array(coeffs)))
+    return MolecularBasis(np.zeros((icenter + 1, 3)), shells, CONVENTIONS, 'L2')
 
 
 def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> np.ndarray:
@@ -185,6 +171,8 @@ def load(lit: LineIterator) -> Dict:
     coeff_beta = None
     ener_beta = None
     occ_beta = None
+    # Using a loop because we're not entirely sure if sections in an MKL file
+    # have a fixed order.
     while True:
         try:
             line = next(lit).strip()
@@ -197,13 +185,14 @@ def load(lit: LineIterator) -> Dict:
         elif line == '$COORD':
             numbers, coordinates = _load_helper_coordinates(lit)
         elif line == '$BASIS':
-            obasis, nbasis = _load_helper_obasis(lit, coordinates)
+            obasis = _load_helper_obasis(lit)
+            obasis.centers[:] = coordinates
         elif line == '$COEFF_ALPHA':
-            coeff_alpha, ener_alpha = _load_helper_coeffs(lit, nbasis)
+            coeff_alpha, ener_alpha = _load_helper_coeffs(lit, obasis.nbasis)
         elif line == '$OCC_ALPHA':
             occ_alpha = _load_helper_occ(lit)
         elif line == '$COEFF_BETA':
-            coeff_beta, ener_beta = _load_helper_coeffs(lit, nbasis)
+            coeff_beta, ener_beta = _load_helper_coeffs(lit, obasis.nbasis)
         elif line == '$OCC_BETA':
             occ_beta = _load_helper_occ(lit)
 
@@ -222,7 +211,7 @@ def load(lit: LineIterator) -> Dict:
     if coeff_beta is None:
         assert nelec % 2 == 0
         assert abs(occ_alpha.sum() - nelec) < 1e-7
-        orb_alpha = (nbasis, coeff_alpha.shape[1])
+        orb_alpha = (obasis.nbasis, coeff_alpha.shape[1])
         orb_alpha_coeffs = coeff_alpha
         orb_alpha_energies = ener_alpha
         orb_alpha_occs = occ_alpha / 2
@@ -237,11 +226,11 @@ def load(lit: LineIterator) -> Dict:
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
-        orb_alpha = (nbasis, coeff_alpha.shape[1])
+        orb_alpha = (obasis.nbasis, coeff_alpha.shape[1])
         orb_alpha_coeffs = coeff_alpha
         orb_alpha_energies = ener_alpha
         orb_alpha_occs = occ_alpha
-        orb_beta = (nbasis, coeff_beta.shape[1])
+        orb_beta = (obasis.nbasis, coeff_beta.shape[1])
         orb_beta_coeffs = coeff_beta
         orb_beta_energies = ener_beta
         orb_beta_occs = occ_beta

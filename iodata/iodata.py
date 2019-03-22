@@ -293,12 +293,11 @@ class IOData:
         raise ValueError("Cannot determine the number of atoms.")
 
 
-# pylint: disable=too-many-branches
-def load_one(*filenames: str) -> IOData:
+def load_one(filename: str) -> IOData:
     """Load data from a file.
 
     This routine uses the extension or prefix of the filename to
-    determine the file format. It returns a dictionary with data loaded
+    determine the file format. It returns a IOData object with data loaded
     from the file.
 
     For each file format, a specialized function is called that returns a
@@ -306,12 +305,8 @@ def load_one(*filenames: str) -> IOData:
 
     Parameters
     ----------
-    filenames : str or sequence of str
-        The files to load data from. When multiple files are given, data
-        from the first file is overwritten by data from the second, etc.
-        When one file contains sign and permutation changes for the
-        orbital basis, these changes will be applied to data from all
-        other files.
+    filename : str
+        The file to load data from.
 
     Returns
     -------
@@ -319,61 +314,15 @@ def load_one(*filenames: str) -> IOData:
         The instance of IOData with data loaded from the input files.
 
     """
-    result = {}
-    for filename in filenames:
-        basename = os.path.basename(filename)
-        for format_module in format_modules:
-            if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
-                lit = LineIterator(filename)
-                try:
-                    result.update(format_module.load(lit))
-                except StopIteration:
-                    raise lit.error("File ended before all data was read.")
-                break
-        else:
-            raise ValueError('Unknown file format for reading: %s' % filename)
-
-    # Apply changes in atomic orbital basis order
-    permutation = result.get('permutation')
-    if permutation is not None:
-        for name in IOData.two_index_names:
-            value = result.get(name)
-            if value is not None:
-                value[:] = value[permutation][:, permutation]
-        er = result.get('er')
-        if er is not None:
-            er[:] = er[permutation][:, permutation][:, :, permutation][:, :, :, permutation]
-        orb_alpha_coeffs = result.get('orb_alpha_coeffs')
-        if orb_alpha_coeffs is not None:
-            orb_alpha_coeffs[:] = orb_alpha_coeffs[permutation]
-        orb_beta_coeffs = result.get('orb_beta_coeffs')
-        if orb_beta_coeffs is not None:
-            orb_beta_coeffs[:] = orb_beta_coeffs[permutation]
-        del result['permutation']
-
-    # Apply changes in atomic orbital basis sign conventions
-    signs = result.get('signs')
-    if signs is not None:
-        for name in IOData.two_index_names:
-            value = result.get(name)
-            if value is not None:
-                value *= signs
-                value *= signs.reshape(-1, 1)
-        er = result.get('er')
-        if er is not None:
-            er *= signs
-            er *= signs.reshape(-1, 1)
-            er *= signs.reshape(-1, 1, 1)
-            er *= signs.reshape(-1, 1, 1, 1)
-        orb_alpha_coeffs = result.get('orb_alpha_coeffs')
-        if orb_alpha_coeffs is not None:
-            orb_alpha_coeffs *= signs.reshape(-1, 1)
-        orb_beta_coeffs = result.get('orb_beta_coeffs')
-        if orb_beta_coeffs is not None:
-            orb_beta_coeffs *= signs.reshape(-1, 1)
-        del result['signs']
-
-    return IOData(**result)
+    basename = os.path.basename(filename)
+    for format_module in format_modules:
+        if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
+            lit = LineIterator(filename)
+            try:
+                return IOData(**format_module.load(lit))
+            except StopIteration:
+                raise lit.error("File ended before all data was read.")
+    raise ValueError('Unknown file format for reading: %s' % filename)
 
 
 def dump_one(iodata: IOData, filename: str):

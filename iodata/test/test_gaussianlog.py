@@ -31,9 +31,6 @@ except ImportError:
     from importlib.resources import path
 
 
-# TODO: shells_to_nbasis(obasis["shell_types"]) replacement test
-
-
 def load_log_helper(fn_log):
     """Load a testing Gaussian log file with iodata.formats.gaussianlog.load."""
     with path('iodata.test.data', fn_log) as fn:
