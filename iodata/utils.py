@@ -19,15 +19,14 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name
 """Utility functions module."""
 
 
+from typing import List, Dict, Tuple, NamedTuple
+
 import numpy as np
 import scipy.constants as spc
-
 from scipy.linalg import eigh
-from typing import List, Dict, Tuple, NamedTuple
 
 from .overlap import get_shell_nbasis
 
@@ -64,7 +63,7 @@ class LineIterator:
 
     def __next__(self):
         """Get the next line, will also increase the lineno attribute."""
-        if len(self.stack) > 0:
+        if self.stack:
             line = self.stack.pop()
         else:
             line = next(self._f)
@@ -174,12 +173,11 @@ def volume(rvecs: np.ndarray) -> float:
     nvecs = rvecs.shape[0]
     if len(rvecs.shape) == 1 or nvecs == 1:
         return np.linalg.norm(rvecs)
-    elif nvecs == 2:
+    if nvecs == 2:
         return np.linalg.norm(np.cross(rvecs[0], rvecs[1]))
-    elif nvecs == 3:
+    if nvecs == 3:
         return np.linalg.det(rvecs)
-    else:
-        raise ValueError("Argument rvecs should be of shape (x, 3), where x is in {1, 2, 3}")
+    raise ValueError("Argument rvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
 def derive_naturals(dm: np.ndarray, overlap: np.ndarray) \
@@ -242,7 +240,7 @@ def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: fl
 
     """
     # construct natural orbitals
-    coeffs, occupations, energies = derive_naturals(dm, overlap)
+    occupations = derive_naturals(dm, overlap)[1]
     if occupations.min() < -eps:
         raise ValueError('The density matrix has eigenvalues considerably smaller than '
                          'zero. error=%e' % (occupations.min()))

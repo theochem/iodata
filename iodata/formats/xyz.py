@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name
 """Module for handling XYZ file format."""
 
 
-import numpy as np
-
 from typing import Dict
+
+import numpy as np
 
 from ..utils import angstrom, LineIterator
 from ..periodic import sym2num, num2sym

@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name,too-many-branches,too-many-statements
 """Module for handling MOLEKEL file format."""
 
 
-import numpy as np
-
 from typing import Dict, Tuple, List
+
+import numpy as np
 
 from .molden import _fix_molden_from_buggy_codes
 from ..utils import angstrom, str_to_shell_types, shells_to_nbasis, LineIterator
@@ -69,7 +68,7 @@ def _load_helper_obasis(lit: LineIterator, coordinates: np.ndarray) -> Tuple[Dic
         line = line.strip()
         if line == '$END':
             break
-        if len(line) == 0:
+        if line == "":
             continue
         if line == '$$':
             center_counter += 1
@@ -158,6 +157,7 @@ def _load_helper_occ(lit: LineIterator) -> np.ndarray:
     return np.array(occs)
 
 
+# pylint: disable=too-many-branches,too-many-statements
 def load(lit: LineIterator) -> Dict:
     """Load data from a MOLEKEL file format.
 

@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name,too-many-statements,too-many-branches
 """Module for handling CP2K file format."""
 
 
-import numpy as np
+from typing import Dict, Union, List, Tuple
 
-from typing import TextIO, Dict, Union, List, Tuple
+import numpy as np
 from scipy.special import factorialk
 
 from ..utils import shells_to_nbasis, str_to_shell_types, LineIterator
@@ -206,14 +205,13 @@ def _read_cp2k_obasis(lit: LineIterator) -> Dict:
     """
     next(lit)  # Skip empty line
     line = next(lit)  # Check for contracted versus uncontracted
-    if line == ' ********************** Contracted Gaussian Type Orbitals ' \
-               '**********************\n':
+    if line == (' ********************** Contracted Gaussian Type Orbitals '
+                '**********************\n'):
         return _read_cp2k_contracted_obasis(lit)
-    elif line == ' ********************* Uncontracted Gaussian Type Orbitals ' \
-                 '*********************\n':
+    if line == (' ********************* Uncontracted Gaussian Type Orbitals '
+                '*********************\n'):
         return _read_cp2k_uncontracted_obasis(lit)
-    else:
-        lit.error('Could not find basis set in CP2K ATOM output.')
+    lit.error('Could not find basis set in CP2K ATOM output.')
 
 
 def _read_cp2k_occupations_energies(lit: LineIterator, restricted: bool) \
@@ -242,7 +240,7 @@ def _read_cp2k_occupations_energies(lit: LineIterator, restricted: bool) \
     while empty < 2:
         line = next(lit)
         words = line.split()
-        if len(words) == 0:
+        if not words:
             empty += 1
             continue
         empty = 0
@@ -285,7 +283,7 @@ def _read_cp2k_orbital_coeffs(lit: LineIterator, oe: List[Tuple[int, int, float,
         s = int(words[6])
         c = []
         for line in lit:
-            if len(line.strip()) == 0:
+            if line.strip() == "":
                 break
             c.append(float(line))
         coeffs[(l, s)] = np.array(c)
@@ -360,11 +358,12 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
             im = m + l
             orb_energies[iorb] = ener
             orb_occupations[iorb] = occ / float((restricted + 1) * (2 * l + 1))
-            for ic in range(len(cs)):
-                orb_coeffs[offsets[l] + stride * ic + im, iorb] = cs[ic]
+            for ic, c in enumerate(cs):
+                orb_coeffs[offsets[l] + stride * ic + im, iorb] = c
             iorb += 1
 
 
+# pylint: disable=too-many-branches,too-many-statements
 def load(lit: LineIterator) -> Dict:
     """Load data from a CP2K ATOM file format.
 

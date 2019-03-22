@@ -18,7 +18,6 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name,fixme
 """Test iodata.log module."""
 
 from numpy.testing import assert_equal, assert_allclose

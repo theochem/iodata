@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
 """Module for handling GAUSSIAN CUBE file format."""
 
 
-import numpy as np
-
 from typing import TextIO, Dict, Tuple, Union
+
+import numpy as np
 
 from ..utils import LineIterator
 
@@ -119,7 +118,7 @@ def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarr
     counter = 0
     words = []
     while counter < tmp.size:
-        if len(words) == 0:
+        if not words:
             words = next(lit).split()
         tmp[counter] = float(words.pop(0))
         counter += 1

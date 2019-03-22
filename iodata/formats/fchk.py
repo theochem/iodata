@@ -19,23 +19,23 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name,too-many-statements,too-many-branches
 """Module for handling GAUSSIAN FCHK file format."""
 
 
-import numpy as np
-
 from typing import Dict, List, Tuple
+
+import numpy as np
 
 from ..utils import LineIterator
 
 
-__all__ = ['FCHKFile', 'load']
+__all__ = ['load']
 
 
 patterns = ['*.fchk']
 
 
+# pylint: disable=too-many-branches,too-many-statements
 def load(lit: LineIterator) -> Dict:
     """Load data from a GAUSSIAN FCHK file format.
 
@@ -172,25 +172,9 @@ def load(lit: LineIterator) -> Dict:
     nbasis = fchk["Number of basis functions"]
 
     # C) Load density matrices
-    def load_dm(label):
-        if label in fchk:
-            dm = np.zeros((nbasis, nbasis))
-            start = 0
-            for i in range(nbasis):
-                stop = start + i + 1
-                dm[i, :i + 1] = fchk[label][start:stop]
-                dm[:i + 1, i] = fchk[label][start:stop]
-                start = stop
-            return dm
-
-    # First try to load the post-hf density matrices.
-    for key in 'MP2', 'MP3', 'CC', 'CI', 'SCF':
-        dm_full = load_dm('Total %s Density' % key)
-        if dm_full is not None:
-            result['dm_full_%s' % key.lower()] = dm_full
-        dm_spin = load_dm('Spin %s Density' % key)
-        if dm_spin is not None:
-            result['dm_spin_%s' % key.lower()] = dm_spin
+    for lot in 'MP2', 'MP3', 'CC', 'CI', 'SCF':
+        _load_dm('Total %s Density' % lot, fchk, result, 'dm_full_%s' % lot.lower())
+        _load_dm('Spin %s Density' % lot, fchk, result, 'dm_spin_%s' % lot.lower())
 
     # D) Load the wavefunction
     # Handle small difference in fchk files from g03 and g09
@@ -200,7 +184,7 @@ def load(lit: LineIterator) -> Dict:
     nalpha = fchk['Number of alpha electrons']
     nbeta = fchk['Number of beta electrons']
     if nalpha < 0 or nbeta < 0 or nalpha + nbeta <= 0:
-        raise ValueError('The file %s does not contain a positive number of electrons.' % filename)
+        lit.error('The number of electrons is not positive.')
     result['orb_alpha'] = (nbasis, nbasis_indep)
     result['orb_alpha_coeffs'] = np.copy(
         fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
@@ -269,7 +253,7 @@ def _load_fchk_low(lit: LineIterator, labels: List[str] = None) -> Dict:
     # labels are used.
     if labels is not None:
         labels = set(labels)
-    while labels is None or len(labels) > 0:
+    while labels is None or labels:
         try:
             label, value = _load_fchk_field(lit, labels)
         except StopIteration:
@@ -280,6 +264,7 @@ def _load_fchk_low(lit: LineIterator, labels: List[str] = None) -> Dict:
     return result
 
 
+# pylint: disable=too-many-branches
 def _load_fchk_field(lit: LineIterator, labels: List[str]) -> Tuple[str, object]:
     """Read a single field with one of the given labels."""
     while True:
@@ -287,7 +272,7 @@ def _load_fchk_field(lit: LineIterator, labels: List[str]) -> Tuple[str, object]
         line = next(lit)
         label = line[:43].strip()
         words = line[43:].split()
-        if len(words) == 0:
+        if not words:
             continue
         if words[0] == 'I':
             datatype = int
@@ -310,7 +295,7 @@ def _load_fchk_field(lit: LineIterator, labels: List[str]) -> Tuple[str, object]
             counter = 0
             words = []
             while counter < length:
-                if len(words) == 0:
+                if not words:
                     words = next(lit).split()
                 word = words.pop(0)
                 try:
@@ -319,6 +304,25 @@ def _load_fchk_field(lit: LineIterator, labels: List[str]) -> Tuple[str, object]
                     lit.error('Could not interpret: {}'.format(word))
                 counter += 1
             return label, value
+
+
+def _load_dm(label: str, fchk: dict, result: dict, key: str):
+    """Load a density matrix from the FCHK file if present.
+
+    Parameters
+    ----------
+    label
+        The label in the FCHK file.
+    fchk
+        The dictionary with labels from the FCHK file.
+    result
+        The output dictionary.
+    key:
+        The key to be used in the output dictionary.
+
+    """
+    if label in fchk:
+        result[key] = _triangle_to_dense(fchk[label])
 
 
 def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:

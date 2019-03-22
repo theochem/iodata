@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name
 """Module for handling GUASSIAN/GAMESS-US WNF file format."""
 
 
-import numpy as np
+from typing import Tuple, List, Dict
 
-from typing import Tuple, List, TextIO, Dict
+import numpy as np
 
 from ..overlap import init_scales
 from ..periodic import sym2num

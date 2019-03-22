@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name,no-member
+# pylint: disable=no-member
 """Test iodata.xyz module."""
 
 import os
@@ -50,6 +50,7 @@ def test_load_water_element():
 
 
 def check_water(mol):
+    """Test some things on a water file."""
     assert mol.title == 'Water'
     assert_equal(mol.numbers, [1, 8, 1])
     # check bond length

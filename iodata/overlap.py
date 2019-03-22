@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name,wrong-import-order
 """Module for computing overlap of atomic orbital basis functions."""
 
 
-import numpy as np
-
 from typing import List, Tuple
+
+import numpy as np
 from scipy.special import factorialk
 
 from .overlap_accel import add_overlap
@@ -176,11 +175,11 @@ def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray)
     scales = np.zeros(nscales)
     scales_offsets = np.zeros(sum(nprims), dtype=int)
 
-    for s in range(len(shell_types)):
+    for s, shell_type in enumerate(shell_types):
         for p in range(nprims[s]):
             scales_offsets[oprim + p] = counter
             alpha = alphas[oprim + p]
-            for n in _get_iter_pow(abs(shell_types[s])):
+            for n in _get_iter_pow(abs(shell_type)):
                 scales[counter] = gob_cart_normalization(alpha, n)
                 counter += 1
         oprim += nprims[s]
@@ -226,10 +225,10 @@ def get_shell_nbasis(shell: int) -> int:
     """
     if shell > 0:  # Cartesian
         return int((shell + 1) * (shell + 2) / 2)
-    elif shell == -1:
+    if shell == -1:
         raise ValueError("Argument shell={0} is not recognized.".format(shell))
-    else:  # Pure
-        return -2 * shell + 1
+    # Pure
+    return -2 * shell + 1
 
 
 def _get_iter_pow(n: int) -> np.ndarray:

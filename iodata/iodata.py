@@ -19,17 +19,16 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name,redefined-outer-name,too-many-branches
 """Module for handling input/output from different file formats."""
 
 
 import os
-import numpy as np
-
 from typing import List, Tuple, Type
 from fnmatch import fnmatch
 from pkgutil import iter_modules
 from importlib import import_module
+
+import numpy as np
 
 from .utils import LineIterator
 
@@ -37,15 +36,23 @@ from .utils import LineIterator
 __all__ = ['IOData']
 
 
-format_modules = []
-for module_info in iter_modules(import_module('iodata.formats').__path__):
-    if not module_info.ispkg:
-        format_module = import_module('iodata.formats.' + module_info.name)
-        if hasattr(format_module, 'patterns'):
-            format_modules.append(format_module)
+def find_format_modules():
+    """Return all file-format modules found with importlib."""
+    result = []
+    for module_info in iter_modules(import_module('iodata.formats').__path__):
+        if not module_info.ispkg:
+            format_module = import_module('iodata.formats.' + module_info.name)
+            if hasattr(format_module, 'patterns'):
+                result.append(format_module)
+    return result
+
+
+format_modules = find_format_modules()
 
 
 class ArrayTypeCheckDescriptor:
+    """A type checker for IOData attributes."""
+
     def __init__(self, name: str, ndim: int = None, shape: Tuple = None, dtype: Type = None,
                  matching: List[str] = None, default: str = None, doc=None):
         """Initialize decorator to perform type and shape checking of np.ndarray attributes.
@@ -85,12 +92,16 @@ class ArrayTypeCheckDescriptor:
         self._default = default
         self.__doc__ = doc or 'A type-checked attribute'
 
-    def __get__(self, obj, type=None):
-        if obj is None:
+    def __get__(self, instance, owner):
+        if instance is None:
             return self
-        if self._default is not None and not hasattr(obj, '_' + self._name):
-            setattr(obj, '_' + self._name, (getattr(obj, '_' + self._default).astype(self._dtype)))
-        return getattr(obj, '_' + self._name)
+        if self._default is not None and not hasattr(instance, '_' + self._name):
+            # When the attribute is not present, we assign it first with the
+            # default value. The return statement can then remain completely
+            # general.
+            default = (getattr(instance, '_' + self._default).astype(self._dtype))
+            setattr(instance, '_' + self._name, default)
+        return getattr(instance, '_' + self._name)
 
     def __set__(self, obj, value):
         # try casting to proper dtype:
@@ -109,7 +120,7 @@ class ArrayTypeCheckDescriptor:
         if self._dtype is not None:
             if not issubclass(value.dtype.type, self._dtype.type):
                 raise TypeError(f"Attribute '{self._name}' of '{type(obj)}' must be a numpy "
-                                f"array with dtype '{self.dtype.type}'.")
+                                f"array with dtype '{self._dtype.type}'.")
         if self._matching is not None:
             for othername in self._matching:
                 other = getattr(obj, '_' + othername, None)
@@ -275,12 +286,14 @@ class IOData:
         """Return the number of atoms."""
         if hasattr(self, 'numbers'):
             return len(self.numbers)
-        elif hasattr(self, 'coordinates'):
+        if hasattr(self, 'coordinates'):
             return len(self.coordinates)
-        elif hasattr(self, 'pseudo_numbers'):
+        if hasattr(self, 'pseudo_numbers'):
             return len(self.pseudo_numbers)
+        raise ValueError("Cannot determine the number of atoms.")
 
 
+# pylint: disable=too-many-branches
 def load_one(*filenames: str) -> IOData:
     """Load data from a file.
 
