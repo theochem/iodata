@@ -57,8 +57,7 @@ cache:
 
 install:
   # Disable deployment when TRAVIS_TAG is not set. This avoids duplicate deployments.
-  - >-
-    if [[ -z $TRAVIS_TAG ]]; then
+  - if [[ -z $TRAVIS_TAG ]]; then
       export ROBERTO_DEPLOY_BINARY=0 ROBERTO_DEPLOY_NOARCH=0;
     fi
   # Get a basic python 3 with pip to run roberto
@@ -69,8 +68,7 @@ install:
 
 script:
   # Instead of simply calling `rob`, we do something that always works on osx too.
-  - >-
-    if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+  - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       python3 -m roberto robot;
     else
       python3 -m roberto;
