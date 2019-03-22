@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name,no-member
+# pylint: disable=no-member
 """Test iodata.molekel module."""
 
 from numpy.testing import assert_equal, assert_allclose

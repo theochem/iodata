@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
 """Module for handling MOLPRO file formal."""
 
 
-import numpy as np
-
 from typing import Dict
+
+import numpy as np
 
 from ..utils import set_four_index_element, LineIterator
 
@@ -152,7 +151,7 @@ def dump(filename: str, data: 'IOData'):
         print(' &END', file=f)
 
         # Write integrals and core energy
-        for i in range(nactive):
+        for i in range(nactive):  # pylint: disable=too-many-nested-blocks
             for j in range(i + 1):
                 for k in range(nactive):
                     for l in range(k + 1):

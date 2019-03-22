@@ -20,6 +20,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+"""Installation script for IOData.
+
+Directly calling this script is only needed by IOData developers in special
+circumstances. End users are recommended to install IOData with pip or conda.
+Developers are recommended to use Roberto.
+"""
 
 
 import os

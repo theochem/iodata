@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
 """Module for handling GAUSSIAN CUBE file format."""
 
 
-import numpy as np
-
 from typing import TextIO, Dict, Tuple, Union
+
+import numpy as np
 
 from ..utils import LineIterator
 
@@ -48,7 +47,8 @@ def _read_cube_header(lit: LineIterator) \
     Returns
     -------
     out : tuple
-        The output tuple contains title, coordinates, numbers, cell, ugrid & pseudo_numbers.
+        The output tuple contains title, coordinates, numbers, cell, ugrid &
+        pseudo_numbers.
 
     """
     # Read the title
@@ -57,7 +57,7 @@ def _read_cube_header(lit: LineIterator) \
     next(lit)
 
     def read_grid_line(line: str) -> Tuple[int, np.ndarray]:
-        """Read a grid line from the cube file"""
+        """Read a grid line from the cube file."""
         words = line.split()
         return (
             int(words[0]),
@@ -78,7 +78,7 @@ def _read_cube_header(lit: LineIterator) \
     ugrid = {"origin": origin, 'grid_rvecs': axes, 'shape': shape, 'pbc': np.ones(3, int)}
 
     def read_coordinate_line(line: str) -> Tuple[int, float, np.ndarray]:
-        """Read an atom number and coordinate from the cube file"""
+        """Read an atom number and coordinate from the cube file."""
         words = line.split()
         return (
             int(words[0]), float(words[1]),
@@ -118,7 +118,7 @@ def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarr
     counter = 0
     words = []
     while counter < tmp.size:
-        if len(words) == 0:
+        if not words:
             words = next(lit).split()
         tmp[counter] = float(words.pop(0))
         counter += 1

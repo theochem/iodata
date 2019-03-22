@@ -19,8 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
-
+"""Utilities for unit tests."""
 
 from os import path
 from contextlib import contextmanager
@@ -101,8 +100,8 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
 
 
 def compare_mols(mol1, mol2):
-    """Compare two IOData objects"""
-    assert (getattr(mol1, 'title') == getattr(mol2, 'title'))
+    """Compare two IOData objects."""
+    assert getattr(mol1, 'title') == getattr(mol2, 'title')
     assert_equal(mol1.numbers, mol2.numbers)
     assert_allclose(mol1.coordinates, mol2.coordinates)
     # orbital basis

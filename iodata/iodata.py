@@ -19,17 +19,16 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name,redefined-outer-name,too-many-branches
 """Module for handling input/output from different file formats."""
 
 
 import os
-import numpy as np
-
 from typing import List, Tuple, Type
 from fnmatch import fnmatch
 from pkgutil import iter_modules
 from importlib import import_module
+
+import numpy as np
 
 from .utils import LineIterator
 
@@ -37,15 +36,23 @@ from .utils import LineIterator
 __all__ = ['IOData']
 
 
-format_modules = []
-for module_info in iter_modules(import_module('iodata.formats').__path__):
-    if not module_info.ispkg:
-        format_module = import_module('iodata.formats.' + module_info.name)
-        if hasattr(format_module, 'patterns'):
-            format_modules.append(format_module)
+def find_format_modules():
+    """Return all file-format modules found with importlib."""
+    result = []
+    for module_info in iter_modules(import_module('iodata.formats').__path__):
+        if not module_info.ispkg:
+            format_module = import_module('iodata.formats.' + module_info.name)
+            if hasattr(format_module, 'patterns'):
+                result.append(format_module)
+    return result
+
+
+format_modules = find_format_modules()
 
 
 class ArrayTypeCheckDescriptor:
+    """A type checker for IOData attributes."""
+
     def __init__(self, name: str, ndim: int = None, shape: Tuple = None, dtype: Type = None,
                  matching: List[str] = None, default: str = None, doc=None):
         """Initialize decorator to perform type and shape checking of np.ndarray attributes.
@@ -85,12 +92,16 @@ class ArrayTypeCheckDescriptor:
         self._default = default
         self.__doc__ = doc or 'A type-checked attribute'
 
-    def __get__(self, obj, type=None):
-        if obj is None:
+    def __get__(self, instance, owner):
+        if instance is None:
             return self
-        if self._default is not None and not hasattr(obj, '_' + self._name):
-            setattr(obj, '_' + self._name, (getattr(obj, '_' + self._default).astype(self._dtype)))
-        return getattr(obj, '_' + self._name)
+        if self._default is not None and not hasattr(instance, '_' + self._name):
+            # When the attribute is not present, we assign it first with the
+            # default value. The return statement can then remain completely
+            # general.
+            default = (getattr(instance, '_' + self._default).astype(self._dtype))
+            setattr(instance, '_' + self._name, default)
+        return getattr(instance, '_' + self._name)
 
     def __set__(self, obj, value):
         # try casting to proper dtype:
@@ -109,7 +120,7 @@ class ArrayTypeCheckDescriptor:
         if self._dtype is not None:
             if not issubclass(value.dtype.type, self._dtype.type):
                 raise TypeError(f"Attribute '{self._name}' of '{type(obj)}' must be a numpy "
-                                f"array with dtype '{self.dtype.type}'.")
+                                f"array with dtype '{self._dtype.type}'.")
         if self._matching is not None:
             for othername in self._matching:
                 other = getattr(obj, '_' + othername, None)
@@ -129,107 +140,112 @@ class ArrayTypeCheckDescriptor:
 class IOData:
     """A container class for data loaded from (or to be written to) a file.
 
-       In principle, the constructor accepts any keyword argument, which is
-       stored as an attribute. All attributes are optional. Attributes can be
-       set are removed after the IOData instance is constructed. The following
-       attributes are supported by at least one of the io formats:
+    In principle, the constructor accepts any keyword argument, which is
+    stored as an attribute. All attributes are optional. Attributes can be
+    set are removed after the IOData instance is constructed. The following
+    attributes are supported by at least one of the io formats:
 
-       **Type checked array attributes (if present):**
+    Type checked array attributes (if present)
+    ------------------------------------------
 
-       cube_data
-            A (L, M, N) array of data on a uniform grid (defined by ugrid).
+    cube_data
+         A (L, M, N) array of data on a uniform grid (defined by ugrid).
 
-       coordinates
-            A (N, 3) float array with Cartesian coordinates of the atoms.
+    coordinates
+         A (N, 3) float array with Cartesian coordinates of the atoms.
 
-       numbers
-            A (N,) int vector with the atomic numbers.
+    numbers
+         A (N,) int vector with the atomic numbers.
 
-       polar
-            A (3, 3) matrix containing the dipole polarizability tensor.
+    polar
+         A (3, 3) matrix containing the dipole polarizability tensor.
 
-       pseudo_numbers
-            A (N,) float array with pseudo-potential core charges.
+    pseudo_numbers
+         A (N,) float array with pseudo-potential core charges.
 
-       **Unspecified type (duck typing):**
+    **Unspecified type (duck typing):**
 
-       cell
-            A Cell object that describes the (generally triclinic) periodic
-            boundary conditions.
+    cell
+         A Cell object that describes the (generally triclinic) periodic
+         boundary conditions.
 
-       core_energy
-            The Hartree-Fock energy due to the core orbitals
+    core_energy
+         The Hartree-Fock energy due to the core orbitals
 
-       energy
-            The total energy (electronic+nn)
+    energy
+         The total energy (electronic+nn)
 
-       er
-            The electron repulsion four-index operator
+    er
+         The electron repulsion four-index operator
 
-       orb_alpha
-            The alpha orbitals (coefficients, occupations and energies).
+    orb_alpha
+         The alpha orbitals (coefficients, occupations and energies).
 
-       orb_beta
-            The beta orbitals (coefficients, occupations and energies).
+    orb_beta
+         The beta orbitals (coefficients, occupations and energies).
 
-       esp_charges
-            Charges fitted to the electrostatic potential
+    esp_charges
+         Charges fitted to the electrostatic potential
 
-       dm_full (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
-            The spin-summed first-order density matrix.
+    dm_full (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
+         The spin-summed first-order density matrix.
 
-       dm_spin (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
-            The spin-difference first-order density matrix.
+    dm_spin (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
+         The spin-difference first-order density matrix.
 
-       grid
-            An integration grid (usually a UniformGrid instance).
+    grid
+         An integration grid (usually a UniformGrid instance).
 
-       kin
-            The kinetic energy operator.
+    kin
+         The kinetic energy operator.
 
-       links
-            A mapping between the atoms in the primitive unit and the
-            crystallographic unit.
+    links
+         A mapping between the atoms in the primitive unit and the
+         crystallographic unit.
 
-       ms2
-            The spin multiplicity.
+    ms2
+         The spin multiplicity.
 
-       mulliken_charges
-            Mulliken AIM charges.
+    mulliken_charges
+         Mulliken AIM charges.
 
-       na
-            The nuclear attraction operator.
+    na
+         The nuclear attraction operator.
 
-       nelec
-            The number of electrons.
+    nelec
+         The number of electrons.
 
-       npa_charges
-            Natural charges.
+    npa_charges
+         Natural charges.
 
-       obasis
-            An OrderedDict containing parameters to instantiate a GOBasis class.
+    obasis
+         An OrderedDict containing parameters to instantiate a GOBasis class.
 
-       olp
-            The overlap operator.
+    olp
+         The overlap operator.
 
-       one_mo
-            One-electron integrals in the (Hartree-Fock) molecular-orbital basis
+    one_mo
+         One-electron integrals in the (Hartree-Fock) molecular-orbital basis
 
-       permutation
-            The permutation applied to the basis functions.
+    permutation
+         The permutation applied to the basis functions.
 
-       signs
-            The sign changes applied to the basis functions.
+    signs
+         The sign changes applied to the basis functions.
 
-       title
-            A suitable name for the data.
+    title
+         A suitable name for the data.
 
-       two_mo
-            Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
+    two_mo
+         Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
 
     """
 
     def __init__(self, **kwargs):
+        """Initialize an IOData instance.
+
+        All keyword arguments will be turned into corresponding attributes.
+        """
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -267,15 +283,17 @@ class IOData:
 
     @property
     def natom(self) -> int:
-        """The number of atoms"""
+        """Return the number of atoms."""
         if hasattr(self, 'numbers'):
             return len(self.numbers)
-        elif hasattr(self, 'coordinates'):
+        if hasattr(self, 'coordinates'):
             return len(self.coordinates)
-        elif hasattr(self, 'pseudo_numbers'):
+        if hasattr(self, 'pseudo_numbers'):
             return len(self.pseudo_numbers)
+        raise ValueError("Cannot determine the number of atoms.")
 
 
+# pylint: disable=too-many-branches
 def load_one(*filenames: str) -> IOData:
     """Load data from a file.
 

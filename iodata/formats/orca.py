@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name
 """Module for handling ORCA OUT file format."""
 
 
-import numpy as np
-
 from typing import Dict, TextIO
+
+import numpy as np
 
 from ..utils import LineIterator
 

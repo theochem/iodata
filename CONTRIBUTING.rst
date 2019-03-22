@@ -9,6 +9,10 @@ General recommendations
   using them, use a maximum line length of 100. To avoid confusion, only clean
   up the code you are working on.
 
+- Do not add module-level ``pylint: disable=...`` lines, except for the
+  ``no-member`` warning in the unit test modules. When adding pylint exception,
+  place them as locally as possible and make sure they are justified.
+
 
 Adding new file formats
 =======================

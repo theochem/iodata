@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name, no-member
+# pylint: disable=no-member
 """Test iodata.cp2k module."""
 
 import pytest
@@ -41,7 +41,7 @@ except ImportError:
 
 
 def check_orthonormality(mol):
-    """Helper function to test if the orbitals are orthonormal."""
+    """Test whether the orbitals are orthonormal."""
     olp = compute_overlap(**mol.obasis)
     check_orthonormal(mol.orb_alpha_coeffs, olp)
     if hasattr(mol, 'orb_beta'):

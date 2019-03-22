@@ -19,14 +19,13 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from ..overlap import compute_overlap
-from iodata.overlap_accel import fac2, _binom
+from ..overlap_accel import fac2, _binom
 
 try:
     from importlib_resources import path

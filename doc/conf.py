@@ -16,6 +16,11 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+# --
+# pylint: disable=unused-argument,redefined-builtin
+"""Sphinxdoc configuration file."""
+
+
 import os
 import subprocess
 
@@ -81,14 +86,16 @@ extensions = ['sphinx.ext.autodoc',
 add_module_names = False
 
 
-def skip(app, what, name, obj, skip, options):
+def autodoc_skip_member(app, what, name, obj, skip, options):
+    """Decide which parts to skip when building the API doc."""
     if name == "__init__":
         return False
     return skip
 
 
 def setup(app):
-    app.connect("autodoc-skip-member", skip)
+    """Set up sphinx."""
+    app.connect("autodoc-skip-member", autodoc_skip_member)
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -105,7 +112,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'IOData'
-copyright = u'2018, The HORTON Developers'
+copyright = u'2019, The HORTON Developers'
 author = u'The HORTON Developers'
 
 # The version info for the project you're documenting, acts as replacement for

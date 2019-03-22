@@ -19,16 +19,13 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name
 """Module for handling AIM/AIMAll WFX file format."""
 
+from typing import Tuple, List, TextIO, Dict
 import re
-
-# import warnings
 
 import numpy as np
 
-from typing import Tuple, List, TextIO, Dict
 
 __all__ = ['load_wfx_low']
 
@@ -140,7 +137,7 @@ def _helper_str(f_content: TextIO) -> Dict:
     for key, val in str_label.items():
         str_info = _helper_section(f_content=f_content, start=val[0],
                                    end=val[1])
-        if len(str_info) != 0:
+        if str_info:
             dict_str[key] = str_info[0]
         else:
             dict_str[key] = None
@@ -173,7 +170,7 @@ def _helper_int(f_content: TextIO) -> Dict:
         int_info = _helper_section(f_content=f_content,
                                    start=val[0],
                                    end=val[1])
-        if len(int_info) != 0:
+        if int_info:
             dict_int[key] = np.array(int_info[0], dtype=np.int)
         else:
             dict_int[key] = np.array(None)

@@ -19,7 +19,6 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name
 """Module for handling VASP CHGCAR file format."""
 
 
@@ -63,7 +62,7 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
     # read cell parameters in angstrom, without the universal scaling factor.
     # each row is one cell vector
     rvecs = []
-    for i in range(3):
+    for _i in range(3):
         rvecs.append([float(w) for w in next(lit).split()])
     rvecs = np.array(rvecs) * angstrom * scaling
 
@@ -125,7 +124,7 @@ def _load_vasp_grid(lit: LineIterator) -> Dict:
     for i2 in range(shape[2]):
         for i1 in range(shape[1]):
             for i0 in range(shape[0]):
-                if len(words) == 0:
+                if not words:
                     words = next(lit).split()
                 cube_data[i0, i1, i2] = float(words.pop(0))
 

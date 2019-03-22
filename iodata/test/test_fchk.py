@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=invalid-name,no-member,fixme
+# pylint: disable=no-member
 """Test iodata.fchk module."""
 
 import numpy as np
@@ -230,11 +230,12 @@ def test_load_fchk_ch3_rohf_g03():
     orb_beta = fields['orb_beta']
     assert_equal(orb_beta_occs.sum(), 4)
     assert_allclose(orb_alpha_coeffs, orb_beta_coeffs)
-    assert not (orb_alpha is orb_beta)
+    assert orb_alpha is not orb_beta
     assert 'dm_full_scf' not in fields
 
 
 def check_load_azirine(key, numbers):
+    """Perform some basic checks on a azirine fchk file."""
     fields = load_fchk_helper_internal('2h-azirine-{}.fchk'.format(key))
     obasis = fields['obasis']
     assert_equal(shells_to_nbasis(obasis["shell_types"]), 33)
@@ -260,6 +261,7 @@ def test_load_azirine_mp3():
 
 
 def check_load_nitrogen(key, numbers_full, numbers_spin):
+    """Perform some basic checks on a nitrogen fchk file."""
     fields = load_fchk_helper_internal('nitrogen-{}.fchk'.format(key))
     obasis = fields['obasis']
     assert_equal(shells_to_nbasis(obasis["shell_types"]), 9)
@@ -292,6 +294,7 @@ def test_load_nitrogen_mp3():
 
 
 def check_normalization_dm_full_azirine(key):
+    """Perform some basic checks on a 2h-azirine fchk file."""
     mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
     olp = compute_overlap(**mol.obasis)
     dm = getattr(mol, 'dm_full_%s' % key)

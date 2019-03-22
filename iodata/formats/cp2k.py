@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name,too-many-statements,too-many-branches
 """Module for handling CP2K file format."""
 
 
-import numpy as np
+from typing import Dict, Union, List, Tuple
 
-from typing import TextIO, Dict, Union, List, Tuple
+import numpy as np
 from scipy.special import factorialk
 
 from ..utils import shells_to_nbasis, str_to_shell_types, LineIterator
@@ -37,8 +36,8 @@ __all__ = ['load']
 patterns = ['*.cp2k.out']
 
 
-def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) -> Union[
-    float, np.ndarray]:
+def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) \
+        -> Union[float, np.ndarray]:
     """Compute the corrections for the normalization of the basis functions.
 
     This correction is needed because the CP2K atom code works with non-normalized basis
@@ -58,6 +57,7 @@ def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) -> Unio
         The scale factor for the expansion coefficients of the wavefunction in
         terms of primitive Gaussians. The inverse of this correction can be
         applied to the contraction coefficients.
+
     """
     expzet = 0.25 * (2 * l + 3)
     prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (l + 2) * factorialk(2 * l + 1, 2))
@@ -76,8 +76,9 @@ def _read_cp2k_contracted_obasis(lit: LineIterator) -> Dict:
     Returns
     -------
     obasis
-        The orbital basis parameters read from the file. Can be used to initialize a GOBasis
-        object.
+        The orbital basis parameters read from the file. Can be used to
+        initialize a GOBasis object.
+
     """
     # Load the relevant data from the file
     basis_desc = []
@@ -139,8 +140,9 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> Dict:
     Returns
     -------
     obasis
-        The orbital basis parameters read from the file. Can be used to initialize a GOBasis
-        object.
+        The orbital basis parameters read from the file. Can be used to
+        initialize a GOBasis object.
+
     """
     # Load the relevant data from the file
     basis_desc = []
@@ -197,23 +199,23 @@ def _read_cp2k_obasis(lit: LineIterator) -> Dict:
     Returns
     -------
     out : dict
-        The atomic orbital basis data which can be used to initialize a ``GOBasis`` class.
+        The atomic orbital basis data which can be used to initialize a
+        ``GOBasis`` class.
 
     """
     next(lit)  # Skip empty line
     line = next(lit)  # Check for contracted versus uncontracted
-    if line == ' ********************** Contracted Gaussian Type Orbitals ' \
-               '**********************\n':
+    if line == (' ********************** Contracted Gaussian Type Orbitals '
+                '**********************\n'):
         return _read_cp2k_contracted_obasis(lit)
-    elif line == ' ********************* Uncontracted Gaussian Type Orbitals ' \
-                 '*********************\n':
+    if line == (' ********************* Uncontracted Gaussian Type Orbitals '
+                '*********************\n'):
         return _read_cp2k_uncontracted_obasis(lit)
-    else:
-        lit.error('Could not find basis set in CP2K ATOM output.')
+    lit.error('Could not find basis set in CP2K ATOM output.')
 
 
-def _read_cp2k_occupations_energies(lit: LineIterator,
-                                    restricted: bool) -> List[Tuple[int, int, float, float]]:
+def _read_cp2k_occupations_energies(lit: LineIterator, restricted: bool) \
+        -> List[Tuple[int, int, float, float]]:
     """Read orbital occupation numbers and energies from a CP2K ATOM file object.
 
     Parameters
@@ -221,8 +223,8 @@ def _read_cp2k_occupations_energies(lit: LineIterator,
     lit
         LineIterator
     restricted
-        If ``True`` the wave-function is considered to be restricted. If ``False`` the unrestricted
-        wave-function is assumed.
+        If ``True`` the wave-function is considered to be restricted. If
+        ``False`` the unrestricted wave-function is assumed.
 
     Returns
     -------
@@ -238,7 +240,7 @@ def _read_cp2k_occupations_energies(lit: LineIterator,
     while empty < 2:
         line = next(lit)
         words = line.split()
-        if len(words) == 0:
+        if not words:
             empty += 1
             continue
         empty = 0
@@ -253,8 +255,8 @@ def _read_cp2k_occupations_energies(lit: LineIterator,
     return oe_alpha, oe_beta
 
 
-def _read_cp2k_orbital_coeffs(lit: LineIterator, oe: List[Tuple[int, int, float, float]]) -> Dict[
-    Tuple[int, int], np.ndarray]:
+def _read_cp2k_orbital_coeffs(lit: LineIterator, oe: List[Tuple[int, int, float, float]]) \
+        -> Dict[Tuple[int, int], np.ndarray]:
     """Read the expansion coefficients of the orbital from an open CP2K ATOM output.
 
     Parameters
@@ -269,6 +271,7 @@ def _read_cp2k_orbital_coeffs(lit: LineIterator, oe: List[Tuple[int, int, float,
     -------
     result
         Key is an (l, s) pair and value is an array with orbital coefficients.
+
     """
     coeffs = {}
     next(lit)
@@ -280,7 +283,7 @@ def _read_cp2k_orbital_coeffs(lit: LineIterator, oe: List[Tuple[int, int, float,
         s = int(words[6])
         c = []
         for line in lit:
-            if len(line.strip()) == 0:
+            if line.strip() == "":
                 break
             c.append(float(line))
         coeffs[(l, s)] = np.array(c)
@@ -300,6 +303,7 @@ def _get_norb_nel(oe: List[Tuple[int, int, float, float]]) -> Tuple[int, float]:
     -------
     Tuple
         Number of orbitals and electrons
+
     """
     norb = 0
     nel = 0
@@ -313,8 +317,9 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
                    oe: List[Tuple[int, int, float, float]],
                    coeffs: Dict[Tuple[int, int], np.ndarray], shell_types: np.ndarray,
                    restricted: bool):
-    """Fill in orbital coefficients, energies and occupation numbers in ``orb_coeffs``,
-    ``orb_energies``, and ``orb_occupations``.
+    """Fill in orbital coefficients, energies and occupation numbers.
+
+    The data is entered int ``orb_coeffs``, ``orb_energies``, and ``orb_occupations``.
 
     Parameters
     ----------
@@ -333,6 +338,7 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
         The array with shell types of the GOBasis instance.
     restricted
         Is wavefunction restricted or unrestricted?
+
     """
     # Find the offsets for each angular momentum
     offset = 0
@@ -352,11 +358,12 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
             im = m + l
             orb_energies[iorb] = ener
             orb_occupations[iorb] = occ / float((restricted + 1) * (2 * l + 1))
-            for ic in range(len(cs)):
-                orb_coeffs[offsets[l] + stride * ic + im, iorb] = cs[ic]
+            for ic, c in enumerate(cs):
+                orb_coeffs[offsets[l] + stride * ic + im, iorb] = c
             iorb += 1
 
 
+# pylint: disable=too-many-branches,too-many-statements
 def load(lit: LineIterator) -> Dict:
     """Load data from a CP2K ATOM file format.
 
@@ -368,14 +375,14 @@ def load(lit: LineIterator) -> Dict:
     Returns
     -------
     out : dict
-        Output dictionary containing ``obasis``, ``orb_alpha``, ``coordinates``, ``numbers``,
-        ``energy`` & ``pseudo_numbers`` keys and corresponding values. It may contain ``orb_beta``
-        key and its value as well.
+        Output dictionary containing ``obasis``, ``orb_alpha``, ``coordinates``,
+        ``numbers``, ``energy`` & ``pseudo_numbers`` keys and corresponding
+        values. It may contain ``orb_beta`` key and its value as well.
 
     Notes
     -----
-    This function assumes that the following subsections are present in the CP2K ATOM input file,
-    in the section ``ATOM%PRINT``:
+    This function assumes that the following subsections are present in the CP2K
+    ATOM input file, in the section ``ATOM%PRINT``:
 
     .. code-block:: text
 

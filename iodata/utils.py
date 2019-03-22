@@ -19,15 +19,14 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name
 """Utility functions module."""
 
 
+from typing import List, Dict, Tuple, NamedTuple
+
 import numpy as np
 import scipy.constants as spc
-
 from scipy.linalg import eigh
-from typing import List, Dict, Tuple, NamedTuple
 
 from .overlap import get_shell_nbasis
 
@@ -64,7 +63,7 @@ class LineIterator:
 
     def __next__(self):
         """Get the next line, will also increase the lineno attribute."""
-        if len(self.stack) > 0:
+        if self.stack:
             line = self.stack.pop()
         else:
             line = next(self._f)
@@ -116,7 +115,7 @@ class MolecularOrbitals(NamedTuple):
 
 
 def str_to_shell_types(s: str, pure: bool = False) -> List[int]:
-    """Convert a string into a list of contraction types"""
+    """Convert a string into a list of contraction types."""
     if pure:
         d = {'s': 0, 'p': 1, 'd': -2, 'f': -3, 'g': -4, 'h': -5, 'i': -6}
     else:
@@ -125,7 +124,7 @@ def str_to_shell_types(s: str, pure: bool = False) -> List[int]:
 
 
 def shell_type_to_str(shell_type: np.ndarray) -> Dict:
-    """Convert a shell type into a character"""
+    """Convert a shell type into a character."""
     return {0: 's', 1: 'p', 2: 'd', 3: 'f', 4: 'g', 5: 'h', 6: 'i'}[abs(shell_type)]
 
 
@@ -133,7 +132,7 @@ def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int
                            value: float):
     """Assign values to a four index object, account for 8-fold index symmetry.
 
-    This function assumes physicists' notation
+    This function assumes physicists' notation.
 
     Parameters
     ----------
@@ -144,6 +143,7 @@ def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int
         The indices to assign to.
     value
         The value of the matrix element to store.
+
     """
     four_index_object[i, j, k, l] = value
     four_index_object[j, i, l, k] = value
@@ -156,31 +156,32 @@ def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int
 
 
 def shells_to_nbasis(shell_types: np.ndarray) -> int:
+    """Compute the number of basis functions for a given list of shell_types."""
     nbasis_shell = [get_shell_nbasis(i) for i in shell_types]
     return sum(nbasis_shell)
 
 
 def volume(rvecs: np.ndarray) -> float:
-    """Calculates cell volume
+    """Calculate the cell volume.
 
     Parameters
     ----------
     rvecs
         a numpy matrix of shape (x,3) where x is in {1,2,3}
+
     """
     nvecs = rvecs.shape[0]
     if len(rvecs.shape) == 1 or nvecs == 1:
         return np.linalg.norm(rvecs)
-    elif nvecs == 2:
+    if nvecs == 2:
         return np.linalg.norm(np.cross(rvecs[0], rvecs[1]))
-    elif nvecs == 3:
+    if nvecs == 3:
         return np.linalg.det(rvecs)
-    else:
-        raise ValueError("Argument rvecs should be of shape (x, 3), where x is in {1, 2, 3}")
+    raise ValueError("Argument rvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
-def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[
-    np.ndarray, np.ndarray, np.ndarray]:
+def derive_naturals(dm: np.ndarray, overlap: np.ndarray) \
+        -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Derive natural orbitals from a given density matrix and assign the result to self.
 
     Parameters
@@ -203,6 +204,7 @@ def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[
     energies
         Orbital energies
         shape=(nfn, )
+
     """
     # Transform density matrix to Fock-like form
     sds = np.dot(overlap.T, np.dot(dm, overlap))
@@ -235,9 +237,10 @@ def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: fl
     ------
     ValueError
         When the density matrix has wrong eigenvalues.
+
     """
     # construct natural orbitals
-    coeffs, occupations, energies = derive_naturals(dm, overlap)
+    occupations = derive_naturals(dm, overlap)[1]
     if occupations.min() < -eps:
         raise ValueError('The density matrix has eigenvalues considerably smaller than '
                          'zero. error=%e' % (occupations.min()))

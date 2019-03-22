@@ -19,13 +19,12 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# pragma pylint: disable=wrong-import-order,invalid-name,too-many-branches,too-many-statements
 """Module for handling MOLDEN file format."""
 
 
-import numpy as np
+from typing import Tuple, Dict, Union
 
-from typing import TextIO, Tuple, Dict, Union
+import numpy as np
 
 from ..periodic import sym2num, num2sym
 from ..overlap import compute_overlap, get_shell_nbasis, gob_cart_normalization
@@ -67,7 +66,7 @@ def _load_helper_coordinates(lit: LineIterator, cunit: float) -> \
     pseudo_numbers = []
     coordinates = []
     for line in lit:
-        if len(line.strip()) == 0:
+        if line.strip() == "":
             break
         words = line.split()
         if len(words) != 6:
@@ -99,7 +98,7 @@ def _load_helper_obasis(lit: LineIterator, coordinates: np.ndarray) -> Tuple[Dic
     while True:
         line = next(lit)
         words = line.split()
-        if len(words) == 0:
+        if not words:
             in_atom = False
             in_shell = False
         elif len(words) == 2 and not in_atom:
@@ -134,6 +133,7 @@ def _load_helper_obasis(lit: LineIterator, coordinates: np.ndarray) -> Tuple[Dic
     return obasis
 
 
+# pylint: disable=too-many-branches,too-many-statements
 def _load_helper_coeffs(lit: LineIterator) -> Tuple:
     """Load the orbital coefficients."""
     coeff_alpha = []
@@ -151,7 +151,7 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
             # we must anticipate for it here.
             break
         # An empty line means we are done
-        if len(line.strip()) == 0:
+        if line.strip() == "":
             break
         # An bracket also means we are done and a new section has started.
         # Other parts of the parser may need this section line, so we push it
@@ -193,7 +193,7 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
     coeff_alpha = np.array(coeff_alpha).T
     ener_alpha = np.array(ener_alpha)
     occ_alpha = np.array(occ_alpha)
-    if len(coeff_beta) == 0:
+    if not coeff_beta:
         coeff_beta = None
         ener_beta = None
         occ_beta = None
@@ -204,6 +204,7 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
     return (coeff_alpha, ener_alpha, occ_alpha), (coeff_beta, ener_beta, occ_beta)
 
 
+# pylint: disable=too-many-branches,too-many-statements
 def load(lit: LineIterator) -> Dict:
     """Load data from a MOLDEN input file format.
 
@@ -333,7 +334,7 @@ def load(lit: LineIterator) -> Dict:
 def _is_normalized_properly(obasis: Dict, permutation: np.ndarray, orb_alpha: np.ndarray,
                             orb_beta: np.ndarray, signs: np.ndarray = None,
                             threshold: float = 1e-4):
-    """Test the normalization of the occupied and virtual orbitals
+    """Test the normalization of the occupied and virtual orbitals.
 
     Parameters
     ----------
@@ -351,6 +352,7 @@ def _is_normalized_properly(obasis: Dict, permutation: np.ndarray, orb_alpha: np
     threshold
         When the maximal error on the norm is large than the threshold,
         the function returns False. True is returned otherwise.
+
     """
     # Set default value for signs
     if signs is None:
@@ -392,10 +394,16 @@ def _is_normalized_properly(obasis: Dict, permutation: np.ndarray, orb_alpha: np
 def _get_orca_signs(shell_types: np.ndarray) -> np.ndarray:
     """Return an array with sign corrections for orbitals read from ORCA.
 
-       **Arguments:**
+    Parameters
+    ----------
+    shell_types
+        An array with integer shell types.
 
-       obasis
-            An instance of GOBasis.
+    Returns
+    -------
+    signs
+        An array with sign flips.
+
     """
     sign_rules = {
         -4: [1, 1, 1, 1, 1, -1, -1, -1, -1],
@@ -413,9 +421,11 @@ def _get_orca_signs(shell_types: np.ndarray) -> np.ndarray:
     return np.array(signs, dtype=int)
 
 
+# pylint: disable=too-many-branches
 def _get_fixed_con_coeffs(nprims: np.ndarray, shell_types: np.ndarray, alphas: np.ndarray,
                           con_coeffs: np.ndarray, code: str) -> Union[np.ndarray, None]:
     """Return corrected contraction coefficients, assuming they came from a broken QC code.
+
     The arguments here are the same as the ones that are given from ``helper_obasis``.
 
     Parameters
@@ -435,6 +445,7 @@ def _get_fixed_con_coeffs(nprims: np.ndarray, shell_types: np.ndarray, alphas: n
     -------
     fixed_con_coeffs
         Corrected contraction coefficients, or None if corrections were not applicable.
+
     """
     assert code in ['orca', 'psi4', 'turbomole']
     fixed_con_coeffs = con_coeffs.copy()
@@ -442,7 +453,7 @@ def _get_fixed_con_coeffs(nprims: np.ndarray, shell_types: np.ndarray, alphas: n
     corrected = False
     for ishell in range(shell_types.size):
         shell_type = shell_types[ishell]
-        for ialpha in range(nprims[ishell]):
+        for _ialpha in range(nprims[ishell]):
             alpha = alphas[iprim]
             # Default 1.0: do not to correct anything, unless we know how to correct.
             correction = 1.0
@@ -481,6 +492,7 @@ def _get_fixed_con_coeffs(nprims: np.ndarray, shell_types: np.ndarray, alphas: n
             iprim += 1
     if corrected:
         return fixed_con_coeffs
+    return None
 
 
 def _normalized_contractions(obasis_dict: Dict):
@@ -522,7 +534,7 @@ def _fix_molden_from_buggy_codes(result: Dict, filename: str):
     filename
         The name of the molden/mkl/... file.
 
-   """
+    """
     obasis_dict = result['obasis']
     permutation = result.get('permutation', None)
     if _is_normalized_properly(obasis_dict, permutation, result['orb_alpha_coeffs'],
@@ -596,6 +608,7 @@ def _fix_molden_from_buggy_codes(result: Dict, filename: str):
                    'can fix it.') % filename)
 
 
+# pylint: disable=too-many-branches,too-many-statements
 def dump(filename: str, data: 'IOData'):
     """Write data into a MOLDEN input file format.
 
@@ -604,9 +617,9 @@ def dump(filename: str, data: 'IOData'):
     filename : str
         The MOLDEN input filename.
     data : IOData
-        An IOData instance which must contain ```coordinates``, ``numbers``, ``obasis``
-        & ``orb_alpha`` attributes. It may contain ```title``, ``pseudo_numbers``, ``orb_beta``
-        attributes.
+        An IOData instance which must contain ```coordinates``, ``numbers``,
+        ``obasis`` & ``orb_alpha`` attributes. It may contain ```title``,
+        ``pseudo_numbers``, ``orb_beta`` attributes.
 
     """
     with open(filename, 'w') as f:
