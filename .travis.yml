@@ -70,10 +70,10 @@ install:
 script:
   # Instead of simply calling `rob`, we do something that always works on osx too.
   - >-
-    if [[ "$TRAVIS_PULL_REQUEST" == "true" ]]; then
-      python3 -m roberto;
-    else
+    if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
       python3 -m roberto robot;
+    else
+      python3 -m roberto;
     fi
 
 before_cache:
