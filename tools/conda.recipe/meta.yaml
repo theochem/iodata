@@ -21,7 +21,6 @@ requirements:
     - numpy >=1.0
     - cython >=0.24.1
     - setuptools
-    - pytest
   run:
     - python
     - scipy
