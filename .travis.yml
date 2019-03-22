@@ -52,6 +52,8 @@ env:
     - TWINE_USERNAME: theochem
 
 cache:
+  # More time is needed for caching due to the sheer size of the conda env.
+  timeout: 1000
   directories:
     - ${HOME}/cache
 
