@@ -22,7 +22,7 @@
 """Module for handling XYZ file format."""
 
 
-from typing import Dict
+from typing import Dict, TextIO
 
 import numpy as np
 
@@ -71,22 +71,21 @@ def load(lit: LineIterator) -> Dict:
     }
 
 
-def dump(filename: str, data: 'IOData'):
+def dump(f: TextIO, data: 'IOData'):
     """Write molecular geometry into a XYZ file format.
 
     Parameters
     ----------
-    filename : str
-        The XYZ filename.
+    f
+        A file to write to.
     data : IOData
         An IOData instance which must contain ``coordinates`` & ``numbers`` attributes.
         If ``title`` attribute is not included, 'Created with IODATA module' is used as ``title``.
 
     """
-    with open(filename, 'w') as f:
-        print(data.natom, file=f)
-        print(getattr(data, 'title', 'Created with IODATA module'), file=f)
-        for i in range(data.natom):
-            n = num2sym[data.numbers[i]]
-            x, y, z = data.coordinates[i] / angstrom
-            print(f'{n:2s} {x:15.10f} {y:15.10f} {z:15.10f}', file=f)
+    print(data.natom, file=f)
+    print(getattr(data, 'title', 'Created with IODATA module'), file=f)
+    for i in range(data.natom):
+        n = num2sym[data.numbers[i]]
+        x, y, z = data.coordinates[i] / angstrom
+        print(f'{n:2s} {x:15.10f} {y:15.10f} {z:15.10f}', file=f)

@@ -394,7 +394,8 @@ def dump_one(iodata: IOData, filename: str):
     basename = os.path.basename(filename)
     for format_module in format_modules:
         if any(fnmatch(basename, pattern)for pattern in format_module.patterns):
-            format_module.dump(filename, iodata)
+            with open(filename, 'w') as f:
+                format_module.dump(f, iodata)
             break
     else:
         raise ValueError('Unknown file format for writing: %s' % filename)

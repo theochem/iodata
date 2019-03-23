@@ -179,22 +179,21 @@ def _write_cube_data(f: TextIO, cube_data: np.ndarray):
         counter += 1
 
 
-def dump(filename: str, data: 'IOData'):
+def dump(f: TextIO, data: 'IOData'):
     """Write data into a CUBE file format.
 
     Parameters
     ----------
-    filename : str
-        The CUBE filename.
+    f
+        A file to write to.
     data : IOData
         An IOData instance which must contain ``coordinates``, ``numbers``, ``grid`` &
         ``cube_data`` attributes. It may contain ``title``  & ``pseudo_numbers`` attributes.
 
     """
-    with open(filename, 'w') as f:
-        if not isinstance(data.grid, dict):
-            raise ValueError(
-                'The system grid must contain a dict to initialize a UniformGrid instance.')
-        title = getattr(data, 'title', 'Created with HORTON')
-        _write_cube_header(f, title, data.coordinates, data.numbers, data.grid, data.pseudo_numbers)
-        _write_cube_data(f, data.cube_data)
+    if not isinstance(data.grid, dict):
+        raise ValueError(
+            'The system grid must contain a dict to initialize a UniformGrid instance.')
+    title = getattr(data, 'title', 'Created with HORTON')
+    _write_cube_header(f, title, data.coordinates, data.numbers, data.grid, data.pseudo_numbers)
+    _write_cube_data(f, data.cube_data)
