@@ -22,7 +22,7 @@
 """Module for handling MOLPRO file formal."""
 
 
-from typing import Dict
+from typing import Dict, TextIO
 
 import numpy as np
 
@@ -116,13 +116,13 @@ def load(lit: LineIterator) -> Dict:
     }
 
 
-def dump(filename: str, data: 'IOData'):
+def dump(f: TextIO, data: 'IOData'):
     """Write one- and two-electron integrals into a MOLPRO 2012 FCIDUMP file format.
 
     Parameters
     ----------
-    filename : str
-        The MOLPRO 2012 FCIDUMP filename.
+    f
+        A file to write to.
     data : IOData
         An IOData instance which must contain ``one_mo`` & ``two_mo`` attributes.
         It may contain ``core_energy``, ``nelec`` and ``ms`` attributes.
@@ -136,33 +136,32 @@ def dump(filename: str, data: 'IOData'):
        older versions are not supported.
 
     """
-    with open(filename, 'w') as f:
-        one_mo = data.one_mo
-        two_mo = data.two_mo
-        nactive = one_mo.shape[0]
-        core_energy = getattr(data, 'core_energy', 0.0)
-        nelec = getattr(data, 'nelec', 0)
-        ms2 = getattr(data, 'ms2', 0)
+    one_mo = data.one_mo
+    two_mo = data.two_mo
+    nactive = one_mo.shape[0]
+    core_energy = getattr(data, 'core_energy', 0.0)
+    nelec = getattr(data, 'nelec', 0)
+    ms2 = getattr(data, 'ms2', 0)
 
-        # Write header
-        print(f' &FCI NORB={nactive:d},NELEC={nelec:d},MS2={ms2:d},', file=f)
-        print(f"  ORBSYM= {','.join('1' for v in range(nactive))},", file=f)
-        print('  ISYM=1', file=f)
-        print(' &END', file=f)
+    # Write header
+    print(f' &FCI NORB={nactive:d},NELEC={nelec:d},MS2={ms2:d},', file=f)
+    print(f"  ORBSYM= {','.join('1' for v in range(nactive))},", file=f)
+    print('  ISYM=1', file=f)
+    print(' &END', file=f)
 
-        # Write integrals and core energy
-        for i in range(nactive):  # pylint: disable=too-many-nested-blocks
-            for j in range(i + 1):
-                for k in range(nactive):
-                    for l in range(k + 1):
-                        if (i * (i + 1)) / 2 + j >= (k * (k + 1)) / 2 + l:
-                            value = two_mo[i, k, j, l]
-                            if value != 0.0:
-                                print(f'{value:23.16e} {i+1:4d} {j+1:4d} {k+1:4d} {l+1:4d}', file=f)
-        for i in range(nactive):
-            for j in range(i + 1):
-                value = one_mo[i, j]
-                if value != 0.0:
-                    print(f'{value:23.16e} {i+1:4d} {j+1:4d} {0:4d} {0:4d}', file=f)
-        if core_energy != 0.0:
-            print(f'{core_energy:23.16e} {0:4d} {0:4d} {0:4d} {0:4d}', file=f)
+    # Write integrals and core energy
+    for i in range(nactive):  # pylint: disable=too-many-nested-blocks
+        for j in range(i + 1):
+            for k in range(nactive):
+                for l in range(k + 1):
+                    if (i * (i + 1)) / 2 + j >= (k * (k + 1)) / 2 + l:
+                        value = two_mo[i, k, j, l]
+                        if value != 0.0:
+                            print(f'{value:23.16e} {i+1:4d} {j+1:4d} {k+1:4d} {l+1:4d}', file=f)
+    for i in range(nactive):
+        for j in range(i + 1):
+            value = one_mo[i, j]
+            if value != 0.0:
+                print(f'{value:23.16e} {i+1:4d} {j+1:4d} {0:4d} {0:4d}', file=f)
+    if core_energy != 0.0:
+        print(f'{core_energy:23.16e} {0:4d} {0:4d} {0:4d} {0:4d}', file=f)

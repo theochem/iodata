@@ -21,7 +21,7 @@
 """Module for handling VASP POSCAR file format."""
 
 
-from typing import Dict
+from typing import Dict, TextIO
 
 import numpy as np
 
@@ -61,40 +61,38 @@ def load(lit: LineIterator) -> Dict:
     }
 
 
-def dump(filename: str, data: 'IOData'):
+def dump(f: TextIO, data: 'IOData'):
     """Write data into a VASP 5 POSCAR file format.
 
     Parameters
     ----------
-    filename
-        The VASP 5 POSCAR filename.
-
+    f
+        A file to write to.
     data
         An IOData instance which must contain ``coordinates``, ``numbers``, ``rvecs`` &
         ``cell_frac`` attributes. It may contain ``title`` attribute.
 
     """
-    with open(filename, 'w') as f:
-        print(getattr(data, 'title', 'Created with HORTON'), file=f)
-        print('   1.00000000000000', file=f)
+    print(getattr(data, 'title', 'Created with HORTON'), file=f)
+    print('   1.00000000000000', file=f)
 
-        # Write cell vectors, each row is one vector in angstrom:
-        rvecs = data.rvecs
-        for rvec in rvecs:
-            r = rvec / angstrom
-            print(f'{r[0]: 21.16f} {r[1]: 21.16f} {r[2]: 21.16f}', file=f)
+    # Write cell vectors, each row is one vector in angstrom:
+    rvecs = data.rvecs
+    for rvec in rvecs:
+        r = rvec / angstrom
+        print(f'{r[0]: 21.16f} {r[1]: 21.16f} {r[2]: 21.16f}', file=f)
 
-        # Construct list of elements to make sure the coordinates get written
-        # in this order. Heaviest elements are put furst.
-        unumbers = sorted(np.unique(data.numbers))[::-1]
-        print(' '.join(f'{num2sym[unumber]:5s}' for unumber in unumbers), file=f)
-        print(' '.join(f'{(data.numbers == unumber).sum():5d}' for unumber in unumbers), file=f)
-        print('Selective dynamics', file=f)
-        print('Direct', file=f)
+    # Construct list of elements to make sure the coordinates get written
+    # in this order. Heaviest elements are put furst.
+    unumbers = sorted(np.unique(data.numbers))[::-1]
+    print(' '.join(f'{num2sym[unumber]:5s}' for unumber in unumbers), file=f)
+    print(' '.join(f'{(data.numbers == unumber).sum():5d}' for unumber in unumbers), file=f)
+    print('Selective dynamics', file=f)
+    print('Direct', file=f)
 
-        # Write the coordinates
-        for unumber in unumbers:
-            indexes = (data.numbers == unumber).nonzero()[0]
-            for index in indexes:
-                row = np.dot(data.gvecs, data.coordinates[index])
-                print(f'  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F', file=f)
+    # Write the coordinates
+    for unumber in unumbers:
+        indexes = (data.numbers == unumber).nonzero()[0]
+        for index in indexes:
+            row = np.dot(data.gvecs, data.coordinates[index])
+            print(f'  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F', file=f)
