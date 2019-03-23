@@ -13,6 +13,21 @@ General recommendations
   ``no-member`` warning in the unit test modules. When adding pylint exception,
   place them as locally as possible and make sure they are justified.
 
+- Use `type hinting<https://docs.python.org/3/library/typing.html>`_ to document
+  the types of function (and method) arguments and return values. This is not
+  yet consistently done throughout IOData at the moment, but it would be helpful
+  to do so in future pull requests. Avoid using strings to postpone the
+  evaluation of the type. (See `PEP
+  0563<https://www.python.org/dev/peps/pep-0563/>`_ for more details on
+  postponed type annotation.)
+
+- In unit testing, use ``np.testing.assert_close`` and
+  ``np.testing.assert_equal`` for comparing floating-point and integer numpy
+  arrays respectively. ``np.testing.assert_close`` can also be used for
+  comparing floating point scalars. In all other cases (not involving floating
+  point numbers), the simple ``assert a == b`` works equally well and is more
+  readable.
+
 
 Adding new file formats
 =======================
