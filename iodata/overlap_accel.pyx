@@ -19,7 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
-# cython: profile=True
+# cython: linetrace=True
 """Cython module to accelerate computation of overlap integrals."""
 
 
