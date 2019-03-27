@@ -26,8 +26,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from ..basis import MolecularBasis, Shell
-from ..overlap import OVERLAP_CONVENTIONS
+from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS
 from ..utils import LineIterator
 
 
@@ -38,24 +37,24 @@ patterns = ['*.fchk']
 
 
 CONVENTIONS = {
-    (9, 'p'): OVERLAP_CONVENTIONS[(9, 'p')],
-    (8, 'p'): OVERLAP_CONVENTIONS[(8, 'p')],
-    (7, 'p'): OVERLAP_CONVENTIONS[(7, 'p')],
-    (6, 'p'): OVERLAP_CONVENTIONS[(6, 'p')],
-    (5, 'p'): OVERLAP_CONVENTIONS[(5, 'p')],
-    (4, 'p'): OVERLAP_CONVENTIONS[(4, 'p')],
-    (3, 'p'): OVERLAP_CONVENTIONS[(3, 'p')],
-    (2, 'p'): OVERLAP_CONVENTIONS[(2, 'p')],
+    (9, 'p'): HORTON2_CONVENTIONS[(9, 'p')],
+    (8, 'p'): HORTON2_CONVENTIONS[(8, 'p')],
+    (7, 'p'): HORTON2_CONVENTIONS[(7, 'p')],
+    (6, 'p'): HORTON2_CONVENTIONS[(6, 'p')],
+    (5, 'p'): HORTON2_CONVENTIONS[(5, 'p')],
+    (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
+    (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
+    (2, 'p'): HORTON2_CONVENTIONS[(2, 'p')],
     (0, 'c'): ['1'],
     (1, 'c'): ['x', 'y', 'z'],
     (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'yz', 'xz'],
     (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-    (4, 'c'): OVERLAP_CONVENTIONS[(4, 'c')][::-1],
-    (5, 'c'): OVERLAP_CONVENTIONS[(5, 'c')][::-1],
-    (6, 'c'): OVERLAP_CONVENTIONS[(6, 'c')][::-1],
-    (7, 'c'): OVERLAP_CONVENTIONS[(7, 'c')][::-1],
-    (8, 'c'): OVERLAP_CONVENTIONS[(8, 'c')][::-1],
-    (9, 'c'): OVERLAP_CONVENTIONS[(9, 'c')][::-1],
+    (4, 'c'): HORTON2_CONVENTIONS[(4, 'c')][::-1],
+    (5, 'c'): HORTON2_CONVENTIONS[(5, 'c')][::-1],
+    (6, 'c'): HORTON2_CONVENTIONS[(6, 'c')][::-1],
+    (7, 'c'): HORTON2_CONVENTIONS[(7, 'c')][::-1],
+    (8, 'c'): HORTON2_CONVENTIONS[(8, 'c')][::-1],
+    (9, 'c'): HORTON2_CONVENTIONS[(9, 'c')][::-1],
 }
 
 

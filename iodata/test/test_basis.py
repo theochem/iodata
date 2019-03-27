@@ -27,7 +27,8 @@ from numpy.testing import assert_equal
 from pytest import raises
 
 from ..basis import (angmom_sti, angmom_its, Shell, MolecularBasis,
-                     convert_convention_shell, convert_conventions)
+                     convert_convention_shell, convert_conventions,
+                     iter_cart_alphabet, HORTON2_CONVENTIONS, PSI4_CONVENTIONS)
 from ..formats.cp2k import CONVENTIONS as CP2K_CONVENTIONS
 
 
@@ -226,3 +227,28 @@ def test_convert_exceptions():
         convert_convention_shell(['a', 'b', 'c'], ['a', 'b', 'd'])
     with raises(TypeError):
         convert_convention_shell(['a', 'b', 'c'], ['a', 'b', '-d'])
+
+
+def test_iter_cart_alphabet():
+    assert np.array(list(iter_cart_alphabet(0))).tolist() == [[0, 0, 0]]
+    assert np.array(list(iter_cart_alphabet(1))).tolist() == [
+        [1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    assert np.array(list(iter_cart_alphabet(2))).tolist() == [
+        [2, 0, 0], [1, 1, 0], [1, 0, 1],
+        [0, 2, 0], [0, 1, 1], [0, 0, 2]]
+
+
+def test_conventions():
+    for angmom in range(24):
+        assert HORTON2_CONVENTIONS[(angmom, 'c')] == PSI4_CONVENTIONS[(angmom, 'c')]
+    assert HORTON2_CONVENTIONS[(0, 'c')] == ['1']
+    assert HORTON2_CONVENTIONS[(1, 'c')] == ['x', 'y', 'z']
+    assert HORTON2_CONVENTIONS[(2, 'c')] == ['xx', 'xy', 'xz', 'yy', 'yz', 'zz']
+    assert (0, 'p') not in HORTON2_CONVENTIONS
+    assert (0, 'p') not in PSI4_CONVENTIONS
+    assert (1, 'p') not in HORTON2_CONVENTIONS
+    assert (1, 'p') not in PSI4_CONVENTIONS
+    assert HORTON2_CONVENTIONS[(2, 'p')] == ['dc0', 'dc1', 'ds1', 'dc2', 'ds2']
+    assert PSI4_CONVENTIONS[(2, 'p')] == ['ds2', 'ds1', 'dc0', 'dc1', 'dc2']
+    assert HORTON2_CONVENTIONS[(3, 'p')] == ['fc0', 'fc1', 'fs1', 'fc2', 'fs2', 'fc3', 'fs3']
+    assert PSI4_CONVENTIONS[(3, 'p')] == ['fs3', 'fs2', 'fs1', 'fc0', 'fc1', 'fc2', 'fc3']

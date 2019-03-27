@@ -28,27 +28,13 @@ from pytest import raises
 
 from ..basis import MolecularBasis, Shell
 from ..iodata import load_one
-from ..overlap import compute_overlap, OVERLAP_CONVENTIONS, _iter_pow
+from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 from ..overlap_accel import fac2, _binom
 
 try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
-
-
-def test_iter_pow():
-    assert np.array(list(_iter_pow(0))).tolist() == [[0, 0, 0]]
-    assert np.array(list(_iter_pow(1))).tolist() == [
-        [1, 0, 0], [0, 1, 0], [0, 0, 1]]
-    assert np.array(list(_iter_pow(2))).tolist() == [
-        [2, 0, 0], [1, 1, 0], [1, 0, 1],
-        [0, 2, 0], [0, 1, 1], [0, 0, 2]]
-
-
-def test_conventions():
-    # DO NOT TOUCH!!!
-    assert OVERLAP_CONVENTIONS[(2, 'p')] == ['dc0', 'dc1', 'ds1', 'dc2', 'ds2']
 
 
 def test_normalization_basics_segmented():

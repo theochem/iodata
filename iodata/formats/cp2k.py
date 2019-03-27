@@ -27,7 +27,7 @@ from typing import Dict, Union, List, Tuple
 import numpy as np
 from scipy.special import factorialk
 
-from ..basis import angmom_sti, MolecularBasis, Shell
+from ..basis import angmom_sti, MolecularBasis, Shell, HORTON2_CONVENTIONS
 from ..utils import LineIterator
 
 
@@ -38,10 +38,10 @@ patterns = ['*.cp2k.out']
 
 
 CONVENTIONS = {
-    (0, 'c'): ['1'],
-    (1, 'c'): ['x', 'y', 'z'],
-    (2, 'p'): ['dc0', 'dc1', 'ds1', 'dc2', 'ds2'],
-    (3, 'p'): ['fc0', 'fc1', 'fs1', 'fc2', 'fs2', 'fc3', 'fs3'],
+    (0, 'c'): HORTON2_CONVENTIONS[(0, 'c')],
+    (1, 'c'): HORTON2_CONVENTIONS[(1, 'c')],
+    (2, 'p'): HORTON2_CONVENTIONS[(2, 'p')],
+    (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
 }
 
 def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) \

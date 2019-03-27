@@ -28,7 +28,8 @@ from typing import List, Dict, NamedTuple, Tuple
 import numpy as np
 
 __all__ = ['angmom_sti', 'angmom_its', 'Shell', 'MolecularBasis',
-           'convert_convention_shell', 'convert_conventions']
+           'convert_convention_shell', 'convert_conventions',
+           'iter_cart_alphabet', 'HORTON2_CONVENTIONS', 'PSI4_CONVENTIONS']
 
 ANGMOM_CHARS = 'spdfghiklmnoqrtuvwxyzabce'
 
@@ -304,3 +305,48 @@ def convert_conventions(molbasis: MolecularBasis, new_conventions: Dict[str, Lis
                 permutation.append(i + offset)
             signs.extend(shell_signs)
     return np.array(permutation), np.array(signs)
+
+
+def iter_cart_alphabet(n: int) -> np.ndarray:
+    """Loop over powers of Cartesian basis functions in alphabetical order.
+
+    See https://theochem.github.io/horton/2.1.1/tech_ref_gaussian_basis.html
+    for details.
+
+    Parameters
+    ----------
+    n
+        The angular momentum, i.e. sum of Cartesian powers in this case.
+
+    """
+    for nx in range(n, -1, -1):
+        for ny in range(n - nx, -1, -1):
+            nz = n - nx - ny
+            yield np.array((nx, ny, nz), dtype=int)
+
+
+def get_default_conventions():
+    """Produce a conventions dictionary compatible with HORTON2.
+
+    Do not change this!!! This is also used by several file formats from other
+    QC codes who happen to follow the same conventions.
+    """
+    horton2 = {(0, 'c'): ['1']}
+    psi4 = {(0, 'c'): ['1']}
+    for angmom in range(1, 25):
+        conv_cart = list('x' * nx + 'y' * ny + 'z' * nz
+                         for nx, ny, nz in iter_cart_alphabet(angmom))
+        horton2[(angmom, 'c')] = conv_cart
+        psi4[(angmom, 'c')] = conv_cart
+        if angmom > 1:
+            char = angmom_its(angmom)
+            conv_pure = [char + 'c0']
+            for absm in range(1, angmom + 1):
+                conv_pure.append('{}c{}'.format(char, absm))
+                conv_pure.append('{}s{}'.format(char, absm))
+            horton2[(angmom, 'p')] = conv_pure
+            psi4[(angmom, 'p')] = conv_pure[:1:-2] + conv_pure[:1] + conv_pure[1::2]
+    return horton2, psi4
+
+
+HORTON2_CONVENTIONS, PSI4_CONVENTIONS = get_default_conventions()

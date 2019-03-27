@@ -28,9 +28,9 @@ import copy
 import numpy as np
 
 from ..basis import (angmom_its, angmom_sti, MolecularBasis, Shell,
-                     convert_conventions)
+                     convert_conventions, HORTON2_CONVENTIONS)
 from ..periodic import sym2num, num2sym
-from ..overlap import compute_overlap, OVERLAP_CONVENTIONS, gob_cart_normalization
+from ..overlap import compute_overlap, gob_cart_normalization
 from ..utils import angstrom, LineIterator
 
 
@@ -53,11 +53,11 @@ patterns = ['*.molden.input', '*.molden']
 CONVENTIONS = {
     (0, 'c'): ['1'],
     (1, 'c'): ['x', 'y', 'z'],
-    (2, 'p'): OVERLAP_CONVENTIONS[(2, 'p')],
+    (2, 'p'): HORTON2_CONVENTIONS[(2, 'p')],
     (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-    (3, 'p'): OVERLAP_CONVENTIONS[(3, 'p')],
+    (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
     (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-    (4, 'p'): OVERLAP_CONVENTIONS[(4, 'p')],
+    (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
     (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
                'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
 }
@@ -377,7 +377,7 @@ def _is_normalized_properly(obasis: MolecularBasis, orb_alpha: np.ndarray,
     # print
 
     # Convert the orbitals to the conventions of the overlap matrix.
-    # permutation, signs = convert_conventions(obasis, OVERLAP_CONVENTIONS)
+    # permutation, signs = convert_conventions(obasis, HORTON2_CONVENTIONS)
     orbs = [orb_alpha]
     if orb_beta is not None:
         orbs.append(orb_beta)

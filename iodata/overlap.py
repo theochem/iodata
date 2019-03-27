@@ -29,48 +29,11 @@ from scipy.special import factorialk
 
 from .overlap_accel import add_overlap
 from .overlap_helper import tfs
-from .basis import angmom_its, convert_conventions
+from .basis import convert_conventions, iter_cart_alphabet
+from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
 
 
 __all__ = ['OVERLAP_CONVENTIONS', 'compute_overlap', 'gob_cart_normalization']
-
-
-def _iter_pow(n: int) -> np.ndarray:
-    """Give the ordering within shells.
-
-    See http://theochem.github.io/horton/2.1.0b1/tech_ref_gaussian_basis.html
-    for details.
-    """
-    for nx in range(n, -1, -1):
-        for ny in range(n - nx, -1, -1):
-            nz = n - nx - ny
-            yield np.array((nx, ny, nz), dtype=int)
-
-
-def get_overlap_conventions():
-    """Produce a conventions dictionary compatible with HORTON2.
-
-    Do not change this!!! This is also used by several file formats from other
-    QC codes who happen to follow the same conventions.
-    """
-    result = {
-        (0, 'c'): ['1'],
-    }
-    for angmom in range(1, 25):
-        result[(angmom, 'c')] = list(
-            'x' * nx + 'y' * ny + 'z' * nz for nx, ny, nz
-            in _iter_pow(angmom))
-        if angmom > 1:
-            char = angmom_its(angmom)
-            convention = [char + 'c0']
-            for absm in range(1, angmom + 1):
-                convention.append('{}c{}'.format(char, absm))
-                convention.append('{}s{}'.format(char, absm))
-            result[(angmom, 'p')] = convention
-    return result
-
-
-OVERLAP_CONVENTIONS = get_overlap_conventions()
 
 
 def compute_overlap(obasis: 'MolecularBasis') -> np.ndarray:
@@ -123,8 +86,8 @@ def compute_overlap(obasis: 'MolecularBasis') -> np.ndarray:
                 # Loop over primitives in shell1 (Cartesian)
                 for iexp1, (a1, cc1) in enumerate(zip(shell1.exponents, shell1.coeffs[:, 0])):
                     s1 = scales[i1][iexp1]
-                    n0 = np.vstack(list(_iter_pow(shell0.angmoms[0])))
-                    n1 = np.vstack(list(_iter_pow(shell1.angmoms[0])))
+                    n0 = np.vstack(list(iter_cart_alphabet(shell0.angmoms[0])))
+                    n1 = np.vstack(list(iter_cart_alphabet(shell1.angmoms[0])))
                     add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, n0, n1, result)
 
             # END of Cartesian coordinate system (if going to pure coordinates)
@@ -169,7 +132,7 @@ def _compute_cart_shell_normalizations(shell: 'Shell') -> np.ndarray:
     for angmom in shell.angmoms:
         for exponent in shell.exponents:
             row = []
-            for n in _iter_pow(angmom):
+            for n in iter_cart_alphabet(angmom):
                 row.append(gob_cart_normalization(exponent, n))
             result.append(np.array(row))
     return result
