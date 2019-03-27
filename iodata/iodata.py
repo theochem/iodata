@@ -227,12 +227,6 @@ class IOData:
     one_mo
          One-electron integrals in the (Hartree-Fock) molecular-orbital basis
 
-    permutation
-         The permutation applied to the basis functions.
-
-    signs
-         The sign changes applied to the basis functions.
-
     title
          A suitable name for the data.
 
