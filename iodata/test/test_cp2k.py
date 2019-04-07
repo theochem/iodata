@@ -42,7 +42,7 @@ except ImportError:
 
 def check_orthonormality(mol):
     """Test whether the orbitals are orthonormal."""
-    olp = compute_overlap(**mol.obasis)
+    olp = compute_overlap(mol.obasis)
     check_orthonormal(mol.orb_alpha_coeffs, olp)
     if hasattr(mol, 'orb_beta'):
         check_orthonormal(mol.orb_beta_coeffs, olp)
@@ -60,7 +60,12 @@ def test_atom_si_uks():
     assert_allclose(mol.orb_beta_energies,
                     [-0.334567, -0.092237, -0.092237, -0.092237], atol=1.e-4)
     assert_allclose(mol.energy, -3.761587698067, atol=1.e-10)
-    assert_equal(mol.obasis["shell_types"], [0, 0, 1, 1, -2])
+    assert len(mol.obasis.shells) == 3
+    assert mol.obasis.shells[0].kinds == ['c', 'c']
+    assert_equal(mol.obasis.shells[1].angmoms, [1, 1])
+    assert mol.obasis.shells[1].kinds == ['c', 'c']
+    assert_equal(mol.obasis.shells[2].angmoms, [2])
+    assert mol.obasis.shells[2].kinds == ['p']
     check_orthonormality(mol)
 
 
@@ -73,7 +78,13 @@ def test_atom_o_rks():
     assert_allclose(mol.orb_alpha_energies,
                     [0.102709, 0.606458, 0.606458, 0.606458], atol=1.e-4)
     assert_allclose(mol.energy, -15.464982778766, atol=1.e-10)
-    assert_equal(mol.obasis["shell_types"], [0, 0, 1, 1, -2])
+    assert_equal(mol.obasis.shells[0].angmoms, [0, 0])
+    assert len(mol.obasis.shells) == 3
+    assert mol.obasis.shells[0].kinds == ['c', 'c']
+    assert_equal(mol.obasis.shells[1].angmoms, [1, 1])
+    assert mol.obasis.shells[1].kinds == ['c', 'c']
+    assert_equal(mol.obasis.shells[2].angmoms, [2])
+    assert mol.obasis.shells[2].kinds == ['p']
     check_orthonormality(mol)
 
 

@@ -29,16 +29,13 @@ import pytest
 
 from ..iodata import load_one
 from ..formats.fchk import load as load_fchk
-from ..utils import shells_to_nbasis, check_dm, LineIterator
 from ..overlap import compute_overlap
+from ..utils import check_dm, LineIterator
 
 try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
-
-
-# TODO: shells_to_nbasis(obasis["shell_types"]) replacement test
 
 
 def test_load_fchk_nonexistent():
@@ -61,24 +58,48 @@ def load_fchk_helper(fn_fchk):
 
 
 def test_load_fchk_hf_sto3g_num():
-    fields = load_fchk_helper_internal('hf_sto3g.fchk')
-    assert fields['title'] == 'hf_sto3g'
-    obasis = fields['obasis']
-    coordinates = fields['coordinates']
-    numbers = fields['numbers']
-    energy = fields['energy']
-    assert_equal(len(obasis["shell_types"]), 4)
-    assert_equal(shells_to_nbasis(obasis["shell_types"]), 6)
-    assert_equal(obasis['nprims'], 3)
-    assert_equal(len(coordinates), len(numbers))
-    assert_equal(coordinates.shape[1], 3)
-    assert_equal(len(numbers), 2)
-    assert_allclose(energy, -9.856961609951867E+01)
-    assert_allclose(fields['mulliken_charges'],
+    mol = load_fchk_helper('hf_sto3g.fchk')
+    assert mol.title == 'hf_sto3g'
+    assert mol.obasis.nbasis == 6
+    assert len(mol.obasis.shells) == 3
+    shell0 = mol.obasis.shells[0]
+    assert shell0.icenter == 0
+    assert shell0.angmoms == [0]
+    assert shell0.kinds == ['c']
+    assert_allclose(shell0.exponents,
+                    np.array([1.66679134E+02, 3.03608123E+01, 8.21682067E+00]))
+    assert_allclose(shell0.coeffs,
+                    np.array([[1.54328967E-01], [5.35328142E-01], [4.44634542E-01]]))
+    assert shell0.nprim == 3
+    assert shell0.ncon == 1
+    assert shell0.nbasis == 1
+    shell1 = mol.obasis.shells[1]
+    assert shell1.icenter == 0
+    assert shell1.angmoms == [0, 1]
+    assert shell1.kinds == ['c', 'c']
+    assert_allclose(shell1.exponents,
+                    np.array([6.46480325E+00, 1.50228124E+00, 4.88588486E-01]))
+    assert_allclose(shell1.coeffs,
+                    np.array([[-9.99672292E-02, 1.55916275E-01],
+                              [3.99512826E-01, 6.07683719E-01],
+                              [7.00115469E-01, 3.91957393E-01]]))
+    assert shell1.nprim == 3
+    assert shell1.ncon == 2
+    assert shell1.nbasis == 4
+    shell2 = mol.obasis.shells[2]
+    assert shell2.nprim == 3
+    assert shell2.ncon == 1
+    assert shell2.nbasis == 1
+    assert mol.obasis.primitive_normalization == 'L2'
+    assert len(mol.coordinates) == len(mol.numbers)
+    assert mol.coordinates.shape[1] == 3
+    assert len(mol.numbers) == 2
+    assert_allclose(mol.energy, -9.856961609951867E+01)
+    assert_allclose(mol.mulliken_charges,
                     [0.45000000E+00, 4.22300000E+00])
-    assert_allclose(fields['npa_charges'],
+    assert_allclose(mol.npa_charges,
                     [3.50000000E+00, 1.32000000E+00])
-    assert_allclose(fields['esp_charges'],
+    assert_allclose(mol.esp_charges,
                     [0.77700000E+00, 0.66600000E+00])
 
 
@@ -89,12 +110,12 @@ def test_load_fchk_h_sto3g_num():
     coordinates = fields['coordinates']
     numbers = fields['numbers']
     energy = fields['energy']
-    assert_equal(len(obasis["shell_types"]), 1)
-    assert_equal(shells_to_nbasis(obasis["shell_types"]), 1)
-    assert_equal(obasis['nprims'], 3)
-    assert_equal(len(coordinates), len(numbers))
-    assert_equal(coordinates.shape[1], 3)
-    assert_equal(len(numbers), 1)
+    assert len(obasis.shells) == 1
+    assert obasis.nbasis == 1
+    assert obasis.shells[0].nprim == 3
+    assert len(coordinates) == len(numbers)
+    assert coordinates.shape[1] == 3
+    assert len(numbers) == 1
     assert_allclose(energy, -4.665818503844346E-01)
 
 
@@ -104,11 +125,11 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     coordinates = fields['coordinates']
     numbers = fields['numbers']
     energy = fields['energy']
-    assert_equal(len(obasis["shell_types"]), 20)
-    assert_equal(shells_to_nbasis(obasis["shell_types"]), 60)
-    assert_equal(len(coordinates), len(numbers))
-    assert_equal(coordinates.shape[1], 3)
-    assert_equal(len(numbers), 2)
+    assert len(obasis.shells) == 20
+    assert obasis.nbasis == 60
+    assert len(coordinates) == len(numbers)
+    assert coordinates.shape[1] == 3
+    assert len(numbers) == 2
     assert_allclose(energy, -1.495944878699246E+02)
 
 
@@ -118,24 +139,24 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     coordinates = fields['coordinates']
     numbers = fields['numbers']
     energy = fields['energy']
-    assert_allclose(len(obasis["shell_types"]), 20)
-    assert_allclose(shells_to_nbasis(obasis["shell_types"]), 70)
-    assert_allclose(len(coordinates), len(numbers))
-    assert_allclose(coordinates.shape[1], 3)
-    assert_allclose(len(numbers), 2)
+    assert len(obasis.shells) == 20
+    assert obasis.nbasis == 70
+    assert len(coordinates) == len(numbers)
+    assert coordinates.shape[1] == 3
+    assert len(numbers) == 2
     assert_allclose(energy, -1.495953594545721E+02)
 
 
 def test_load_fchk_water_sto3g_hf():
     fields = load_fchk_helper_internal('water_sto3g_hf_g03.fchk')
     obasis = fields['obasis']
-    assert_equal(len(obasis["shell_types"]), 5)
-    assert_equal(shells_to_nbasis(obasis["shell_types"]), 7)
+    assert len(obasis.shells) == 4
+    assert obasis.nbasis == 7
     coordinates = fields['coordinates']
     numbers = fields['numbers']
-    assert_equal(len(coordinates), len(numbers))
-    assert_equal(coordinates.shape[1], 3)
-    assert_equal(len(numbers), 3)
+    assert len(coordinates) == len(numbers)
+    assert coordinates.shape[1] == 3
+    assert len(numbers) == 3
     orb_alpha = fields['orb_alpha']
     orb_alpha_coeffs = fields['orb_alpha_coeffs']
     orb_alpha_energies = fields['orb_alpha_energies']
@@ -158,13 +179,13 @@ def test_load_fchk_water_sto3g_hf():
 def test_load_fchk_lih_321g_hf():
     fields = load_fchk_helper_internal('li_h_3-21G_hf_g09.fchk')
     obasis = fields['obasis']
-    assert_equal(len(obasis["shell_types"]), 7)
-    assert_equal(shells_to_nbasis(obasis["shell_types"]), 11)
+    assert len(obasis.shells) == 5
+    assert obasis.nbasis == 11
     coordinates = fields['coordinates']
     numbers = fields['numbers']
-    assert_equal(len(coordinates), len(numbers))
-    assert_equal(coordinates.shape[1], 3)
-    assert_equal(len(numbers), 2)
+    assert len(coordinates) == len(numbers)
+    assert coordinates.shape[1] == 3
+    assert len(numbers) == 2
     orb_alpha = fields['orb_alpha']
     orb_alpha_coeffs = fields['orb_alpha_coeffs']
     orb_alpha_energies = fields['orb_alpha_energies']
@@ -214,7 +235,7 @@ def test_load_fchk_ghost_atoms():
     assert_equal(numbers.shape[0], natom)
     assert_equal(coordinates.shape[0], natom)
     assert_equal(mulliken_charges.shape[0], natom)
-    assert_equal(obasis['centers'].shape[0], natom + nghost)
+    assert_equal(obasis.centers.shape[0], natom + nghost)
 
 
 def test_load_fchk_ch3_rohf_g03():
@@ -238,7 +259,7 @@ def check_load_azirine(key, numbers):
     """Perform some basic checks on a azirine fchk file."""
     fields = load_fchk_helper_internal('2h-azirine-{}.fchk'.format(key))
     obasis = fields['obasis']
-    assert_equal(shells_to_nbasis(obasis["shell_types"]), 33)
+    assert obasis.nbasis == 33
     dm_full = fields['dm_full_%s' % key]
     assert_equal(dm_full[0, 0], numbers[0])
     assert_equal(dm_full[32, 32], numbers[1])
@@ -264,7 +285,7 @@ def check_load_nitrogen(key, numbers_full, numbers_spin):
     """Perform some basic checks on a nitrogen fchk file."""
     fields = load_fchk_helper_internal('nitrogen-{}.fchk'.format(key))
     obasis = fields['obasis']
-    assert_equal(shells_to_nbasis(obasis["shell_types"]), 9)
+    assert obasis.nbasis == 9
     dm_full = fields['dm_full_%s' % key]
     assert_equal(dm_full[0, 0], numbers_full[0])
     assert_equal(dm_full[8, 8], numbers_full[1])
@@ -296,7 +317,7 @@ def test_load_nitrogen_mp3():
 def check_normalization_dm_full_azirine(key):
     """Perform some basic checks on a 2h-azirine fchk file."""
     mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
-    olp = compute_overlap(**mol.obasis)
+    olp = compute_overlap(mol.obasis)
     dm = getattr(mol, 'dm_full_%s' % key)
     check_dm(dm, olp, eps=1e-2, occ_max=2)
     assert_allclose(np.einsum('ab,ba', olp, dm), 22.0, atol=1.e-3)

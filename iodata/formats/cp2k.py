@@ -27,7 +27,8 @@ from typing import Dict, Union, List, Tuple
 import numpy as np
 from scipy.special import factorialk
 
-from ..utils import shells_to_nbasis, str_to_shell_types, LineIterator
+from ..basis import angmom_sti, MolecularBasis, Shell, HORTON2_CONVENTIONS
+from ..utils import LineIterator
 
 
 __all__ = ['load']
@@ -36,12 +37,20 @@ __all__ = ['load']
 patterns = ['*.cp2k.out']
 
 
+CONVENTIONS = {
+    (0, 'c'): HORTON2_CONVENTIONS[(0, 'c')],
+    (1, 'c'): HORTON2_CONVENTIONS[(1, 'c')],
+    (2, 'p'): HORTON2_CONVENTIONS[(2, 'p')],
+    (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
+}
+
 def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) \
         -> Union[float, np.ndarray]:
     """Compute the corrections for the normalization of the basis functions.
 
-    This correction is needed because the CP2K atom code works with non-normalized basis
-    functions. HORTON assumes Gaussian primitives are always normalized.
+    This correction is needed because the CP2K atom code works with a different
+    type of normalization for the primitives. IOData assumes Gaussian primitives
+    are always L2-normalized.
 
     Parameters
     ----------
@@ -65,7 +74,7 @@ def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) \
     return zeta ** expzet / prefac
 
 
-def _read_cp2k_contracted_obasis(lit: LineIterator) -> Dict:
+def _read_cp2k_contracted_obasis(lit: LineIterator) -> MolecularBasis:
     """Read a contracted basis set from an open CP2K ATOM output file.
 
     Parameters
@@ -76,60 +85,41 @@ def _read_cp2k_contracted_obasis(lit: LineIterator) -> Dict:
     Returns
     -------
     obasis
-        The orbital basis parameters read from the file. Can be used to
-        initialize a GOBasis object.
+        The orbital basis.
 
     """
-    # Load the relevant data from the file
-    basis_desc = []
-    for line in lit:
-        if line.startswith(' *******************'):
+    shells = []
+    while True:
+        line = next(lit)
+        if line[3:12] != 'Functions':
             break
-        elif line[3:12] == 'Functions':
-            shell_type = str_to_shell_types(line[1:2], pure=True)[0]
-            a = []  # exponents (alpha)
-            c = []  # contraction coefficients
-            basis_desc.append((shell_type, a, c))
-        else:
+        angmom = angmom_sti(line[1:2])
+        exponents = []
+        coeffs = []
+        for line in lit:
+            if line[3:12] == 'Functions' or line.startswith(' *******************'):
+                break
             values = [float(w) for w in line.split()]
-            a.append(values[0])  # one exponent per line
-            c.append(values[1:])  # many contraction coefficients per line
+            # one exponent per line
+            exponents.append(values[0])
+            # many contraction coefficients per line, all corresponding to the
+            # same primitive, so rows in coeffs
+            coeffs.append(
+                np.array(values[1:]) / _get_cp2k_norm_corrections(angmom, values[0]))
+        # Push back the last line for the next iteration
+        lit.back(line)
+        # Build the shell
+        exponents = np.array(exponents)
+        coeffs = np.array(coeffs)
+        kind = 'c' if angmom < 2 else 'p'
+        shells.append(Shell(0, np.array([angmom] * coeffs.shape[1]),
+                            [kind] * coeffs.shape[1],
+                            exponents, coeffs))
 
-    # Convert the basis into HORTON format
-    shell_map = []
-    shell_types = []
-    nprims = []
-    alphas = []
-    con_coeffs = []
-
-    for shell_type, a, c in basis_desc:
-        # get correction to contraction coefficients. CP2K uses different normalization
-        # conventions.
-        corrections = _get_cp2k_norm_corrections(abs(shell_type), np.array(a))
-        c = np.array(c) / corrections.reshape(-1, 1)
-        # fill in arrays
-        for col in c.T:
-            shell_map.append(0)
-            shell_types.append(shell_type)
-            nprims.append(len(col))
-            alphas.extend(a)
-            con_coeffs.extend(col)
-
-    # Create the basis object
-    coordinates = np.zeros((1, 3))
-    shell_map = np.array(shell_map)
-    nprims = np.array(nprims)
-    shell_types = np.array(shell_types)
-    alphas = np.array(alphas)
-    con_coeffs = np.array(con_coeffs)
-
-    obasis = {"centers": coordinates, "shell_map": shell_map, "nprims": nprims,
-              "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
-
-    return obasis
+    return MolecularBasis(np.zeros((1, 3)), shells, CONVENTIONS, 'L2')
 
 
-def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> Dict:
+def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> MolecularBasis:
     """Read an uncontracted basis set from an open CP2K ATOM output file.
 
     Parameters
@@ -145,46 +135,32 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> Dict:
 
     """
     # Load the relevant data from the file
-    basis_desc = []
-    shell_type = None
-    for line in lit:
-        if line.startswith(' *******************'):
+    shells = []
+    next(lit)
+    while True:
+        line = next(lit)
+        if line[3:13] != 'Exponents:':
             break
-        elif line[3:13] == 'Exponents:':
-            shell_type = str_to_shell_types(line[1:2], pure=True)[0]
-        words = line.split()
-        if len(words) >= 2:
+        angmom = angmom_sti(line[1:2])
+        exponents = []
+        coeffs = []
+        while True:
+            if line.strip() == "" or "*****" in line:
+                break
+            words = line.split()
             # read the exponent
-            alpha = float(words[-1])
-            basis_desc.append((shell_type, alpha))
+            exponent = float(words[-1])
+            exponents.append(exponent)
+            coeffs.append([1.0 / _get_cp2k_norm_corrections(angmom, exponent)])
+            line = next(lit)
+        # Build the shell
+        kind = 'c' if angmom < 2 else 'p'
+        for exponent, coeff in zip(exponents, coeffs):
+            shells.append(Shell(
+                0, np.array([angmom]), [kind],
+                np.array([exponent]), np.array([[coeff]])))
 
-    # Convert the basis into HORTON format
-    shell_map = []
-    shell_types = []
-    nprims = []
-    alphas = []
-    con_coeffs = []
-
-    # fill in arrays
-    for shell_type, alpha in basis_desc:
-        correction = _get_cp2k_norm_corrections(abs(shell_type), alpha)
-        shell_map.append(0)
-        shell_types.append(shell_type)
-        nprims.append(1)
-        alphas.append(alpha)
-        con_coeffs.append(1.0 / correction)
-
-    # Create the basis object
-    centers = np.zeros((1, 3))
-    shell_map = np.array(shell_map)
-    nprims = np.array(nprims)
-    shell_types = np.array(shell_types)
-    alphas = np.array(alphas)
-    con_coeffs = np.array(con_coeffs)
-
-    obasis = {"centers": centers, "shell_map": shell_map, "nprims": nprims,
-              "shell_types": shell_types, "alphas": alphas, "con_coeffs": con_coeffs}
-    return obasis
+    return MolecularBasis(np.zeros((1, 3)), shells, CONVENTIONS, 'L2')
 
 
 # pylint: disable=inconsistent-return-statements
@@ -221,7 +197,7 @@ def _read_cp2k_occupations_energies(lit: LineIterator, restricted: bool) \
     Parameters
     ----------
     lit
-        LineIterator
+        The line iterator to read the data from.
     restricted
         If ``True`` the wave-function is considered to be restricted. If
         ``False`` the unrestricted wave-function is assumed.
@@ -273,21 +249,21 @@ def _read_cp2k_orbital_coeffs(lit: LineIterator, oe: List[Tuple[int, int, float,
         Key is an (l, s) pair and value is an array with orbital coefficients.
 
     """
-    coeffs = {}
+    allcoeffs = {}
     next(lit)
-    while len(coeffs) < len(oe):
+    while len(allcoeffs) < len(oe):
         line = next(lit)
         assert line.startswith("    ORBITAL      L =")
         words = line.split()
-        l = int(words[3])
-        s = int(words[6])
-        c = []
+        angmom = int(words[3])
+        state = int(words[6])
+        coeffs = []
         for line in lit:
             if line.strip() == "":
                 break
-            c.append(float(line))
-        coeffs[(l, s)] = np.array(c)
-    return coeffs
+            coeffs.append(float(line))
+        allcoeffs[(angmom, state)] = np.array(coeffs)
+    return allcoeffs
 
 
 def _get_norb_nel(oe: List[Tuple[int, int, float, float]]) -> Tuple[int, float]:
@@ -313,9 +289,12 @@ def _get_norb_nel(oe: List[Tuple[int, int, float, float]]) -> Tuple[int, float]:
     return norb, nel
 
 
-def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupations: np.ndarray,
+def _fill_orbitals(orb_coeffs: np.ndarray,
+                   orb_energies: np.ndarray,
+                   orb_occupations: np.ndarray,
                    oe: List[Tuple[int, int, float, float]],
-                   coeffs: Dict[Tuple[int, int], np.ndarray], shell_types: np.ndarray,
+                   coeffs: Dict[Tuple[int, int], np.ndarray],
+                   obasis: MolecularBasis,
                    restricted: bool):
     """Fill in orbital coefficients, energies and occupation numbers.
 
@@ -334,8 +313,8 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
         ``_read_cp2k_occupations_energies``.
     coeffs
         The orbital coefficients read with ``_read_cp2k_orbital_coeffs``.
-    shell_types
-        The array with shell types of the GOBasis instance.
+    obasis
+        The molecular basis set
     restricted
         Is wavefunction restricted or unrestricted?
 
@@ -343,7 +322,7 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
     # Find the offsets for each angular momentum
     offset = 0
     offsets = []
-    ls = abs(shell_types)
+    ls = np.concatenate([shell.angmoms for shell in obasis.shells])
     for l in sorted(set(ls)):
         offsets.append(offset)
         offset += (2 * l + 1) * (l == ls).sum()
@@ -351,11 +330,10 @@ def _fill_orbitals(orb_coeffs: np.ndarray, orb_energies: np.ndarray, orb_occupat
 
     # Fill in the coefficients
     iorb = 0
-    for l, s, occ, ener in oe:
-        cs = coeffs.get((l, s))
+    for l, state, occ, ener in oe:
+        cs = coeffs.get((l, state))
         stride = 2 * l + 1
-        for m in range(-l, l + 1):
-            im = m + l
+        for im in range(2 * l + 1):
             orb_energies[iorb] = ener
             orb_occupations[iorb] = occ / float((restricted + 1) * (2 * l + 1))
             for ic, c in enumerate(cs):
@@ -470,33 +448,32 @@ def load(lit: LineIterator) -> Dict:
         coeffs_beta = _read_cp2k_orbital_coeffs(lit, oe_beta)
 
     # Turn orbital data into a HORTON orbital expansions
-    nbasis = shells_to_nbasis(obasis['shell_types'])
     if restricted:
         norb, nel = _get_norb_nel(oe_alpha)
         assert nel % 2 == 0
-        orb_alpha = (nbasis, norb)
+        orb_alpha = (obasis.nbasis, norb)
         orb_beta = None
-        orb_alpha_coeffs = np.zeros([nbasis, norb])
+        orb_alpha_coeffs = np.zeros([obasis.nbasis, norb])
         orb_alpha_energies = np.zeros(norb)
         orb_alpha_occs = np.zeros(norb)
         _fill_orbitals(orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs,
-                       oe_alpha, coeffs_alpha, obasis["shell_types"], restricted)
+                       oe_alpha, coeffs_alpha, obasis, restricted)
     else:
         norb_alpha = _get_norb_nel(oe_alpha)[0]
         norb_beta = _get_norb_nel(oe_beta)[0]
         assert norb_alpha == norb_beta
-        orb_alpha = (nbasis, norb_alpha)
-        orb_alpha_coeffs = np.zeros([nbasis, norb_alpha])
+        orb_alpha = (obasis.nbasis, norb_alpha)
+        orb_alpha_coeffs = np.zeros([obasis.nbasis, norb_alpha])
         orb_alpha_energies = np.zeros(norb_alpha)
         orb_alpha_occs = np.zeros(norb_alpha)
-        orb_beta = (nbasis, norb_beta)
-        orb_beta_coeffs = np.zeros([nbasis, norb_beta])
+        orb_beta = (obasis.nbasis, norb_beta)
+        orb_beta_coeffs = np.zeros([obasis.nbasis, norb_beta])
         orb_beta_energies = np.zeros(norb_beta)
         orb_beta_occs = np.zeros(norb_beta)
         _fill_orbitals(orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs,
-                       oe_alpha, coeffs_alpha, obasis["shell_types"], restricted)
+                       oe_alpha, coeffs_alpha, obasis, restricted)
         _fill_orbitals(orb_beta_coeffs, orb_beta_energies, orb_beta_occs,
-                       oe_beta, coeffs_beta, obasis["shell_types"], restricted)
+                       oe_beta, coeffs_beta, obasis, restricted)
 
     result = {
         'obasis': obasis,
@@ -504,7 +481,7 @@ def load(lit: LineIterator) -> Dict:
         'orb_alpha_coeffs': orb_alpha_coeffs,
         'orb_alpha_energies': orb_alpha_energies,
         'orb_alpha_occs': orb_alpha_occs,
-        'coordinates': obasis["centers"],
+        'coordinates': obasis.centers,
         'numbers': np.array([number]),
         'energy': energy,
         'pseudo_numbers': np.array([pseudo_number]),

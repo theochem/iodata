@@ -24,10 +24,10 @@
 
 from numpy.testing import assert_equal, assert_allclose
 
-from . common import check_orthonormal
-from .. iodata import load_one
-from .. utils import angstrom, shells_to_nbasis
-from .. overlap import compute_overlap
+from .common import check_orthonormal
+from ..overlap import compute_overlap
+from ..iodata import load_one
+from ..utils import angstrom
 
 try:
     from importlib_resources import path
@@ -46,16 +46,18 @@ def test_load_mkl_ethanol():
     assert_equal(mol.coordinates.shape, (9, 3))
     assert_allclose(mol.coordinates[2, 1] / angstrom, 2.239037, atol=1.e-5)
     assert_allclose(mol.coordinates[5, 2] / angstrom, 0.948420, atol=1.e-5)
-    assert_equal(shells_to_nbasis(mol.obasis["shell_types"]), 39)
-    assert_allclose(mol.obasis['alphas'][0], 18.731137000)
-    assert_allclose(mol.obasis['alphas'][10], 7.868272400)
-    assert_allclose(mol.obasis['alphas'][-3], 2.825393700)
-    # assert mol.obasis.con_coeffs[5] == 0.989450608
-    # assert mol.obasis.con_coeffs[7] == 2.079187061
-    # assert mol.obasis.con_coeffs[-1] == 0.181380684
-    assert_equal(mol.obasis["shell_map"][:5], [0, 0, 1, 1, 1])
-    assert_equal(mol.obasis["shell_types"][:5], [0, 0, 0, 0, 1])
-    assert_equal(mol.obasis['nprims'][-5:], [3, 1, 1, 3, 1])
+    assert mol.obasis.nbasis == 39
+    assert_allclose(mol.obasis.shells[0].exponents[0], 18.731137000)
+    assert_allclose(mol.obasis.shells[4].exponents[0], 7.868272400)
+    assert_allclose(mol.obasis.shells[7].exponents[1], 2.825393700)
+    # No correspondence due to correction of the normalization of
+    # the primivitves:
+    # assert_allclose(mol.obasis.shells[2].coeffs[1, 0], 0.989450608)
+    # assert_allclose(mol.obasis.shells[2].coeffs[3, 0], 2.079187061)
+    # assert_allclose(mol.obasis.shells[-1].coeffs[-1, -1], 0.181380684)
+    assert_equal([shell.icenter for shell in mol.obasis.shells[:5]], [0, 0, 1, 1, 1])
+    assert_equal([shell.angmoms[0] for shell in mol.obasis.shells[:5]], [0, 0, 0, 0, 1])
+    assert_equal([shell.nprim for shell in mol.obasis.shells[:5]], [3, 1, 6, 3, 3])
     assert_equal(mol.orb_alpha_coeffs.shape, (39, 39))
     assert_equal(mol.orb_alpha_energies.shape, (39,))
     assert_equal(mol.orb_alpha_occs.shape, (39,))
@@ -73,7 +75,7 @@ def test_load_mkl_li2():
         mol = load_one(str(fn_mkl))
 
     # Check normalization
-    olp = compute_overlap(**mol.obasis)
+    olp = compute_overlap(mol.obasis)
     check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
     check_orthonormal(mol.orb_beta_coeffs, olp, 1e-5)
 
@@ -81,5 +83,5 @@ def test_load_mkl_li2():
 def test_load_mkl_h2():
     with path('iodata.test.data', 'h2_sto3g.mkl') as fn_mkl:
         mol = load_one(str(fn_mkl))
-    olp = compute_overlap(**mol.obasis)
+    olp = compute_overlap(mol.obasis)
     check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)

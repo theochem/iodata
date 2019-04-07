@@ -24,11 +24,15 @@
 
 import os
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
 from .common import compute_mulliken_charges, compare_mols, check_orthonormal
+from ..basis import convert_conventions
+from ..formats.molden import _load_low
 from ..iodata import load_one, dump_one
-from ..overlap import compute_overlap
+from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
+from ..utils import LineIterator
+
 
 try:
     from importlib_resources import path
@@ -44,7 +48,7 @@ def test_load_molden_li2_orca():
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=li2'
 
     # Check normalization
-    olp = compute_overlap(**mol.obasis)
+    olp = compute_overlap(mol.obasis)
     check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
     check_orthonormal(mol.orb_beta_coeffs, olp, 1e-5)
 
@@ -62,7 +66,7 @@ def test_load_molden_h2o_orca():
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=h2o'
 
     # Check normalization
-    olp = compute_overlap(**mol.obasis)
+    olp = compute_overlap(mol.obasis)
     check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
 
     # Check Mulliken charges
@@ -81,6 +85,69 @@ def test_load_molden_nh3_molden_pure():
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
     assert_allclose(charges, molden_charges, atol=1.e-3)
+
+
+def test_load_molden_low_nh3_molden_cart():
+    with path('iodata.test.data', 'nh3_molden_cart.molden') as fn_molden:
+        lit = LineIterator(str(fn_molden))
+        data = _load_low(lit)
+    obasis = data['obasis']
+    assert obasis.nbasis == 52
+    assert len(obasis.shells) == 24
+    for shell in obasis.shells:
+        assert shell.kinds == ['c']
+        assert shell.ncon == 1
+    for ishell in [0, 1, 2, 3, 9, 10, 11, 14, 15, 16, 19, 20, 21]:
+        shell = obasis.shells[ishell]
+        assert shell.angmoms == [0]
+    for ishell in [4, 5, 6, 12, 13, 17, 18, 22, 23]:
+        shell = obasis.shells[ishell]
+        assert shell.angmoms == [1]
+    for ishell in [7, 8]:
+        shell = obasis.shells[ishell]
+        assert shell.angmoms == [2]
+    for shell in obasis.shells[:9]:
+        assert shell.icenter == 0
+    for shell in obasis.shells[9:14]:
+        assert shell.icenter == 1
+    for shell in obasis.shells[14:19]:
+        assert shell.icenter == 2
+    for shell in obasis.shells[19:]:
+        assert shell.icenter == 3
+
+    shell0 = obasis.shells[0]
+    assert shell0.nprim == 8
+    assert shell0.exponents.shape == (8, )
+    assert_allclose(shell0.exponents[4], 0.2856000000E+02)
+    assert shell0.coeffs.shape == (8, 1)
+    assert_allclose(shell0.coeffs[4, 0], 0.2785706633E+00)
+    shell7 = obasis.shells[7]
+    assert shell7.nprim == 1
+    assert shell7.exponents.shape == (1, )
+    assert_allclose(shell7.exponents, [0.8170000000E+00])
+    assert_allclose(shell7.coeffs, [[1.0]])
+    assert shell7.coeffs.shape == (1, 1)
+    shell19 = obasis.shells[19]
+    assert shell19.nprim == 3
+    assert shell19.exponents.shape == (3, )
+    assert_allclose(shell19.exponents, [
+        0.1301000000E+02, 0.1962000000E+01, 0.4446000000E+00])
+    assert_allclose(shell19.coeffs, [
+        [0.3349872639E-01], [0.2348008012E+00], [0.8136829579E+00]])
+    assert shell19.coeffs.shape == (3, 1)
+
+    orb_alpha_coeffs = data['orb_alpha_coeffs']
+    assert orb_alpha_coeffs.shape == (52, 52)
+    assert_allclose(orb_alpha_coeffs[:2, 0], [1.002730, 0.005420])
+    assert_allclose(orb_alpha_coeffs[-2:, 1], [0.003310, -0.011620])
+    assert_allclose(orb_alpha_coeffs[-4:-2, -1], [-0.116400, 0.098220])
+
+    permutation, signs = convert_conventions(obasis, OVERLAP_CONVENTIONS)
+    assert_equal(permutation, [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 14, 18, 15, 19,
+        22, 23, 20, 24, 21, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+        38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51])
+    assert_equal(signs, [1] * 52)
 
 
 def test_load_molden_nh3_molden_cart():

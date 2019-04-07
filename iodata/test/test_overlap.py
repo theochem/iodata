@@ -19,18 +19,40 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 #
 # --
+# pylint: disable=no-member
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
+from pytest import raises
 
-from ..overlap import compute_overlap
+from ..basis import MolecularBasis, Shell
+from ..iodata import load_one
+from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 from ..overlap_accel import fac2, _binom
 
 try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
+
+
+def test_normalization_basics_segmented():
+    for angmom in range(7):
+        shells = [Shell(0, [angmom], ['c'], np.array([0.23]), np.array([[1.0]]))]
+        if angmom >= 2:
+            shells.append(Shell(0, [angmom], ['p'], np.array([0.23]), np.array([[1.0]])))
+        obasis = MolecularBasis(np.zeros((3, 1)), shells, OVERLAP_CONVENTIONS, 'L2')
+        overlap = compute_overlap(obasis)
+        assert_allclose(np.diag(overlap), np.ones(obasis.nbasis))
+
+
+def test_normalization_basics_generalized():
+    for angmom in range(2, 7):
+        shells = [Shell(0, [angmom] * 2, ['c', 'p'], np.array([0.23]), np.array([[1.0, 1.0]]))]
+        obasis = MolecularBasis(np.zeros((3, 1)), shells, OVERLAP_CONVENTIONS, 'L2')
+        overlap = compute_overlap(obasis)
+        assert_allclose(np.diag(overlap), np.ones(obasis.nbasis))
 
 
 def test_fac2():
@@ -58,123 +80,31 @@ def test_binom():
 def test_load_fchk_hf_sto3g_num():
     with path('iodata.test.data', 'load_fchk_hf_sto3g_num.npy') as fn_npy:
         ref = np.load(str(fn_npy))
-    d = dict([('centers', np.array([[0., 0., 0.19048439],
-                                    [0., 0., -1.71435955]])),
-              ('shell_map', np.array([0, 0, 0, 1])),
-              ('nprims', np.array([3, 3, 3, 3])),
-              ('shell_types', np.array([0, 0, 1, 0])),
-              ('alphas',
-               np.array([166.679134, 30.3608123, 8.21682067, 6.46480325,
-                         1.50228124, 0.48858849, 6.46480325, 1.50228124,
-                         0.48858849, 3.42525091, 0.62391373, 0.1688554])),
-              ('con_coeffs', np.array([0.15432897, 0.53532814, 0.44463454,
-                                       -0.09996723, 0.39951283, 0.70011547,
-                                       0.15591627, 0.60768372, 0.39195739,
-                                       0.15432897, 0.53532814, 0.44463454]))])
-    assert_allclose(ref, compute_overlap(**d), rtol=1.e-5, atol=1.e-8)
+    with path('iodata.test.data', 'hf_sto3g.fchk') as fn_fchk:
+        data = load_one(fn_fchk)
+    assert_allclose(ref, compute_overlap(data.obasis), rtol=1.e-5, atol=1.e-8)
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
     with path('iodata.test.data',
               'load_fchk_o2_cc_pvtz_pure_num.npy') as fn_npy:
         ref = np.load(str(fn_npy))
-    d = dict(
-        [('centers',
-          np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
-                    [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])),
-         ('shell_map', np.array(
-             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])),
-         ('nprims',
-          np.array(
-              [7, 7, 1, 1, 3, 1, 1, 1, 1, 1, 7, 7, 1, 1, 3, 1, 1, 1, 1, 1])),
-         ('shell_types',
-          np.array([0, 0, 0, 0, 1, 1, 1, -2, -2, -3,
-                    0, 0, 0, 0, 1, 1, 1, -2, -2, -3])),
-         ('alphas', np.array([1.53300000e+04, 2.29900000e+03, 5.22400000e+02,
-                              1.47300000e+02, 4.75500000e+01, 1.67600000e+01,
-                              6.20700000e+00, 1.53300000e+04, 2.29900000e+03,
-                              5.22400000e+02, 4.75500000e+01, 1.67600000e+01,
-                              6.20700000e+00, 6.88200000e-01, 1.75200000e+00,
-                              2.38400000e-01, 3.44600000e+01, 7.74900000e+00,
-                              2.28000000e+00, 7.15600000e-01, 2.14000000e-01,
-                              2.31400000e+00, 6.45000000e-01, 1.42800000e+00,
-                              1.53300000e+04, 2.29900000e+03, 5.22400000e+02,
-                              1.47300000e+02, 4.75500000e+01, 1.67600000e+01,
-                              6.20700000e+00, 1.53300000e+04, 2.29900000e+03,
-                              5.22400000e+02, 4.75500000e+01, 1.67600000e+01,
-                              6.20700000e+00, 6.88200000e-01, 1.75200000e+00,
-                              2.38400000e-01, 3.44600000e+01, 7.74900000e+00,
-                              2.28000000e+00, 7.15600000e-01, 2.14000000e-01,
-                              2.31400000e+00, 6.45000000e-01, 1.42800000e+00])),
-         ('con_coeffs', np.array(
-             [5.19808943e-04, 4.02025621e-03, 2.07128267e-02,
-              8.10105536e-02, 2.35962985e-01, 4.42653446e-01,
-              3.57064423e-01, 9.13376623e-06, 6.07362596e-05,
-              2.68782282e-04, -6.96940030e-03, -6.06456900e-02,
-              -1.65519536e-01, 1.07151369e+00, 1.00000000e+00,
-              1.00000000e+00, 4.11634896e-02, 2.57762836e-01,
-              8.02419274e-01, 1.00000000e+00, 1.00000000e+00,
-              1.00000000e+00, 1.00000000e+00, 1.00000000e+00,
-              5.19808943e-04, 4.02025621e-03, 2.07128267e-02,
-              8.10105536e-02, 2.35962985e-01, 4.42653446e-01,
-              3.57064423e-01, 9.13376623e-06, 6.07362596e-05,
-              2.68782282e-04, -6.96940030e-03, -6.06456900e-02,
-              -1.65519536e-01, 1.07151369e+00, 1.00000000e+00,
-              1.00000000e+00, 4.11634896e-02, 2.57762836e-01,
-              8.02419274e-01, 1.00000000e+00, 1.00000000e+00,
-              1.00000000e+00, 1.00000000e+00, 1.00000000e+00]))])
-    assert_allclose(ref, compute_overlap(**d), rtol=1.e-5, atol=1.e-8)
+    with path('iodata.test.data', 'o2_cc_pvtz_pure.fchk') as fn_fchk:
+        data = load_one(fn_fchk)
+    assert_allclose(ref, compute_overlap(data.obasis), rtol=1.e-5, atol=1.e-8)
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
     with path('iodata.test.data',
               'load_fchk_o2_cc_pvtz_cart_num.npy') as fn_npy:
         ref = np.load(str(fn_npy))
-    d = dict(
-        [('centers',
-          np.array([[0.00000000e+00, 0.00000000e+00, 1.09122830e+00],
-                    [1.33636924e-16, 0.00000000e+00, -1.09122830e+00]])),
-         ('shell_map',
-          np.array(
-              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])),
-         ('nprims',
-          np.array(
-              [7, 7, 1, 1, 3, 1, 1, 1, 1, 1, 7, 7, 1, 1, 3, 1, 1, 1, 1, 1])),
-         ('shell_types',
-          np.array(
-              [0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 0, 0, 0, 0, 1, 1, 1, 2, 2, 3])),
-         ('alphas', np.array([1.53300000e+04, 2.29900000e+03, 5.22400000e+02,
-                              1.47300000e+02, 4.75500000e+01, 1.67600000e+01,
-                              6.20700000e+00, 1.53300000e+04, 2.29900000e+03,
-                              5.22400000e+02, 4.75500000e+01, 1.67600000e+01,
-                              6.20700000e+00, 6.88200000e-01, 1.75200000e+00,
-                              2.38400000e-01, 3.44600000e+01, 7.74900000e+00,
-                              2.28000000e+00, 7.15600000e-01, 2.14000000e-01,
-                              2.31400000e+00, 6.45000000e-01, 1.42800000e+00,
-                              1.53300000e+04, 2.29900000e+03, 5.22400000e+02,
-                              1.47300000e+02, 4.75500000e+01, 1.67600000e+01,
-                              6.20700000e+00, 1.53300000e+04, 2.29900000e+03,
-                              5.22400000e+02, 4.75500000e+01, 1.67600000e+01,
-                              6.20700000e+00, 6.88200000e-01, 1.75200000e+00,
-                              2.38400000e-01, 3.44600000e+01, 7.74900000e+00,
-                              2.28000000e+00, 7.15600000e-01, 2.14000000e-01,
-                              2.31400000e+00, 6.45000000e-01, 1.42800000e+00])),
-         ('con_coeffs',
-          np.array([5.19808943e-04, 4.02025621e-03, 2.07128267e-02,
-                    8.10105536e-02, 2.35962985e-01, 4.42653446e-01,
-                    3.57064423e-01, 9.13376623e-06, 6.07362596e-05,
-                    2.68782282e-04, -6.96940030e-03, -6.06456900e-02,
-                    -1.65519536e-01, 1.07151369e+00, 1.00000000e+00,
-                    1.00000000e+00, 4.11634896e-02, 2.57762836e-01,
-                    8.02419274e-01, 1.00000000e+00, 1.00000000e+00,
-                    1.00000000e+00, 1.00000000e+00, 1.00000000e+00,
-                    5.19808943e-04, 4.02025621e-03, 2.07128267e-02,
-                    8.10105536e-02, 2.35962985e-01, 4.42653446e-01,
-                    3.57064423e-01, 9.13376623e-06, 6.07362596e-05,
-                    2.68782282e-04, -6.96940030e-03, -6.06456900e-02,
-                    -1.65519536e-01, 1.07151369e+00, 1.00000000e+00,
-                    1.00000000e+00, 4.11634896e-02, 2.57762836e-01,
-                    8.02419274e-01, 1.00000000e+00, 1.00000000e+00,
-                    1.00000000e+00, 1.00000000e+00, 1.00000000e+00]))])
+    with path('iodata.test.data', 'o2_cc_pvtz_cart.fchk') as fn_fchk:
+        data = load_one(fn_fchk)
+    obasis = data.obasis._replace(conventions=OVERLAP_CONVENTIONS)
+    assert_allclose(ref, compute_overlap(obasis), rtol=1.e-5, atol=1.e-8)
 
-    assert_allclose(ref, compute_overlap(**d), atol=1e-8)
+
+def test_overlap_l1():
+    dbasis = MolecularBasis(np.zeros((3, 1)), [], {}, 'L1')
+    with raises(ValueError):
+        _ = compute_overlap(dbasis)

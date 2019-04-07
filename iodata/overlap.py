@@ -29,166 +29,117 @@ from scipy.special import factorialk
 
 from .overlap_accel import add_overlap
 from .overlap_helper import tfs
+from .basis import convert_conventions, iter_cart_alphabet
+from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
 
 
-__all__ = ['compute_overlap', 'gob_cart_normalization', 'get_shell_nbasis']
+__all__ = ['OVERLAP_CONVENTIONS', 'compute_overlap', 'gob_cart_normalization']
 
 
-def compute_overlap(centers: np.ndarray, shell_map: np.ndarray, nprims: np.ndarray,
-                    shell_types: np.ndarray, alphas: np.ndarray,
-                    con_coeffs: np.ndarray) -> np.ndarray:
-    r"""
-    Compute overlap matrix. Follows same parameter convention as horton.GOBasis.
+def compute_overlap(obasis: 'MolecularBasis') -> np.ndarray:
+    r"""Compute overlap matrix for the given molecular basis set.
 
     .. math::
         \braket{\psi_{i}}{\psi_{j}}
 
-    Parameters
-    ----------
-    centers
-        A numpy array with centers for the basis functions.
-        shape = (ncenter, 3)
-    shell_map
-        An array with the center index for each shell.
-        shape = (nshell,)
-    nprims
-        The number of primitives in each shell.
-        shape = (nshell,)
-    shell_types
-        An array with contraction types: 0 = S, 1 = P, 2 = Cartesian D,
-        3 = Cartesian F, ..., -2 = pure D, -3 = pure F, ...
-        shape = (nshell,)
-    alphas
-        The exponents of the primitives in one shell.
-        shape = (sum(nprims),)
-    con_coeffs
-        The contraction coefficients of the primitives for each
-        contraction in a contiguous array. The coefficients are ordered
-        according to the shells. Within each shell, the coefficients are
-        grouped per exponent.
-        shape = (sum(nprims),)
+    This function takes into account the requested order of the basis functions
+    in ``obasis.conventions``. Note that only L2 normalized primitives are
+    supported at the moment.
 
     Returns
     -------
-    np.ndarray
-        The overlap integral.
+    overlap
+        The matrix with overlap integrals, shape=(obasis.nbasis, obasis.nbasis).
 
     """
-    # compute total number of shells
-    nshell = len(shell_types)
-    # compute number of basis functions in each shell
-    shell_nbasis = np.array([get_shell_nbasis(shell) for shell in shell_types])
-    # compute total number of basis functions
-    nbasis = np.sum(shell_nbasis)
-    # compute index offset of each shell
-    shell_offsets = np.cumsum(np.insert(shell_nbasis, 0, 0), dtype=int)
-
-    scales, scales_offsets = init_scales(alphas, nprims, shell_types)
+    if obasis.primitive_normalization != 'L2':
+        raise ValueError('The overlap integrals are only implemented for L2 '
+                         'normalization.')
 
     # Initialize result
-    integral = np.zeros((nbasis, nbasis))
+    overlap = np.zeros((obasis.nbasis, obasis.nbasis))
 
-    # Reorganize arrays in pythonic manner
-    alphas_split = _split_data_by_prims(alphas, nprims)
-    con_coeffs_split = _split_data_by_prims(con_coeffs, nprims)
-    scales_offsets_split = _split_data_by_prims(scales_offsets, nprims)
+    # Get a segmented basis, for simplicity
+    obasis = obasis.get_segmented()
+
+    # Compute the normalization constants of the primitives
+    scales = [_compute_cart_shell_normalizations(shell) for shell in obasis.shells]
 
     # Loop over shell0
-    for big_tuple0 in zip(list(range(nshell)), shell_map, shell_types, shell_offsets,
-                          shell_offsets[1:],
-                          alphas_split, con_coeffs_split, scales_offsets_split):
+    begin0 = 0
+    for i0, shell0 in enumerate(obasis.shells):
+        r0 = obasis.centers[shell0.icenter]
+        end0 = begin0 + shell0.nbasis
 
-        (ishell0, center0, shell_type0, start0,
-         end0, alphas0, con_coeffs0, scales_offsets0) = big_tuple0
-
-        r0 = centers[center0, :]
-
-        # Loop over shell1 (lower triangular only)
-        for big_tuple1 in zip(shell_map[:ishell0 + 1], shell_types[:ishell0 + 1], shell_offsets,
-                              shell_offsets[1:], alphas_split[:ishell0 + 1],
-                              con_coeffs_split[:ishell0 + 1], scales_offsets_split[:ishell0 + 1]):
-
-            center1, shell_type1, start1, end1, alphas1, con_coeffs1, scales_offsets1 = big_tuple1
-
-            r1 = centers[center1, :]
+        # Loop over shell1 (lower triangular only, including diagonal)
+        begin1 = 0
+        for i1, shell1 in enumerate(obasis.shells[:i0 + 1]):
+            r1 = obasis.centers[shell1.icenter]
+            end1 = begin1 + shell1.nbasis
 
             # START of Cartesian coordinates. Shell types are positive
-            result = np.zeros((get_shell_nbasis(abs(shell_type0)),
-                               get_shell_nbasis(abs(shell_type1))))
-            # print "shell type", shell_type0, shell_type1
+            result = np.zeros((len(scales[i0][0]), len(scales[i1][0])))
             # Loop over primitives in shell0 (Cartesian)
-            for a0, so0, cc0 in zip(alphas0, scales_offsets0, con_coeffs0):
-                s0 = scales[so0:]
+            for iexp0, (a0, cc0) in enumerate(zip(shell0.exponents, shell0.coeffs[:, 0])):
+                s0 = scales[i0][iexp0]
 
                 # Loop over primitives in shell1 (Cartesian)
-                for a1, so1, cc1 in zip(alphas1, scales_offsets1, con_coeffs1):
-                    s1 = scales[so1:]
-                    n0 = np.vstack(list(_get_iter_pow(abs(shell_type0))))
-                    n1 = np.vstack(list(_get_iter_pow(abs(shell_type1))))
+                for iexp1, (a1, cc1) in enumerate(zip(shell1.exponents, shell1.coeffs[:, 0])):
+                    s1 = scales[i1][iexp1]
+                    n0 = np.vstack(list(iter_cart_alphabet(shell0.angmoms[0])))
+                    n1 = np.vstack(list(iter_cart_alphabet(shell1.angmoms[0])))
                     add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, n0, n1, result)
 
             # END of Cartesian coordinate system (if going to pure coordinates)
 
             # cart to pure
-            if shell_type0 < -1:
-                result = np.dot(tfs[abs(shell_type0)], result)
-            if shell_type1 < -1:
-                result = np.dot(result, tfs[abs(shell_type1)].T)
+            if shell0.kinds[0] == 'p':
+                result = np.dot(tfs[shell0.angmoms[0]], result)
+            if shell1.kinds[0] == 'p':
+                result = np.dot(result, tfs[shell1.angmoms[0]].T)
 
             # store lower triangular result
-            integral[start0:end0, start1:end1] = result
-
+            overlap[begin0:end0, begin1:end1] = result
             # store upper triangular result
-            integral[start1:end1, start0:end0] = result.T
-    return integral
+            overlap[begin1:end1, begin0:end0] = result.T
+
+            begin1 = end1
+        begin0 = end0
+
+    permutation, signs = convert_conventions(obasis, OVERLAP_CONVENTIONS, reverse=True)
+    overlap = overlap[permutation] * signs.reshape(-1, 1)
+    overlap = overlap[:, permutation] * signs
+    return overlap
 
 
-def _split_data_by_prims(x: np.ndarray, nprims: np.ndarray) -> List[np.ndarray]:
-    """Return nested lists according to the number of primitives per shell."""
-    nprims = np.insert(nprims, 0, 0)
-    nprims = np.cumsum(nprims)
-    return [x[s:e] for s, e in zip(nprims, nprims[1:])]
-
-
-def init_scales(alphas: np.ndarray, nprims: np.ndarray, shell_types: np.ndarray) \
-        -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Return normalization constants and offsets per shell.
+def _compute_cart_shell_normalizations(shell: 'Shell') -> np.ndarray:
+    """Return normalization constants for the primitives in a given shell.
 
     Parameters
     ----------
-    alphas
-        Gaussian basis exponents
-    nprims
-        Number of primitives in each shell
-    shell_types
-        The angular momentum of each shell
+    shell
+        The shell for which the normalization constants must be computed.
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray]
-        The normalization factors for each shell
+    np.ndarray
+        The normalization constants, always for Cartesian functions, even when
+        shell is pure.
 
     """
-    counter, oprim = 0, 0
-    nscales = sum([get_shell_nbasis(abs(s)) * p for s, p in zip(shell_types, nprims)])
-    scales = np.zeros(nscales)
-    scales_offsets = np.zeros(sum(nprims), dtype=int)
-
-    for s, shell_type in enumerate(shell_types):
-        for p in range(nprims[s]):
-            scales_offsets[oprim + p] = counter
-            alpha = alphas[oprim + p]
-            for n in _get_iter_pow(abs(shell_type)):
-                scales[counter] = gob_cart_normalization(alpha, n)
-                counter += 1
-        oprim += nprims[s]
-
-    return scales, scales_offsets
+    shell = shell._replace(kinds=['c'] * shell.ncon)
+    result = []
+    for angmom in shell.angmoms:
+        for exponent in shell.exponents:
+            row = []
+            for n in iter_cart_alphabet(angmom):
+                row.append(gob_cart_normalization(exponent, n))
+            result.append(np.array(row))
+    return result
 
 
-def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # from utils
-    """Check normalization of exponent.
+def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:
+    """Compute normalization of exponent.
 
     Parameters
     ----------
@@ -204,40 +155,5 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:  # f
 
     """
     vfac2 = np.vectorize(factorialk)
-    return np.sqrt((4 * alpha)**sum(n) * (2 * alpha / np.pi)**1.5 / np.prod(vfac2(2 * n - 1, 2)))
-
-
-def get_shell_nbasis(shell: int) -> int:
-    """Return number of basis functions within a shell.
-
-    Negative shell numbers refer to pure functions.
-
-    Parameters
-    ----------
-    shell
-        Angular momentum quantum number
-
-    Returns
-    -------
-    int
-        The number of basis functions in the shell
-
-    """
-    if shell > 0:  # Cartesian
-        return int((shell + 1) * (shell + 2) / 2)
-    if shell == -1:
-        raise ValueError("Argument shell={0} is not recognized.".format(shell))
-    # Pure
-    return -2 * shell + 1
-
-
-def _get_iter_pow(n: int) -> np.ndarray:
-    """Give the ordering within shells.
-
-    See http://theochem.github.io/horton/2.1.0b1/tech_ref_gaussian_basis.html
-    for details.
-    """
-    for nx in range(n, -1, -1):
-        for ny in range(n - nx, -1, -1):
-            nz = n - nx - ny
-            yield np.array((nx, ny, nz), dtype=int)
+    return np.sqrt((4 * alpha)**sum(n) * (2 * alpha / np.pi)**1.5
+                   / np.prod(vfac2(2 * n - 1, 2)))
