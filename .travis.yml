@@ -36,7 +36,7 @@ env:
     # This makes it possible to still deploy packages after cache cleaning.
     - CONDA_BLD_PATH=${HOME}/conda-bld
     # Tell roberto which branch is being merged into, in case of a PR.
-    - ROBERTO_MERGE_BRANCH=${TRAVIS_BRANCH}
+    - ROBERTO_GIT_MERGE_BRANCH=${TRAVIS_BRANCH}
     # Debugging options
     # - HUB_VERBOSE=1
 
