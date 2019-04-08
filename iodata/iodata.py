@@ -33,7 +33,7 @@ import numpy as np
 from .utils import LineIterator
 
 
-__all__ = ['IOData']
+__all__ = ['IOData', 'load_one', 'dump_one']
 
 
 def find_format_modules():
