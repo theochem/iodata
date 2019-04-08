@@ -44,6 +44,7 @@ CONVENTIONS = {
     (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
 }
 
+
 def _get_cp2k_norm_corrections(l: int, alphas: Union[float, np.ndarray]) \
         -> Union[float, np.ndarray]:
     """Compute the corrections for the normalization of the basis functions.
