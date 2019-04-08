@@ -32,8 +32,7 @@ from ..periodic import sym2num
 from ..utils import MolecularOrbitals, LineIterator
 
 
-__all__ = ['load_wfn_low', 'get_permutation_orbital',
-           'get_permutation_basis', 'get_mask', 'load']
+__all__ = ['load_wfn_low', 'build_obasis', 'load']
 
 
 patterns = ['*.wfn']
