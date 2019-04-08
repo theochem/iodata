@@ -22,8 +22,6 @@
 """Module for computing overlap of atomic orbital basis functions."""
 
 
-from typing import List, Tuple
-
 import numpy as np
 from scipy.special import factorialk
 
