@@ -36,8 +36,14 @@ from setuptools import setup, Extension
 
 
 def get_version():
-    """Get the version string set by Travis, else default to version 0.0.0."""
-    return os.environ.get("PROJECT_VERSION", "0.0.0")
+    """Read __version__ from version.py, with exec to avoid importing it."""
+    try:
+        with open(os.path.join('iodata', 'version.py'), 'r') as f:
+            myglobals = {}
+            exec(f.read(), myglobals)  # pylint: disable=exec-used
+        return myglobals['__version__']
+    except IOError:
+        return "0.0.0.post0"
 
 
 def get_readme():
