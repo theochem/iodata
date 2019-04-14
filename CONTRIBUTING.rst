@@ -7,19 +7,19 @@ General recommendations
 - Please, be careful with tools like autopep8, black or yapf. They may result in
   a massive number of changes, making pull requests harder to review. Also, when
   using them, use a maximum line length of 100. To avoid confusion, only clean
-  up the code you are working on.
+  up the code you are working on. A safer option is to use
+  `cardboardlint -F -r master`. This will only clean code where you have already
+  made changes.
 
 - Do not add module-level ``pylint: disable=...`` lines, except for the
   ``no-member`` warning in the unit test modules. When adding pylint exception,
   place them as locally as possible and make sure they are justified.
 
-- Use `type hinting<https://docs.python.org/3/library/typing.html>`_ to document
-  the types of function (and method) arguments and return values. This is not
-  yet consistently done throughout IOData at the moment, but it would be helpful
-  to do so in future pull requests. Avoid using strings to postpone the
-  evaluation of the type. (See `PEP
-  0563<https://www.python.org/dev/peps/pep-0563/>`_ for more details on
-  postponed type annotation.)
+- Use `type hinting`_ to document the types of function (and method) arguments
+  and return values. This is not yet consistently done throughout IOData at the
+  moment, but it would be helpful to do so in future pull requests. Avoid using
+  strings to postpone the evaluation of the type. (See `PEP 0563`_ for more
+  details on postponed type annotation.)
 
 - In unit testing, use ``np.testing.assert_close`` and
   ``np.testing.assert_equal`` for comparing floating-point and integer numpy
@@ -237,3 +237,6 @@ Github work flow
     someone should review your pull request in a few days. Ideally, the review
     results in minor corrections at worst. We'll do our best to avoid larger
     problems in step 1.
+
+.. _type hinting: https://docs.python.org/3/library/typing.html
+.. _PEP 0563: https://www.python.org/dev/peps/pep-0563/

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 # IODATA is an input and output module for quantum chemistry.
-#
 # Copyright (C) 2011-2019 The IODATA Development Team
 #
 # This file is part of IODATA.
@@ -17,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
-#
 # --
 """Module for handling CP2K file format."""
 
@@ -31,7 +28,7 @@ from ..basis import angmom_sti, MolecularBasis, Shell, HORTON2_CONVENTIONS
 from ..utils import LineIterator
 
 
-__all__ = ['load']
+__all__ = []
 
 
 patterns = ['*.cp2k.out']

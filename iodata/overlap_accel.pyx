@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 # IODATA is an input and output module for quantum chemistry.
-#
 # Copyright (C) 2011-2019 The IODATA Development Team
 #
 # This file is part of IODATA.
@@ -17,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
-#
 # --
 # cython: linetrace=True
 """Cython module to accelerate computation of overlap integrals."""
@@ -116,10 +113,10 @@ cpdef long _binom(long n, long m) nogil:
 cpdef long fac2(long n) nogil:
     r"""
     Factorial of every other number starting from n.
-    
+
     .. math::
         n*(n-2)*(n-4)...1
-    
+
     Parameters
     ----------
     n
