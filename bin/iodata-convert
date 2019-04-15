@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 # IODATA is an input and output module for quantum chemistry.
-#
 # Copyright (C) 2011-2019 The IODATA Development Team
 #
 # This file is part of IODATA.
@@ -18,59 +16,39 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
-#
 # --
+"""CLI for file conversion."""
 
 
 import argparse
 import numpy as np
 
-from iodata import IOData
+from iodata import load_one, dump_one
+
+try:
+    from iodata import __version__
+except ImportError:
+    __version__ = '0.0.0.post0'
+
 
 # All, except underflows, is *not* fine.
 np.seterr(divide='raise', over='raise', invalid='raise')
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(prog='horton-convert',
-                                     description='Convert between file formats supported in HORTON.'
-                                                 ' This only works if the input contains sufficient'
-                                                 ' data for the output')
-    parser.add_argument('-V', '--version', action='version',
-                        try:
-                            version="%%(prog)s (HORTON version %s)" % version.__version__
-                        except ImportError:
-                            raise ImportError('No version.py file found'))
-    parser.add_argument('input',
-                        help='The input file. Supported file types are: '
-                             '*.h5 (HORTON\'s native format), '
-                             '*.cif (Crystallographic Information File), '
-                             '*.cp2k.out (Output from a CP2K atom computation), '
-                             '*.cube (Gaussian cube file), '
-                             '*.log (Gaussian log file), '
-                             '*.out (Orca output file), '
-                             '*.fchk (Gaussian formatted checkpoint file), '
-                             '*.molden.input (Molden wavefunction file), '
-                             '*.mkl (Molekel wavefunction file), '
-                             '*.wfn (Gaussian/GAMESS wavefunction file), '
-                             'CHGCAR, LOCPOT or POSCAR (VASP files), '
-                             '*.xyz (The XYZ format).')
-    parser.add_argument('output',
-                        help='The output file. Supported file types are: '
-                             '*.h5 (HORTON\'s native format), '
-                             '*.cif (Crystallographic Information File), '
-                             '*.cube (Gaussian cube file), '
-                             '*.molden.input (Molden wavefunction file), '
-                             'POSCAR (VASP files), '
-                             '*.xyz (The XYZ format).')
-
-    return parser.parse_args()
-
-
 def main():
-    args = parse_args()
-    mol = IOData.from_file(args.input)
-    mol.to_file(args.output)
+    """Convert files between two formats using command-line arguments."""
+    parser = argparse.ArgumentParser(
+        prog='horton-convert',
+        description='Convert between file formats supported by IOData. This '
+                    'only works if the input contains sufficient data for '
+                    'the output.')
+    parser.add_argument('-V', '--version', action='version',
+                        version="%(prog)s (IOData version {})".format(__version__))
+    parser.add_argument('input', help='The input file.')
+    parser.add_argument('output', help='The output file.')
+    args = parser.parse_args()
+    data = load_one(args.input)
+    dump_one(data, args.output)
 
 
 if __name__ == '__main__':
