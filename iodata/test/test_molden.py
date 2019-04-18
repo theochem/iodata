@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 # pylint: disable=no-member
-"""Test iodata.molden module."""
+"""Test iodata.formats.molden module."""
 
 import os
 import numpy as np

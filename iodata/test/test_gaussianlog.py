@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Test iodata.log module."""
+"""Test iodata.formats.log module."""
 
 from numpy.testing import assert_equal, assert_allclose
 

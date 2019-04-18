@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 # pylint: disable=no-member
-"""Test iodata.cube module."""
+"""Test iodata.formats.cube module."""
 
 
 import numpy as np

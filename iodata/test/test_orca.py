@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 # pylint: disable=no-member
-"""Test iodata.orca module."""
+"""Test iodata.formats.orca module."""
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
