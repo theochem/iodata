@@ -53,8 +53,8 @@ def angmom_sti(char: str) -> int:
     Returns
     -------
     angmom
-        An integer representation of the angular momentum. A list, if a list of
-        words was given.
+        An integer representation of the angular momentum. If a list of str
+        char is given, a list of integers in returned.
 
     """
     return ANGMOM_CHARS.index(char.lower())
