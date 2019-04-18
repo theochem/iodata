@@ -44,6 +44,18 @@ def test_angmom_sti():
     assert angmom_sti(['e', 't', 'k']) == [24, 14, 7]
 
 
+def test_angmom_sti_uppercase():
+    assert angmom_sti('S') == 0
+    assert angmom_sti('D') == 2
+    assert angmom_sti('g') == 4
+    assert angmom_sti(['P']) == [1]
+    assert angmom_sti(['F', 'f']) == [3, 3]
+    assert angmom_sti(['n', 'N', 'N']) == [10, 10, 10]
+    assert angmom_sti(['D', 'O']) == [2, 11]
+    assert angmom_sti(['S', 'p', 'P', 'D', 's', 'I']) == [0, 1, 1, 2, 0, 6]
+    assert angmom_sti(['E', 'T', 'k']) == [24, 14, 7]
+
+
 def test_angmom_its():
     assert angmom_its(0) == 's'
     assert angmom_its(1) == 'p'
