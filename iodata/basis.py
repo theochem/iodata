@@ -20,7 +20,7 @@
 
 from functools import wraps
 from numbers import Integral
-from typing import List, Dict, NamedTuple, Tuple
+from typing import List, Dict, NamedTuple, Tuple, Union
 
 import numpy as np
 
@@ -42,7 +42,7 @@ def _alsolist(f):
 
 
 @_alsolist
-def angmom_sti(char: str) -> int:
+def angmom_sti(char: Union[str, List[str]]) -> Union[int, List[int]]:
     """Convert an angular momentum from string to integer format.
 
     Parameters
@@ -61,7 +61,7 @@ def angmom_sti(char: str) -> int:
 
 
 @_alsolist
-def angmom_its(angmom: int) -> str:
+def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
     """Convert an angular momentum from integer to string representation.
 
     Parameters
