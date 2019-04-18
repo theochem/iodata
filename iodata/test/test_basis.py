@@ -53,6 +53,12 @@ def test_angmom_its():
     assert angmom_its([0, 1, 3]) == ['s', 'p', 'f']
     with raises(ValueError):
         angmom_its(-1)
+    with raises(ValueError):
+        angmom_its([-4])
+    with raises(ValueError):
+        angmom_its([1, -5])
+    with raises(ValueError):
+        angmom_its([0, 5, -2, 3, 3, 1])
 
 
 def test_shell_info_propertes():
