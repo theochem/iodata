@@ -81,7 +81,7 @@ def angmom_its(angmom: int) -> Dict:
 
 
 class Shell(NamedTuple):
-    """Desribe a single shell in a molecular basis set.
+    """Describe a single shell in a molecular basis set.
 
     Attributes
     ----------
