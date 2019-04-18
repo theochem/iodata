@@ -61,7 +61,7 @@ def angmom_sti(char: str) -> int:
 
 
 @_alsolist
-def angmom_its(angmom: int) -> Dict:
+def angmom_its(angmom: int) -> str:
     """Convert an angular momentum from integer to string representation.
 
     Parameters
@@ -72,7 +72,8 @@ def angmom_its(angmom: int) -> Dict:
     Returns
     -------
     char
-        The string representation of the angular momentum.
+        The string representation of the angular momentum. If a list of integer
+        angmom is given, a list of str is returned.
 
     """
     if angmom < 0:
