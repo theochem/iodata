@@ -186,7 +186,6 @@ def test_convert_convention_shell():
     vec1 = np.array([1, 2, 3])
     vec2 = np.array([-3, 2, 1])
     assert_equal(vec1[permutation] * signs, vec2)
-    permutation, signs = convert_convention_shell(['a', 'b', 'c'], ['-c', 'b', 'a'], True)
 
     permutation, signs = convert_convention_shell(['a', '-b', '-c'], ['-c', 'b', 'a'])
     assert permutation == [2, 1, 0]
