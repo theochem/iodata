@@ -20,7 +20,7 @@
 
 from functools import wraps
 from numbers import Integral
-from typing import List, Dict, NamedTuple, Tuple
+from typing import List, Dict, NamedTuple, Tuple, Union
 
 import numpy as np
 
@@ -42,7 +42,7 @@ def _alsolist(f):
 
 
 @_alsolist
-def angmom_sti(char: str) -> int:
+def angmom_sti(char: Union[str, List[str]]) -> Union[int, List[int]]:
     """Convert an angular momentum from string to integer format.
 
     Parameters
@@ -53,15 +53,15 @@ def angmom_sti(char: str) -> int:
     Returns
     -------
     angmom
-        An integer representation of the angular momentum. A list, if a list of
-        words was given.
+        An integer representation of the angular momentum. If a list of str
+        char is given, a list of integers in returned.
 
     """
     return ANGMOM_CHARS.index(char.lower())
 
 
 @_alsolist
-def angmom_its(angmom: int) -> Dict:
+def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
     """Convert an angular momentum from integer to string representation.
 
     Parameters
@@ -72,7 +72,8 @@ def angmom_its(angmom: int) -> Dict:
     Returns
     -------
     char
-        The string representation of the angular momentum.
+        The string representation of the angular momentum. If a list of integer
+        angmom is given, a list of str is returned.
 
     """
     if angmom < 0:
@@ -81,7 +82,7 @@ def angmom_its(angmom: int) -> Dict:
 
 
 class Shell(NamedTuple):
-    """Desribe a single shell in a molecular basis set.
+    """Describe a single shell in a molecular basis set.
 
     Attributes
     ----------

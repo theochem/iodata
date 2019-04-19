@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 # pylint: disable=no-member
-"""Test iodata.molekel module."""
+"""Test iodata.formats.molekel module."""
 
 from numpy.testing import assert_equal, assert_allclose
 

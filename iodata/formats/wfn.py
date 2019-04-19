@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling GUASSIAN/GAMESS-US WNF file format."""
+"""Module for handling GAUSSIAN/GAMESS-US WNF file format."""
 
 
 from typing import Tuple, List, Dict
@@ -121,7 +121,7 @@ def _load_helper_num(lit: LineIterator) -> List[int]:
 
 
 def _load_helper_coordinates(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
-    """Read the coordiantes of the atoms."""
+    """Read the coordinates of the atoms."""
     numbers = np.empty(num_atoms, int)
     coordinates = np.empty((num_atoms, 3), float)
     for atom in range(num_atoms):
@@ -302,10 +302,9 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``energy``,
-        ``obasis`` & ``orb_alpha`` keys and their corresponding values. It may contain
-        ``orb_beta`` key and its value as well.
+        ``obasis`` & ``mo`` keys and their corresponding values.
 
     """
     (title, numbers, coordinates, icenters, type_assignments, exponents,

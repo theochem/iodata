@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 # pylint: disable=no-member
-"""Test iodata.cp2k module."""
+"""Test iodata.formats.cp2k module."""
 
 import pytest
 
