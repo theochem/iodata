@@ -19,7 +19,7 @@
 """Module for handling XYZ file format."""
 
 
-from typing import Dict, TextIO
+from typing import TextIO, Iterator
 
 import numpy as np
 
@@ -33,7 +33,7 @@ __all__ = []
 patterns = ['*.xyz']
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load molecular geometry from a XYZ file format.
 
     Parameters
@@ -43,7 +43,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title`, ``coordinates`` & ``numbers`` keys
         and corresponding values.
 
@@ -68,6 +68,33 @@ def load(lit: LineIterator) -> Dict:
     }
 
 
+def load_many(lit: LineIterator) -> Iterator[dict]:
+    """Load an XYZ trajectory file.
+
+    This function can also handle an XYZ with different molecules, e.g. a
+    molecular database. Usually, the different frames in a trajectory describe
+    different geometries of the same molecule, with atoms in the same order.
+
+    Parameters
+    ----------
+    lit
+        The line iterator to read the data from.
+
+    Yields
+    ------
+    output
+        See XYZ load function above.
+
+    """
+    # XYZ Trajectory files are a simple concatenation of individual XYZ files,'
+    # making it travial to load many frames.
+    while True:
+        try:
+            yield load(lit)
+        except StopIteration:
+            return
+
+
 def dump(f: TextIO, data: 'IOData'):
     """Write molecular geometry into a XYZ file format.
 
@@ -75,7 +102,7 @@ def dump(f: TextIO, data: 'IOData'):
     ----------
     f
         A file to write to.
-    data : IOData
+    data
         An IOData instance which must contain ``coordinates`` & ``numbers`` attributes.
         If ``title`` attribute is not included, 'Created with IODATA module' is used as ``title``.
 
@@ -86,3 +113,23 @@ def dump(f: TextIO, data: 'IOData'):
         n = num2sym[data.numbers[i]]
         x, y, z = data.coordinates[i] / angstrom
         print(f'{n:2s} {x:15.10f} {y:15.10f} {z:15.10f}', file=f)
+
+
+def dump_many(f: TextIO, datas: Iterator['IOData']):
+    """Write an XYZ trajectory file.
+
+    This will also work when the different data objects describe different
+    molecules.
+
+    Parameters
+    ----------
+    f
+        A file to write to.
+    datas
+        An iterator of IOData instances, satisfying the requirements for the
+        XYZ dump function above.
+
+    """
+    # Similar to load_many, this is relatively easy.
+    for data in datas:
+        dump(f, data)

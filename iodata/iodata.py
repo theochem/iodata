@@ -20,7 +20,8 @@
 
 
 import os
-from typing import List, Tuple, Type
+from typing import List, Tuple, Type, Iterator
+from types import ModuleType
 from fnmatch import fnmatch
 from pkgutil import iter_modules
 from importlib import import_module
@@ -30,7 +31,7 @@ import numpy as np
 from .utils import LineIterator
 
 
-__all__ = ['IOData', 'load_one', 'dump_one']
+__all__ = ['IOData', 'load_one', 'load_many', 'dump_one', 'dump_many']
 
 
 def find_format_modules():
@@ -284,36 +285,82 @@ class IOData:
         raise ValueError("Cannot determine the number of atoms.")
 
 
-def load_one(filename: str) -> IOData:
-    """Load data from a file.
-
-    This routine uses the extension or prefix of the filename to
-    determine the file format. It returns a IOData object with data loaded
-    from the file.
-
-    For each file format, a specialized function is called that returns a
-    dictionary with data from the file.
+def _select_format_module(filename: str, attrname: str) -> ModuleType:
+    """Find a file format module with the requested attribute name.
 
     Parameters
     ----------
-    filename : str
-        The file to load data from.
+    filename
+        The file to load or dump.
+    attrname
+        The required atrtibute of the file format module.
 
     Returns
     -------
-    out : IOData
-        The instance of IOData with data loaded from the input files.
+    format_module
+        The module implementing the required file format.
 
     """
     basename = os.path.basename(filename)
     for format_module in format_modules:
         if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
-            lit = LineIterator(filename)
-            try:
-                return IOData(**format_module.load(lit))
-            except StopIteration:
-                raise lit.error("File ended before all data was read.")
-    raise ValueError('Unknown file format for reading: %s' % filename)
+            if hasattr(format_module, attrname):
+                return format_module
+    raise ValueError('Could not find file format with feature {} for file {}'.format(
+        attrname, filename))
+
+
+def load_one(filename: str) -> IOData:
+    """Load data from a file.
+
+    This function uses the extension or prefix of the filename to determine the
+    file format. When the file format is detected, a specialized load function
+    is called for the heavy lifting.
+
+    Parameters
+    ----------
+    filename
+        The file to load data from.
+
+    Returns
+    -------
+    out
+        The instance of IOData with data loaded from the input files.
+
+    """
+    format_module = _select_format_module(filename, 'load')
+    lit = LineIterator(filename)
+    try:
+        return IOData(**format_module.load(lit))
+    except StopIteration:
+        raise lit.error("File ended before all data was read.")
+
+
+def load_many(filename: str) -> Iterator[IOData]:
+    """Load multiple IOData instances from a file.
+
+    This function uses the extension or prefix of the filename to determine the
+    file format. When the file format is detected, a specialized load function
+    is called for the heavy lifting.
+
+    Parameters
+    ----------
+    filename
+        The file to load data from.
+
+    Yields
+    ------
+    out
+        An instance of IOData with data for one frame loaded for the file.
+
+    """
+    format_module = _select_format_module(filename, 'load_many')
+    lit = LineIterator(filename)
+    for data in format_module.load_many(lit):
+        try:
+            yield IOData(**data)
+        except StopIteration:
+            return
 
 
 def dump_one(iodata: IOData, filename: str):
@@ -331,11 +378,26 @@ def dump_one(iodata: IOData, filename: str):
         The file to write the data to.
 
     """
-    basename = os.path.basename(filename)
-    for format_module in format_modules:
-        if any(fnmatch(basename, pattern)for pattern in format_module.patterns):
-            with open(filename, 'w') as f:
-                format_module.dump(f, iodata)
-            break
-    else:
-        raise ValueError('Unknown file format for writing: %s' % filename)
+    format_module = _select_format_module(filename, 'dump')
+    with open(filename, 'w') as f:
+        format_module.dump(f, iodata)
+
+
+def dump_many(iodatas: Iterator[IOData], filename: str):
+    """Write multiple IOData instances to a file.
+
+    This routine uses the extension or prefix of the filename to determine
+    the file format. For each file format, a specialized function is
+    called that does the real work.
+
+    Parameters
+    ----------
+    iodatas
+        An iterator over IOData instances.
+    filename : str
+        The file to write the data to.
+
+    """
+    format_module = _select_format_module(filename, 'dump_many')
+    with open(filename, 'w') as f:
+        format_module.dump_many(f, iodatas)
