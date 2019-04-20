@@ -158,9 +158,9 @@ def test_load_fchk_lih_321g_hf():
     assert fields['coordinates'].shape[1] == 3
     assert len(fields['numbers']) == 2
 
-    orb_alpha_coeffs = fields['mo'].coeffs[:, :11]
-    orb_alpha_energies = fields['mo'].energies[:11]
-    orb_alpha_occs = fields['mo'].occs[:11]
+    orb_alpha_coeffs = fields['mo'].coeffs[:, :fields['mo'].naorb]
+    orb_alpha_energies = fields['mo'].energies[:fields['mo'].naorb]
+    orb_alpha_occs = fields['mo'].occs[:fields['mo'].naorb]
 
     assert_allclose(orb_alpha_energies[0], (-2.76117), atol=1.e-4)
     assert_allclose(orb_alpha_energies[-1], 0.97089, atol=1.e-4)
@@ -173,9 +173,9 @@ def test_load_fchk_lih_321g_hf():
     assert_equal(orb_alpha_occs.min(), 0.0)
     assert_equal(orb_alpha_occs.max(), 1.0)
 
-    orb_beta_coeffs = fields['mo'].coeffs[:, 11:]
-    orb_beta_energies = fields['mo'].energies[11:]
-    orb_beta_occs = fields['mo'].occs[11:]
+    orb_beta_coeffs = fields['mo'].coeffs[:, fields['mo'].naorb:]
+    orb_beta_energies = fields['mo'].energies[fields['mo'].naorb:]
+    orb_beta_occs = fields['mo'].occs[fields['mo'].naorb:]
 
     assert_allclose(orb_beta_energies[0], -2.76031, atol=1.e-4)
     assert_allclose(orb_beta_energies[-1], 1.13197, atol=1.e-4)

@@ -172,12 +172,14 @@ def load(lit: LineIterator) -> Dict:
     if nalpha < nbeta:
         raise ValueError('n_alpha={0} < n_beta={1} is not valid!'.format(nalpha, nbeta))
 
+    naorb = fchk['Alpha Orbital Energies'].shape[0]
     mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
     mo_energy = np.copy(fchk['Alpha Orbital Energies'])
 
     if 'Beta Orbital Energies' in fchk:
         # unrestricted
         mo_type = 'unrestricted'
+        nborb = fchk['Beta Orbital Energies'].shape[0]
         mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
         mo_coeffs = np.concatenate((mo_coeffs, mo_coeffs_b), axis=1)
         mo_energy = np.concatenate((mo_energy, np.copy(fchk['Beta Orbital Energies'])), axis=0)
@@ -187,6 +189,7 @@ def load(lit: LineIterator) -> Dict:
     else:
         # restricted close-shell and open-shell
         mo_type = 'restricted'
+        nborb = naorb
         mo_occs = np.zeros(nbasis_indep)
         mo_occs[:nalpha] = 1.0
         mo_occs[:nbeta] = 2.0
@@ -195,7 +198,7 @@ def load(lit: LineIterator) -> Dict:
             result.pop('dm_full_scf')
 
     # create a MO namedtuple
-    result['mo'] = MolecularOrbitals(mo_type, nalpha, nbeta, mo_occs, mo_coeffs, None, mo_energy)
+    result['mo'] = MolecularOrbitals(mo_type, naorb, nborb, mo_occs, mo_coeffs, None, mo_energy)
 
     # E) Load properties
     result['energy'] = fchk['Total Energy']
