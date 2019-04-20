@@ -25,7 +25,7 @@ import numpy as np
 from scipy.special import factorialk
 
 from ..basis import angmom_sti, MolecularBasis, Shell, HORTON2_CONVENTIONS
-from ..utils import LineIterator
+from ..utils import LineIterator, MolecularOrbitals
 
 
 __all__ = []
@@ -447,24 +447,26 @@ def load(lit: LineIterator) -> Dict:
 
     # Turn orbital data into a HORTON orbital expansions
     if restricted:
+        mo_type = 'restricted'
         norb, nel = _get_norb_nel(oe_alpha)
+        norb_alpha = norb_beta = norb
         assert nel % 2 == 0
-        orb_alpha = (obasis.nbasis, norb)
-        orb_beta = None
         orb_alpha_coeffs = np.zeros([obasis.nbasis, norb])
         orb_alpha_energies = np.zeros(norb)
         orb_alpha_occs = np.zeros(norb)
         _fill_orbitals(orb_alpha_coeffs, orb_alpha_energies, orb_alpha_occs,
                        oe_alpha, coeffs_alpha, obasis, restricted)
+        mo_occs = orb_alpha_occs
+        mo_coeffs = orb_alpha_coeffs
+        mo_energy = orb_alpha_energies
     else:
+        mo_type = 'unrestricted'
         norb_alpha = _get_norb_nel(oe_alpha)[0]
         norb_beta = _get_norb_nel(oe_beta)[0]
         assert norb_alpha == norb_beta
-        orb_alpha = (obasis.nbasis, norb_alpha)
         orb_alpha_coeffs = np.zeros([obasis.nbasis, norb_alpha])
         orb_alpha_energies = np.zeros(norb_alpha)
         orb_alpha_occs = np.zeros(norb_alpha)
-        orb_beta = (obasis.nbasis, norb_beta)
         orb_beta_coeffs = np.zeros([obasis.nbasis, norb_beta])
         orb_beta_energies = np.zeros(norb_beta)
         orb_beta_occs = np.zeros(norb_beta)
@@ -473,20 +475,19 @@ def load(lit: LineIterator) -> Dict:
         _fill_orbitals(orb_beta_coeffs, orb_beta_energies, orb_beta_occs,
                        oe_beta, coeffs_beta, obasis, restricted)
 
+        mo_occs = np.concatenate((orb_alpha_occs, orb_beta_occs), axis=0)
+        mo_energy = np.concatenate((orb_alpha_energies, orb_beta_energies), axis=0)
+        mo_coeffs = np.concatenate((orb_alpha_coeffs, orb_beta_coeffs), axis=1)
+
+    # create a MO namedtuple
+    mo = MolecularOrbitals(mo_type, norb_alpha, norb_beta, mo_occs, mo_coeffs, None, mo_energy)
+
     result = {
         'obasis': obasis,
-        'orb_alpha': orb_alpha,
-        'orb_alpha_coeffs': orb_alpha_coeffs,
-        'orb_alpha_energies': orb_alpha_energies,
-        'orb_alpha_occs': orb_alpha_occs,
+        'mo': mo,
         'coordinates': obasis.centers,
         'numbers': np.array([number]),
         'energy': energy,
         'pseudo_numbers': np.array([pseudo_number]),
     }
-    if orb_beta is not None:
-        result['orb_beta'] = orb_beta
-        result['orb_beta_coeffs'] = orb_beta_coeffs
-        result['orb_beta_energies'] = orb_beta_energies
-        result['orb_beta_occs'] = orb_beta_occs
     return result
