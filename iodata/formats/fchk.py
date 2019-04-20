@@ -172,39 +172,27 @@ def load(lit: LineIterator) -> Dict:
     if nalpha < nbeta:
         raise ValueError('n_alpha={0} < n_beta={1} is not valid!'.format(nalpha, nbeta))
 
+    mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
+    mo_energy = np.copy(fchk['Alpha Orbital Energies'])
+
     if 'Beta Orbital Energies' in fchk:
         # unrestricted
         mo_type = 'unrestricted'
-        mo_coeffs_a = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
         mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
-        mo_coeffs = np.concatenate((mo_coeffs_a, mo_coeffs_b), axis=1)
-        mo_energy = np.copy(fchk['Alpha Orbital Energies'])
+        mo_coeffs = np.concatenate((mo_coeffs, mo_coeffs_b), axis=1)
         mo_energy = np.concatenate((mo_energy, np.copy(fchk['Beta Orbital Energies'])), axis=0)
         mo_occs = np.zeros(2 * nbasis_indep)
         mo_occs[:nalpha] = 1.0
         mo_occs[nbasis_indep: nbasis_indep + nbeta] = 1.0
-
-    elif fchk['Number of beta electrons'] != fchk['Number of alpha electrons']:
-        # restricted open-shell
-        assert nalpha > nbeta, (nalpha, nbeta)
+    else:
+        # restricted close-shell and open-shell
         mo_type = 'restricted'
-        mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
-        mo_energy = np.copy(fchk['Alpha Orbital Energies'])
         mo_occs = np.zeros(nbasis_indep)
         mo_occs[:nalpha] = 1.0
         mo_occs[:nbeta] = 2.0
-
-        # Delete dm_full_scf because it is known to be buggy
-        result.pop('dm_full_scf')
-
-    else:
-        # restricted close-shell
-        assert nalpha == nbeta
-        mo_type = 'restricted'
-        mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
-        mo_energy = np.copy(fchk['Alpha Orbital Energies'])
-        mo_occs = np.zeros(nbasis_indep)
-        mo_occs[:nalpha] = 2.0
+        if nalpha != nbeta:
+            # delete dm_full_scf because it is known to be buggy
+            result.pop('dm_full_scf')
 
     # create a MO namedtuple
     result['mo'] = MolecularOrbitals(mo_type, nalpha, nbeta, mo_occs, mo_coeffs, None, mo_energy)
