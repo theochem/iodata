@@ -154,21 +154,17 @@ def test_load_fchk_water_sto3g_hf():
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 3
-    orb_alpha = fields['orb_alpha']
-    orb_alpha_coeffs = fields['orb_alpha_coeffs']
-    orb_alpha_energies = fields['orb_alpha_energies']
-    orb_alpha_occs = fields['orb_alpha_occs']
-    assert orb_alpha[0] == 7
-    assert_allclose(orb_alpha_energies[0], (-2.02333942E+01), atol=1.e-7)
-    assert_allclose(orb_alpha_energies[-1], 7.66134805E-01, atol=1.e-7)
-    assert_allclose(orb_alpha_coeffs[0, 0], 0.99410, atol=1.e-4)
-    assert_allclose(orb_alpha_coeffs[1, 0], 0.02678, atol=1.e-4)
-    assert_allclose(orb_alpha_coeffs[-1, 2], -0.44154, atol=1.e-4)
-    assert abs(orb_alpha_coeffs[3, -1]) < 1e-4
-    assert_allclose(orb_alpha_coeffs[4, -1], -0.82381, atol=1.e-4)
-    assert_equal(orb_alpha_occs.sum(), 5)
-    assert_equal(orb_alpha_occs.min(), 0.0)
-    assert_equal(orb_alpha_occs.max(), 1.0)
+    mo = fields['mo']
+    assert_allclose(mo.energies[0], -2.02333942E+01, atol=1.e-7)
+    assert_allclose(mo.energies[-1], 7.66134805E-01, atol=1.e-7)
+    assert_allclose(mo.coeffs[0, 0], 0.99410, atol=1.e-4)
+    assert_allclose(mo.coeffs[1, 0], 0.02678, atol=1.e-4)
+    assert_allclose(mo.coeffs[-1, 2], -0.44154, atol=1.e-4)
+    assert abs(mo.coeffs[3, -1]) < 1e-4
+    assert_allclose(mo.coeffs[4, -1], -0.82381, atol=1.e-4)
+    assert_equal(mo.occs.sum(), 10)
+    assert_equal(mo.occs.min(), 0.0)
+    assert_equal(mo.occs.max(), 2.0)
     energy = fields['energy']
     assert_allclose(energy, -7.495929232844363E+01)
 
@@ -183,11 +179,11 @@ def test_load_fchk_lih_321g_hf():
     assert len(coordinates) == len(numbers)
     assert coordinates.shape[1] == 3
     assert len(numbers) == 2
-    orb_alpha = fields['orb_alpha']
-    orb_alpha_coeffs = fields['orb_alpha_coeffs']
-    orb_alpha_energies = fields['orb_alpha_energies']
-    orb_alpha_occs = fields['orb_alpha_occs']
-    assert_equal(orb_alpha[0], 11)
+
+    orb_alpha_coeffs = fields['mo'].coeffs[:, :11]
+    orb_alpha_energies = fields['mo'].energies[:11]
+    orb_alpha_occs = fields['mo'].occs[:11]
+
     assert_allclose(orb_alpha_energies[0], (-2.76117), atol=1.e-4)
     assert_allclose(orb_alpha_energies[-1], 0.97089, atol=1.e-4)
     assert_allclose(orb_alpha_coeffs[0, 0], 0.99105, atol=1.e-4)
@@ -198,11 +194,11 @@ def test_load_fchk_lih_321g_hf():
     assert_equal(orb_alpha_occs.sum(), 2)
     assert_equal(orb_alpha_occs.min(), 0.0)
     assert_equal(orb_alpha_occs.max(), 1.0)
-    orb_beta = fields['orb_beta']
-    orb_beta_coeffs = fields['orb_beta_coeffs']
-    orb_beta_energies = fields['orb_beta_energies']
-    orb_beta_occs = fields['orb_beta_occs']
-    assert_equal(orb_beta[0], 11)
+
+    orb_beta_coeffs = fields['mo'].coeffs[:, 11:]
+    orb_beta_energies = fields['mo'].energies[11:]
+    orb_beta_occs = fields['mo'].occs[11:]
+
     assert_allclose(orb_beta_energies[0], -2.76031, atol=1.e-4)
     assert_allclose(orb_beta_energies[-1], 1.13197, atol=1.e-4)
     assert_allclose(orb_beta_coeffs[0, 0], 0.99108, atol=1.e-4)
@@ -237,18 +233,10 @@ def test_load_fchk_ghost_atoms():
 
 def test_load_fchk_ch3_rohf_g03():
     fields = load_fchk_helper_internal('ch3_rohf_sto3g_g03.fchk')
-    orb_alpha = fields['orb_alpha']
-    orb_alpha_coeffs = fields['orb_alpha_coeffs']
-    orb_alpha_occs = fields['orb_alpha_occs']
-    orb_beta_coeffs = fields['orb_beta_coeffs']
-    orb_beta_occs = fields['orb_beta_occs']
-    assert_equal(orb_alpha_occs.shape[0], orb_alpha_coeffs.shape[0])
-    assert_equal(orb_beta_occs.shape[0], orb_beta_coeffs.shape[0])
-    assert_equal(orb_alpha_occs.sum(), 5)
-    orb_beta = fields['orb_beta']
-    assert_equal(orb_beta_occs.sum(), 4)
-    assert_allclose(orb_alpha_coeffs, orb_beta_coeffs)
-    assert orb_alpha is not orb_beta
+    assert_equal(fields['mo'].occs.shape[0], fields['mo'].coeffs.shape[0])
+    assert_equal(fields['mo'].occs.sum(), 9.0)
+    assert_equal(fields['mo'].occs.min(), 0.0)
+    assert_equal(fields['mo'].occs.max(), 2.0)
     assert 'dm_full_scf' not in fields
 
 
