@@ -84,12 +84,11 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
                 break
             exponents.append(float(words[0]))
             coeffs.append([float(words[1])])
-        shells.append(Shell(icenter, [angmom], [kind], np.array(exponents),
-                            np.array(coeffs)))
+        shells.append(Shell(icenter, [angmom], [kind], np.array(exponents), np.array(coeffs)))
     return MolecularBasis(np.zeros((icenter + 1, 3)), shells, CONVENTIONS, 'L2')
 
 
-def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> np.ndarray:
+def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.ndarray]:
     coeffs = []
     energies = []
 
@@ -105,7 +104,7 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> np.ndarray:
             assert ncol > 0
             for word in words:
                 assert word == 'a1g'
-            cols = [np.zeros((nbasis, 1), float) for icol in range(ncol)]
+            cols = [np.zeros((nbasis, 1), float) for _ in range(ncol)]
             in_orb = 1
         elif in_orb == 1:
             # read energies
