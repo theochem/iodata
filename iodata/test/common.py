@@ -33,17 +33,8 @@ __all__ = ['compute_mulliken_charges', 'compute_1rdm',
 
 def compute_1rdm(iodata):
     """Compute 1-RDM."""
-    if hasattr(iodata, 'mo'):
-        coeffs, occs = iodata.mo.coeffs, iodata.mo.occs
-        dm = np.dot(coeffs * occs, coeffs.T)
-    if hasattr(iodata, 'orb_alpha_coeffs'):
-        coeffs, occs = iodata.orb_alpha_coeffs, iodata.orb_alpha_occs
-        dm = np.dot(coeffs * occs, coeffs.T)
-        if hasattr(iodata, 'orb_beta_coeffs'):
-            coeffs, occs = iodata.orb_beta_coeffs, iodata.orb_beta_occs
-            dm += np.dot(coeffs * occs, coeffs.T)
-        else:
-            dm *= 2
+    coeffs, occs = iodata.mo.coeffs, iodata.mo.occs
+    dm = np.dot(coeffs * occs, coeffs.T)
     return dm
 
 
