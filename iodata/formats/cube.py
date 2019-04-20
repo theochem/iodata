@@ -43,7 +43,7 @@ def _read_cube_header(lit: LineIterator) \
 
     Returns
     -------
-    out : tuple
+    out
         The output tuple contains title, coordinates, numbers, cell, ugrid &
         pseudo_numbers.
 
@@ -106,7 +106,7 @@ def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarr
 
     Returns
     -------
-    out : array_like
+    out
         The cube data array.
 
     """
@@ -183,7 +183,7 @@ def dump(f: TextIO, data: 'IOData'):
     ----------
     f
         A file to write to.
-    data : IOData
+    data
         An IOData instance which must contain ``coordinates``, ``numbers``, ``grid`` &
         ``cube_data`` attributes. It may contain ``title``  & ``pseudo_numbers`` attributes.
 

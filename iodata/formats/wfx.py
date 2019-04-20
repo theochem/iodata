@@ -30,7 +30,7 @@ __all__ = []
 patterns = ['*.wfx']
 
 
-def load_wfx_low(filename: str) -> Tuple:
+def load_wfx_low(filename: str) -> tuple:
     """Load data from a WFX file into arrays."""
     with open(filename) as f:
         fc = f.read()

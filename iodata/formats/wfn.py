@@ -132,7 +132,7 @@ def _load_helper_coordinates(lit: LineIterator, num_atoms: int) -> Tuple[np.ndar
 
 
 def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
-                         dtype: np.dtype) -> List:
+                         dtype: np.dtype) -> np.ndarray:
     """Read CENTRE ASSIGNMENTS, TYPE ASSIGNMENTS, and EXPONENTS sections."""
     section = []
     while len(section) < nprim:
@@ -144,7 +144,7 @@ def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
     return np.array([word.replace('D', 'E') for word in section]).astype(dtype)
 
 
-def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[str, str, str, List[str]]:
+def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[str, str, str, np.ndarray]:
     """Read one section of MO information."""
     line = next(lit)
     assert line.startswith('MO')
@@ -201,7 +201,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
 # pylint: disable=too-many-branches
 def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
                  exponents: np.ndarray, coordinates: np.ndarray,
-                 lit: LineIterator) -> MolecularBasis:
+                 lit: LineIterator) -> Tuple[MolecularBasis, np.ndarray]:
     """Construct a basis set using the arrays read from a WFN file.
 
     Parameters

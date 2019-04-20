@@ -75,7 +75,7 @@ def dump(f: TextIO, data: 'IOData'):
     ----------
     f
         A file to write to.
-    data : IOData
+    data
         An IOData instance which must contain ``coordinates`` & ``numbers`` attributes.
         If ``title`` attribute is not included, 'Created with IODATA module' is used as ``title``.
 

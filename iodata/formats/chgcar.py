@@ -43,7 +43,7 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
 
     Returns
     -------
-    out : tuple
+    out
         Output Contains ``title``, ``cell``, ``numbers``, ``coordinates``.
 
     Notes

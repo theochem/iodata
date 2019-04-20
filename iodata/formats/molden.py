@@ -329,7 +329,7 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
 
 
 def _is_normalized_properly(obasis: MolecularBasis, orb_alpha: np.ndarray,
-                            orb_beta: np.ndarray, threshold: float = 1e-4):
+                            orb_beta: np.ndarray, threshold: float = 1e-4) -> bool:
     """Test the normalization of the occupied and virtual orbitals.
 
     Parameters

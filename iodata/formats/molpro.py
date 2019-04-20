@@ -120,7 +120,7 @@ def dump(f: TextIO, data: 'IOData'):
     ----------
     f
         A file to write to.
-    data : IOData
+    data
         An IOData instance which must contain ``one_mo`` & ``two_mo`` attributes.
         It may contain ``core_energy``, ``nelec`` and ``ms`` attributes.
 

@@ -91,7 +91,7 @@ def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
 
     Returns
     -------
-    out: array_like
+    out
         The output (nbasis, nbasis) array of operator.
 
     """
@@ -124,7 +124,7 @@ def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
 
     Returns
     -------
-    out: array_like
+    out
         The (nbasis, nbasis, nbasis, nbasis) array of operator.
 
     """
