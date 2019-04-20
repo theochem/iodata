@@ -169,6 +169,8 @@ def load(lit: LineIterator) -> Dict:
     nbeta = fchk['Number of beta electrons']
     if nalpha < 0 or nbeta < 0 or nalpha + nbeta <= 0:
         lit.error('The number of electrons is not positive.')
+    if nalpha < nbeta:
+        raise ValueError('n_alpha={0} < n_beta={1} is not valid!'.format(nalpha, nbeta))
 
     if 'Beta Orbital Energies' in fchk:
         # unrestricted
