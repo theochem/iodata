@@ -89,9 +89,9 @@ class MolecularOrbitals(NamedTuple):
     ----------
     type : str
         Molecular orbital type; choose from 'restricted', 'unrestricted', or 'generalized'.
-    norb_a : int
+    naorb : int
         Number of alpha molecular orbitals.
-    norb_b : int
+    nborb : int
         Number of beta molecular orbitals.
     occs : np.ndarray
         Molecular orbital occupation numbers.
@@ -105,8 +105,8 @@ class MolecularOrbitals(NamedTuple):
     """
 
     type: str
-    norb_a: int
-    norb_b: int
+    naorb: int
+    nborb: int
     occs: np.ndarray
     coeffs: np.ndarray
     irreps: np.ndarray
