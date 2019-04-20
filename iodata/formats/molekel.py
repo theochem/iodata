@@ -152,10 +152,8 @@ def load(lit: LineIterator) -> Dict:
     Returns
     -------
     out : dict
-        Output dictionary containing ``coordinates``, ``numbers``, ``obasis``, ``orb_alpha``,
-        ``orb_alpha_coeffs``, ``orb_alpha_energies`` & ``orb_alpha_occs`` keys and their
-        corresponding values. It may also contain ``orb_beta``, ``orb_beta_coeffs``,
-        ``orb_beta_energies`` & ``orb_beta_occs`` keys and their values.
+        Output dictionary containing ``coordinates``, ``numbers``, ``obasis``, ``mo``,
+        keys and their corresponding values.
 
     """
     charge = None
