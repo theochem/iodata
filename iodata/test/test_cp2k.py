@@ -102,8 +102,7 @@ def test_carbon_gs_ae_contracted():
 
 
 def test_carbon_gs_ae_uncontracted():
-    with path('iodata.test.data',
-              'carbon_gs_ae_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_gs_ae_uncontracted.cp2k.out') as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
@@ -134,8 +133,7 @@ def test_carbon_gs_pp_contracted():
 
 
 def test_carbon_gs_pp_uncontracted():
-    with path('iodata.test.data',
-              'carbon_gs_pp_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
@@ -165,8 +163,7 @@ def test_carbon_sc_ae_contracted():
 
 
 def test_carbon_sc_ae_uncontracted():
-    with path('iodata.test.data',
-              'carbon_sc_ae_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_sc_ae_uncontracted.cp2k.out') as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
@@ -195,8 +192,7 @@ def test_carbon_sc_pp_contracted():
 
 
 def test_carbon_sc_pp_uncontracted():
-    with path('iodata.test.data',
-              'carbon_sc_pp_uncontracted.cp2k.out') as fn_out:
+    with path('iodata.test.data', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
@@ -209,8 +205,7 @@ def test_carbon_sc_pp_uncontracted():
 
 
 def test_errors(tmpdir):
-    with path('iodata.test.data',
-              'carbon_sc_pp_uncontracted.cp2k.out') as fn_test:
+    with path('iodata.test.data', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_test:
         with truncated_file(fn_test, 0, 0, tmpdir) as fn:
             with pytest.raises(IOError):
                 load_one(fn)
@@ -223,8 +218,7 @@ def test_errors(tmpdir):
         with truncated_file(fn_test, 405, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 load_one(fn)
-    with path('iodata.test.data',
-              'carbon_gs_pp_uncontracted.cp2k.out') as fn_test:
+    with path('iodata.test.data', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_test:
         with truncated_file(fn_test, 456, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 load_one(fn)
