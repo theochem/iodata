@@ -122,17 +122,24 @@ def compare_mols(mol1, mol2):
         assert mol2.obasis is None
     # wfn
     permutation, signs = convert_conventions(mol1.obasis, mol2.obasis.conventions)
-    assert_allclose(mol1.orb_alpha, mol2.orb_alpha)
-    assert_allclose(mol1.orb_alpha_coeffs[permutation] * signs.reshape(-1, 1),
-                    mol2.orb_alpha_coeffs, atol=1e-8)
-    assert_allclose(mol1.orb_alpha_energies, mol2.orb_alpha_energies)
-    assert_allclose(mol1.orb_alpha_occs, mol2.orb_alpha_occs)
-    if hasattr(mol1, "orb_beta"):
-        assert_allclose(mol1.orb_beta, mol2.orb_beta)
-        assert_allclose(mol1.orb_beta_coeffs[permutation] * signs.reshape(-1, 1),
-                        mol2.orb_beta_coeffs, atol=1e-8)
-        assert_allclose(mol1.orb_beta_energies, mol2.orb_beta_energies)
-        assert_allclose(mol1.orb_beta_occs, mol2.orb_beta_occs)
+    if hasattr(mol1, 'mo') and hasattr(mol2, 'mo'):
+        assert mol1.mo.type == mol2.mo.type
+        assert_allclose(mol1.mo.occs, mol2.mo.occs)
+        assert_allclose(mol1.mo.energies, mol2.mo.energies)
+        assert_allclose(mol1.mo.coeffs[permutation] * signs.reshape(-1, 1),
+                        mol2.mo.coeffs, atol=1e-8)
+    else:
+        assert_allclose(mol1.orb_alpha, mol2.orb_alpha)
+        assert_allclose(mol1.orb_alpha_coeffs[permutation] * signs.reshape(-1, 1),
+                        mol2.orb_alpha_coeffs, atol=1e-8)
+        assert_allclose(mol1.orb_alpha_energies, mol2.orb_alpha_energies)
+        assert_allclose(mol1.orb_alpha_occs, mol2.orb_alpha_occs)
+        if hasattr(mol1, "orb_beta"):
+            assert_allclose(mol1.orb_beta, mol2.orb_beta)
+            assert_allclose(mol1.orb_beta_coeffs[permutation] * signs.reshape(-1, 1),
+                            mol2.orb_beta_coeffs, atol=1e-8)
+            assert_allclose(mol1.orb_beta_energies, mol2.orb_beta_energies)
+            assert_allclose(mol1.orb_beta_occs, mol2.orb_beta_occs)
 
     # operators
     for key in 'olp', 'kin', 'na', 'er', 'dm_full_mp2', 'dm_spin_mp2', \
