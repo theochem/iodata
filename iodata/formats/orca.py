@@ -19,7 +19,7 @@
 """Module for handling ORCA OUT file format."""
 
 
-from typing import Dict, TextIO
+from typing import TextIO
 
 import numpy as np
 
@@ -32,7 +32,7 @@ __all__ = []
 patterns = ['*.out']
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load several results from an orca output file.
 
     Parameters
@@ -42,7 +42,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary may contain ``numbers``, ``coordinates``, and ``total_energy`` and
         corresponding values.
 

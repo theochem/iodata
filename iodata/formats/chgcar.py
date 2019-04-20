@@ -19,7 +19,7 @@
 """Module for handling VASP CHGCAR file format."""
 
 
-from typing import Tuple, Dict
+from typing import Tuple
 
 import numpy as np
 
@@ -91,7 +91,7 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
     return title, rvecs, numbers, coordinates
 
 
-def _load_vasp_grid(lit: LineIterator) -> Dict:
+def _load_vasp_grid(lit: LineIterator) -> dict:
     """Load grid data file from the VASP 5 file format.
 
     Parameters
@@ -101,7 +101,7 @@ def _load_vasp_grid(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``rvecs``,
         ``grid`` & ``cube_data`` keys and their corresponding values.
 
@@ -138,7 +138,7 @@ def _load_vasp_grid(lit: LineIterator) -> Dict:
     }
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a VASP 5 CHGCAR file format.
 
     Parameters

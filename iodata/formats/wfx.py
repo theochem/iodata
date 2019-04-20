@@ -18,7 +18,8 @@
 # --
 """Module for handling AIM/AIMAll WFX file format."""
 
-from typing import Tuple, List, TextIO, Dict
+
+from typing import Tuple, List, TextIO
 import re
 
 import numpy as np
@@ -122,7 +123,7 @@ def _helper_section(f_content: TextIO, start: str, end: str,
     return section
 
 
-def _helper_str(f_content: TextIO) -> Dict:
+def _helper_str(f_content: TextIO) -> dict:
     """Compute the string type values."""
     str_label = {
         'title': ['<Title>', '</Title>'],
@@ -142,7 +143,7 @@ def _helper_str(f_content: TextIO) -> Dict:
     return dict_str
 
 
-def _helper_int(f_content: TextIO) -> Dict:
+def _helper_int(f_content: TextIO) -> dict:
     """Compute the init type values."""
     int_label = {
         'num_atoms': ['<Number of Nuclei>', '</Number of Nuclei>'],
@@ -175,7 +176,7 @@ def _helper_int(f_content: TextIO) -> Dict:
     return dict_int
 
 
-def _helper_float(f_content: TextIO) -> Dict:
+def _helper_float(f_content: TextIO) -> dict:
     """Compute the float type values."""
     float_label = {
         'charge': ['<Net Charge>', '</Net Charge>'],

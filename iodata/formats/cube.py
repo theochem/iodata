@@ -19,7 +19,7 @@
 """Module for handling GAUSSIAN CUBE file format."""
 
 
-from typing import TextIO, Dict, Tuple, Union
+from typing import TextIO, Dict, Tuple
 
 import numpy as np
 
@@ -122,7 +122,7 @@ def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarr
     return data
 
 
-def load(lit: LineIterator) -> Dict[str, Union[str, np.ndarray, Dict]]:
+def load(lit: LineIterator) -> dict:
     """Load data from a CUBE file format.
 
     Parameters
@@ -132,7 +132,7 @@ def load(lit: LineIterator) -> Dict[str, Union[str, np.ndarray, Dict]]:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``pseudo_numbers``,
         ``cell``, ``cube_data`` & ``grid`` keys and their corresponding values.
 

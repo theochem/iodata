@@ -162,7 +162,7 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> MolecularBasis:
 
 
 # pylint: disable=inconsistent-return-statements
-def _read_cp2k_obasis(lit: LineIterator) -> Dict:
+def _read_cp2k_obasis(lit: LineIterator) -> dict:
     """Read atomic orbital basis set from a CP2K ATOM file object.
 
     Parameters
@@ -172,7 +172,7 @@ def _read_cp2k_obasis(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         The atomic orbital basis data which can be used to initialize a
         ``GOBasis`` class.
 
@@ -340,7 +340,7 @@ def _fill_orbitals(orb_coeffs: np.ndarray,
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a CP2K ATOM file format.
 
     Parameters
@@ -350,7 +350,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``obasis``, ``orb_alpha``, ``coordinates``,
         ``numbers``, ``energy`` & ``pseudo_numbers`` keys and corresponding
         values. It may contain ``orb_beta`` key and its value as well.

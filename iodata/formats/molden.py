@@ -19,7 +19,7 @@
 """Module for handling MOLDEN file format."""
 
 
-from typing import Tuple, Dict, Union, TextIO
+from typing import Tuple, Union, TextIO
 import copy
 
 import numpy as np
@@ -60,7 +60,7 @@ CONVENTIONS = {
 }
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a MOLDEN input file format.
 
     Parameters
@@ -70,7 +70,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         output dictionary containing ``coordinates``, ``numbers``, ``pseudo_numbers``,
         ``obasis``, ``mo`` & ``signs`` keys and corresponding values. It may contain
         ``title`` key and its corresponding value as well.
@@ -82,7 +82,7 @@ def load(lit: LineIterator) -> Dict:
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def _load_low(lit: LineIterator) -> Dict:
+def _load_low(lit: LineIterator) -> dict:
     """Load data from a MOLDEN input file format, without trying to fix errors.
 
     Parameters
@@ -92,7 +92,7 @@ def _load_low(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         output dictionary containing ``coordinates``, ``numbers``, ``pseudo_numbers``,
         ``obasis``, ``mo`` & ``signs`` keys and corresponding values. It may contain
         ``title`` key and its corresponding value as well.
@@ -522,7 +522,7 @@ def _fix_obasis_normalize_contractions(obasis: MolecularBasis) -> MolecularBasis
                           obasis.primitive_normalization)
 
 
-def _fix_molden_from_buggy_codes(result: Dict, filename: str):
+def _fix_molden_from_buggy_codes(result: dict, filename: str):
     """Detect errors in the data loaded from a molden or mkl file and correct.
 
     This function can recognize erroneous files created by PSI4, ORCA and

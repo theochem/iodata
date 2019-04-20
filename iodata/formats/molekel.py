@@ -19,7 +19,7 @@
 """Module for handling MOLEKEL file format."""
 
 
-from typing import Dict, Tuple, List
+from typing import Tuple, List
 
 import numpy as np
 
@@ -140,7 +140,7 @@ def _load_helper_occ(lit: LineIterator) -> np.ndarray:
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a MOLEKEL file format.
 
     Parameters
@@ -150,7 +150,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``coordinates``, ``numbers``, ``obasis``, ``mo``,
         keys and their corresponding values.
 

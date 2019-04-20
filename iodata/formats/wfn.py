@@ -19,7 +19,7 @@
 """Module for handling GAUSSIAN/GAMESS-US WNF file format."""
 
 
-from typing import Tuple, List, Dict
+from typing import Tuple, List
 
 import numpy as np
 
@@ -292,7 +292,7 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
     return obasis, permutation
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a WFN file format.
 
     Parameters
