@@ -537,15 +537,14 @@ def _fix_molden_from_buggy_codes(result: Dict, filename: str):
 
     """
     obasis = result['obasis']
-    if 'mo' in result and result['mo'].type == 'restricted':
+    if result['mo'].type == 'restricted':
         coeffs_a = result['mo'].coeffs
         coeffs_b = None
-    elif 'mo' in result and result['mo'].type == 'unrestricted':
+    elif result['mo'].type == 'unrestricted':
         coeffs_a = result['mo'].coeffs[:, :result['mo'].naorb]
         coeffs_b = result['mo'].coeffs[:, result['mo'].naorb:]
     else:
-        coeffs_a = result['orb_alpha_coeffs']
-        coeffs_b = result.get('orb_beta_coeffs')
+        raise ValueError('Molecular orbital type={0} not recognized'.format(result['mo'].type))
     if _is_normalized_properly(obasis, coeffs_a, coeffs_b):
         # The file is good. No need to change obasis.
         return
