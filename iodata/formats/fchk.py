@@ -187,7 +187,7 @@ def load(lit: LineIterator) -> Dict:
         mo_occs[:nalpha] = 1.0
         mo_occs[nbasis_indep: nbasis_indep + nbeta] = 1.0
     else:
-        # restricted close-shell and open-shell
+        # restricted closed-shell and open-shell
         mo_type = 'restricted'
         nborb = naorb
         mo_occs = np.zeros(nbasis_indep)

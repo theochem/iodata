@@ -203,7 +203,7 @@ def load(lit: LineIterator) -> Dict:
 
     nelec = numbers.sum() - charge
     if coeff_beta is None:
-        # restricted close-shell
+        # restricted closed-shell
         mo_type = 'restricted'
         assert nelec % 2 == 0
         assert abs(occ_alpha.sum() - nelec) < 1e-7
