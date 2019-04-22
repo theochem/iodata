@@ -42,6 +42,7 @@ def test_atom_si_uks():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [14])
     assert_equal(mol.pseudo_numbers, [4])
+    assert mol.mo.type == 'unrestricted'
     assert_equal(mol.mo.occs[:mol.mo.naorb], [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
     assert_equal(mol.mo.occs[mol.mo.naorb:], [1, 0, 0, 0])
     assert_allclose(mol.mo.energies[:mol.mo.naorb],
@@ -66,6 +67,7 @@ def test_atom_o_rks():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [8])
     assert_equal(mol.pseudo_numbers, [6])
+    assert mol.mo.type == 'restricted'
     assert_equal(mol.mo.occs, [1, 1, 1, 1])
     assert_allclose(mol.mo.energies, [0.102709, 0.606458, 0.606458, 0.606458], atol=1.e-4)
     assert_allclose(mol.energy, -15.464982778766, atol=1.e-10)
@@ -86,6 +88,7 @@ def test_carbon_gs_ae_contracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
+    assert mol.mo.type == 'unrestricted'
     assert_allclose(mol.mo.occs[:mol.mo.naorb],
                     [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
     assert_allclose(mol.mo.energies[:mol.mo.naorb],
@@ -105,6 +108,7 @@ def test_carbon_gs_ae_uncontracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
+    assert mol.mo.type == 'unrestricted'
     assert_allclose(mol.mo.occs[:mol.mo.naorb],
                     [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
     assert_allclose(mol.mo.energies[:mol.mo.naorb],
@@ -124,6 +128,7 @@ def test_carbon_gs_pp_contracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
+    assert mol.mo.type == 'unrestricted'
     assert_allclose(mol.mo.occs[:mol.mo.naorb], [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
     assert_allclose(mol.mo.energies[:mol.mo.naorb],
                     [-0.528007, -0.219974, -0.219974, -0.219974])
@@ -142,7 +147,7 @@ def test_carbon_gs_pp_uncontracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
-
+    assert mol.mo.type == 'unrestricted'
     assert_allclose(mol.mo.occs[:mol.mo.naorb], [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
     assert_allclose(mol.mo.energies[:mol.mo.naorb],
                     [-0.528146, -0.219803, -0.219803, -0.219803])
@@ -161,6 +166,7 @@ def test_carbon_sc_ae_contracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
+    assert mol.mo.type == 'restricted'
     assert_allclose(mol.mo.occs, [1, 1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
     assert_allclose(mol.mo.energies, [-10.067251, -0.495823, -0.187878, -0.187878, -0.187878])
     assert_allclose(mol.energy, -37.793939631890)
@@ -174,6 +180,7 @@ def test_carbon_sc_ae_uncontracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
+    assert mol.mo.type == 'restricted'
     assert_allclose(mol.mo.occs, [1, 1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
     assert_allclose(mol.mo.energies, [-10.062206, -0.499716, -0.192580, -0.192580, -0.192580])
     assert_allclose(mol.energy, -37.800453482378)
@@ -187,6 +194,7 @@ def test_carbon_sc_pp_contracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
+    assert mol.mo.type == 'restricted'
     assert_allclose(mol.mo.occs, [1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
     assert_allclose(mol.mo.energies, [-0.500732, -0.193138, -0.193138, -0.193138])
     assert_allclose(mol.energy, -5.350765755382)
@@ -200,6 +208,7 @@ def test_carbon_sc_pp_uncontracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
+    assert mol.mo.type == 'restricted'
     assert_allclose(mol.mo.occs, [1, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0])
     assert_allclose(mol.mo.energies, [-0.500238, -0.192365, -0.192365, -0.192365])
     assert_allclose(mol.energy, -5.352864672201)
