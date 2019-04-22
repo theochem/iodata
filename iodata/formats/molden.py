@@ -687,16 +687,16 @@ def dump(f: TextIO, data: 'IOData'):
                          data.mo.coeffs[:, naorb:][permutation] * signs.reshape(-1, 1))
     else:
         f.write('[MO]\n')
-        _dump_helper_orb(f, 'Alpha', data.mo.energies, data.mo.occs / 2,
-                         data.mo.coeffs[permutation] * signs.reshape(-1, 1), 2.0)
+        _dump_helper_orb(f, 'Alpha', data.mo.energies, data.mo.occs,
+                         data.mo.coeffs[permutation] * signs.reshape(-1, 1))
 
 
-def _dump_helper_orb(f, spin, orb_energies, orb_occs, orb_coeffs, occ_scale=1.0):
+def _dump_helper_orb(f, spin, orb_energies, orb_occs, orb_coeffs):
     for ifn in range(orb_coeffs.shape[1]):
         f.write(f' Ene= {orb_energies[ifn]:.17e}\n')
         f.write(' Sym=     1a\n')
         f.write(f' Spin= {spin}\n')
-        f.write(f' Occup= {orb_occs[ifn] * occ_scale:.17e}\n')
+        f.write(f' Occup= {orb_occs[ifn]:.17e}\n')
         for ibasis in range(orb_coeffs.shape[0]):
             # The original molden floating-point formatting is too low
             # precision. Molden also reads high-precision, so we use this
