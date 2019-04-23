@@ -46,8 +46,8 @@ def test_load_molden_li2_orca():
 
     # Check normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.mo.coeffs[:, :mol.mo.naorb], olp, 1e-5)
-    check_orthonormal(mol.mo.coeffs[:, mol.mo.naorb:], olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp, 1e-5)
 
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)

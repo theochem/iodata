@@ -43,11 +43,11 @@ def test_atom_si_uks():
     assert_equal(mol.numbers, [14])
     assert_equal(mol.pseudo_numbers, [4])
     assert mol.mo.type == 'unrestricted'
-    assert_equal(mol.mo.occs[:mol.mo.naorb], [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
-    assert_equal(mol.mo.occs[mol.mo.naorb:], [1, 0, 0, 0])
-    assert_allclose(mol.mo.energies[:mol.mo.naorb],
+    assert_equal(mol.mo.occs[:mol.mo.norba], [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
+    assert_equal(mol.mo.occs[mol.mo.norba:], [1, 0, 0, 0])
+    assert_allclose(mol.mo.energies[:mol.mo.norba],
                     [-0.398761, -0.154896, -0.154896, -0.154896], atol=1.e-4)
-    assert_allclose(mol.mo.energies[mol.mo.naorb:],
+    assert_allclose(mol.mo.energies[mol.mo.norba:],
                     [-0.334567, -0.092237, -0.092237, -0.092237], atol=1.e-4)
     assert_allclose(mol.energy, -3.761587698067, atol=1.e-10)
     assert len(mol.obasis.shells) == 3
@@ -58,8 +58,8 @@ def test_atom_si_uks():
     assert mol.obasis.shells[2].kinds == ['p']
     # check mo normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.mo.coeffs[:, :mol.mo.naorb], olp)
-    check_orthonormal(mol.mo.coeffs[:, mol.mo.naorb:], olp)
+    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp)
+    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp)
 
 
 def test_atom_o_rks():
@@ -89,18 +89,18 @@ def test_carbon_gs_ae_contracted():
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
     assert mol.mo.type == 'unrestricted'
-    assert_allclose(mol.mo.occs[:mol.mo.naorb],
+    assert_allclose(mol.mo.occs[:mol.mo.norba],
                     [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
-    assert_allclose(mol.mo.energies[:mol.mo.naorb],
+    assert_allclose(mol.mo.energies[:mol.mo.norba],
                     [-10.058194, -0.526244, -0.214978, -0.214978, -0.214978])
-    assert_allclose(mol.mo.occs[mol.mo.naorb:], [1, 1, 0, 0, 0])
-    assert_allclose(mol.mo.energies[mol.mo.naorb:],
+    assert_allclose(mol.mo.occs[mol.mo.norba:], [1, 1, 0, 0, 0])
+    assert_allclose(mol.mo.energies[mol.mo.norba:],
                     [-10.029898, -0.434300, -0.133323, -0.133323, -0.133323])
     assert_allclose(mol.energy, -37.836423363057)
     # check mo normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.mo.coeffs[:, :mol.mo.naorb], olp)
-    check_orthonormal(mol.mo.coeffs[:, mol.mo.naorb:], olp)
+    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp)
+    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp)
 
 
 def test_carbon_gs_ae_uncontracted():
@@ -109,18 +109,18 @@ def test_carbon_gs_ae_uncontracted():
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [6])
     assert mol.mo.type == 'unrestricted'
-    assert_allclose(mol.mo.occs[:mol.mo.naorb],
+    assert_allclose(mol.mo.occs[:mol.mo.norba],
                     [1, 1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
-    assert_allclose(mol.mo.energies[:mol.mo.naorb],
+    assert_allclose(mol.mo.energies[:mol.mo.norba],
                     [-10.050076, -0.528162, -0.217626, -0.217626, -0.217626])
-    assert_allclose(mol.mo.occs[mol.mo.naorb:], [1, 1, 0, 0, 0])
-    assert_allclose(mol.mo.energies[mol.mo.naorb:],
+    assert_allclose(mol.mo.occs[mol.mo.norba:], [1, 1, 0, 0, 0])
+    assert_allclose(mol.mo.energies[mol.mo.norba:],
                     [-10.022715, -0.436340, -0.137135, -0.137135, -0.137135])
     assert_allclose(mol.energy, -37.842552743398)
     # check mo normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.mo.coeffs[:, :mol.mo.naorb], olp)
-    check_orthonormal(mol.mo.coeffs[:, mol.mo.naorb:], olp)
+    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp)
+    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp)
 
 
 def test_carbon_gs_pp_contracted():
@@ -129,17 +129,17 @@ def test_carbon_gs_pp_contracted():
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
     assert mol.mo.type == 'unrestricted'
-    assert_allclose(mol.mo.occs[:mol.mo.naorb], [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
-    assert_allclose(mol.mo.energies[:mol.mo.naorb],
+    assert_allclose(mol.mo.occs[:mol.mo.norba], [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
+    assert_allclose(mol.mo.energies[:mol.mo.norba],
                     [-0.528007, -0.219974, -0.219974, -0.219974])
-    assert_allclose(mol.mo.occs[mol.mo.naorb:], [1, 0, 0, 0])
-    assert_allclose(mol.mo.energies[mol.mo.naorb:],
+    assert_allclose(mol.mo.occs[mol.mo.norba:], [1, 0, 0, 0])
+    assert_allclose(mol.mo.energies[mol.mo.norba:],
                     [-0.429657, -0.127060, -0.127060, -0.127060])
     assert_allclose(mol.energy, -5.399938535844)
     # check mo normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.mo.coeffs[:, :mol.mo.naorb], olp)
-    check_orthonormal(mol.mo.coeffs[:, mol.mo.naorb:], olp)
+    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp)
+    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp)
 
 
 def test_carbon_gs_pp_uncontracted():
@@ -148,17 +148,17 @@ def test_carbon_gs_pp_uncontracted():
     assert_equal(mol.numbers, [6])
     assert_equal(mol.pseudo_numbers, [4])
     assert mol.mo.type == 'unrestricted'
-    assert_allclose(mol.mo.occs[:mol.mo.naorb], [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
-    assert_allclose(mol.mo.energies[:mol.mo.naorb],
+    assert_allclose(mol.mo.occs[:mol.mo.norba], [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
+    assert_allclose(mol.mo.energies[:mol.mo.norba],
                     [-0.528146, -0.219803, -0.219803, -0.219803])
-    assert_allclose(mol.mo.occs[mol.mo.naorb:], [1, 0, 0, 0])
-    assert_allclose(mol.mo.energies[mol.mo.naorb:],
+    assert_allclose(mol.mo.occs[mol.mo.norba:], [1, 0, 0, 0])
+    assert_allclose(mol.mo.energies[mol.mo.norba:],
                     [-0.429358, -0.126411, -0.126411, -0.126411])
     assert_allclose(mol.energy, -5.402288849332)
     # check mo normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.mo.coeffs[:, :mol.mo.naorb], olp)
-    check_orthonormal(mol.mo.coeffs[:, mol.mo.naorb:], olp)
+    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp)
+    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp)
 
 
 def test_carbon_sc_ae_contracted():

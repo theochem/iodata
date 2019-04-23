@@ -72,8 +72,8 @@ def test_load_mkl_li2():
         mol = load_one(str(fn_mkl))
     # check mo normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.mo.coeffs[:, :mol.mo.naorb], olp, 1e-5)
-    check_orthonormal(mol.mo.coeffs[:, mol.mo.naorb:], olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp, 1e-5)
 
 
 def test_load_mkl_h2():

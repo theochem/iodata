@@ -207,7 +207,7 @@ def load(lit: LineIterator) -> Dict:
         mo_type = 'restricted'
         assert nelec % 2 == 0
         assert abs(occ_alpha.sum() - nelec) < 1e-7
-        naorb = nborb = coeff_alpha.shape[1]
+        norba = norbb = coeff_alpha.shape[1]
         mo_occs = occ_alpha
         mo_coeffs = coeff_alpha
         mo_energy = ener_alpha
@@ -222,13 +222,13 @@ def load(lit: LineIterator) -> Dict:
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
-        naorb = coeff_alpha.shape[1]
-        nborb = coeff_beta.shape[1]
+        norba = coeff_alpha.shape[1]
+        norbb = coeff_beta.shape[1]
         mo_occs = np.concatenate((occ_alpha, occ_beta), axis=0)
         mo_energy = np.concatenate((ener_alpha, ener_beta), axis=0)
         mo_coeffs = np.concatenate((coeff_alpha, coeff_beta), axis=1)
     # create a MO namedtuple
-    mo = MolecularOrbitals(mo_type, naorb, nborb, mo_occs, mo_coeffs, None, mo_energy)
+    mo = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
 
     result = {
         'coordinates': coordinates,

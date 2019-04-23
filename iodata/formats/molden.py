@@ -168,7 +168,7 @@ def _load_low(lit: LineIterator) -> Dict:
         mo_type = 'restricted'
         if coeff_alpha.shape[0] != obasis.nbasis:
             lit.error("Number of alpha orbital coefficients does not match the size of the basis.")
-        naorb = nborb = coeff_alpha.shape[1]
+        norba = norbb = coeff_alpha.shape[1]
         mo_occs = occ_alpha
         mo_coeffs = coeff_alpha
         mo_energy = ener_alpha
@@ -176,13 +176,13 @@ def _load_low(lit: LineIterator) -> Dict:
         mo_type = 'unrestricted'
         if coeff_beta.shape[0] != obasis.nbasis:
             lit.error("Number of beta orbital coefficients does not match the size of the basis.")
-        naorb = coeff_alpha.shape[1]
-        nborb = coeff_beta.shape[1]
+        norba = coeff_alpha.shape[1]
+        norbb = coeff_beta.shape[1]
         mo_occs = np.concatenate((occ_alpha, occ_beta), axis=0)
         mo_energy = np.concatenate((ener_alpha, ener_beta), axis=0)
         mo_coeffs = np.concatenate((coeff_alpha, coeff_beta), axis=1)
     # create a MO namedtuple
-    mo = MolecularOrbitals(mo_type, naorb, nborb, mo_occs, mo_coeffs, None, mo_energy)
+    mo = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
 
     # filter out ghost atoms
     mask = pseudo_numbers != 0
@@ -541,8 +541,8 @@ def _fix_molden_from_buggy_codes(result: Dict, filename: str):
         coeffs_a = result['mo'].coeffs
         coeffs_b = None
     elif result['mo'].type == 'unrestricted':
-        coeffs_a = result['mo'].coeffs[:, :result['mo'].naorb]
-        coeffs_b = result['mo'].coeffs[:, result['mo'].naorb:]
+        coeffs_a = result['mo'].coeffs[:, :result['mo'].norba]
+        coeffs_b = result['mo'].coeffs[:, result['mo'].norba:]
     else:
         raise ValueError('Molecular orbital type={0} not recognized'.format(result['mo'].type))
     if _is_normalized_properly(obasis, coeffs_a, coeffs_b):
@@ -680,11 +680,11 @@ def dump(f: TextIO, data: 'IOData'):
     # Print the mean-field orbitals
     if data.mo.type == 'unrestricted':
         f.write('[MO]\n')
-        naorb = data.mo.naorb
-        _dump_helper_orb(f, 'Alpha', data.mo.energies[:naorb], data.mo.occs[:naorb],
-                         data.mo.coeffs[:, :naorb][permutation] * signs.reshape(-1, 1))
-        _dump_helper_orb(f, 'Beta', data.mo.energies[naorb:], data.mo.occs[naorb:],
-                         data.mo.coeffs[:, naorb:][permutation] * signs.reshape(-1, 1))
+        norba = data.mo.norba
+        _dump_helper_orb(f, 'Alpha', data.mo.energies[:norba], data.mo.occs[:norba],
+                         data.mo.coeffs[:, :norba][permutation] * signs.reshape(-1, 1))
+        _dump_helper_orb(f, 'Beta', data.mo.energies[norba:], data.mo.occs[norba:],
+                         data.mo.coeffs[:, norba:][permutation] * signs.reshape(-1, 1))
     else:
         f.write('[MO]\n')
         _dump_helper_orb(f, 'Alpha', data.mo.energies, data.mo.occs,

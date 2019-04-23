@@ -137,8 +137,8 @@ def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
     if mol.mo.type == 'restricted':
         check_orthonormal(mol.mo.coeffs, olp, 1.e-5)
     elif mol.mo.type == 'unrestricted':
-        check_orthonormal(mol.mo.coeffs[:, :mol.mo.naorb], olp, 1.e-5)
-        check_orthonormal(mol.mo.coeffs[:, mol.mo.naorb:], olp, 1.e-5)
+        check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp, 1.e-5)
+        check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp, 1.e-5)
     # check energy & atomic charges
     if energy is not None:
         assert_allclose(mol.energy, energy, rtol=0., atol=1.e-5)
@@ -187,14 +187,14 @@ def test_load_wfn_li_sp_virtual():
 def test_load_wfn_li_sp():
     mol = check_wfn('li_sp_orbital.wfn', 8, -3.712905542719, None)
     assert mol.title == 'Li atom - using s & p orbitals'
-    assert_equal([mol.mo.naorb, mol.mo.nborb], [2, 1])
+    assert_equal([mol.mo.norba, mol.mo.norbb], [2, 1])
     assert_allclose(mol.mo.energies,
                     [-0.087492, -0.080310, -0.079905], rtol=0., atol=1.e-6)
 
 
 def test_load_wfn_o2():
     mol = check_wfn('o2_uhf.wfn', 72, -149.664140769678, np.array([0.0, 0.0]))
-    assert_equal([mol.mo.naorb, mol.mo.nborb], [9, 7])
+    assert_equal([mol.mo.norba, mol.mo.norbb], [9, 7])
 
 
 def test_load_wfn_o2_virtual():
@@ -202,15 +202,15 @@ def test_load_wfn_o2_virtual():
                     -149.664140769678, np.array([0.0, 0.0]))
     # check MO occupation
     assert_equal(mol.mo.occs.shape, (88,))
-    assert_allclose(mol.mo.occs[:mol.mo.naorb], [1.] * 9 + [0.] * 35)
-    assert_allclose(mol.mo.occs[mol.mo.naorb:], [1.] * 7 + [0.] * 37)
+    assert_allclose(mol.mo.occs[:mol.mo.norba], [1.] * 9 + [0.] * 35)
+    assert_allclose(mol.mo.occs[mol.mo.norba:], [1.] * 7 + [0.] * 37)
     # check MO energies
     assert_equal(mol.mo.energies.shape, (88,))
-    mo_energies_a = mol.mo.energies[:mol.mo.naorb]
+    mo_energies_a = mol.mo.energies[:mol.mo.norba]
     assert_allclose(mo_energies_a[0], -20.752000, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_a[10], 0.179578, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_a[-1], 51.503193, rtol=0, atol=1.e-6)
-    mo_energies_b = mol.mo.energies[mol.mo.naorb:]
+    mo_energies_b = mol.mo.energies[mol.mo.norba:]
     assert_allclose(mo_energies_b[0], -20.697027, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_b[15], 0.322590, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_b[-1], 51.535258, rtol=0, atol=1.e-6)
@@ -239,4 +239,4 @@ def test_load_wfn_lih_cation_fci():
     assert_equal(mol.numbers, [3, 1])
     assert_equal(mol.mo.occs.shape, (11,))
     assert_allclose(mol.mo.occs.sum(), 3., rtol=0., atol=1.e-6)
-    # assert abs(mol.mo.occs[:mol.mo.naorb].sum() - 1.5) < 1.e-6
+    # assert abs(mol.mo.occs[:mol.mo.norba].sum() - 1.5) < 1.e-6
