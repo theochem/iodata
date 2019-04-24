@@ -55,30 +55,30 @@ def test_load_mkl_ethanol():
     assert_equal([shell.icenter for shell in mol.obasis.shells[:5]], [0, 0, 1, 1, 1])
     assert_equal([shell.angmoms[0] for shell in mol.obasis.shells[:5]], [0, 0, 0, 0, 1])
     assert_equal([shell.nprim for shell in mol.obasis.shells[:5]], [3, 1, 6, 3, 3])
-    assert_equal(mol.orb_alpha_coeffs.shape, (39, 39))
-    assert_equal(mol.orb_alpha_energies.shape, (39,))
-    assert_equal(mol.orb_alpha_occs.shape, (39,))
-    assert_equal(mol.orb_alpha_occs[:13], 1.0)
-    assert_equal(mol.orb_alpha_occs[13:], 0.0)
-    assert_allclose(mol.orb_alpha_energies[4], -1.0206976)
-    assert_allclose(mol.orb_alpha_energies[-1], 2.0748685)
-    assert_allclose(mol.orb_alpha_coeffs[0, 0], 0.0000119)
-    assert_allclose(mol.orb_alpha_coeffs[1, 0], -0.0003216)
-    assert_allclose(mol.orb_alpha_coeffs[-1, -1], -0.1424743)
+    assert_equal(mol.mo.coeffs.shape, (39, 39))
+    assert_equal(mol.mo.energies.shape, (39,))
+    assert_equal(mol.mo.occs.shape, (39,))
+    assert_equal(mol.mo.occs[:13], 2.0)
+    assert_equal(mol.mo.occs[13:], 0.0)
+    assert_allclose(mol.mo.energies[4], -1.0206976)
+    assert_allclose(mol.mo.energies[-1], 2.0748685)
+    assert_allclose(mol.mo.coeffs[0, 0], 0.0000119)
+    assert_allclose(mol.mo.coeffs[1, 0], -0.0003216)
+    assert_allclose(mol.mo.coeffs[-1, -1], -0.1424743)
 
 
 def test_load_mkl_li2():
     with path('iodata.test.data', 'li2.mkl') as fn_mkl:
         mol = load_one(str(fn_mkl))
-
-    # Check normalization
+    # check mo normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
-    check_orthonormal(mol.orb_beta_coeffs, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp, 1e-5)
 
 
 def test_load_mkl_h2():
     with path('iodata.test.data', 'h2_sto3g.mkl') as fn_mkl:
         mol = load_one(str(fn_mkl))
+    # check mo normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs, olp, 1e-5)

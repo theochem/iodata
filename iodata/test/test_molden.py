@@ -46,8 +46,8 @@ def test_load_molden_li2_orca():
 
     # Check normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
-    check_orthonormal(mol.orb_beta_coeffs, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp, 1e-5)
 
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
@@ -64,7 +64,7 @@ def test_load_molden_h2o_orca():
 
     # Check normalization
     olp = compute_overlap(mol.obasis)
-    check_orthonormal(mol.orb_alpha_coeffs, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs, olp, 1e-5)
 
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
@@ -133,11 +133,10 @@ def test_load_molden_low_nh3_molden_cart():
         [0.3349872639E-01], [0.2348008012E+00], [0.8136829579E+00]])
     assert shell19.coeffs.shape == (3, 1)
 
-    orb_alpha_coeffs = data['orb_alpha_coeffs']
-    assert orb_alpha_coeffs.shape == (52, 52)
-    assert_allclose(orb_alpha_coeffs[:2, 0], [1.002730, 0.005420])
-    assert_allclose(orb_alpha_coeffs[-2:, 1], [0.003310, -0.011620])
-    assert_allclose(orb_alpha_coeffs[-4:-2, -1], [-0.116400, 0.098220])
+    assert data['mo'].coeffs.shape == (52, 52)
+    assert_allclose(data['mo'].coeffs[:2, 0], [1.002730, 0.005420])
+    assert_allclose(data['mo'].coeffs[-2:, 1], [0.003310, -0.011620])
+    assert_allclose(data['mo'].coeffs[-4:-2, -1], [-0.116400, 0.098220])
 
     permutation, signs = convert_conventions(obasis, OVERLAP_CONVENTIONS)
     assert_equal(permutation, [
