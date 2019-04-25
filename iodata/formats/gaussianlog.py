@@ -19,8 +19,6 @@
 """Module for handling GAUSSIAN LOG file format."""
 
 
-from typing import Dict
-
 import numpy as np
 
 from ..utils import set_four_index_element, LineIterator
@@ -32,7 +30,7 @@ __all__ = []
 patterns = ['*.log']
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load several two- and four-index operators from a GAUSSIAN09 LOG file format.
 
     Parameters
@@ -42,7 +40,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary may contain ``olp``, ``kin``, ``na`` and/or ``er`` keys and
         corresponding values.
 
@@ -93,7 +91,7 @@ def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
 
     Returns
     -------
-    out: array_like
+    out
         The output (nbasis, nbasis) array of operator.
 
     """
@@ -126,7 +124,7 @@ def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
 
     Returns
     -------
-    out: array_like
+    out
         The (nbasis, nbasis, nbasis, nbasis) array of operator.
 
     """

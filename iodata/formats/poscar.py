@@ -19,7 +19,7 @@
 """Module for handling VASP POSCAR file format."""
 
 
-from typing import Dict, TextIO
+from typing import TextIO
 
 import numpy as np
 
@@ -34,7 +34,7 @@ __all__ = []
 patterns = ['POSCAR*']
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a VASP 5 POSCAR file format.
 
     Parameters
@@ -44,7 +44,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title``, ``coordinates``, ``numbers`` & ``rvecs`` keys
         and their corresponding values.
 

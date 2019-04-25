@@ -19,7 +19,7 @@
 """Module for handling XYZ file format."""
 
 
-from typing import Dict, TextIO
+from typing import TextIO
 
 import numpy as np
 
@@ -33,7 +33,7 @@ __all__ = []
 patterns = ['*.xyz']
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load molecular geometry from a XYZ file format.
 
     Parameters
@@ -43,7 +43,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title`, ``coordinates`` & ``numbers`` keys
         and corresponding values.
 
@@ -75,7 +75,7 @@ def dump(f: TextIO, data: 'IOData'):
     ----------
     f
         A file to write to.
-    data : IOData
+    data
         An IOData instance which must contain ``coordinates`` & ``numbers`` attributes.
         If ``title`` attribute is not included, 'Created with IODATA module' is used as ``title``.
 

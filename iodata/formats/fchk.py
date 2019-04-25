@@ -19,7 +19,7 @@
 """Module for handling GAUSSIAN FCHK file format."""
 
 
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 
@@ -56,7 +56,7 @@ CONVENTIONS = {
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a GAUSSIAN FCHK file format.
 
     Parameters
@@ -66,7 +66,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``pseudo_numbers``,
         ``obasis``, ``mo``, ``energy`` & ``mulliken_charges`` keys and
         corresponding values. It may also contain ``npa_charges``, ``esp_charges``,
@@ -222,7 +222,7 @@ def load(lit: LineIterator) -> Dict:
     return result
 
 
-def _load_fchk_low(lit: LineIterator, labels: List[str] = None) -> Dict:
+def _load_fchk_low(lit: LineIterator, labels: List[str] = None) -> dict:
     """Read selected fields from a formatted checkpoint file."""
     result = {}
     # Read the two-line header

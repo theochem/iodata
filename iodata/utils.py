@@ -29,8 +29,8 @@ from scipy.linalg import eigh
 __all__ = ['LineIterator', 'set_four_index_element', 'MolecularOrbitals']
 
 
-angstrom = spc.angstrom / spc.value(u'atomic unit of length')
-electronvolt = 1. / spc.value(u'hartree-electron volt relationship')
+angstrom: float = spc.angstrom / spc.value(u'atomic unit of length')
+electronvolt: float = 1. / spc.value(u'hartree-electron volt relationship')
 
 
 class LineIterator:
