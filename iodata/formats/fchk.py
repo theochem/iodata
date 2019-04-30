@@ -19,7 +19,8 @@
 """Module for handling GAUSSIAN FCHK file format."""
 
 
-from typing import Dict, List, Tuple
+from fnmatch import fnmatch
+from typing import List, Tuple, Iterator
 
 import numpy as np
 
@@ -56,7 +57,7 @@ CONVENTIONS = {
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a GAUSSIAN FCHK file format.
 
     Parameters
@@ -66,7 +67,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``pseudo_numbers``,
         ``obasis``, ``orb_alpha``, ``energy`` & ``mulliken_charges`` keys and
         corresponding values. It may also contain ``npa_charges``, ``esp_charges``, ``orb_beta``,
@@ -220,8 +221,91 @@ def load(lit: LineIterator) -> Dict:
     return result
 
 
-def _load_fchk_low(lit: LineIterator, labels: List[str] = None) -> Dict:
-    """Read selected fields from a formatted checkpoint file."""
+def load_many(lit: LineIterator) -> Iterator[dict]:
+    """Load trajecotry data from a GAUSSIAN FCHK file format.
+
+    Parameters
+    ----------
+    lit
+        The line iterator to read the data from.
+
+    Yields
+    ------
+    out
+        Output dictionary containing ``title``, ``coordinates``, ``numbers``,
+        ``pseudo_numbers``, ``ipoint``, ``npoint``, ``istep``, ``nstep``,
+        ``gradient``, ``reaction_coordinate``, and ``energy``.
+
+    Trajectories from a Gaussian optimization, relaxed scan or IRC calculation
+    are written in groups of frames, called "points" in the Gaussian world, e.g.
+    to discrimininate between different values of the constraint in a relaxed
+    geometry. In most cases, e.g. IRC or conventional optimization, there is
+    only one "point". ``ipoint`` is the counter for such point and ``npoint`` is
+    the total number of points. Within one "point", one can have multiple
+    geometries and their properties. ``istep`` is the counter for these
+    geometries and ``nstep`` is the total number of geometries within in
+    "point". Properties read at each step are: ``energy``,
+    ``reaction_coordinate`` (only non-zero for IRC), ``coordinates`` and
+    ``gradients``.
+
+    """
+    fchk = _load_fchk_low(lit, [
+        "Atomic numbers", "Current cartesian coordinates", "Nuclear charges",
+        "IRC *", "Optimization *", "Opt point *"])
+    print(fchk.keys())
+
+    # Determine the type of calculation: IRC or Optimization
+    if "IRC Number of geometries" in fchk:
+        prefix = "IRC point"
+        nsteps = fchk["IRC Number of geometries"]
+    elif "Optimization Number of geometries" in fchk:
+        prefix = "Opt point"
+        nsteps = fchk["Optimization Number of geometries"]
+    else:
+        lit.error("Could not find IRC or Optimization trajectory in FCHK file.")
+
+    natom = fchk["Atomic numbers"].size
+    for ipoint, nstep in enumerate(nsteps):
+        results_geoms = fchk["{} {:7d} Results for each geome".format(prefix, ipoint + 1)]
+        trajectory = list(zip(
+            results_geoms[::2], results_geoms[1::2],
+            fchk["{} {:7d} Geometries".format(prefix, ipoint + 1)].reshape(-1, natom, 3),
+            fchk["{} {:7d} Gradient at each geome".format(prefix, ipoint + 1)].reshape(-1, natom, 3)
+        ))
+        assert len(trajectory) == nstep
+        for istep, (energy, recor, coordinates, gradients) in enumerate(trajectory):
+            yield {
+                'title': fchk['title'],
+                'numbers': fchk["Atomic numbers"],
+                'pseudo_numbers': fchk["Nuclear charges"],
+                'ipoint': ipoint,
+                'npoint': len(nsteps),
+                'istep': istep,
+                'nstep': nstep,
+                'energy': energy,
+                'reaction_coordinate': recor,
+                'coordinates': coordinates,
+                'gradients': gradients,
+            }
+
+
+def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
+    """Read selected fields from a formatted checkpoint file.
+
+    Parameters
+    ----------
+    lit
+        The line iterator to read the data from.
+    label_patterns
+        A list of Unix shell-style wildcard patterns of labels to read.
+
+    Returns
+    -------
+    fields
+        The data read from the FCHK file. Keys are the field names and values
+        are either scalar or array data. Arrays are always one-dimensional.
+
+    """
     result = {}
     # Read the two-line header
     result['title'] = next(lit).strip()
@@ -233,24 +317,36 @@ def _load_fchk_low(lit: LineIterator, labels: List[str] = None) -> Dict:
     else:
         lit.error('The second line of the FCHK file should contain two or three words.')
 
-    # Read all fields, go all they way until the until unless all requested
-    # labels are used.
-    if labels is not None:
-        labels = set(labels)
-    while labels is None or labels:
+    while True:
         try:
-            label, value = _load_fchk_field(lit, labels)
+            label, value = _load_fchk_field(lit, label_patterns)
         except StopIteration:
-            # We read the whole file, this happens when more labels are given
-            # than those present in the file, which should be allowed.
+            # We always read until the end of the file.
             break
         result[label] = value
     return result
 
 
 # pylint: disable=too-many-branches
-def _load_fchk_field(lit: LineIterator, labels: List[str]) -> Tuple[str, object]:
-    """Read a single field with one of the given labels."""
+def _load_fchk_field(lit: LineIterator, label_patterns: List[str]) -> Tuple[str, object]:
+    """Read a single field matching one of the given label_patterns.
+
+    Parameters
+    ----------
+    lit
+        The line iterator to read the data from.
+    label_patterns
+        A list of Unix shell-style wildcard patterns. The next field matching
+        one of the patterns is returned
+
+    Returns
+    -------
+    label
+        The name of the field
+    value
+        The scalar or array data of the field.
+
+    """
     while True:
         # find a sane header line
         line = next(lit)
@@ -264,7 +360,8 @@ def _load_fchk_field(lit: LineIterator, labels: List[str]) -> Tuple[str, object]
             datatype = float
         else:
             continue
-        if labels is not None and label not in labels:
+        if not (label_patterns is None
+                or any(fnmatch(label, label_pattern) for label_pattern in label_patterns)):
             continue
         if len(words) == 2:
             try:
