@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 # pylint: disable=no-member
-"""Test iodata.poscar module."""
+"""Test iodata.formats.poscar module."""
 
 import os
 

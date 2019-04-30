@@ -33,17 +33,8 @@ __all__ = ['compute_mulliken_charges', 'compute_1rdm',
 
 def compute_1rdm(iodata):
     """Compute 1-RDM."""
-    if hasattr(iodata, 'mo'):
-        coeffs, occs = iodata.mo.coeffs, iodata.mo.occs
-        dm = np.dot(coeffs * occs, coeffs.T)
-    if hasattr(iodata, 'orb_alpha_coeffs'):
-        coeffs, occs = iodata.orb_alpha_coeffs, iodata.orb_alpha_occs
-        dm = np.dot(coeffs * occs, coeffs.T)
-        if hasattr(iodata, 'orb_beta_coeffs'):
-            coeffs, occs = iodata.orb_beta_coeffs, iodata.orb_beta_occs
-            dm += np.dot(coeffs * occs, coeffs.T)
-        else:
-            dm *= 2
+    coeffs, occs = iodata.mo.coeffs, iodata.mo.occs
+    dm = np.dot(coeffs * occs, coeffs.T)
     return dm
 
 
@@ -122,18 +113,10 @@ def compare_mols(mol1, mol2):
         assert mol2.obasis is None
     # wfn
     permutation, signs = convert_conventions(mol1.obasis, mol2.obasis.conventions)
-    assert_allclose(mol1.orb_alpha, mol2.orb_alpha)
-    assert_allclose(mol1.orb_alpha_coeffs[permutation] * signs.reshape(-1, 1),
-                    mol2.orb_alpha_coeffs, atol=1e-8)
-    assert_allclose(mol1.orb_alpha_energies, mol2.orb_alpha_energies)
-    assert_allclose(mol1.orb_alpha_occs, mol2.orb_alpha_occs)
-    if hasattr(mol1, "orb_beta"):
-        assert_allclose(mol1.orb_beta, mol2.orb_beta)
-        assert_allclose(mol1.orb_beta_coeffs[permutation] * signs.reshape(-1, 1),
-                        mol2.orb_beta_coeffs, atol=1e-8)
-        assert_allclose(mol1.orb_beta_energies, mol2.orb_beta_energies)
-        assert_allclose(mol1.orb_beta_occs, mol2.orb_beta_occs)
-
+    assert mol1.mo.type == mol2.mo.type
+    assert_allclose(mol1.mo.occs, mol2.mo.occs)
+    assert_allclose(mol1.mo.energies, mol2.mo.energies)
+    assert_allclose(mol1.mo.coeffs[permutation] * signs.reshape(-1, 1), mol2.mo.coeffs, atol=1e-8)
     # operators
     for key in 'olp', 'kin', 'na', 'er', 'dm_full_mp2', 'dm_spin_mp2', \
                'dm_full_mp3', 'dm_spin_mp3', 'dm_full_ci', 'dm_spin_ci', \

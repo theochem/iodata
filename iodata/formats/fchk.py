@@ -25,7 +25,7 @@ from typing import List, Tuple, Iterator
 import numpy as np
 
 from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS
-from ..utils import LineIterator
+from ..utils import LineIterator, MolecularOrbitals
 
 
 __all__ = []
@@ -69,8 +69,8 @@ def load(lit: LineIterator) -> dict:
     -------
     out
         Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``pseudo_numbers``,
-        ``obasis``, ``orb_alpha``, ``energy`` & ``mulliken_charges`` keys and
-        corresponding values. It may also contain ``npa_charges``, ``esp_charges``, ``orb_beta``,
+        ``obasis``, ``mo``, ``energy`` & ``mulliken_charges`` keys and
+        corresponding values. It may also contain ``npa_charges``, ``esp_charges``,
         ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
         ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``, ``dm_spin_scf``,
         ``polar``, ``dipole_moment`` & ``quadrupole_moment`` keys and their values as well.
@@ -170,34 +170,36 @@ def load(lit: LineIterator) -> dict:
     nbeta = fchk['Number of beta electrons']
     if nalpha < 0 or nbeta < 0 or nalpha + nbeta <= 0:
         lit.error('The number of electrons is not positive.')
-    result['orb_alpha'] = (nbasis, nbasis_indep)
-    result['orb_alpha_coeffs'] = np.copy(
-        fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
-    result['orb_alpha_energies'] = np.copy(fchk['Alpha Orbital Energies'])
-    aoccs = np.zeros(nbasis_indep)
-    aoccs[:nalpha] = 1.0
-    result['orb_alpha_occs'] = aoccs
+    if nalpha < nbeta:
+        raise ValueError('n_alpha={0} < n_beta={1} is not valid!'.format(nalpha, nbeta))
+
+    norba = fchk['Alpha Orbital Energies'].shape[0]
+    mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
+    mo_energy = np.copy(fchk['Alpha Orbital Energies'])
+
     if 'Beta Orbital Energies' in fchk:
-        # UHF case
-        result['orb_beta'] = (nbasis, nbasis_indep)
-        result['orb_beta_coeffs'] = np.copy(
-            fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
-        result['orb_beta_energies'] = np.copy(fchk['Beta Orbital Energies'])
-        boccs = np.zeros(nbasis_indep)
-        boccs[:nbeta] = 1.0
-        result['orb_beta_occs'] = boccs
+        # unrestricted
+        mo_type = 'unrestricted'
+        norbb = fchk['Beta Orbital Energies'].shape[0]
+        mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
+        mo_coeffs = np.concatenate((mo_coeffs, mo_coeffs_b), axis=1)
+        mo_energy = np.concatenate((mo_energy, np.copy(fchk['Beta Orbital Energies'])), axis=0)
+        mo_occs = np.zeros(2 * nbasis_indep)
+        mo_occs[:nalpha] = 1.0
+        mo_occs[nbasis_indep: nbasis_indep + nbeta] = 1.0
+    else:
+        # restricted closed-shell and open-shell
+        mo_type = 'restricted'
+        norbb = norba
+        mo_occs = np.zeros(nbasis_indep)
+        mo_occs[:nalpha] = 1.0
+        mo_occs[:nbeta] = 2.0
+        if nalpha != nbeta:
+            # delete dm_full_scf because it is known to be buggy
+            result.pop('dm_full_scf')
 
-    elif fchk['Number of beta electrons'] != fchk['Number of alpha electrons']:
-        # ROHF case
-        result['orb_beta'] = (nbasis, nbasis_indep)
-        result['orb_beta_coeffs'] = fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T
-        result['orb_beta_energies'] = fchk['Alpha Orbital Energies']
-        boccs = np.zeros(nbasis_indep)
-        boccs[:nbeta] = 1.0
-        result['orb_beta_occs'] = boccs
-
-        # Delete dm_full_scf because it is known to be buggy
-        result.pop('dm_full_scf')
+    # create a MO namedtuple
+    result['mo'] = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
 
     # E) Load properties
     result['energy'] = fchk['Total Energy']

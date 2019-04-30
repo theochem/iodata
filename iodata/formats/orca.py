@@ -19,7 +19,7 @@
 """Module for handling ORCA OUT file format."""
 
 
-from typing import Dict, TextIO
+from typing import TextIO, Tuple
 
 import numpy as np
 
@@ -32,7 +32,7 @@ __all__ = []
 patterns = ['*.out']
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load several results from an orca output file.
 
     Parameters
@@ -42,7 +42,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary may contain ``numbers``, ``coordinates``, and ``total_energy`` and
         corresponding values.
 
@@ -98,7 +98,7 @@ def _helper_number_atoms(lit: LineIterator) -> int:
     return natom
 
 
-def _helper_geometry(lit: TextIO, natom: int) -> (int, np.ndarray):
+def _helper_geometry(lit: TextIO, natom: int) -> Tuple[np.ndarray, np.ndarray]:
     """Load coordinates form a ORCA output file format.
 
     Parameters
@@ -127,4 +127,4 @@ def _helper_geometry(lit: TextIO, natom: int) -> (int, np.ndarray):
         coordinates[i, 0] = float(words[5])
         coordinates[i, 1] = float(words[6])
         coordinates[i, 2] = float(words[7])
-    return (numbers, coordinates)
+    return numbers, coordinates

@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 # pylint: disable=no-member
-"""Test iodata.molpro module."""
+"""Test iodata.formats.molpro module."""
 
 import os
 

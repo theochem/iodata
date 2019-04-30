@@ -19,7 +19,7 @@
 """Module for handling MOLPRO file formal."""
 
 
-from typing import Dict, TextIO
+from typing import TextIO
 
 import numpy as np
 
@@ -32,7 +32,7 @@ __all__ = []
 patterns = ['*FCIDUMP*']
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load one- and two-electron integrals from a MOLPRO 2012 FCIDUMP file format.
 
     Parameters
@@ -42,7 +42,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``nelec``, ``ms2``, ``one_mo``, ``two_mo`` & ``core_energy``
         keys and their corresponding values.
 
@@ -120,7 +120,7 @@ def dump(f: TextIO, data: 'IOData'):
     ----------
     f
         A file to write to.
-    data : IOData
+    data
         An IOData instance which must contain ``one_mo`` & ``two_mo`` attributes.
         It may contain ``core_energy``, ``nelec`` and ``ms`` attributes.
 

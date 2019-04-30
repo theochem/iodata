@@ -19,13 +19,13 @@
 """Module for handling MOLEKEL file format."""
 
 
-from typing import Dict, Tuple, List
+from typing import Tuple, List
 
 import numpy as np
 
 from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 from ..basis import angmom_sti, MolecularBasis, Shell
-from ..utils import angstrom, LineIterator
+from ..utils import angstrom, LineIterator, MolecularOrbitals
 
 
 __all__ = []
@@ -84,12 +84,11 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
                 break
             exponents.append(float(words[0]))
             coeffs.append([float(words[1])])
-        shells.append(Shell(icenter, [angmom], [kind], np.array(exponents),
-                            np.array(coeffs)))
+        shells.append(Shell(icenter, [angmom], [kind], np.array(exponents), np.array(coeffs)))
     return MolecularBasis(np.zeros((icenter + 1, 3)), shells, CONVENTIONS, 'L2')
 
 
-def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> np.ndarray:
+def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.ndarray]:
     coeffs = []
     energies = []
 
@@ -105,7 +104,7 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> np.ndarray:
             assert ncol > 0
             for word in words:
                 assert word == 'a1g'
-            cols = [np.zeros((nbasis, 1), float) for icol in range(ncol)]
+            cols = [np.zeros((nbasis, 1), float) for _ in range(ncol)]
             in_orb = 1
         elif in_orb == 1:
             # read energies
@@ -141,7 +140,7 @@ def _load_helper_occ(lit: LineIterator) -> np.ndarray:
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a MOLEKEL file format.
 
     Parameters
@@ -151,11 +150,9 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
-        Output dictionary containing ``coordinates``, ``numbers``, ``obasis``, ``orb_alpha``,
-        ``orb_alpha_coeffs``, ``orb_alpha_energies`` & ``orb_alpha_occs`` keys and their
-        corresponding values. It may also contain ``orb_beta``, ``orb_beta_coeffs``,
-        ``orb_beta_energies`` & ``orb_beta_occs`` keys and their values.
+    out
+        Output dictionary containing ``coordinates``, ``numbers``, ``obasis``, ``mo``,
+        keys and their corresponding values.
 
     """
     charge = None
@@ -206,14 +203,16 @@ def load(lit: LineIterator) -> Dict:
 
     nelec = numbers.sum() - charge
     if coeff_beta is None:
+        # restricted closed-shell
+        mo_type = 'restricted'
         assert nelec % 2 == 0
         assert abs(occ_alpha.sum() - nelec) < 1e-7
-        orb_alpha = (obasis.nbasis, coeff_alpha.shape[1])
-        orb_alpha_coeffs = coeff_alpha
-        orb_alpha_energies = ener_alpha
-        orb_alpha_occs = occ_alpha / 2
-        orb_beta = None
+        norba = norbb = coeff_alpha.shape[1]
+        mo_occs = occ_alpha
+        mo_coeffs = coeff_alpha
+        mo_energy = ener_alpha
     else:
+        mo_type = 'unrestricted'
         if occ_beta is None:
             lit.error('Beta occupation numbers not found in mkl file while '
                       'beta orbitals were present.')
@@ -223,28 +222,19 @@ def load(lit: LineIterator) -> Dict:
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape
         assert occ_alpha.shape == occ_beta.shape
-        orb_alpha = (obasis.nbasis, coeff_alpha.shape[1])
-        orb_alpha_coeffs = coeff_alpha
-        orb_alpha_energies = ener_alpha
-        orb_alpha_occs = occ_alpha
-        orb_beta = (obasis.nbasis, coeff_beta.shape[1])
-        orb_beta_coeffs = coeff_beta
-        orb_beta_energies = ener_beta
-        orb_beta_occs = occ_beta
+        norba = coeff_alpha.shape[1]
+        norbb = coeff_beta.shape[1]
+        mo_occs = np.concatenate((occ_alpha, occ_beta), axis=0)
+        mo_energy = np.concatenate((ener_alpha, ener_beta), axis=0)
+        mo_coeffs = np.concatenate((coeff_alpha, coeff_beta), axis=1)
+    # create a MO namedtuple
+    mo = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
 
     result = {
         'coordinates': coordinates,
-        'orb_alpha': orb_alpha,
-        'orb_alpha_coeffs': orb_alpha_coeffs,
-        'orb_alpha_energies': orb_alpha_energies,
-        'orb_alpha_occs': orb_alpha_occs,
         'numbers': numbers,
         'obasis': obasis,
+        'mo': mo,
     }
-    if orb_beta is not None:
-        result['orb_beta'] = orb_beta
-        result['orb_beta_coeffs'] = orb_beta_coeffs
-        result['orb_beta_energies'] = orb_beta_energies
-        result['orb_beta_occs'] = orb_beta_occs
     _fix_molden_from_buggy_codes(result, lit.filename)
     return result

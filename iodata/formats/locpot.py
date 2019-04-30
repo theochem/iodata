@@ -19,8 +19,6 @@
 """Module for handling VASP LOCPOT file format."""
 
 
-from typing import Dict
-
 from ..utils import electronvolt, LineIterator
 from .chgcar import _load_vasp_grid
 
@@ -31,7 +29,7 @@ __all__ = []
 patterns = ['LOCPOT*']
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a VASP 5 LOCPOT file format.
 
     Parameters
@@ -41,7 +39,7 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Ouput dictionary containing ``title``, ``coordinates``, ``numbers``, ``rvecs``,
         ``grid`` & ``cube_data`` keys and corresponding values.
 

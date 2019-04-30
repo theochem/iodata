@@ -29,8 +29,8 @@ from scipy.linalg import eigh
 __all__ = ['LineIterator', 'set_four_index_element', 'MolecularOrbitals']
 
 
-angstrom = spc.angstrom / spc.value(u'atomic unit of length')
-electronvolt = 1. / spc.value(u'hartree-electron volt relationship')
+angstrom: float = spc.angstrom / spc.value(u'atomic unit of length')
+electronvolt: float = 1. / spc.value(u'hartree-electron volt relationship')
 
 
 class LineIterator:
@@ -57,7 +57,7 @@ class LineIterator:
         return self
 
     def __next__(self):
-        """Get the next line, will also increase the lineno attribute."""
+        """Return the next line and increase the lineno attribute by one."""
         if self.stack:
             line = self.stack.pop()
         else:
@@ -65,15 +65,19 @@ class LineIterator:
         self.lineno += 1
         return line
 
-    def error(self, msg):
+    def error(self, msg: str):
         """Raise an error while reading a file.
 
-        Filename and line number are added to the message.
+        Parameters
+        ----------
+        msg
+            Message to raise alongside filename and line number.
+
         """
         raise IOError("{}:{} {}".format(self.filename, self.lineno, msg))
 
     def back(self, line):
-        """Push one line back, which will be read again when next(lit) is called."""
+        """Go one line back and decrease the lineno attribute by one."""
         self.stack.append(line)
         self.lineno -= 1
 
@@ -85,9 +89,9 @@ class MolecularOrbitals(NamedTuple):
     ----------
     type : str
         Molecular orbital type; choose from 'restricted', 'unrestricted', or 'generalized'.
-    norb_a : int
+    norba : int
         Number of alpha molecular orbitals.
-    norb_b : int
+    norbb : int
         Number of beta molecular orbitals.
     occs : np.ndarray
         Molecular orbital occupation numbers.
@@ -101,8 +105,8 @@ class MolecularOrbitals(NamedTuple):
     """
 
     type: str
-    norb_a: int
-    norb_b: int
+    norba: int
+    norbb: int
     occs: np.ndarray
     coeffs: np.ndarray
     irreps: np.ndarray

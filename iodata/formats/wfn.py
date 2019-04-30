@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling GUASSIAN/GAMESS-US WNF file format."""
+"""Module for handling GAUSSIAN/GAMESS-US WNF file format."""
 
 
-from typing import Tuple, List, Dict
+from typing import Tuple, List
 
 import numpy as np
 
@@ -121,7 +121,7 @@ def _load_helper_num(lit: LineIterator) -> List[int]:
 
 
 def _load_helper_coordinates(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
-    """Read the coordiantes of the atoms."""
+    """Read the coordinates of the atoms."""
     numbers = np.empty(num_atoms, int)
     coordinates = np.empty((num_atoms, 3), float)
     for atom in range(num_atoms):
@@ -132,7 +132,7 @@ def _load_helper_coordinates(lit: LineIterator, num_atoms: int) -> Tuple[np.ndar
 
 
 def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
-                         dtype: np.dtype) -> List:
+                         dtype: np.dtype) -> np.ndarray:
     """Read CENTRE ASSIGNMENTS, TYPE ASSIGNMENTS, and EXPONENTS sections."""
     section = []
     while len(section) < nprim:
@@ -144,7 +144,7 @@ def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
     return np.array([word.replace('D', 'E') for word in section]).astype(dtype)
 
 
-def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[str, str, str, List[str]]:
+def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[str, str, str, np.ndarray]:
     """Read one section of MO information."""
     line = next(lit)
     assert line.startswith('MO')
@@ -201,7 +201,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
 # pylint: disable=too-many-branches
 def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
                  exponents: np.ndarray, coordinates: np.ndarray,
-                 lit: LineIterator) -> MolecularBasis:
+                 lit: LineIterator) -> Tuple[MolecularBasis, np.ndarray]:
     """Construct a basis set using the arrays read from a WFN file.
 
     Parameters
@@ -292,7 +292,7 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
     return obasis, permutation
 
 
-def load(lit: LineIterator) -> Dict:
+def load(lit: LineIterator) -> dict:
     """Load data from a WFN file format.
 
     Parameters
@@ -302,10 +302,9 @@ def load(lit: LineIterator) -> Dict:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``energy``,
-        ``obasis`` & ``orb_alpha`` keys and their corresponding values. It may contain
-        ``orb_beta`` key and its value as well.
+        ``obasis`` & ``mo`` keys and their corresponding values.
 
     """
     (title, numbers, coordinates, icenters, type_assignments, exponents,

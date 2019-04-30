@@ -19,7 +19,7 @@
 """Module for handling GAUSSIAN CUBE file format."""
 
 
-from typing import TextIO, Dict, Tuple, Union
+from typing import TextIO, Dict, Tuple
 
 import numpy as np
 
@@ -43,7 +43,7 @@ def _read_cube_header(lit: LineIterator) \
 
     Returns
     -------
-    out : tuple
+    out
         The output tuple contains title, coordinates, numbers, cell, ugrid &
         pseudo_numbers.
 
@@ -106,7 +106,7 @@ def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarr
 
     Returns
     -------
-    out : array_like
+    out
         The cube data array.
 
     """
@@ -122,7 +122,7 @@ def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarr
     return data
 
 
-def load(lit: LineIterator) -> Dict[str, Union[str, np.ndarray, Dict]]:
+def load(lit: LineIterator) -> dict:
     """Load data from a CUBE file format.
 
     Parameters
@@ -132,7 +132,7 @@ def load(lit: LineIterator) -> Dict[str, Union[str, np.ndarray, Dict]]:
 
     Returns
     -------
-    out : dict
+    out
         Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``pseudo_numbers``,
         ``cell``, ``cube_data`` & ``grid`` keys and their corresponding values.
 
@@ -183,7 +183,7 @@ def dump(f: TextIO, data: 'IOData'):
     ----------
     f
         A file to write to.
-    data : IOData
+    data
         An IOData instance which must contain ``coordinates``, ``numbers``, ``grid`` &
         ``cube_data`` attributes. It may contain ``title``  & ``pseudo_numbers`` attributes.
 
