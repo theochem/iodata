@@ -324,7 +324,7 @@ def load_fchk_trj_helper(fn_fchk):
         return list(load_many(fn))
 
 
-def check_trj_basics(trj, nsteps, title):
+def check_trj_basics(trj, nsteps, title, irc):
     """Check sizes of arrays, step and point attributes."""
     # Make a copy of the list, so we can pop items without destroying the original.
     trj = list(trj)
@@ -344,18 +344,15 @@ def check_trj_basics(trj, nsteps, title):
             assert mol.gradients.shape == (natom, 3)
             assert mol.title == title
             assert hasattr(mol, 'energy')
-            assert hasattr(mol, 'reaction_coordinate')
+            assert hasattr(mol, 'reaction_coordinate') ^ (not irc)
 
 
 def test_peroxide_opt():
     trj = load_fchk_trj_helper("peroxide_opt.fchk")
-    check_trj_basics(trj, [5], 'opt')
+    check_trj_basics(trj, [5], 'opt', False)
     assert_allclose(trj[0].energy, -1.48759755E+02)
     assert_allclose(trj[1].energy, -1.48763504E+02)
     assert_allclose(trj[-1].energy, -1.48764883E+02)
-    assert trj[0].reaction_coordinate == 0.0
-    assert trj[1].reaction_coordinate == 0.0
-    assert trj[-1].reaction_coordinate == 0.0
     assert_allclose(trj[0].coordinates[1],
                     [9.02056208E-17, -1.37317707E+00, 0.00000000E+00])
     assert_allclose(trj[-1].coordinates[-1],
@@ -368,13 +365,10 @@ def test_peroxide_opt():
 
 def test_peroxide_tsopt():
     trj = load_fchk_trj_helper("peroxide_tsopt.fchk")
-    check_trj_basics(trj, [3], 'tsopt')
+    check_trj_basics(trj, [3], 'tsopt', False)
     assert_allclose(trj[0].energy, -1.48741996E+02)
     assert_allclose(trj[1].energy, -1.48750392E+02)
     assert_allclose(trj[2].energy, -1.48750432E+02)
-    assert trj[0].reaction_coordinate == 0.0
-    assert trj[1].reaction_coordinate == 0.0
-    assert trj[2].reaction_coordinate == 0.0
     assert_allclose(trj[0].coordinates[3],
                     [-2.40150648E-01, -1.58431001E+00, 1.61489448E+00])
     assert_allclose(trj[2].coordinates[2],
@@ -387,13 +381,10 @@ def test_peroxide_tsopt():
 
 def test_peroxide_relaxed_scan():
     trj = load_fchk_trj_helper("peroxide_relaxed_scan.fchk")
-    check_trj_basics(trj, [6, 1, 1, 1, 2, 2], 'relaxed scan')
+    check_trj_basics(trj, [6, 1, 1, 1, 2, 2], 'relaxed scan', False)
     assert_allclose(trj[0].energy, -1.48759755E+02)
     assert_allclose(trj[10].energy, -1.48764896E+02)
     assert_allclose(trj[-1].energy, -1.48764905E+02)
-    assert trj[0].reaction_coordinate == 0.0
-    assert trj[10].reaction_coordinate == 0.0
-    assert trj[-1].reaction_coordinate == 0.0
     assert_allclose(trj[1].coordinates[3],
                     [-1.85942837E+00, -1.70565735E+00, -1.11022302E-16])
     assert_allclose(trj[5].coordinates[0],
@@ -406,7 +397,7 @@ def test_peroxide_relaxed_scan():
 
 def test_peroxide_irc():
     trj = load_fchk_trj_helper("peroxide_irc.fchk")
-    check_trj_basics(trj, [21], 'irc')
+    check_trj_basics(trj, [21], 'irc', True)
     assert_allclose(trj[0].energy, -1.48750432E+02)
     assert_allclose(trj[5].energy, -1.48752713E+02)
     assert_allclose(trj[-1].energy, -1.48757803E+02)

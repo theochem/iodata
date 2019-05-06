@@ -276,7 +276,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
         ))
         assert len(trajectory) == nstep
         for istep, (energy, recor, coordinates, gradients) in enumerate(trajectory):
-            yield {
+            data = {
                 'title': fchk['title'],
                 'numbers': fchk["Atomic numbers"],
                 'pseudo_numbers': fchk["Nuclear charges"],
@@ -285,10 +285,12 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
                 'istep': istep,
                 'nstep': nstep,
                 'energy': energy,
-                'reaction_coordinate': recor,
                 'coordinates': coordinates,
                 'gradients': gradients,
             }
+            if prefix == "IRC point":
+                data['reaction_coordinate'] = recor
+            yield data
 
 
 def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
