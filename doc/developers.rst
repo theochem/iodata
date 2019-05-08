@@ -67,14 +67,14 @@ The :code:`load_*` functions are implemented in their own files. Here is the ``l
         ... # read file
         for i in range(size):
             ... #read file
-            coordinates[i, 0] = float(words[1]) * angstrom
-            coordinates[i, 1] = float(words[2]) * angstrom
-            coordinates[i, 2] = float(words[3]) * angstrom
+            atcoords[i, 0] = float(words[1]) * angstrom
+            atcoords[i, 1] = float(words[2]) * angstrom
+            atcoords[i, 2] = float(words[3]) * angstrom
         f.close()
         return {
             'title': title,
-            'coordinates': coordinates,
-            'numbers': numbers
+            'atcoords': atcoords,
+            'atnums': atnums
         }
 
 The important thing to note here is that this function does a few things:
