@@ -44,7 +44,7 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
     Returns
     -------
     out
-        Output Contains ``title``, ``cell``, ``atnums``, ``atcoords``.
+        Output Contains ``title``, ``cellvecs``, ``atnums``, ``atcoords``.
 
     Notes
     -----
@@ -58,10 +58,10 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
 
     # read cell parameters in angstrom, without the universal scaling factor.
     # each row is one cell vector
-    rvecs = []
+    cellvecs = []
     for _i in range(3):
-        rvecs.append([float(w) for w in next(lit).split()])
-    rvecs = np.array(rvecs) * angstrom * scaling
+        cellvecs.append([float(w) for w in next(lit).split()])
+    cellvecs = np.array(cellvecs) * angstrom * scaling
 
     # note that in older VASP version the following line might be absent
     vasp_atnums = [sym2num[w] for w in next(lit).split()]
@@ -86,9 +86,9 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
     if cartesian:
         atcoords = np.array(atcoords) * angstrom * scaling
     else:
-        atcoords = np.dot(np.array(atcoords), rvecs)
+        atcoords = np.dot(np.array(atcoords), cellvecs)
 
-    return title, rvecs, atnums, atcoords
+    return title, cellvecs, atnums, atcoords
 
 
 def _load_vasp_grid(lit: LineIterator) -> dict:
@@ -102,12 +102,12 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``rvecs``,
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``cellvecs``,
         ``grid`` & ``cube_data`` keys and their corresponding values.
 
     """
     # Load header
-    title, rvecs, atnums, atcoords = _load_vasp_header(lit)
+    title, cellvecs, atnums, atcoords = _load_vasp_header(lit)
 
     # read the shape of the data
     for line in lit:
@@ -125,15 +125,18 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
                     words = next(lit).split()
                 cube_data[i0, i1, i2] = float(words.pop(0))
 
-    ugrid = {"origin": np.zeros(3), 'grid_rvecs': rvecs / shape.reshape(-1, 1), 'shape': shape,
-             'pbc': np.ones(3, int)}
+    ugrid = {
+        "origin": np.zeros(3),
+        "axes": cellvecs / shape.reshape(-1, 1),
+        "shape": shape,
+    }
 
     return {
         'title': title,
         'atcoords': atcoords,
         'atnums': atnums,
-        'rvecs': rvecs,
-        'grid': ugrid,
+        'cellvecs': cellvecs,
+        'ugrid': ugrid,
         'cube_data': cube_data,
     }
 
@@ -149,11 +152,11 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``rvecs``,
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``cellvecs``,
         ``grid`` & ``cube_data`` keys and corresponding values.
 
     """
     result = _load_vasp_grid(lit)
     # renormalize electron density
-    result['cube_data'] /= volume(result['rvecs'])
+    result['cube_data'] /= volume(result['cellvecs'])
     return result

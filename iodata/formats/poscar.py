@@ -45,17 +45,17 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums`` & ``rvecs`` keys
+        Output dictionary containing ``title``, ``atcoords``, ``atnums`` & ``cellvecs`` keys
         and their corresponding values.
 
     """
     # Load header
-    title, rvecs, atnums, atcoords = _load_vasp_header(lit)
+    title, cellvecs, atnums, atcoords = _load_vasp_header(lit)
     return {
         'title': title,
         'atcoords': atcoords,
         'atnums': atnums,
-        'rvecs': rvecs,
+        'cellvecs': cellvecs,
     }
 
 
@@ -67,7 +67,7 @@ def dump(f: TextIO, data: 'IOData'):
     f
         A file to write to.
     data
-        An IOData instance which must contain ``atcoords``, ``atnums``, ``rvecs`` &
+        An IOData instance which must contain ``atcoords``, ``atnums``, ``cellvecs`` &
         ``cell_frac`` attributes. It may contain ``title`` attribute.
 
     """
@@ -75,8 +75,8 @@ def dump(f: TextIO, data: 'IOData'):
     print('   1.00000000000000', file=f)
 
     # Write cell vectors, each row is one vector in angstrom:
-    rvecs = data.rvecs
-    for rvec in rvecs:
+    cellvecs = data.cellvecs
+    for rvec in cellvecs:
         r = rvec / angstrom
         print(f'{r[0]: 21.16f} {r[1]: 21.16f} {r[2]: 21.16f}', file=f)
 

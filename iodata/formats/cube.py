@@ -44,7 +44,7 @@ def _read_cube_header(lit: LineIterator) \
     Returns
     -------
     out
-        The output tuple contains title, atcoords, atnums, cell, ugrid &
+        The output tuple contains title, atcoords, atnums, cellvecs, ugrid &
         atcorenums.
 
     """
@@ -71,8 +71,8 @@ def _read_cube_header(lit: LineIterator) \
     shape = np.array([shape0, shape1, shape2], int)
     axes = np.array([axis0, axis1, axis2])
 
-    cell = axes * shape.reshape(-1, 1)
-    ugrid = {"origin": origin, 'grid_rvecs': axes, 'shape': shape, 'pbc': np.ones(3, int)}
+    cellvecs = axes * shape.reshape(-1, 1)
+    ugrid = {"origin": origin, 'axes': axes, 'shape': shape}
 
     def read_atom_line(line: str) -> Tuple[int, float, np.ndarray]:
         """Read an atomic number and coordinate from the cube file."""
@@ -93,7 +93,7 @@ def _read_cube_header(lit: LineIterator) \
         if atcorenums[i] == 0.0:
             atcorenums[i] = atnums[i]
 
-    return title, atcoords, atnums, cell, ugrid, atcorenums
+    return title, atcoords, atnums, cellvecs, ugrid, atcorenums
 
 
 def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
@@ -134,18 +134,18 @@ def load(lit: LineIterator) -> dict:
     -------
     out
         Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``atcorenums``,
-        ``cell``, ``cube_data`` & ``grid`` keys and their corresponding values.
+        ``cellvecs``, ``cube_data`` & ``grid`` keys and their corresponding values.
 
     """
-    title, atcoords, atnums, cell, ugrid, atcorenums = _read_cube_header(lit)
+    title, atcoords, atnums, cellvecs, ugrid, atcorenums = _read_cube_header(lit)
     data = _read_cube_data(lit, ugrid)
     return {
         'title': title,
         'atcoords': atcoords,
         'atnums': atnums,
-        'cell': cell,
+        'cellvecs': cellvecs,
         'cube_data': data,
-        'grid': ugrid,
+        'ugrid': ugrid,
         'atcorenums': atcorenums,
     }
 
@@ -157,9 +157,9 @@ def _write_cube_header(f: TextIO, title: str, atcoords: np.ndarray, atnums: np.n
     natom = len(atnums)
     x, y, z = ugrid_dict["origin"]
     print(f'{natom:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
-    rvecs = ugrid_dict["grid_rvecs"]
+    axes = ugrid_dict["axes"]
     for i in range(3):
-        x, y, z = rvecs[i]
+        x, y, z = axes[i]
         print(f'{ugrid_dict["shape"][i]:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
     for i in range(natom):
         q = atcorenums[i]
@@ -188,9 +188,9 @@ def dump(f: TextIO, data: 'IOData'):
         ``cube_data`` attributes. It may contain ``title``  & ``atcorenums`` attributes.
 
     """
-    if not isinstance(data.grid, dict):
+    if not isinstance(data.ugrid, dict):
         raise ValueError(
-            'The system grid must contain a dict to initialize a UniformGrid instance.')
+            'The ugrid attribute must be dictionary.')
     title = getattr(data, 'title', 'Created with HORTON')
-    _write_cube_header(f, title, data.atcoords, data.atnums, data.grid, data.atcorenums)
+    _write_cube_header(f, title, data.atcoords, data.atnums, data.ugrid, data.atcorenums)
     _write_cube_data(f, data.cube_data)

@@ -34,8 +34,8 @@ def test_load_locpot_oxygen():
         mol = load_one(str(fn))
     assert mol.title == 'O atom in a box'
     assert_equal(mol.atnums[0], 8)
-    assert_allclose(volume(mol.rvecs), (10 * angstrom) ** 3, atol=1.e-10)
-    ugrid = mol.grid
+    assert_allclose(volume(mol.cellvecs), (10 * angstrom) ** 3, atol=1.e-10)
+    ugrid = mol.ugrid
     assert_equal(len(ugrid['shape']), 3)
     assert_equal(ugrid['shape'], [1, 4, 2])
     assert abs(ugrid['origin']).max() < 1e-10
