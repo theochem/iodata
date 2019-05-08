@@ -261,7 +261,7 @@ class IOData:
     atcoords = ArrayTypeCheckDescriptor('atcoords', 2, (-1, 3), float,
                                         ['atnums', 'atcorenums'],
                                         doc="A (N, 3) float array with Cartesian atcoords "
-                                             "of the atoms.")
+                                            "of the atoms.")
     cube_data = ArrayTypeCheckDescriptor('cube_data', 3,
                                          doc="A (L, M, N) array of data on a uniform grid "
                                              "(defined by ugrid).")
@@ -269,9 +269,9 @@ class IOData:
                                      doc="A (3, 3) matrix containing the dipole polarizability "
                                          "tensor.")
     atcorenums = ArrayTypeCheckDescriptor('atcorenums', 1, (-1,), float,
-                                              ['atcoords', 'atnums'], 'atnums',
-                                              doc="A (N,) float array with pseudo-potential core "
-                                                  "charges.")
+                                          ['atcoords', 'atnums'], 'atnums',
+                                          doc="A (N,) float array with pseudo-potential core "
+                                              "charges.")
 
     @property
     def natom(self) -> int:
