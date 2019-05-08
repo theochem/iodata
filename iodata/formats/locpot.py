@@ -40,7 +40,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Ouput dictionary containing ``title``, ``atcoords``, ``numbers``, ``rvecs``,
+        Ouput dictionary containing ``title``, ``atcoords``, ``numbers``, ``cellvecs``,
         ``grid`` & ``cube_data`` keys and corresponding values.
 
     """

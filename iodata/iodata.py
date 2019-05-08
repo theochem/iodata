@@ -163,9 +163,11 @@ class IOData:
 
     **Unspecified type (duck typing):**
 
-    cell
-         A Cell object that describes the (generally triclinic) periodic
-         boundary conditions.
+    cellvecs
+         A (NP, 3) array containing the (real-space) cell vectors describing
+         periodic boundary conditions. A single vector corresponds to a 1D cell,
+         e.g. for a wire. Two vectors describe a 2D cell, e.g. for a membrane.
+         Three vectors describe a 3D cell, e.g. a crystalline solid.
 
     core_energy
          The Hartree-Fock energy due to the core orbitals
@@ -181,9 +183,6 @@ class IOData:
 
     orb_beta
          The beta orbitals (coefficients, occupations and energies).
-
-    esp_charges
-         Charges fitted to the electrostatic potential
 
     dm_full (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
          The spin-summed first-order density matrix.
@@ -230,6 +229,14 @@ class IOData:
 
     two_mo
          Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
+
+    ugrid
+         A dictionary describing the uniform grid (typically from a cube file).
+         It contains the following fields: ``origin``, a 3D vector with the
+         origin of the axes frame. ``axes`` a 3x3 array where each row
+         represents the spacing between two neighboring grid points along the
+         first, second and third axis, respectively. ``shape`` A three-tuple
+         with the number of points along each axis, respectively.
 
     """
 

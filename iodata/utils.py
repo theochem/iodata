@@ -140,23 +140,30 @@ def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int
     four_index_object[l, i, j, k] = value
 
 
-def volume(rvecs: np.ndarray) -> float:
-    """Calculate the cell volume.
+def volume(cellvecs: np.ndarray) -> float:
+    """Calculate the (generalized) cell volume.
 
     Parameters
     ----------
-    rvecs
-        a numpy matrix of shape (x,3) where x is in {1,2,3}
+    cellvecs
+        A numpy matrix of shape (x,3) where x is in {1,2,3}. Each row is one
+        cellvector.
+
+    Returns
+    -------
+    volume
+        In case of 3D, the cell volume. In case of 2D, the cell area. In case of
+        1D, the cell length.
 
     """
-    nvecs = rvecs.shape[0]
-    if len(rvecs.shape) == 1 or nvecs == 1:
-        return np.linalg.norm(rvecs)
+    nvecs = cellvecs.shape[0]
+    if len(cellvecs.shape) == 1 or nvecs == 1:
+        return np.linalg.norm(cellvecs)
     if nvecs == 2:
-        return np.linalg.norm(np.cross(rvecs[0], rvecs[1]))
+        return np.linalg.norm(np.cross(cellvecs[0], cellvecs[1]))
     if nvecs == 3:
-        return np.linalg.det(rvecs)
-    raise ValueError("Argument rvecs should be of shape (x, 3), where x is in {1, 2, 3}")
+        return np.linalg.det(cellvecs)
+    raise ValueError("Argument cellvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
 def derive_naturals(dm: np.ndarray, overlap: np.ndarray) \
