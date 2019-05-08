@@ -352,7 +352,7 @@ def load(lit: LineIterator) -> dict:
     -------
     out
         Output dictionary containing ``obasis``, ``orb_alpha``, ``coordinates``,
-        ``atnums``, ``energy`` & ``pseudo_numbers`` keys and corresponding
+        ``atnums``, ``energy`` & ``atcorenums`` keys and corresponding
         values. It may contain ``orb_beta`` key and its value as well.
 
     Notes
@@ -403,18 +403,18 @@ def load(lit: LineIterator) -> dict:
                 break
 
     # Search for the core charge (pseudo number)
-    pseudo_number = None
+    atcorenum = None
     for line in lit:
         if line.startswith('          Core Charge'):
-            pseudo_number = float(line[70:])
-            assert pseudo_number == int(pseudo_number)
+            atcorenum = float(line[70:])
+            assert atcorenum == int(atcorenum)
             break
         elif line.startswith(' Electronic structure'):
-            pseudo_number = float(atnum)
+            atcorenum = float(atnum)
             break
 
     # Select the correct basis
-    if pseudo_number == atnum:
+    if atcorenum == atnum:
         obasis = ae_obasis
     else:
         obasis = pp_obasis
@@ -488,6 +488,6 @@ def load(lit: LineIterator) -> dict:
         'coordinates': obasis.centers,
         'atnums': np.array([atnum]),
         'energy': energy,
-        'pseudo_numbers': np.array([pseudo_number]),
+        'atcorenums': np.array([atcorenum]),
     }
     return result

@@ -38,10 +38,10 @@ def compute_1rdm(iodata):
     return dm
 
 
-def compute_mulliken_charges(iodata, pseudo_numbers=None):
+def compute_mulliken_charges(iodata, atcorenums=None):
     """Compute Mulliken charges."""
-    if pseudo_numbers is None:
-        pseudo_numbers = iodata.pseudo_numbers
+    if atcorenums is None:
+        atcorenums = iodata.atcorenums
     dm = compute_1rdm(iodata)
     ov = compute_overlap(iodata.obasis)
     # compute basis function population matrix
@@ -55,8 +55,8 @@ def compute_mulliken_charges(iodata, pseudo_numbers=None):
     populations = np.zeros(len(iodata.obasis.centers))
     for index in range(len(iodata.obasis.centers)):
         populations[index] = np.sum(bp[basis_center == index])
-    assert_equal(pseudo_numbers.shape, populations.shape)
-    return pseudo_numbers - np.array(populations)
+    assert_equal(atcorenums.shape, populations.shape)
+    return atcorenums - np.array(populations)
 
 
 @contextmanager

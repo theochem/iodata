@@ -211,7 +211,7 @@ def test_load_molden_he2_ghost_psi4_1():
     # It should be read in properly by ignoring the ghost atoms.
     with path('iodata.test.data', 'he2_ghost_psi4_1.0.molden') as fn_molden:
         mol = load_one(str(fn_molden))
-    np.testing.assert_equal(mol.pseudo_numbers, np.array([2.0]))
+    np.testing.assert_equal(mol.atcorenums, np.array([2.0]))
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol, np.array([0.0, 2.0]))

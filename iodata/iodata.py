@@ -158,7 +158,7 @@ class IOData:
     polar
          A (3, 3) matrix containing the dipole polarizability tensor.
 
-    pseudo_numbers
+    atcorenums
          A (N,) float array with pseudo-potential core charges.
 
     **Unspecified type (duck typing):**
@@ -256,10 +256,10 @@ class IOData:
                        'na', 'olp']
 
     # only perform type checking on minimal attributes
-    atnums = ArrayTypeCheckDescriptor('atnums', 1, (-1,), int, ['coordinates', 'pseudo_numbers'],
+    atnums = ArrayTypeCheckDescriptor('atnums', 1, (-1,), int, ['coordinates', 'atcorenums'],
                                        doc="A (N,) int vector with the atomic numbers.")
     coordinates = ArrayTypeCheckDescriptor('coordinates', 2, (-1, 3), float,
-                                           ['atnums', 'pseudo_numbers'],
+                                           ['atnums', 'atcorenums'],
                                            doc="A (N, 3) float array with Cartesian coordinates "
                                                "of the atoms.")
     cube_data = ArrayTypeCheckDescriptor('cube_data', 3,
@@ -268,7 +268,7 @@ class IOData:
     polar = ArrayTypeCheckDescriptor('polar', 2, (3, 3), float,
                                      doc="A (3, 3) matrix containing the dipole polarizability "
                                          "tensor.")
-    pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float,
+    atcorenums = ArrayTypeCheckDescriptor('atcorenums', 1, (-1,), float,
                                               ['coordinates', 'atnums'], 'atnums',
                                               doc="A (N,) float array with pseudo-potential core "
                                                   "charges.")
@@ -280,8 +280,8 @@ class IOData:
             return len(self.atnums)
         if hasattr(self, 'coordinates'):
             return len(self.coordinates)
-        if hasattr(self, 'pseudo_numbers'):
-            return len(self.pseudo_numbers)
+        if hasattr(self, 'atcorenums'):
+            return len(self.atcorenums)
         raise ValueError("Cannot determine the number of atoms.")
 
 

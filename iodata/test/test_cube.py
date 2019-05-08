@@ -53,7 +53,7 @@ def test_load_aelta():
 
     assert_allclose(mol.cube_data[0, 0, 0], 9.49232e-06, atol=1.e-12)
     assert_allclose(mol.cube_data[-1, -1, -1], 2.09856e-04, atol=1.e-10)
-    pn = mol.pseudo_numbers
+    pn = mol.atcorenums
     assert_allclose(pn[0], 1.0, atol=1.e-10)
     assert_allclose(pn[1], 0.1, atol=1.e-10)
     assert_allclose(pn[-2], 0.2, atol=1.e-10)
@@ -76,4 +76,4 @@ def test_load_dump_load_aelta(tmpdir):
     assert_allclose(ugrid1["grid_rvecs"], ugrid2["grid_rvecs"], atol=1.e-4)
     assert_equal(ugrid1["shape"], ugrid2["shape"])
     assert_allclose(mol1.cube_data, mol2.cube_data, atol=1.e-4)
-    assert_allclose(mol1.pseudo_numbers, mol2.pseudo_numbers, atol=1.e-4)
+    assert_allclose(mol1.atcorenums, mol2.atcorenums, atol=1.e-4)

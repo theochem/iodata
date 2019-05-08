@@ -68,7 +68,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``pseudo_numbers``,
+        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``atcorenums``,
         ``obasis``, ``mo``, ``energy`` & ``mulliken_charges`` keys and
         corresponding values. It may also contain ``npa_charges``, ``esp_charges``,
         ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
@@ -100,13 +100,13 @@ def load(lit: LineIterator) -> dict:
     # A) Load the geometry
     atnums = fchk["Atomic numbers"]
     coordinates = fchk["Current cartesian coordinates"].reshape(-1, 3)
-    pseudo_numbers = fchk["Nuclear charges"]
+    atcorenums = fchk["Nuclear charges"]
     # Mask out ghost atoms
-    mask = pseudo_numbers != 0.0
+    mask = atcorenums != 0.0
     atnums = atnums[mask]
     # Do not overwrite coordinates array, because it is needed to specify basis
     system_coordinates = coordinates[mask]
-    pseudo_numbers = pseudo_numbers[mask]
+    atcorenums = atcorenums[mask]
 
     # B) Load the orbital basis set
     shell_types = fchk["Shell types"]
@@ -151,7 +151,7 @@ def load(lit: LineIterator) -> dict:
         'coordinates': system_coordinates,
         'atnums': atnums,
         'obasis': obasis,
-        'pseudo_numbers': pseudo_numbers,
+        'atcorenums': atcorenums,
     }
 
     nbasis = fchk["Number of basis functions"]
@@ -235,7 +235,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     ------
     out
         Output dictionary containing ``title``, ``coordinates``, ``atnums``,
-        ``pseudo_numbers``, ``ipoint``, ``npoint``, ``istep``, ``nstep``,
+        ``atcorenums``, ``ipoint``, ``npoint``, ``istep``, ``nstep``,
         ``gradient``, ``reaction_coordinate``, and ``energy``.
 
     Trajectories from a Gaussian optimization, relaxed scan or IRC calculation
@@ -279,7 +279,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             data = {
                 'title': fchk['title'],
                 'atnums': fchk["Atomic numbers"],
-                'pseudo_numbers': fchk["Nuclear charges"],
+                'atcorenums': fchk["Nuclear charges"],
                 'ipoint': ipoint,
                 'npoint': len(nsteps),
                 'istep': istep,

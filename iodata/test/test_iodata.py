@@ -37,10 +37,10 @@ def test_typecheck():
     m = IOData(coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
     assert np.issubdtype(m.coordinates.dtype, np.floating)
     assert not hasattr(m, 'atnums')
-    m = IOData(atnums=np.array([2.0, 3.0]), pseudo_numbers=np.array([1, 1]),
+    m = IOData(atnums=np.array([2.0, 3.0]), atcorenums=np.array([1, 1]),
                coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
     assert np.issubdtype(m.atnums.dtype, np.integer)
-    assert np.issubdtype(m.pseudo_numbers.dtype, np.floating)
+    assert np.issubdtype(m.atcorenums.dtype, np.floating)
     assert hasattr(m, 'atnums')
     del m.atnums
     assert not hasattr(m, 'atnums')
@@ -51,10 +51,10 @@ def test_typecheck_raises():
     assert_raises(TypeError, IOData, coordinates=np.array([[1, 2], [2, 3]]))
     assert_raises(TypeError, IOData, atnums=np.array([[1, 2], [2, 3]]))
     # check inconsistency between various attributes
-    atnums, pseudo_numbers, coordinates = np.array(
+    atnums, atcorenums, coordinates = np.array(
         [2, 3]), np.array([1]), np.array([[1, 2, 3]])
     assert_raises(TypeError, IOData, atnums=atnums,
-                  pseudo_numbers=pseudo_numbers)
+                  atcorenums=atcorenums)
     assert_raises(TypeError, IOData, atnums=atnums, coordinates=coordinates)
     assert_raises(TypeError, IOData, cube_data=np.array([1, 2]))
     cube_data = np.array([[1, 2], [2, 3], [3, 2]])

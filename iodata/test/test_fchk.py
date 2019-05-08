@@ -339,7 +339,7 @@ def check_trj_basics(trj, nsteps, title, irc):
             assert mol.nstep == nstep
             assert mol.natom == natom
             assert mol.atnums.shape == (natom, )
-            assert mol.pseudo_numbers.shape == (natom, )
+            assert mol.atcorenums.shape == (natom, )
             assert mol.coordinates.shape == (natom, 3)
             assert mol.gradients.shape == (natom, 3)
             assert mol.title == title
