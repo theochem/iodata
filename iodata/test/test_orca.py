@@ -61,15 +61,15 @@ def check_water(mol):
         IOdata dictionary.
 
     """
-    np.testing.assert_equal(mol.numbers, [8, 1, 1])
+    np.testing.assert_equal(mol.atnums, [8, 1, 1])
     # check bond length
 
     assert_allclose(np.linalg.norm(
-        mol.coordinates[0] - mol.coordinates[1]) / angstrom, 0.9500, atol=1.e-5)
+        mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.9500, atol=1.e-5)
     assert_allclose(np.linalg.norm(
-        mol.coordinates[0] - mol.coordinates[2]) / angstrom, 0.9500, atol=1.e-5)
+        mol.atcoords[0] - mol.atcoords[2]) / angstrom, 0.9500, atol=1.e-5)
     assert_allclose(np.linalg.norm(
-        mol.coordinates[1] - mol.coordinates[2]) / angstrom, 1.5513, atol=1.e-4)
+        mol.atcoords[1] - mol.atcoords[2]) / angstrom, 1.5513, atol=1.e-4)
     # check scf energy
     assert_allclose(mol.energy, -74.959292304818, atol=1e-8)
 

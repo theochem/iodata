@@ -52,7 +52,7 @@ To read a file, use something like this:
     from iodata import IOData
 
     mol = IOData.from_file('water.xyz')  # Stored in Angstrom
-    print(mol.coordinates)  # prints out in Bohr
+    print(mol.atcoords)  # prints out in Bohr
 
 The file format is inferred from the extension. **Note that IOData will automatically convert units
 from the file format's official specification to atomic units (which is the format used throughout
@@ -81,5 +81,5 @@ IOData can be used to store data in a consistent format for writing at a future 
     from iodata import IOData
 
     mol = IOData(title="water")
-    mol.numbers = np.array([8, 1, 1])
+    mol.atnums = np.array([8, 1, 1])
     mol.coordinates = np.array([[0, 0, 0,], [0, 1, 0,], [0, -1, 0,]])  # in Bohr

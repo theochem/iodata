@@ -149,16 +149,16 @@ class IOData:
     cube_data
          A (L, M, N) array of data on a uniform grid (defined by ugrid).
 
-    coordinates
+    atcoords
          A (N, 3) float array with Cartesian coordinates of the atoms.
 
-    numbers
+    atnums
          A (N,) int vector with the atomic numbers.
 
     polar
          A (3, 3) matrix containing the dipole polarizability tensor.
 
-    pseudo_numbers
+    atcorenums
          A (N,) float array with pseudo-potential core charges.
 
     **Unspecified type (duck typing):**
@@ -256,32 +256,32 @@ class IOData:
                        'na', 'olp']
 
     # only perform type checking on minimal attributes
-    numbers = ArrayTypeCheckDescriptor('numbers', 1, (-1,), int, ['coordinates', 'pseudo_numbers'],
-                                       doc="A (N,) int vector with the atomic numbers.")
-    coordinates = ArrayTypeCheckDescriptor('coordinates', 2, (-1, 3), float,
-                                           ['numbers', 'pseudo_numbers'],
-                                           doc="A (N, 3) float array with Cartesian coordinates "
-                                               "of the atoms.")
+    atnums = ArrayTypeCheckDescriptor('atnums', 1, (-1,), int, ['atcoords', 'atcorenums'],
+                                      doc="A (N,) int vector with the atomic numbers.")
+    atcoords = ArrayTypeCheckDescriptor('atcoords', 2, (-1, 3), float,
+                                        ['atnums', 'atcorenums'],
+                                        doc="A (N, 3) float array with Cartesian atcoords "
+                                             "of the atoms.")
     cube_data = ArrayTypeCheckDescriptor('cube_data', 3,
                                          doc="A (L, M, N) array of data on a uniform grid "
                                              "(defined by ugrid).")
     polar = ArrayTypeCheckDescriptor('polar', 2, (3, 3), float,
                                      doc="A (3, 3) matrix containing the dipole polarizability "
                                          "tensor.")
-    pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float,
-                                              ['coordinates', 'numbers'], 'numbers',
+    atcorenums = ArrayTypeCheckDescriptor('atcorenums', 1, (-1,), float,
+                                              ['atcoords', 'atnums'], 'atnums',
                                               doc="A (N,) float array with pseudo-potential core "
                                                   "charges.")
 
     @property
     def natom(self) -> int:
         """Return the number of atoms."""
-        if hasattr(self, 'numbers'):
-            return len(self.numbers)
-        if hasattr(self, 'coordinates'):
-            return len(self.coordinates)
-        if hasattr(self, 'pseudo_numbers'):
-            return len(self.pseudo_numbers)
+        if hasattr(self, 'atnums'):
+            return len(self.atnums)
+        if hasattr(self, 'atcoords'):
+            return len(self.atcoords)
+        if hasattr(self, 'atcorenums'):
+            return len(self.atcorenums)
         raise ValueError("Cannot determine the number of atoms.")
 
 

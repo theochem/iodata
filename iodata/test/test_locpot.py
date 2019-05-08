@@ -33,7 +33,7 @@ def test_load_locpot_oxygen():
     with path('iodata.test.data', 'LOCPOT.oxygen') as fn:
         mol = load_one(str(fn))
     assert mol.title == 'O atom in a box'
-    assert_equal(mol.numbers[0], 8)
+    assert_equal(mol.atnums[0], 8)
     assert_allclose(volume(mol.rvecs), (10 * angstrom) ** 3, atol=1.e-10)
     ugrid = mol.grid
     assert_equal(len(ugrid['shape']), 3)

@@ -28,7 +28,7 @@ from ..basis import convert_conventions
 from ..formats.molden import _load_low
 from ..iodata import load_one, dump_one
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
-from ..utils import LineIterator
+from ..utils import LineIterator, angstrom
 
 
 try:
@@ -43,6 +43,10 @@ def test_load_molden_li2_orca():
 
     # Checkt title
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=li2'
+
+    # Check geometry
+    assert_equal(mol.atnums, [3, 3])
+    assert_allclose(mol.atcoords[1], [5.2912331750, 0.0, 0.0])
 
     # Check normalization
     olp = compute_overlap(mol.obasis)
@@ -62,6 +66,10 @@ def test_load_molden_h2o_orca():
     # Checkt title
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=h2o'
 
+    # Check geometry
+    assert_equal(mol.atnums, [8, 1, 1])
+    assert_allclose(mol.atcoords[2], [0.0, -0.1808833432, 1.9123825806])
+
     # Check normalization
     olp = compute_overlap(mol.obasis)
     check_orthonormal(mol.mo.coeffs, olp, 1e-5)
@@ -77,6 +85,10 @@ def test_load_molden_nh3_molden_pure():
     # properly without altering normalization and sign conventions.
     with path('iodata.test.data', 'nh3_molden_pure.molden') as fn_molden:
         mol = load_one(str(fn_molden))
+    # Check geometry
+    assert_equal(mol.atnums, [7, 1, 1, 1])
+    assert_allclose(mol.atcoords[0] / angstrom, [-0.007455, 0.044763, 0.054913])
+    assert_allclose(mol.atcoords[2] / angstrom, [-0.313244, -0.879581, 0.283126])
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
@@ -199,7 +211,7 @@ def test_load_molden_he2_ghost_psi4_1():
     # It should be read in properly by ignoring the ghost atoms.
     with path('iodata.test.data', 'he2_ghost_psi4_1.0.molden') as fn_molden:
         mol = load_one(str(fn_molden))
-    np.testing.assert_equal(mol.pseudo_numbers, np.array([2.0]))
+    np.testing.assert_equal(mol.atcorenums, np.array([2.0]))
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol, np.array([0.0, 2.0]))

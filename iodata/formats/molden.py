@@ -71,7 +71,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        output dictionary containing ``coordinates``, ``numbers``, ``pseudo_numbers``,
+        output dictionary containing ``atcoords``, ``atnums``, ``atcorenums``,
         ``obasis``, ``mo`` & ``signs`` keys and corresponding values. It may contain
         ``title`` key and its corresponding value as well.
 
@@ -93,14 +93,14 @@ def _load_low(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        output dictionary containing ``coordinates``, ``numbers``, ``pseudo_numbers``,
+        output dictionary containing ``atcoords``, ``atnums``, ``atcorenums``,
         ``obasis``, ``mo`` & ``signs`` keys and corresponding values. It may contain
         ``title`` key and its corresponding value as well.
 
     """
     pure_angmoms = set([])
-    numbers = None
-    coordinates = None
+    atnums = None
+    atcoords = None
     obasis = None
     coeff_alpha = None
     ener_alpha = None
@@ -143,7 +143,7 @@ def _load_low(lit: LineIterator) -> dict:
                 cunit = 1.0
             elif 'angs' in line:
                 cunit = angstrom
-            numbers, pseudo_numbers, coordinates = _load_helper_coordinates(lit, cunit)
+            atnums, atcorenums, atcoords = _load_helper_atoms(lit, cunit)
         # we only support Gaussian-type orbitals (gto's)
         elif line == '[gto]':
             obasis = _load_helper_obasis(lit)
@@ -162,7 +162,7 @@ def _load_low(lit: LineIterator) -> dict:
         if shell.angmoms[0] in pure_angmoms:
             shell.kinds[0] = 'p'
     # Fix the centers.
-    obasis.centers[:] = coordinates
+    obasis.centers[:] = atcoords
 
     if coeff_beta is None:
         mo_type = 'restricted'
@@ -185,29 +185,29 @@ def _load_low(lit: LineIterator) -> dict:
     mo = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
 
     # filter out ghost atoms
-    mask = pseudo_numbers != 0
-    coordinates = coordinates[mask]
-    numbers = numbers[mask]
-    pseudo_numbers = pseudo_numbers[mask]
+    mask = atcorenums != 0
+    atcoords = atcoords[mask]
+    atnums = atnums[mask]
+    atcorenums = atcorenums[mask]
 
     result = {
-        'coordinates': coordinates,
-        'numbers': numbers,
+        'atcoords': atcoords,
+        'atnums': atnums,
         'obasis': obasis,
         'mo': mo,
-        'pseudo_numbers': pseudo_numbers,
+        'atcorenums': atcorenums,
     }
     if title is not None:
         result['title'] = title
     return result
 
 
-def _load_helper_coordinates(lit: LineIterator, cunit: float) -> \
+def _load_helper_atoms(lit: LineIterator, cunit: float) -> \
         Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Load element numbers and coordinates."""
-    numbers = []
-    pseudo_numbers = []
-    coordinates = []
+    atnums = []
+    atcorenums = []
+    atcoords = []
     for line in lit:
         if line.strip() == "":
             break
@@ -216,13 +216,13 @@ def _load_helper_coordinates(lit: LineIterator, cunit: float) -> \
             # Go back to previous line and stop
             lit.back(line)
             break
-        numbers.append(sym2num[words[0].title()])
-        pseudo_numbers.append(float(words[2]))
-        coordinates.append([float(words[3]), float(words[4]), float(words[5])])
-    numbers = np.array(numbers, int)
-    pseudo_numbers = np.array(pseudo_numbers)
-    coordinates = np.array(coordinates) * cunit
-    return numbers, pseudo_numbers, coordinates
+        atnums.append(sym2num[words[0].title()])
+        atcorenums.append(float(words[2]))
+        atcoords.append([float(words[3]), float(words[4]), float(words[5])])
+    atnums = np.array(atnums, int)
+    atcorenums = np.array(atcorenums)
+    atcoords = np.array(atcoords) * cunit
+    return atnums, atcorenums, atcoords
 
 
 def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
@@ -597,9 +597,9 @@ def dump(f: TextIO, data: 'IOData'):
     f
         A file to write to.
     data : IOData
-        An IOData instance which must contain ```coordinates``, ``numbers``,
+        An IOData instance which must contain ```atcoords``, ``atnums``,
         ``obasis`` & ``orb_alpha`` attributes. It may contain ```title``,
-        ``pseudo_numbers``, ``orb_beta`` attributes.
+        ``atcorenums``, ``orb_beta`` attributes.
 
     """
     # Print the header
@@ -610,11 +610,11 @@ def dump(f: TextIO, data: 'IOData'):
     # Print the elements numbers and the coordinates
     f.write('[Atoms] AU\n')
     for iatom in range(data.natom):
-        number = data.numbers[iatom]
-        pseudo_number = data.pseudo_numbers[iatom]
-        x, y, z = data.coordinates[iatom]
+        atnum = data.atnums[iatom]
+        atcorenum = data.atcorenums[iatom]
+        x, y, z = data.atcoords[iatom]
         f.write('{:2s} {:3d} {:3.0f}  {:25.18f} {:25.18f} {:25.18f}\n'.format(
-            num2sym[number].ljust(2), iatom + 1, pseudo_number, x, y, z
+            num2sym[atnum].ljust(2), iatom + 1, atcorenum, x, y, z
         ))
     f.write('\n')
 

@@ -41,7 +41,7 @@ def test_load_wfx_low_h2():
         num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
         num_beta_electron, num_spin_multi, charge, energy, \
         virial_ratio, nuclear_virial, full_virial_ratio, mo_count, \
-        atom_numbers, mo_spin_type, coordinates, centers, \
+        atom_numbers, mo_spin_type, atcoords, centers, \
         primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
         gradient, mo_coefficients = data
 
@@ -72,8 +72,8 @@ def test_load_wfx_low_h2():
           'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
           'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
           'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', ]]).T)
-    assert_allclose(coordinates[0], [0., 0., 0.7019452462164])
-    assert_allclose(coordinates[1], [0., 0., -0.7019452462164])
+    assert_allclose(atcoords[0], [0., 0., 0.7019452462164])
+    assert_allclose(atcoords[1], [0., 0., -0.7019452462164])
     assert_equal(centers, np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                      1, 1, 1, 1, 1, 1, 1, 2, 2, 2,
                                      2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -176,7 +176,7 @@ def test_load_wfx_low_water():
         num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
         num_beta_electron, num_spin_multi, charge, energy, \
         virial_ratio, nuclear_virial, full_virial_ratio, mo_count, \
-        atom_numbers, mo_spin_type, coordinates, centers, \
+        atom_numbers, mo_spin_type, atcoords, centers, \
         primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
         gradient, mo_coefficients = data
 
@@ -208,15 +208,15 @@ def test_load_wfx_low_water():
                                           'Beta',
                                           'Alpha',
                                           'Beta']]).T)
-    assert_allclose(coordinates[0], [0.00000000000000E+000,
-                                     0.00000000000000E+000,
-                                     2.40242907000000E-001])
-    assert_allclose(coordinates[1], [0.00000000000000E+000,
-                                     1.43244242000000E+000,
-                                     -9.60971627000000E-001])
-    assert_allclose(coordinates[2], [-1.75417809000000E-016,
-                                     -1.43244242000000E+000,
-                                     -9.60971627000000E-001])
+    assert_allclose(atcoords[0], [0.00000000000000E+000,
+                                  0.00000000000000E+000,
+                                  2.40242907000000E-001])
+    assert_allclose(atcoords[1], [0.00000000000000E+000,
+                                  1.43244242000000E+000,
+                                  -9.60971627000000E-001])
+    assert_allclose(atcoords[2], [-1.75417809000000E-016,
+                                  -1.43244242000000E+000,
+                                  -9.60971627000000E-001])
     assert_equal(centers, np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                      1, 1, 1, 1, 2, 2, 2, 3, 3, 3]]))
     assert_equal(primitives_types, np.array([

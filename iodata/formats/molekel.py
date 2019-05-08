@@ -38,18 +38,18 @@ def _load_helper_char_mult(lit: LineIterator) -> List[int]:
     return [int(word) for word in next(lit).split()]
 
 
-def _load_helper_coordinates(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]:
-    numbers = []
-    coordinates = []
+def _load_helper_atoms(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]:
+    atnums = []
+    atcoords = []
     for line in lit:
         if line.strip() == '$END':
             break
         words = line.split()
-        numbers.append(int(words[0]))
-        coordinates.append([float(words[1]), float(words[2]), float(words[3])])
-    numbers = np.array(numbers, int)
-    coordinates = np.array(coordinates) * angstrom
-    return numbers, coordinates
+        atnums.append(int(words[0]))
+        atcoords.append([float(words[1]), float(words[2]), float(words[3])])
+    atnums = np.array(atnums, int)
+    atcoords = np.array(atcoords) * angstrom
+    return atnums, atcoords
 
 
 def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
@@ -151,13 +151,13 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``coordinates``, ``numbers``, ``obasis``, ``mo``,
+        Output dictionary containing ``atcoords``, ``atnums``, ``obasis``, ``mo``,
         keys and their corresponding values.
 
     """
     charge = None
-    numbers = None
-    coordinates = None
+    atnums = None
+    atcoords = None
     obasis = None
     coeff_alpha = None
     ener_alpha = None
@@ -177,10 +177,10 @@ def load(lit: LineIterator) -> dict:
         if line == '$CHAR_MULT':
             charge, _spinmult = _load_helper_char_mult(lit)
         elif line == '$COORD':
-            numbers, coordinates = _load_helper_coordinates(lit)
+            atnums, atcoords = _load_helper_atoms(lit)
         elif line == '$BASIS':
             obasis = _load_helper_obasis(lit)
-            obasis.centers[:] = coordinates
+            obasis.centers[:] = atcoords
         elif line == '$COEFF_ALPHA':
             coeff_alpha, ener_alpha = _load_helper_coeffs(lit, obasis.nbasis)
         elif line == '$OCC_ALPHA':
@@ -192,7 +192,7 @@ def load(lit: LineIterator) -> dict:
 
     if charge is None:
         lit.error('Charge and multiplicity not found.')
-    if coordinates is None:
+    if atcoords is None:
         lit.error('Coordinates not found.')
     if obasis is None:
         lit.error('Orbital basis not found.')
@@ -201,7 +201,7 @@ def load(lit: LineIterator) -> dict:
     if occ_alpha is None:
         lit.error('Alpha occupation numbers not found.')
 
-    nelec = numbers.sum() - charge
+    nelec = atnums.sum() - charge
     if coeff_beta is None:
         # restricted closed-shell
         mo_type = 'restricted'
@@ -231,8 +231,8 @@ def load(lit: LineIterator) -> dict:
     mo = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
 
     result = {
-        'coordinates': coordinates,
-        'numbers': numbers,
+        'atcoords': atcoords,
+        'atnums': atnums,
         'obasis': obasis,
         'mo': mo,
     }

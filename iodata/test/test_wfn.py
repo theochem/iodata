@@ -48,12 +48,12 @@ def helper_load_wfn_low(fn_wfn):
 def test_load_wfn_low_he_s():
     data = helper_load_wfn_low('he_s_orbital.wfn')
     # unpack data
-    title, numbers, coordinates, centers, type_assignments = data[:5]
+    title, atnums, atcoords, centers, type_assignments = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'He atom - decontracted 6-31G basis set'
-    assert_equal(numbers.shape, (1,))
-    assert_equal(numbers, [2])
-    assert_equal(coordinates.shape, (1, 3))
+    assert_equal(atnums.shape, (1,))
+    assert_equal(atnums, [2])
+    assert_equal(atcoords.shape, (1, 3))
     assert_equal(centers.shape, (4,))
     assert_equal(type_assignments.shape, (4,))
     assert_equal(exponents.shape, (4,))
@@ -65,7 +65,7 @@ def test_load_wfn_low_he_s():
     assert_equal(type_assignments, [0, 0, 0, 0])
     assert_equal(centers, [0, 0, 0, 0])
     assert_equal(occ_num, [2.0])
-    assert_allclose(coordinates, np.array([[0.00, 0.00, 0.00]]))
+    assert_allclose(atcoords, np.array([[0.00, 0.00, 0.00]]))
     assert_allclose(exponents, [0.3842163E+02, 0.5778030E+01,
                                 0.1241774E+01, 0.2979640E+00])
     assert_allclose(mo_energy, [-0.914127])
@@ -78,11 +78,11 @@ def test_load_wfn_low_he_s():
 def test_load_wfn_low_h2o():
     data = helper_load_wfn_low('h2o_sto3g.wfn')
     # unpack data
-    title, numbers, coordinates, centers, type_assignments = data[:5]
+    title, atnums, atcoords, centers, type_assignments = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'H2O Optimization'
-    assert_equal(numbers.shape, (3,))
-    assert_equal(coordinates.shape, (3, 3))
+    assert_equal(atnums.shape, (3,))
+    assert_equal(atcoords.shape, (3, 3))
     assert_equal(centers.shape, (21,))
     assert_equal(type_assignments.shape, (21,))
     assert_equal(exponents.shape, (21,))
@@ -90,7 +90,7 @@ def test_load_wfn_low_h2o():
     assert_equal(occ_num.shape, (5,))
     assert_equal(mo_energy.shape, (5,))
     assert_equal(coefficients.shape, (21, 5))
-    assert_equal(numbers, np.array([8, 1, 1]))
+    assert_equal(atnums, np.array([8, 1, 1]))
     assert_equal(centers[:15], np.zeros(15, int))
     assert_equal(centers[15:], np.array([1, 1, 1, 2, 2, 2]))
     assert_equal(type_assignments[:6], np.zeros(6))
@@ -100,7 +100,7 @@ def test_load_wfn_low_h2o():
     assert_equal(mo_count, [1, 2, 3, 4, 5])
     assert_equal(np.sum(occ_num), 10.0)
     assert_equal(occ_num, [2.0, 2.0, 2.0, 2.0, 2.0])
-    assert_allclose(coordinates, np.array([
+    assert_allclose(atcoords, np.array([
         [-4.44734101, 3.39697999, 0.00000000],
         [-2.58401495, 3.55136194, 0.00000000],
         [-4.92380519, 5.20496220, 0.00000000]]))
@@ -236,7 +236,7 @@ def test_load_wfn_lif_fci():
 def test_load_wfn_lih_cation_fci():
     mol = check_wfn('lih_cation_fci.wfn', 26, -7.7214366383,
                     np.array([0.913206, 0.086794]))
-    assert_equal(mol.numbers, [3, 1])
+    assert_equal(mol.atnums, [3, 1])
     assert_equal(mol.mo.occs.shape, (11,))
     assert_allclose(mol.mo.occs.sum(), 3., rtol=0., atol=1.e-6)
     # assert abs(mol.mo.occs[:mol.mo.norba].sum() - 1.5) < 1.e-6
