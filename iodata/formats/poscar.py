@@ -45,15 +45,15 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``atnums`` & ``rvecs`` keys
+        Output dictionary containing ``title``, ``atcoords``, ``atnums`` & ``rvecs`` keys
         and their corresponding values.
 
     """
     # Load header
-    title, rvecs, atnums, coordinates = _load_vasp_header(lit)
+    title, rvecs, atnums, atcoords = _load_vasp_header(lit)
     return {
         'title': title,
-        'coordinates': coordinates,
+        'atcoords': atcoords,
         'atnums': atnums,
         'rvecs': rvecs,
     }
@@ -67,7 +67,7 @@ def dump(f: TextIO, data: 'IOData'):
     f
         A file to write to.
     data
-        An IOData instance which must contain ``coordinates``, ``atnums``, ``rvecs`` &
+        An IOData instance which must contain ``atcoords``, ``atnums``, ``rvecs`` &
         ``cell_frac`` attributes. It may contain ``title`` attribute.
 
     """
@@ -92,5 +92,5 @@ def dump(f: TextIO, data: 'IOData'):
     for uatnum in uatnums:
         indexes = (data.atnums == uatnum).nonzero()[0]
         for index in indexes:
-            row = np.dot(data.gvecs, data.coordinates[index])
+            row = np.dot(data.gvecs, data.atcoords[index])
             print(f'  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F', file=f)

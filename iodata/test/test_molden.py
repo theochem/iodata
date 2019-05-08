@@ -46,7 +46,7 @@ def test_load_molden_li2_orca():
 
     # Check geometry
     assert_equal(mol.atnums, [3, 3])
-    assert_allclose(mol.coordinates[1], [5.2912331750, 0.0, 0.0])
+    assert_allclose(mol.atcoords[1], [5.2912331750, 0.0, 0.0])
 
     # Check normalization
     olp = compute_overlap(mol.obasis)
@@ -68,7 +68,7 @@ def test_load_molden_h2o_orca():
 
     # Check geometry
     assert_equal(mol.atnums, [8, 1, 1])
-    assert_allclose(mol.coordinates[2], [0.0, -0.1808833432, 1.9123825806])
+    assert_allclose(mol.atcoords[2], [0.0, -0.1808833432, 1.9123825806])
 
     # Check normalization
     olp = compute_overlap(mol.obasis)
@@ -87,8 +87,8 @@ def test_load_molden_nh3_molden_pure():
         mol = load_one(str(fn_molden))
     # Check geometry
     assert_equal(mol.atnums, [7, 1, 1, 1])
-    assert_allclose(mol.coordinates[0] / angstrom, [-0.007455, 0.044763, 0.054913])
-    assert_allclose(mol.coordinates[2] / angstrom, [-0.313244, -0.879581, 0.283126])
+    assert_allclose(mol.atcoords[0] / angstrom, [-0.007455, 0.044763, 0.054913])
+    assert_allclose(mol.atcoords[2] / angstrom, [-0.313244, -0.879581, 0.283126])
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)

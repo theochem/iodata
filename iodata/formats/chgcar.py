@@ -44,7 +44,7 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
     Returns
     -------
     out
-        Output Contains ``title``, ``cell``, ``atnums``, ``coordinates``.
+        Output Contains ``title``, ``cell``, ``atnums``, ``atcoords``.
 
     Notes
     -----
@@ -79,16 +79,16 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
     cartesian = line[0].lower() in ['c', 'k']
 
     # read the coordinates
-    coordinates = []
+    atcoords = []
     for _iatom in range(len(atnums)):
         line = next(lit)
-        coordinates.append([float(w) for w in line.split()[:3]])
+        atcoords.append([float(w) for w in line.split()[:3]])
     if cartesian:
-        coordinates = np.array(coordinates) * angstrom * scaling
+        atcoords = np.array(atcoords) * angstrom * scaling
     else:
-        coordinates = np.dot(np.array(coordinates), rvecs)
+        atcoords = np.dot(np.array(atcoords), rvecs)
 
-    return title, rvecs, atnums, coordinates
+    return title, rvecs, atnums, atcoords
 
 
 def _load_vasp_grid(lit: LineIterator) -> dict:
@@ -102,12 +102,12 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``rvecs``,
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``rvecs``,
         ``grid`` & ``cube_data`` keys and their corresponding values.
 
     """
     # Load header
-    title, rvecs, atnums, coordinates = _load_vasp_header(lit)
+    title, rvecs, atnums, atcoords = _load_vasp_header(lit)
 
     # read the shape of the data
     for line in lit:
@@ -130,7 +130,7 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
 
     return {
         'title': title,
-        'coordinates': coordinates,
+        'atcoords': atcoords,
         'atnums': atnums,
         'rvecs': rvecs,
         'grid': ugrid,
@@ -149,7 +149,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``rvecs``,
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``rvecs``,
         ``grid`` & ``cube_data`` keys and corresponding values.
 
     """

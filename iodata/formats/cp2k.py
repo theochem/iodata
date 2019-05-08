@@ -351,7 +351,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``obasis``, ``orb_alpha``, ``coordinates``,
+        Output dictionary containing ``obasis``, ``orb_alpha``, ``atcoords``,
         ``atnums``, ``energy`` & ``atcorenums`` keys and corresponding
         values. It may contain ``orb_beta`` key and its value as well.
 
@@ -485,7 +485,7 @@ def load(lit: LineIterator) -> dict:
     result = {
         'obasis': obasis,
         'mo': mo,
-        'coordinates': obasis.centers,
+        'atcoords': obasis.centers,
         'atnums': np.array([atnum]),
         'energy': energy,
         'atcorenums': np.array([atcorenum]),

@@ -120,15 +120,15 @@ def _load_helper_num(lit: LineIterator) -> List[int]:
     return [int(i) for i in line.split() if i.isdigit()]
 
 
-def _load_helper_coordinates(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
     """Read the coordinates of the atoms."""
     atnums = np.empty(num_atoms, int)
-    coordinates = np.empty((num_atoms, 3), float)
+    atcoords = np.empty((num_atoms, 3), float)
     for atom in range(num_atoms):
         words = next(lit).split()
         atnums[atom] = sym2num[words[0].title()]
-        coordinates[atom, :] = [words[4], words[5], words[6]]
-    return atnums, coordinates
+        atcoords[atom, :] = [words[4], words[5], words[6]]
+    return atnums, atcoords
 
 
 def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
@@ -176,7 +176,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
     # read sections of wfn file
     title = next(lit).strip()
     num_mo, nprim, num_atoms = _load_helper_num(lit)
-    atnums, coordinates = _load_helper_coordinates(lit, num_atoms)
+    atnums, atcoords = _load_helper_atoms(lit, num_atoms)
     # centers are indexed from zero in HORTON
     icenters = _load_helper_section(lit, nprim, 'CENTRE ASSIGNMENTS', 2, int) - 1
     # The type assignments are integer indices for individual basis functions,
@@ -194,13 +194,13 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
         mo_count[mo], mo_occ[mo], mo_energy[mo], mo_coefficients[:, mo] = \
             _load_helper_mo(lit, nprim)
     energy = _load_helper_energy(lit)
-    return title, atnums, coordinates, icenters, type_assignments, exponent, \
+    return title, atnums, atcoords, icenters, type_assignments, exponent, \
         mo_count, mo_occ, mo_energy, mo_coefficients, energy
 
 
 # pylint: disable=too-many-branches
 def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
-                 exponents: np.ndarray, coordinates: np.ndarray,
+                 exponents: np.ndarray, atcoords: np.ndarray,
                  lit: LineIterator) -> Tuple[MolecularBasis, np.ndarray]:
     """Construct a basis set using the arrays read from a WFN file.
 
@@ -214,7 +214,7 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
         is zero.
     exponents
         The Gaussian exponents of all basis functions. shape=(nbasis,)
-    coordinates
+    atcoords
         The positions of all atoms. shape=(natom, 3).
 
     """
@@ -287,7 +287,7 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
                                 np.array([[1.0]])))
         # Move on to the next contraction
         ibasis += ncart * ncon
-    obasis = MolecularBasis(coordinates, shells, CONVENTIONS, 'L2')
+    obasis = MolecularBasis(atcoords, shells, CONVENTIONS, 'L2')
     assert obasis.nbasis == nbasis
     return obasis, permutation
 
@@ -303,14 +303,14 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``energy``,
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``energy``,
         ``obasis`` & ``mo`` keys and their corresponding values.
 
     """
-    (title, atnums, coordinates, icenters, type_assignments, exponents,
+    (title, atnums, atcoords, icenters, type_assignments, exponents,
      mo_count, mo_occ, mo_energy, mo_coefficients, energy) = load_wfn_low(lit)
     # Build the basis set and the permutation needed to regroup shells.
-    obasis, permutation = build_obasis(icenters, type_assignments, exponents, coordinates, lit)
+    obasis, permutation = build_obasis(icenters, type_assignments, exponents, atcoords, lit)
     # Re-order the mo coefficients.
     mo_coefficients = mo_coefficients[permutation]
     # Get the normalization of the un-normalized Cartesian basis functions.
@@ -350,7 +350,7 @@ def load(lit: LineIterator) -> dict:
 
     result = {
         'title': title,
-        'coordinates': coordinates,
+        'atcoords': atcoords,
         'atnums': atnums,
         'obasis': obasis,
         'mo': mo,

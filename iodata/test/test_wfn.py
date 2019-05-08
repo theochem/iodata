@@ -48,12 +48,12 @@ def helper_load_wfn_low(fn_wfn):
 def test_load_wfn_low_he_s():
     data = helper_load_wfn_low('he_s_orbital.wfn')
     # unpack data
-    title, atnums, coordinates, centers, type_assignments = data[:5]
+    title, atnums, atcoords, centers, type_assignments = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'He atom - decontracted 6-31G basis set'
     assert_equal(atnums.shape, (1,))
     assert_equal(atnums, [2])
-    assert_equal(coordinates.shape, (1, 3))
+    assert_equal(atcoords.shape, (1, 3))
     assert_equal(centers.shape, (4,))
     assert_equal(type_assignments.shape, (4,))
     assert_equal(exponents.shape, (4,))
@@ -65,7 +65,7 @@ def test_load_wfn_low_he_s():
     assert_equal(type_assignments, [0, 0, 0, 0])
     assert_equal(centers, [0, 0, 0, 0])
     assert_equal(occ_num, [2.0])
-    assert_allclose(coordinates, np.array([[0.00, 0.00, 0.00]]))
+    assert_allclose(atcoords, np.array([[0.00, 0.00, 0.00]]))
     assert_allclose(exponents, [0.3842163E+02, 0.5778030E+01,
                                 0.1241774E+01, 0.2979640E+00])
     assert_allclose(mo_energy, [-0.914127])
@@ -78,11 +78,11 @@ def test_load_wfn_low_he_s():
 def test_load_wfn_low_h2o():
     data = helper_load_wfn_low('h2o_sto3g.wfn')
     # unpack data
-    title, atnums, coordinates, centers, type_assignments = data[:5]
+    title, atnums, atcoords, centers, type_assignments = data[:5]
     exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
     assert title == 'H2O Optimization'
     assert_equal(atnums.shape, (3,))
-    assert_equal(coordinates.shape, (3, 3))
+    assert_equal(atcoords.shape, (3, 3))
     assert_equal(centers.shape, (21,))
     assert_equal(type_assignments.shape, (21,))
     assert_equal(exponents.shape, (21,))
@@ -100,7 +100,7 @@ def test_load_wfn_low_h2o():
     assert_equal(mo_count, [1, 2, 3, 4, 5])
     assert_equal(np.sum(occ_num), 10.0)
     assert_equal(occ_num, [2.0, 2.0, 2.0, 2.0, 2.0])
-    assert_allclose(coordinates, np.array([
+    assert_allclose(atcoords, np.array([
         [-4.44734101, 3.39697999, 0.00000000],
         [-2.58401495, 3.55136194, 0.00000000],
         [-4.92380519, 5.20496220, 0.00000000]]))

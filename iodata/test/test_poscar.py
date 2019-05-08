@@ -39,7 +39,7 @@ def test_load_poscar_water():
     assert mol.title == 'Water molecule in a box'
     assert_equal(mol.atnums, [8, 1, 1])
     coords = np.array([0.074983 * 15, 0.903122 * 15, 0.000000])
-    assert_allclose(mol.coordinates[1], coords, atol=1e-7)
+    assert_allclose(mol.atcoords[1], coords, atol=1e-7)
     assert_allclose(volume(mol.rvecs), 15 ** 3, atol=1.e-4)
 
 
@@ -48,7 +48,7 @@ def test_load_poscar_cubicbn_cartesian():
         mol = load_one(str(fn))
     assert mol.title == 'Cubic BN'
     assert_equal(mol.atnums, [5, 7])
-    assert_allclose(mol.coordinates[1],
+    assert_allclose(mol.atcoords[1],
                     np.array([0.25] * 3) * 3.57 * angstrom, atol=1.e-10)
     assert_allclose(volume(mol.rvecs), (3.57 * angstrom) ** 3 / 4, atol=1.e-10)
 
@@ -58,7 +58,7 @@ def test_load_poscar_cubicbn_direct():
         mol = load_one(str(fn))
     assert mol.title == 'Cubic BN'
     assert_equal(mol.atnums, [5, 7])
-    assert_allclose(mol.coordinates[1],
+    assert_allclose(mol.atcoords[1],
                     np.array([0.25] * 3) * 3.57 * angstrom, atol=1.e-10)
     assert_allclose(volume(mol.rvecs), (3.57 * angstrom) ** 3 / 4, 1.e-10)
 
@@ -78,7 +78,7 @@ def test_load_dump_consistency(tmpdir):
 
     assert mol0.title == mol1.title
     assert_equal(mol1.atnums, [8, 1, 1])
-    assert_allclose(mol0.coordinates[1], mol1.coordinates[0], atol=1.e-10)
-    assert_allclose(mol0.coordinates[0], mol1.coordinates[1], atol=1.e-10)
-    assert_allclose(mol0.coordinates[2], mol1.coordinates[2], atol=1.e-10)
+    assert_allclose(mol0.atcoords[1], mol1.atcoords[0], atol=1.e-10)
+    assert_allclose(mol0.atcoords[0], mol1.atcoords[1], atol=1.e-10)
+    assert_allclose(mol0.atcoords[2], mol1.atcoords[2], atol=1.e-10)
     assert_allclose(mol0.rvecs, mol1.rvecs, atol=1.e-10)

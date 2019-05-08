@@ -68,7 +68,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``atcorenums``,
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``atcorenums``,
         ``obasis``, ``mo``, ``energy`` & ``mulliken_charges`` keys and
         corresponding values. It may also contain ``npa_charges``, ``esp_charges``,
         ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
@@ -99,13 +99,13 @@ def load(lit: LineIterator) -> dict:
 
     # A) Load the geometry
     atnums = fchk["Atomic numbers"]
-    coordinates = fchk["Current cartesian coordinates"].reshape(-1, 3)
+    atcoords = fchk["Current cartesian coordinates"].reshape(-1, 3)
     atcorenums = fchk["Nuclear charges"]
     # Mask out ghost atoms
     mask = atcorenums != 0.0
     atnums = atnums[mask]
     # Do not overwrite coordinates array, because it is needed to specify basis
-    system_coordinates = coordinates[mask]
+    system_atcoords = atcoords[mask]
     atcorenums = atcorenums[mask]
 
     # B) Load the orbital basis set
@@ -144,11 +144,11 @@ def load(lit: LineIterator) -> dict:
     del nprims
     del exponents
 
-    obasis = MolecularBasis(coordinates, shells, CONVENTIONS, 'L2')
+    obasis = MolecularBasis(atcoords, shells, CONVENTIONS, 'L2')
 
     result = {
         'title': fchk['title'],
-        'coordinates': system_coordinates,
+        'atcoords': system_atcoords,
         'atnums': atnums,
         'obasis': obasis,
         'atcorenums': atcorenums,
@@ -234,7 +234,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     Yields
     ------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``atnums``,
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``,
         ``atcorenums``, ``ipoint``, ``npoint``, ``istep``, ``nstep``,
         ``gradient``, ``reaction_coordinate``, and ``energy``.
 
@@ -247,7 +247,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     geometries and their properties. ``istep`` is the counter for these
     geometries and ``nstep`` is the total number of geometries within in
     "point". Properties read at each step are: ``energy``,
-    ``reaction_coordinate`` (only non-zero for IRC), ``coordinates`` and
+    ``reaction_coordinate`` (only non-zero for IRC), ``atcoords`` and
     ``gradients``.
 
     """
@@ -275,7 +275,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             fchk["{} {:7d} Gradient at each geome".format(prefix, ipoint + 1)].reshape(-1, natom, 3)
         ))
         assert len(trajectory) == nstep
-        for istep, (energy, recor, coordinates, gradients) in enumerate(trajectory):
+        for istep, (energy, recor, atcoords, gradients) in enumerate(trajectory):
             data = {
                 'title': fchk['title'],
                 'atnums': fchk["Atomic numbers"],
@@ -285,7 +285,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
                 'istep': istep,
                 'nstep': nstep,
                 'energy': energy,
-                'coordinates': coordinates,
+                'atcoords': atcoords,
                 'gradients': gradients,
             }
             if prefix == "IRC point":

@@ -87,8 +87,8 @@ def test_load_fchk_hf_sto3g_num():
     assert shell2.ncon == 1
     assert shell2.nbasis == 1
     assert mol.obasis.primitive_normalization == 'L2'
-    assert len(mol.coordinates) == len(mol.atnums)
-    assert mol.coordinates.shape[1] == 3
+    assert len(mol.atcoords) == len(mol.atnums)
+    assert mol.atcoords.shape[1] == 3
     assert len(mol.atnums) == 2
     assert_allclose(mol.energy, -9.856961609951867E+01)
     assert_allclose(mol.mulliken_charges, [0.45000000E+00, 4.22300000E+00])
@@ -102,8 +102,8 @@ def test_load_fchk_h_sto3g_num():
     assert len(fields['obasis'].shells) == 1
     assert fields['obasis'].nbasis == 1
     assert fields['obasis'].shells[0].nprim == 3
-    assert len(fields['coordinates']) == len(fields['atnums'])
-    assert fields['coordinates'].shape[1] == 3
+    assert len(fields['atcoords']) == len(fields['atnums'])
+    assert fields['atcoords'].shape[1] == 3
     assert len(fields['atnums']) == 1
     assert_allclose(fields['energy'], -4.665818503844346E-01)
 
@@ -112,8 +112,8 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     fields = load_fchk_helper_internal('o2_cc_pvtz_pure.fchk')
     assert len(fields['obasis'].shells) == 20
     assert fields['obasis'].nbasis == 60
-    assert len(fields['coordinates']) == len(fields['atnums'])
-    assert fields['coordinates'].shape[1] == 3
+    assert len(fields['atcoords']) == len(fields['atnums'])
+    assert fields['atcoords'].shape[1] == 3
     assert len(fields['atnums']) == 2
     assert_allclose(fields['energy'], -1.495944878699246E+02)
 
@@ -122,8 +122,8 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     fields = load_fchk_helper_internal('o2_cc_pvtz_cart.fchk')
     assert len(fields['obasis'].shells) == 20
     assert fields['obasis'].nbasis == 70
-    assert len(fields['coordinates']) == len(fields['atnums'])
-    assert fields['coordinates'].shape[1] == 3
+    assert len(fields['atcoords']) == len(fields['atnums'])
+    assert fields['atcoords'].shape[1] == 3
     assert len(fields['atnums']) == 2
     assert_allclose(fields['energy'], -1.495953594545721E+02)
 
@@ -132,8 +132,8 @@ def test_load_fchk_water_sto3g_hf():
     fields = load_fchk_helper_internal('water_sto3g_hf_g03.fchk')
     assert len(fields['obasis'].shells) == 4
     assert fields['obasis'].nbasis == 7
-    assert len(fields['coordinates']) == len(fields['atnums'])
-    assert fields['coordinates'].shape[1] == 3
+    assert len(fields['atcoords']) == len(fields['atnums'])
+    assert fields['atcoords'].shape[1] == 3
     assert len(fields['atnums']) == 3
     mo = fields['mo']
     assert_allclose(mo.energies[0], -2.02333942E+01, atol=1.e-7)
@@ -154,8 +154,8 @@ def test_load_fchk_lih_321g_hf():
     fields = load_fchk_helper_internal('li_h_3-21G_hf_g09.fchk')
     assert len(fields['obasis'].shells) == 5
     assert fields['obasis'].nbasis == 11
-    assert len(fields['coordinates']) == len(fields['atnums'])
-    assert fields['coordinates'].shape[1] == 3
+    assert len(fields['atcoords']) == len(fields['atnums'])
+    assert fields['atcoords'].shape[1] == 3
     assert len(fields['atnums']) == 2
 
     orb_alpha_coeffs = fields['mo'].coeffs[:, :fields['mo'].norba]
@@ -199,7 +199,7 @@ def test_load_fchk_ghost_atoms():
     # There should be 3 real atoms and 3 ghost atoms
     natom, nghost = 3, 3
     assert_equal(fields['atnums'].shape[0], natom)
-    assert_equal(fields['coordinates'].shape[0], natom)
+    assert_equal(fields['atcoords'].shape[0], natom)
     assert_equal(fields['mulliken_charges'].shape[0], natom)
     assert_equal(fields['obasis'].centers.shape[0], natom + nghost)
 
@@ -340,7 +340,7 @@ def check_trj_basics(trj, nsteps, title, irc):
             assert mol.natom == natom
             assert mol.atnums.shape == (natom, )
             assert mol.atcorenums.shape == (natom, )
-            assert mol.coordinates.shape == (natom, 3)
+            assert mol.atcoords.shape == (natom, 3)
             assert mol.gradients.shape == (natom, 3)
             assert mol.title == title
             assert hasattr(mol, 'energy')
@@ -353,9 +353,9 @@ def test_peroxide_opt():
     assert_allclose(trj[0].energy, -1.48759755E+02)
     assert_allclose(trj[1].energy, -1.48763504E+02)
     assert_allclose(trj[-1].energy, -1.48764883E+02)
-    assert_allclose(trj[0].coordinates[1],
+    assert_allclose(trj[0].atcoords[1],
                     [9.02056208E-17, -1.37317707E+00, 0.00000000E+00])
-    assert_allclose(trj[-1].coordinates[-1],
+    assert_allclose(trj[-1].atcoords[-1],
                     [-1.85970174E+00, -1.64631025E+00, 0.00000000E+00])
     assert_allclose(trj[2].gradients[0],
                     [-5.19698814E-03, -1.17503170E-03, -1.06165077E-15])
@@ -369,9 +369,9 @@ def test_peroxide_tsopt():
     assert_allclose(trj[0].energy, -1.48741996E+02)
     assert_allclose(trj[1].energy, -1.48750392E+02)
     assert_allclose(trj[2].energy, -1.48750432E+02)
-    assert_allclose(trj[0].coordinates[3],
+    assert_allclose(trj[0].atcoords[3],
                     [-2.40150648E-01, -1.58431001E+00, 1.61489448E+00])
-    assert_allclose(trj[2].coordinates[2],
+    assert_allclose(trj[2].atcoords[2],
                     [1.26945011E-03, 1.81554334E+00, 1.62426250E+00])
     assert_allclose(trj[1].gradients[1],
                     [-8.38752120E-04, 3.46889422E-03, 1.96559245E-03])
@@ -385,9 +385,9 @@ def test_peroxide_relaxed_scan():
     assert_allclose(trj[0].energy, -1.48759755E+02)
     assert_allclose(trj[10].energy, -1.48764896E+02)
     assert_allclose(trj[-1].energy, -1.48764905E+02)
-    assert_allclose(trj[1].coordinates[3],
+    assert_allclose(trj[1].atcoords[3],
                     [-1.85942837E+00, -1.70565735E+00, -1.11022302E-16])
-    assert_allclose(trj[5].coordinates[0],
+    assert_allclose(trj[5].atcoords[0],
                     [-1.21430643E-16, 1.32466211E+00, 3.46944695E-17])
     assert_allclose(trj[8].gradients[1],
                     [2.46088230E-04, -4.46299289E-04, -3.21529658E-05])
@@ -405,9 +405,9 @@ def test_peroxide_irc():
     assert_allclose(trj[1].reaction_coordinate, 1.05689581E-01)
     assert_allclose(trj[10].reaction_coordinate, 1.05686037E+00)
     assert_allclose(trj[-1].reaction_coordinate, -1.05685760E+00)
-    assert_allclose(trj[0].coordinates[2],
+    assert_allclose(trj[0].atcoords[2],
                     [-1.94749866E+00, -5.22905491E-01, -1.47814774E+00])
-    assert_allclose(trj[10].coordinates[1],
+    assert_allclose(trj[10].atcoords[1],
                     [1.31447798E+00, 1.55994117E-01, -5.02320861E-02])
     assert_allclose(trj[15].gradients[3],
                     [4.73066407E-04, -5.36135653E-03, 2.16301508E-04])

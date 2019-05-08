@@ -36,8 +36,8 @@ def test_load_aelta():
         mol = load_one(str(fn_cube))
     assert mol.title == 'Some random cube for testing (sort of) useless data'
     assert_equal(mol.natom, 72)
-    assert_allclose(mol.coordinates[5, 0], 27.275511, atol=1.e-5)
-    assert_allclose(mol.coordinates[-2, 2], 26.460812, atol=1.e-5)
+    assert_allclose(mol.atcoords[5, 0], 27.275511, atol=1.e-5)
+    assert_allclose(mol.atcoords[-2, 2], 26.460812, atol=1.e-5)
     assert_equal(mol.grid['shape'], 12)
     rvecs = mol.cell
     my_rvecs = np.array([[1.8626, 0.1, 0.0],
@@ -69,7 +69,7 @@ def test_load_dump_load_aelta(tmpdir):
     mol2 = load_one(fn_cube2)
 
     assert mol1.title == mol2.title
-    assert_allclose(mol1.coordinates, mol2.coordinates, atol=1.e-4)
+    assert_allclose(mol1.atcoords, mol2.atcoords, atol=1.e-4)
     assert_equal(mol1.atnums, mol2.atnums)
     ugrid1 = mol1.grid
     ugrid2 = mol2.grid

@@ -149,7 +149,7 @@ class IOData:
     cube_data
          A (L, M, N) array of data on a uniform grid (defined by ugrid).
 
-    coordinates
+    atcoords
          A (N, 3) float array with Cartesian coordinates of the atoms.
 
     atnums
@@ -256,12 +256,12 @@ class IOData:
                        'na', 'olp']
 
     # only perform type checking on minimal attributes
-    atnums = ArrayTypeCheckDescriptor('atnums', 1, (-1,), int, ['coordinates', 'atcorenums'],
-                                       doc="A (N,) int vector with the atomic numbers.")
-    coordinates = ArrayTypeCheckDescriptor('coordinates', 2, (-1, 3), float,
-                                           ['atnums', 'atcorenums'],
-                                           doc="A (N, 3) float array with Cartesian coordinates "
-                                               "of the atoms.")
+    atnums = ArrayTypeCheckDescriptor('atnums', 1, (-1,), int, ['atcoords', 'atcorenums'],
+                                      doc="A (N,) int vector with the atomic numbers.")
+    atcoords = ArrayTypeCheckDescriptor('atcoords', 2, (-1, 3), float,
+                                        ['atnums', 'atcorenums'],
+                                        doc="A (N, 3) float array with Cartesian atcoords "
+                                             "of the atoms.")
     cube_data = ArrayTypeCheckDescriptor('cube_data', 3,
                                          doc="A (L, M, N) array of data on a uniform grid "
                                              "(defined by ugrid).")
@@ -269,7 +269,7 @@ class IOData:
                                      doc="A (3, 3) matrix containing the dipole polarizability "
                                          "tensor.")
     atcorenums = ArrayTypeCheckDescriptor('atcorenums', 1, (-1,), float,
-                                              ['coordinates', 'atnums'], 'atnums',
+                                              ['atcoords', 'atnums'], 'atnums',
                                               doc="A (N,) float array with pseudo-potential core "
                                                   "charges.")
 
@@ -278,8 +278,8 @@ class IOData:
         """Return the number of atoms."""
         if hasattr(self, 'atnums'):
             return len(self.atnums)
-        if hasattr(self, 'coordinates'):
-            return len(self.coordinates)
+        if hasattr(self, 'atcoords'):
+            return len(self.atcoords)
         if hasattr(self, 'atcorenums'):
             return len(self.atcorenums)
         raise ValueError("Cannot determine the number of atoms.")

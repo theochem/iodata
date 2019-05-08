@@ -51,13 +51,13 @@ def check_water(mol):
     assert mol.title == 'Water'
     assert_equal(mol.atnums, [1, 8, 1])
     # check bond length
-    print(np.linalg.norm(mol.coordinates[0] - mol.coordinates[2]) / angstrom)
+    print(np.linalg.norm(mol.atcoords[0] - mol.atcoords[2]) / angstrom)
     assert_allclose(np.linalg.norm(
-        mol.coordinates[0] - mol.coordinates[1]) / angstrom, 0.960, atol=1.e-5)
+        mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.960, atol=1.e-5)
     assert_allclose(np.linalg.norm(
-        mol.coordinates[2] - mol.coordinates[1]) / angstrom, 0.960, atol=1.e-5)
+        mol.atcoords[2] - mol.atcoords[1]) / angstrom, 0.960, atol=1.e-5)
     assert_allclose(np.linalg.norm(
-        mol.coordinates[0] - mol.coordinates[2]) / angstrom, 1.568, atol=1.e-3)
+        mol.atcoords[0] - mol.atcoords[2]) / angstrom, 1.568, atol=1.e-3)
 
 
 def check_load_dump_consistency(tmpdir, fn):
@@ -70,7 +70,7 @@ def check_load_dump_consistency(tmpdir, fn):
     # check two xyz files
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
-    assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)
+    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
 
 
 def test_load_dump_consistency(tmpdir):
@@ -95,10 +95,10 @@ def test_load_many():
     for imol, mol in enumerate(mols):
         assert mol.title == "Frame {}".format(imol)
         assert_equal(mol.atnums, [8, 1, 1])
-        assert mol.coordinates.shape == (3, 3)
-    assert_allclose(mols[0].coordinates[2] / angstrom, [2.864329, 0.114369, 3.3635])
-    assert_allclose(mols[2].coordinates[0] / angstrom, [-0.232964, -0.789588, -3.247615])
-    assert_allclose(mols[-1].coordinates[1] / angstrom, [-2.123423, -3.355326, -3.353739])
+        assert mol.atcoords.shape == (3, 3)
+    assert_allclose(mols[0].atcoords[2] / angstrom, [2.864329, 0.114369, 3.3635])
+    assert_allclose(mols[2].atcoords[0] / angstrom, [-0.232964, -0.789588, -3.247615])
+    assert_allclose(mols[-1].atcoords[1] / angstrom, [-2.123423, -3.355326, -3.353739])
 
 
 def test_load_dump_many_consistency(tmpdir):
@@ -112,4 +112,4 @@ def test_load_dump_many_consistency(tmpdir):
     for mol0, mol1 in zip(mols0, mols1):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
-        assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)
+        assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)

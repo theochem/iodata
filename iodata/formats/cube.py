@@ -44,7 +44,7 @@ def _read_cube_header(lit: LineIterator) \
     Returns
     -------
     out
-        The output tuple contains title, coordinates, atnums, cell, ugrid &
+        The output tuple contains title, atcoords, atnums, cell, ugrid &
         atcorenums.
 
     """
@@ -74,7 +74,7 @@ def _read_cube_header(lit: LineIterator) \
     cell = axes * shape.reshape(-1, 1)
     ugrid = {"origin": origin, 'grid_rvecs': axes, 'shape': shape, 'pbc': np.ones(3, int)}
 
-    def read_coordinate_line(line: str) -> Tuple[int, float, np.ndarray]:
+    def read_atom_line(line: str) -> Tuple[int, float, np.ndarray]:
         """Read an atomic number and coordinate from the cube file."""
         words = line.split()
         return (
@@ -85,15 +85,15 @@ def _read_cube_header(lit: LineIterator) \
 
     atnums = np.zeros(natom, int)
     atcorenums = np.zeros(natom, float)
-    coordinates = np.zeros((natom, 3), float)
+    atcoords = np.zeros((natom, 3), float)
     for i in range(natom):
-        atnums[i], atcorenums[i], coordinates[i] = read_coordinate_line(next(lit))
+        atnums[i], atcorenums[i], atcoords[i] = read_atom_line(next(lit))
         # If the atcorenum field is zero, we assume that no effective core
         # potentials were used.
         if atcorenums[i] == 0.0:
             atcorenums[i] = atnums[i]
 
-    return title, coordinates, atnums, cell, ugrid, atcorenums
+    return title, atcoords, atnums, cell, ugrid, atcorenums
 
 
 def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
@@ -133,15 +133,15 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``atcorenums``,
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``atcorenums``,
         ``cell``, ``cube_data`` & ``grid`` keys and their corresponding values.
 
     """
-    title, coordinates, atnums, cell, ugrid, atcorenums = _read_cube_header(lit)
+    title, atcoords, atnums, cell, ugrid, atcorenums = _read_cube_header(lit)
     data = _read_cube_data(lit, ugrid)
     return {
         'title': title,
-        'coordinates': coordinates,
+        'atcoords': atcoords,
         'atnums': atnums,
         'cell': cell,
         'cube_data': data,
@@ -150,7 +150,7 @@ def load(lit: LineIterator) -> dict:
     }
 
 
-def _write_cube_header(f: TextIO, title: str, coordinates: np.ndarray, atnums: np.ndarray,
+def _write_cube_header(f: TextIO, title: str, atcoords: np.ndarray, atnums: np.ndarray,
                        ugrid_dict: Dict[str, np.ndarray], atcorenums: np.ndarray):
     print(title, file=f)
     print('OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z', file=f)
@@ -163,7 +163,7 @@ def _write_cube_header(f: TextIO, title: str, coordinates: np.ndarray, atnums: n
         print(f'{ugrid_dict["shape"][i]:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
     for i in range(natom):
         q = atcorenums[i]
-        x, y, z = coordinates[i]
+        x, y, z = atcoords[i]
         print(f'{atnums[i]:5d} {q: 11.6f} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
 
 
@@ -184,7 +184,7 @@ def dump(f: TextIO, data: 'IOData'):
     f
         A file to write to.
     data
-        An IOData instance which must contain ``coordinates``, ``atnums``, ``grid`` &
+        An IOData instance which must contain ``atcoords``, ``atnums``, ``grid`` &
         ``cube_data`` attributes. It may contain ``title``  & ``atcorenums`` attributes.
 
     """
@@ -192,5 +192,5 @@ def dump(f: TextIO, data: 'IOData'):
         raise ValueError(
             'The system grid must contain a dict to initialize a UniformGrid instance.')
     title = getattr(data, 'title', 'Created with HORTON')
-    _write_cube_header(f, title, data.coordinates, data.atnums, data.grid, data.atcorenums)
+    _write_cube_header(f, title, data.atcoords, data.atnums, data.grid, data.atcorenums)
     _write_cube_data(f, data.cube_data)

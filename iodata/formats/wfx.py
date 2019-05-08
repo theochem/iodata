@@ -70,7 +70,7 @@ def load_wfx_low(filename: str) -> tuple:
             line_break=True)[0]
         mo_spin_list = [i for i in mo_spin_list if i != 'and']
         mo_spin_type = np.array(mo_spin_list, dtype=np.unicode_).reshape(-1, 1)
-        coordinates = np.array(
+        atcoords = np.array(
             _helper_section(
                 f_content=fc, start='<Nuclear Cartesian Coordinates>',
                 end='</Nuclear Cartesian Coordinates>', line_break=True),
@@ -106,7 +106,7 @@ def load_wfx_low(filename: str) -> tuple:
         num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
         num_beta_electron, num_spin_multi, charge, energy, \
         virial_ratio, nuclear_virial, full_virial_ratio, mo_count, \
-        atom_numbers, mo_spin_type, coordinates, centers, \
+        atom_numbers, mo_spin_type, atcoords, centers, \
         primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
         gradient, mo_coefficients
 

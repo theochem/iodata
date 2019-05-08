@@ -55,7 +55,7 @@ def test_load_chgcar_water():
     assert_equal(mol.atnums, [8, 1, 1])
     coords = np.array(
         [0.074983 * 15 + 0.903122 * 1, 0.903122 * 15, 0.000000])
-    assert_allclose(mol.coordinates[1], coords, atol=1.e-7)
+    assert_allclose(mol.atcoords[1], coords, atol=1.e-7)
     assert_allclose(volume(mol.rvecs), 15 ** 3, atol=1.e-4)
     ugrid = mol.grid
     assert_equal(len(ugrid['shape']), 3)

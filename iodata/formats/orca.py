@@ -43,7 +43,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary may contain ``atnums``, ``coordinates``, and ``total_energy`` and
+        Output dictionary may contain ``atnums``, ``atcoords``, and ``total_energy`` and
         corresponding values.
 
     """
@@ -60,7 +60,7 @@ def load(lit: LineIterator) -> dict:
         # Every Cartesian coordinates found are replaced with the old ones
         # to maintain the ones from the final SCF iteration in e.g. optimization run
         if line.startswith('CARTESIAN COORDINATES (A.U.)'):
-            result['atnums'], result['coordinates'] = _helper_geometry(lit, natom)
+            result['atnums'], result['atcoords'] = _helper_geometry(lit, natom)
         # The final SCF energy is obtained
         if line.startswith('FINAL SINGLE POINT ENERGY'):
             words = line.split()
@@ -110,11 +110,11 @@ def _helper_geometry(lit: TextIO, natom: int) -> Tuple[np.ndarray, np.ndarray]:
     -------
     atnums: int
         The atomic numbers.
-    coordinates: array_like
-        The coordinates in an array of size (natom, 3).
+    atcoords: array_like
+        The atcoords in an array of size (natom, 3).
 
     """
-    coordinates = np.zeros((natom, 3))
+    atcoords = np.zeros((natom, 3))
     atnums = np.zeros(natom)
     # skip the dashed line
     next(lit)
@@ -124,7 +124,7 @@ def _helper_geometry(lit: TextIO, natom: int) -> Tuple[np.ndarray, np.ndarray]:
     for i in range(natom):
         words = next(lit).split()
         atnums[i] = int(float(words[2]))
-        coordinates[i, 0] = float(words[5])
-        coordinates[i, 1] = float(words[6])
-        coordinates[i, 2] = float(words[7])
-    return atnums, coordinates
+        atcoords[i, 0] = float(words[5])
+        atcoords[i, 1] = float(words[6])
+        atcoords[i, 2] = float(words[7])
+    return atnums, atcoords
