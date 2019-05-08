@@ -61,7 +61,7 @@ def check_water(mol):
         IOdata dictionary.
 
     """
-    np.testing.assert_equal(mol.numbers, [8, 1, 1])
+    np.testing.assert_equal(mol.atnums, [8, 1, 1])
     # check bond length
 
     assert_allclose(np.linalg.norm(

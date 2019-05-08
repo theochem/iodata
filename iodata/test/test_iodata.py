@@ -36,26 +36,26 @@ except ImportError:
 def test_typecheck():
     m = IOData(coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
     assert np.issubdtype(m.coordinates.dtype, np.floating)
-    assert not hasattr(m, 'numbers')
-    m = IOData(numbers=np.array([2.0, 3.0]), pseudo_numbers=np.array([1, 1]),
+    assert not hasattr(m, 'atnums')
+    m = IOData(atnums=np.array([2.0, 3.0]), pseudo_numbers=np.array([1, 1]),
                coordinates=np.array([[1, 2, 3], [2, 3, 1]]))
-    assert np.issubdtype(m.numbers.dtype, np.integer)
+    assert np.issubdtype(m.atnums.dtype, np.integer)
     assert np.issubdtype(m.pseudo_numbers.dtype, np.floating)
-    assert hasattr(m, 'numbers')
-    del m.numbers
-    assert not hasattr(m, 'numbers')
+    assert hasattr(m, 'atnums')
+    del m.atnums
+    assert not hasattr(m, 'atnums')
 
 
 def test_typecheck_raises():
     # check attribute type
     assert_raises(TypeError, IOData, coordinates=np.array([[1, 2], [2, 3]]))
-    assert_raises(TypeError, IOData, numbers=np.array([[1, 2], [2, 3]]))
+    assert_raises(TypeError, IOData, atnums=np.array([[1, 2], [2, 3]]))
     # check inconsistency between various attributes
-    numbers, pseudo_numbers, coordinates = np.array(
+    atnums, pseudo_numbers, coordinates = np.array(
         [2, 3]), np.array([1]), np.array([[1, 2, 3]])
-    assert_raises(TypeError, IOData, numbers=numbers,
+    assert_raises(TypeError, IOData, atnums=atnums,
                   pseudo_numbers=pseudo_numbers)
-    assert_raises(TypeError, IOData, numbers=numbers, coordinates=coordinates)
+    assert_raises(TypeError, IOData, atnums=atnums, coordinates=coordinates)
     assert_raises(TypeError, IOData, cube_data=np.array([1, 2]))
     cube_data = np.array([[1, 2], [2, 3], [3, 2]])
     assert_raises(TypeError, IOData, coordinates=coordinates,

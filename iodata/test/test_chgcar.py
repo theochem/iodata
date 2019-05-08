@@ -34,7 +34,7 @@ except ImportError:
 def test_load_chgcar_oxygen():
     with path('iodata.test.data', 'CHGCAR.oxygen') as fn:
         mol = load_one(str(fn))
-    assert_equal(mol.numbers, 8)
+    assert_equal(mol.atnums, 8)
     assert_allclose(volume(mol.rvecs), (10 * angstrom) ** 3, atol=1.e-10)
     ugrid = mol.grid
     assert_equal(ugrid['shape'], [2, 2, 2])
@@ -52,7 +52,7 @@ def test_load_chgcar_water():
     with path('iodata.test.data', 'CHGCAR.water') as fn:
         mol = load_one(str(fn))
     assert mol.title == 'unknown system'
-    assert_equal(mol.numbers, [8, 1, 1])
+    assert_equal(mol.atnums, [8, 1, 1])
     coords = np.array(
         [0.074983 * 15 + 0.903122 * 1, 0.903122 * 15, 0.000000])
     assert_allclose(mol.coordinates[1], coords, atol=1.e-7)

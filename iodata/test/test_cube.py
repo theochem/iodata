@@ -57,7 +57,7 @@ def test_load_aelta():
     assert_allclose(pn[0], 1.0, atol=1.e-10)
     assert_allclose(pn[1], 0.1, atol=1.e-10)
     assert_allclose(pn[-2], 0.2, atol=1.e-10)
-    assert_allclose(pn[-1], mol.numbers[-1], atol=1.e-10)
+    assert_allclose(pn[-1], mol.atnums[-1], atol=1.e-10)
 
 
 def test_load_dump_load_aelta(tmpdir):
@@ -70,7 +70,7 @@ def test_load_dump_load_aelta(tmpdir):
 
     assert mol1.title == mol2.title
     assert_allclose(mol1.coordinates, mol2.coordinates, atol=1.e-4)
-    assert_equal(mol1.numbers, mol2.numbers)
+    assert_equal(mol1.atnums, mol2.atnums)
     ugrid1 = mol1.grid
     ugrid2 = mol2.grid
     assert_allclose(ugrid1["grid_rvecs"], ugrid2["grid_rvecs"], atol=1.e-4)

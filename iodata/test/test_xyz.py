@@ -49,7 +49,7 @@ def test_load_water_element():
 def check_water(mol):
     """Test some things on a water file."""
     assert mol.title == 'Water'
-    assert_equal(mol.numbers, [1, 8, 1])
+    assert_equal(mol.atnums, [1, 8, 1])
     # check bond length
     print(np.linalg.norm(mol.coordinates[0] - mol.coordinates[2]) / angstrom)
     assert_allclose(np.linalg.norm(
@@ -69,7 +69,7 @@ def check_load_dump_consistency(tmpdir, fn):
     mol1 = load_one(fn_tmp)
     # check two xyz files
     assert mol0.title == mol1.title
-    assert_equal(mol0.numbers, mol1.numbers)
+    assert_equal(mol0.atnums, mol1.atnums)
     assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)
 
 
@@ -94,7 +94,7 @@ def test_load_many():
     assert len(mols) == 5
     for imol, mol in enumerate(mols):
         assert mol.title == "Frame {}".format(imol)
-        assert_equal(mol.numbers, [8, 1, 1])
+        assert_equal(mol.atnums, [8, 1, 1])
         assert mol.coordinates.shape == (3, 3)
     assert_allclose(mols[0].coordinates[2] / angstrom, [2.864329, 0.114369, 3.3635])
     assert_allclose(mols[2].coordinates[0] / angstrom, [-0.232964, -0.789588, -3.247615])
@@ -111,5 +111,5 @@ def test_load_dump_many_consistency(tmpdir):
     assert len(mols0) == len(mols1)
     for mol0, mol1 in zip(mols0, mols1):
         assert mol0.title == mol1.title
-        assert_equal(mol0.numbers, mol1.numbers)
+        assert_equal(mol0.atnums, mol1.atnums)
         assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)

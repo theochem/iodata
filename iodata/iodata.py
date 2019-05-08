@@ -152,7 +152,7 @@ class IOData:
     coordinates
          A (N, 3) float array with Cartesian coordinates of the atoms.
 
-    numbers
+    atnums
          A (N,) int vector with the atomic numbers.
 
     polar
@@ -256,10 +256,10 @@ class IOData:
                        'na', 'olp']
 
     # only perform type checking on minimal attributes
-    numbers = ArrayTypeCheckDescriptor('numbers', 1, (-1,), int, ['coordinates', 'pseudo_numbers'],
+    atnums = ArrayTypeCheckDescriptor('atnums', 1, (-1,), int, ['coordinates', 'pseudo_numbers'],
                                        doc="A (N,) int vector with the atomic numbers.")
     coordinates = ArrayTypeCheckDescriptor('coordinates', 2, (-1, 3), float,
-                                           ['numbers', 'pseudo_numbers'],
+                                           ['atnums', 'pseudo_numbers'],
                                            doc="A (N, 3) float array with Cartesian coordinates "
                                                "of the atoms.")
     cube_data = ArrayTypeCheckDescriptor('cube_data', 3,
@@ -269,15 +269,15 @@ class IOData:
                                      doc="A (3, 3) matrix containing the dipole polarizability "
                                          "tensor.")
     pseudo_numbers = ArrayTypeCheckDescriptor('pseudo_numbers', 1, (-1,), float,
-                                              ['coordinates', 'numbers'], 'numbers',
+                                              ['coordinates', 'atnums'], 'atnums',
                                               doc="A (N,) float array with pseudo-potential core "
                                                   "charges.")
 
     @property
     def natom(self) -> int:
         """Return the number of atoms."""
-        if hasattr(self, 'numbers'):
-            return len(self.numbers)
+        if hasattr(self, 'atnums'):
+            return len(self.atnums)
         if hasattr(self, 'coordinates'):
             return len(self.coordinates)
         if hasattr(self, 'pseudo_numbers'):

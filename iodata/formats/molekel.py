@@ -39,17 +39,17 @@ def _load_helper_char_mult(lit: LineIterator) -> List[int]:
 
 
 def _load_helper_coordinates(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]:
-    numbers = []
+    atnums = []
     coordinates = []
     for line in lit:
         if line.strip() == '$END':
             break
         words = line.split()
-        numbers.append(int(words[0]))
+        atnums.append(int(words[0]))
         coordinates.append([float(words[1]), float(words[2]), float(words[3])])
-    numbers = np.array(numbers, int)
+    atnums = np.array(atnums, int)
     coordinates = np.array(coordinates) * angstrom
-    return numbers, coordinates
+    return atnums, coordinates
 
 
 def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
@@ -151,12 +151,12 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``coordinates``, ``numbers``, ``obasis``, ``mo``,
+        Output dictionary containing ``coordinates``, ``atnums``, ``obasis``, ``mo``,
         keys and their corresponding values.
 
     """
     charge = None
-    numbers = None
+    atnums = None
     coordinates = None
     obasis = None
     coeff_alpha = None
@@ -177,7 +177,7 @@ def load(lit: LineIterator) -> dict:
         if line == '$CHAR_MULT':
             charge, _spinmult = _load_helper_char_mult(lit)
         elif line == '$COORD':
-            numbers, coordinates = _load_helper_coordinates(lit)
+            atnums, coordinates = _load_helper_coordinates(lit)
         elif line == '$BASIS':
             obasis = _load_helper_obasis(lit)
             obasis.centers[:] = coordinates
@@ -201,7 +201,7 @@ def load(lit: LineIterator) -> dict:
     if occ_alpha is None:
         lit.error('Alpha occupation numbers not found.')
 
-    nelec = numbers.sum() - charge
+    nelec = atnums.sum() - charge
     if coeff_beta is None:
         # restricted closed-shell
         mo_type = 'restricted'
@@ -232,7 +232,7 @@ def load(lit: LineIterator) -> dict:
 
     result = {
         'coordinates': coordinates,
-        'numbers': numbers,
+        'atnums': atnums,
         'obasis': obasis,
         'mo': mo,
     }

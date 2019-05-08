@@ -44,7 +44,7 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
     Returns
     -------
     out
-        Output Contains ``title``, ``cell``, ``numbers``, ``coordinates``.
+        Output Contains ``title``, ``cell``, ``atnums``, ``coordinates``.
 
     Notes
     -----
@@ -64,12 +64,12 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
     rvecs = np.array(rvecs) * angstrom * scaling
 
     # note that in older VASP version the following line might be absent
-    vasp_numbers = [sym2num[w] for w in next(lit).split()]
+    vasp_atnums = [sym2num[w] for w in next(lit).split()]
     vasp_counts = [int(w) for w in next(lit).split()]
-    numbers = []
-    for n, c in zip(vasp_numbers, vasp_counts):
-        numbers.extend([n] * c)
-    numbers = np.array(numbers)
+    atnums = []
+    for n, c in zip(vasp_atnums, vasp_counts):
+        atnums.extend([n] * c)
+    atnums = np.array(atnums)
 
     line = next(lit)
     # the 7th line can optionally indicate selective dynamics
@@ -80,7 +80,7 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
 
     # read the coordinates
     coordinates = []
-    for _iatom in range(len(numbers)):
+    for _iatom in range(len(atnums)):
         line = next(lit)
         coordinates.append([float(w) for w in line.split()[:3]])
     if cartesian:
@@ -88,7 +88,7 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
     else:
         coordinates = np.dot(np.array(coordinates), rvecs)
 
-    return title, rvecs, numbers, coordinates
+    return title, rvecs, atnums, coordinates
 
 
 def _load_vasp_grid(lit: LineIterator) -> dict:
@@ -102,12 +102,12 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``rvecs``,
+        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``rvecs``,
         ``grid`` & ``cube_data`` keys and their corresponding values.
 
     """
     # Load header
-    title, rvecs, numbers, coordinates = _load_vasp_header(lit)
+    title, rvecs, atnums, coordinates = _load_vasp_header(lit)
 
     # read the shape of the data
     for line in lit:
@@ -131,7 +131,7 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
     return {
         'title': title,
         'coordinates': coordinates,
-        'numbers': numbers,
+        'atnums': atnums,
         'rvecs': rvecs,
         'grid': ugrid,
         'cube_data': cube_data,
@@ -149,7 +149,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``rvecs``,
+        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``rvecs``,
         ``grid`` & ``cube_data`` keys and corresponding values.
 
     """

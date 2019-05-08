@@ -68,7 +68,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``pseudo_numbers``,
+        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``pseudo_numbers``,
         ``obasis``, ``mo``, ``energy`` & ``mulliken_charges`` keys and
         corresponding values. It may also contain ``npa_charges``, ``esp_charges``,
         ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
@@ -98,12 +98,12 @@ def load(lit: LineIterator) -> dict:
     ])
 
     # A) Load the geometry
-    numbers = fchk["Atomic numbers"]
+    atnums = fchk["Atomic numbers"]
     coordinates = fchk["Current cartesian coordinates"].reshape(-1, 3)
     pseudo_numbers = fchk["Nuclear charges"]
     # Mask out ghost atoms
     mask = pseudo_numbers != 0.0
-    numbers = numbers[mask]
+    atnums = atnums[mask]
     # Do not overwrite coordinates array, because it is needed to specify basis
     system_coordinates = coordinates[mask]
     pseudo_numbers = pseudo_numbers[mask]
@@ -149,7 +149,7 @@ def load(lit: LineIterator) -> dict:
     result = {
         'title': fchk['title'],
         'coordinates': system_coordinates,
-        'numbers': numbers,
+        'atnums': atnums,
         'obasis': obasis,
         'pseudo_numbers': pseudo_numbers,
     }
@@ -234,7 +234,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     Yields
     ------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``numbers``,
+        Output dictionary containing ``title``, ``coordinates``, ``atnums``,
         ``pseudo_numbers``, ``ipoint``, ``npoint``, ``istep``, ``nstep``,
         ``gradient``, ``reaction_coordinate``, and ``energy``.
 
@@ -278,7 +278,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
         for istep, (energy, recor, coordinates, gradients) in enumerate(trajectory):
             data = {
                 'title': fchk['title'],
-                'numbers': fchk["Atomic numbers"],
+                'atnums': fchk["Atomic numbers"],
                 'pseudo_numbers': fchk["Nuclear charges"],
                 'ipoint': ipoint,
                 'npoint': len(nsteps),

@@ -44,27 +44,27 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title`, ``coordinates`` & ``numbers`` keys
+        Output dictionary containing ``title`, ``coordinates`` & ``atnums`` keys
         and corresponding values.
 
     """
     size = int(next(lit))
     title = next(lit).strip()
     coordinates = np.empty((size, 3), float)
-    numbers = np.empty(size, int)
+    atnums = np.empty(size, int)
     for i in range(size):
         words = next(lit).split()
         try:
-            numbers[i] = sym2num[words[0].title()]
+            atnums[i] = sym2num[words[0].title()]
         except KeyError:
-            numbers[i] = int(words[0])
+            atnums[i] = int(words[0])
         coordinates[i, 0] = float(words[1]) * angstrom
         coordinates[i, 1] = float(words[2]) * angstrom
         coordinates[i, 2] = float(words[3]) * angstrom
     return {
         'title': title,
         'coordinates': coordinates,
-        'numbers': numbers
+        'atnums': atnums
     }
 
 
@@ -103,14 +103,14 @@ def dump(f: TextIO, data: 'IOData'):
     f
         A file to write to.
     data
-        An IOData instance which must contain ``coordinates`` & ``numbers`` attributes.
+        An IOData instance which must contain ``coordinates`` & ``atnums`` attributes.
         If ``title`` attribute is not included, 'Created with IODATA module' is used as ``title``.
 
     """
     print(data.natom, file=f)
     print(getattr(data, 'title', 'Created with IODATA module'), file=f)
     for i in range(data.natom):
-        n = num2sym[data.numbers[i]]
+        n = num2sym[data.atnums[i]]
         x, y, z = data.coordinates[i] / angstrom
         print(f'{n:2s} {x:15.10f} {y:15.10f} {z:15.10f}', file=f)
 

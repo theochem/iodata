@@ -122,13 +122,13 @@ def _load_helper_num(lit: LineIterator) -> List[int]:
 
 def _load_helper_coordinates(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
     """Read the coordinates of the atoms."""
-    numbers = np.empty(num_atoms, int)
+    atnums = np.empty(num_atoms, int)
     coordinates = np.empty((num_atoms, 3), float)
     for atom in range(num_atoms):
         words = next(lit).split()
-        numbers[atom] = sym2num[words[0].title()]
+        atnums[atom] = sym2num[words[0].title()]
         coordinates[atom, :] = [words[4], words[5], words[6]]
-    return numbers, coordinates
+    return atnums, coordinates
 
 
 def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
@@ -176,7 +176,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
     # read sections of wfn file
     title = next(lit).strip()
     num_mo, nprim, num_atoms = _load_helper_num(lit)
-    numbers, coordinates = _load_helper_coordinates(lit, num_atoms)
+    atnums, coordinates = _load_helper_coordinates(lit, num_atoms)
     # centers are indexed from zero in HORTON
     icenters = _load_helper_section(lit, nprim, 'CENTRE ASSIGNMENTS', 2, int) - 1
     # The type assignments are integer indices for individual basis functions,
@@ -194,7 +194,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
         mo_count[mo], mo_occ[mo], mo_energy[mo], mo_coefficients[:, mo] = \
             _load_helper_mo(lit, nprim)
     energy = _load_helper_energy(lit)
-    return title, numbers, coordinates, icenters, type_assignments, exponent, \
+    return title, atnums, coordinates, icenters, type_assignments, exponent, \
         mo_count, mo_occ, mo_energy, mo_coefficients, energy
 
 
@@ -303,11 +303,11 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``numbers``, ``energy``,
+        Output dictionary containing ``title``, ``coordinates``, ``atnums``, ``energy``,
         ``obasis`` & ``mo`` keys and their corresponding values.
 
     """
-    (title, numbers, coordinates, icenters, type_assignments, exponents,
+    (title, atnums, coordinates, icenters, type_assignments, exponents,
      mo_count, mo_occ, mo_energy, mo_coefficients, energy) = load_wfn_low(lit)
     # Build the basis set and the permutation needed to regroup shells.
     obasis, permutation = build_obasis(icenters, type_assignments, exponents, coordinates, lit)
@@ -351,7 +351,7 @@ def load(lit: LineIterator) -> dict:
     result = {
         'title': title,
         'coordinates': coordinates,
-        'numbers': numbers,
+        'atnums': atnums,
         'obasis': obasis,
         'mo': mo,
         'energy': energy,

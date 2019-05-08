@@ -87,9 +87,9 @@ def test_load_fchk_hf_sto3g_num():
     assert shell2.ncon == 1
     assert shell2.nbasis == 1
     assert mol.obasis.primitive_normalization == 'L2'
-    assert len(mol.coordinates) == len(mol.numbers)
+    assert len(mol.coordinates) == len(mol.atnums)
     assert mol.coordinates.shape[1] == 3
-    assert len(mol.numbers) == 2
+    assert len(mol.atnums) == 2
     assert_allclose(mol.energy, -9.856961609951867E+01)
     assert_allclose(mol.mulliken_charges, [0.45000000E+00, 4.22300000E+00])
     assert_allclose(mol.npa_charges, [3.50000000E+00, 1.32000000E+00])
@@ -102,9 +102,9 @@ def test_load_fchk_h_sto3g_num():
     assert len(fields['obasis'].shells) == 1
     assert fields['obasis'].nbasis == 1
     assert fields['obasis'].shells[0].nprim == 3
-    assert len(fields['coordinates']) == len(fields['numbers'])
+    assert len(fields['coordinates']) == len(fields['atnums'])
     assert fields['coordinates'].shape[1] == 3
-    assert len(fields['numbers']) == 1
+    assert len(fields['atnums']) == 1
     assert_allclose(fields['energy'], -4.665818503844346E-01)
 
 
@@ -112,9 +112,9 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     fields = load_fchk_helper_internal('o2_cc_pvtz_pure.fchk')
     assert len(fields['obasis'].shells) == 20
     assert fields['obasis'].nbasis == 60
-    assert len(fields['coordinates']) == len(fields['numbers'])
+    assert len(fields['coordinates']) == len(fields['atnums'])
     assert fields['coordinates'].shape[1] == 3
-    assert len(fields['numbers']) == 2
+    assert len(fields['atnums']) == 2
     assert_allclose(fields['energy'], -1.495944878699246E+02)
 
 
@@ -122,9 +122,9 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     fields = load_fchk_helper_internal('o2_cc_pvtz_cart.fchk')
     assert len(fields['obasis'].shells) == 20
     assert fields['obasis'].nbasis == 70
-    assert len(fields['coordinates']) == len(fields['numbers'])
+    assert len(fields['coordinates']) == len(fields['atnums'])
     assert fields['coordinates'].shape[1] == 3
-    assert len(fields['numbers']) == 2
+    assert len(fields['atnums']) == 2
     assert_allclose(fields['energy'], -1.495953594545721E+02)
 
 
@@ -132,9 +132,9 @@ def test_load_fchk_water_sto3g_hf():
     fields = load_fchk_helper_internal('water_sto3g_hf_g03.fchk')
     assert len(fields['obasis'].shells) == 4
     assert fields['obasis'].nbasis == 7
-    assert len(fields['coordinates']) == len(fields['numbers'])
+    assert len(fields['coordinates']) == len(fields['atnums'])
     assert fields['coordinates'].shape[1] == 3
-    assert len(fields['numbers']) == 3
+    assert len(fields['atnums']) == 3
     mo = fields['mo']
     assert_allclose(mo.energies[0], -2.02333942E+01, atol=1.e-7)
     assert_allclose(mo.energies[-1], 7.66134805E-01, atol=1.e-7)
@@ -154,9 +154,9 @@ def test_load_fchk_lih_321g_hf():
     fields = load_fchk_helper_internal('li_h_3-21G_hf_g09.fchk')
     assert len(fields['obasis'].shells) == 5
     assert fields['obasis'].nbasis == 11
-    assert len(fields['coordinates']) == len(fields['numbers'])
+    assert len(fields['coordinates']) == len(fields['atnums'])
     assert fields['coordinates'].shape[1] == 3
-    assert len(fields['numbers']) == 2
+    assert len(fields['atnums']) == 2
 
     orb_alpha_coeffs = fields['mo'].coeffs[:, :fields['mo'].norba]
     orb_alpha_energies = fields['mo'].energies[:fields['mo'].norba]
@@ -198,7 +198,7 @@ def test_load_fchk_ghost_atoms():
     fields = load_fchk_helper_internal('water_dimer_ghost.fchk')
     # There should be 3 real atoms and 3 ghost atoms
     natom, nghost = 3, 3
-    assert_equal(fields['numbers'].shape[0], natom)
+    assert_equal(fields['atnums'].shape[0], natom)
     assert_equal(fields['coordinates'].shape[0], natom)
     assert_equal(fields['mulliken_charges'].shape[0], natom)
     assert_equal(fields['obasis'].centers.shape[0], natom + nghost)
@@ -338,7 +338,7 @@ def check_trj_basics(trj, nsteps, title, irc):
             assert mol.istep == istep
             assert mol.nstep == nstep
             assert mol.natom == natom
-            assert mol.numbers.shape == (natom, )
+            assert mol.atnums.shape == (natom, )
             assert mol.pseudo_numbers.shape == (natom, )
             assert mol.coordinates.shape == (natom, 3)
             assert mol.gradients.shape == (natom, 3)

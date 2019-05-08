@@ -352,7 +352,7 @@ def load(lit: LineIterator) -> dict:
     -------
     out
         Output dictionary containing ``obasis``, ``orb_alpha``, ``coordinates``,
-        ``numbers``, ``energy`` & ``pseudo_numbers`` keys and corresponding
+        ``atnums``, ``energy`` & ``pseudo_numbers`` keys and corresponding
         values. It may contain ``orb_beta`` key and its value as well.
 
     Notes
@@ -373,10 +373,10 @@ def load(lit: LineIterator) -> dict:
 
     """
     # Find the element number
-    number = None
+    atnum = None
     for line in lit:
         if line.startswith(' Atomic Energy Calculation'):
-            number = int(line[-5:-1])
+            atnum = int(line[-5:-1])
             break
 
     # Go to the all-electron basis set and read it.
@@ -410,11 +410,11 @@ def load(lit: LineIterator) -> dict:
             assert pseudo_number == int(pseudo_number)
             break
         elif line.startswith(' Electronic structure'):
-            pseudo_number = float(number)
+            pseudo_number = float(atnum)
             break
 
     # Select the correct basis
-    if pseudo_number == number:
+    if pseudo_number == atnum:
         obasis = ae_obasis
     else:
         obasis = pp_obasis
@@ -486,7 +486,7 @@ def load(lit: LineIterator) -> dict:
         'obasis': obasis,
         'mo': mo,
         'coordinates': obasis.centers,
-        'numbers': np.array([number]),
+        'atnums': np.array([atnum]),
         'energy': energy,
         'pseudo_numbers': np.array([pseudo_number]),
     }

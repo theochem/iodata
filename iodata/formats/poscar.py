@@ -45,16 +45,16 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``coordinates``, ``numbers`` & ``rvecs`` keys
+        Output dictionary containing ``title``, ``coordinates``, ``atnums`` & ``rvecs`` keys
         and their corresponding values.
 
     """
     # Load header
-    title, rvecs, numbers, coordinates = _load_vasp_header(lit)
+    title, rvecs, atnums, coordinates = _load_vasp_header(lit)
     return {
         'title': title,
         'coordinates': coordinates,
-        'numbers': numbers,
+        'atnums': atnums,
         'rvecs': rvecs,
     }
 
@@ -67,7 +67,7 @@ def dump(f: TextIO, data: 'IOData'):
     f
         A file to write to.
     data
-        An IOData instance which must contain ``coordinates``, ``numbers``, ``rvecs`` &
+        An IOData instance which must contain ``coordinates``, ``atnums``, ``rvecs`` &
         ``cell_frac`` attributes. It may contain ``title`` attribute.
 
     """
@@ -82,15 +82,15 @@ def dump(f: TextIO, data: 'IOData'):
 
     # Construct list of elements to make sure the coordinates get written
     # in this order. Heaviest elements are put furst.
-    unumbers = sorted(np.unique(data.numbers))[::-1]
-    print(' '.join(f'{num2sym[unumber]:5s}' for unumber in unumbers), file=f)
-    print(' '.join(f'{(data.numbers == unumber).sum():5d}' for unumber in unumbers), file=f)
+    uatnums = sorted(np.unique(data.atnums))[::-1]
+    print(' '.join(f'{num2sym[uatnum]:5s}' for uatnum in uatnums), file=f)
+    print(' '.join(f'{(data.atnums == uatnum).sum():5d}' for uatnum in uatnums), file=f)
     print('Selective dynamics', file=f)
     print('Direct', file=f)
 
     # Write the coordinates
-    for unumber in unumbers:
-        indexes = (data.numbers == unumber).nonzero()[0]
+    for uatnum in uatnums:
+        indexes = (data.atnums == uatnum).nonzero()[0]
         for index in indexes:
             row = np.dot(data.gvecs, data.coordinates[index])
             print(f'  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F', file=f)

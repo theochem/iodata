@@ -37,9 +37,9 @@ def test_load_mkl_ethanol():
         mol = load_one(str(fn_mkl))
 
     # Direct checks with mkl file
-    assert_equal(mol.numbers.shape, (9,))
-    assert_equal(mol.numbers[0], 1)
-    assert_equal(mol.numbers[4], 6)
+    assert_equal(mol.atnums.shape, (9,))
+    assert_equal(mol.atnums[0], 1)
+    assert_equal(mol.atnums[4], 6)
     assert_equal(mol.coordinates.shape, (9, 3))
     assert_allclose(mol.coordinates[2, 1] / angstrom, 2.239037, atol=1.e-5)
     assert_allclose(mol.coordinates[5, 2] / angstrom, 0.948420, atol=1.e-5)
