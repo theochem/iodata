@@ -24,7 +24,7 @@ import os
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..iodata import load_one, dump_one
+from ..iodata import load_one, load_many, dump_one, dump_many
 from ..utils import angstrom
 try:
     from importlib_resources import path
@@ -86,3 +86,30 @@ def test_dump_xyz_water_element(tmpdir):
 def test_dump_xyz_water_number(tmpdir):
     with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
         check_load_dump_consistency(tmpdir, fn_xyz)
+
+
+def test_load_many():
+    with path('iodata.test.data', 'water_trajectory.xyz') as fn_xyz:
+        mols = list(load_many(str(fn_xyz)))
+    assert len(mols) == 5
+    for imol, mol in enumerate(mols):
+        assert mol.title == "Frame {}".format(imol)
+        assert_equal(mol.numbers, [8, 1, 1])
+        assert mol.coordinates.shape == (3, 3)
+    assert_allclose(mols[0].coordinates[2] / angstrom, [2.864329, 0.114369, 3.3635])
+    assert_allclose(mols[2].coordinates[0] / angstrom, [-0.232964, -0.789588, -3.247615])
+    assert_allclose(mols[-1].coordinates[1] / angstrom, [-2.123423, -3.355326, -3.353739])
+
+
+def test_load_dump_many_consistency(tmpdir):
+    with path('iodata.test.data', 'water_trajectory.xyz') as fn_xyz:
+        mols0 = list(load_many(str(fn_xyz)))
+    # write xyz file in a temporary folder & then read it
+    fn_tmp = os.path.join(tmpdir, 'test.xyz')
+    dump_many(mols0, fn_tmp)
+    mols1 = list(load_many(fn_tmp))
+    assert len(mols0) == len(mols1)
+    for mol0, mol1 in zip(mols0, mols1):
+        assert mol0.title == mol1.title
+        assert_equal(mol0.numbers, mol1.numbers)
+        assert_allclose(mol0.coordinates, mol1.coordinates, atol=1.e-5)

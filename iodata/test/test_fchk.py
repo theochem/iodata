@@ -25,7 +25,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 import pytest
 
-from ..iodata import load_one
+from ..iodata import load_one, load_many
 from ..formats.fchk import load as load_fchk
 from ..overlap import compute_overlap
 from ..utils import check_dm, LineIterator
@@ -316,3 +316,100 @@ def test_load_monosilicic_acid_hf_lan():
                      8.97029351E-01,  # yy
                      -1.38159653E-02,  # yz
                      -3.63312087E+00])  # zz
+
+
+def load_fchk_trj_helper(fn_fchk):
+    """Load a trajectory from a testing fchk file with iodata.iodata.load_many."""
+    with path('iodata.test.data', fn_fchk) as fn:
+        return list(load_many(fn))
+
+
+def check_trj_basics(trj, nsteps, title, irc):
+    """Check sizes of arrays, step and point attributes."""
+    # Make a copy of the list, so we can pop items without destroying the original.
+    trj = list(trj)
+    assert len(trj) == sum(nsteps)
+    natom = trj[0].natom
+    for ipoint, nstep in enumerate(nsteps):
+        for istep in range(nstep):
+            mol = trj.pop(0)
+            assert mol.ipoint == ipoint
+            assert mol.npoint == len(nsteps)
+            assert mol.istep == istep
+            assert mol.nstep == nstep
+            assert mol.natom == natom
+            assert mol.numbers.shape == (natom, )
+            assert mol.pseudo_numbers.shape == (natom, )
+            assert mol.coordinates.shape == (natom, 3)
+            assert mol.gradients.shape == (natom, 3)
+            assert mol.title == title
+            assert hasattr(mol, 'energy')
+            assert hasattr(mol, 'reaction_coordinate') ^ (not irc)
+
+
+def test_peroxide_opt():
+    trj = load_fchk_trj_helper("peroxide_opt.fchk")
+    check_trj_basics(trj, [5], 'opt', False)
+    assert_allclose(trj[0].energy, -1.48759755E+02)
+    assert_allclose(trj[1].energy, -1.48763504E+02)
+    assert_allclose(trj[-1].energy, -1.48764883E+02)
+    assert_allclose(trj[0].coordinates[1],
+                    [9.02056208E-17, -1.37317707E+00, 0.00000000E+00])
+    assert_allclose(trj[-1].coordinates[-1],
+                    [-1.85970174E+00, -1.64631025E+00, 0.00000000E+00])
+    assert_allclose(trj[2].gradients[0],
+                    [-5.19698814E-03, -1.17503170E-03, -1.06165077E-15])
+    assert_allclose(trj[3].gradients[2],
+                    [-8.70435823E-04, 1.44609443E-03, -3.79091290E-16])
+
+
+def test_peroxide_tsopt():
+    trj = load_fchk_trj_helper("peroxide_tsopt.fchk")
+    check_trj_basics(trj, [3], 'tsopt', False)
+    assert_allclose(trj[0].energy, -1.48741996E+02)
+    assert_allclose(trj[1].energy, -1.48750392E+02)
+    assert_allclose(trj[2].energy, -1.48750432E+02)
+    assert_allclose(trj[0].coordinates[3],
+                    [-2.40150648E-01, -1.58431001E+00, 1.61489448E+00])
+    assert_allclose(trj[2].coordinates[2],
+                    [1.26945011E-03, 1.81554334E+00, 1.62426250E+00])
+    assert_allclose(trj[1].gradients[1],
+                    [-8.38752120E-04, 3.46889422E-03, 1.96559245E-03])
+    assert_allclose(trj[-1].gradients[0],
+                    [2.77986102E-05, -1.74709101E-05, 2.45875530E-05])
+
+
+def test_peroxide_relaxed_scan():
+    trj = load_fchk_trj_helper("peroxide_relaxed_scan.fchk")
+    check_trj_basics(trj, [6, 1, 1, 1, 2, 2], 'relaxed scan', False)
+    assert_allclose(trj[0].energy, -1.48759755E+02)
+    assert_allclose(trj[10].energy, -1.48764896E+02)
+    assert_allclose(trj[-1].energy, -1.48764905E+02)
+    assert_allclose(trj[1].coordinates[3],
+                    [-1.85942837E+00, -1.70565735E+00, -1.11022302E-16])
+    assert_allclose(trj[5].coordinates[0],
+                    [-1.21430643E-16, 1.32466211E+00, 3.46944695E-17])
+    assert_allclose(trj[8].gradients[1],
+                    [2.46088230E-04, -4.46299289E-04, -3.21529658E-05])
+    assert_allclose(trj[9].gradients[2],
+                    [-1.02574260E-04, -3.33214833E-04, 5.27406641E-05])
+
+
+def test_peroxide_irc():
+    trj = load_fchk_trj_helper("peroxide_irc.fchk")
+    check_trj_basics(trj, [21], 'irc', True)
+    assert_allclose(trj[0].energy, -1.48750432E+02)
+    assert_allclose(trj[5].energy, -1.48752713E+02)
+    assert_allclose(trj[-1].energy, -1.48757803E+02)
+    assert trj[0].reaction_coordinate == 0.0
+    assert_allclose(trj[1].reaction_coordinate, 1.05689581E-01)
+    assert_allclose(trj[10].reaction_coordinate, 1.05686037E+00)
+    assert_allclose(trj[-1].reaction_coordinate, -1.05685760E+00)
+    assert_allclose(trj[0].coordinates[2],
+                    [-1.94749866E+00, -5.22905491E-01, -1.47814774E+00])
+    assert_allclose(trj[10].coordinates[1],
+                    [1.31447798E+00, 1.55994117E-01, -5.02320861E-02])
+    assert_allclose(trj[15].gradients[3],
+                    [4.73066407E-04, -5.36135653E-03, 2.16301508E-04])
+    assert_allclose(trj[-1].gradients[0],
+                    [-1.27710420E-03, -6.90543903E-03, 4.49870405E-03])
