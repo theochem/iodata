@@ -37,7 +37,7 @@ def test_load_fcidump_psi4_h2():
         mol = load_one(str(fn))
     assert_allclose(mol.core_energy, 0.7151043364864863E+00)
     assert_equal(mol.nelec, 2)
-    assert_equal(mol.ms2, 0)
+    assert_equal(mol.spinmult, 0)
     assert_equal(mol.one_mo.shape, (10, 10))
     assert_allclose(mol.one_mo[0, 0], -0.1251399119550580E+01)
     assert_allclose(mol.one_mo[2, 1], 0.9292454365115077E-01)
@@ -62,7 +62,7 @@ def test_load_fcidump_molpro_h2():
         mol = load_one(str(fn))
     assert_allclose(mol.core_energy, 0.7151043364864863E+00)
     assert_equal(mol.nelec, 2)
-    assert_equal(mol.ms2, 0)
+    assert_equal(mol.spinmult, 0)
     assert_equal(mol.one_mo.shape, (4, 4))
     assert_allclose(mol.one_mo[0, 0], -0.1245406261597530E+01)
     assert_allclose(mol.one_mo[0, 1], -0.1666402467335385E+00)
@@ -87,7 +87,7 @@ def test_dump_load_fcidimp_consistency_ao(tmpdir):
     with path('iodata.test.data', 'water.xyz') as fn:
         mol0 = load_one(str(fn))
     mol0.nelec = 10
-    mol0.ms2 = 1
+    mol0.spinmult = 1
     with path('iodata.test.data', 'psi4_h2_one.npy') as fn:
         mol0.one_mo = np.load(str(fn))
     with path('iodata.test.data', 'psi4_h2_two.npy') as fn:
@@ -100,6 +100,6 @@ def test_dump_load_fcidimp_consistency_ao(tmpdir):
 
     # Compare results
     assert_equal(mol0.nelec, mol1.nelec)
-    assert_equal(mol0.ms2, mol1.ms2)
+    assert_equal(mol0.spinmult, mol1.spinmult)
     assert_allclose(mol0.one_mo, mol1.one_mo)
     assert_allclose(mol0.two_mo, mol1.two_mo)

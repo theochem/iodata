@@ -210,7 +210,7 @@ class IOData:
     kin
          The kinetic energy operator.
 
-    ms2
+    spinmult
          The spin multiplicity.
 
     mulliken_charges
