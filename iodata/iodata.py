@@ -316,6 +316,25 @@ class IOData:
         raise ValueError("Cannot determine the number of atoms.")
 
     @property
+    def nelec(self) -> float:
+        """Return the number of electrons."""
+        mo = getattr(self, 'mo', None)
+        if mo is None:
+            return self._nelec
+        return mo.nelec
+
+    @nelec.setter
+    def nelec(self, nelec: float):
+        mo = getattr(self, 'mo', None)
+        if mo is None:
+            # We need to fix the following together with all the no-member
+            # warnings, see https://github.com/theochem/iodata/issues/73
+            # pylint: disable=attribute-defined-outside-init
+            self._nelec = nelec
+        else:
+            raise TypeError("nelec cannot be set when orbitals are present.")
+
+    @property
     def spinmult(self) -> float:
         """Return the spin multiplicity."""
         mo = getattr(self, 'mo', None)
