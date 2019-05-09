@@ -307,12 +307,18 @@ class IOData:
     @property
     def natom(self) -> int:
         """Return the number of atoms."""
-        if hasattr(self, 'atnums'):
-            return len(self.atnums)
         if hasattr(self, 'atcoords'):
             return len(self.atcoords)
         if hasattr(self, 'atcorenums'):
             return len(self.atcorenums)
+        if hasattr(self, 'atforces'):
+            return len(self.atforces)
+        if hasattr(self, 'atfrozen'):
+            return len(self.atfrozen)
+        if hasattr(self, 'atmasses'):
+            return len(self.atmasses)
+        if hasattr(self, 'atnums'):
+            return len(self.atnums)
         raise AttributeError("Cannot determine the number of atoms.")
 
     @property
