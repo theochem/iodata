@@ -136,7 +136,7 @@ def test_undefined():
     with pytest.raises(AttributeError):
         _ = mol.nelec
     with pytest.raises(AttributeError):
-        _ = mol.spinmult
+        _ = mol.spinpol
     with pytest.raises(AttributeError):
         _ = mol.natom
     mol.nelec = 5
