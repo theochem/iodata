@@ -325,7 +325,7 @@ class IOData:
 
     @spinmult.setter
     def spinmult(self, spinmult: float):
-        mo = getattr(self, 'orbitals', None)
+        mo = getattr(self, 'mo', None)
         if mo is None:
             # We need to fix the following together with all the no-member
             # warnings, see https://github.com/theochem/iodata/issues/73
