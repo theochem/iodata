@@ -146,22 +146,36 @@ class IOData:
     Type checked array attributes (if present)
     ------------------------------------------
 
-    cube_data
-         A (L, M, N) array of data on a uniform grid (defined by ugrid).
-
     atcoords
          A (N, 3) float array with Cartesian coordinates of the atoms.
-
-    atnums
-         A (N,) int vector with the atomic numbers.
-
-    polar
-         A (3, 3) matrix containing the dipole polarizability tensor.
 
     atcorenums
          A (N,) float array with pseudo-potential core charges.
 
+    atforces
+        A (N, 3) float array with Cartesian forces on each atom.
+
+    atfrozen
+        A (N,) bool array with frozen atoms. (All atoms are free if this
+        attribute is not set.)
+
+    atmasses
+        A (N,) float array with atomic masses
+
+    atnums
+         A (N,) int vector with the atomic numbers.
+
+    cube_data
+         A (L, M, N) array of data on a uniform grid (defined by ugrid).
+
+    polar
+         A (3, 3) matrix containing the dipole polarizability tensor.
+
     **Unspecified type (duck typing):**
+
+    athessian
+        A (3*N, 3*N) array containing the energy Hessian w.r.t Cartesian atomic
+        displacements.
 
     cellvecs
          A (NP, 3) array containing the (real-space) cell vectors describing
@@ -195,10 +209,6 @@ class IOData:
 
     kin
          The kinetic energy operator.
-
-    links
-         A mapping between the atoms in the primitive unit and the
-         crystallographic unit.
 
     ms2
          The spin multiplicity.
@@ -262,23 +272,38 @@ class IOData:
                        'dm_spin_mp3', 'dm_spin_cc', 'dm_spin_ci', 'dm_spin_scf', 'kin',
                        'na', 'olp']
 
-    # only perform type checking on minimal attributes
-    atnums = ArrayTypeCheckDescriptor('atnums', 1, (-1,), int, ['atcoords', 'atcorenums'],
-                                      doc="A (N,) int vector with the atomic numbers.")
-    atcoords = ArrayTypeCheckDescriptor('atcoords', 2, (-1, 3), float,
-                                        ['atnums', 'atcorenums'],
-                                        doc="A (N, 3) float array with Cartesian atcoords "
-                                            "of the atoms.")
-    cube_data = ArrayTypeCheckDescriptor('cube_data', 3,
-                                         doc="A (L, M, N) array of data on a uniform grid "
-                                             "(defined by ugrid).")
-    polar = ArrayTypeCheckDescriptor('polar', 2, (3, 3), float,
-                                     doc="A (3, 3) matrix containing the dipole polarizability "
-                                         "tensor.")
-    atcorenums = ArrayTypeCheckDescriptor('atcorenums', 1, (-1,), float,
-                                          ['atcoords', 'atnums'], 'atnums',
-                                          doc="A (N,) float array with pseudo-potential core "
-                                              "charges.")
+    # only perform type checking on some attributes
+    atcoords = ArrayTypeCheckDescriptor(
+        'atcoords', 2, (-1, 3), float,
+        ['atcorenums', 'atforces', 'atfrozen', 'atmasses', 'atnums'],
+        doc="A (N, 3) float array with Cartesian coordinates of the atoms.")
+    atcorenums = ArrayTypeCheckDescriptor(
+        'atcorenums', 1, (-1,), float,
+        ['atcoords', 'atforces', 'atfrozen', 'atmasses', 'atnums'],
+        'atnums',
+        doc="A (N,) float array with pseudo-potential core charges.")
+    atforces = ArrayTypeCheckDescriptor(
+        'atforces', 2, (-1, 3), float,
+        ['atcoords', 'atcorenums', 'atfrozen', 'atmasses', 'atnums'],
+        doc="A (N, 3) float array with Cartesian atomic forces.")
+    atfrozen = ArrayTypeCheckDescriptor(
+        'atfrozen', 1, (-1,), bool,
+        ['atcoords', 'atcorenums', 'atforces', 'atmasses', 'atnums'],
+        doc="A (N,) boolean array flagging fixed atoms.")
+    atmasses = ArrayTypeCheckDescriptor(
+        'atmasses', 1, (-1,), float,
+        ['atcoords', 'atcorenums', 'atforces', 'atfrozen', 'atnums'],
+        doc="A (N,) float array with atomic masses.")
+    atnums = ArrayTypeCheckDescriptor(
+        'atnums', 1, (-1,), int,
+        ['atcoords', 'atcorenums', 'atforces', 'atfrozen', 'atmasses'],
+        doc="A (N,) int vector with the atomic numbers.")
+    cube_data = ArrayTypeCheckDescriptor(
+        'cube_data', 3,
+        doc="A (L, M, N) array of data on a uniform grid (defined by ugrid).")
+    polar = ArrayTypeCheckDescriptor(
+        'polar', 2, (3, 3), float,
+        doc="A (3, 3) matrix containing the dipole polarizability tensor.")
 
     @property
     def natom(self) -> int:
