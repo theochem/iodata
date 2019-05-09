@@ -25,7 +25,7 @@ from typing import List, Tuple, Iterator
 import numpy as np
 
 from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS
-from ..utils import LineIterator, MolecularOrbitals
+from ..utils import LineIterator, MolecularOrbitals, amu
 
 
 __all__ = []
@@ -82,6 +82,7 @@ def load(lit: LineIterator) -> dict:
         "Number of independent functions",
         "Number of alpha electrons", "Number of beta electrons",
         "Atomic numbers", "Current cartesian coordinates",
+        "Real atomic weights",
         "Shell types", "Shell to atom map", "Shell to atom map",
         "Number of primitives per shell", "Primitive exponents",
         "Contraction coefficients", "P(S=P) Contraction coefficients",
@@ -95,12 +96,26 @@ def load(lit: LineIterator) -> dict:
         'Total CI Density', 'Spin CI Density',
         'Mulliken Charges', 'ESP Charges', 'NPA Charges',
         'Polarizability', 'Dipole Moment', 'Quadrupole Moment',
+        'Cartesian Gradient', 'Cartesian Force Constants', 'MicOpt',
     ])
 
     # A) Load the geometry
     atnums = fchk["Atomic numbers"]
     atcoords = fchk["Current cartesian coordinates"].reshape(-1, 3)
     atcorenums = fchk["Nuclear charges"]
+    atmasses = fchk.get("Real atomic weights")
+    if atmasses is not None:
+        atmasses *= amu
+    atforces = fchk.get('Cartesian Gradient')
+    if atforces is not None:
+        atforces = -atforces.reshape(-1, 3)
+    athessian = fchk.get('Cartesian Force Constants')
+    if athessian is not None:
+        athessian = _triangle_to_dense(athessian)
+    atfrozen = fchk.get("MicOpt")
+    if atfrozen is not None:
+        atfrozen = (atfrozen == -2)
+        print(atfrozen)
     # Mask out ghost atoms
     mask = atcorenums != 0.0
     atnums = atnums[mask]
@@ -152,7 +167,16 @@ def load(lit: LineIterator) -> dict:
         'atnums': atnums,
         'obasis': obasis,
         'atcorenums': atcorenums,
+        'athessian': athessian,
     }
+    if atmasses is not None:
+        result['atmasses'] = atmasses
+    if atforces is not None:
+        result['atforces'] = atforces
+    if athessian is not None:
+        result['athessian'] = athessian
+    if atfrozen is not None:
+        result['atfrozen'] = atfrozen
 
     nbasis = fchk["Number of basis functions"]
 
@@ -286,7 +310,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
                 'nstep': nstep,
                 'energy': energy,
                 'atcoords': atcoords,
-                'gradients': gradients,
+                'atforces': -gradients,
             }
             if prefix == "IRC point":
                 data['reaction_coordinate'] = recor

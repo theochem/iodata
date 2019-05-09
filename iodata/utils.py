@@ -29,8 +29,13 @@ from scipy.linalg import eigh
 __all__ = ['LineIterator', 'set_four_index_element', 'MolecularOrbitals']
 
 
+# The unit conversion factors below can be used as follows:
+# - Conversion to atomic units: distance = 5*angstrom
+# - Conversion from atomic units: print(distance/angstrom)
 angstrom: float = spc.angstrom / spc.value(u'atomic unit of length')
-electronvolt: float = 1. / spc.value(u'hartree-electron volt relationship')
+electronvolt: float = 1 / spc.value(u'hartree-electron volt relationship')
+# atomic mass unit (not atomic unit of mass!)
+amu: float = 1e-3 / (spc.value(u'electron mass') * spc.value(u'Avogadro constant'))
 
 
 class LineIterator:

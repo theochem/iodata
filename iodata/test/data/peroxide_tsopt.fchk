@@ -52,7 +52,7 @@ Nuclear QMom                               R   N=           4
 Nuclear GFac                               R   N=           4
   0.00000000E+00  0.00000000E+00  2.79284600E+00  2.79284600E+00
 MicOpt                                     I   N=           4
-          -1          -1          -1          -1
+          -1          -1          -1          -2
 Number of residues                         I                0
 Number of secondary structures             I                0
 Redundant internal dimensions              I   N=           4

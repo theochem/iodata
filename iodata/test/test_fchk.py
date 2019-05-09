@@ -316,6 +316,7 @@ def test_load_monosilicic_acid_hf_lan():
                      8.97029351E-01,  # yy
                      -1.38159653E-02,  # yz
                      -3.63312087E+00])  # zz
+    assert_allclose(mol.atforces[0], [0.0, 0.0, 0.0])
 
 
 def load_fchk_trj_helper(fn_fchk):
@@ -341,7 +342,7 @@ def check_trj_basics(trj, nsteps, title, irc):
             assert mol.atnums.shape == (natom, )
             assert mol.atcorenums.shape == (natom, )
             assert mol.atcoords.shape == (natom, 3)
-            assert mol.gradients.shape == (natom, 3)
+            assert mol.atforces.shape == (natom, 3)
             assert mol.title == title
             assert hasattr(mol, 'energy')
             assert hasattr(mol, 'reaction_coordinate') ^ (not irc)
@@ -357,9 +358,9 @@ def test_peroxide_opt():
                     [9.02056208E-17, -1.37317707E+00, 0.00000000E+00])
     assert_allclose(trj[-1].atcoords[-1],
                     [-1.85970174E+00, -1.64631025E+00, 0.00000000E+00])
-    assert_allclose(trj[2].gradients[0],
+    assert_allclose(-trj[2].atforces[0],
                     [-5.19698814E-03, -1.17503170E-03, -1.06165077E-15])
-    assert_allclose(trj[3].gradients[2],
+    assert_allclose(-trj[3].atforces[2],
                     [-8.70435823E-04, 1.44609443E-03, -3.79091290E-16])
 
 
@@ -373,9 +374,9 @@ def test_peroxide_tsopt():
                     [-2.40150648E-01, -1.58431001E+00, 1.61489448E+00])
     assert_allclose(trj[2].atcoords[2],
                     [1.26945011E-03, 1.81554334E+00, 1.62426250E+00])
-    assert_allclose(trj[1].gradients[1],
+    assert_allclose(-trj[1].atforces[1],
                     [-8.38752120E-04, 3.46889422E-03, 1.96559245E-03])
-    assert_allclose(trj[-1].gradients[0],
+    assert_allclose(-trj[-1].atforces[0],
                     [2.77986102E-05, -1.74709101E-05, 2.45875530E-05])
 
 
@@ -389,9 +390,9 @@ def test_peroxide_relaxed_scan():
                     [-1.85942837E+00, -1.70565735E+00, -1.11022302E-16])
     assert_allclose(trj[5].atcoords[0],
                     [-1.21430643E-16, 1.32466211E+00, 3.46944695E-17])
-    assert_allclose(trj[8].gradients[1],
+    assert_allclose(-trj[8].atforces[1],
                     [2.46088230E-04, -4.46299289E-04, -3.21529658E-05])
-    assert_allclose(trj[9].gradients[2],
+    assert_allclose(-trj[9].atforces[2],
                     [-1.02574260E-04, -3.33214833E-04, 5.27406641E-05])
 
 
@@ -409,7 +410,33 @@ def test_peroxide_irc():
                     [-1.94749866E+00, -5.22905491E-01, -1.47814774E+00])
     assert_allclose(trj[10].atcoords[1],
                     [1.31447798E+00, 1.55994117E-01, -5.02320861E-02])
-    assert_allclose(trj[15].gradients[3],
+    assert_allclose(-trj[15].atforces[3],
                     [4.73066407E-04, -5.36135653E-03, 2.16301508E-04])
-    assert_allclose(trj[-1].gradients[0],
+    assert_allclose(-trj[-1].atforces[0],
                     [-1.27710420E-03, -6.90543903E-03, 4.49870405E-03])
+
+
+def test_atforces():
+    mol = load_fchk_helper('peroxide_tsopt.fchk')
+    assert_allclose(-mol.atforces[0], [2.77986102E-05, -1.74709101E-05, 2.45875530E-05])
+    assert_allclose(-mol.atforces[-1], [2.03469628E-05, 1.49353694E-05, -2.45875530E-05])
+
+
+def test_athessian():
+    mol = load_fchk_helper('peroxide_tsopt.fchk')
+    assert_allclose(mol.athessian[0, 0], -1.49799052E-02)
+    assert_allclose(mol.athessian[-1, -1], 5.83032386E-01)
+    assert_allclose(mol.athessian[0, 1], 5.07295215E-05)
+    assert_allclose(mol.athessian[1, 0], 5.07295215E-05)
+    assert mol.athessian.shape == (3 * mol.natom, 3 * mol.natom)
+
+
+def test_atfrozen():
+    mol = load_fchk_helper('peroxide_tsopt.fchk')
+    assert_equal(mol.atfrozen, [False, False, False, True])
+
+
+def test_atmasses():
+    mol = load_fchk_helper('peroxide_tsopt.fchk')
+    assert_allclose(mol.atmasses[0], 29156.94, atol=0.1)
+    assert_allclose(mol.atmasses[-1], 1837.15, atol=0.1)
