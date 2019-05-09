@@ -21,8 +21,8 @@
 
 
 import numpy as np
-
 from numpy.testing import assert_raises, assert_allclose
+import pytest
 
 from .common import compute_1rdm
 from ..iodata import load_one, IOData
@@ -98,3 +98,51 @@ def test_dm_ch3_rohf_g03():
     olp = compute_overlap(mol.obasis)
     dm = compute_1rdm(mol)
     assert_allclose(np.einsum('ab,ba', olp, dm), 9, atol=1.e-6)
+
+
+def test_charge_nelec1():
+    # One a blank IOData object, charge and nelec can be set independently.
+    mol = IOData()
+    mol.nelec = 4
+    mol.charge = -1
+
+
+def test_charge_nelec2():
+    # When atcorenums is set, nelec and charge are coupled
+    mol = IOData()
+    mol.atcorenums = np.array([6.0, 1.0, 1.0, 1.0, 1.0])
+    mol.nelec = 10
+    assert mol.charge == 0
+    mol.charge = 1
+    assert mol.nelec == 9
+
+
+def test_charge_nelec3():
+    # When atnums is set, nelec and charge are coupled
+    mol = IOData()
+    mol.atnums = np.array([6, 1, 1, 1, 1])
+    mol.nelec = 10
+    assert mol.charge == 0
+    mol.charge = 1
+    assert mol.nelec == 9
+
+
+def test_undefined():
+    # One a blank IOData object, accessing undefined charge and nelec should raise
+    # an AttributeError.
+    mol = IOData()
+    with pytest.raises(AttributeError):
+        _ = mol.charge
+    with pytest.raises(AttributeError):
+        _ = mol.nelec
+    with pytest.raises(AttributeError):
+        _ = mol.spinmult
+    with pytest.raises(AttributeError):
+        _ = mol.natom
+    mol.nelec = 5
+    with pytest.raises(AttributeError):
+        _ = mol.charge
+    mol = IOData()
+    mol.charge = 1
+    with pytest.raises(AttributeError):
+        _ = mol.nelec

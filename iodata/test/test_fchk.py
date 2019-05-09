@@ -453,3 +453,16 @@ def test_spinmult():
     assert mol2.spinmult == 2
     with pytest.raises(TypeError):
         mol2.spinmult = 3
+
+
+def test_nelec_charge():
+    mol1 = load_fchk_helper('ch3_rohf_sto3g_g03.fchk')
+    assert mol1.nelec == 9
+    assert mol1.charge == 0
+    mol2 = load_fchk_helper('li_h_3-21G_hf_g09.fchk')
+    assert mol2.nelec == 3
+    assert mol2.charge == 1
+    with pytest.raises(TypeError):
+        mol2.nelec = 4
+    with pytest.raises(TypeError):
+        mol2.charge = 0

@@ -125,12 +125,16 @@ class MolecularOrbitals(NamedTuple):
     energies: np.ndarray
 
     @property
+    def nelec(self):
+        """Return the total number of electrons."""
+        return self.occs.sum()
+
+    @property
     def spinmult(self):
         """Return the spin multiplicity of the Slater determinant."""
         if self.type == 'restricted':
-            nelec = self.occs.sum()
             nbeta = np.clip(self.occs, 0, 1).sum()
-            sq = nelec - 2 * nbeta
+            sq = self.nelec - 2 * nbeta
         elif self.type == 'unrestricted':
             sq = self.occs[:self.norba].sum() - self.occs[self.norba:].sum()
         else:
