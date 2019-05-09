@@ -192,11 +192,8 @@ class IOData:
     er
          The electron repulsion four-index operator
 
-    orb_alpha
-         The alpha orbitals (coefficients, occupations and energies).
-
-    orb_beta
-         The beta orbitals (coefficients, occupations and energies).
+    mo
+        An instance of MolecularOrbitals.
 
     dm_full (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
          The spin-summed first-order density matrix.
@@ -210,8 +207,10 @@ class IOData:
     kin
          The kinetic energy operator.
 
-    ms2
-         The spin multiplicity.
+    spinmult
+         The spin multiplicity. By default, its value is derived from the
+         molecular orbitals (mo attribute), in which case it cannot be set. When
+         no molecular orbitals are present, this attribute can be set.
 
     mulliken_charges
          Mulliken AIM charges.
@@ -315,6 +314,25 @@ class IOData:
         if hasattr(self, 'atcorenums'):
             return len(self.atcorenums)
         raise ValueError("Cannot determine the number of atoms.")
+
+    @property
+    def spinmult(self) -> float:
+        """Return the spin multiplicity."""
+        mo = getattr(self, 'mo', None)
+        if mo is None:
+            return self._spinmult
+        return mo.spinmult
+
+    @spinmult.setter
+    def spinmult(self, spinmult: float):
+        mo = getattr(self, 'mo', None)
+        if mo is None:
+            # We need to fix the following together with all the no-member
+            # warnings, see https://github.com/theochem/iodata/issues/73
+            # pylint: disable=attribute-defined-outside-init
+            self._spinmult = spinmult
+        else:
+            raise TypeError("spinmult cannot be set when orbitals are present.")
 
 
 def _select_format_module(filename: str, attrname: str) -> ModuleType:

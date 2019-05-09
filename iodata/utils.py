@@ -95,17 +95,24 @@ class MolecularOrbitals(NamedTuple):
     type : str
         Molecular orbital type; choose from 'restricted', 'unrestricted', or 'generalized'.
     norba : int
-        Number of alpha molecular orbitals.
+        Number of alpha molecular orbitals. None in case of type=='generalized'.
     norbb : int
-        Number of beta molecular orbitals.
+        Number of beta molecular orbitals. None in case of type=='generalized'.
     occs : np.ndarray
-        Molecular orbital occupation numbers.
+        Molecular orbital occupation numbers. The number of elements equals the
+        number of columns of coeffs.
     coeffs : np.ndarray
-        Molecular orbital basis coefficients. shape = (nbasis, norb_a + norb_b)
+        Molecular orbital basis coefficients.
+        In case of restricted: shape = (nbasis, norb_a) = (nbasis, norb_b).
+        In case of unrestricted: shape = (nbasis, norb_a + norb_b).
+        In case of generalized: shape = (2*nbasis, norb), where norb is the
+        total number of orbitals (not defined by other attributes).
     irreps : np.ndarray
-        Irreducible representation.
+        Irreducible representation. The number of elements equals the
+        number of columns of coeffs.
     energies : np.ndarray
-        Molecular orbital energies.
+        Molecular orbital energies. The number of elements equals the
+        number of columns of coeffs.
 
     """
 
@@ -116,6 +123,20 @@ class MolecularOrbitals(NamedTuple):
     coeffs: np.ndarray
     irreps: np.ndarray
     energies: np.ndarray
+
+    @property
+    def spinmult(self):
+        """Return the spin multiplicity of the Slater determinant."""
+        if self.type == 'restricted':
+            nelec = self.occs.sum()
+            nbeta = np.clip(self.occs, 0, 1).sum()
+            sq = nelec - 2 * nbeta
+        elif self.type == 'unrestricted':
+            sq = self.occs[:self.norba].sum() - self.occs[self.norba:].sum()
+        else:
+            # Not sure how to do this in a simply way.
+            raise NotImplementedError
+        return 1 + abs(sq)
 
 
 def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int, l: int,

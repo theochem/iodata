@@ -43,7 +43,7 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``nelec``, ``ms2``, ``one_mo``, ``two_mo`` & ``core_energy``
+        Output dictionary containing ``nelec``, ``spinmult``, ``one_mo``, ``two_mo`` & ``core_energy``
         keys and their corresponding values.
 
     Notes
@@ -69,7 +69,7 @@ def load(lit: LineIterator) -> dict:
             header_info[key.strip()] = value.strip()
     nbasis = int(header_info['NORB'])
     nelec = int(header_info['NELEC'])
-    ms2 = int(header_info['MS2'])
+    spinmult = int(header_info['MS2'])
 
     # skip rest of header
     for line in lit:
@@ -106,7 +106,7 @@ def load(lit: LineIterator) -> dict:
 
     return {
         'nelec': nelec,
-        'ms2': ms2,
+        'spinmult': spinmult,
         'one_mo': one_mo,
         'two_mo': two_mo,
         'core_energy': core_energy,
@@ -138,10 +138,10 @@ def dump(f: TextIO, data: 'IOData'):
     nactive = one_mo.shape[0]
     core_energy = getattr(data, 'core_energy', 0.0)
     nelec = getattr(data, 'nelec', 0)
-    ms2 = getattr(data, 'ms2', 0)
+    spinmult = getattr(data, 'spinmult', 0)
 
     # Write header
-    print(f' &FCI NORB={nactive:d},NELEC={nelec:d},MS2={ms2:d},', file=f)
+    print(f' &FCI NORB={nactive:d},NELEC={nelec:d},MS2={spinmult:d},', file=f)
     print(f"  ORBSYM= {','.join('1' for v in range(nactive))},", file=f)
     print('  ISYM=1', file=f)
     print(' &END', file=f)
