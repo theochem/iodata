@@ -58,6 +58,8 @@ def load_fchk_helper(fn_fchk):
 def test_load_fchk_hf_sto3g_num():
     mol = load_fchk_helper('hf_sto3g.fchk')
     assert mol.title == 'hf_sto3g'
+    assert mol.mo.type == 'restricted'
+    assert mol.spinmult == 1
     assert mol.obasis.nbasis == 6
     assert len(mol.obasis.shells) == 3
     shell0 = mol.obasis.shells[0]
@@ -440,3 +442,12 @@ def test_atmasses():
     mol = load_fchk_helper('peroxide_tsopt.fchk')
     assert_allclose(mol.atmasses[0], 29156.94, atol=0.1)
     assert_allclose(mol.atmasses[-1], 1837.15, atol=0.1)
+
+
+def test_spinmult():
+    mol1 = load_fchk_helper('ch3_rohf_sto3g_g03.fchk')
+    assert mol1.mo.type == 'restricted'
+    assert mol1.spinmult == 2
+    mol2 = load_fchk_helper('li_h_3-21G_hf_g09.fchk')
+    assert mol2.mo.type == 'unrestricted'
+    assert mol2.spinmult == 2
