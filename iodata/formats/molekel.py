@@ -34,8 +34,10 @@ __all__ = []
 patterns = ['*.mkl']
 
 
-def _load_helper_char_mult(lit: LineIterator) -> List[int]:
-    return [int(word) for word in next(lit).split()]
+def _load_helper_charge_spinpol(lit: LineIterator) -> List[int]:
+    charge, spinmult = [int(word) for word in next(lit).split()]
+    spinpol = spinmult - 1
+    return charge, spinpol
 
 
 def _load_helper_atoms(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]:
@@ -175,7 +177,7 @@ def load(lit: LineIterator) -> dict:
             # reaching the end of the file.
             break
         if line == '$CHAR_MULT':
-            charge, _spinmult = _load_helper_char_mult(lit)
+            charge, spinpol = _load_helper_charge_spinpol(lit)
         elif line == '$COORD':
             atnums, atcoords = _load_helper_atoms(lit)
         elif line == '$BASIS':
@@ -191,7 +193,7 @@ def load(lit: LineIterator) -> dict:
             occ_beta = _load_helper_occ(lit)
 
     if charge is None:
-        lit.error('Charge and multiplicity not found.')
+        lit.error('Charge and spin polarization not found.')
     if atcoords is None:
         lit.error('Coordinates not found.')
     if obasis is None:
@@ -218,6 +220,7 @@ def load(lit: LineIterator) -> dict:
                       'beta orbitals were present.')
         nalpha = int(np.round(occ_alpha.sum()))
         nbeta = int(np.round(occ_beta.sum()))
+        assert abs(spinpol - abs(nalpha - nbeta)) < 1e-7
         assert nelec == nalpha + nbeta
         assert coeff_alpha.shape == coeff_beta.shape
         assert ener_alpha.shape == ener_beta.shape

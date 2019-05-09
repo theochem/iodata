@@ -130,7 +130,7 @@ class MolecularOrbitals(NamedTuple):
         return self.occs.sum()
 
     @property
-    def spinmult(self):
+    def spinpol(self):
         """Return the spin multiplicity of the Slater determinant."""
         if self.type == 'restricted':
             nbeta = np.clip(self.occs, 0, 1).sum()
@@ -140,7 +140,7 @@ class MolecularOrbitals(NamedTuple):
         else:
             # Not sure how to do this in a simply way.
             raise NotImplementedError
-        return 1 + abs(sq)
+        return abs(sq)
 
 
 def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int, l: int,

@@ -136,7 +136,7 @@ def test_undefined():
     with pytest.raises(AttributeError):
         _ = mol.nelec
     with pytest.raises(AttributeError):
-        _ = mol.spinmult
+        _ = mol.spinpol
     with pytest.raises(AttributeError):
         _ = mol.natom
     mol.nelec = 5
@@ -146,3 +146,12 @@ def test_undefined():
     mol.charge = 1
     with pytest.raises(AttributeError):
         _ = mol.nelec
+
+
+def test_natom():
+    assert IOData(atcoords=np.zeros((4, 3))).natom == 4
+    assert IOData(atcorenums=np.zeros(4)).natom == 4
+    assert IOData(atforces=np.zeros((4, 3))).natom == 4
+    assert IOData(atfrozen=[False, True, False, True]).natom == 4
+    assert IOData(atmasses=[0, 0, 0, 0]).natom == 4
+    assert IOData(atnums=[1, 1, 1, 1]).natom == 4
