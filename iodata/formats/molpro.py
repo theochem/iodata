@@ -43,8 +43,8 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``nelec``, ``spinmult``, ``one_mo``, ``two_mo`` & ``core_energy``
-        keys and their corresponding values.
+        Output dictionary containing ``nelec``, ``spinmult``, ``one_mo``,
+        ``two_mo`` & ``core_energy`` keys and their corresponding values.
 
     Notes
     -----
