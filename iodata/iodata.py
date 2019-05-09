@@ -209,9 +209,8 @@ class IOData:
 
     spinmult
          The spin multiplicity. By default, its value is derived from the
-         orbitals attribute, in which case it cannot be set manually. When
-         no orbitals are present, this attribute can be set to any
-         value >= 1.
+         molecular orbitals (mo attribute), in which case it cannot be set. When
+         no molecular orbitals are present, this attribute can be set.
 
     mulliken_charges
          Mulliken AIM charges.
