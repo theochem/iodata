@@ -313,7 +313,7 @@ class IOData:
             return len(self.atcoords)
         if hasattr(self, 'atcorenums'):
             return len(self.atcorenums)
-        raise ValueError("Cannot determine the number of atoms.")
+        raise AttributeError("Cannot determine the number of atoms.")
 
     @property
     def nelec(self) -> float:
@@ -333,6 +333,25 @@ class IOData:
             self._nelec = nelec
         else:
             raise TypeError("nelec cannot be set when orbitals are present.")
+
+    @property
+    def charge(self) -> float:
+        """Return the net charge of the system."""
+        atcorenums = getattr(self, 'atcorenums', None)
+        if atcorenums is None:
+            return self._charge
+        return atcorenums.sum() - self.nelec
+
+    @charge.setter
+    def charge(self, charge: float):
+        atcorenums = getattr(self, 'atcorenums', None)
+        if atcorenums is None:
+            # We need to fix the following together with all the no-member
+            # warnings, see https://github.com/theochem/iodata/issues/73
+            # pylint: disable=attribute-defined-outside-init
+            self._charge = charge
+        else:
+            self.nelec = atcorenums.sum() - charge
 
     @property
     def spinmult(self) -> float:
