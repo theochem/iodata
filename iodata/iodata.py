@@ -166,7 +166,7 @@ class IOData:
         A (N,) int vector with the atomic numbers.
 
     cube_data
-        A (L, M, N) array of data on a uniform grid (defined by ugrid).
+        A (K, L, M) array of data on a uniform grid (defined by ugrid).
 
     polar
         A (3, 3) matrix containing the dipole polarizability tensor.
@@ -177,9 +177,29 @@ class IOData:
         A dictionary where keys are names of charge definitions and values are
         arrays with atomic charges (size N).
 
+    atffparams
+        A dictionary with arrays of atomic force field parameters (typically
+        non-bonded). Keys include 'charges', 'vdw_radii', 'sigmas', 'epsilons',
+        'alphas' (atomic polarizabilities), 'c6s', 'c8s', 'c10s', 'buck_as',
+        'buck_bs', 'lj_as', 'core_charges', 'valence_charges', 'valence_widths',
+        etc. Not all of them have to be present, depending on the use case.
+
     athessian
         A (3*N, 3*N) array containing the energy Hessian w.r.t Cartesian atomic
         displacements.
+
+    basisdef
+        A basis set definition, i.e. a dictionary whose keys are symbols (of
+        chemical elements), atomic numbers (similar to previous, str to make
+        distinction with following) or an atom index (integer referring to a
+        specific atom in a molecule). The format of the values is to be decided
+        when implementing a load function for basis set definitions.
+
+    bonds
+        An (nbond, 3) array with the list of covalent bonds. Each row represents
+        one bond and consists of three integers: first atom index (starting
+        from zero), second atom index & an optional bond type (0: not known, 1:
+        single, 2: double, 3: triple, 4: conjugated).
 
     cellvecs
         A (NP, 3) array containing the (real-space) cell vectors describing
@@ -191,7 +211,15 @@ class IOData:
         The Hartree-Fock energy due to the core orbitals
 
     energy
-        The total energy (electronic+nn)
+        The total energy (electronic + nn)
+
+    extcharges
+        Array with values of external charges, with shape (nextcharge, 4). First
+        three columns for Cartesian X, Y and Z coordinates, last column for the
+        actual charge.
+
+    g_rot
+        The rotational symmetry number of the molecule.
 
     mo
         An instance of MolecularOrbitals.
@@ -201,6 +229,11 @@ class IOData:
 
     obasis
         An OrderedDict containing parameters to instantiate a GOBasis class.
+
+    obasis_name
+        A name or DOI describing the basis set used for the orbitals in the
+        mo attribute (if applicable). Should be consistent with
+        www.basissetexchange.org.
 
     one_ints
         Dictionary where keys are names and values are numpy arrays with
@@ -219,6 +252,10 @@ class IOData:
         Dictionary where keys are names and values are one-particle density
         matrices. Names can be ``scf``, ``post_scf``, ``scf_spin``,
         ``post_scf_spin``. These matrices are always expressed in the AO basis.
+
+    run_type
+        The type of calculation that lead to the results stored in IOData, e.g.
+        'energy', 'energy_force', 'opt', 'freq', ...
 
     spinpol
         The spin polarization. By default, its value is derived from the
