@@ -93,9 +93,9 @@ def test_load_fchk_hf_sto3g_num():
     assert mol.atcoords.shape[1] == 3
     assert len(mol.atnums) == 2
     assert_allclose(mol.energy, -9.856961609951867E+01)
-    assert_allclose(mol.mulliken_charges, [0.45000000E+00, 4.22300000E+00])
-    assert_allclose(mol.npa_charges, [3.50000000E+00, 1.32000000E+00])
-    assert_allclose(mol.esp_charges, [0.77700000E+00, 0.66600000E+00])
+    assert_allclose(mol.atcharges['mulliken'], [0.45000000E+00, 4.22300000E+00])
+    assert_allclose(mol.atcharges['npa'], [3.50000000E+00, 1.32000000E+00])
+    assert_allclose(mol.atcharges['esp'], [0.77700000E+00, 0.66600000E+00])
 
 
 def test_load_fchk_h_sto3g_num():
@@ -202,7 +202,7 @@ def test_load_fchk_ghost_atoms():
     natom, nghost = 3, 3
     assert_equal(fields['atnums'].shape[0], natom)
     assert_equal(fields['atcoords'].shape[0], natom)
-    assert_equal(fields['mulliken_charges'].shape[0], natom)
+    assert_equal(fields['atcharges']['mulliken'].shape[0], natom)
     assert_equal(fields['obasis'].centers.shape[0], natom + nghost)
 
 

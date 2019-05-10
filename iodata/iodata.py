@@ -173,6 +173,10 @@ class IOData:
 
     **Unspecified type (duck typing):**
 
+    atcharges
+        A dictionary where keys are names of charge definitions and values are
+        arrays with atomic charges (size N).
+
     athessian
         A (3*N, 3*N) array containing the energy Hessian w.r.t Cartesian atomic
         displacements.
@@ -213,17 +217,11 @@ class IOData:
          case, spinpol cannot be set. When no molecular orbitals are present,
          this attribute can be set.
 
-    mulliken_charges
-         Mulliken AIM charges.
-
     na
          The nuclear attraction operator.
 
     nelec
          The number of electrons.
-
-    npa_charges
-         Natural charges.
 
     obasis
          An OrderedDict containing parameters to instantiate a GOBasis class.

@@ -237,12 +237,15 @@ def load(lit: LineIterator) -> dict:
 
     # F) Load optional properties
     # Mask out ghost atoms from charges
+    atcharges = {}
     if 'Mulliken Charges' in fchk:
-        result['mulliken_charges'] = fchk['Mulliken Charges'][mask]
+        atcharges['mulliken'] = fchk['Mulliken Charges'][mask]
     if 'ESP Charges' in fchk:
-        result['esp_charges'] = fchk['ESP Charges'][mask]
+        atcharges['esp'] = fchk['ESP Charges'][mask]
     if 'NPA Charges' in fchk:
-        result['npa_charges'] = fchk['NPA Charges'][mask]
+        atcharges['npa'] = fchk['NPA Charges'][mask]
+    if atcharges:
+        result['atcharges'] = atcharges
 
     return result
 
