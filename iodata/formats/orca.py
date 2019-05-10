@@ -65,13 +65,11 @@ def load(lit: LineIterator) -> dict:
         if line.startswith('FINAL SINGLE POINT ENERGY'):
             words = line.split()
             result['energy'] = float(words[4])
-        # read also the dipole moment (commented out until key is in iodata)
-        # if line.startswith('Total Dipole Moment'):
-        #    dipole = np.zeros(3)
-        #    dipole[0] = float(words[5])
-        #    dipole[1] = float(words[6])
-        #    dipole[2] = float(words[7])
-        #    result['dipole'] = dipole
+        # Read also the dipole moment
+        if line.startswith('Total Dipole Moment'):
+            words = line.split()
+            dipole = np.array([float(words[4]), float(words[5]), float(words[6])])
+            result['moments'] = {(1, 'c'): dipole}
     return result
 
 

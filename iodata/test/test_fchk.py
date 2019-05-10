@@ -58,6 +58,9 @@ def load_fchk_helper(fn_fchk):
 def test_load_fchk_hf_sto3g_num():
     mol = load_fchk_helper('hf_sto3g.fchk')
     assert mol.title == 'hf_sto3g'
+    assert mol.run_type == 'energy'
+    assert mol.lot == 'rhf'
+    assert mol.obasis_name == 'sto-3g'
     assert mol.mo.type == 'restricted'
     assert mol.spinpol == 0
     assert mol.obasis.nbasis == 6
@@ -111,13 +114,14 @@ def test_load_fchk_h_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    fields = load_fchk_helper_internal('o2_cc_pvtz_pure.fchk')
-    assert len(fields['obasis'].shells) == 20
-    assert fields['obasis'].nbasis == 60
-    assert len(fields['atcoords']) == len(fields['atnums'])
-    assert fields['atcoords'].shape[1] == 3
-    assert len(fields['atnums']) == 2
-    assert_allclose(fields['energy'], -1.495944878699246E+02)
+    mol = load_fchk_helper('o2_cc_pvtz_pure.fchk')
+    assert mol.run_type == 'energy'
+    assert mol.lot == 'rhf'
+    assert mol.obasis_name == 'cc-pvtz'
+    assert len(mol.obasis.shells) == 20
+    assert mol.obasis.nbasis == 60
+    assert mol.natom == 2
+    assert_allclose(mol.energy, -1.495944878699246E+02)
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
@@ -295,11 +299,13 @@ def test_normalization_dm_azirine_mp3():
 
 def test_load_water_hfs_321g():
     mol = load_fchk_helper('water_hfs_321g.fchk')
-    assert_allclose(mol.polar[0, 0], 7.23806684E+00)
-    assert_allclose(mol.polar[1, 1], 8.04213953E+00)
-    assert_allclose(mol.polar[1, 2], 1.20021770E-10)
-    assert_allclose(mol.dipole_moment, [-5.82654324E-17, 0.00000000E+00, -8.60777067E-01])
-    assert_allclose(mol.quadrupole_moment,
+    pol = mol.extra['polarizability_tensor']
+    assert_allclose(pol[0, 0], 7.23806684E+00)
+    assert_allclose(pol[1, 1], 8.04213953E+00)
+    assert_allclose(pol[1, 2], 1.20021770E-10)
+    assert_allclose(mol.moments[(1, 'c')],
+                    [-5.82654324E-17, 0.00000000E+00, -8.60777067E-01])
+    assert_allclose(mol.moments[(2, 'c')],
                     [-8.89536026E-01,  # xx
                      8.28408371E-17,  # xy
                      4.89353090E-17,  # xz
@@ -310,8 +316,9 @@ def test_load_water_hfs_321g():
 
 def test_load_monosilicic_acid_hf_lan():
     mol = load_fchk_helper('monosilicic_acid_hf_lan.fchk')
-    assert_allclose(mol.dipole_moment, [-6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
-    assert_allclose(mol.quadrupole_moment,
+    assert_allclose(mol.moments[(1, 'c')],
+                    [-6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
+    assert_allclose(mol.moments[(2, 'c')],
                     [2.73609152E+00,  # xx
                      -6.65787832E-02,  # xy
                      2.11973730E-01,  # xz
@@ -426,6 +433,9 @@ def test_atforces():
 
 def test_athessian():
     mol = load_fchk_helper('peroxide_tsopt.fchk')
+    assert mol.run_type == 'freq'
+    assert mol.lot == 'rhf'
+    assert mol.obasis_name == 'sto-3g'
     assert_allclose(mol.athessian[0, 0], -1.49799052E-02)
     assert_allclose(mol.athessian[-1, -1], 5.83032386E-01)
     assert_allclose(mol.athessian[0, 1], 5.07295215E-05)

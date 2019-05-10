@@ -32,38 +32,12 @@ except ImportError:
 
 
 def test_load_water_number():
-    # test if IOData has atomic numbers
-    with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = load_one(fn_xyz)
-    check_water(mol)
-
-
-def test_load_water_element():
-    # test if IOData has atomic symbols
-    with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = load_one(fn_xyz)
-    check_water(mol)
-
-
-def test_load_scf_energy():
-    # test if IOData has the correct energy
-    with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = load_one(fn_xyz)
-    check_water(mol)
-
-
-def check_water(mol):
-    """Check if atomic numbers and coordinates obtained from orca out file are correct.
-
-    Parameters
-    ----------
-    mol : IOData
-        IOdata dictionary.
-
-    """
-    np.testing.assert_equal(mol.atnums, [8, 1, 1])
+    with path('iodata.test.data', 'water_orca.out') as fn:
+        mol = load_one(fn)
+    # Test atomic numbers and number of atoms
+    assert mol.natom == 3
+    assert_equal(mol.atnums, [8, 1, 1])
     # check bond length
-
     assert_allclose(np.linalg.norm(
         mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.9500, atol=1.e-5)
     assert_allclose(np.linalg.norm(
@@ -72,10 +46,5 @@ def check_water(mol):
         mol.atcoords[1] - mol.atcoords[2]) / angstrom, 1.5513, atol=1.e-4)
     # check scf energy
     assert_allclose(mol.energy, -74.959292304818, atol=1e-8)
-
-
-def test_helper_number_atoms():
-    # Test if the number of atoms in the ORCA out file is obtained correctly
-    with path('iodata.test.data', 'water_orca.out') as fn_xyz:
-        mol = load_one(str(fn_xyz))
-    assert_equal(mol.natom, 3)
+    # check dipole moment
+    assert_allclose(mol.moments[(1, 'c')], [0.54642, 0.00000, 0.38638])

@@ -71,8 +71,8 @@ def load(lit: LineIterator) -> dict:
         Output dictionary containing ``title``, ``atcoords``, ``atnums``,
         ``atcorenums``, ``obasis``, ``mo``, ``energy`` & ``mulliken_charges``
         keys and corresponding values. It may also contain ``npa_charges``,
-        ``esp_charges``, ``one_rdms``, ``polar``, ``dipole_moment`` &
-        ``quadrupole_moment`` keys and their values as well.
+        ``esp_charges``, ``one_rdms``, ``polar`` & ``moments`` keys and their
+        values as well.
 
     """
     fchk = _load_fchk_low(lit, [
@@ -162,12 +162,19 @@ def load(lit: LineIterator) -> dict:
 
     result = {
         'title': fchk['title'],
+        'energy': fchk['Total Energy'],
+        'lot': fchk['lot'].lower(),
+        'obasis_name': fchk['obasis_name'].lower(),
         'atcoords': system_atcoords,
         'atnums': atnums,
         'obasis': obasis,
         'atcorenums': atcorenums,
         'athessian': athessian,
     }
+    run_types = {'SP': 'energy', 'FOpt': 'opt', 'Scan': 'scan', 'Freq': 'freq'}
+    run_type = run_types.get(fchk['command'])
+    if run_type is not None:
+        result['run_type'] = run_type
     if atmasses is not None:
         result['atmasses'] = atmasses
     if atforces is not None:
@@ -231,14 +238,16 @@ def load(lit: LineIterator) -> dict:
     result['mo'] = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
 
     # E) Load properties
-    result['energy'] = fchk['Total Energy']
     if 'Polarizability' in fchk:
-        result['polar'] = _triangle_to_dense(fchk['Polarizability'])
+        result['extra'] = {'polarizability_tensor': _triangle_to_dense(fchk['Polarizability'])}
+    moments = {}
     if 'Dipole Moment' in fchk:
-        result['dipole_moment'] = fchk['Dipole Moment']
+        moments[(1, 'c')] = fchk['Dipole Moment']
     if 'Quadrupole Moment' in fchk:
         # Convert to HORTON ordering: xx, xy, xz, yy, yz, zz
-        result['quadrupole_moment'] = fchk['Quadrupole Moment'][[0, 3, 4, 1, 5, 2]]
+        moments[(2, 'c')] = fchk['Quadrupole Moment'][[0, 3, 4, 1, 5, 2]]
+    if moments:
+        result['moments'] = moments
 
     # F) Load optional properties
     # Mask out ghost atoms from charges
@@ -347,7 +356,7 @@ def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
     result['title'] = next(lit).strip()
     words = next(lit).split()
     if len(words) == 3:
-        result['command'], result['lot'], result['obasis'] = words
+        result['command'], result['lot'], result['obasis_name'] = words
     elif len(words) == 2:
         result['command'], result['lot'] = words
     else:
