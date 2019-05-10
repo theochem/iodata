@@ -200,8 +200,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
 
 # pylint: disable=too-many-branches
 def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
-                 exponents: np.ndarray, atcoords: np.ndarray,
-                 lit: LineIterator) -> Tuple[MolecularBasis, np.ndarray]:
+                 exponents: np.ndarray, lit: LineIterator) -> Tuple[MolecularBasis, np.ndarray]:
     """Construct a basis set using the arrays read from a WFN file.
 
     Parameters
@@ -214,8 +213,6 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
         is zero.
     exponents
         The Gaussian exponents of all basis functions. shape=(nbasis,)
-    atcoords
-        The positions of all atoms. shape=(natom, 3).
 
     """
     # Build the basis set, keeping track of permutations in case there are
@@ -287,7 +284,7 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
                                 np.array([[1.0]])))
         # Move on to the next contraction
         ibasis += ncart * ncon
-    obasis = MolecularBasis(atcoords, shells, CONVENTIONS, 'L2')
+    obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
     assert obasis.nbasis == nbasis
     return obasis, permutation
 
@@ -310,7 +307,7 @@ def load(lit: LineIterator) -> dict:
     (title, atnums, atcoords, icenters, type_assignments, exponents,
      mo_count, mo_occ, mo_energy, mo_coefficients, energy) = load_wfn_low(lit)
     # Build the basis set and the permutation needed to regroup shells.
-    obasis, permutation = build_obasis(icenters, type_assignments, exponents, atcoords, lit)
+    obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
     # Re-order the mo coefficients.
     mo_coefficients = mo_coefficients[permutation]
     # Get the normalization of the un-normalized Cartesian basis functions.

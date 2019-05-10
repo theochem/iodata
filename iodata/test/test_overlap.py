@@ -39,16 +39,18 @@ def test_normalization_basics_segmented():
         shells = [Shell(0, [angmom], ['c'], np.array([0.23]), np.array([[1.0]]))]
         if angmom >= 2:
             shells.append(Shell(0, [angmom], ['p'], np.array([0.23]), np.array([[1.0]])))
-        obasis = MolecularBasis(np.zeros((3, 1)), shells, OVERLAP_CONVENTIONS, 'L2')
-        overlap = compute_overlap(obasis)
+        obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, 'L2')
+        atcoords = np.zeros((3, 1))
+        overlap = compute_overlap(obasis, atcoords)
         assert_allclose(np.diag(overlap), np.ones(obasis.nbasis))
 
 
 def test_normalization_basics_generalized():
     for angmom in range(2, 7):
         shells = [Shell(0, [angmom] * 2, ['c', 'p'], np.array([0.23]), np.array([[1.0, 1.0]]))]
-        obasis = MolecularBasis(np.zeros((3, 1)), shells, OVERLAP_CONVENTIONS, 'L2')
-        overlap = compute_overlap(obasis)
+        obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, 'L2')
+        atcoords = np.zeros((3, 1))
+        overlap = compute_overlap(obasis, atcoords)
         assert_allclose(np.diag(overlap), np.ones(obasis.nbasis))
 
 
@@ -79,7 +81,7 @@ def test_load_fchk_hf_sto3g_num():
         ref = np.load(str(fn_npy))
     with path('iodata.test.data', 'hf_sto3g.fchk') as fn_fchk:
         data = load_one(fn_fchk)
-    assert_allclose(ref, compute_overlap(data.obasis), rtol=1.e-5, atol=1.e-8)
+    assert_allclose(ref, compute_overlap(data.obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
@@ -88,7 +90,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
         ref = np.load(str(fn_npy))
     with path('iodata.test.data', 'o2_cc_pvtz_pure.fchk') as fn_fchk:
         data = load_one(fn_fchk)
-    assert_allclose(ref, compute_overlap(data.obasis), rtol=1.e-5, atol=1.e-8)
+    assert_allclose(ref, compute_overlap(data.obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
@@ -98,10 +100,11 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     with path('iodata.test.data', 'o2_cc_pvtz_cart.fchk') as fn_fchk:
         data = load_one(fn_fchk)
     obasis = data.obasis._replace(conventions=OVERLAP_CONVENTIONS)
-    assert_allclose(ref, compute_overlap(obasis), rtol=1.e-5, atol=1.e-8)
+    assert_allclose(ref, compute_overlap(obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
 
 
 def test_overlap_l1():
-    dbasis = MolecularBasis(np.zeros((3, 1)), [], {}, 'L1')
+    dbasis = MolecularBasis([], {}, 'L1')
+    atcoords = np.zeros((3, 1))
     with raises(ValueError):
-        _ = compute_overlap(dbasis)
+        _ = compute_overlap(dbasis, atcoords)

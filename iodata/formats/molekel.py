@@ -87,7 +87,7 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
             exponents.append(float(words[0]))
             coeffs.append([float(words[1])])
         shells.append(Shell(icenter, [angmom], [kind], np.array(exponents), np.array(coeffs)))
-    return MolecularBasis(np.zeros((icenter + 1, 3)), shells, CONVENTIONS, 'L2')
+    return MolecularBasis(shells, CONVENTIONS, 'L2')
 
 
 def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.ndarray]:
@@ -182,7 +182,6 @@ def load(lit: LineIterator) -> dict:
             atnums, atcoords = _load_helper_atoms(lit)
         elif line == '$BASIS':
             obasis = _load_helper_obasis(lit)
-            obasis.centers[:] = atcoords
         elif line == '$COEFF_ALPHA':
             coeff_alpha, ener_alpha = _load_helper_coeffs(lit, obasis.nbasis)
         elif line == '$OCC_ALPHA':

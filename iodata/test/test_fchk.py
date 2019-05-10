@@ -58,6 +58,9 @@ def load_fchk_helper(fn_fchk):
 def test_load_fchk_hf_sto3g_num():
     mol = load_fchk_helper('hf_sto3g.fchk')
     assert mol.title == 'hf_sto3g'
+    assert mol.run_type == 'energy'
+    assert mol.lot == 'rhf'
+    assert mol.obasis_name == 'sto-3g'
     assert mol.mo.type == 'restricted'
     assert mol.spinpol == 0
     assert mol.obasis.nbasis == 6
@@ -111,13 +114,14 @@ def test_load_fchk_h_sto3g_num():
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    fields = load_fchk_helper_internal('o2_cc_pvtz_pure.fchk')
-    assert len(fields['obasis'].shells) == 20
-    assert fields['obasis'].nbasis == 60
-    assert len(fields['atcoords']) == len(fields['atnums'])
-    assert fields['atcoords'].shape[1] == 3
-    assert len(fields['atnums']) == 2
-    assert_allclose(fields['energy'], -1.495944878699246E+02)
+    mol = load_fchk_helper('o2_cc_pvtz_pure.fchk')
+    assert mol.run_type == 'energy'
+    assert mol.lot == 'rhf'
+    assert mol.obasis_name == 'cc-pvtz'
+    assert len(mol.obasis.shells) == 20
+    assert mol.obasis.nbasis == 60
+    assert mol.natom == 2
+    assert_allclose(mol.energy, -1.495944878699246E+02)
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
@@ -197,13 +201,13 @@ def test_load_fchk_lih_321g_hf():
 
 def test_load_fchk_ghost_atoms():
     # Load fchk file with ghost atoms
-    fields = load_fchk_helper_internal('water_dimer_ghost.fchk')
+    mol = load_fchk_helper('water_dimer_ghost.fchk')
     # There should be 3 real atoms and 3 ghost atoms
-    natom, nghost = 3, 3
-    assert_equal(fields['atnums'].shape[0], natom)
-    assert_equal(fields['atcoords'].shape[0], natom)
-    assert_equal(fields['atcharges']['mulliken'].shape[0], natom)
-    assert_equal(fields['obasis'].centers.shape[0], natom + nghost)
+    assert mol.natom == 6
+    assert_equal(mol.atnums, [1, 8, 1, 1, 8, 1])
+    assert_equal(mol.atcorenums, [1.0, 8.0, 1.0, 0.0, 0.0, 0.0])
+    assert_equal(mol.atcoords.shape[0], 6)
+    assert_equal(mol.atcharges['mulliken'].shape[0], 6)
 
 
 def test_load_fchk_ch3_rohf_g03():
@@ -271,7 +275,7 @@ def test_load_nitrogen_mp3():
 def check_normalization_dm_azirine(key):
     """Perform some basic checks on a 2h-azirine fchk file."""
     mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
-    olp = compute_overlap(mol.obasis)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
     dm = mol.one_rdms['post_scf']
     check_dm(dm, olp, eps=1e-2, occ_max=2)
     assert_allclose(np.einsum('ab,ba', olp, dm), 22.0, atol=1.e-3)
@@ -295,11 +299,13 @@ def test_normalization_dm_azirine_mp3():
 
 def test_load_water_hfs_321g():
     mol = load_fchk_helper('water_hfs_321g.fchk')
-    assert_allclose(mol.polar[0, 0], 7.23806684E+00)
-    assert_allclose(mol.polar[1, 1], 8.04213953E+00)
-    assert_allclose(mol.polar[1, 2], 1.20021770E-10)
-    assert_allclose(mol.dipole_moment, [-5.82654324E-17, 0.00000000E+00, -8.60777067E-01])
-    assert_allclose(mol.quadrupole_moment,
+    pol = mol.extra['polarizability_tensor']
+    assert_allclose(pol[0, 0], 7.23806684E+00)
+    assert_allclose(pol[1, 1], 8.04213953E+00)
+    assert_allclose(pol[1, 2], 1.20021770E-10)
+    assert_allclose(mol.moments[(1, 'c')],
+                    [-5.82654324E-17, 0.00000000E+00, -8.60777067E-01])
+    assert_allclose(mol.moments[(2, 'c')],
                     [-8.89536026E-01,  # xx
                      8.28408371E-17,  # xy
                      4.89353090E-17,  # xz
@@ -310,8 +316,9 @@ def test_load_water_hfs_321g():
 
 def test_load_monosilicic_acid_hf_lan():
     mol = load_fchk_helper('monosilicic_acid_hf_lan.fchk')
-    assert_allclose(mol.dipole_moment, [-6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
-    assert_allclose(mol.quadrupole_moment,
+    assert_allclose(mol.moments[(1, 'c')],
+                    [-6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
+    assert_allclose(mol.moments[(2, 'c')],
                     [2.73609152E+00,  # xx
                      -6.65787832E-02,  # xy
                      2.11973730E-01,  # xz
@@ -426,6 +433,9 @@ def test_atforces():
 
 def test_athessian():
     mol = load_fchk_helper('peroxide_tsopt.fchk')
+    assert mol.run_type == 'freq'
+    assert mol.lot == 'rhf'
+    assert mol.obasis_name == 'sto-3g'
     assert_allclose(mol.athessian[0, 0], -1.49799052E-02)
     assert_allclose(mol.athessian[-1, -1], 5.83032386E-01)
     assert_allclose(mol.athessian[0, 1], 5.07295215E-05)

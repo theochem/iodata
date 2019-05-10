@@ -97,7 +97,6 @@ def test_shell_info_propertes():
     assert shells[3].ncon == 1
     assert shells[4].ncon == 3
     obasis = MolecularBasis(
-        None,
         shells,
         {(0, 'c'): ['s'],
          (1, 'c'): ['x', 'z', '-y'],
@@ -116,23 +115,21 @@ def test_shell_exceptions():
 
 
 def test_nbasis1():
-    obasis = MolecularBasis(
-        np.zeros((1, 3)), [
-            Shell(0, [0], ['c'], np.zeros(16), None),
-            Shell(0, [1], ['c'], np.zeros(16), None),
-            Shell(0, [2], ['p'], np.zeros(16), None),
-        ], CP2K_CONVENTIONS, 'L2')
+    obasis = MolecularBasis([
+        Shell(0, [0], ['c'], np.zeros(16), None),
+        Shell(0, [1], ['c'], np.zeros(16), None),
+        Shell(0, [2], ['p'], np.zeros(16), None),
+    ], CP2K_CONVENTIONS, 'L2')
     assert obasis.nbasis == 9
 
 
 def test_get_segmented():
-    obasis0 = MolecularBasis(
-        np.zeros((1, 3)), [
-            Shell(0, [0, 1], ['c', 'c'], np.random.uniform(0, 1, 5),
-                  np.random.uniform(-1, 1, (5, 2))),
-            Shell(1, [2, 3], ['p', 'p'], np.random.uniform(0, 1, 7),
-                  np.random.uniform(-1, 1, (7, 2))),
-        ], CP2K_CONVENTIONS, 'L2')
+    obasis0 = MolecularBasis([
+        Shell(0, [0, 1], ['c', 'c'], np.random.uniform(0, 1, 5),
+              np.random.uniform(-1, 1, (5, 2))),
+        Shell(1, [2, 3], ['p', 'p'], np.random.uniform(0, 1, 7),
+              np.random.uniform(-1, 1, (7, 2))),
+    ], CP2K_CONVENTIONS, 'L2')
     assert obasis0.nbasis == 16
     obasis1 = obasis0.get_segmented()
     assert len(obasis1.shells) == 4
@@ -208,7 +205,6 @@ def test_convert_convention_shell():
 
 def test_convert_convention_obasis():
     obasis = MolecularBasis(
-        None,
         [Shell(0, [0], ['c'], None, None),
          Shell(0, [0, 1], ['c', 'c'], None, None),
          Shell(0, [0, 1], ['c', 'c'], None, None),

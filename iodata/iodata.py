@@ -150,7 +150,8 @@ class IOData:
         A (N, 3) float array with Cartesian coordinates of the atoms.
 
     atcorenums
-        A (N,) float array with pseudo-potential core charges.
+        A (N,) float array with pseudo-potential core charges. The matrix
+        elements corresponding to ghost atoms are zero.
 
     atforces
         A (N, 3) float array with Cartesian forces on each atom.
@@ -168,10 +169,8 @@ class IOData:
     cube_data
         A (K, L, M) array of data on a uniform grid (defined by ugrid).
 
-    polar
-        A (3, 3) matrix containing the dipole polarizability tensor.
-
-    **Unspecified type (duck typing):**
+    Attributes without type checking
+    --------------------------------
 
     atcharges
         A dictionary where keys are names of charge definitions and values are
@@ -218,11 +217,28 @@ class IOData:
         three columns for Cartesian X, Y and Z coordinates, last column for the
         actual charge.
 
+    extra
+        A dictionary with additional data loaded from a file. Any data which
+        cannot be assigned to the other attributes belongs here. It may be
+        decided in future to move some of the results from this dictionary to
+        IOData attributes, with a more final name.
+
     g_rot
         The rotational symmetry number of the molecule.
 
+    lot
+        The level of theory used to compute the orbitals (and other properties).
+
     mo
         An instance of MolecularOrbitals.
+
+    moments
+        A dictionary with electrostatic multipole moments. Keys are (angmom,
+        kind) tuples where angmom is an integer for the angular momentum and
+        kind is 'c' for Cartesian or 'p' for pure functions (only for angmom >=
+        2). The corresponding values are 1D numpy arrays. The order of the
+        components of the multipole moments follows the HORTON2_CONVENTIONS from
+        iodata/basis.py
 
     nelec
         The number of electrons.
@@ -326,9 +342,6 @@ class IOData:
     cube_data = ArrayTypeCheckDescriptor(
         'cube_data', 3,
         doc="A (L, M, N) array of data on a uniform grid (defined by ugrid).")
-    polar = ArrayTypeCheckDescriptor(
-        'polar', 2, (3, 3), float,
-        doc="A (3, 3) matrix containing the dipole polarizability tensor.")
 
     @property
     def natom(self) -> int:

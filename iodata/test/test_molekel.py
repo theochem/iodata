@@ -71,7 +71,7 @@ def test_load_mkl_li2():
     with path('iodata.test.data', 'li2.mkl') as fn_mkl:
         mol = load_one(str(fn_mkl))
     # check mo normalization
-    olp = compute_overlap(mol.obasis)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp, 1e-5)
     check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp, 1e-5)
 
@@ -80,5 +80,5 @@ def test_load_mkl_h2():
     with path('iodata.test.data', 'h2_sto3g.mkl') as fn_mkl:
         mol = load_one(str(fn_mkl))
     # check mo normalization
-    olp = compute_overlap(mol.obasis)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp, 1e-5)
