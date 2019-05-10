@@ -133,7 +133,7 @@ def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
     # check number of basis functions
     assert mol.obasis.nbasis == nbasis
     # check orthonormal mo
-    olp = compute_overlap(mol.obasis)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
     if mol.mo.type == 'restricted':
         check_orthonormal(mol.mo.coeffs, olp, 1.e-5)
     elif mol.mo.type == 'unrestricted':

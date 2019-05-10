@@ -201,13 +201,13 @@ def test_load_fchk_lih_321g_hf():
 
 def test_load_fchk_ghost_atoms():
     # Load fchk file with ghost atoms
-    fields = load_fchk_helper_internal('water_dimer_ghost.fchk')
+    mol = load_fchk_helper('water_dimer_ghost.fchk')
     # There should be 3 real atoms and 3 ghost atoms
-    natom, nghost = 3, 3
-    assert_equal(fields['atnums'].shape[0], natom)
-    assert_equal(fields['atcoords'].shape[0], natom)
-    assert_equal(fields['atcharges']['mulliken'].shape[0], natom)
-    assert_equal(fields['obasis'].centers.shape[0], natom + nghost)
+    assert mol.natom == 6
+    assert_equal(mol.atnums, [1, 8, 1, 1, 8, 1])
+    assert_equal(mol.atcorenums, [1.0, 8.0, 1.0, 0.0, 0.0, 0.0])
+    assert_equal(mol.atcoords.shape[0], 6)
+    assert_equal(mol.atcharges['mulliken'].shape[0], 6)
 
 
 def test_load_fchk_ch3_rohf_g03():
@@ -275,7 +275,7 @@ def test_load_nitrogen_mp3():
 def check_normalization_dm_azirine(key):
     """Perform some basic checks on a 2h-azirine fchk file."""
     mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
-    olp = compute_overlap(mol.obasis)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
     dm = mol.one_rdms['post_scf']
     check_dm(dm, olp, eps=1e-2, occ_max=2)
     assert_allclose(np.einsum('ab,ba', olp, dm), 22.0, atol=1.e-3)

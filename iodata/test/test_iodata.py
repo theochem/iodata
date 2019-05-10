@@ -95,7 +95,7 @@ def test_dm_lih_sto3g_hf():
 def test_dm_ch3_rohf_g03():
     with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
         mol = load_one(str(fn_fchk))
-    olp = compute_overlap(mol.obasis)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
     dm = compute_1rdm(mol)
     assert_allclose(np.einsum('ab,ba', olp, dm), 9, atol=1.e-6)
 

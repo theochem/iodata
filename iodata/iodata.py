@@ -150,7 +150,8 @@ class IOData:
         A (N, 3) float array with Cartesian coordinates of the atoms.
 
     atcorenums
-        A (N,) float array with pseudo-potential core charges.
+        A (N,) float array with pseudo-potential core charges. The matrix
+        elements corresponding to ghost atoms are zero.
 
     atforces
         A (N, 3) float array with Cartesian forces on each atom.

@@ -38,12 +38,10 @@ def compute_1rdm(iodata):
     return dm
 
 
-def compute_mulliken_charges(iodata, atcorenums=None):
+def compute_mulliken_charges(iodata):
     """Compute Mulliken charges."""
-    if atcorenums is None:
-        atcorenums = iodata.atcorenums
     dm = compute_1rdm(iodata)
-    ov = compute_overlap(iodata.obasis)
+    ov = compute_overlap(iodata.obasis, iodata.atcoords)
     # compute basis function population matrix
     bp = np.sum(np.multiply(dm, ov), axis=1)
     # find basis functions center
@@ -52,11 +50,9 @@ def compute_mulliken_charges(iodata, atcorenums=None):
         basis_center.extend([shell.icenter] * shell.nbasis)
     basis_center = np.array(basis_center)
     # compute atomic populations
-    populations = np.zeros(len(iodata.obasis.centers))
-    for index in range(len(iodata.obasis.centers)):
-        populations[index] = np.sum(bp[basis_center == index])
-    assert_equal(atcorenums.shape, populations.shape)
-    return atcorenums - np.array(populations)
+    populations = np.array([np.sum(bp[basis_center == index])
+                            for index in range(iodata.natom)])
+    return iodata.atcorenums - np.array(populations)
 
 
 @contextmanager
@@ -95,7 +91,6 @@ def compare_mols(mol1, mol2):
     # orbital basis
     if mol1.obasis is not None:
         # compare dictionaries
-        assert_allclose(mol1.obasis.centers, mol2.obasis.centers)
         assert len(mol1.obasis.shells) == len(mol2.obasis.shells)
         for shell1, shell2 in zip(mol1.obasis.shells, mol2.obasis.shells):
             assert shell1.icenter == shell2.icenter

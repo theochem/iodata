@@ -87,7 +87,7 @@ class Shell(NamedTuple):
     Attributes
     ----------
     icenter
-        An integer referring to a row in the centers array
+        An integer referring to a row in the array atcoords in an IOData object.
     angmoms
         An integer array of angular momentum quantum numbers, non-negative, with
         shape (ncon,).
@@ -140,12 +140,6 @@ class MolecularBasis(NamedTuple):
 
     Attributes
     ----------
-    centers
-        an array with of shape (ncenter, 3). Must be the same as the array
-        of atomic positions (real atoms, ghost atoms and extra point charges)
-        elsewhere in IOData.
-        # TODO: this could be dropped as soon as the atomic positions in IOData
-        # are allowed to contain ghost atoms.
     shells
         a list of objects of the type Shell
     conventions
@@ -171,7 +165,6 @@ class MolecularBasis(NamedTuple):
 
     """
 
-    centers: np.ndarray
     shells: tuple
     conventions: Dict[str, str]
     primitive_normalization: str

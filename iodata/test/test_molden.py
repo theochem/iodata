@@ -49,7 +49,7 @@ def test_load_molden_li2_orca():
     assert_allclose(mol.atcoords[1], [5.2912331750, 0.0, 0.0])
 
     # Check normalization
-    olp = compute_overlap(mol.obasis)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp, 1e-5)
     check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp, 1e-5)
 
@@ -71,7 +71,7 @@ def test_load_molden_h2o_orca():
     assert_allclose(mol.atcoords[2], [0.0, -0.1808833432, 1.9123825806])
 
     # Check normalization
-    olp = compute_overlap(mol.obasis)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp, 1e-5)
 
     # Check Mulliken charges
@@ -208,13 +208,12 @@ def test_load_molden_nh3_psi4_1():
 
 def test_load_molden_he2_ghost_psi4_1():
     # The file tested here is created with PSI4 (version 1.0).
-    # It should be read in properly by ignoring the ghost atoms.
     with path('iodata.test.data', 'he2_ghost_psi4_1.0.molden') as fn_molden:
         mol = load_one(str(fn_molden))
-    np.testing.assert_equal(mol.atcorenums, np.array([2.0]))
+    np.testing.assert_equal(mol.atcorenums, np.array([0.0, 2.0]))
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
-    charges = compute_mulliken_charges(mol, np.array([0.0, 2.0]))
+    charges = compute_mulliken_charges(mol)
     molden_charges = np.array([-0.0041, 0.0041])
     assert_allclose(charges, molden_charges, atol=5e-4)
 

@@ -115,12 +115,6 @@ def load(lit: LineIterator) -> dict:
     if atfrozen is not None:
         atfrozen = (atfrozen == -2)
         print(atfrozen)
-    # Mask out ghost atoms
-    mask = atcorenums != 0.0
-    atnums = atnums[mask]
-    # Do not overwrite coordinates array, because it is needed to specify basis
-    system_atcoords = atcoords[mask]
-    atcorenums = atcorenums[mask]
 
     # B) Load the orbital basis set
     shell_types = fchk["Shell types"]
@@ -158,14 +152,14 @@ def load(lit: LineIterator) -> dict:
     del nprims
     del exponents
 
-    obasis = MolecularBasis(atcoords, shells, CONVENTIONS, 'L2')
+    obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
 
     result = {
         'title': fchk['title'],
         'energy': fchk['Total Energy'],
         'lot': fchk['lot'].lower(),
         'obasis_name': fchk['obasis_name'].lower(),
-        'atcoords': system_atcoords,
+        'atcoords': atcoords,
         'atnums': atnums,
         'obasis': obasis,
         'atcorenums': atcorenums,
@@ -250,14 +244,13 @@ def load(lit: LineIterator) -> dict:
         result['moments'] = moments
 
     # F) Load optional properties
-    # Mask out ghost atoms from charges
     atcharges = {}
     if 'Mulliken Charges' in fchk:
-        atcharges['mulliken'] = fchk['Mulliken Charges'][mask]
+        atcharges['mulliken'] = fchk['Mulliken Charges']
     if 'ESP Charges' in fchk:
-        atcharges['esp'] = fchk['ESP Charges'][mask]
+        atcharges['esp'] = fchk['ESP Charges']
     if 'NPA Charges' in fchk:
-        atcharges['npa'] = fchk['NPA Charges'][mask]
+        atcharges['npa'] = fchk['NPA Charges']
     if atcharges:
         result['atcharges'] = atcharges
 

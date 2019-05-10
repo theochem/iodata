@@ -24,14 +24,14 @@ from scipy.special import factorialk
 
 from .overlap_accel import add_overlap
 from .overlap_helper import tfs
-from .basis import convert_conventions, iter_cart_alphabet
+from .basis import convert_conventions, iter_cart_alphabet, MolecularBasis
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
 
 
 __all__ = ['OVERLAP_CONVENTIONS', 'compute_overlap', 'gob_cart_normalization']
 
 
-def compute_overlap(obasis: 'MolecularBasis') -> np.ndarray:
+def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
     r"""Compute overlap matrix for the given molecular basis set.
 
     .. math::
@@ -40,6 +40,13 @@ def compute_overlap(obasis: 'MolecularBasis') -> np.ndarray:
     This function takes into account the requested order of the basis functions
     in ``obasis.conventions``. Note that only L2 normalized primitives are
     supported at the moment.
+
+    Parameters
+    ----------
+    obasis
+        The orbital basis set.
+    atcoords
+        The atomic Cartesian coordinates (including those of ghost atoms).
 
     Returns
     -------
@@ -63,13 +70,13 @@ def compute_overlap(obasis: 'MolecularBasis') -> np.ndarray:
     # Loop over shell0
     begin0 = 0
     for i0, shell0 in enumerate(obasis.shells):
-        r0 = obasis.centers[shell0.icenter]
+        r0 = atcoords[shell0.icenter]
         end0 = begin0 + shell0.nbasis
 
         # Loop over shell1 (lower triangular only, including diagonal)
         begin1 = 0
         for i1, shell1 in enumerate(obasis.shells[:i0 + 1]):
-            r1 = obasis.centers[shell1.icenter]
+            r1 = atcoords[shell1.icenter]
             end1 = begin1 + shell1.nbasis
 
             # START of Cartesian coordinates. Shell types are positive

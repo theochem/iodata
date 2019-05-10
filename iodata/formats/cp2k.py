@@ -114,7 +114,7 @@ def _read_cp2k_contracted_obasis(lit: LineIterator) -> MolecularBasis:
                             [kind] * coeffs.shape[1],
                             exponents, coeffs))
 
-    return MolecularBasis(np.zeros((1, 3)), shells, CONVENTIONS, 'L2')
+    return MolecularBasis(shells, CONVENTIONS, 'L2')
 
 
 def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> MolecularBasis:
@@ -158,7 +158,7 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> MolecularBasis:
                 0, np.array([angmom]), [kind],
                 np.array([exponent]), np.array([[coeff]])))
 
-    return MolecularBasis(np.zeros((1, 3)), shells, CONVENTIONS, 'L2')
+    return MolecularBasis(shells, CONVENTIONS, 'L2')
 
 
 # pylint: disable=inconsistent-return-statements
@@ -485,7 +485,7 @@ def load(lit: LineIterator) -> dict:
     result = {
         'obasis': obasis,
         'mo': mo,
-        'atcoords': obasis.centers,
+        'atcoords': np.zeros((1, 3), float),
         'atnums': np.array([atnum]),
         'energy': energy,
         'atcorenums': np.array([atcorenum]),

@@ -161,8 +161,6 @@ def _load_low(lit: LineIterator) -> dict:
         # Code only has to work for segmented contractions
         if shell.angmoms[0] in pure_angmoms:
             shell.kinds[0] = 'p'
-    # Fix the centers.
-    obasis.centers[:] = atcoords
 
     if coeff_beta is None:
         mo_type = 'restricted'
@@ -183,12 +181,6 @@ def _load_low(lit: LineIterator) -> dict:
         mo_coeffs = np.concatenate((coeff_alpha, coeff_beta), axis=1)
     # create a MO namedtuple
     mo = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
-
-    # filter out ghost atoms
-    mask = atcorenums != 0
-    atcoords = atcoords[mask]
-    atnums = atnums[mask]
-    atcorenums = atcorenums[mask]
 
     result = {
         'atcoords': atcoords,
@@ -254,9 +246,7 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
                 coeffs[iprim, 0] = float(words[1].replace('D', 'E'))
             # Unless changed later, all shells are assumed to be Cartesian.
             shells.append(Shell(icenter, [angmom], ['c'], exponents, coeffs))
-    # Create an empty array for centers, which will be filled in later.
-    centers = np.zeros((icenter + 1, 3))
-    return MolecularBasis(centers, shells, CONVENTIONS, 'L2')
+    return MolecularBasis(shells, CONVENTIONS, 'L2')
 
 
 def _load_helper_coeffs(lit: LineIterator) -> Tuple:
@@ -328,23 +318,21 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
     return (coeff_alpha, ener_alpha, occ_alpha), (coeff_beta, ener_beta, occ_beta)
 
 
-def _is_normalized_properly(obasis: MolecularBasis, orb_alpha: np.ndarray,
-                            orb_beta: np.ndarray, threshold: float = 1e-4) -> bool:
+def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
+                            orb_alpha: np.ndarray, orb_beta: np.ndarray,
+                            threshold: float = 1e-4) -> bool:
     """Test the normalization of the occupied and virtual orbitals.
 
     Parameters
     ----------
     obasis
         A dictionary containing the parameters of the GOBasis class.
-    permutation
-        The permutation of the basis functions to bring them in HORTON's
-        standard ordering.
+    atcoords
+        The atomic Cartesian coordinates, shape = (natom, 3).
     orb_alpha
         The alpha orbitals coefficients
     orb_beta
         The beta orbitals (may be None).
-    signs
-        Changes in sign conventions.
     threshold
         When the maximal error on the norm is large than the threshold,
         the function returns False. True is returned otherwise.
@@ -353,7 +341,7 @@ def _is_normalized_properly(obasis: MolecularBasis, orb_alpha: np.ndarray,
     # Compute the overlap matrix. Unfortunately, we have to recalculate it at
     # every attempt because also the primitive normalization may differ in
     # different cases.
-    olp = compute_overlap(obasis)
+    olp = compute_overlap(obasis, atcoords)
 
     # Convenient code for debugging files coming from crappy QC codes.
     # np.set_printoptions(linewidth=5000, precision=2, suppress=True, threshold=100000)
@@ -424,8 +412,7 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
             if correction != 1.0:
                 fixed_shell.coeffs[iprim, 0] /= correction
             iprim += 1
-    return MolecularBasis(obasis.centers, fixed_shells, orca_conventions,
-                          obasis.primitive_normalization)
+    return MolecularBasis(fixed_shells, orca_conventions, obasis.primitive_normalization)
 
 
 def _fix_obasis_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
@@ -458,8 +445,7 @@ def _fix_obasis_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
                 corrected = True
                 fixed_shell.coeffs[iprim, 0] /= correction
     if corrected:
-        return MolecularBasis(obasis.centers, fixed_shells, obasis.conventions,
-                              obasis.primitive_normalization)
+        return MolecularBasis(fixed_shells, obasis.conventions, obasis.primitive_normalization)
     return None
 
 
@@ -489,8 +475,7 @@ def _fix_obasis_turbomole(obasis: MolecularBasis) -> Union[MolecularBasis, None]
                 corrected = True
                 fixed_shell.coeffs[iprim, 0] /= correction
     if corrected:
-        return MolecularBasis(obasis.centers, fixed_shells, obasis.conventions,
-                              obasis.primitive_normalization)
+        return MolecularBasis(fixed_shells, obasis.conventions, obasis.primitive_normalization)
     return None
 
 
@@ -507,19 +492,17 @@ def _fix_obasis_normalize_contractions(obasis: MolecularBasis) -> MolecularBasis
     fixed_shells = []
     for shell in obasis.shells:
         shell_obasis = MolecularBasis(
-            obasis.centers,
-            [shell],
+            [shell._replace(icenter=0)],
             obasis.conventions,
             obasis.primitive_normalization
         )
         # 2) Get the first diagonal element of the overlap matrix
-        olpdiag = compute_overlap(shell_obasis)[0, 0]
+        olpdiag = compute_overlap(shell_obasis, np.zeros((3, 1), float))[0, 0]
         # 3) Normalize the contraction
         fixed_shell = copy.deepcopy(shell)
         fixed_shell.coeffs[:] /= np.sqrt(olpdiag)
         fixed_shells.append(fixed_shell)
-    return MolecularBasis(obasis.centers, fixed_shells, obasis.conventions,
-                          obasis.primitive_normalization)
+    return MolecularBasis(fixed_shells, obasis.conventions, obasis.primitive_normalization)
 
 
 def _fix_molden_from_buggy_codes(result: dict, filename: str):
@@ -537,6 +520,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
 
     """
     obasis = result['obasis']
+    atcoords = result['atcoords']
     if result['mo'].type == 'restricted':
         coeffs_a = result['mo'].coeffs
         coeffs_b = None
@@ -545,7 +529,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
         coeffs_b = result['mo'].coeffs[:, result['mo'].norba:]
     else:
         raise ValueError('Molecular orbital type={0} not recognized'.format(result['mo'].type))
-    if _is_normalized_properly(obasis, coeffs_a, coeffs_b):
+    if _is_normalized_properly(obasis, atcoords, coeffs_a, coeffs_b):
         # The file is good. No need to change obasis.
         return
     print('5:Detected incorrect normalization of orbitals loaded from a Molden or MKL file.')
@@ -553,7 +537,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
     # --- ORCA
     print('5:Trying to fix it as if it was a file generated by ORCA.')
     orca_obasis = _fix_obasis_orca(obasis)
-    if _is_normalized_properly(orca_obasis, coeffs_a, coeffs_b):
+    if _is_normalized_properly(orca_obasis, atcoords, coeffs_a, coeffs_b):
         print('5:Detected typical ORCA errors in file. Fixing them...')
         result['obasis'] = orca_obasis
         return
@@ -561,7 +545,8 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
     # --- PSI4
     print('5:Trying to fix it as if it was a file generated by PSI4 (pre 1.0).')
     psi4_obasis = _fix_obasis_psi4(obasis)
-    if psi4_obasis is not None and _is_normalized_properly(psi4_obasis, coeffs_a, coeffs_b):
+    if psi4_obasis is not None and \
+       _is_normalized_properly(psi4_obasis, atcoords, coeffs_a, coeffs_b):
         print('5:Detected typical PSI4 errors in file. Fixing them...')
         result['obasis'] = psi4_obasis
         return
@@ -569,7 +554,8 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
     # -- Turbomole
     print('5:Trying to fix it as if it was a file generated by Turbomole.')
     turbom_obasis = _fix_obasis_turbomole(obasis)
-    if turbom_obasis is not None and _is_normalized_properly(turbom_obasis, coeffs_a, coeffs_b):
+    if turbom_obasis is not None and \
+       _is_normalized_properly(turbom_obasis, atcoords, coeffs_a, coeffs_b):
         print('5:Detected typical Turbomole errors in file. Fixing them...')
         result['obasis'] = turbom_obasis
         return
@@ -577,7 +563,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
     # --- Renormalized contractions
     print('5:Last resort: trying by renormalizing all contractions')
     normed_obasis = _fix_obasis_normalize_contractions(obasis)
-    if _is_normalized_properly(normed_obasis, coeffs_a, coeffs_b):
+    if _is_normalized_properly(normed_obasis, atcoords, coeffs_a, coeffs_b):
         print('5:Detected unnormalized contractions in file. Fixing them...')
         result['obasis'] = normed_obasis
         return
@@ -655,9 +641,6 @@ def dump(f: TextIO, data: 'IOData'):
     if angmom_kinds[4] == 'p':
         f.write('[9G]\n')
 
-    # The molden format assumes that every basis function is centered on one
-    # of the atoms. (This may not always be the case, e.g. for ghost atoms.)
-    # TODO: we need better ways to handle ghost atoms and raise errors here.
     f.write('[GTO]\n')
     last_icenter = -1
     # The shells must be sorted by center.
