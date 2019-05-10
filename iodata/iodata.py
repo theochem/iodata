@@ -196,6 +196,12 @@ class IOData:
     mo
         An instance of MolecularOrbitals.
 
+    nelec
+         The number of electrons.
+
+    obasis
+         An OrderedDict containing parameters to instantiate a GOBasis class.
+
     one_ints
         Dictionary where keys are names and values are numpy arrays with
         one-body operators, typically integrals of a one-body operator
@@ -215,20 +221,11 @@ class IOData:
         ``post_scf_spin``, followed by a suffix ``_ao`` or ``_mo``, similar to
         the names in ``one_ints``.
 
-    grid
-         An integration grid (usually a UniformGrid instance).
-
     spinpol
          The spin polarization. By default, its value is derived from the
          molecular orbitals (mo attribute), as abs(nalpha - nbeta). In this
          case, spinpol cannot be set. When no molecular orbitals are present,
          this attribute can be set.
-
-    nelec
-         The number of electrons.
-
-    obasis
-         An OrderedDict containing parameters to instantiate a GOBasis class.
 
     title
          A suitable name for the data.
