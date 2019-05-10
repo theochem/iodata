@@ -105,6 +105,8 @@ def test_charge_nelec1():
     mol = IOData()
     mol.nelec = 4
     mol.charge = -1
+    assert mol.nelec == 4
+    assert mol.charge == -1
 
 
 def test_charge_nelec2():
