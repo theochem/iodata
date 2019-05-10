@@ -209,11 +209,11 @@ class IOData:
         omitted because it is only useful to compute them in the atomic-orbital
         basis.
 
-    dm_full (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
-         The spin-summed first-order density matrix.
-
-    dm_spin (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
-         The spin-difference first-order density matrix.
+    one_rdms
+        Dictionary where keys are names and values are one-particle density
+        matrices. Names could begin with ``scf``, ``post_scf``, ``scf_spin``,
+        ``post_scf_spin``, followed by a suffix ``_ao`` or ``_mo``, similar to
+        the names in ``one_ints``.
 
     grid
          An integration grid (usually a UniformGrid instance).
@@ -240,6 +240,12 @@ class IOData:
         (electron repulsion) or ``two`` (general pairswise interaction). When
         relevant, these names must have a suffix ``_ao`` or ``_mo`` to clarify
         in which basis the integrals are computed, see one_ints for more details.
+
+    two_rdms
+        Dictionary where keys are names and values are two-particle density
+        matrices. Names could begin with ``post_scf``, ``post_scf_spin``,
+        followed by a suffix ``_ao`` or ``_mo``, similar to the names in
+        ``one_ints``.
 
     ugrid
          A dictionary describing the uniform grid (typically from a cube file).

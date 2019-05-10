@@ -207,21 +207,21 @@ def test_load_fchk_ghost_atoms():
 
 
 def test_load_fchk_ch3_rohf_g03():
-    fields = load_fchk_helper_internal('ch3_rohf_sto3g_g03.fchk')
-    assert_equal(fields['mo'].occs.shape[0], fields['mo'].coeffs.shape[0])
-    assert_equal(fields['mo'].occs.sum(), 9.0)
-    assert_equal(fields['mo'].occs.min(), 0.0)
-    assert_equal(fields['mo'].occs.max(), 2.0)
-    assert 'dm_full_scf' not in fields
+    mol = load_fchk_helper('ch3_rohf_sto3g_g03.fchk')
+    assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[0])
+    assert_equal(mol.mo.occs.sum(), 9.0)
+    assert_equal(mol.mo.occs.min(), 0.0)
+    assert_equal(mol.mo.occs.max(), 2.0)
+    assert 'scf' not in mol.one_rdms
 
 
 def check_load_azirine(key, numbers):
     """Perform some basic checks on a azirine fchk file."""
-    fields = load_fchk_helper_internal('2h-azirine-{}.fchk'.format(key))
-    assert fields['obasis'].nbasis == 33
-    dm_full = fields['dm_full_%s' % key]
-    assert_equal(dm_full[0, 0], numbers[0])
-    assert_equal(dm_full[32, 32], numbers[1])
+    mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
+    assert mol.obasis.nbasis == 33
+    dm = mol.one_rdms['post_scf']
+    assert_equal(dm[0, 0], numbers[0])
+    assert_equal(dm[32, 32], numbers[1])
 
 
 def test_load_azirine_cc():
@@ -240,14 +240,14 @@ def test_load_azirine_mp3():
     check_load_azirine('mp3', [2.08243417E+00, 1.02590815E-01])
 
 
-def check_load_nitrogen(key, numbers_full, numbers_spin):
+def check_load_nitrogen(key, numbers, numbers_spin):
     """Perform some basic checks on a nitrogen fchk file."""
-    fields = load_fchk_helper_internal('nitrogen-{}.fchk'.format(key))
-    assert fields['obasis'].nbasis == 9
-    dm_full = fields['dm_full_%s' % key]
-    assert_equal(dm_full[0, 0], numbers_full[0])
-    assert_equal(dm_full[8, 8], numbers_full[1])
-    dm_spin = fields['dm_spin_%s' % key]
+    mol = load_fchk_helper('nitrogen-{}.fchk'.format(key))
+    assert mol.obasis.nbasis == 9
+    dm = mol.one_rdms['post_scf']
+    assert_equal(dm[0, 0], numbers[0])
+    assert_equal(dm[8, 8], numbers[1])
+    dm_spin = mol.one_rdms['post_scf_spin']
     assert_equal(dm_spin[0, 0], numbers_spin[0])
     assert_equal(dm_spin[8, 8], numbers_spin[1])
 
@@ -268,29 +268,29 @@ def test_load_nitrogen_mp3():
     check_load_nitrogen('mp3', [2.08674302E+00, 4.91149023E-01], [7.06941101E-04, -1.96276763E-02])
 
 
-def check_normalization_dm_full_azirine(key):
+def check_normalization_dm_azirine(key):
     """Perform some basic checks on a 2h-azirine fchk file."""
     mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
     olp = compute_overlap(mol.obasis)
-    dm = getattr(mol, 'dm_full_%s' % key)
+    dm = mol.one_rdms['post_scf']
     check_dm(dm, olp, eps=1e-2, occ_max=2)
     assert_allclose(np.einsum('ab,ba', olp, dm), 22.0, atol=1.e-3)
 
 
-def test_normalization_dm_full_azirine_cc():
-    check_normalization_dm_full_azirine('cc')
+def test_normalization_dm_azirine_cc():
+    check_normalization_dm_azirine('cc')
 
 
-def test_normalization_dm_full_azirine_ci():
-    check_normalization_dm_full_azirine('ci')
+def test_normalization_dm_azirine_ci():
+    check_normalization_dm_azirine('ci')
 
 
-def test_normalization_dm_full_azirine_mp2():
-    check_normalization_dm_full_azirine('mp2')
+def test_normalization_dm_azirine_mp2():
+    check_normalization_dm_azirine('mp2')
 
 
-def test_normalization_dm_full_azirine_mp3():
-    check_normalization_dm_full_azirine('mp3')
+def test_normalization_dm_azirine_mp3():
+    check_normalization_dm_azirine('mp3')
 
 
 def test_load_water_hfs_321g():

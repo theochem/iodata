@@ -117,19 +117,25 @@ def compare_mols(mol1, mol2):
     assert_allclose(mol1.mo.occs, mol2.mo.occs)
     assert_allclose(mol1.mo.energies, mol2.mo.energies)
     assert_allclose(mol1.mo.coeffs[permutation] * signs.reshape(-1, 1), mol2.mo.coeffs, atol=1e-8)
-    # operators
-    for key in 'olp', 'kin', 'na', 'er', 'dm_full_mp2', 'dm_spin_mp2', \
-               'dm_full_mp3', 'dm_spin_mp3', 'dm_full_ci', 'dm_spin_ci', \
-               'dm_full_cc', 'dm_spin_cc', 'dm_full_scf', 'dm_spin_scf':
-        if hasattr(mol1, key):
-            assert hasattr(mol2, key)
-            matrix1 = getattr(mol1, key)
-            matrix1 = matrix1[permutation] * signs.reshape(-1, 1)
-            matrix1 = matrix1[:, permutation] * signs
-            matrix2 = getattr(mol2, key)
-            np.testing.assert_equal(matrix1, matrix2)
-        else:
-            assert not hasattr(mol2, key)
+    # operators and density matrices
+    cases = [
+        ('one_ints', ['olp', 'kin_ao', 'na_ao']),
+        ('two_ints', ['er_ao']),
+        ('one_rdms', ['scf', 'scf_spin', 'post_scf', 'post_scf_spin']),
+    ]
+    for attrname, keys in cases:
+        d1 = getattr(mol1, attrname, {})
+        d2 = getattr(mol2, attrname, {})
+        for key in keys:
+            if key in d1:
+                assert key in d2
+                matrix1 = d1[key]
+                matrix1 = matrix1[permutation] * signs.reshape(-1, 1)
+                matrix1 = matrix1[:, permutation] * signs
+                matrix2 = d2[key]
+                np.testing.assert_equal(matrix1, matrix2)
+            else:
+                assert key not in d2
 
 
 def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
