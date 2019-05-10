@@ -193,11 +193,21 @@ class IOData:
     energy
          The total energy (electronic+nn)
 
-    er
-         The electron repulsion four-index operator
-
     mo
         An instance of MolecularOrbitals.
+
+    one_ints
+        Dictionary where keys are names and values are numpy arrays with
+        one-body operators, typically integrals of a one-body operator
+        with a pair of (Gaussian) basis functions. Names can start with ``olp``
+        (overlap), ``kin`` (kinetic energy), ``na`` (nuclear attraction),
+        ``core`` (core hamiltonian), etc. When relevant, these names must have a
+        suffix ``_ao`` or ``_mo`` to clarify in which basis the integrals are
+        computed. ``_ao`` is used to denote integrals in a non-orthogonal
+        (atomic orbital) basis. ``_mo`` is used to denote an orthogonal
+        (molecular orbital) basis. For the overlap integrals, this suffix can be
+        omitted because it is only useful to compute them in the atomic-orbital
+        basis.
 
     dm_full (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
          The spin-summed first-order density matrix.
@@ -208,17 +218,11 @@ class IOData:
     grid
          An integration grid (usually a UniformGrid instance).
 
-    kin
-         The kinetic energy operator.
-
     spinpol
          The spin polarization. By default, its value is derived from the
          molecular orbitals (mo attribute), as abs(nalpha - nbeta). In this
          case, spinpol cannot be set. When no molecular orbitals are present,
          this attribute can be set.
-
-    na
-         The nuclear attraction operator.
 
     nelec
          The number of electrons.
@@ -226,17 +230,16 @@ class IOData:
     obasis
          An OrderedDict containing parameters to instantiate a GOBasis class.
 
-    olp
-         The overlap operator.
-
-    one_mo
-         One-electron integrals in the (Hartree-Fock) molecular-orbital basis
-
     title
          A suitable name for the data.
 
-    two_mo
-         Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
+    two_ints
+        Dictionary where keys are names and values are numpy arrays with
+        two-body operators, typically integrals of two-body operator
+        with four of (Gaussian) basis functions. Names can start with ``er``
+        (electron repulsion) or ``two`` (general pairswise interaction). When
+        relevant, these names must have a suffix ``_ao`` or ``_mo`` to clarify
+        in which basis the integrals are computed, see one_ints for more details.
 
     ugrid
          A dictionary describing the uniform grid (typically from a cube file).
@@ -255,20 +258,6 @@ class IOData:
         """
         for key, value in kwargs.items():
             setattr(self, key, value)
-
-    # Numpy array attributes that may require orbital basis reordering or sign correction.
-    # Note: this list is a very fragile thing and should be implemented differently in
-    # future. Ideally, each IO format should be implemented as a class, with a load and
-    # a dump method. Besides these two basic methods, it should also provide additional
-    # information on the fields it can read/write and which should be considered for
-    # reordering basis functions or changing their signs. The current approach to maintain
-    # this list at the iodata level requires us to keep it up-to-date whenever we change
-    # something in the file formats. (The same can be said of the class doc string and the
-    # documentation of the file formats.)
-    two_index_names = ['dm_full', 'dm_full_mp2', 'dm_full_mp3', 'dm_full_cc',
-                       'dm_full_ci', 'dm_full_scf', 'dm_spin', 'dm_spin_mp2',
-                       'dm_spin_mp3', 'dm_spin_cc', 'dm_spin_ci', 'dm_spin_scf', 'kin',
-                       'na', 'olp']
 
     # only perform type checking on some attributes
     atcoords = ArrayTypeCheckDescriptor(

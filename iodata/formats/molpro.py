@@ -107,8 +107,8 @@ def load(lit: LineIterator) -> dict:
     return {
         'nelec': nelec,
         'spinpol': spinpol,
-        'one_mo': one_mo,
-        'two_mo': two_mo,
+        'one_ints': {'core_mo': one_mo},
+        'two_ints': {'two_mo': two_mo},
         'core_energy': core_energy,
     }
 
@@ -133,8 +133,8 @@ def dump(f: TextIO, data: 'IOData'):
        older versions are not supported.
 
     """
-    one_mo = data.one_mo
-    two_mo = data.two_mo
+    one_mo = data.one_ints['core_mo']
+    two_mo = data.two_ints['two_mo']
     nactive = one_mo.shape[0]
     core_energy = getattr(data, 'core_energy', 0.0)
     nelec = getattr(data, 'nelec', 0)
