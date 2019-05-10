@@ -153,12 +153,13 @@ class IOData:
         A (N,) float array with pseudo-potential core charges. The matrix
         elements corresponding to ghost atoms are zero.
 
-    atforces
-        A (N, 3) float array with Cartesian forces on each atom.
-
     atfrozen
         A (N,) bool array with frozen atoms. (All atoms are free if this
         attribute is not set.)
+
+    atgradient
+        A (N, 3) float array with the first derivatives of the energy w.r.t.
+        Cartesian atomic displacements.
 
     atmasses
         A (N,) float array with atomic masses
@@ -316,28 +317,28 @@ class IOData:
     # only perform type checking on some attributes
     atcoords = ArrayTypeCheckDescriptor(
         'atcoords', 2, (-1, 3), float,
-        ['atcorenums', 'atforces', 'atfrozen', 'atmasses', 'atnums'],
+        ['atcorenums', 'atgradient', 'atfrozen', 'atmasses', 'atnums'],
         doc="A (N, 3) float array with Cartesian coordinates of the atoms.")
     atcorenums = ArrayTypeCheckDescriptor(
         'atcorenums', 1, (-1,), float,
-        ['atcoords', 'atforces', 'atfrozen', 'atmasses', 'atnums'],
+        ['atcoords', 'atgradient', 'atfrozen', 'atmasses', 'atnums'],
         'atnums',
         doc="A (N,) float array with pseudo-potential core charges.")
-    atforces = ArrayTypeCheckDescriptor(
-        'atforces', 2, (-1, 3), float,
+    atgradient = ArrayTypeCheckDescriptor(
+        'atgradient', 2, (-1, 3), float,
         ['atcoords', 'atcorenums', 'atfrozen', 'atmasses', 'atnums'],
         doc="A (N, 3) float array with Cartesian atomic forces.")
     atfrozen = ArrayTypeCheckDescriptor(
         'atfrozen', 1, (-1,), bool,
-        ['atcoords', 'atcorenums', 'atforces', 'atmasses', 'atnums'],
+        ['atcoords', 'atcorenums', 'atgradient', 'atmasses', 'atnums'],
         doc="A (N,) boolean array flagging fixed atoms.")
     atmasses = ArrayTypeCheckDescriptor(
         'atmasses', 1, (-1,), float,
-        ['atcoords', 'atcorenums', 'atforces', 'atfrozen', 'atnums'],
+        ['atcoords', 'atcorenums', 'atgradient', 'atfrozen', 'atnums'],
         doc="A (N,) float array with atomic masses.")
     atnums = ArrayTypeCheckDescriptor(
         'atnums', 1, (-1,), int,
-        ['atcoords', 'atcorenums', 'atforces', 'atfrozen', 'atmasses'],
+        ['atcoords', 'atcorenums', 'atgradient', 'atfrozen', 'atmasses'],
         doc="A (N,) int vector with the atomic numbers.")
     cube_data = ArrayTypeCheckDescriptor(
         'cube_data', 3,
@@ -350,8 +351,8 @@ class IOData:
             return len(self.atcoords)
         if hasattr(self, 'atcorenums'):
             return len(self.atcorenums)
-        if hasattr(self, 'atforces'):
-            return len(self.atforces)
+        if hasattr(self, 'atgradient'):
+            return len(self.atgradient)
         if hasattr(self, 'atfrozen'):
             return len(self.atfrozen)
         if hasattr(self, 'atmasses'):
