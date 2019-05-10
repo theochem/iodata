@@ -85,8 +85,9 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
 
 def compare_mols(mol1, mol2):
     """Compare two IOData objects."""
-    assert getattr(mol1, 'title') == getattr(mol2, 'title')
+    assert getattr(mol1, 'title', None) == getattr(mol2, 'title', None)
     assert_equal(mol1.atnums, mol2.atnums)
+    assert_equal(mol1.atcorenums, mol2.atcorenums)
     assert_allclose(mol1.atcoords, mol2.atcoords)
     # orbital basis
     if mol1.obasis is not None:

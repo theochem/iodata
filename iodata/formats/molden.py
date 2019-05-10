@@ -590,8 +590,9 @@ def dump(f: TextIO, data: 'IOData'):
     """
     # Print the header
     f.write('[Molden Format]\n')
-    f.write('[Title]\n')
-    f.write(' {}\n'.format(getattr(data, 'title', 'Created with HORTON')))
+    if hasattr(data, 'title'):
+        f.write('[Title]\n')
+        f.write(' {}\n'.format(data.title))
 
     # Print the elements numbers and the coordinates
     f.write('[Atoms] AU\n')

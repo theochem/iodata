@@ -289,3 +289,7 @@ def test_load_dump_consistency_nh3_molden_pure(tmpdir):
 
 def test_load_dump_consistency_nh3_molden_cart(tmpdir):
     check_load_dump_consistency('nh3_molden_cart.molden', tmpdir)
+
+
+def test_load_dump_consistency_he2_ghost_psi4_1(tmpdir):
+    check_load_dump_consistency('he2_ghost_psi4_1.0.molden', tmpdir)
