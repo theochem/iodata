@@ -217,9 +217,8 @@ class IOData:
 
     one_rdms
         Dictionary where keys are names and values are one-particle density
-        matrices. Names could begin with ``scf``, ``post_scf``, ``scf_spin``,
-        ``post_scf_spin``, followed by a suffix ``_ao`` or ``_mo``, similar to
-        the names in ``one_ints``.
+        matrices. Names can be ``scf``, ``post_scf``, ``scf_spin``,
+        ``post_scf_spin``. These matrices are always expressed in the AO basis.
 
     spinpol
          The spin polarization. By default, its value is derived from the
@@ -240,9 +239,8 @@ class IOData:
 
     two_rdms
         Dictionary where keys are names and values are two-particle density
-        matrices. Names could begin with ``post_scf``, ``post_scf_spin``,
-        followed by a suffix ``_ao`` or ``_mo``, similar to the names in
-        ``one_ints``.
+        matrices. Names can be ``post_scf`` or ``post_scf_spin``. These matrices
+        are always expressed in the AO basis.
 
     ugrid
          A dictionary describing the uniform grid (typically from a cube file).
