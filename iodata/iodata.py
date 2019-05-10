@@ -147,10 +147,10 @@ class IOData:
     ------------------------------------------
 
     atcoords
-         A (N, 3) float array with Cartesian coordinates of the atoms.
+        A (N, 3) float array with Cartesian coordinates of the atoms.
 
     atcorenums
-         A (N,) float array with pseudo-potential core charges.
+        A (N,) float array with pseudo-potential core charges.
 
     atforces
         A (N, 3) float array with Cartesian forces on each atom.
@@ -163,13 +163,13 @@ class IOData:
         A (N,) float array with atomic masses
 
     atnums
-         A (N,) int vector with the atomic numbers.
+        A (N,) int vector with the atomic numbers.
 
     cube_data
-         A (L, M, N) array of data on a uniform grid (defined by ugrid).
+        A (L, M, N) array of data on a uniform grid (defined by ugrid).
 
     polar
-         A (3, 3) matrix containing the dipole polarizability tensor.
+        A (3, 3) matrix containing the dipole polarizability tensor.
 
     **Unspecified type (duck typing):**
 
@@ -182,25 +182,25 @@ class IOData:
         displacements.
 
     cellvecs
-         A (NP, 3) array containing the (real-space) cell vectors describing
-         periodic boundary conditions. A single vector corresponds to a 1D cell,
-         e.g. for a wire. Two vectors describe a 2D cell, e.g. for a membrane.
-         Three vectors describe a 3D cell, e.g. a crystalline solid.
+        A (NP, 3) array containing the (real-space) cell vectors describing
+        periodic boundary conditions. A single vector corresponds to a 1D cell,
+        e.g. for a wire. Two vectors describe a 2D cell, e.g. for a membrane.
+        Three vectors describe a 3D cell, e.g. a crystalline solid.
 
     core_energy
-         The Hartree-Fock energy due to the core orbitals
+        The Hartree-Fock energy due to the core orbitals
 
     energy
-         The total energy (electronic+nn)
+        The total energy (electronic+nn)
 
     mo
         An instance of MolecularOrbitals.
 
     nelec
-         The number of electrons.
+        The number of electrons.
 
     obasis
-         An OrderedDict containing parameters to instantiate a GOBasis class.
+        An OrderedDict containing parameters to instantiate a GOBasis class.
 
     one_ints
         Dictionary where keys are names and values are numpy arrays with
@@ -221,10 +221,10 @@ class IOData:
         ``post_scf_spin``. These matrices are always expressed in the AO basis.
 
     spinpol
-         The spin polarization. By default, its value is derived from the
-         molecular orbitals (mo attribute), as abs(nalpha - nbeta). In this
-         case, spinpol cannot be set. When no molecular orbitals are present,
-         this attribute can be set.
+        The spin polarization. By default, its value is derived from the
+        molecular orbitals (mo attribute), as abs(nalpha - nbeta). In this case,
+        spinpol cannot be set. When no molecular orbitals are present, this
+        attribute can be set.
 
     title
          A suitable name for the data.
@@ -243,12 +243,12 @@ class IOData:
         are always expressed in the AO basis.
 
     ugrid
-         A dictionary describing the uniform grid (typically from a cube file).
-         It contains the following fields: ``origin``, a 3D vector with the
-         origin of the axes frame. ``axes`` a 3x3 array where each row
-         represents the spacing between two neighboring grid points along the
-         first, second and third axis, respectively. ``shape`` A three-tuple
-         with the number of points along each axis, respectively.
+        A dictionary describing the uniform grid (typically from a cube file).
+        It contains the following fields: ``origin``, a 3D vector with the
+        origin of the axes frame. ``axes`` a 3x3 array where each row represents
+        the spacing between two neighboring grid points along the first, second
+        and third axis, respectively. ``shape`` A three-tuple with the number of
+        points along each axis, respectively.
 
     """
 
