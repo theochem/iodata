@@ -69,7 +69,7 @@ def test_unknown_format():
 def test_dm_water_sto3g_hf():
     with path('iodata.test.data', 'water_sto3g_hf_g03.fchk') as fn_fchk:
         mol = load_one(str(fn_fchk))
-    dm = mol.dm_full_scf
+    dm = mol.one_rdms['scf']
     assert_allclose(dm[0, 0], 2.10503807, atol=1.e-7)
     assert_allclose(dm[0, 1], -0.439115917, atol=1.e-7)
     assert_allclose(dm[1, 1], 1.93312061, atol=1.e-7)
@@ -79,13 +79,13 @@ def test_dm_lih_sto3g_hf():
     with path('iodata.test.data', 'li_h_3-21G_hf_g09.fchk') as fn_fchk:
         mol = load_one(str(fn_fchk))
 
-    dm_full = mol.dm_full_scf
-    assert_allclose(dm_full[0, 0], 1.96589709, atol=1.e-7)
-    assert_allclose(dm_full[0, 1], 0.122114249, atol=1.e-7)
-    assert_allclose(dm_full[1, 1], 0.0133112081, atol=1.e-7)
-    assert_allclose(dm_full[10, 10], 4.23924688E-01, atol=1.e-7)
+    dm = mol.one_rdms['scf']
+    assert_allclose(dm[0, 0], 1.96589709, atol=1.e-7)
+    assert_allclose(dm[0, 1], 0.122114249, atol=1.e-7)
+    assert_allclose(dm[1, 1], 0.0133112081, atol=1.e-7)
+    assert_allclose(dm[10, 10], 4.23924688E-01, atol=1.e-7)
 
-    dm_spin = mol.dm_spin_scf
+    dm_spin = mol.one_rdms['scf_spin']
     assert_allclose(dm_spin[0, 0], 1.40210760E-03, atol=1.e-9)
     assert_allclose(dm_spin[0, 1], -2.65370873E-03, atol=1.e-9)
     assert_allclose(dm_spin[1, 1], 5.38701212E-03, atol=1.e-9)
@@ -105,6 +105,8 @@ def test_charge_nelec1():
     mol = IOData()
     mol.nelec = 4
     mol.charge = -1
+    assert mol.nelec == 4
+    assert mol.charge == -1
 
 
 def test_charge_nelec2():

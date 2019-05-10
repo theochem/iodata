@@ -63,19 +63,26 @@ def load(lit: LineIterator) -> dict:
     # Then load the two- and four-index operators. This part is written such
     # that it does not make any assumptions about the order in which these
     # operators are printed.
-    result = {}
+    one_ints = {}
+    two_ints = {}
     while True:
         line = next(lit)
         if line.startswith(" Normal termination of Gaussian"):
             break
         elif line.startswith(' *** Overlap ***'):
-            result['olp'] = _load_twoindex_g09(lit, nbasis)
+            one_ints['olp'] = _load_twoindex_g09(lit, nbasis)
         elif line.startswith(' *** Kinetic Energy ***'):
-            result['kin'] = _load_twoindex_g09(lit, nbasis)
+            one_ints['kin_ao'] = _load_twoindex_g09(lit, nbasis)
         elif line.startswith(' ***** Potential Energy *****'):
-            result['na'] = _load_twoindex_g09(lit, nbasis)
+            one_ints['na_ao'] = _load_twoindex_g09(lit, nbasis)
         elif line.startswith(' *** Dumping Two-Electron integrals ***'):
-            result['er'] = _load_fourindex_g09(lit, nbasis)
+            two_ints['er_ao'] = _load_fourindex_g09(lit, nbasis)
+
+    result = {}
+    if one_ints:
+        result['one_ints'] = one_ints
+    if two_ints:
+        result['two_ints'] = two_ints
     return result
 
 

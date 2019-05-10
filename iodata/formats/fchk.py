@@ -68,12 +68,11 @@ def load(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``atcorenums``,
-        ``obasis``, ``mo``, ``energy`` & ``mulliken_charges`` keys and
-        corresponding values. It may also contain ``npa_charges``, ``esp_charges``,
-        ``dm_full_mp2``, ``dm_spin_mp2``, ``dm_full_mp3``, ``dm_spin_mp3``, ``dm_full_cc``,
-        ``dm_spin_cc``, ``dm_full_ci``, ``dm_spin_ci``, ``dm_full_scf``, ``dm_spin_scf``,
-        ``polar``, ``dipole_moment`` & ``quadrupole_moment`` keys and their values as well.
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``,
+        ``atcorenums``, ``obasis``, ``mo``, ``energy`` & ``mulliken_charges``
+        keys and corresponding values. It may also contain ``npa_charges``,
+        ``esp_charges``, ``one_rdms``, ``polar``, ``dipole_moment`` &
+        ``quadrupole_moment`` keys and their values as well.
 
     """
     fchk = _load_fchk_low(lit, [
@@ -181,9 +180,15 @@ def load(lit: LineIterator) -> dict:
     nbasis = fchk["Number of basis functions"]
 
     # C) Load density matrices
-    for lot in 'MP2', 'MP3', 'CC', 'CI', 'SCF':
-        _load_dm('Total %s Density' % lot, fchk, result, 'dm_full_%s' % lot.lower())
-        _load_dm('Spin %s Density' % lot, fchk, result, 'dm_spin_%s' % lot.lower())
+    one_rdms = {}
+    _load_dm('Total SCF Density', fchk, one_rdms, 'scf')
+    _load_dm('Spin SCF Density', fchk, one_rdms, 'scf_spin')
+    # only one of the lots should be present, hence using the same key
+    for lot in 'MP2', 'MP3', 'CC', 'CI':
+        _load_dm('Total {} Density'.format(lot), fchk, one_rdms, 'post_scf')
+        _load_dm('Spin {} Density'.format(lot), fchk, one_rdms, 'post_scf_spin')
+    if one_rdms:
+        result['one_rdms'] = one_rdms
 
     # D) Load the wavefunction
     # Handle small difference in fchk files from g03 and g09
@@ -220,7 +225,7 @@ def load(lit: LineIterator) -> dict:
         mo_occs[:nbeta] = 2.0
         if nalpha != nbeta:
             # delete dm_full_scf because it is known to be buggy
-            result.pop('dm_full_scf')
+            result['one_rdms'].pop('scf')
 
     # create a MO namedtuple
     result['mo'] = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
@@ -237,12 +242,15 @@ def load(lit: LineIterator) -> dict:
 
     # F) Load optional properties
     # Mask out ghost atoms from charges
+    atcharges = {}
     if 'Mulliken Charges' in fchk:
-        result['mulliken_charges'] = fchk['Mulliken Charges'][mask]
+        atcharges['mulliken'] = fchk['Mulliken Charges'][mask]
     if 'ESP Charges' in fchk:
-        result['esp_charges'] = fchk['ESP Charges'][mask]
+        atcharges['esp'] = fchk['ESP Charges'][mask]
     if 'NPA Charges' in fchk:
-        result['npa_charges'] = fchk['NPA Charges'][mask]
+        atcharges['npa'] = fchk['NPA Charges'][mask]
+    if atcharges:
+        result['atcharges'] = atcharges
 
     return result
 

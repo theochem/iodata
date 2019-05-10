@@ -147,10 +147,10 @@ class IOData:
     ------------------------------------------
 
     atcoords
-         A (N, 3) float array with Cartesian coordinates of the atoms.
+        A (N, 3) float array with Cartesian coordinates of the atoms.
 
     atcorenums
-         A (N,) float array with pseudo-potential core charges.
+        A (N,) float array with pseudo-potential core charges.
 
     atforces
         A (N, 3) float array with Cartesian forces on each atom.
@@ -163,90 +163,129 @@ class IOData:
         A (N,) float array with atomic masses
 
     atnums
-         A (N,) int vector with the atomic numbers.
+        A (N,) int vector with the atomic numbers.
 
     cube_data
-         A (L, M, N) array of data on a uniform grid (defined by ugrid).
+        A (K, L, M) array of data on a uniform grid (defined by ugrid).
 
     polar
-         A (3, 3) matrix containing the dipole polarizability tensor.
+        A (3, 3) matrix containing the dipole polarizability tensor.
 
     **Unspecified type (duck typing):**
+
+    atcharges
+        A dictionary where keys are names of charge definitions and values are
+        arrays with atomic charges (size N).
+
+    atffparams
+        A dictionary with arrays of atomic force field parameters (typically
+        non-bonded). Keys include 'charges', 'vdw_radii', 'sigmas', 'epsilons',
+        'alphas' (atomic polarizabilities), 'c6s', 'c8s', 'c10s', 'buck_as',
+        'buck_bs', 'lj_as', 'core_charges', 'valence_charges', 'valence_widths',
+        etc. Not all of them have to be present, depending on the use case.
 
     athessian
         A (3*N, 3*N) array containing the energy Hessian w.r.t Cartesian atomic
         displacements.
 
+    basisdef
+        A basis set definition, i.e. a dictionary whose keys are symbols (of
+        chemical elements), atomic numbers (similar to previous, str to make
+        distinction with following) or an atom index (integer referring to a
+        specific atom in a molecule). The format of the values is to be decided
+        when implementing a load function for basis set definitions.
+
+    bonds
+        An (nbond, 3) array with the list of covalent bonds. Each row represents
+        one bond and consists of three integers: first atom index (starting
+        from zero), second atom index & an optional bond type (0: not known, 1:
+        single, 2: double, 3: triple, 4: conjugated).
+
     cellvecs
-         A (NP, 3) array containing the (real-space) cell vectors describing
-         periodic boundary conditions. A single vector corresponds to a 1D cell,
-         e.g. for a wire. Two vectors describe a 2D cell, e.g. for a membrane.
-         Three vectors describe a 3D cell, e.g. a crystalline solid.
+        A (NP, 3) array containing the (real-space) cell vectors describing
+        periodic boundary conditions. A single vector corresponds to a 1D cell,
+        e.g. for a wire. Two vectors describe a 2D cell, e.g. for a membrane.
+        Three vectors describe a 3D cell, e.g. a crystalline solid.
 
     core_energy
-         The Hartree-Fock energy due to the core orbitals
+        The Hartree-Fock energy due to the core orbitals
 
     energy
-         The total energy (electronic+nn)
+        The total energy (electronic + nn)
 
-    er
-         The electron repulsion four-index operator
+    extcharges
+        Array with values of external charges, with shape (nextcharge, 4). First
+        three columns for Cartesian X, Y and Z coordinates, last column for the
+        actual charge.
+
+    g_rot
+        The rotational symmetry number of the molecule.
 
     mo
         An instance of MolecularOrbitals.
 
-    dm_full (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
-         The spin-summed first-order density matrix.
-
-    dm_spin (optionally with a suffix like _mp2, _mp3, _cc, _ci, _scf).
-         The spin-difference first-order density matrix.
-
-    grid
-         An integration grid (usually a UniformGrid instance).
-
-    kin
-         The kinetic energy operator.
-
-    spinpol
-         The spin polarization. By default, its value is derived from the
-         molecular orbitals (mo attribute), as abs(nalpha - nbeta). In this
-         case, spinpol cannot be set. When no molecular orbitals are present,
-         this attribute can be set.
-
-    mulliken_charges
-         Mulliken AIM charges.
-
-    na
-         The nuclear attraction operator.
-
     nelec
-         The number of electrons.
-
-    npa_charges
-         Natural charges.
+        The number of electrons.
 
     obasis
-         An OrderedDict containing parameters to instantiate a GOBasis class.
+        An OrderedDict containing parameters to instantiate a GOBasis class.
 
-    olp
-         The overlap operator.
+    obasis_name
+        A name or DOI describing the basis set used for the orbitals in the
+        mo attribute (if applicable). Should be consistent with
+        www.basissetexchange.org.
 
-    one_mo
-         One-electron integrals in the (Hartree-Fock) molecular-orbital basis
+    one_ints
+        Dictionary where keys are names and values are numpy arrays with
+        one-body operators, typically integrals of a one-body operator
+        with a pair of (Gaussian) basis functions. Names can start with ``olp``
+        (overlap), ``kin`` (kinetic energy), ``na`` (nuclear attraction),
+        ``core`` (core hamiltonian), etc. When relevant, these names must have a
+        suffix ``_ao`` or ``_mo`` to clarify in which basis the integrals are
+        computed. ``_ao`` is used to denote integrals in a non-orthogonal
+        (atomic orbital) basis. ``_mo`` is used to denote an orthogonal
+        (molecular orbital) basis. For the overlap integrals, this suffix can be
+        omitted because it is only useful to compute them in the atomic-orbital
+        basis.
+
+    one_rdms
+        Dictionary where keys are names and values are one-particle density
+        matrices. Names can be ``scf``, ``post_scf``, ``scf_spin``,
+        ``post_scf_spin``. These matrices are always expressed in the AO basis.
+
+    run_type
+        The type of calculation that lead to the results stored in IOData, e.g.
+        'energy', 'energy_force', 'opt', 'freq', ...
+
+    spinpol
+        The spin polarization. By default, its value is derived from the
+        molecular orbitals (mo attribute), as abs(nalpha - nbeta). In this case,
+        spinpol cannot be set. When no molecular orbitals are present, this
+        attribute can be set.
 
     title
          A suitable name for the data.
 
-    two_mo
-         Two-electron integrals in the (Hartree-Fock) molecular-orbital basis
+    two_ints
+        Dictionary where keys are names and values are numpy arrays with
+        two-body operators, typically integrals of two-body operator
+        with four of (Gaussian) basis functions. Names can start with ``er``
+        (electron repulsion) or ``two`` (general pairswise interaction). When
+        relevant, these names must have a suffix ``_ao`` or ``_mo`` to clarify
+        in which basis the integrals are computed, see one_ints for more details.
+
+    two_rdms
+        Dictionary where keys are names and values are two-particle density
+        matrices. Names can be ``post_scf`` or ``post_scf_spin``. These matrices
+        are always expressed in the AO basis.
 
     ugrid
-         A dictionary describing the uniform grid (typically from a cube file).
-         It contains the following fields: ``origin``, a 3D vector with the
-         origin of the axes frame. ``axes`` a 3x3 array where each row
-         represents the spacing between two neighboring grid points along the
-         first, second and third axis, respectively. ``shape`` A three-tuple
-         with the number of points along each axis, respectively.
+        A dictionary describing the uniform grid (typically from a cube file).
+        It contains the following fields: ``origin``, a 3D vector with the
+        origin of the axes frame. ``axes`` a 3x3 array where each row represents
+        the spacing between two neighboring grid points along the first, second
+        and third axis, respectively. ``shape`` A three-tuple with the number of
+        points along each axis, respectively.
 
     """
 
@@ -257,20 +296,6 @@ class IOData:
         """
         for key, value in kwargs.items():
             setattr(self, key, value)
-
-    # Numpy array attributes that may require orbital basis reordering or sign correction.
-    # Note: this list is a very fragile thing and should be implemented differently in
-    # future. Ideally, each IO format should be implemented as a class, with a load and
-    # a dump method. Besides these two basic methods, it should also provide additional
-    # information on the fields it can read/write and which should be considered for
-    # reordering basis functions or changing their signs. The current approach to maintain
-    # this list at the iodata level requires us to keep it up-to-date whenever we change
-    # something in the file formats. (The same can be said of the class doc string and the
-    # documentation of the file formats.)
-    two_index_names = ['dm_full', 'dm_full_mp2', 'dm_full_mp3', 'dm_full_cc',
-                       'dm_full_ci', 'dm_full_scf', 'dm_spin', 'dm_spin_mp2',
-                       'dm_spin_mp3', 'dm_spin_cc', 'dm_spin_ci', 'dm_spin_scf', 'kin',
-                       'na', 'olp']
 
     # only perform type checking on some attributes
     atcoords = ArrayTypeCheckDescriptor(
