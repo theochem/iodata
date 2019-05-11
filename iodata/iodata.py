@@ -127,19 +127,15 @@ class IOData:
 
     atcoords
         A (N, 3) float array with Cartesian coordinates of the atoms.
-
     atcorenums
         A (N,) float array with pseudo-potential core charges. The matrix
         elements corresponding to ghost atoms are zero.
-
     atfrozen
         A (N,) bool array with frozen atoms. (All atoms are free if this
         attribute is not set.)
-
     atgradient
         A (N, 3) float array with the first derivatives of the energy w.r.t.
         Cartesian atomic displacements.
-
     atmasses
         A (N,) float array with atomic masses
 
@@ -152,67 +148,53 @@ class IOData:
     atcharges
         A dictionary where keys are names of charge definitions and values are
         arrays with atomic charges (size N).
-
     atffparams
         A dictionary with arrays of atomic force field parameters (typically
         non-bonded). Keys include 'charges', 'vdw_radii', 'sigmas', 'epsilons',
         'alphas' (atomic polarizabilities), 'c6s', 'c8s', 'c10s', 'buck_as',
         'buck_bs', 'lj_as', 'core_charges', 'valence_charges', 'valence_widths',
         etc. Not all of them have to be present, depending on the use case.
-
     athessian
         A (3*N, 3*N) array containing the energy Hessian w.r.t Cartesian atomic
         displacements.
-
     basisdef
         A basis set definition, i.e. a dictionary whose keys are symbols (of
         chemical elements), atomic numbers (similar to previous, str to make
         distinction with following) or an atom index (integer referring to a
         specific atom in a molecule). The format of the values is to be decided
         when implementing a load function for basis set definitions.
-
     bonds
         An (nbond, 3) array with the list of covalent bonds. Each row represents
         one bond and consists of three integers: first atom index (starting
         from zero), second atom index & an optional bond type (0: not known, 1:
         single, 2: double, 3: triple, 4: conjugated).
-
     cellvecs
         A (NP, 3) array containing the (real-space) cell vectors describing
         periodic boundary conditions. A single vector corresponds to a 1D cell,
         e.g. for a wire. Two vectors describe a 2D cell, e.g. for a membrane.
         Three vectors describe a 3D cell, e.g. a crystalline solid.
-
     core_energy
         The Hartree-Fock energy due to the core orbitals
-
     cube
         An instance of Cube, describing the volumetric data from a cube (or
         similar) file.
-
     energy
         The total energy (electronic + nn)
-
     extcharges
         Array with values of external charges, with shape (nextcharge, 4). First
         three columns for Cartesian X, Y and Z coordinates, last column for the
         actual charge.
-
     extra
         A dictionary with additional data loaded from a file. Any data which
         cannot be assigned to the other attributes belongs here. It may be
         decided in future to move some of the results from this dictionary to
         IOData attributes, with a more final name.
-
     g_rot
         The rotational symmetry number of the molecule.
-
     lot
         The level of theory used to compute the orbitals (and other properties).
-
     mo
         An instance of MolecularOrbitals.
-
     moments
         A dictionary with electrostatic multipole moments. Keys are (angmom,
         kind) tuples where angmom is an integer for the angular momentum and
@@ -220,18 +202,14 @@ class IOData:
         2). The corresponding values are 1D numpy arrays. The order of the
         components of the multipole moments follows the HORTON2_CONVENTIONS from
         iodata/basis.py
-
     nelec
         The number of electrons.
-
     obasis
         An OrderedDict containing parameters to instantiate a GOBasis class.
-
     obasis_name
         A name or DOI describing the basis set used for the orbitals in the
         mo attribute (if applicable). Should be consistent with
         www.basissetexchange.org.
-
     one_ints
         Dictionary where keys are names and values are numpy arrays with
         one-body operators, typically integrals of a one-body operator
@@ -244,25 +222,20 @@ class IOData:
         (molecular orbital) basis. For the overlap integrals, this suffix can be
         omitted because it is only useful to compute them in the atomic-orbital
         basis.
-
     one_rdms
         Dictionary where keys are names and values are one-particle density
         matrices. Names can be ``scf``, ``post_scf``, ``scf_spin``,
         ``post_scf_spin``. These matrices are always expressed in the AO basis.
-
     run_type
         The type of calculation that lead to the results stored in IOData, e.g.
         'energy', 'energy_force', 'opt', 'freq', ...
-
     spinpol
         The spin polarization. By default, its value is derived from the
         molecular orbitals (mo attribute), as abs(nalpha - nbeta). In this case,
         spinpol cannot be set. When no molecular orbitals are present, this
         attribute can be set.
-
     title
          A suitable name for the data.
-
     two_ints
         Dictionary where keys are names and values are numpy arrays with
         two-body operators, typically integrals of two-body operator
@@ -270,7 +243,6 @@ class IOData:
         (electron repulsion) or ``two`` (general pairswise interaction). When
         relevant, these names must have a suffix ``_ao`` or ``_mo`` to clarify
         in which basis the integrals are computed, see one_ints for more details.
-
     two_rdms
         Dictionary where keys are names and values are two-particle density
         matrices. Names can be ``post_scf`` or ``post_scf_spin``. These matrices
