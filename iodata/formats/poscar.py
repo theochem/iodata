@@ -68,8 +68,8 @@ def dump_one(f: TextIO, data: IOData):
     f
         A file to write to.
     data
-        An IOData instance which must contain ``atcoords``, ``atnums``, ``cellvecs`` &
-        ``cell_frac`` attributes. It may contain ``title`` attribute.
+        An IOData instance which must contain ``atcoords``, ``atnums`` &
+        ``cellvecs`` attributes. It may contain ``title`` attribute.
 
     """
     print(getattr(data, 'title', 'Created with HORTON'), file=f)
