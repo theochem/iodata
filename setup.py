@@ -64,6 +64,9 @@ setup(
                            sources=['iodata/overlap_accel.pyx'],
                            include_dirs=[np.get_include()])],
     include_package_data=True,
+    entry_points={
+        'console_scripts': ['iodata-convert = iodata.__main__:main']
+    },
     classifiers=[
         'Environment :: Console',
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',

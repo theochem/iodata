@@ -26,7 +26,7 @@ import numpy as np
 from iodata import load_one, dump_one
 
 try:
-    from iodata import __version__
+    from iodata.version import __version__
 except ImportError:
     __version__ = '0.0.0.post0'
 
