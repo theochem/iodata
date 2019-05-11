@@ -31,12 +31,14 @@ except ImportError:
     __version__ = '0.0.0.post0'
 
 
-# All, except underflows, is *not* fine.
-np.seterr(divide='raise', over='raise', invalid='raise')
+__all__ = []
 
 
 def main():
     """Convert files between two formats using command-line arguments."""
+    # All, except underflows, is *not* fine.
+    np.seterr(divide='raise', over='raise', invalid='raise')
+
     parser = argparse.ArgumentParser(
         prog='iodata-convert',
         description='Convert between file formats supported by IOData. This '
