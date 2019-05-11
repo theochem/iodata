@@ -198,7 +198,7 @@ def volume(cellvecs: np.ndarray) -> float:
 
 def derive_naturals(dm: np.ndarray, overlap: np.ndarray) \
         -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Derive natural orbitals from a given density matrix and assign the result to self.
+    """Derive natural orbitals from a given density matrix.
 
     Parameters
     ----------
