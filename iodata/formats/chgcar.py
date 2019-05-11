@@ -141,7 +141,7 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
     }
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a VASP 5 CHGCAR file format.
 
     Parameters

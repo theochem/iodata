@@ -289,7 +289,7 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
     return obasis, permutation
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a WFN file format.
 
     Parameters

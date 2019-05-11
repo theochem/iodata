@@ -462,10 +462,10 @@ def load_one(filename: str) -> IOData:
         The instance of IOData with data loaded from the input files.
 
     """
-    format_module = _select_format_module(filename, 'load')
+    format_module = _select_format_module(filename, 'load_one')
     lit = LineIterator(filename)
     try:
-        return IOData(**format_module.load(lit))
+        return IOData(**format_module.load_one(lit))
     except StopIteration:
         raise lit.error("File ended before all data was read.")
 
@@ -512,9 +512,9 @@ def dump_one(iodata: IOData, filename: str):
         The file to write the data to.
 
     """
-    format_module = _select_format_module(filename, 'dump')
+    format_module = _select_format_module(filename, 'dump_one')
     with open(filename, 'w') as f:
-        format_module.dump(f, iodata)
+        format_module.dump_one(f, iodata)
 
 
 def dump_many(iodatas: Iterator[IOData], filename: str):

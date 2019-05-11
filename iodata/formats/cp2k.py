@@ -340,7 +340,7 @@ def _fill_orbitals(orb_coeffs: np.ndarray,
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a CP2K ATOM file format.
 
     Parameters

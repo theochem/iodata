@@ -60,7 +60,7 @@ CONVENTIONS = {
 }
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a MOLDEN input file format.
 
     Parameters
@@ -575,7 +575,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
                    'files causing this error'.format(filename)))
 
 
-def dump(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: 'IOData'):
     """Write data into a MOLDEN input file format.
 
     Parameters

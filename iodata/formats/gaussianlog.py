@@ -30,7 +30,7 @@ __all__ = []
 patterns = ['*.log']
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load several two- and four-index operators from a GAUSSIAN09 LOG file format.
 
     Parameters

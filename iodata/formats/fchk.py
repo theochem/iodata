@@ -57,7 +57,7 @@ CONVENTIONS = {
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a GAUSSIAN FCHK file format.
 
     Parameters

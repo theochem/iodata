@@ -34,7 +34,7 @@ __all__ = []
 patterns = ['POSCAR*']
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a VASP 5 POSCAR file format.
 
     Parameters
@@ -59,7 +59,7 @@ def load(lit: LineIterator) -> dict:
     }
 
 
-def dump(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: 'IOData'):
     """Write data into a VASP 5 POSCAR file format.
 
     Parameters

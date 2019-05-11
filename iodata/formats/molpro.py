@@ -32,7 +32,7 @@ __all__ = []
 patterns = ['*FCIDUMP*']
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load one- and two-electron integrals from a MOLPRO 2012 FCIDUMP file format.
 
     Parameters
@@ -113,7 +113,7 @@ def load(lit: LineIterator) -> dict:
     }
 
 
-def dump(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: 'IOData'):
     """Write one- and two-electron integrals into a MOLPRO 2012 FCIDUMP file format.
 
     Parameters

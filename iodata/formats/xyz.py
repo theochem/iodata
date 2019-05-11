@@ -33,7 +33,7 @@ __all__ = []
 patterns = ['*.xyz']
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load molecular geometry from a XYZ file format.
 
     Parameters
@@ -90,12 +90,12 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     # making it travial to load many frames.
     while True:
         try:
-            yield load(lit)
+            yield load_one(lit)
         except StopIteration:
             return
 
 
-def dump(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: 'IOData'):
     """Write molecular geometry into a XYZ file format.
 
     Parameters
@@ -132,4 +132,4 @@ def dump_many(f: TextIO, datas: Iterator['IOData']):
     """
     # Similar to load_many, this is relatively easy.
     for data in datas:
-        dump(f, data)
+        dump_one(f, data)

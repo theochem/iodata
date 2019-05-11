@@ -122,7 +122,7 @@ def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarr
     return data
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a CUBE file format.
 
     Parameters
@@ -176,7 +176,7 @@ def _write_cube_data(f: TextIO, cube_data: np.ndarray):
         counter += 1
 
 
-def dump(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: 'IOData'):
     """Write data into a CUBE file format.
 
     Parameters
