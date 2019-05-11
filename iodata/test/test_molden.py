@@ -265,9 +265,9 @@ def check_load_dump_consistency(fn, tmpdir):
     """
     with path('iodata.test.data', fn) as file_name:
         mol1 = load_one(str(file_name))
-    fn_tmp = os.path.join(tmpdir, 'foo.molden')
-    dump_one(mol1, fn_tmp)
-    mol2 = load_one(fn_tmp)
+    fn_tmp = os.path.join(tmpdir, 'foo.bar')
+    dump_one(mol1, fn_tmp, fmt='molden')
+    mol2 = load_one(fn_tmp, fmt='molden')
     compare_mols(mol1, mol2)
 
 

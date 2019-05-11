@@ -105,9 +105,9 @@ def test_load_dump_many_consistency(tmpdir):
     with path('iodata.test.data', 'water_trajectory.xyz') as fn_xyz:
         mols0 = list(load_many(str(fn_xyz)))
     # write xyz file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test.xyz')
-    dump_many(mols0, fn_tmp)
-    mols1 = list(load_many(fn_tmp))
+    fn_tmp = os.path.join(tmpdir, 'test')
+    dump_many(mols0, fn_tmp, fmt='xyz')
+    mols1 = list(load_many(fn_tmp, fmt='xyz'))
     assert len(mols0) == len(mols1)
     for mol0, mol1 in zip(mols0, mols1):
         assert mol0.title == mol1.title

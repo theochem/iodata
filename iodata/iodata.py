@@ -36,12 +36,12 @@ __all__ = ['IOData', 'load_one', 'load_many', 'dump_one', 'dump_many']
 
 def find_format_modules():
     """Return all file-format modules found with importlib."""
-    result = []
+    result = {}
     for module_info in iter_modules(import_module('iodata.formats').__path__):
         if not module_info.ispkg:
             format_module = import_module('iodata.formats.' + module_info.name)
             if hasattr(format_module, 'patterns'):
-                result.append(format_module)
+                result[module_info.name] = format_module
     return result
 
 
@@ -419,7 +419,7 @@ class IOData:
             raise TypeError("spinpol cannot be set when orbitals are present.")
 
 
-def _select_format_module(filename: str, attrname: str) -> ModuleType:
+def _select_format_module(filename: str, attrname: str, fmt: str = None) -> ModuleType:
     """Find a file format module with the requested attribute name.
 
     Parameters
@@ -428,6 +428,9 @@ def _select_format_module(filename: str, attrname: str) -> ModuleType:
         The file to load or dump.
     attrname
         The required atrtibute of the file format module.
+    fmt
+        The name of the file format module to use. When not given, it is guessed
+        from the filename.
 
     Returns
     -------
@@ -436,15 +439,18 @@ def _select_format_module(filename: str, attrname: str) -> ModuleType:
 
     """
     basename = os.path.basename(filename)
-    for format_module in format_modules:
-        if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
-            if hasattr(format_module, attrname):
-                return format_module
+    if fmt is None:
+        for name, format_module in format_modules.items():
+            if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
+                if hasattr(format_module, attrname):
+                    return format_module
+    else:
+        return format_modules[fmt]
     raise ValueError('Could not find file format with feature {} for file {}'.format(
         attrname, filename))
 
 
-def load_one(filename: str) -> IOData:
+def load_one(filename: str, fmt: str = None) -> IOData:
     """Load data from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -455,6 +461,9 @@ def load_one(filename: str) -> IOData:
     ----------
     filename
         The file to load data from.
+    fmt
+        The name of the file format module to use. When not given, it is guessed
+        from the filename.
 
     Returns
     -------
@@ -462,7 +471,7 @@ def load_one(filename: str) -> IOData:
         The instance of IOData with data loaded from the input files.
 
     """
-    format_module = _select_format_module(filename, 'load_one')
+    format_module = _select_format_module(filename, 'load_one', fmt)
     lit = LineIterator(filename)
     try:
         return IOData(**format_module.load_one(lit))
@@ -470,7 +479,7 @@ def load_one(filename: str) -> IOData:
         raise lit.error("File ended before all data was read.")
 
 
-def load_many(filename: str) -> Iterator[IOData]:
+def load_many(filename: str, fmt: str = None) -> Iterator[IOData]:
     """Load multiple IOData instances from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -481,6 +490,9 @@ def load_many(filename: str) -> Iterator[IOData]:
     ----------
     filename
         The file to load data from.
+    fmt
+        The name of the file format module to use. When not given, it is guessed
+        from the filename.
 
     Yields
     ------
@@ -488,7 +500,7 @@ def load_many(filename: str) -> Iterator[IOData]:
         An instance of IOData with data for one frame loaded for the file.
 
     """
-    format_module = _select_format_module(filename, 'load_many')
+    format_module = _select_format_module(filename, 'load_many', fmt)
     lit = LineIterator(filename)
     for data in format_module.load_many(lit):
         try:
@@ -497,7 +509,7 @@ def load_many(filename: str) -> Iterator[IOData]:
             return
 
 
-def dump_one(iodata: IOData, filename: str):
+def dump_one(iodata: IOData, filename: str, fmt: str = None):
     """Write data to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -508,16 +520,19 @@ def dump_one(iodata: IOData, filename: str):
     ----------
     iodata
         The object containing the data to be written.
-    filename : str
+    filename
         The file to write the data to.
+    fmt
+        The name of the file format module to use. When not given, it is guessed
+        from the filename.
 
     """
-    format_module = _select_format_module(filename, 'dump_one')
+    format_module = _select_format_module(filename, 'dump_one', fmt)
     with open(filename, 'w') as f:
         format_module.dump_one(f, iodata)
 
 
-def dump_many(iodatas: Iterator[IOData], filename: str):
+def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None):
     """Write multiple IOData instances to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -530,8 +545,10 @@ def dump_many(iodatas: Iterator[IOData], filename: str):
         An iterator over IOData instances.
     filename : str
         The file to write the data to.
+    fmt
+        The name of the file format module to use.
 
     """
-    format_module = _select_format_module(filename, 'dump_many')
+    format_module = _select_format_module(filename, 'dump_many', fmt)
     with open(filename, 'w') as f:
         format_module.dump_many(f, iodatas)
