@@ -23,8 +23,9 @@ from typing import TextIO, Iterator
 
 import numpy as np
 
-from ..utils import angstrom, LineIterator
+from ..iodata import IOData
 from ..periodic import sym2num, num2sym
+from ..utils import angstrom, LineIterator
 
 
 __all__ = []
@@ -95,7 +96,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             return
 
 
-def dump_one(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: IOData):
     """Write molecular geometry into a XYZ file format.
 
     Parameters
@@ -115,7 +116,7 @@ def dump_one(f: TextIO, data: 'IOData'):
         print(f'{n:2s} {x:15.10f} {y:15.10f} {z:15.10f}', file=f)
 
 
-def dump_many(f: TextIO, datas: Iterator['IOData']):
+def dump_many(f: TextIO, datas: Iterator[IOData]):
     """Write an XYZ trajectory file.
 
     This will also work when the different data objects describe different

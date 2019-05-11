@@ -25,8 +25,8 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from .common import compute_mulliken_charges, check_orthonormal
+from ..api import load_one
 from ..formats.wfn import load_wfn_low
-from ..iodata import load_one
 from ..overlap import compute_overlap
 from ..utils import LineIterator
 

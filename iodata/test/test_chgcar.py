@@ -22,8 +22,8 @@
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
+from ..api import load_one
 from ..utils import angstrom, volume
-from ..iodata import load_one
 
 try:
     from importlib_resources import path

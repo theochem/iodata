@@ -23,8 +23,8 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 from pytest import raises
 
+from ..api import load_one
 from ..basis import MolecularBasis, Shell
-from ..iodata import load_one
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 from ..overlap_accel import fac2, _binom
 

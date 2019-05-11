@@ -25,7 +25,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 from .common import truncated_file, check_orthonormal
 
-from ..iodata import load_one
+from ..api import load_one
 from ..overlap import compute_overlap
 
 try:

@@ -23,6 +23,7 @@ from typing import TextIO, Dict, Tuple
 
 import numpy as np
 
+from ..iodata import IOData
 from ..utils import LineIterator
 
 
@@ -176,7 +177,7 @@ def _write_cube_data(f: TextIO, cube_data: np.ndarray):
         counter += 1
 
 
-def dump_one(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: IOData):
     """Write data into a CUBE file format.
 
     Parameters

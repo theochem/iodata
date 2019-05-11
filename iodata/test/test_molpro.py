@@ -24,7 +24,7 @@ import os
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..iodata import load_one, dump_one
+from ..api import load_one, dump_one
 
 try:
     from importlib_resources import path

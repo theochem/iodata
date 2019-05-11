@@ -24,9 +24,9 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 
 from .common import compute_mulliken_charges, compare_mols, check_orthonormal
+from ..api import load_one, dump_one
 from ..basis import convert_conventions
 from ..formats.molden import _load_low
-from ..iodata import load_one, dump_one
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 from ..utils import LineIterator, angstrom
 

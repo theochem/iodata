@@ -22,8 +22,8 @@
 from numpy.testing import assert_equal, assert_allclose
 
 from .common import check_orthonormal
+from ..api import load_one
 from ..overlap import compute_overlap
-from ..iodata import load_one
 from ..utils import angstrom
 
 try:

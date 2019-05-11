@@ -25,7 +25,7 @@ from numpy.testing import assert_raises, assert_allclose
 import pytest
 
 from .common import compute_1rdm
-from ..iodata import load_one, IOData
+from ..api import load_one, IOData
 from ..overlap import compute_overlap
 try:
     from importlib_resources import path

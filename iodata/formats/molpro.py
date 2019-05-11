@@ -23,6 +23,7 @@ from typing import TextIO
 
 import numpy as np
 
+from ..iodata import IOData
 from ..utils import set_four_index_element, LineIterator
 
 
@@ -113,7 +114,7 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
-def dump_one(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: IOData):
     """Write one- and two-electron integrals into a MOLPRO 2012 FCIDUMP file format.
 
     Parameters

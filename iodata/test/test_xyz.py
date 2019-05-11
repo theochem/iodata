@@ -24,7 +24,7 @@ import os
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..iodata import load_one, load_many, dump_one, dump_many
+from ..api import load_one, load_many, dump_one, dump_many
 from ..utils import angstrom
 try:
     from importlib_resources import path

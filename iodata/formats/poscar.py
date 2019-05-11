@@ -23,6 +23,7 @@ from typing import TextIO
 
 import numpy as np
 
+from ..iodata import IOData
 from ..periodic import num2sym
 from ..utils import angstrom, LineIterator
 from .chgcar import _load_vasp_header
@@ -59,7 +60,7 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
-def dump_one(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: IOData):
     """Write data into a VASP 5 POSCAR file format.
 
     Parameters

@@ -21,8 +21,8 @@
 
 from numpy.testing import assert_equal, assert_allclose
 
+from ..api import load_one
 from ..utils import angstrom, electronvolt, volume
-from ..iodata import load_one
 try:
     from importlib_resources import path
 except ImportError:
