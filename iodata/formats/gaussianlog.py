@@ -150,7 +150,7 @@ def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
         k = int(line[15:19]) - 1
         l = int(line[21:25]) - 1
         value = float(line[29:].replace('D', 'E'))
-        # Gaussian uses the chemists notation for the 4-center indexes. HORTON
+        # Gaussian uses the chemists notation for the 4-center indexes. IOdata
         # uses the physicists notation.
         set_four_index_element(result, i, k, j, l, value)
     return result

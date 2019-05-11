@@ -242,11 +242,13 @@ class IOData:
         with four of (Gaussian) basis functions. Names can start with ``er``
         (electron repulsion) or ``two`` (general pairswise interaction). When
         relevant, these names must have a suffix ``_ao`` or ``_mo`` to clarify
-        in which basis the integrals are computed, see one_ints for more details.
+        in which basis the integrals are computed, see one_ints for more
+        details. Array indexes are in physicist's notation.
     two_rdms
         Dictionary where keys are names and values are two-particle density
         matrices. Names can be ``post_scf`` or ``post_scf_spin``. These matrices
-        are always expressed in the AO basis.
+        are always expressed in the AO basis. Array indexes are in physicist's
+        notation.
 
     """
 

@@ -223,7 +223,7 @@ def load_one(lit: LineIterator) -> dict:
     if 'Dipole Moment' in fchk:
         moments[(1, 'c')] = fchk['Dipole Moment']
     if 'Quadrupole Moment' in fchk:
-        # Convert to HORTON ordering: xx, xy, xz, yy, yz, zz
+        # Convert to alphabetical ordering: xx, xy, xz, yy, yz, zz
         moments[(2, 'c')] = fchk['Quadrupole Moment'][[0, 3, 4, 1, 5, 2]]
     if moments:
         result['moments'] = moments
