@@ -24,9 +24,9 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 
 from .common import compute_mulliken_charges, compare_mols, check_orthonormal
+from ..api import load_one, dump_one
 from ..basis import convert_conventions
 from ..formats.molden import _load_low
-from ..iodata import load_one, dump_one
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 from ..utils import LineIterator, angstrom
 
@@ -265,9 +265,9 @@ def check_load_dump_consistency(fn, tmpdir):
     """
     with path('iodata.test.data', fn) as file_name:
         mol1 = load_one(str(file_name))
-    fn_tmp = os.path.join(tmpdir, 'foo.molden')
-    dump_one(mol1, fn_tmp)
-    mol2 = load_one(fn_tmp)
+    fn_tmp = os.path.join(tmpdir, 'foo.bar')
+    dump_one(mol1, fn_tmp, fmt='molden')
+    mol2 = load_one(fn_tmp, fmt='molden')
     compare_mols(mol1, mol2)
 
 

@@ -26,6 +26,7 @@ import numpy as np
 
 from ..basis import (angmom_its, angmom_sti, MolecularBasis, Shell,
                      convert_conventions, HORTON2_CONVENTIONS)
+from ..iodata import IOData
 from ..periodic import sym2num, num2sym
 from ..overlap import compute_overlap, gob_cart_normalization
 from ..utils import angstrom, LineIterator, MolecularOrbitals
@@ -60,7 +61,7 @@ CONVENTIONS = {
 }
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a MOLDEN input file format.
 
     Parameters
@@ -575,7 +576,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
                    'files causing this error'.format(filename)))
 
 
-def dump(f: TextIO, data: 'IOData'):
+def dump_one(f: TextIO, data: IOData):
     """Write data into a MOLDEN input file format.
 
     Parameters

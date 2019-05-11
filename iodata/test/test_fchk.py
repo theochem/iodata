@@ -25,8 +25,8 @@ from numpy.testing import assert_equal, assert_allclose
 
 import pytest
 
-from ..iodata import load_one, load_many
-from ..formats.fchk import load as load_fchk
+from ..api import load_one, load_many
+from ..formats.fchk import load_one as load_fchk
 from ..overlap import compute_overlap
 from ..utils import check_dm, LineIterator
 

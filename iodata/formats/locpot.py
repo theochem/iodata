@@ -29,7 +29,7 @@ __all__ = []
 patterns = ['LOCPOT*']
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a VASP 5 LOCPOT file format.
 
     Parameters

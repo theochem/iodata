@@ -32,7 +32,7 @@ __all__ = []
 patterns = ['*.out']
 
 
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load several results from an orca output file.
 
     Parameters

@@ -142,7 +142,7 @@ def _load_helper_occ(lit: LineIterator) -> np.ndarray:
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a MOLEKEL file format.
 
     Parameters

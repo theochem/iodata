@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
+# pylint: disable=no-member
 """Test iodata.formats.log module."""
 
 from numpy.testing import assert_equal, assert_allclose
 
-from ..formats.gaussianlog import load
-from ..utils import LineIterator
+from ..api import load_one
 
 try:
     from importlib_resources import path
@@ -30,20 +30,19 @@ except ImportError:
 
 
 def load_log_helper(fn_log):
-    """Load a testing Gaussian log file with iodata.formats.gaussianlog.load."""
+    """Load a testing Gaussian log file with iodata.load_one."""
     with path('iodata.test.data', fn_log) as fn:
-        lit = LineIterator(str(fn))
-        return load(lit)
+        return load_one(fn)
 
 
 def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
-    result = load_log_helper('water_sto3g_hf_g03.log')
+    mol = load_log_helper('water_sto3g_hf_g03.log')
 
-    olp = result['one_ints']['olp']
-    kin_ao = result['one_ints']['kin_ao']
-    na_ao = result['one_ints']['na_ao']
-    er_ao = result['two_ints']['er_ao']
+    olp = mol.one_ints['olp']
+    kin_ao = mol.one_ints['kin_ao']
+    na_ao = mol.one_ints['na_ao']
+    er_ao = mol.two_ints['er_ao']
 
     assert_equal(olp.shape, (7, 7))
     assert_equal(kin_ao.shape, (7, 7))
@@ -73,12 +72,12 @@ def test_load_operators_water_sto3g_hf_g03():
 
 def test_load_operators_water_ccpvdz_pure_hf_g03():
     eps = 1e-5
-    result = load_log_helper('water_ccpvdz_pure_hf_g03.log')
+    mol = load_log_helper('water_ccpvdz_pure_hf_g03.log')
 
-    olp = result['one_ints']['olp']
-    kin_ao = result['one_ints']['kin_ao']
-    na_ao = result['one_ints']['na_ao']
-    er_ao = result['two_ints']['er_ao']
+    olp = mol.one_ints['olp']
+    kin_ao = mol.one_ints['kin_ao']
+    na_ao = mol.one_ints['na_ao']
+    er_ao = mol.two_ints['er_ao']
 
     assert_equal(olp.shape, (24, 24))
     assert_equal(kin_ao.shape, (24, 24))

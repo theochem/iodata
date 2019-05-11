@@ -57,7 +57,7 @@ CONVENTIONS = {
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def load(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Load data from a GAUSSIAN FCHK file format.
 
     Parameters
@@ -271,7 +271,6 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     fchk = _load_fchk_low(lit, [
         "Atomic numbers", "Current cartesian coordinates", "Nuclear charges",
         "IRC *", "Optimization *", "Opt point *"])
-    print(fchk.keys())
 
     # Determine the type of calculation: IRC or Optimization
     if "IRC Number of geometries" in fchk:
