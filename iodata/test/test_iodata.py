@@ -153,7 +153,7 @@ def test_undefined():
 def test_natom():
     assert IOData(atcoords=np.zeros((4, 3))).natom == 4
     assert IOData(atcorenums=np.zeros(4)).natom == 4
-    assert IOData(atforces=np.zeros((4, 3))).natom == 4
+    assert IOData(atgradient=np.zeros((4, 3))).natom == 4
     assert IOData(atfrozen=[False, True, False, True]).natom == 4
     assert IOData(atmasses=[0, 0, 0, 0]).natom == 4
     assert IOData(atnums=[1, 1, 1, 1]).natom == 4

@@ -98,23 +98,33 @@ def load(lit: LineIterator) -> dict:
         'Cartesian Gradient', 'Cartesian Force Constants', 'MicOpt',
     ])
 
-    # A) Load the geometry
-    atnums = fchk["Atomic numbers"]
-    atcoords = fchk["Current cartesian coordinates"].reshape(-1, 3)
-    atcorenums = fchk["Nuclear charges"]
+    # A) Load a bunch of simple things
+    result = {
+        'title': fchk['title'],
+        'energy': fchk['Total Energy'],
+        'lot': fchk['lot'].lower(),
+        'obasis_name': fchk['obasis_name'].lower(),
+        'atcoords': fchk["Current cartesian coordinates"].reshape(-1, 3),
+        'atnums': fchk["Atomic numbers"],
+        'atcorenums': fchk["Nuclear charges"],
+    }
+
     atmasses = fchk.get("Real atomic weights")
     if atmasses is not None:
-        atmasses *= amu
-    atforces = fchk.get('Cartesian Gradient')
-    if atforces is not None:
-        atforces = -atforces.reshape(-1, 3)
+        result['atmasses'] = atmasses * amu
+    atgradient = fchk.get('Cartesian Gradient')
+    if atgradient is not None:
+        result['atgradient'] = atgradient.reshape(-1, 3)
     athessian = fchk.get('Cartesian Force Constants')
     if athessian is not None:
-        athessian = _triangle_to_dense(athessian)
+        result['athessian'] = _triangle_to_dense(athessian)
     atfrozen = fchk.get("MicOpt")
     if atfrozen is not None:
-        atfrozen = (atfrozen == -2)
-        print(atfrozen)
+        result['atfrozen'] = (atfrozen == -2)
+    run_types = {'SP': 'energy', 'FOpt': 'opt', 'Scan': 'scan', 'Freq': 'freq'}
+    run_type = run_types.get(fchk['command'])
+    if run_type is not None:
+        result['run_type'] = run_type
 
     # B) Load the orbital basis set
     shell_types = fchk["Shell types"]
@@ -152,32 +162,7 @@ def load(lit: LineIterator) -> dict:
     del nprims
     del exponents
 
-    obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
-
-    result = {
-        'title': fchk['title'],
-        'energy': fchk['Total Energy'],
-        'lot': fchk['lot'].lower(),
-        'obasis_name': fchk['obasis_name'].lower(),
-        'atcoords': atcoords,
-        'atnums': atnums,
-        'obasis': obasis,
-        'atcorenums': atcorenums,
-        'athessian': athessian,
-    }
-    run_types = {'SP': 'energy', 'FOpt': 'opt', 'Scan': 'scan', 'Freq': 'freq'}
-    run_type = run_types.get(fchk['command'])
-    if run_type is not None:
-        result['run_type'] = run_type
-    if atmasses is not None:
-        result['atmasses'] = atmasses
-    if atforces is not None:
-        result['atforces'] = atforces
-    if athessian is not None:
-        result['athessian'] = athessian
-    if atfrozen is not None:
-        result['atfrozen'] = atfrozen
-
+    result['obasis'] = MolecularBasis(shells, CONVENTIONS, 'L2')
     nbasis = fchk["Number of basis functions"]
 
     # C) Load density matrices
@@ -242,8 +227,6 @@ def load(lit: LineIterator) -> dict:
         moments[(2, 'c')] = fchk['Quadrupole Moment'][[0, 3, 4, 1, 5, 2]]
     if moments:
         result['moments'] = moments
-
-    # F) Load optional properties
     atcharges = {}
     if 'Mulliken Charges' in fchk:
         atcharges['mulliken'] = fchk['Mulliken Charges']
@@ -320,7 +303,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
                 'nstep': nstep,
                 'energy': energy,
                 'atcoords': atcoords,
-                'atforces': -gradients,
+                'atgradient': gradients,
             }
             if prefix == "IRC point":
                 data['reaction_coordinate'] = recor
