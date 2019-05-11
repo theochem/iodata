@@ -24,7 +24,7 @@ from typing import Tuple
 import numpy as np
 
 from ..periodic import sym2num
-from ..utils import angstrom, volume, LineIterator
+from ..utils import angstrom, volume, LineIterator, Cube
 
 
 __all__ = []
@@ -102,8 +102,8 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``cellvecs``,
-        ``grid`` & ``cube_data`` keys and their corresponding values.
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``,
+        ``cellvecs`` & ``cube`` keys and their corresponding values.
 
     """
     # Load header
@@ -125,19 +125,15 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
                     words = next(lit).split()
                 cube_data[i0, i1, i2] = float(words.pop(0))
 
-    ugrid = {
-        "origin": np.zeros(3),
-        "axes": cellvecs / shape.reshape(-1, 1),
-        "shape": shape,
-    }
+    cube = Cube(origin=np.zeros(3), axes=cellvecs / shape.reshape(-1, 1),
+                shape=shape, data=cube_data)
 
     return {
         'title': title,
         'atcoords': atcoords,
         'atnums': atnums,
         'cellvecs': cellvecs,
-        'ugrid': ugrid,
-        'cube_data': cube_data,
+        'cube': cube,
     }
 
 
@@ -152,11 +148,11 @@ def load_one(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``cellvecs``,
-        ``grid`` & ``cube_data`` keys and corresponding values.
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``,
+        ``cellvecs`` & ``cube`` keys and corresponding values.
 
     """
     result = _load_vasp_grid(lit)
     # renormalize electron density
-    result['cube_data'] /= volume(result['cellvecs'])
+    result['cube'].data[:] /= volume(result['cellvecs'])
     return result

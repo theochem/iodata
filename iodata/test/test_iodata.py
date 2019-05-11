@@ -56,10 +56,6 @@ def test_typecheck_raises():
     assert_raises(TypeError, IOData, atnums=atnums,
                   atcorenums=atcorenums)
     assert_raises(TypeError, IOData, atnums=atnums, atcoords=atcoords)
-    assert_raises(TypeError, IOData, cube_data=np.array([1, 2]))
-    cube_data = np.array([[1, 2], [2, 3], [3, 2]])
-    assert_raises(TypeError, IOData, atcoords=atcoords,
-                  cube_data=cube_data)
 
 
 def test_unknown_format():

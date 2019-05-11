@@ -38,21 +38,19 @@ def test_load_aelta():
     assert_equal(mol.natom, 72)
     assert_allclose(mol.atcoords[5, 0], 27.275511, atol=1.e-5)
     assert_allclose(mol.atcoords[-2, 2], 26.460812, atol=1.e-5)
-    assert_equal(mol.ugrid['shape'], 12)
-    cellvecs = mol.cellvecs
+    assert_equal(mol.cube.shape, 12)
     my_cellvecs = np.array([[1.8626, 0.1, 0.0],
                             [0.0, 1.8626, 0.0],
                             [0.0, 0.0, 1.8626]], dtype=np.float) * 12
-    assert_allclose(cellvecs, my_cellvecs, atol=1.e-5)
-    cellvecs = mol.ugrid['axes']
-    my_cellvecs = np.array([[1.8626, 0.1, 0.0],
-                            [0.0, 1.8626, 0.0],
-                            [0.0, 0.0, 1.8626]], dtype=np.float)
-    assert_allclose(cellvecs, my_cellvecs, atol=1.e-5)
-    assert_allclose(mol.ugrid['origin'], np.array([0.0, 1.2, 0.0]), atol=1.e-10)
+    assert_allclose(mol.cellvecs, my_cellvecs, atol=1.e-5)
+    my_axes = np.array([[1.8626, 0.1, 0.0],
+                        [0.0, 1.8626, 0.0],
+                        [0.0, 0.0, 1.8626]], dtype=np.float)
+    assert_allclose(mol.cube.axes, my_axes, atol=1.e-5)
+    assert_allclose(mol.cube.origin, np.array([0.0, 1.2, 0.0]), atol=1.e-10)
 
-    assert_allclose(mol.cube_data[0, 0, 0], 9.49232e-06, atol=1.e-12)
-    assert_allclose(mol.cube_data[-1, -1, -1], 2.09856e-04, atol=1.e-10)
+    assert_allclose(mol.cube.data[0, 0, 0], 9.49232e-06, atol=1.e-12)
+    assert_allclose(mol.cube.data[-1, -1, -1], 2.09856e-04, atol=1.e-10)
     pn = mol.atcorenums
     assert_allclose(pn[0], 1.0, atol=1.e-10)
     assert_allclose(pn[1], 0.1, atol=1.e-10)
@@ -71,9 +69,9 @@ def test_load_dump_load_aelta(tmpdir):
     assert mol1.title == mol2.title
     assert_allclose(mol1.atcoords, mol2.atcoords, atol=1.e-4)
     assert_equal(mol1.atnums, mol2.atnums)
-    ugrid1 = mol1.ugrid
-    ugrid2 = mol2.ugrid
-    assert_allclose(ugrid1["axes"], ugrid2["axes"], atol=1.e-4)
-    assert_equal(ugrid1["shape"], ugrid2["shape"])
-    assert_allclose(mol1.cube_data, mol2.cube_data, atol=1.e-4)
+    cube1 = mol1.cube
+    cube2 = mol2.cube
+    assert_allclose(cube1.axes, cube2.axes, atol=1.e-4)
+    assert_equal(cube1.shape, cube2.shape)
+    assert_allclose(mol1.cube.data, mol2.cube.data, atol=1.e-4)
     assert_allclose(mol1.atcorenums, mol2.atcorenums, atol=1.e-4)

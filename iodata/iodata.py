@@ -146,9 +146,6 @@ class IOData:
     atnums
         A (N,) int vector with the atomic numbers.
 
-    cube_data
-        A (K, L, M) array of data on a uniform grid (defined by ugrid).
-
     Attributes without type checking
     --------------------------------
 
@@ -188,6 +185,10 @@ class IOData:
 
     core_energy
         The Hartree-Fock energy due to the core orbitals
+
+    cube
+        An instance of Cube, describing the volumetric data from a cube (or
+        similar) file.
 
     energy
         The total energy (electronic + nn)
@@ -275,14 +276,6 @@ class IOData:
         matrices. Names can be ``post_scf`` or ``post_scf_spin``. These matrices
         are always expressed in the AO basis.
 
-    ugrid
-        A dictionary describing the uniform grid (typically from a cube file).
-        It contains the following fields: ``origin``, a 3D vector with the
-        origin of the axes frame. ``axes`` a 3x3 array where each row represents
-        the spacing between two neighboring grid points along the first, second
-        and third axis, respectively. ``shape`` A three-tuple with the number of
-        points along each axis, respectively.
-
     """
 
     def __init__(self, **kwargs):
@@ -319,9 +312,6 @@ class IOData:
         'atnums', 1, (-1,), int,
         ['atcoords', 'atcorenums', 'atgradient', 'atfrozen', 'atmasses'],
         doc="A (N,) int vector with the atomic numbers.")
-    cube_data = ArrayTypeCheckDescriptor(
-        'cube_data', 3,
-        doc="A (L, M, N) array of data on a uniform grid (defined by ugrid).")
 
     @property
     def natom(self) -> int:
