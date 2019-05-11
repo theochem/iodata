@@ -40,11 +40,11 @@ def load_one(lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Ouput dictionary containing ``title``, ``atcoords``, ``numbers``, ``cellvecs``,
-        ``grid`` & ``cube_data`` keys and corresponding values.
+        Ouput dictionary containing ``title``, ``atcoords``, ``numbers``,
+        ``cellvecs`` & ``cube`` keys and corresponding values.
 
     """
     result = _load_vasp_grid(lit)
     # convert locpot to atomic units
-    result['cube_data'] *= electronvolt
+    result['cube'].data[:] *= electronvolt
     return result

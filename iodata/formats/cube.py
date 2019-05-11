@@ -24,7 +24,7 @@ from typing import TextIO, Dict, Tuple
 import numpy as np
 
 from ..iodata import IOData
-from ..utils import LineIterator
+from ..utils import LineIterator, Cube
 
 
 __all__ = []
@@ -73,7 +73,7 @@ def _read_cube_header(lit: LineIterator) \
     axes = np.array([axis0, axis1, axis2])
 
     cellvecs = axes * shape.reshape(-1, 1)
-    ugrid = {"origin": origin, 'axes': axes, 'shape': shape}
+    cube = {"origin": origin, 'axes': axes, 'shape': shape}
 
     def read_atom_line(line: str) -> Tuple[int, float, np.ndarray]:
         """Read an atomic number and coordinate from the cube file."""
@@ -94,10 +94,10 @@ def _read_cube_header(lit: LineIterator) \
         if atcorenums[i] == 0.0:
             atcorenums[i] = atnums[i]
 
-    return title, atcoords, atnums, cellvecs, ugrid, atcorenums
+    return title, atcoords, atnums, cellvecs, cube, atcorenums
 
 
-def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarray:
+def _read_cube_data(lit: LineIterator, cube: Dict[str, np.ndarray]):
     """Load cube data from a CUBE file object.
 
     Parameters
@@ -111,8 +111,8 @@ def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarr
         The cube data array.
 
     """
-    data = np.zeros(tuple(ugrid["shape"]), float)
-    tmp = data.ravel()
+    cube['data'] = np.zeros(tuple(cube['shape']), float)
+    tmp = cube['data'].ravel()
     counter = 0
     words = []
     while counter < tmp.size:
@@ -120,11 +120,10 @@ def _read_cube_data(lit: LineIterator, ugrid: Dict[str, np.ndarray]) -> np.ndarr
             words = next(lit).split()
         tmp[counter] = float(words.pop(0))
         counter += 1
-    return data
 
 
 def load_one(lit: LineIterator) -> dict:
-    """Load data from a CUBE file format.
+    """Load data from a CUBE file.
 
     Parameters
     ----------
@@ -135,33 +134,31 @@ def load_one(lit: LineIterator) -> dict:
     -------
     out
         Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``atcorenums``,
-        ``cellvecs``, ``cube_data`` & ``grid`` keys and their corresponding values.
+        ``cellvecs``, ``cube`` keys and their corresponding values.
 
     """
-    title, atcoords, atnums, cellvecs, ugrid, atcorenums = _read_cube_header(lit)
-    data = _read_cube_data(lit, ugrid)
+    title, atcoords, atnums, cellvecs, cube, atcorenums = _read_cube_header(lit)
+    _read_cube_data(lit, cube)
     return {
         'title': title,
         'atcoords': atcoords,
         'atnums': atnums,
         'cellvecs': cellvecs,
-        'cube_data': data,
-        'ugrid': ugrid,
+        'cube': Cube(**cube),
         'atcorenums': atcorenums,
     }
 
 
 def _write_cube_header(f: TextIO, title: str, atcoords: np.ndarray, atnums: np.ndarray,
-                       ugrid_dict: Dict[str, np.ndarray], atcorenums: np.ndarray):
+                       cube: Dict[str, np.ndarray], atcorenums: np.ndarray):
     print(title, file=f)
     print('OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z', file=f)
     natom = len(atnums)
-    x, y, z = ugrid_dict["origin"]
+    x, y, z = cube.origin
     print(f'{natom:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
-    axes = ugrid_dict["axes"]
     for i in range(3):
-        x, y, z = axes[i]
-        print(f'{ugrid_dict["shape"][i]:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
+        x, y, z = cube.axes[i]
+        print(f'{cube.shape[i]:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
     for i in range(natom):
         q = atcorenums[i]
         x, y, z = atcoords[i]
@@ -185,13 +182,11 @@ def dump_one(f: TextIO, data: IOData):
     f
         A file to write to.
     data
-        An IOData instance which must contain ``atcoords``, ``atnums``, ``grid`` &
-        ``cube_data`` attributes. It may contain ``title``  & ``atcorenums`` attributes.
+        An IOData instance which must contain ``atcoords``, ``atnums`` &
+        ``cube`` attributes. It may contain ``title`` & ``atcorenums``
+        attributes.
 
     """
-    if not isinstance(data.ugrid, dict):
-        raise ValueError(
-            'The ugrid attribute must be dictionary.')
-    title = getattr(data, 'title', 'Created with HORTON')
-    _write_cube_header(f, title, data.atcoords, data.atnums, data.ugrid, data.atcorenums)
-    _write_cube_data(f, data.cube_data)
+    title = getattr(data, 'title', 'Created with IOData')
+    _write_cube_header(f, title, data.atcoords, data.atnums, data.cube, data.atcorenums)
+    _write_cube_data(f, data.cube.data)

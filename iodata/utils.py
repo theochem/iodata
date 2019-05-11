@@ -143,6 +143,30 @@ class MolecularOrbitals(NamedTuple):
         return abs(sq)
 
 
+class Cube(NamedTuple):
+    """The volumetric data from a cube (or similar) file.
+
+    Attributes
+    ----------
+    origin
+        A 3D vector with the origin of the axes frame.
+    axes
+        A (3, 3) array where each row represents the spacing between two
+        neighboring grid points along the first, second and third axis,
+        respectively.
+    shape
+        A three-tuple with the number of points along each axis, respectively.
+    data
+        A (K, L, M) array of data on a uniform grid
+
+    """
+
+    origin: np.ndarray
+    axes: np.ndarray
+    shape: np.ndarray
+    data: np.ndarray
+
+
 def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int, l: int,
                            value: float):
     """Assign values to a four index object, account for 8-fold index symmetry.
