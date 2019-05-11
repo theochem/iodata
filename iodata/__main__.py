@@ -26,17 +26,19 @@ import numpy as np
 from iodata import load_one, dump_one
 
 try:
-    from iodata import __version__
+    from iodata.version import __version__
 except ImportError:
     __version__ = '0.0.0.post0'
 
 
-# All, except underflows, is *not* fine.
-np.seterr(divide='raise', over='raise', invalid='raise')
+__all__ = []
 
 
 def main():
     """Convert files between two formats using command-line arguments."""
+    # All, except underflows, is *not* fine.
+    np.seterr(divide='raise', over='raise', invalid='raise')
+
     parser = argparse.ArgumentParser(
         prog='iodata-convert',
         description='Convert between file formats supported by IOData. This '
