@@ -445,7 +445,7 @@ def load_one(lit: LineIterator) -> dict:
             lit.error('Could not find beta orbital coefficient in CP2K ATOM output.')
         coeffs_beta = _read_cp2k_orbital_coeffs(lit, oe_beta)
 
-    # Turn orbital data into a HORTON orbital expansions
+    # Turn orbital data into a MolecularOrbitals object.
     if restricted:
         mo_type = 'restricted'
         norb, nel = _get_norb_nel(oe_alpha)

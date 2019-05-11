@@ -38,7 +38,7 @@ np.seterr(divide='raise', over='raise', invalid='raise')
 def main():
     """Convert files between two formats using command-line arguments."""
     parser = argparse.ArgumentParser(
-        prog='horton-convert',
+        prog='iodata-convert',
         description='Convert between file formats supported by IOData. This '
                     'only works if the input contains sufficient data for '
                     'the output.')

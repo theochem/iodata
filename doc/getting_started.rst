@@ -28,11 +28,11 @@ IOData can be used to read and write different quantum chemistry file formats.
 Script usage
 ------------
 
-The simplest way to use IOData, without writing any code is to use the ``horton-convert`` script.
+The simplest way to use IOData, without writing any code is to use the ``iodata-convert`` script.
 
 .. code-block:: bash
 
-    horton-convert.py in.xyz out.molden
+    iodata-convert in.xyz out.molden
 
 See the :code:`--help` option for more details on usage.
 

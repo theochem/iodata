@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# cython: linetrace=True
+# cython: linetrace=True, embedsignature=True, language_level=3
 """Cython module to accelerate computation of overlap integrals."""
 
 
@@ -49,12 +49,14 @@ cpdef void add_overlap(double coeff, double alpha0, double alpha1, double[::1] s
             #     _vec_gb_overlap_int1d(n0, n1, gpt_center - r0, gpt_center - r1, gamma_inv), \
             #     scales0[s0], scales1[s1]
 
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 cdef double _dist_sq(double[::1] r0, double[::1] r1) nogil:
     return pow((r0[0] - r1[0]), 2) \
            + pow((r0[1] - r1[1]), 2) \
            + pow((r0[2] - r1[2]), 2)
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -74,16 +76,18 @@ cdef double _vec_gb_overlap_int1d(long[::1] n0, long[::1] n1, double[::1] r0, do
            _gb_overlap_int1d(n0[1], n1[1], gptc[1] - r0[1], gptc[1] - r1[1], gamma_inv) * \
            _gb_overlap_int1d(n0[2], n1[2], gptc[2] - r0[2], gptc[2] - r1[2], gamma_inv)
 
+
 cdef double _gb_overlap_int1d(long n0, long n1, double pa, double pb, double gamma_inv) nogil:
     """The overlap integral in one dimension."""
     cdef long k, kmax
     cdef double result = 0.0
 
-    kmax = (n0 + n1) / 2
+    kmax = (n0 + n1) // 2
     for k in range(kmax + 1):
         result += fac2(2 * k - 1) * _gpt_coeff(2 * k, n0, n1, pa, pb) * pow(0.5 * gamma_inv, k)
 
     return sqrt(3.14159265358979323846 * gamma_inv) * result
+
 
 cdef double _gpt_coeff(long k, long n0, long n1, double pa, double pb) nogil:
     cdef double result = 0.0
@@ -101,6 +105,7 @@ cdef double _gpt_coeff(long k, long n0, long n1, double pa, double pb) nogil:
             break
     return result
 
+
 cpdef long _binom(long n, long m) nogil:
     cdef long numer = 1
     cdef long denom = 1
@@ -108,7 +113,8 @@ cpdef long _binom(long n, long m) nogil:
         numer *= n
         denom *= n - m
         n -= 1
-    return numer / denom
+    return numer // denom
+
 
 cpdef long fac2(long n) nogil:
     r"""
