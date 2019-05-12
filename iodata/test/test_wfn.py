@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=no-member
 """Test iodata.formats.wfn module."""
 
 
@@ -238,4 +237,4 @@ def test_load_wfn_lih_cation_fci():
     assert_equal(mol.atnums, [3, 1])
     assert_equal(mol.mo.occs.shape, (11,))
     assert_allclose(mol.mo.occs.sum(), 3., rtol=0., atol=1.e-6)
-    #assert abs(mol.mo.occsa.sum() - 1.5) < 1.e-6
+    # assert abs(mol.mo.occsa.sum() - 1.5) < 1.e-6

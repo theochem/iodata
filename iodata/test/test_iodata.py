@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=no-member
+# pylint: disable=unsubscriptable-object,no-member
 """Test iodata.iodata module."""
 
 
 import numpy as np
-from numpy.testing import assert_raises, assert_allclose
+from numpy.testing import assert_allclose
 import pytest
 
 from .common import compute_1rdm
@@ -36,30 +36,30 @@ except ImportError:
 def test_typecheck():
     m = IOData(atcoords=np.array([[1, 2, 3], [2, 3, 1]]))
     assert np.issubdtype(m.atcoords.dtype, np.floating)
-    assert not hasattr(m, 'atnums')
+    assert m.atnums is None
     m = IOData(atnums=np.array([2.0, 3.0]), atcorenums=np.array([1, 1]),
                atcoords=np.array([[1, 2, 3], [2, 3, 1]]))
     assert np.issubdtype(m.atnums.dtype, np.integer)
     assert np.issubdtype(m.atcorenums.dtype, np.floating)
-    assert hasattr(m, 'atnums')
-    del m.atnums
-    assert not hasattr(m, 'atnums')
+    assert m.atnums is not None
+    m.atnums = None
+    assert m.atnums is None
 
 
 def test_typecheck_raises():
     # check attribute type
-    assert_raises(TypeError, IOData, atcoords=np.array([[1, 2], [2, 3]]))
-    assert_raises(TypeError, IOData, atnums=np.array([[1, 2], [2, 3]]))
+    pytest.raises(TypeError, IOData, atcoords=np.array([[1, 2], [2, 3]]))
+    pytest.raises(TypeError, IOData, atnums=np.array([[1, 2], [2, 3]]))
     # check inconsistency between various attributes
     atnums, atcorenums, atcoords = np.array(
         [2, 3]), np.array([1]), np.array([[1, 2, 3]])
-    assert_raises(TypeError, IOData, atnums=atnums,
+    pytest.raises(TypeError, IOData, atnums=atnums,
                   atcorenums=atcorenums)
-    assert_raises(TypeError, IOData, atnums=atnums, atcoords=atcoords)
+    pytest.raises(TypeError, IOData, atnums=atnums, atcoords=atcoords)
 
 
 def test_unknown_format():
-    assert_raises(ValueError, load_one, 'foo.unknown_file_extension')
+    pytest.raises(ValueError, load_one, 'foo.unknown_file_extension')
 
 
 def test_dm_water_sto3g_hf():
@@ -129,21 +129,15 @@ def test_undefined():
     # One a blank IOData object, accessing undefined charge and nelec should raise
     # an AttributeError.
     mol = IOData()
-    with pytest.raises(AttributeError):
-        _ = mol.charge
-    with pytest.raises(AttributeError):
-        _ = mol.nelec
-    with pytest.raises(AttributeError):
-        _ = mol.spinpol
-    with pytest.raises(AttributeError):
-        _ = mol.natom
+    assert mol.charge is None
+    assert mol.nelec is None
+    assert mol.spinpol is None
+    assert mol.natom is None
     mol.nelec = 5
-    with pytest.raises(AttributeError):
-        _ = mol.charge
+    assert mol.charge is None
     mol = IOData()
     mol.charge = 1
-    with pytest.raises(AttributeError):
-        _ = mol.nelec
+    assert mol.nelec is None
 
 
 def test_natom():

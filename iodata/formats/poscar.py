@@ -90,8 +90,9 @@ def dump_one(f: TextIO, data: IOData):
     print('Direct', file=f)
 
     # Write the coordinates
+    gvecs = np.linalg.inv(data.cellvecs).T
     for uatnum in uatnums:
         indexes = (data.atnums == uatnum).nonzero()[0]
         for index in indexes:
-            row = np.dot(data.gvecs, data.atcoords[index])
+            row = np.dot(gvecs, data.atcoords[index])
             print(f'  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F', file=f)
