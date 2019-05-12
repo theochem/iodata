@@ -23,7 +23,7 @@
 import argparse
 import numpy as np
 
-from iodata import load_one, dump_one
+from .api import load_one, dump_one
 
 try:
     from iodata.version import __version__
