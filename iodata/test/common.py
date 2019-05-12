@@ -109,7 +109,6 @@ def compare_mols(mol1, mol2):
         assert mol2.obasis is None
     # wfn
     permutation, signs = convert_conventions(mol1.obasis, mol2.obasis.conventions)
-    assert mol1.mo.type == mol2.mo.type
     assert_allclose(mol1.mo.occs, mol2.mo.occs)
     assert_allclose(mol1.mo.energies, mol2.mo.energies)
     assert_allclose(mol1.mo.coeffs[permutation] * signs.reshape(-1, 1), mol2.mo.coeffs, atol=1e-8)

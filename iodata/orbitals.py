@@ -21,23 +21,19 @@
 
 from typing import NamedTuple
 
+import attr
 import numpy as np
 
 
-__all__ = ['MolecularOrbitals']
+__all__ = ['RestrictedOrbitals', 'UnrestrictedOrbitals', 'GeneralizedOrbitals']
 
 
-class MolecularOrbitals(NamedTuple):
-    """Molecular Orbitals Class.
+@attr.s(auto_attribs=True)
+class Orbitals:
+    """Molecular Orbitals base Class.
 
     Attributes
     ----------
-    type : str
-        Molecular orbital type; choose from 'restricted', 'unrestricted', or 'generalized'.
-    norba : int
-        Number of alpha molecular orbitals. None in case of type=='generalized'.
-    norbb : int
-        Number of beta molecular orbitals. None in case of type=='generalized'.
     occs : np.ndarray
         Molecular orbital occupation numbers. The number of elements equals the
         number of columns of coeffs.
@@ -47,22 +43,19 @@ class MolecularOrbitals(NamedTuple):
         In case of unrestricted: shape = (nbasis, norb_a + norb_b).
         In case of generalized: shape = (2*nbasis, norb), where norb is the
         total number of orbitals (not defined by other attributes).
-    irreps : np.ndarray
-        Irreducible representation. The number of elements equals the
-        number of columns of coeffs.
     energies : np.ndarray
         Molecular orbital energies. The number of elements equals the
+        number of columns of coeffs.
+    irreps : np.ndarray
+        Irreducible representation. The number of elements equals the
         number of columns of coeffs.
 
     """
 
-    type: str
-    norba: int
-    norbb: int
     occs: np.ndarray
     coeffs: np.ndarray
-    irreps: np.ndarray
     energies: np.ndarray
+    irreps: np.ndarray
 
     @property
     def nelec(self) -> float:
@@ -70,14 +63,151 @@ class MolecularOrbitals(NamedTuple):
         return self.occs.sum()
 
     @property
+    def nbasis(self):
+        """Return the number of spatial basis functions."""
+        return self.coeffs.shape[0]
+
+    @property
+    def norb(self):
+        """Return the number of orbitals."""
+        return self.coeffs.shape[1]
+
+
+@attr.s(auto_attribs=True)
+class RestrictedOrbitals(Orbitals):
+    """Restricted Orbitals class."""
+
+    @property
     def spinpol(self) -> float:
-        """Return the spin multiplicity of the Slater determinant."""
-        if self.type == 'restricted':
-            nbeta = np.clip(self.occs, 0, 1).sum()
-            sq = self.nelec - 2 * nbeta
-        elif self.type == 'unrestricted':
-            sq = self.occs[:self.norba].sum() - self.occs[self.norba:].sum()
-        else:
-            # Not sure how to do this in a simply way.
-            raise NotImplementedError
-        return abs(sq)
+        """Return the spin polarization of the Slater determinant."""
+        nbeta = np.clip(self.occs, 0, 1).sum()
+        return abs(self.nelec - 2 * nbeta)
+
+    @property
+    def occsa(self):
+        """Return alpha occupation numbers."""
+        return np.clip(self.occs, 0, 1)
+
+    @property
+    def occsb(self):
+        """Return beta occupation numbers."""
+        return self.occs - np.clip(self.occs, 0, 1)
+
+    @property
+    def coeffsa(self):
+        """Return alpha orbital coefficients."""
+        return self.coeffs
+
+    @property
+    def coeffsb(self):
+        """Return beta orbital coefficients."""
+        return self.coeffs
+
+    @property
+    def irrepsa(self):
+        """Return alpha irreps."""
+        return self.irreps
+
+    @property
+    def irrepsb(self):
+        """Return beta irreps."""
+        return self.irreps
+
+    @property
+    def energiesa(self):
+        """Return alpha orbital energies."""
+        return self.energies
+
+    @property
+    def energiesb(self):
+        """Return beta orbital energies."""
+        return self.energies
+
+
+@attr.s(auto_attribs=True)
+class UnrestrictedOrbitals(Orbitals):
+    """Unestricted Orbitals class.
+
+    New attributes not defined in Orbitals
+    --------------------------------------
+    norba : int
+        Number of alpha molecular orbitals. Only present in case of
+
+    """
+
+    # Note: one cannot inherit attributes of a NamedTuple. They must be defined
+    # in the subclass.
+    norba: int
+    occs: np.ndarray
+    coeffs: np.ndarray
+    energies: np.ndarray
+    irreps: np.ndarray
+
+    @property
+    def norbb(self):
+        """Return the number of beta orbitals."""
+        return self.norb - self.norba
+
+    @norbb.setter
+    def norbb(self, norbb):
+        self.norba = self.norb - norbb
+
+    @property
+    def spinpol(self) -> float:
+        """Return the spin polarization of the Slater determinant."""
+        return abs(self.occsa.sum() - self.occsb.sum())
+
+    @property
+    def occsa(self):
+        """Return alpha occupation numbers."""
+        return self.occs[:self.norba]
+
+    @property
+    def occsb(self):
+        """Return beta occupation numbers."""
+        return self.occs[self.norba:]
+
+    @property
+    def coeffsa(self):
+        """Return alpha orbital coefficients."""
+        return self.coeffs[:, :self.norba]
+
+    @property
+    def coeffsb(self):
+        """Return beta orbital coefficients."""
+        return self.coeffs[:, self.norba:]
+
+    @property
+    def irrepsa(self):
+        """Return alpha irreps."""
+        return self.irreps[:self.norba]
+
+    @property
+    def irrepsb(self):
+        """Return beta irreps."""
+        return self.irreps[self.norba:]
+
+    @property
+    def energiesa(self):
+        """Return alpha orbital energies."""
+        return self.energies[:self.norba]
+
+    @property
+    def energiesb(self):
+        """Return beta orbital energies."""
+        return self.energies[self.norba:]
+
+
+@attr.s(auto_attribs=True)
+class GeneralizedOrbitals(Orbitals, NamedTuple):
+    """Generalized Orbitals class."""
+
+    @property
+    def nbasis(self):
+        """Return the number of spatial basis functions."""
+        return self.coeffs.shape[0] // 2
+
+    @property
+    def spinpol(self) -> float:
+        """Return the spin polarization of the Slater determinant."""
+        raise NotImplementedError

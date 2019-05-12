@@ -26,7 +26,7 @@ import numpy as np
 from ..basis import MolecularBasis, Shell
 from ..overlap import gob_cart_normalization
 from ..periodic import sym2num
-from ..orbitals import MolecularOrbitals
+from ..orbitals import RestrictedOrbitals, UnrestrictedOrbitals
 from ..utils import LineIterator
 
 
@@ -328,23 +328,17 @@ def load_one(lit: LineIterator) -> dict:
     mo_coefficients /= scales.reshape(-1, 1)
     # make the wavefunction
     if mo_occ.max() > 1.0:
-        # close shell system
-        mo_type = 'restricted'
-        na_orb = len(mo_occ)
-        nb_orb = len(mo_occ)
+        # closed-shell system
+        mo = RestrictedOrbitals(mo_occ, mo_coefficients, mo_energy, None)
     else:
-        # open shell system
-        mo_type = 'unrestricted'
-        # counting the number of alpha and beta orbitals
-        n = 1
-        while (n < mo_coefficients.shape[1]
-               and mo_energy[n] >= mo_energy[n - 1]
-               and mo_count[n] == mo_count[n - 1] + 1):
-            n += 1
-        na_orb = n
-        nb_orb = len(mo_occ) - n
-    # create a MO namedtuple
-    mo = MolecularOrbitals(mo_type, na_orb, nb_orb, mo_occ, mo_coefficients, None, mo_energy)
+        # open-shell system
+        # counting the number of alpha orbitals
+        norba = 1
+        while (norba < mo_coefficients.shape[1]
+               and mo_energy[norba] >= mo_energy[norba - 1]
+               and mo_count[norba] == mo_count[norba - 1] + 1):
+            norba += 1
+        mo = UnrestrictedOrbitals(norba, mo_occ, mo_coefficients, mo_energy, None)
 
     result = {
         'title': title,

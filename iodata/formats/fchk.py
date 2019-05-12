@@ -25,7 +25,7 @@ from typing import List, Tuple, Iterator
 import numpy as np
 
 from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS
-from ..orbitals import MolecularOrbitals
+from ..orbitals import RestrictedOrbitals, UnrestrictedOrbitals
 from ..utils import LineIterator, amu
 
 
@@ -191,21 +191,20 @@ def load_one(lit: LineIterator) -> dict:
 
     norba = fchk['Alpha Orbital Energies'].shape[0]
     mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
-    mo_energy = np.copy(fchk['Alpha Orbital Energies'])
+    mo_energies = np.copy(fchk['Alpha Orbital Energies'])
 
     if 'Beta Orbital Energies' in fchk:
         # unrestricted
-        mo_type = 'unrestricted'
         norbb = fchk['Beta Orbital Energies'].shape[0]
         mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
         mo_coeffs = np.concatenate((mo_coeffs, mo_coeffs_b), axis=1)
-        mo_energy = np.concatenate((mo_energy, np.copy(fchk['Beta Orbital Energies'])), axis=0)
+        mo_energies = np.concatenate((mo_energies, np.copy(fchk['Beta Orbital Energies'])), axis=0)
         mo_occs = np.zeros(2 * nbasis_indep)
         mo_occs[:nalpha] = 1.0
         mo_occs[nbasis_indep: nbasis_indep + nbeta] = 1.0
+        mo = UnrestrictedOrbitals(norba, mo_occs, mo_coeffs, mo_energies, None)
     else:
         # restricted closed-shell and open-shell
-        mo_type = 'restricted'
         norbb = norba
         mo_occs = np.zeros(nbasis_indep)
         mo_occs[:nalpha] = 1.0
@@ -213,9 +212,8 @@ def load_one(lit: LineIterator) -> dict:
         if nalpha != nbeta:
             # delete dm_full_scf because it is known to be buggy
             result['one_rdms'].pop('scf')
-
-    # create a MO namedtuple
-    result['mo'] = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
+        mo = RestrictedOrbitals(mo_occs, mo_coeffs, mo_energies, None)
+    result['mo'] = mo
 
     # E) Load properties
     if 'Polarizability' in fchk:

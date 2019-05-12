@@ -77,6 +77,6 @@ setup(
         'Intended Audience :: Science/Research',
     ],
     setup_requires=['numpy>=1.0', 'cython>=0.24.1'],
-    install_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy',
+    install_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy', 'attr>=19.1.0',
                       'importlib_resources; python_version < "3.7"'],
 )
