@@ -36,6 +36,9 @@ angstrom: float = spc.angstrom / spc.value(u'atomic unit of length')
 electronvolt: float = 1 / spc.value(u'hartree-electron volt relationship')
 # atomic mass unit (not atomic unit of mass!)
 amu: float = 1e-3 / (spc.value(u'electron mass') * spc.value(u'Avogadro constant'))
+# avogadro, calorie
+avogadro: float = spc.value('Avogadro constant')
+calorie: float = spc.calorie
 
 
 class LineIterator:
