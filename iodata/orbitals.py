@@ -75,7 +75,15 @@ class Orbitals:
 
 @attr.s(auto_attribs=True)
 class RestrictedOrbitals(Orbitals):
-    """Restricted Orbitals class."""
+    """Restricted Orbitals class.
+
+    Warning: the interpretation of the occupation numbers may only be suitable
+    for single-reference orbitals (not fractionally occupied natural orbitals.)
+    When an occupation number is in ]0, 1], it is assumed that an alpha orbital
+    is (fractionally) occupied. When an occupation number is in ]1, 2], it is
+    assumed that the alpha orbital is fully occupied and the beta orbital is
+    (fractionally) occupied.
+    """
 
     @property
     def spinpol(self) -> float:

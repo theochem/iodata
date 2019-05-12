@@ -313,7 +313,12 @@ class IOData:
 
     @property
     def spinpol(self) -> float:
-        """Return the spin multiplicity."""
+        """Return the spin polarization.
+
+        Warning: for restricted wavefunctions, it is assumed that an occupation
+        number in ]0, 2[ implies spin polarizaiton, which may not always be a
+        valid assumption.
+        """
         if self.mo is None:
             return self._spinpol
         return self.mo.spinpol
