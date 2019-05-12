@@ -85,7 +85,7 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
 
 def compare_mols(mol1, mol2):
     """Compare two IOData objects."""
-    assert getattr(mol1, 'title', None) == getattr(mol2, 'title', None)
+    assert mol1.title == mol2.title
     assert_equal(mol1.atnums, mol2.atnums)
     assert_equal(mol1.atcorenums, mol2.atcorenums)
     assert_allclose(mol1.atcoords, mol2.atcoords)
@@ -121,8 +121,8 @@ def compare_mols(mol1, mol2):
         ('one_rdms', ['scf', 'scf_spin', 'post_scf', 'post_scf_spin']),
     ]
     for attrname, keys in cases:
-        d1 = getattr(mol1, attrname, {})
-        d2 = getattr(mol2, attrname, {})
+        d1 = getattr(mol1, attrname)
+        d2 = getattr(mol2, attrname)
         for key in keys:
             if key in d1:
                 assert key in d2

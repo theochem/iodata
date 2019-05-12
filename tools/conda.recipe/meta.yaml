@@ -26,6 +26,7 @@ requirements:
   run:
     - python
     - scipy
+    - attrs >=19.1.0
     - importlib_resources  # [py<37]
 
 test:

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=no-member
+# pylint: disable=unsubscriptable-object,no-member
 """Test iodata.formats.fchk module."""
 
 
@@ -334,18 +334,18 @@ def check_trj_basics(trj, nsteps, title, irc):
     for ipoint, nstep in enumerate(nsteps):
         for istep in range(nstep):
             mol = trj.pop(0)
-            assert mol.ipoint == ipoint
-            assert mol.npoint == len(nsteps)
-            assert mol.istep == istep
-            assert mol.nstep == nstep
+            assert mol.extra['ipoint'] == ipoint
+            assert mol.extra['npoint'] == len(nsteps)
+            assert mol.extra['istep'] == istep
+            assert mol.extra['nstep'] == nstep
             assert mol.natom == natom
             assert mol.atnums.shape == (natom, )
             assert mol.atcorenums.shape == (natom, )
             assert mol.atcoords.shape == (natom, 3)
             assert mol.atgradient.shape == (natom, 3)
             assert mol.title == title
-            assert hasattr(mol, 'energy')
-            assert hasattr(mol, 'reaction_coordinate') ^ (not irc)
+            assert mol.energy is not None
+            assert ('reaction_coordinate' in mol.extra) ^ (not irc)
 
 
 def test_peroxide_opt():
@@ -402,10 +402,10 @@ def test_peroxide_irc():
     assert_allclose(trj[0].energy, -1.48750432E+02)
     assert_allclose(trj[5].energy, -1.48752713E+02)
     assert_allclose(trj[-1].energy, -1.48757803E+02)
-    assert trj[0].reaction_coordinate == 0.0
-    assert_allclose(trj[1].reaction_coordinate, 1.05689581E-01)
-    assert_allclose(trj[10].reaction_coordinate, 1.05686037E+00)
-    assert_allclose(trj[-1].reaction_coordinate, -1.05685760E+00)
+    assert trj[0].extra['reaction_coordinate'] == 0.0
+    assert_allclose(trj[1].extra['reaction_coordinate'], 1.05689581E-01)
+    assert_allclose(trj[10].extra['reaction_coordinate'], 1.05686037E+00)
+    assert_allclose(trj[-1].extra['reaction_coordinate'], -1.05685760E+00)
     assert_allclose(trj[0].atcoords[2],
                     [-1.94749866E+00, -5.22905491E-01, -1.47814774E+00])
     assert_allclose(trj[10].atcoords[1],

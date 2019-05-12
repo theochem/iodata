@@ -19,101 +19,46 @@
 """Module for handling input/output from different file formats."""
 
 
-from typing import List, Tuple, Type
-
+import attr
 import numpy as np
+
+from .basis import MolecularBasis
+from .orbitals import MolecularOrbitals
+from .utils import Cube
 
 
 __all__ = ['IOData']
 
 
-class ArrayTypeCheckDescriptor:
-    """A type checker for IOData attributes."""
-
-    def __init__(self, name: str, ndim: int = None, shape: Tuple = None, dtype: Type = None,
-                 matching: List[str] = None, default: str = None, doc=None):
-        """Initialize decorator to perform type and shape checking of np.ndarray attributes.
-
-        Parameters
-        ----------
-        name
-            Name of the attribute (without leading underscores).
-        ndim
-            The number of dimensions of the array.
-        shape
-            The shape of the array. Use -1 for dimensions where the shape is
-            not fixed a priori.
-        dtype
-            The datatype of the array.
-        matching
-            A list of names of other attributes that must have consistent
-            shapes. This argument requires that the shape is specified.
-            All dimensions for which the shape tuple equals -1 are must be
-            the same in this attribute and the matching attributes.
-        default
-            The name of another (type-checked) attribute to return as default
-            when this attribute is not set
-
-        """
-        if matching is not None and shape is None:
-            raise TypeError('The matching argument requires the shape to be specified.')
-
-        self._name = name
-        self._ndim = ndim
-        self._shape = shape
-        if dtype is None:
-            self._dtype = None
-        else:
-            self._dtype = np.dtype(dtype)
-        self._matching = matching
-        self._default = default
-        self.__doc__ = doc or 'A type-checked attribute'
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-        if self._default is not None and not hasattr(instance, '_' + self._name):
-            # When the attribute is not present, we assign it first with the
-            # default value. The return statement can then remain completely
-            # general.
-            default = (getattr(instance, '_' + self._default).astype(self._dtype))
-            setattr(instance, '_' + self._name, default)
-        return getattr(instance, '_' + self._name)
-
-    def __set__(self, obj, value):
-        # try casting to proper dtype:
-        value = np.array(value, dtype=self._dtype, copy=False)
-        # if not isinstance(value, np.ndarray):
-        #    raise TypeError('Attribute \'%s\' of \'%s\' must be a numpy '
-        #                    'array.' % (self._name, type(obj)))
-        if self._ndim is not None and value.ndim != self._ndim:
-            raise TypeError(f"Attribute '{self._name}' of '{type(obj)}' must be a numpy array "
-                            f"with {self._ndim} dimension(s).")
-        if self._shape is not None:
-            for i in range(len(self._shape)):
-                if self._shape[i] >= 0 and self._shape[i] != value.shape[i]:
-                    raise TypeError(f"Attribute '{self._name}' of '{type(obj)}' must be a numpy"
-                                    f" array {self._shape[i]} elements in dimension {i}.")
-        if self._dtype is not None:
-            if not issubclass(value.dtype.type, self._dtype.type):
-                raise TypeError(f"Attribute '{self._name}' of '{type(obj)}' must be a numpy "
-                                f"array with dtype '{self._dtype.type}'.")
-        if self._matching is not None:
-            for othername in self._matching:
-                other = getattr(obj, '_' + othername, None)
-                if other is not None:
-                    for i in range(len(self._shape)):
-                        if self._shape[i] == -1 and \
-                                other.shape[i] != value.shape[i]:
-                            raise TypeError(f"shape[{i}] of attribute '{self._name}' of "
-                                            f"'{type(obj)}' in is incompatible with "
-                                            f"that of '{othername}'.")
-        setattr(obj, '_' + self._name, value)
-
-    def __delete__(self, obj):
-        delattr(obj, '_' + self._name)
+def convert_array_to(dtype):
+    """Return a function to convert arrays to the given type."""
+    def converter(array):
+        if array is None:
+            return None
+        return np.array(array, copy=False, dtype=dtype)
+    return converter
 
 
+def validate_shape(*shape):
+    """Return a function to validate the shape of an array."""
+    def validator(obj, attrname, value):
+        if value is None:
+            return
+        myshape = tuple([obj.natom if size == 'natom' else size for size in shape])
+        if len(myshape) != len(value.shape):
+            raise TypeError('Expect ndim {} for attribute {}, got {}'.format(
+                len(myshape), attrname, len(value.shape)))
+        for axis, size in enumerate(myshape):
+            if size is None:
+                continue
+            if size != value.shape[axis]:
+                raise TypeError(
+                    'Expect size {} for axis {} of attribute {}, got {}'.format(
+                        size, axis, attrname, value.shape[axis]))
+    return validator
+
+
+@attr.s(auto_attribs=True, slots=True)
 class IOData:
     """A container class for data loaded from (or to be written to) a file.
 
@@ -122,41 +67,35 @@ class IOData:
     set are removed after the IOData instance is constructed. The following
     attributes are supported by at least one of the io formats:
 
-    Type checked array attributes (if present)
-    ------------------------------------------
-
+    Attributes
+    ----------
+    atcharges
+        A dictionary where keys are names of charge definitions and values are
+        arrays with atomic charges (size N).
     atcoords
         A (N, 3) float array with Cartesian coordinates of the atoms.
     atcorenums
         A (N,) float array with pseudo-potential core charges. The matrix
         elements corresponding to ghost atoms are zero.
-    atfrozen
-        A (N,) bool array with frozen atoms. (All atoms are free if this
-        attribute is not set.)
-    atgradient
-        A (N, 3) float array with the first derivatives of the energy w.r.t.
-        Cartesian atomic displacements.
-    atmasses
-        A (N,) float array with atomic masses
-
-    atnums
-        A (N,) int vector with the atomic numbers.
-
-    Attributes without type checking
-    --------------------------------
-
-    atcharges
-        A dictionary where keys are names of charge definitions and values are
-        arrays with atomic charges (size N).
     atffparams
         A dictionary with arrays of atomic force field parameters (typically
         non-bonded). Keys include 'charges', 'vdw_radii', 'sigmas', 'epsilons',
         'alphas' (atomic polarizabilities), 'c6s', 'c8s', 'c10s', 'buck_as',
         'buck_bs', 'lj_as', 'core_charges', 'valence_charges', 'valence_widths',
         etc. Not all of them have to be present, depending on the use case.
+    atfrozen
+        A (N,) bool array with frozen atoms. (All atoms are free if this
+        attribute is not set.)
+    atgradient
+        A (N, 3) float array with the first derivatives of the energy w.r.t.
+        Cartesian atomic displacements.
     athessian
         A (3*N, 3*N) array containing the energy Hessian w.r.t Cartesian atomic
         displacements.
+    atmasses
+        A (N,) float array with atomic masses
+    atnums
+        A (N,) int vector with the atomic numbers.
     basisdef
         A basis set definition, i.e. a dictionary whose keys are symbols (of
         chemical elements), atomic numbers (similar to previous, str to make
@@ -173,6 +112,8 @@ class IOData:
         periodic boundary conditions. A single vector corresponds to a 1D cell,
         e.g. for a wire. Two vectors describe a 2D cell, e.g. for a membrane.
         Three vectors describe a 3D cell, e.g. a crystalline solid.
+    charge
+        The net charge of the system.
     core_energy
         The Hartree-Fock energy due to the core orbitals
     cube
@@ -252,95 +193,123 @@ class IOData:
 
     """
 
-    def __init__(self, **kwargs):
-        """Initialize an IOData instance.
+    atcharges: dict = {}
+    atcoords: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(float),
+        validator=validate_shape('natom', 3))
+    _atcorenums: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(float),
+        validator=validate_shape('natom'))
+    atffparams: dict = {}
+    atfrozen: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(bool),
+        validator=validate_shape('natom'))
+    atgradient: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(float),
+        validator=validate_shape('natom', 3))
+    athessian: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(float),
+        validator=validate_shape(None, None))
+    atmasses: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(float),
+        validator=validate_shape('natom'))
+    atnums: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(int),
+        validator=validate_shape('natom'))
+    basisdef: str = None
+    bonds: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(int),
+        validator=validate_shape(None, 3))
+    cellvecs: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(float),
+        validator=validate_shape(None, 3))
+    _charge: float = None
+    core_energy: float = None
+    cube: Cube = None
+    energy: float = None
+    extcharges: np.ndarray = attr.ib(
+        default=None, converter=convert_array_to(float),
+        validator=validate_shape(None, 4))
+    extra: dict = {}
+    g_rot: float = None
+    lot: str = None
+    mo: MolecularOrbitals = None
+    moments: dict = {}
+    _nelec: float = None
+    obasis: MolecularBasis = None
+    obasis_name: str = None
+    one_ints: dict = {}
+    one_rdms: dict = {}
+    run_type: str = None
+    _spinpol: float = None
+    title: str = None
+    two_ints: dict = {}
+    two_rdms: dict = {}
 
-        All keyword arguments will be turned into corresponding attributes.
-        """
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-    # only perform type checking on some attributes
-    atcoords = ArrayTypeCheckDescriptor(
-        'atcoords', 2, (-1, 3), float,
-        ['atcorenums', 'atgradient', 'atfrozen', 'atmasses', 'atnums'],
-        doc="A (N, 3) float array with Cartesian coordinates of the atoms.")
-    atcorenums = ArrayTypeCheckDescriptor(
-        'atcorenums', 1, (-1,), float,
-        ['atcoords', 'atgradient', 'atfrozen', 'atmasses', 'atnums'],
-        'atnums',
-        doc="A (N,) float array with pseudo-potential core charges.")
-    atgradient = ArrayTypeCheckDescriptor(
-        'atgradient', 2, (-1, 3), float,
-        ['atcoords', 'atcorenums', 'atfrozen', 'atmasses', 'atnums'],
-        doc="A (N, 3) float array with Cartesian atomic forces.")
-    atfrozen = ArrayTypeCheckDescriptor(
-        'atfrozen', 1, (-1,), bool,
-        ['atcoords', 'atcorenums', 'atgradient', 'atmasses', 'atnums'],
-        doc="A (N,) boolean array flagging fixed atoms.")
-    atmasses = ArrayTypeCheckDescriptor(
-        'atmasses', 1, (-1,), float,
-        ['atcoords', 'atcorenums', 'atgradient', 'atfrozen', 'atnums'],
-        doc="A (N,) float array with atomic masses.")
-    atnums = ArrayTypeCheckDescriptor(
-        'atnums', 1, (-1,), int,
-        ['atcoords', 'atcorenums', 'atgradient', 'atfrozen', 'atmasses'],
-        doc="A (N,) int vector with the atomic numbers.")
+    # Public interfaces to private attributes
 
     @property
-    def natom(self) -> int:
-        """Return the number of atoms."""
-        if hasattr(self, 'atcoords'):
-            return len(self.atcoords)
-        if hasattr(self, 'atcorenums'):
-            return len(self.atcorenums)
-        if hasattr(self, 'atgradient'):
-            return len(self.atgradient)
-        if hasattr(self, 'atfrozen'):
-            return len(self.atfrozen)
-        if hasattr(self, 'atmasses'):
-            return len(self.atmasses)
-        if hasattr(self, 'atnums'):
-            return len(self.atnums)
-        raise AttributeError("Cannot determine the number of atoms.")
+    def atcorenums(self) -> np.ndarray:
+        """Return effective core charges."""
+        result = self._atcorenums
+        if result is None and self.atnums is not None:
+            # Known bug in pylint. See
+            # https://stackoverflow.com/questions/47972143/using-attr-with-pylint
+            # https://github.com/PyCQA/pylint/issues/1694
+            # pylint: disable=no-member
+            result = self.atnums.astype(float)
+            self._atcorenums = result
+        return result
 
-    @property
-    def nelec(self) -> float:
-        """Return the number of electrons."""
-        mo = getattr(self, 'mo', None)
-        if mo is None:
-            return self._nelec
-        return mo.nelec
-
-    @nelec.setter
-    def nelec(self, nelec: float):
-        mo = getattr(self, 'mo', None)
-        if mo is None:
-            # We need to fix the following together with all the no-member
-            # warnings, see https://github.com/theochem/iodata/issues/73
-            # pylint: disable=attribute-defined-outside-init
-            self._nelec = nelec
-        else:
-            raise TypeError("nelec cannot be set when orbitals are present.")
+    @atcorenums.setter
+    def atcorenums(self, atcorenums):
+        self._atcorenums = atcorenums
 
     @property
     def charge(self) -> float:
         """Return the net charge of the system."""
-        atcorenums = getattr(self, 'atcorenums', None)
-        if atcorenums is None:
+        if self.atcorenums is None:
             return self._charge
-        return atcorenums.sum() - self.nelec
+        return self.atcorenums.sum() - self.nelec
 
     @charge.setter
     def charge(self, charge: float):
-        atcorenums = getattr(self, 'atcorenums', None)
-        if atcorenums is None:
-            # We need to fix the following together with all the no-member
-            # warnings, see https://github.com/theochem/iodata/issues/73
-            # pylint: disable=attribute-defined-outside-init
+        if self.atcorenums is None:
             self._charge = charge
         else:
-            self.nelec = atcorenums.sum() - charge
+            self.nelec = self.atcorenums.sum() - charge
+
+    @property
+    def natom(self) -> int:
+        """Return the number of atoms."""
+        natom = None
+        if self.atcoords is not None:
+            natom = len(self.atcoords)
+        elif self.atcorenums is not None:
+            natom = len(self.atcorenums)
+        elif self.atgradient is not None:
+            natom = len(self.atgradient)
+        elif self.atfrozen is not None:
+            natom = len(self.atfrozen)
+        elif self.atmasses is not None:
+            natom = len(self.atmasses)
+        elif self.atnums is not None:
+            natom = len(self.atnums)
+        return natom
+
+    @property
+    def nelec(self) -> float:
+        """Return the number of electrons."""
+        if self.mo is None:
+            return self._nelec
+        return self.mo.nelec
+
+    @nelec.setter
+    def nelec(self, nelec: float):
+        if self.mo is None:
+            self._nelec = nelec
+        else:
+            raise TypeError("nelec cannot be set when orbitals are present.")
 
     @property
     def spinpol(self) -> float:
@@ -350,18 +319,13 @@ class IOData:
         number in ]0, 2[ implies spin polarizaiton, which may not always be a
         valid assumption.
         """
-        mo = getattr(self, 'mo', None)
-        if mo is None:
+        if self.mo is None:
             return self._spinpol
-        return mo.spinpol
+        return self.mo.spinpol
 
     @spinpol.setter
     def spinpol(self, spinpol: float):
-        mo = getattr(self, 'mo', None)
-        if mo is None:
-            # We need to fix the following together with all the no-member
-            # warnings, see https://github.com/theochem/iodata/issues/73
-            # pylint: disable=attribute-defined-outside-init
+        if self.mo is None:
             self._spinpol = spinpol
         else:
             raise TypeError("spinpol cannot be set when orbitals are present.")

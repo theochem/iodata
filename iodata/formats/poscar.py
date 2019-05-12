@@ -72,7 +72,7 @@ def dump_one(f: TextIO, data: IOData):
         ``cellvecs`` attributes. It may contain ``title`` attribute.
 
     """
-    print(getattr(data, 'title', 'Created with HORTON'), file=f)
+    print(data.title or 'Created with IOData', file=f)
     print('   1.00000000000000', file=f)
 
     # Write cell vectors, each row is one vector in angstrom:
@@ -90,8 +90,9 @@ def dump_one(f: TextIO, data: IOData):
     print('Direct', file=f)
 
     # Write the coordinates
+    gvecs = np.linalg.inv(data.cellvecs).T
     for uatnum in uatnums:
         indexes = (data.atnums == uatnum).nonzero()[0]
         for index in indexes:
-            row = np.dot(data.gvecs, data.atcoords[index])
+            row = np.dot(gvecs, data.atcoords[index])
             print(f'  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F', file=f)

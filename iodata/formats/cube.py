@@ -187,6 +187,6 @@ def dump_one(f: TextIO, data: IOData):
         attributes.
 
     """
-    title = getattr(data, 'title', 'Created with IOData')
+    title = data.title or 'Created with IOData'
     _write_cube_header(f, title, data.atcoords, data.atnums, data.cube, data.atcorenums)
     _write_cube_data(f, data.cube.data)

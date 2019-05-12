@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=no-member
+# pylint: disable=unsubscriptable-object
 """Test iodata.formats.poscar module."""
 
 import os
@@ -70,7 +70,6 @@ def test_load_dump_consistency(tmpdir):
     mol0.cellvecs = np.array([[2.05278155, 0.23284023, 1.59024118],
                               [4.96430141, 4.73044423, 4.67590975],
                               [3.48374425, 0.67931228, 0.66281160]])
-    mol0.gvecs = np.linalg.inv(mol0.cellvecs).T
 
     fn_tmp = os.path.join(tmpdir, 'POSCAR')
     dump_one(mol0, fn_tmp)

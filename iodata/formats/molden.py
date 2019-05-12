@@ -595,7 +595,7 @@ def dump_one(f: TextIO, data: IOData):
     """
     # Print the header
     f.write('[Molden Format]\n')
-    if hasattr(data, 'title'):
+    if data.title is not None:
         f.write('[Title]\n')
         f.write(' {}\n'.format(data.title))
 
@@ -611,8 +611,8 @@ def dump_one(f: TextIO, data: IOData):
     f.write('\n')
 
     # Print the basis set
-    if not hasattr(data, 'obasis'):
-        raise IOError('A Gaussian orbital basis is required to write a molden input file.')
+    if data.obasis is None:
+        raise IOError('A Gaussian orbital basis is required to write a molden file.')
     obasis = data.obasis
 
     # Figure out the pure/Cartesian situation. Note that the Molden
