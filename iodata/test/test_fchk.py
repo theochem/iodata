@@ -345,7 +345,7 @@ def check_trj_basics(trj, nsteps, title, irc):
             assert mol.atcoords.shape == (natom, 3)
             assert mol.atgradient.shape == (natom, 3)
             assert mol.title == title
-            assert hasattr(mol, 'energy')
+            assert mol.energy is not None
             assert ('reaction_coordinate' in mol.extra) ^ (not irc)
 
 
