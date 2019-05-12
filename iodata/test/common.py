@@ -111,8 +111,9 @@ def compare_mols(mol1, mol2):
     permutation, signs = convert_conventions(mol1.obasis, mol2.obasis.conventions)
     assert mol1.mo.kind == mol2.mo.kind
     assert_allclose(mol1.mo.occs, mol2.mo.occs)
-    assert_allclose(mol1.mo.energies, mol2.mo.energies)
     assert_allclose(mol1.mo.coeffs[permutation] * signs.reshape(-1, 1), mol2.mo.coeffs, atol=1e-8)
+    assert_allclose(mol1.mo.energies, mol2.mo.energies)
+    assert_equal(mol1.mo.irreps, mol2.mo.irreps)
     # operators and density matrices
     cases = [
         ('one_ints', ['olp', 'kin_ao', 'na_ao']),
