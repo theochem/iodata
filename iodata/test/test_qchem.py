@@ -22,7 +22,7 @@
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from ..qchem import load_qchem_low
+from ..formats.qchem import load_qchem_low
 from ..utils import angstrom, amu, calorie, avogadro
 
 try:
