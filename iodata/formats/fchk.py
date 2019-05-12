@@ -195,7 +195,6 @@ def load_one(lit: LineIterator) -> dict:
 
     if 'Beta Orbital Energies' in fchk:
         # unrestricted
-        norbb = fchk['Beta Orbital Energies'].shape[0]
         mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
         mo_coeffs = np.concatenate((mo_coeffs, mo_coeffs_b), axis=1)
         mo_energies = np.concatenate((mo_energies, np.copy(fchk['Beta Orbital Energies'])), axis=0)
@@ -205,7 +204,6 @@ def load_one(lit: LineIterator) -> dict:
         mo = UnrestrictedOrbitals(norba, mo_occs, mo_coeffs, mo_energies, None)
     else:
         # restricted closed-shell and open-shell
-        norbb = norba
         mo_occs = np.zeros(nbasis_indep)
         mo_occs[:nalpha] = 1.0
         mo_occs[:nbeta] = 2.0
