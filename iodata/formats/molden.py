@@ -154,8 +154,8 @@ def _load_low(lit: LineIterator) -> dict:
         # molecular-orbital coefficients.
         elif line == '[mo]':
             data_alpha, data_beta = _load_helper_coeffs(lit)
-            coeffsa, energiesa, occsa = data_alpha
-            coeffsb, energiesb, occsb = data_beta
+            occsa, coeffsa, energiesa, irrepsa = data_alpha
+            occsb, coeffsb, energiesb, irrepsb = data_beta
 
     # Assign pure and Cartesian correctly. This needs to be done after reading
     # because the tags for pure functions may come after the basis set.
@@ -167,7 +167,7 @@ def _load_low(lit: LineIterator) -> dict:
     if coeffsb is None:
         if coeffsa.shape[0] != obasis.nbasis:
             lit.error("Number of alpha orbital coefficients does not match the size of the basis.")
-        mo = RestrictedOrbitals(occsa, coeffsa, energiesa, None)
+        mo = RestrictedOrbitals(occsa, coeffsa, energiesa, irrepsa)
     else:
         if coeffsb.shape[0] != obasis.nbasis:
             lit.error("Number of beta orbital coefficients does not match the size of the basis.")
@@ -176,7 +176,7 @@ def _load_low(lit: LineIterator) -> dict:
             np.concatenate((occsa, occsb), axis=0),
             np.concatenate((coeffsa, coeffsb), axis=1),
             np.concatenate((energiesa, energiesb), axis=0),
-            None
+            irrepsa + irrepsb
         )
 
     result = {
@@ -248,16 +248,18 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
 
 def _load_helper_coeffs(lit: LineIterator) -> Tuple:
     """Load the orbital coefficients."""
+    occsa = []
     coeffsa = []
     energiesa = []
-    occsa = []
+    irrepsa = []
+    occsb = []
     coeffsb = []
     energiesb = []
-    occsb = []
+    irrepsb = []
 
     while True:
         try:
-            line = next(lit).lower().strip()
+            line = next(lit).strip()
         except StopIteration:
             # We have no proper way to check when a Molden file has ended, so
             # we must anticipate for it here.
@@ -280,18 +282,21 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
                 break
             key, value = line.split('=')
             info[key.strip().lower()] = value
-        energy = float(info['ene'])
         occ = float(info['occup'])
         col = []
+        energy = float(info['ene'])
+        irrep = info.get('sym', '??').strip()
         # store column of coefficients, i.e. one orbital, energy and occ
         if info['spin'].strip().lower() == 'alpha':
+            occsa.append(occ)
             coeffsa.append(col)
             energiesa.append(energy)
-            occsa.append(occ)
+            irrepsa.append(irrep)
         else:
+            occsb.append(occ)
             coeffsb.append(col)
             energiesb.append(energy)
-            occsb.append(occ)
+            irrepsb.append(irrep)
         for line in lit:
             words = line.split()
             if len(words) != 2 or not words[0].isdigit():
@@ -312,7 +317,7 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
         coeffsb = np.array(coeffsb).T
         energiesb = np.array(energiesb)
         occsb = np.array(occsb)
-    return (coeffsa, energiesa, occsa), (coeffsb, energiesb, occsb)
+    return (occsa, coeffsa, energiesa, irrepsa), (occsb, coeffsb, energiesb, irrepsb)
 
 
 def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
@@ -658,25 +663,28 @@ def dump_one(f: TextIO, data: IOData):
     # Print the mean-field orbitals
     if isinstance(data.mo, UnrestrictedOrbitals):
         f.write('[MO]\n')
-        _dump_helper_orb(f, 'Alpha', data.mo.energiesa, data.mo.occsa,
-                         data.mo.coeffsa[permutation] * signs.reshape(-1, 1))
-        _dump_helper_orb(f, 'Beta', data.mo.energiesb, data.mo.occsb,
-                         data.mo.coeffsb[permutation] * signs.reshape(-1, 1))
+        _dump_helper_orb(f, 'Alpha', data.mo.occsa,
+                         data.mo.coeffsa[permutation] * signs.reshape(-1, 1),
+                         data.mo.energiesa, data.mo.irrepsa)
+        _dump_helper_orb(f, 'Beta', data.mo.occsb,
+                         data.mo.coeffsb[permutation] * signs.reshape(-1, 1),
+                         data.mo.energiesb, data.mo.irrepsb)
     else:
         f.write('[MO]\n')
-        _dump_helper_orb(f, 'Alpha', data.mo.energies, data.mo.occs,
-                         data.mo.coeffs[permutation] * signs.reshape(-1, 1))
+        _dump_helper_orb(f, 'Alpha', data.mo.occs,
+                         data.mo.coeffs[permutation] * signs.reshape(-1, 1),
+                         data.mo.energies, data.mo.irreps)
 
 
-def _dump_helper_orb(f, spin, orb_energies, orb_occs, orb_coeffs):
-    for ifn in range(orb_coeffs.shape[1]):
-        f.write(f' Ene= {orb_energies[ifn]:.17e}\n')
-        f.write(' Sym=     1a\n')
+def _dump_helper_orb(f, spin, occs, coeffs, energies, irreps):
+    for ifn in range(coeffs.shape[1]):
+        f.write(f' Ene= {energies[ifn]:.17e}\n')
+        f.write(f' Sym= {irreps[ifn]}\n')
         f.write(f' Spin= {spin}\n')
-        f.write(f' Occup= {orb_occs[ifn]:.17e}\n')
-        for ibasis in range(orb_coeffs.shape[0]):
+        f.write(f' Occup= {occs[ifn]:.17e}\n')
+        for ibasis in range(coeffs.shape[0]):
             # The original molden floating-point formatting is too low
             # precision. Molden also reads high-precision, so we use this
             # instead.
             # f.write('{:4d} {:10.6f}\n'.format(ibasis + 1, orb_coeffs[ibasis, ifn]))
-            f.write('{:4d} {:.17e}\n'.format(ibasis + 1, orb_coeffs[ibasis, ifn]))
+            f.write('{:4d} {:.17e}\n'.format(ibasis + 1, coeffs[ibasis, ifn]))
