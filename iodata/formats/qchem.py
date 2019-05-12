@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 # IODATA is an input and output module for quantum chemistry.
-#
 # Copyright (C) 2011-2019 The IODATA Development Team
 #
 # This file is part of IODATA.
@@ -17,7 +15,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
-#
 # --
 # pragma pylint: disable=invalid-name, too-many-branches, too-many-statements
 """Module for handling Q-Chem computation output."""
@@ -28,8 +25,8 @@ from typing import Tuple
 
 import numpy as np
 
-from .periodic import sym2num
-from .utils import angstrom, amu, calorie, avogadro
+from ..periodic import sym2num
+from ..utils import angstrom, amu, calorie, avogadro
 
 __all__ = ['load_qchem_low']
 
