@@ -25,7 +25,8 @@ import numpy as np
 
 from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 from ..basis import angmom_sti, MolecularBasis, Shell
-from ..utils import angstrom, LineIterator, MolecularOrbitals
+from ..orbitals import MolecularOrbitals
+from ..utils import angstrom, LineIterator
 
 
 __all__ = []

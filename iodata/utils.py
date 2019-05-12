@@ -26,7 +26,8 @@ import scipy.constants as spc
 from scipy.linalg import eigh
 
 
-__all__ = ['LineIterator', 'set_four_index_element', 'MolecularOrbitals']
+__all__ = ['LineIterator', 'Cube', 'set_four_index_element', 'volume',
+           'derive_naturals', 'check_dm']
 
 
 # The unit conversion factors below can be used as follows:
@@ -85,62 +86,6 @@ class LineIterator:
         """Go one line back and decrease the lineno attribute by one."""
         self.stack.append(line)
         self.lineno -= 1
-
-
-class MolecularOrbitals(NamedTuple):
-    """Molecular Orbitals Class.
-
-    Attributes
-    ----------
-    type : str
-        Molecular orbital type; choose from 'restricted', 'unrestricted', or 'generalized'.
-    norba : int
-        Number of alpha molecular orbitals. None in case of type=='generalized'.
-    norbb : int
-        Number of beta molecular orbitals. None in case of type=='generalized'.
-    occs : np.ndarray
-        Molecular orbital occupation numbers. The number of elements equals the
-        number of columns of coeffs.
-    coeffs : np.ndarray
-        Molecular orbital basis coefficients.
-        In case of restricted: shape = (nbasis, norb_a) = (nbasis, norb_b).
-        In case of unrestricted: shape = (nbasis, norb_a + norb_b).
-        In case of generalized: shape = (2*nbasis, norb), where norb is the
-        total number of orbitals (not defined by other attributes).
-    irreps : np.ndarray
-        Irreducible representation. The number of elements equals the
-        number of columns of coeffs.
-    energies : np.ndarray
-        Molecular orbital energies. The number of elements equals the
-        number of columns of coeffs.
-
-    """
-
-    type: str
-    norba: int
-    norbb: int
-    occs: np.ndarray
-    coeffs: np.ndarray
-    irreps: np.ndarray
-    energies: np.ndarray
-
-    @property
-    def nelec(self):
-        """Return the total number of electrons."""
-        return self.occs.sum()
-
-    @property
-    def spinpol(self):
-        """Return the spin multiplicity of the Slater determinant."""
-        if self.type == 'restricted':
-            nbeta = np.clip(self.occs, 0, 1).sum()
-            sq = self.nelec - 2 * nbeta
-        elif self.type == 'unrestricted':
-            sq = self.occs[:self.norba].sum() - self.occs[self.norba:].sum()
-        else:
-            # Not sure how to do this in a simply way.
-            raise NotImplementedError
-        return abs(sq)
 
 
 class Cube(NamedTuple):

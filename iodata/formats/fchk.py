@@ -25,7 +25,8 @@ from typing import List, Tuple, Iterator
 import numpy as np
 
 from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS
-from ..utils import LineIterator, MolecularOrbitals, amu
+from ..orbitals import MolecularOrbitals
+from ..utils import LineIterator, amu
 
 
 __all__ = []

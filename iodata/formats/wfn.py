@@ -26,7 +26,8 @@ import numpy as np
 from ..basis import MolecularBasis, Shell
 from ..overlap import gob_cart_normalization
 from ..periodic import sym2num
-from ..utils import MolecularOrbitals, LineIterator
+from ..orbitals import MolecularOrbitals
+from ..utils import LineIterator
 
 
 __all__ = []

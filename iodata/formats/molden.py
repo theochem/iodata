@@ -28,8 +28,9 @@ from ..basis import (angmom_its, angmom_sti, MolecularBasis, Shell,
                      convert_conventions, HORTON2_CONVENTIONS)
 from ..iodata import IOData
 from ..periodic import sym2num, num2sym
+from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
-from ..utils import angstrom, LineIterator, MolecularOrbitals
+from ..utils import angstrom, LineIterator
 
 
 __all__ = []

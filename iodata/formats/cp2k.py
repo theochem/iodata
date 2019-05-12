@@ -25,7 +25,8 @@ import numpy as np
 from scipy.special import factorialk
 
 from ..basis import angmom_sti, MolecularBasis, Shell, HORTON2_CONVENTIONS
-from ..utils import LineIterator, MolecularOrbitals
+from ..orbitals import MolecularOrbitals
+from ..utils import LineIterator
 
 
 __all__ = []
