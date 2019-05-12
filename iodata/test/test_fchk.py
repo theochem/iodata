@@ -61,7 +61,7 @@ def test_load_fchk_hf_sto3g_num():
     assert mol.run_type == 'energy'
     assert mol.lot == 'rhf'
     assert mol.obasis_name == 'sto-3g'
-    assert mol.mo.type == 'restricted'
+    assert mol.mo.kind == 'restricted'
     assert mol.spinpol == 0
     assert mol.obasis.nbasis == 6
     assert len(mol.obasis.shells) == 3
@@ -157,46 +157,37 @@ def test_load_fchk_water_sto3g_hf():
 
 
 def test_load_fchk_lih_321g_hf():
-    fields = load_fchk_helper_internal('li_h_3-21G_hf_g09.fchk')
-    assert len(fields['obasis'].shells) == 5
-    assert fields['obasis'].nbasis == 11
-    assert len(fields['atcoords']) == len(fields['atnums'])
-    assert fields['atcoords'].shape[1] == 3
-    assert len(fields['atnums']) == 2
+    mol = load_fchk_helper('li_h_3-21G_hf_g09.fchk')
+    assert len(mol.obasis.shells) == 5
+    assert mol.obasis.nbasis == 11
+    assert len(mol.atcoords) == len(mol.atnums)
+    assert mol.atcoords.shape[1] == 3
+    assert len(mol.atnums) == 2
+    assert_allclose(mol.energy, -7.687331212191968E+00)
 
-    orb_alpha_coeffs = fields['mo'].coeffs[:, :fields['mo'].norba]
-    orb_alpha_energies = fields['mo'].energies[:fields['mo'].norba]
-    orb_alpha_occs = fields['mo'].occs[:fields['mo'].norba]
+    assert_allclose(mol.mo.energiesa[0], (-2.76117), atol=1.e-4)
+    assert_allclose(mol.mo.energiesa[-1], 0.97089, atol=1.e-4)
+    assert_allclose(mol.mo.coeffsa[0, 0], 0.99105, atol=1.e-4)
+    assert_allclose(mol.mo.coeffsa[1, 0], 0.06311, atol=1.e-4)
+    assert mol.mo.coeffsa[3, 2] < 1.e-4
+    assert_allclose(mol.mo.coeffsa[-1, 9], 0.13666, atol=1.e-4)
+    assert_allclose(mol.mo.coeffsa[4, -1], 0.17828, atol=1.e-4)
+    assert_equal(mol.mo.occsa.sum(), 2)
+    assert_equal(mol.mo.occsa.min(), 0.0)
+    assert_equal(mol.mo.occsa.max(), 1.0)
 
-    assert_allclose(orb_alpha_energies[0], (-2.76117), atol=1.e-4)
-    assert_allclose(orb_alpha_energies[-1], 0.97089, atol=1.e-4)
-    assert_allclose(orb_alpha_coeffs[0, 0], 0.99105, atol=1.e-4)
-    assert_allclose(orb_alpha_coeffs[1, 0], 0.06311, atol=1.e-4)
-    assert orb_alpha_coeffs[3, 2] < 1.e-4
-    assert_allclose(orb_alpha_coeffs[-1, 9], 0.13666, atol=1.e-4)
-    assert_allclose(orb_alpha_coeffs[4, -1], 0.17828, atol=1.e-4)
-    assert_equal(orb_alpha_occs.sum(), 2)
-    assert_equal(orb_alpha_occs.min(), 0.0)
-    assert_equal(orb_alpha_occs.max(), 1.0)
-
-    orb_beta_coeffs = fields['mo'].coeffs[:, fields['mo'].norba:]
-    orb_beta_energies = fields['mo'].energies[fields['mo'].norba:]
-    orb_beta_occs = fields['mo'].occs[fields['mo'].norba:]
-
-    assert_allclose(orb_beta_energies[0], -2.76031, atol=1.e-4)
-    assert_allclose(orb_beta_energies[-1], 1.13197, atol=1.e-4)
-    assert_allclose(orb_beta_coeffs[0, 0], 0.99108, atol=1.e-4)
-    assert_allclose(orb_beta_coeffs[1, 0], 0.06295, atol=1.e-4)
-    assert abs(orb_beta_coeffs[3, 2]) < 1e-4
-    assert_allclose(orb_beta_coeffs[-1, 9], 0.80875, atol=1.e-4)
-    assert_allclose(orb_beta_coeffs[4, -1], -0.15503, atol=1.e-4)
-    assert_equal(orb_beta_occs.sum(), 1)
-    assert_equal(orb_beta_occs.min(), 0.0)
-    assert_equal(orb_beta_occs.max(), 1.0)
-    assert_equal(orb_alpha_occs.shape[0], orb_alpha_coeffs.shape[0])
-    assert_equal(orb_beta_occs.shape[0], orb_beta_coeffs.shape[0])
-    energy = fields['energy']
-    assert_allclose(energy, -7.687331212191968E+00)
+    assert_allclose(mol.mo.energiesb[0], -2.76031, atol=1.e-4)
+    assert_allclose(mol.mo.energiesb[-1], 1.13197, atol=1.e-4)
+    assert_allclose(mol.mo.coeffsb[0, 0], 0.99108, atol=1.e-4)
+    assert_allclose(mol.mo.coeffsb[1, 0], 0.06295, atol=1.e-4)
+    assert abs(mol.mo.coeffsb[3, 2]) < 1e-4
+    assert_allclose(mol.mo.coeffsb[-1, 9], 0.80875, atol=1.e-4)
+    assert_allclose(mol.mo.coeffsb[4, -1], -0.15503, atol=1.e-4)
+    assert_equal(mol.mo.occsb.sum(), 1)
+    assert_equal(mol.mo.occsb.min(), 0.0)
+    assert_equal(mol.mo.occsb.max(), 1.0)
+    assert_equal(mol.mo.occsa.shape[0], mol.mo.coeffsa.shape[0])
+    assert_equal(mol.mo.occsb.shape[0], mol.mo.coeffsb.shape[0])
 
 
 def test_load_fchk_ghost_atoms():
@@ -456,10 +447,10 @@ def test_atmasses():
 
 def test_spinpol():
     mol1 = load_fchk_helper('ch3_rohf_sto3g_g03.fchk')
-    assert mol1.mo.type == 'restricted'
+    assert mol1.mo.kind == 'restricted'
     assert mol1.spinpol == 1
     mol2 = load_fchk_helper('li_h_3-21G_hf_g09.fchk')
-    assert mol2.mo.type == 'unrestricted'
+    assert mol2.mo.kind == 'unrestricted'
     assert mol2.spinpol == 1
     with pytest.raises(TypeError):
         mol2.spinpol = 2

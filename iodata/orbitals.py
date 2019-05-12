@@ -28,41 +28,48 @@ __all__ = ['MolecularOrbitals']
 
 
 class MolecularOrbitals(NamedTuple):
-    """Molecular Orbitals Class.
+    """Molecular Orbitals base Class.
 
     Attributes
     ----------
-    type : str
-        Molecular orbital type; choose from 'restricted', 'unrestricted', or 'generalized'.
+    kind
+        'restricted', 'unrestricted', 'generalized'
     norba : int
         Number of alpha molecular orbitals. None in case of type=='generalized'.
     norbb : int
         Number of beta molecular orbitals. None in case of type=='generalized'.
-    occs : np.ndarray
+    occs
         Molecular orbital occupation numbers. The number of elements equals the
         number of columns of coeffs.
-    coeffs : np.ndarray
+    coeffs
         Molecular orbital basis coefficients.
         In case of restricted: shape = (nbasis, norb_a) = (nbasis, norb_b).
         In case of unrestricted: shape = (nbasis, norb_a + norb_b).
         In case of generalized: shape = (2*nbasis, norb), where norb is the
-        total number of orbitals (not defined by other attributes).
-    irreps : np.ndarray
-        Irreducible representation. The number of elements equals the
-        number of columns of coeffs.
-    energies : np.ndarray
+        total number of orbitals.
+    energies
         Molecular orbital energies. The number of elements equals the
         number of columns of coeffs.
+    irreps
+        Irreducible representation. The number of elements equals the
+        number of columns of coeffs.
+
+    Warning: the interpretation of the occupation numbers may only be suitable
+    for single-reference orbitals (not fractionally occupied natural orbitals.)
+    When an occupation number is in ]0, 1], it is assumed that an alpha orbital
+    is (fractionally) occupied. When an occupation number is in ]1, 2], it is
+    assumed that the alpha orbital is fully occupied and the beta orbital is
+    (fractionally) occupied.
 
     """
 
-    type: str
+    kind: str
     norba: int
     norbb: int
     occs: np.ndarray
     coeffs: np.ndarray
-    irreps: np.ndarray
     energies: np.ndarray
+    irreps: np.ndarray
 
     @property
     def nelec(self) -> float:
@@ -70,14 +77,98 @@ class MolecularOrbitals(NamedTuple):
         return self.occs.sum()
 
     @property
+    def nbasis(self):
+        """Return the number of spatial basis functions."""
+        if self.kind == 'generalized':
+            return self.coeffs.shape[0] // 2
+        return self.coeffs.shape[0]
+
+    @property
+    def norb(self):
+        """Return the number of orbitals."""
+        return self.coeffs.shape[1]
+
+    @property
     def spinpol(self) -> float:
-        """Return the spin multiplicity of the Slater determinant."""
-        if self.type == 'restricted':
+        """Return the spin polarization of the Slater determinant."""
+        if self.kind == 'restricted':
             nbeta = np.clip(self.occs, 0, 1).sum()
-            sq = self.nelec - 2 * nbeta
-        elif self.type == 'unrestricted':
-            sq = self.occs[:self.norba].sum() - self.occs[self.norba:].sum()
-        else:
-            # Not sure how to do this in a simply way.
-            raise NotImplementedError
-        return abs(sq)
+            return abs(self.nelec - 2 * nbeta)
+        if self.kind == 'unrestricted':
+            return abs(self.occsa.sum() - self.occsb.sum())
+        raise NotImplementedError
+
+    @property
+    def occsa(self):
+        """Return alpha occupation numbers."""
+        if self.kind == 'restricted':
+            return np.clip(self.occs, 0, 1)
+        if self.kind == 'unrestricted':
+            return self.occs[:self.norba]
+        raise NotImplementedError
+
+    @property
+    def occsb(self):
+        """Return beta occupation numbers."""
+        if self.kind == 'restricted':
+            return self.occs - np.clip(self.occs, 0, 1)
+        if self.kind == 'unrestricted':
+            return self.occs[self.norba:]
+        raise NotImplementedError
+
+    @property
+    def coeffsa(self):
+        """Return alpha orbital coefficients."""
+        if self.kind == 'restricted':
+            return self.coeffs
+        if self.kind == 'unrestricted':
+            return self.coeffs[:, :self.norba]
+        raise NotImplementedError
+
+    @property
+    def coeffsb(self):
+        """Return beta orbital coefficients."""
+        if self.kind == 'restricted':
+            return self.coeffs
+        if self.kind == 'unrestricted':
+            return self.coeffs[:, self.norba:]
+        raise NotImplementedError
+
+    @property
+    def irrepsa(self):
+        """Return alpha irreps."""
+        if self.kind == 'restricted':
+            return self.irreps
+        if self.kind == 'unrestricted':
+            return self.irreps[:self.norba]
+        raise NotImplementedError
+
+    @property
+    def irrepsb(self):
+        """Return beta irreps."""
+        if self.kind == 'restricted':
+            return self.irreps
+        if self.kind == 'unrestricted':
+            return self.irreps[self.norba:]
+        raise NotImplementedError
+
+    @property
+    def energiesa(self):
+        """Return alpha orbital energies."""
+        if self.kind == 'restricted':
+            return self.energies
+        if self.kind == 'unrestricted':
+            return self.energies[:self.norba]
+        raise NotImplementedError
+
+    @property
+    def energiesb(self):
+        """Return beta orbital energies."""
+        if self.kind == 'restricted':
+            return self.energies
+        if self.kind == 'unrestricted':
+            return self.energies[self.norba:]
+        raise NotImplementedError
+
+
+MolecularOrbitals.__defaults__ = (None,)

@@ -162,12 +162,12 @@ def load_one(lit: LineIterator) -> dict:
     atnums = None
     atcoords = None
     obasis = None
-    coeff_alpha = None
-    ener_alpha = None
-    occ_alpha = None
-    coeff_beta = None
-    ener_beta = None
-    occ_beta = None
+    coeffsa = None
+    energiesa = None
+    occsa = None
+    coeffsb = None
+    energiesb = None
+    occsb = None
     # Using a loop because we're not entirely sure if sections in an MKL file
     # have a fixed order.
     while True:
@@ -184,13 +184,13 @@ def load_one(lit: LineIterator) -> dict:
         elif line == '$BASIS':
             obasis = _load_helper_obasis(lit)
         elif line == '$COEFF_ALPHA':
-            coeff_alpha, ener_alpha = _load_helper_coeffs(lit, obasis.nbasis)
+            coeffsa, energiesa = _load_helper_coeffs(lit, obasis.nbasis)
         elif line == '$OCC_ALPHA':
-            occ_alpha = _load_helper_occ(lit)
+            occsa = _load_helper_occ(lit)
         elif line == '$COEFF_BETA':
-            coeff_beta, ener_beta = _load_helper_coeffs(lit, obasis.nbasis)
+            coeffsb, energiesb = _load_helper_coeffs(lit, obasis.nbasis)
         elif line == '$OCC_BETA':
-            occ_beta = _load_helper_occ(lit)
+            occsb = _load_helper_occ(lit)
 
     if charge is None:
         lit.error('Charge and spin polarization not found.')
@@ -198,40 +198,38 @@ def load_one(lit: LineIterator) -> dict:
         lit.error('Coordinates not found.')
     if obasis is None:
         lit.error('Orbital basis not found.')
-    if coeff_alpha is None:
+    if coeffsa is None:
         lit.error('Alpha orbitals not found.')
-    if occ_alpha is None:
+    if occsa is None:
         lit.error('Alpha occupation numbers not found.')
 
     nelec = atnums.sum() - charge
-    if coeff_beta is None:
+    if coeffsb is None:
         # restricted closed-shell
-        mo_type = 'restricted'
         assert nelec % 2 == 0
-        assert abs(occ_alpha.sum() - nelec) < 1e-7
-        norba = norbb = coeff_alpha.shape[1]
-        mo_occs = occ_alpha
-        mo_coeffs = coeff_alpha
-        mo_energy = ener_alpha
+        assert abs(occsa.sum() - nelec) < 1e-7
+        mo = MolecularOrbitals(
+            'restricted', coeffsa.shape[1], coeffsa.shape[1],
+            occsa, coeffsa, energiesa, None)
     else:
-        mo_type = 'unrestricted'
-        if occ_beta is None:
+        if occsb is None:
             lit.error('Beta occupation numbers not found in mkl file while '
                       'beta orbitals were present.')
-        nalpha = int(np.round(occ_alpha.sum()))
-        nbeta = int(np.round(occ_beta.sum()))
+        nalpha = int(np.round(occsa.sum()))
+        nbeta = int(np.round(occsb.sum()))
         assert abs(spinpol - abs(nalpha - nbeta)) < 1e-7
         assert nelec == nalpha + nbeta
-        assert coeff_alpha.shape == coeff_beta.shape
-        assert ener_alpha.shape == ener_beta.shape
-        assert occ_alpha.shape == occ_beta.shape
-        norba = coeff_alpha.shape[1]
-        norbb = coeff_beta.shape[1]
-        mo_occs = np.concatenate((occ_alpha, occ_beta), axis=0)
-        mo_energy = np.concatenate((ener_alpha, ener_beta), axis=0)
-        mo_coeffs = np.concatenate((coeff_alpha, coeff_beta), axis=1)
-    # create a MO namedtuple
-    mo = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
+        assert coeffsa.shape == coeffsb.shape
+        assert energiesa.shape == energiesb.shape
+        assert occsa.shape == occsb.shape
+        mo = MolecularOrbitals(
+            'unrestricted',
+            coeffsa.shape[1],
+            coeffsb.shape[1],
+            np.concatenate((occsa, occsb), axis=0),
+            np.concatenate((coeffsa, coeffsb), axis=1),
+            np.concatenate((energiesa, energiesb), axis=0),
+            None)
 
     result = {
         'atcoords': atcoords,
