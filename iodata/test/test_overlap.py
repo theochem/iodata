@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=no-member
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
 import numpy as np

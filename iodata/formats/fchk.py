@@ -250,8 +250,8 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     ------
     out
         Output dictionary containing ``title``, ``atcoords``, ``atnums``,
-        ``atcorenums``, ``ipoint``, ``npoint``, ``istep``, ``nstep``,
-        ``gradient``, ``reaction_coordinate``, and ``energy``.
+        ``atcorenums``, ``extra`` (with ``ipoint``, ``npoint``, ``istep``,
+        ``nstep``), ``gradient``, ``reaction_coordinate``, and ``energy``.
 
     Trajectories from a Gaussian optimization, relaxed scan or IRC calculation
     are written in groups of frames, called "points" in the Gaussian world, e.g.
@@ -294,16 +294,18 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
                 'title': fchk['title'],
                 'atnums': fchk["Atomic numbers"],
                 'atcorenums': fchk["Nuclear charges"],
-                'ipoint': ipoint,
-                'npoint': len(nsteps),
-                'istep': istep,
-                'nstep': nstep,
                 'energy': energy,
                 'atcoords': atcoords,
                 'atgradient': gradients,
+                'extra': {
+                    'ipoint': ipoint,
+                    'npoint': len(nsteps),
+                    'istep': istep,
+                    'nstep': nstep,
+                },
             }
             if prefix == "IRC point":
-                data['reaction_coordinate'] = recor
+                data['extra']['reaction_coordinate'] = recor
             yield data
 
 

@@ -109,7 +109,7 @@ def dump_one(f: TextIO, data: IOData):
 
     """
     print(data.natom, file=f)
-    print(getattr(data, 'title', 'Created with IODATA module'), file=f)
+    print(data.title or 'Created with IOData', file=f)
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         x, y, z = data.atcoords[i] / angstrom

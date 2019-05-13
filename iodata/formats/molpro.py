@@ -135,19 +135,18 @@ def dump_one(f: TextIO, data: IOData):
 
     """
     one_mo = data.one_ints['core_mo']
-    two_mo = data.two_ints['two_mo']
-    nactive = one_mo.shape[0]
-    core_energy = getattr(data, 'core_energy', 0.0)
-    nelec = getattr(data, 'nelec', 0)
-    spinpol = getattr(data, 'spinpol', 0)
 
     # Write header
+    nactive = one_mo.shape[0]
+    nelec = data.nelec or 0
+    spinpol = data.spinpol or 0
     print(f' &FCI NORB={nactive:d},NELEC={nelec:d},MS2={spinpol:d},', file=f)
     print(f"  ORBSYM= {','.join('1' for v in range(nactive))},", file=f)
     print('  ISYM=1', file=f)
     print(' &END', file=f)
 
     # Write integrals and core energy
+    two_mo = data.two_ints['two_mo']
     for i in range(nactive):  # pylint: disable=too-many-nested-blocks
         for j in range(i + 1):
             for k in range(nactive):
@@ -161,5 +160,5 @@ def dump_one(f: TextIO, data: IOData):
             value = one_mo[i, j]
             if value != 0.0:
                 print(f'{value:23.16e} {i+1:4d} {j+1:4d} {0:4d} {0:4d}', file=f)
-    if core_energy != 0.0:
-        print(f'{core_energy:23.16e} {0:4d} {0:4d} {0:4d} {0:4d}', file=f)
+    if data.core_energy is not None:
+        print(f'{data.core_energy:23.16e} {0:4d} {0:4d} {0:4d} {0:4d}', file=f)
