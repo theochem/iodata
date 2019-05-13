@@ -134,11 +134,9 @@ def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
     assert mol.obasis.nbasis == nbasis
     # check orthonormal mo
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    if mol.mo.type == 'restricted':
-        check_orthonormal(mol.mo.coeffs, olp, 1.e-5)
-    elif mol.mo.type == 'unrestricted':
-        check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp, 1.e-5)
-        check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp, 1.e-5)
+    check_orthonormal(mol.mo.coeffsa, olp, 1.e-5)
+    if mol.mo.kind == 'unrestricted':
+        check_orthonormal(mol.mo.coeffsb, olp, 1.e-5)
     # check energy & atomic charges
     if energy is not None:
         assert_allclose(mol.energy, energy, rtol=0., atol=1.e-5)
@@ -202,15 +200,15 @@ def test_load_wfn_o2_virtual():
                     -149.664140769678, np.array([0.0, 0.0]))
     # check MO occupation
     assert_equal(mol.mo.occs.shape, (88,))
-    assert_allclose(mol.mo.occs[:mol.mo.norba], [1.] * 9 + [0.] * 35)
-    assert_allclose(mol.mo.occs[mol.mo.norba:], [1.] * 7 + [0.] * 37)
+    assert_allclose(mol.mo.occsa, [1.] * 9 + [0.] * 35)
+    assert_allclose(mol.mo.occsb, [1.] * 7 + [0.] * 37)
     # check MO energies
     assert_equal(mol.mo.energies.shape, (88,))
-    mo_energies_a = mol.mo.energies[:mol.mo.norba]
+    mo_energies_a = mol.mo.energiesa
     assert_allclose(mo_energies_a[0], -20.752000, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_a[10], 0.179578, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_a[-1], 51.503193, rtol=0, atol=1.e-6)
-    mo_energies_b = mol.mo.energies[mol.mo.norba:]
+    mo_energies_b = mol.mo.energiesb
     assert_allclose(mo_energies_b[0], -20.697027, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_b[15], 0.322590, rtol=0, atol=1.e-6)
     assert_allclose(mo_energies_b[-1], 51.535258, rtol=0, atol=1.e-6)
@@ -239,4 +237,4 @@ def test_load_wfn_lih_cation_fci():
     assert_equal(mol.atnums, [3, 1])
     assert_equal(mol.mo.occs.shape, (11,))
     assert_allclose(mol.mo.occs.sum(), 3., rtol=0., atol=1.e-6)
-    # assert abs(mol.mo.occs[:mol.mo.norba].sum() - 1.5) < 1.e-6
+    # assert abs(mol.mo.occsa.sum() - 1.5) < 1.e-6

@@ -46,12 +46,17 @@ def test_load_molden_li2_orca():
 
     # Check geometry
     assert_equal(mol.atnums, [3, 3])
+    assert_allclose(mol.mo.occsa[:4], [1, 1, 1, 0])
+    assert_allclose(mol.mo.occsb[:4], [1, 1, 0, 0])
+    assert_equal(mol.mo.irreps, ['1a'] * mol.mo.norb)
+    assert_equal(mol.mo.irrepsa, ['1a'] * mol.mo.norba)
+    assert_equal(mol.mo.irrepsb, ['1a'] * mol.mo.norbb)
     assert_allclose(mol.atcoords[1], [5.2912331750, 0.0, 0.0])
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    check_orthonormal(mol.mo.coeffs[:, :mol.mo.norba], olp, 1e-5)
-    check_orthonormal(mol.mo.coeffs[:, mol.mo.norba:], olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
 
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
@@ -68,6 +73,8 @@ def test_load_molden_h2o_orca():
 
     # Check geometry
     assert_equal(mol.atnums, [8, 1, 1])
+    assert_allclose(mol.mo.occs[:6], [2, 2, 2, 2, 2, 0])
+    assert_equal(mol.mo.irreps, ['1a'] * mol.mo.norb)
     assert_allclose(mol.atcoords[2], [0.0, -0.1808833432, 1.9123825806])
 
     # Check normalization
@@ -250,6 +257,15 @@ def test_load_molden_nh3_turbomole():
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.03801, -0.27428, 0.01206, 0.22421])
     assert_allclose(charges, molden_charges, atol=1.e-3)
+
+
+def test_load_molden_f():
+    with path('iodata.test.data', 'F.molden') as fn_molden:
+        mol = load_one(str(fn_molden))
+    assert_allclose(mol.mo.occsa[:6], [1, 1, 1, 1, 1, 0])
+    assert_allclose(mol.mo.occsb[:6], [1, 1, 1, 1, 0, 0])
+    assert_equal(mol.mo.irrepsa[:6], ['Ag', 'Ag', 'B3u', 'B2u', 'B1u', 'B3u'])
+    assert_equal(mol.mo.irrepsb[:6], ['Ag', 'Ag', 'B3u', 'B2u', 'B1u', 'B3u'])
 
 
 def check_load_dump_consistency(fn, tmpdir):

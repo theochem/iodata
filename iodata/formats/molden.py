@@ -28,8 +28,9 @@ from ..basis import (angmom_its, angmom_sti, MolecularBasis, Shell,
                      convert_conventions, HORTON2_CONVENTIONS)
 from ..iodata import IOData
 from ..periodic import sym2num, num2sym
+from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
-from ..utils import angstrom, LineIterator, MolecularOrbitals
+from ..utils import angstrom, LineIterator
 
 
 __all__ = []
@@ -103,12 +104,12 @@ def _load_low(lit: LineIterator) -> dict:
     atnums = None
     atcoords = None
     obasis = None
-    coeff_alpha = None
-    ener_alpha = None
-    occ_alpha = None
-    coeff_beta = None
-    ener_beta = None
-    occ_beta = None
+    coeffsa = None
+    energiesa = None
+    occsa = None
+    coeffsb = None
+    energiesb = None
+    occsb = None
     title = None
 
     line = next(lit)
@@ -153,8 +154,8 @@ def _load_low(lit: LineIterator) -> dict:
         # molecular-orbital coefficients.
         elif line == '[mo]':
             data_alpha, data_beta = _load_helper_coeffs(lit)
-            coeff_alpha, ener_alpha, occ_alpha = data_alpha
-            coeff_beta, ener_beta, occ_beta = data_beta
+            occsa, coeffsa, energiesa, irrepsa = data_alpha
+            occsb, coeffsb, energiesb, irrepsb = data_beta
 
     # Assign pure and Cartesian correctly. This needs to be done after reading
     # because the tags for pure functions may come after the basis set.
@@ -163,25 +164,21 @@ def _load_low(lit: LineIterator) -> dict:
         if shell.angmoms[0] in pure_angmoms:
             shell.kinds[0] = 'p'
 
-    if coeff_beta is None:
-        mo_type = 'restricted'
-        if coeff_alpha.shape[0] != obasis.nbasis:
+    if coeffsb is None:
+        if coeffsa.shape[0] != obasis.nbasis:
             lit.error("Number of alpha orbital coefficients does not match the size of the basis.")
-        norba = norbb = coeff_alpha.shape[1]
-        mo_occs = occ_alpha
-        mo_coeffs = coeff_alpha
-        mo_energy = ener_alpha
+        mo = MolecularOrbitals(
+            'restricted', coeffsa.shape[1], coeffsa.shape[1],
+            occsa, coeffsa, energiesa, irrepsa)
     else:
-        mo_type = 'unrestricted'
-        if coeff_beta.shape[0] != obasis.nbasis:
+        if coeffsb.shape[0] != obasis.nbasis:
             lit.error("Number of beta orbital coefficients does not match the size of the basis.")
-        norba = coeff_alpha.shape[1]
-        norbb = coeff_beta.shape[1]
-        mo_occs = np.concatenate((occ_alpha, occ_beta), axis=0)
-        mo_energy = np.concatenate((ener_alpha, ener_beta), axis=0)
-        mo_coeffs = np.concatenate((coeff_alpha, coeff_beta), axis=1)
-    # create a MO namedtuple
-    mo = MolecularOrbitals(mo_type, norba, norbb, mo_occs, mo_coeffs, None, mo_energy)
+        mo = MolecularOrbitals(
+            'unrestricted', coeffsa.shape[1], coeffsb.shape[1],
+            np.concatenate((occsa, occsb), axis=0),
+            np.concatenate((coeffsa, coeffsb), axis=1),
+            np.concatenate((energiesa, energiesb), axis=0),
+            irrepsa + irrepsb)
 
     result = {
         'atcoords': atcoords,
@@ -252,16 +249,18 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
 
 def _load_helper_coeffs(lit: LineIterator) -> Tuple:
     """Load the orbital coefficients."""
-    coeff_alpha = []
-    ener_alpha = []
-    occ_alpha = []
-    coeff_beta = []
-    ener_beta = []
-    occ_beta = []
+    occsa = []
+    coeffsa = []
+    energiesa = []
+    irrepsa = []
+    occsb = []
+    coeffsb = []
+    energiesb = []
+    irrepsb = []
 
     while True:
         try:
-            line = next(lit).lower().strip()
+            line = next(lit).strip()
         except StopIteration:
             # We have no proper way to check when a Molden file has ended, so
             # we must anticipate for it here.
@@ -284,18 +283,21 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
                 break
             key, value = line.split('=')
             info[key.strip().lower()] = value
-        energy = float(info['ene'])
         occ = float(info['occup'])
         col = []
+        energy = float(info['ene'])
+        irrep = info.get('sym', '??').strip()
         # store column of coefficients, i.e. one orbital, energy and occ
         if info['spin'].strip().lower() == 'alpha':
-            coeff_alpha.append(col)
-            ener_alpha.append(energy)
-            occ_alpha.append(occ)
+            occsa.append(occ)
+            coeffsa.append(col)
+            energiesa.append(energy)
+            irrepsa.append(irrep)
         else:
-            coeff_beta.append(col)
-            ener_beta.append(energy)
-            occ_beta.append(occ)
+            occsb.append(occ)
+            coeffsb.append(col)
+            energiesb.append(energy)
+            irrepsb.append(irrep)
         for line in lit:
             words = line.split()
             if len(words) != 2 or not words[0].isdigit():
@@ -305,18 +307,18 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
                 break
             col.append(float(words[1]))
 
-    coeff_alpha = np.array(coeff_alpha).T
-    ener_alpha = np.array(ener_alpha)
-    occ_alpha = np.array(occ_alpha)
-    if not coeff_beta:
-        coeff_beta = None
-        ener_beta = None
-        occ_beta = None
+    coeffsa = np.array(coeffsa).T
+    energiesa = np.array(energiesa)
+    occsa = np.array(occsa)
+    if not coeffsb:
+        coeffsb = None
+        energiesb = None
+        occsb = None
     else:
-        coeff_beta = np.array(coeff_beta).T
-        ener_beta = np.array(ener_beta)
-        occ_beta = np.array(occ_beta)
-    return (coeff_alpha, ener_alpha, occ_alpha), (coeff_beta, ener_beta, occ_beta)
+        coeffsb = np.array(coeffsb).T
+        energiesb = np.array(energiesb)
+        occsb = np.array(occsb)
+    return (occsa, coeffsa, energiesa, irrepsa), (occsb, coeffsb, energiesb, irrepsb)
 
 
 def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
@@ -522,15 +524,17 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
     """
     obasis = result['obasis']
     atcoords = result['atcoords']
-    if result['mo'].type == 'restricted':
-        coeffs_a = result['mo'].coeffs
-        coeffs_b = None
-    elif result['mo'].type == 'unrestricted':
-        coeffs_a = result['mo'].coeffs[:, :result['mo'].norba]
-        coeffs_b = result['mo'].coeffs[:, result['mo'].norba:]
+    if result['mo'].kind == 'restricted':
+        coeffsa = result['mo'].coeffs
+        # Skip testing coeffsb if it is the same array as coeffsa.
+        coeffsb = None
+    elif result['mo'].kind == 'unrestricted':
+        coeffsa = result['mo'].coeffsa
+        coeffsb = result['mo'].coeffsb
     else:
-        raise ValueError('Molecular orbital type={0} not recognized'.format(result['mo'].type))
-    if _is_normalized_properly(obasis, atcoords, coeffs_a, coeffs_b):
+        raise ValueError('Molecular orbital kind={0} not recognized'.format(result['mo'].kind))
+
+    if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb):
         # The file is good. No need to change obasis.
         return
     print('5:Detected incorrect normalization of orbitals loaded from a Molden or MKL file.')
@@ -538,7 +542,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
     # --- ORCA
     print('5:Trying to fix it as if it was a file generated by ORCA.')
     orca_obasis = _fix_obasis_orca(obasis)
-    if _is_normalized_properly(orca_obasis, atcoords, coeffs_a, coeffs_b):
+    if _is_normalized_properly(orca_obasis, atcoords, coeffsa, coeffsb):
         print('5:Detected typical ORCA errors in file. Fixing them...')
         result['obasis'] = orca_obasis
         return
@@ -547,7 +551,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
     print('5:Trying to fix it as if it was a file generated by PSI4 (pre 1.0).')
     psi4_obasis = _fix_obasis_psi4(obasis)
     if psi4_obasis is not None and \
-       _is_normalized_properly(psi4_obasis, atcoords, coeffs_a, coeffs_b):
+       _is_normalized_properly(psi4_obasis, atcoords, coeffsa, coeffsb):
         print('5:Detected typical PSI4 errors in file. Fixing them...')
         result['obasis'] = psi4_obasis
         return
@@ -556,7 +560,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
     print('5:Trying to fix it as if it was a file generated by Turbomole.')
     turbom_obasis = _fix_obasis_turbomole(obasis)
     if turbom_obasis is not None and \
-       _is_normalized_properly(turbom_obasis, atcoords, coeffs_a, coeffs_b):
+       _is_normalized_properly(turbom_obasis, atcoords, coeffsa, coeffsb):
         print('5:Detected typical Turbomole errors in file. Fixing them...')
         result['obasis'] = turbom_obasis
         return
@@ -564,7 +568,7 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
     # --- Renormalized contractions
     print('5:Last resort: trying by renormalizing all contractions')
     normed_obasis = _fix_obasis_normalize_contractions(obasis)
-    if _is_normalized_properly(normed_obasis, atcoords, coeffs_a, coeffs_b):
+    if _is_normalized_properly(normed_obasis, atcoords, coeffsa, coeffsb):
         print('5:Detected unnormalized contractions in file. Fixing them...')
         result['obasis'] = normed_obasis
         return
@@ -663,28 +667,32 @@ def dump_one(f: TextIO, data: IOData):
     permutation, signs = convert_conventions(obasis, CONVENTIONS)
 
     # Print the mean-field orbitals
-    if data.mo.type == 'unrestricted':
+    if data.mo.kind == 'unrestricted':
         f.write('[MO]\n')
-        norba = data.mo.norba
-        _dump_helper_orb(f, 'Alpha', data.mo.energies[:norba], data.mo.occs[:norba],
-                         data.mo.coeffs[:, :norba][permutation] * signs.reshape(-1, 1))
-        _dump_helper_orb(f, 'Beta', data.mo.energies[norba:], data.mo.occs[norba:],
-                         data.mo.coeffs[:, norba:][permutation] * signs.reshape(-1, 1))
+        _dump_helper_orb(f, 'Alpha', data.mo.occsa,
+                         data.mo.coeffsa[permutation] * signs.reshape(-1, 1),
+                         data.mo.energiesa, data.mo.irrepsa)
+        _dump_helper_orb(f, 'Beta', data.mo.occsb,
+                         data.mo.coeffsb[permutation] * signs.reshape(-1, 1),
+                         data.mo.energiesb, data.mo.irrepsb)
+    elif data.mo.kind == 'restricted':
+        f.write('[MO]\n')
+        _dump_helper_orb(f, 'Alpha', data.mo.occs,
+                         data.mo.coeffs[permutation] * signs.reshape(-1, 1),
+                         data.mo.energies, data.mo.irreps)
     else:
-        f.write('[MO]\n')
-        _dump_helper_orb(f, 'Alpha', data.mo.energies, data.mo.occs,
-                         data.mo.coeffs[permutation] * signs.reshape(-1, 1))
+        raise NotImplementedError
 
 
-def _dump_helper_orb(f, spin, orb_energies, orb_occs, orb_coeffs):
-    for ifn in range(orb_coeffs.shape[1]):
-        f.write(f' Ene= {orb_energies[ifn]:.17e}\n')
-        f.write(' Sym=     1a\n')
+def _dump_helper_orb(f, spin, occs, coeffs, energies, irreps):
+    for ifn in range(coeffs.shape[1]):
+        f.write(f' Ene= {energies[ifn]:.17e}\n')
+        f.write(f' Sym= {irreps[ifn]}\n')
         f.write(f' Spin= {spin}\n')
-        f.write(f' Occup= {orb_occs[ifn]:.17e}\n')
-        for ibasis in range(orb_coeffs.shape[0]):
+        f.write(f' Occup= {occs[ifn]:.17e}\n')
+        for ibasis in range(coeffs.shape[0]):
             # The original molden floating-point formatting is too low
             # precision. Molden also reads high-precision, so we use this
             # instead.
             # f.write('{:4d} {:10.6f}\n'.format(ibasis + 1, orb_coeffs[ibasis, ifn]))
-            f.write('{:4d} {:.17e}\n'.format(ibasis + 1, orb_coeffs[ibasis, ifn]))
+            f.write('{:4d} {:.17e}\n'.format(ibasis + 1, coeffs[ibasis, ifn]))
