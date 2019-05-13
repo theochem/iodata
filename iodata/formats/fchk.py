@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling GAUSSIAN FCHK file format."""
+"""Gaussian FCHK file format."""
 
 
 from fnmatch import fnmatch
@@ -25,6 +25,7 @@ from typing import List, Tuple, Iterator
 import numpy as np
 
 from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS
+from ..docstrings import document_load_one, document_load_many
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, amu
 
@@ -32,7 +33,7 @@ from ..utils import LineIterator, amu
 __all__ = []
 
 
-patterns = ['*.fchk']
+PATTERNS = ['*.fchk']
 
 
 CONVENTIONS = {
@@ -58,24 +59,13 @@ CONVENTIONS = {
 
 
 # pylint: disable=too-many-branches,too-many-statements
+@document_load_one(
+    "Gaussian Formatted Checkpoint",
+    ['atcharges', 'atcoords', 'atnums', 'atcorenums', 'energy', 'lot', 'mo', 'obasis',
+     'obasis_name', 'run_type', 'title'],
+    ['atfrozen', 'atgradient', 'athessian', 'atmasses', 'one_rdms', 'extra', 'moments'])
 def load_one(lit: LineIterator) -> dict:
-    """Load data from a GAUSSIAN FCHK file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``,
-        ``atcorenums``, ``obasis``, ``mo``, ``energy`` & ``mulliken_charges``
-        keys and corresponding values. It may also contain ``npa_charges``,
-        ``esp_charges``, ``one_rdms``, ``polar`` & ``moments`` keys and their
-        values as well.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     fchk = _load_fchk_low(lit, [
         "Number of electrons", "Number of basis functions",
         "Number of independant functions",
@@ -238,34 +228,25 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
+LOAD_MANY_NOTES = """
+Trajectories from a Gaussian optimization, relaxed scan or IRC calculation are written in
+groups of frames, called "points" in the Gaussian world, e.g. to discrimininate between
+different values of the constraint in a relaxed geometry. In most cases, e.g. IRC or
+conventional optimization, there is only one "point". Within one "point", one can have
+multiple geometries and their properties. This information is stored in the ``extra``
+attribute:
+
+- ``ipoint`` is the counter for a point
+- ``npoint`` is the total number of points.
+- ``istep`` is the counter within one "point"
+- ``nstep`` is the total number of geometries within in a "point".
+- ``reaction_coordinate`` is only present in case of an IRC calculation.
+"""
+
+@document_load_many("XYZ", ['atcoords', 'atgradient', 'atnums', 'atcorenums',
+                            'energy', 'extra', 'title'], [], LOAD_MANY_NOTES)
 def load_many(lit: LineIterator) -> Iterator[dict]:
-    """Load trajecotry data from a GAUSSIAN FCHK file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Yields
-    ------
-    out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``,
-        ``atcorenums``, ``extra`` (with ``ipoint``, ``npoint``, ``istep``,
-        ``nstep``), ``gradient``, ``reaction_coordinate``, and ``energy``.
-
-    Trajectories from a Gaussian optimization, relaxed scan or IRC calculation
-    are written in groups of frames, called "points" in the Gaussian world, e.g.
-    to discrimininate between different values of the constraint in a relaxed
-    geometry. In most cases, e.g. IRC or conventional optimization, there is
-    only one "point". ``ipoint`` is the counter for such point and ``npoint`` is
-    the total number of points. Within one "point", one can have multiple
-    geometries and their properties. ``istep`` is the counter for these
-    geometries and ``nstep`` is the total number of geometries within in
-    "point". Properties read at each step are: ``energy``,
-    ``reaction_coordinate`` (only non-zero for IRC), ``atcoords`` and
-    ``gradients``.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     fchk = _load_fchk_low(lit, [
         "Atomic numbers", "Current cartesian coordinates", "Nuclear charges",
         "IRC *", "Optimization *", "Opt point *"])
@@ -317,7 +298,7 @@ def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
     lit
         The line iterator to read the data from.
     label_patterns
-        A list of Unix shell-style wildcard patterns of labels to read.
+        A list of Unix shell-style wildcard PATTERNS of labels to read.
 
     Returns
     -------
@@ -356,8 +337,8 @@ def _load_fchk_field(lit: LineIterator, label_patterns: List[str]) -> Tuple[str,
     lit
         The line iterator to read the data from.
     label_patterns
-        A list of Unix shell-style wildcard patterns. The next field matching
-        one of the patterns is returned
+        A list of Unix shell-style wildcard PATTERNS. The next field matching
+        one of the PATTERNS is returned
 
     Returns
     -------

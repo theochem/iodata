@@ -16,7 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling GAUSSIAN/GAMESS-US WNF file format."""
+"""Gaussian/GAMESS-US WFN file format.
+
+Only use this format if the program that generated it does not offer any alternatives that
+HORTON can load. The WFN format has the disadvantage that it cannot represent contractions
+and therefore expands all orbitals into a decontracted basis. This makes the
+post-processing less efficient compared to formats that do support contractions of
+Gaussian functions.
+"""
 
 
 from typing import Tuple, List
@@ -24,16 +31,17 @@ from typing import Tuple, List
 import numpy as np
 
 from ..basis import MolecularBasis, Shell
+from ..docstrings import document_load_one
 from ..overlap import gob_cart_normalization
-from ..periodic import sym2num
 from ..orbitals import MolecularOrbitals
+from ..periodic import sym2num
 from ..utils import LineIterator
 
 
 __all__ = []
 
 
-patterns = ['*.wfn']
+PATTERNS = ['*.wfn']
 
 
 # From the AIMALL documentation
@@ -290,21 +298,9 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
     return obasis, permutation
 
 
+@document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title'])
 def load_one(lit: LineIterator) -> dict:
-    """Load data from a WFN file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``energy``,
-        ``obasis`` & ``mo`` keys and their corresponding values.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     (title, atnums, atcoords, icenters, type_assignments, exponents,
      mo_count, mo_occ, mo_energy, mo_coefficients, energy) = load_wfn_low(lit)
     # Build the basis set and the permutation needed to regroup shells.

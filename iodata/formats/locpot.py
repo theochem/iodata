@@ -16,9 +16,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling VASP LOCPOT file format."""
+"""VASP 5 LOCPOT file format.
+
+This format is used by `VASP 5.X <https://www.vasp.at/>`_ and
+`VESTA <http://jp-minerals.org/vesta/en/>`_.
+
+Note that even though the ``CHGCAR`` and ``LOCPOT`` files look very similar, they require
+different conversions to atomic units.
+"""
 
 
+from ..docstrings import document_load_one
 from ..utils import electronvolt, LineIterator
 from .chgcar import _load_vasp_grid
 
@@ -26,24 +34,12 @@ from .chgcar import _load_vasp_grid
 __all__ = []
 
 
-patterns = ['LOCPOT*']
+PATTERNS = ['LOCPOT*']
 
 
+@document_load_one("VASP 5 LOCPOT", ['atcoords', 'atnums', 'cellvecs', 'cube', 'title'])
 def load_one(lit: LineIterator) -> dict:
-    """Load data from a VASP 5 LOCPOT file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Ouput dictionary containing ``title``, ``atcoords``, ``numbers``,
-        ``cellvecs`` & ``cube`` keys and corresponding values.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     result = _load_vasp_grid(lit)
     # convert locpot to atomic units
     result['cube'].data[:] *= electronvolt

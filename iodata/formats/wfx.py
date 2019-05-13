@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling AIM/AIMAll WFX file format."""
+"""AIM/AIMAll WFX file format."""
 
 
 from typing import Tuple, List, TextIO
@@ -27,7 +27,7 @@ import numpy as np
 
 __all__ = []
 
-patterns = ['*.wfx']
+PATTERNS = ['*.wfx']
 
 
 def load_wfx_low(filename: str) -> tuple:

@@ -16,13 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling VASP CHGCAR file format."""
+"""VASP 5 CHGCAR file format.
+
+This format is used by `VASP 5.X <https://www.vasp.at/>`_ and
+`VESTA <http://jp-minerals.org/vesta/en/>`_.
+
+Note that even though the ``CHGCAR`` and ``LOCPOT`` files look very similar, they require
+different conversions to atomic units.
+"""
 
 
 from typing import Tuple
 
 import numpy as np
 
+from ..docstrings import document_load_one
 from ..periodic import sym2num
 from ..utils import angstrom, volume, LineIterator, Cube
 
@@ -30,7 +38,7 @@ from ..utils import angstrom, volume, LineIterator, Cube
 __all__ = []
 
 
-patterns = ['CHGCAR*', 'AECCAR*']
+PATTERNS = ['CHGCAR*', 'AECCAR*']
 
 
 def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray]:
@@ -137,21 +145,9 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
     }
 
 
+@document_load_one("VASP 5 CHGCAR", ['atcoords', 'atnums', 'cellvecs', 'cube', 'title'])
 def load_one(lit: LineIterator) -> dict:
-    """Load data from a VASP 5 CHGCAR file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``,
-        ``cellvecs`` & ``cube`` keys and corresponding values.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     result = _load_vasp_grid(lit)
     # renormalize electron density
     result['cube'].data[:] /= volume(result['cellvecs'])

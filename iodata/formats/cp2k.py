@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling CP2K file format."""
+"""CP2K ATOM output file format."""
 
 
 from typing import Dict, Union, List, Tuple
@@ -25,6 +25,7 @@ import numpy as np
 from scipy.special import factorialk
 
 from ..basis import angmom_sti, MolecularBasis, Shell, HORTON2_CONVENTIONS
+from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator
 
@@ -32,7 +33,7 @@ from ..utils import LineIterator
 __all__ = []
 
 
-patterns = ['*.cp2k.out']
+PATTERNS = ['*.cp2k.out']
 
 
 CONVENTIONS = {
@@ -340,39 +341,32 @@ def _fill_orbitals(orb_coeffs: np.ndarray,
             iorb += 1
 
 
+LOAD_ONE_NOTES = """
+
+This function assumes that the following subsections are present in the CP2K
+ATOM input file, in the section ``ATOM%PRINT``:
+
+.. code-block:: text
+
+  &PRINT
+    &POTENTIAL
+    &END POTENTIAL
+    &BASIS_SET
+    &END BASIS_SET
+    &ORBITALS
+    &END ORBITALS
+  &END PRINT
+
+"""
+
+
 # pylint: disable=too-many-branches,too-many-statements
+@document_load_one(
+    "CP2K ATOM outupt",
+    ['atcoords', 'atcorenums', 'atnums', 'energy', 'mo', 'obasis'],
+    [], LOAD_ONE_NOTES)
 def load_one(lit: LineIterator) -> dict:
-    """Load data from a CP2K ATOM file format.
-
-    Parameters
-    ---------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary containing ``obasis``, ``orb_alpha``, ``atcoords``,
-        ``atnums``, ``energy`` & ``atcorenums`` keys and corresponding
-        values. It may contain ``orb_beta`` key and its value as well.
-
-    Notes
-    -----
-    This function assumes that the following subsections are present in the CP2K
-    ATOM input file, in the section ``ATOM%PRINT``:
-
-    .. code-block:: text
-
-      &PRINT
-        &POTENTIAL
-        &END POTENTIAL
-        &BASIS_SET
-        &END BASIS_SET
-        &ORBITALS
-        &END ORBITALS
-      &END PRINT
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     # Find the element number
     atnum = None
     for line in lit:

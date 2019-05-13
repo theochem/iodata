@@ -16,13 +16,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling XYZ file format."""
+"""XYZ file format.
+
+Usually, the different frames in a trajectory describe different geometries of the same
+molecule, with atoms in the same order. The ``load_many`` and ``dump_many`` functions
+below can also handle an XYZ with different molecules, e.g. a molecular database.
+"""
 
 
 from typing import TextIO, Iterator
 
 import numpy as np
 
+from ..docstrings import (document_load_one, document_load_many, document_dump_one,
+                          document_dump_many)
 from ..iodata import IOData
 from ..periodic import sym2num, num2sym
 from ..utils import angstrom, LineIterator
@@ -31,24 +38,12 @@ from ..utils import angstrom, LineIterator
 __all__ = []
 
 
-patterns = ['*.xyz']
+PATTERNS = ['*.xyz']
 
 
+@document_load_one("XYZ", ['atcoords', 'atnums', 'title'])
 def load_one(lit: LineIterator) -> dict:
-    """Load molecular geometry from a XYZ file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary containing ``title`, ``atcoords`` & ``atnums`` keys
-        and corresponding values.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     size = int(next(lit))
     title = next(lit).strip()
     atcoords = np.empty((size, 3), float)
@@ -69,24 +64,9 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
+@document_load_many("XYZ", ['atcoords', 'atnums', 'title'])
 def load_many(lit: LineIterator) -> Iterator[dict]:
-    """Load an XYZ trajectory file.
-
-    This function can also handle an XYZ with different molecules, e.g. a
-    molecular database. Usually, the different frames in a trajectory describe
-    different geometries of the same molecule, with atoms in the same order.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Yields
-    ------
-    output
-        See XYZ load function above.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     # XYZ Trajectory files are a simple concatenation of individual XYZ files,'
     # making it travial to load many frames.
     while True:
@@ -96,18 +76,9 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             return
 
 
+@document_dump_one("XYZ", ['atcoords', 'atnums'], ['title'])
 def dump_one(f: TextIO, data: IOData):
-    """Write molecular geometry into a XYZ file format.
-
-    Parameters
-    ----------
-    f
-        A file to write to.
-    data
-        An IOData instance which must contain ``atcoords`` & ``atnums`` attributes.
-        If ``title`` attribute is not included, 'Created with IODATA module' is used as ``title``.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     print(data.natom, file=f)
     print(data.title or 'Created with IOData', file=f)
     for i in range(data.natom):
@@ -116,21 +87,9 @@ def dump_one(f: TextIO, data: IOData):
         print(f'{n:2s} {x:15.10f} {y:15.10f} {z:15.10f}', file=f)
 
 
+@document_dump_many("XYZ", ['atcoords', 'atnums'], ['title'])
 def dump_many(f: TextIO, datas: Iterator[IOData]):
-    """Write an XYZ trajectory file.
-
-    This will also work when the different data objects describe different
-    molecules.
-
-    Parameters
-    ----------
-    f
-        A file to write to.
-    datas
-        An iterator of IOData instances, satisfying the requirements for the
-        XYZ dump function above.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     # Similar to load_many, this is relatively easy.
     for data in datas:
         dump_one(f, data)

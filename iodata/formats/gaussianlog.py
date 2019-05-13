@@ -16,44 +16,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling GAUSSIAN LOG file format."""
+"""Gaussian Log file format.
+
+To write out the integrals in a Gaussian log file, which can be loaded with this module,
+you need to use the following Gaussian command line:
+
+.. code-block ::
+
+    scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)
+
+"""
 
 
 import numpy as np
 
+from ..docstrings import document_load_one
 from ..utils import set_four_index_element, LineIterator
 
 
 __all__ = []
 
 
-patterns = ['*.log']
+PATTERNS = ['*.log']
 
 
+@document_load_one("Gaussian Log", [], ['one_ints', 'two_ints'])
 def load_one(lit: LineIterator) -> dict:
-    """Load several two- and four-index operators from a GAUSSIAN09 LOG file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary may contain ``olp``, ``kin``, ``na`` and/or ``er`` keys and
-        corresponding values.
-
-    Notes
-    -----
-    1. The following two-index operators are loaded if present:
-       overlap, kinetic, nuclear attraction.
-    2. The following four-index operator is loaded if present: electrostatic repulsion.
-       In order to make all these matrices present in the GAUSSIAN LOG file, the following
-       commands must be used in the GAUSSIAN INPUT file:
-       ```scf(conventional) iop(3/33=5) extralinks=l316 iop(3/27=999)```
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     # First get the line with the number of orbital basis functions
     for line in lit:
         if line.startswith('    NBasis ='):
