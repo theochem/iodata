@@ -39,7 +39,7 @@ def _find_format_modules():
     for module_info in iter_modules(import_module('iodata.formats').__path__):
         if not module_info.ispkg:
             format_module = import_module('iodata.formats.' + module_info.name)
-            if hasattr(format_module, 'patterns'):
+            if hasattr(format_module, 'PATTERNS'):
                 result[module_info.name] = format_module
     return result
 
@@ -69,7 +69,7 @@ def _select_format_module(filename: str, attrname: str, fmt: str = None) -> Modu
     basename = os.path.basename(filename)
     if fmt is None:
         for name, format_module in FORMAT_MODULES.items():
-            if any(fnmatch(basename, pattern) for pattern in format_module.patterns):
+            if any(fnmatch(basename, pattern) for pattern in format_module.PATTERNS):
                 if hasattr(format_module, attrname):
                     return format_module
     else:

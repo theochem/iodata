@@ -14,10 +14,8 @@ help:
 
 .PHONY: help Makefile
 
-autogendoc:
-	SPHINX_APIDOC_OPTIONS=members,undoc-members,show-inheritance,inherited-members sphinx-apidoc -o pyapi/ ../iodata/ ../iodata/test/test_*.py ../iodata/test/cached --separate
-
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%:: Makefile autogendoc
+%:: Makefile
+	./gen_docs.sh
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

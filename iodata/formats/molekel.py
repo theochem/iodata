@@ -16,7 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling MOLEKEL file format."""
+"""Molekel file format.
+
+This format is used by two programs:
+`Molekel <http://ugovaretto.github.io/molekel/wiki/pmwiki.php/Main/HomePage.html>`_ and
+`Orca <https://orcaforum.cec.mpg.de/>`_.
+"""
 
 
 from typing import Tuple, List
@@ -25,6 +30,7 @@ import numpy as np
 
 from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 from ..basis import angmom_sti, MolecularBasis, Shell
+from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..utils import angstrom, LineIterator
 
@@ -32,7 +38,7 @@ from ..utils import angstrom, LineIterator
 __all__ = []
 
 
-patterns = ['*.mkl']
+PATTERNS = ['*.mkl']
 
 
 def _load_helper_charge_spinpol(lit: LineIterator) -> List[int]:
@@ -143,21 +149,9 @@ def _load_helper_occ(lit: LineIterator) -> np.ndarray:
 
 
 # pylint: disable=too-many-branches,too-many-statements
+@document_load_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'])
 def load_one(lit: LineIterator) -> dict:
-    """Load data from a MOLEKEL file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary containing ``atcoords``, ``atnums``, ``obasis``, ``mo``,
-        keys and their corresponding values.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     charge = None
     atnums = None
     atcoords = None

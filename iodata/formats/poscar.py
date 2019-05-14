@@ -16,13 +16,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling VASP POSCAR file format."""
+"""VASP 5 POSCAR file format.
+
+This format is used by `VASP 5.X <https://www.vasp.at/>`_ and
+`VESTA <http://jp-minerals.org/vesta/en/>`_.
+"""
 
 
 from typing import TextIO
 
 import numpy as np
 
+from ..docstrings import document_load_one, document_dump_one
 from ..iodata import IOData
 from ..periodic import num2sym
 from ..utils import angstrom, LineIterator
@@ -32,24 +37,12 @@ from .chgcar import _load_vasp_header
 __all__ = []
 
 
-patterns = ['POSCAR*']
+PATTERNS = ['POSCAR*']
 
 
+@document_load_one("VASP 5 POSCAR", ['atcoords', 'atnums', 'cellvecs', 'title'])
 def load_one(lit: LineIterator) -> dict:
-    """Load data from a VASP 5 POSCAR file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums`` & ``cellvecs`` keys
-        and their corresponding values.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     # Load header
     title, cellvecs, atnums, atcoords = _load_vasp_header(lit)
     return {
@@ -60,18 +53,9 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
+@document_dump_one("VASP 5 POSCAR", ['atcoords', 'atnums', 'cellvecs'], ['title'])
 def dump_one(f: TextIO, data: IOData):
-    """Write data into a VASP 5 POSCAR file format.
-
-    Parameters
-    ----------
-    f
-        A file to write to.
-    data
-        An IOData instance which must contain ``atcoords``, ``atnums`` &
-        ``cellvecs`` attributes. It may contain ``title`` attribute.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     print(data.title or 'Created with IOData', file=f)
     print('   1.00000000000000', file=f)
 

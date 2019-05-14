@@ -16,37 +16,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling ORCA OUT file format."""
+"""Orca output file format."""
 
 
 from typing import TextIO, Tuple
 
 import numpy as np
 
+from ..docstrings import document_load_one
 from ..utils import LineIterator
 
 
 __all__ = []
 
 
-patterns = ['*.out']
+PATTERNS = ['*.out']
 
 
+@document_load_one("Orca output", ['atcoords', 'atnums', 'energy', 'moments'])
 def load_one(lit: LineIterator) -> dict:
-    """Load several results from an orca output file.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary may contain ``atnums``, ``atcoords``, and ``total_energy`` and
-        corresponding values.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     result = {}
     while True:
         try:

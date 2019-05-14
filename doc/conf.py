@@ -25,11 +25,12 @@ import subprocess
 
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+
+# -- Fragile tricks for RTD -----------------------------------------------
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-
 if on_rtd:
+    sys.path.insert(0, os.path.abspath('..'))
     branch = os.environ.get("READTHEDOCS_VERSION", "latest")
     conda_prefix = "/home/docs/checkouts/readthedocs.org/user_builds/iodata/conda/{}".format(branch)
     os.environ["PATH"] = "{}:{}/bin".format(os.environ["PATH"], conda_prefix)
@@ -42,59 +43,42 @@ if on_rtd:
     os.chdir("doc")
     subprocess.call('./gen_docs.sh', shell=True)
 
+# Custom sidebar templates, must be a dictionary that maps document names
+# to template names.
+#
+# This is required for the alabaster theme
+# refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
+html_sidebars = {
+    '**': [
+        'about.html',
+        'navigation.html',
+        'relations.html',  # needs 'show_related': True theme option to display
+        'searchbox.html',
+        'donate.html',
+    ]
+}
+
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
 # needs_sphinx = '1.0'
 
-mathjax_config = {
-    'extensions': ['fast-preview.js'],
-    # TeX: {
-    #     Macros: {
-    #       RR: '{\\bf R}',
-    #       bold: ['{\\bf #1}', 1]
-    #     }
-    #   }
-    'TeX': {
-        'Macros': {
-            'ket': ["{\\left\\vert { #1 } \\right\\rangle}", 1],
-            'bra': ["{\\left\\langle { #1} \\right\\vert}", 1],
-            'braket': ["{\\left\\langle {#1} \\mid { #2} \\right\\rangle}", 2],
-            'ketbra': ["{\\left\\vert { #1 } \\right\\rangle\\left\\langle { #2} \\right\\vert}",
-                       2],
-            'ev': ["{\\left\\langle {#2} \\vert {#1} \\vert {#2} \\right\\rangle}", 2],
-            'mel': ["{\\left\\langle{ #1 }\\right\\vert{ #2 }\\left\\vert{#3}\\right\\rangle}", 3]
-        }
-    },
-}
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.doctest',
-              'sphinx.ext.intersphinx',
-              'sphinx.ext.coverage',
-              'sphinx.ext.mathjax',
-              'sphinx.ext.viewcode',
-              'sphinx.ext.napoleon',
-              'sphinx_autodoc_typehints',
-              ]
-
-add_module_names = False
-
-
-def autodoc_skip_member(app, what, name, obj, skip, options):
-    """Decide which parts to skip when building the API doc."""
-    if name == "__init__":
-        return False
-    return skip
-
-
-def setup(app):
-    """Set up sphinx."""
-    app.connect("autodoc-skip-member", autodoc_skip_member)
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.coverage',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
+    'sphinx_autodoc_typehints',
+]
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -111,8 +95,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'IOData'
-copyright = u'2019, The HORTON Developers'
-author = u'The HORTON Developers'
+copyright = u'2019, The IODATA Development Team'
+author = u'The IODATA Development Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -159,20 +143,6 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-# Custom sidebar templates, must be a dictionary that maps document names
-# to template names.
-#
-# This is required for the alabaster theme
-# refs: http://alabaster.readthedocs.io/en/latest/installation.html#sidebars
-html_sidebars = {
-    '**': [
-        'about.html',
-        'navigation.html',
-        'relations.html',  # needs 'show_related': True theme option to display
-        'searchbox.html',
-        'donate.html',
-    ]
-}
 
 # -- Options for HTMLHelp output ------------------------------------------
 
@@ -249,3 +219,53 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+
+# -- Configuration for autodoc extensions ---------------------------------
+
+autodoc_default_options = {
+    'undoc-members': True,
+    'show-inheritance': True,
+    'members': None,
+    'inherited-members': True,
+    'ignore-module-all': True,
+}
+
+
+add_module_names = False
+
+
+def autodoc_skip_member(app, what, name, obj, skip, options):
+    """Decide which parts to skip when building the API doc."""
+    if name == "__init__":
+        return False
+    return skip
+
+
+def setup(app):
+    """Set up sphinx."""
+    app.connect("autodoc-skip-member", autodoc_skip_member)
+
+
+# -- Configuration of mathjax extension -----------------------------------
+
+mathjax_config = {
+    'extensions': ['fast-preview.js'],
+    # TeX: {
+    #     Macros: {
+    #       RR: '{\\bf R}',
+    #       bold: ['{\\bf #1}', 1]
+    #     }
+    #   }
+    'TeX': {
+        'Macros': {
+            'ket': ["{\\left\\vert { #1 } \\right\\rangle}", 1],
+            'bra': ["{\\left\\langle { #1} \\right\\vert}", 1],
+            'braket': ["{\\left\\langle {#1} \\mid { #2} \\right\\rangle}", 2],
+            'ketbra': ["{\\left\\vert { #1 } \\right\\rangle\\left\\langle { #2} \\right\\vert}",
+                       2],
+            'ev': ["{\\left\\langle {#2} \\vert {#1} \\vert {#2} \\right\\rangle}", 2],
+            'mel': ["{\\left\\langle{ #1 }\\right\\vert{ #2 }\\left\\vert{#3}\\right\\rangle}", 3]
+        }
+    },
+}

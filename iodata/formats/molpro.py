@@ -16,13 +16,24 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling MOLPRO file formal."""
+"""Molpro 2012 FCIDUMP file format.
+
+Notes
+-----
+1. This function works only for restricted wave-functions.
+2. One- and two-electron integrals are stored in chemists' notation in an FCIDUMP file,
+   while IOData internally uses Physicist's notation.
+3. Keep in mind that the FCIDUMP format changed in MOLPRO 2012, so files generated with
+   older versions are not supported.
+
+"""
 
 
 from typing import TextIO
 
 import numpy as np
 
+from ..docstrings import document_load_one, document_dump_one
 from ..iodata import IOData
 from ..utils import set_four_index_element, LineIterator
 
@@ -30,32 +41,13 @@ from ..utils import set_four_index_element, LineIterator
 __all__ = []
 
 
-patterns = ['*FCIDUMP*']
+PATTERNS = ['*FCIDUMP*']
 
 
+@document_load_one("Molpro 2012 FCIDUMP", ['core_energy', 'one_ints', 'nelec', 'spinpol',
+                                           'two_ints'])
 def load_one(lit: LineIterator) -> dict:
-    """Load one- and two-electron integrals from a MOLPRO 2012 FCIDUMP file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        Output dictionary containing ``nelec``, ``spinpol``, ``one_mo``,
-        ``two_mo`` & ``core_energy`` keys and their corresponding values.
-
-    Notes
-    -----
-    1. This function works only for restricted wave-functions.
-    2. One- and two-electron integrals are stored in chemists' notation in an FCIDUMP file,
-       while HORTON internally uses Physicist's notation.
-    3. Keep in mind that the FCIDUMP format changed in MOLPRO 2012, so files generated with
-       older versions are not supported.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     # check header
     line = next(lit)
     if not line.startswith(' &FCI NORB='):
@@ -114,26 +106,15 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
+LOAD_ONE_NOTES = """
+The dictionary ``one_ints`` must contain a field ``core_mo``. Similarly, ``two_ints`` must
+contain ``two_mo``.
+"""
+
+@document_dump_one("Molpro 2012 FCIDUMP", ['one_ints', 'two_ints'],
+                   ['core_energy', 'nelec', 'spinpol'], LOAD_ONE_NOTES)
 def dump_one(f: TextIO, data: IOData):
-    """Write one- and two-electron integrals into a MOLPRO 2012 FCIDUMP file format.
-
-    Parameters
-    ----------
-    f
-        A file to write to.
-    data
-        An IOData instance which must contain ``one_mo`` & ``two_mo`` attributes.
-        It may contain ``core_energy``, ``nelec`` and ``ms`` attributes.
-
-    Notes
-    -----
-    1. This function works only for restricted wave-functions.
-    2. One- and two-electron integrals are stored in chemists' notation in an FCIDUMP file,
-       while HORTON internally uses Physicist's notation.
-    3. Keep in mind that the FCIDUMP format changed in MOLPRO 2012, so files generated with
-       older versions are not supported.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     one_mo = data.one_ints['core_mo']
 
     # Write header

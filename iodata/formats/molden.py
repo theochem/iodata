@@ -16,7 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Module for handling MOLDEN file format."""
+"""Molden file format.
+
+Many QC codes can write out Molden files, e.g. `Molpro <https://www.molpro.net/>`_,
+`Orca <https://orcaforum.cec.mpg.de/>`_, `PSI4 <http://www.psicode.org/>`_,
+`Molden <http://www.cmbi.ru.nl/molden/>`_, `Turbomole <http://www.turbomole.com/>`_. Keep
+in mind that several of these write incorrect versions of the file format, but these
+errors are corrected when loading them with IOData.
+"""
 
 
 from typing import Tuple, Union, TextIO
@@ -26,6 +33,7 @@ import numpy as np
 
 from ..basis import (angmom_its, angmom_sti, MolecularBasis, Shell,
                      convert_conventions, HORTON2_CONVENTIONS)
+from ..docstrings import document_load_one, document_dump_one
 from ..iodata import IOData
 from ..periodic import sym2num, num2sym
 from ..orbitals import MolecularOrbitals
@@ -36,7 +44,7 @@ from ..utils import angstrom, LineIterator
 __all__ = []
 
 
-patterns = ['*.molden.input', '*.molden']
+PATTERNS = ['*.molden.input', '*.molden']
 
 # From the Molden format documentation:
 #    5D: D 0, D+1, D-1, D+2, D-2
@@ -62,22 +70,9 @@ CONVENTIONS = {
 }
 
 
+@document_load_one("Molden", ['atcoords', 'atnums', 'atcorenums', 'mo', 'obasis'], ['title'])
 def load_one(lit: LineIterator) -> dict:
-    """Load data from a MOLDEN input file format.
-
-    Parameters
-    ----------
-    lit
-        The line iterator to read the data from.
-
-    Returns
-    -------
-    out
-        output dictionary containing ``atcoords``, ``atnums``, ``atcorenums``,
-        ``obasis``, ``mo`` & ``signs`` keys and corresponding values. It may contain
-        ``title`` key and its corresponding value as well.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     result = _load_low(lit)
     _fix_molden_from_buggy_codes(result, lit.filename)
     return result
@@ -580,19 +575,9 @@ def _fix_molden_from_buggy_codes(result: dict, filename: str):
                    'files causing this error'.format(filename)))
 
 
+@document_dump_one("Molden", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcorenums', 'title'])
 def dump_one(f: TextIO, data: IOData):
-    """Write data into a MOLDEN input file format.
-
-    Parameters
-    ----------
-    f
-        A file to write to.
-    data : IOData
-        An IOData instance which must contain ```atcoords``, ``atnums``,
-        ``obasis`` & ``orb_alpha`` attributes. It may contain ```title``,
-        ``atcorenums``, ``orb_beta`` attributes.
-
-    """
+    """Do not edit this docstring. It will be overwritten."""
     # Print the header
     f.write('[Molden Format]\n')
     if data.title is not None:
