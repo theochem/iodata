@@ -2,14 +2,14 @@ We'd love you to contribute. Here are some practical hints to help out.
 
 
 General recommendations
-=======================
+-----------------------
 
 - Please, be careful with tools like autopep8, black or yapf. They may result in
   a massive number of changes, making pull requests harder to review. Also, when
   using them, use a maximum line length of 100. To avoid confusion, only clean
   up the code you are working on. A safer option is to use
-  `cardboardlint -F -r master`. This will only clean code where you have already
-  made changes.
+  ``cardboardlint -F -r master``. This will only clean code where you have
+  already made changes.
 
 - Do not add module-level ``pylint: disable=...`` lines, except for the
   ``no-member`` warning in the unit test modules. When adding pylint exception,
@@ -21,51 +21,45 @@ General recommendations
   strings to postpone the evaluation of the type. (See `PEP 0563`_ for more
   details on postponed type annotation.)
 
-- In unit testing, use ``np.testing.assert_close`` and
+- In unit testing, use ``np.testing.assert_allclose`` and
   ``np.testing.assert_equal`` for comparing floating-point and integer numpy
-  arrays respectively. ``np.testing.assert_close`` can also be used for
+  arrays respectively. ``np.testing.assert_allclose`` can also be used for
   comparing floating point scalars. In all other cases (not involving floating
   point numbers), the simple ``assert a == b`` works equally well and is more
   readable.
 
 
 Adding new file formats
-=======================
+-----------------------
 
 Each file format is implemented in a module of the package ``iodata.formats``.
-These modules all follow the same API. The following must always be present
+These modules all follow the same API. Please consult existing formats for some
+guidance, e.g. the :py:mod:`iodata.formats.xyz` is a simple but complete
+example. From the following list, ``PATTERNS`` and one of the functions must
+be implemented:
 
-.. code-block :: python
+* ``PATTERNS = [ ... ]``: a list of glob patterns used to recognize file formats
+  from the file names. This is used to select the correct module from
+  ``iodata.formats`` in functions in ``iodata.api``.
+* ``load_one``: load a single IOData object.
+* ``dump_one``: dump a single IOData object.
+* ``load_many``: load multiple IOData objects (iterator) from a single file.
+* ``dump_many``: dump multiple IOData objects (iterator) to a single file.
 
-    # A list of glob patterns used to recognize file formats from the file names.
-    # This is used to select the correct module in ``iodata.formats`` in the
-    # ``load_one`` and ``dump_one`` functions.
-    patterns = [ ... ]
 
+``load_one`` function: reading a single IOData object from a file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`load` functions: reading from files
-------------------------------------
-
-In order to read from a new file format, the module must contain a ``load``
+In order to read from a new file format, the module must contain a ``load_one``
 function with the following signature:
 
 .. code-block :: python
 
-    def load(lit: LineIterator) -> Dict:
-        """Load data from <please-fill-in-some-info>.
-
-        Parameters
-        ----------
-        lit
-            The line iterator to read the data from.
-
-        Returns
-        -------
-        out : dict
-            Output dictionary contains keys ...
-            Output dictionary may contain keys ...
-
-        """
+    @document_load_one("format", ['list', 'of', 'guaranteed', 'attributes'],
+                       ['list', 'of', 'attributes', 'which', 'may', 'be', 'read'],
+                       notes)
+    def load_one(lit: LineIterator) -> dict:
+        """Do not edit this docstring. It will be overwritten."""
         # Actual code to read the file
 
 
@@ -144,14 +138,70 @@ The error appearing on screen will automatically also contain the filename
 and line number.
 
 
-`dump` functions: writing to files
-----------------------------------
+``dump_one`` functions: writing a single IOData object to a file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TODO
+The ``dump_one`` functions are conceptually simpler: they just receive an open
+file object and an ``IOData`` instance as arguments, and should write the data
+to the open file.
+
+.. code-block:: python
+
+    @document_dump_one("format", ['guaranteed', 'attributes'], ['optional', 'attribtues'], notes)
+    def dump_one(f: TextIO, data: IOData):
+        """Do not edit this docstring. It will be overwritten."""
+        # code to write data to f.
+
+
+``load_many`` function: reading multiple IOData objects from a single file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function works essentially in the same way as ``load_one``, but can load
+multiple molecules. For example:
+
+.. code-block :: python
+
+    @document_load_many("XYZ", ['atcoords', 'atnums', 'title'])
+    def load_many(lit: LineIterator) -> Iterator[dict]:
+        """Do not edit this docstring. It will be overwritten."""
+        # XYZ Trajectory files are a simple concatenation of individual XYZ files,'
+        # making it travial to load many frames.
+        while True:
+            try:
+                yield load_one(lit)
+            except StopIteration:
+                return
+
+
+The XYZ trajectory format is simply a concatenation of individual XYZ files,
+such that one can use the load_one function to read a single frame. In some
+file formats, more complicated approaches are needed. In any case, one must
+use the ``yield`` keyword for every frame read from a file.
+
+
+``dump_many`` function: writing multiple IOData objects to a single file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Also ``dump_many`` is very similar to ``dump_one``, but just takes an iterator
+over multiple IOData instances as argument. It is expected to write all of these
+to a single open file object. For example:
+
+.. code-block :: python
+
+    @document_dump_many("XYZ", ['atcoords', 'atnums'], ['title'])
+    def dump_many(f: TextIO, datas: Iterator[IOData]):
+        """Do not edit this docstring. It will be overwritten."""
+        # Similar to load_many, this is relatively easy.
+        for data in datas:
+            dump_one(f, data)
+
+Also here, we take advantage of the simple structure of the XYZ trajectory
+format, i.e. the simple concatenation of individual XYZ files. For other
+formats, this could become more complicated.
 
 
 Github work flow
-================
+----------------
 
 1. Before diving into technicalities: if you intend to make major changes,
    beyond fixing bugs and small functionality improvements, please open a Github

@@ -30,8 +30,12 @@ Welcome to IOData's documentation!
 
 IOData is the HORTON3 module for reading and writing different quantum chemistry formats.
 
-Currently we support the following formats to varying degrees: **xyz, poscar, cube, CHGCAR, LOCPOT,
-fchk, molden, mkl, wfn, FCIDUMP, log,**. See :ref:`file_formats` for details.
+Currently we support the following formats to varying degrees: **XYZ, POSCAR,
+Cube, CHGCAR, LOCPOT, Fchk, Molden, MKL, WFN, FCIDUMP, CP2K ATOM output and
+Gaussian log**. See :ref:`file_formats` for details. IOData primarily focusses
+on correctly reading in wavefunctions from these file formats, where needed also
+correcting for common errors in the Molden and Molekel formats introduced by
+various programs (ORCA, TurboMole and pre-1.0 versions of PSI4).
 
 User Documentation
 ^^^^^^^^^^^^^^^^^^
@@ -58,7 +62,7 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
-   pyapi/iodata
+   pyapi/modules
 
 Indices and tables
 ==================
