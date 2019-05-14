@@ -16,15 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-
-# pragma pylint: disable=invalid-name,no-member
 """Test iodata.format.qchem module."""
 
 import numpy as np
-from numpy.testing import assert_allclose
+# from numpy.testing import assert_allclose
 
 from ..formats.qchem import load_qchem_low
-from ..utils import LineIterator, angstrom, amu, calorie, avogadro
+from ..utils import LineIterator, angstrom, amu
+# from ..utils import LineIterator, angstrom, amu, calorie, avogadro
 
 try:
     from importlib_resources import path

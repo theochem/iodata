@@ -17,17 +17,19 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 """Module for handling Qchem file format."""
+# pragma pylint: disable=invalid-name, too-many-branches, too-many-statements
 
 import re
 
-from typing import Tuple, List
+# from typing import Tuple, List
+from typing import Tuple
 
 import numpy as np
 
-from ..basis import MolecularBasis, Shell
-from ..overlap import gob_cart_normalization
+# from ..basis import MolecularBasis, Shell
+# from ..overlap import gob_cart_normalization
 from ..periodic import sym2num
-from ..orbitals import MolecularOrbitals
+# from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, angstrom, amu, calorie, avogadro
 
 __all__ = []
