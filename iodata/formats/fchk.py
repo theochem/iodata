@@ -298,7 +298,7 @@ def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
     lit
         The line iterator to read the data from.
     label_patterns
-        A list of Unix shell-style wildcard PATTERNS of labels to read.
+        A list of Unix shell-style wildcard patterns of labels to read.
 
     Returns
     -------
@@ -337,8 +337,8 @@ def _load_fchk_field(lit: LineIterator, label_patterns: List[str]) -> Tuple[str,
     lit
         The line iterator to read the data from.
     label_patterns
-        A list of Unix shell-style wildcard PATTERNS. The next field matching
-        one of the PATTERNS is returned
+        A list of Unix shell-style wildcard patterns. The next field matching
+        one of the patterns is returned
 
     Returns
     -------
