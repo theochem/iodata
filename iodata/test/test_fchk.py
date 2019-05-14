@@ -340,6 +340,7 @@ def check_trj_basics(trj, nsteps, title, irc):
             assert mol.extra['nstep'] == nstep
             assert mol.natom == natom
             assert mol.atnums.shape == (natom, )
+            assert_equal(mol.atnums, [8, 8, 1, 1])
             assert mol.atcorenums.shape == (natom, )
             assert mol.atcoords.shape == (natom, 3)
             assert mol.atgradient.shape == (natom, 3)
