@@ -216,6 +216,3 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
         num_alpha_electron, num_beta_electron, mol_charges, \
         mulliken_charges, energy, alpha_mo_energy, beta_mo_energy, \
         vib_energy, enthalply, entropy
-
-
-
