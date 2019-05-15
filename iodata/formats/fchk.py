@@ -33,7 +33,7 @@ from ..utils import LineIterator, amu
 __all__ = []
 
 
-PATTERNS = ['*.fchk']
+PATTERNS = ['*.fchk', '*.fch']
 
 
 CONVENTIONS = {
