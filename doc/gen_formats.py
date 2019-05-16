@@ -33,10 +33,6 @@ HEADER = """
 Supported File Formats
 ######################
 
-.. |br| raw:: html
-
-    <br />
-
 """
 
 
@@ -48,10 +44,18 @@ def _format_words(words):
 def main():
     """Write formats.rst to stdout."""
     print(HEADER)
-    for _name, module in sorted(FORMAT_MODULES.items()):
+    for name, module in sorted(FORMAT_MODULES.items()):
+        load_one = getattr(module, 'load_one', None)
+        dump_one = getattr(module, 'dump_one', None)
+        load_many = getattr(module, 'load_many', None)
+        dump_many = getattr(module, 'dump_many', None)
+
+        if not (load_one or dump_one or load_many or dump_many):
+            continue
+
         lines = module.__doc__.split('\n')
-        print(lines[0][:-1])
-        print('=' * len(lines[0][:-1]))
+        print(lines[0][:-1], '(``{}``)'.format(name))
+        print('=' * (len(name) + len(lines[0][:-1]) + 7))
         print()
         for line in lines[2:]:
             print(line)
@@ -59,7 +63,7 @@ def main():
         print("Filename patterns: ", _format_words(module.PATTERNS))
         print()
 
-        load_one = getattr(module, 'load_one', None)
+
         if load_one is not None:
             print("load_one")
             print("--------")
@@ -71,7 +75,6 @@ def main():
                 print(load_one.notes)
             print()
 
-        dump_one = getattr(module, 'dump_one', None)
         if dump_one is not None:
             print("dump_one")
             print("--------")
@@ -83,7 +86,6 @@ def main():
                 print(dump_one.notes)
             print()
 
-        load_many = getattr(module, 'load_many', None)
         if load_many is not None:
             print("load_many")
             print("---------")
@@ -95,7 +97,6 @@ def main():
                 print(load_many.notes)
             print()
 
-        dump_many = getattr(module, 'dump_many', None)
         if dump_many is not None:
             print("dump_many")
             print("---------")

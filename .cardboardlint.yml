@@ -19,4 +19,4 @@ linters:
   - yamllint:
       filefilter: ['- *conda.recipe/meta.yaml', '+ *.yml', '+ *.yaml']
   - rst-lint:
-      filefilter: ['- doc*', '+ *.rst']
+      filefilter: ['+ README.rst']

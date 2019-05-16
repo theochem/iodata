@@ -20,14 +20,44 @@
     :
     : --
 
-HORTON3 Changelog
+IOData Changelog
 =================
 
-The following API breaking changes were implemented as a part of the code modernization to
-Python3/HORTON3.
 
-* H5 file format support has been removed
-* A GOBasis instance is no longer returned. Instead, the parameters to initialize the instance
-  are returned within a dictionary.
-* An Orbitals (aka DenseExpansion, aka wfn expansion) instance is no longer returned. Instead the
-  parameters to initialize the instance as returned within a dictionary.
+**Version 1.0.0**
+
+Originally, IOData was a subpackage of HORTON2. It is currently factored out,
+modernized and ported to Python 3. In this process, the API was seriously
+refactored, essentially designed from scratch. Compared to HORTON2, IOData 1.0.0
+contains the following API-breaking changes:
+
+* The user-facing API is now a set of four *free* functions:
+  :py:func:`iodata.api.load_one`, :py:func:`iodata.api.dump_one`,
+  :py:func:`iodata.api.load_many`, :py:func:`iodata.api.dump_many`.
+* The :py:class:`iodata.iodata.IOData` object is implemented with the
+  `attrs <https://www.attrs.org>`_ module, which facilites type hinting and
+  checking.
+* The ``load_many`` and ``dump_many`` functions can handle trajectories and
+  database formats. (At the time of writing, only XYZ and FCHK are supported.)
+* IOData does not impose a specific ordering of the atomic orbital basis
+  functions (within one shell). Practically all possible conventions are
+  supported and one can easily convert from one to another.
+* All attributes of IOData are either built-in Python types, Numpy arrays or
+  NamedTuples defined in IOData. It no longer relies on other parts of HORTON2
+  to define these data types. (This is most relevant for the orbital basis,
+  the molecular orbitals and the cube data.)
+* Nearly all attributes of the IOData class have been renamed to more systematic
+  terminology.
+* All file format modules have an identical API (and therefore do not fit into
+  a single namespace).
+* Ghost atoms are now loaded as atoms with a zero effective core charge
+  (``atcorenums``).
+* Spin multiplicity is no longer used. Instead, the spin polarization is stored
+  `= abs(nalpha - nbeta)`.
+* The internal HDF5 file format support has been removed.
+* Many smaller changes have been made, which would be too tedious to be listed
+  here.
+
+In addition, several new attributes were added to the ``IOData`` class, and
+several of them can also be read from file formats we already supported
+previously. This work will be expanded upon in future releases.
