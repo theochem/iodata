@@ -63,7 +63,6 @@ def main():
         print("Filename patterns: ", _format_words(module.PATTERNS))
         print()
 
-
         if load_one is not None:
             print("load_one")
             print("--------")
