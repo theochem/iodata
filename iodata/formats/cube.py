@@ -39,7 +39,7 @@ from ..utils import LineIterator, Cube
 __all__ = []
 
 
-PATTERNS = ['*.cube']
+PATTERNS = ['*.cube', '*.cub']
 
 
 def _read_cube_header(lit: LineIterator) \
