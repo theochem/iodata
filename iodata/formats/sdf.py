@@ -20,7 +20,7 @@
 
 Usually, the different frames in a trajectory describe different geometries of the same
 molecule, with atoms in the same order. The ``load_many`` and ``dump_many`` functions
-below can also handle an XYZ with different molecules, e.g. a molecular database.
+below can also handle an SDF file with different molecules, e.g. a molecular database.
 """
 
 
@@ -78,7 +78,7 @@ def load_one(lit: LineIterator) -> dict:
 @document_load_many("SDF", ['atcoords', 'atnums', 'title'])
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
-    # XYZ Trajectory files are a simple concatenation of individual XYZ files,'
+    # SDF files with more molecueles are a simple concatenation of individual SDF files,'
     # making it travial to load many frames.
     while True:
         try:
