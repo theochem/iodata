@@ -20,6 +20,7 @@
 
 import os
 
+import pytest
 from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one, load_many, dump_one, dump_many
@@ -35,6 +36,13 @@ def test_sdf_load_one():
     with path('iodata.test.data', 'example.sdf') as fn_sdf:
         mol = load_one(str(fn_sdf))
     check_example(mol)
+
+
+def test_sdf_tooshort():
+    # test if sdf file has the wrong ending without $$$$
+    with path('iodata.test.data', 'example_tooshort.sdf') as fn_sdf:
+        with pytest.raises(IOError):
+            load_one(str(fn_sdf))
 
 
 def check_example(mol):
