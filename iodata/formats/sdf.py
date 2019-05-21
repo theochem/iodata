@@ -57,14 +57,11 @@ def load_one(lit: LineIterator) -> dict:
         atcoords[i, 0] = float(words[0]) * angstrom
         atcoords[i, 1] = float(words[1]) * angstrom
         atcoords[i, 2] = float(words[2]) * angstrom
-        try:
-            atnums[i] = sym2num[words[3].title()]
-        except KeyError:
-            atnums[i] = int(words[0])
+        atnums[i] = sym2num.get(words[3].title())
     while True:
         try:
             words = next(lit)
-        except ValueError:
+        except StopIteration:
             raise lit.error("Molecule specification did not end properly with $$$$")
         if words == "$$$$\n":
             break
@@ -78,7 +75,7 @@ def load_one(lit: LineIterator) -> dict:
 @document_load_many("SDF", ['atcoords', 'atnums', 'title'])
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
-    # SDF files with more molecueles are a simple concatenation of individual SDF files,'
+    # SDF files with more molecules are a simple concatenation of individual SDF files,'
     # making it travial to load many frames.
     while True:
         try:
