@@ -23,6 +23,7 @@ import os
 import pytest
 from numpy.testing import assert_equal, assert_allclose
 
+from .common import truncated_file
 from ..api import load_one, load_many, dump_one, dump_many
 from ..utils import angstrom
 try:
@@ -38,11 +39,12 @@ def test_sdf_load_one():
     check_example(mol)
 
 
-def test_sdf_tooshort():
+def test_sdf_formaterror(tmpdir):
     # test if sdf file has the wrong ending without $$$$
-    with path('iodata.test.data', 'example_tooshort.sdf') as fn_sdf:
-        with pytest.raises(IOError):
-            load_one(str(fn_sdf))
+    with path('iodata.test.data', 'example.sdf') as fn_test:
+        with truncated_file(fn_test, 36, 0, tmpdir) as fn:
+            with pytest.raises(IOError):
+                load_one(str(fn))
 
 
 def check_example(mol):
