@@ -80,6 +80,7 @@ def test_load_many():
     with path('iodata.test.data', 'example.sdf') as fn_sdf:
         mols = list(load_many(str(fn_sdf)))
     assert len(mols) == 2
+    check_example(mols[0])
     assert mols[1].title == '24978481'
     assert_equal(mols[1].natom, 21)
     assert_allclose(mols[0].atcoords[0] / angstrom, [2.8660, -0.4400, 0.0000])
