@@ -29,7 +29,7 @@ import numpy as np
 # from ..basis import MolecularBasis, Shell
 # from ..overlap import gob_cart_normalization
 from ..periodic import sym2num
-from ..orbitals import MolecularOrbitals
+# from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, angstrom, amu, calorie, avogadro
 
 __all__ = []
@@ -82,7 +82,7 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
     atcoords = np.array(atcoords, dtype=np.float) * angstrom
     num_atoms = atcoords.shape[0]
 
-    atomic_num = np.array([sym2num[i] for i in atnames], dtype=np.int)
+    atnums = np.array([sym2num[i] for i in atnames], dtype=np.int)
 
     # nuclear repulsion energy in hartrees
     for line in lit:
@@ -212,8 +212,40 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
             entropy = np.array(line.strip().split()[-2], dtype=np.float)
             break
 
-    return title, runtype, basis, exchange, atnames, atomic_num, num_atoms, num_sym, \
+    return title, runtype, basis, exchange, atnames, atnums, num_atoms, num_sym, \
         masses, atcoords, polar_matrix, athessian, nucl_repul_energy, \
         num_alpha_electron, num_beta_electron, mol_charges, \
         mulliken_charges, energy, alpha_mo_energy, beta_mo_energy, \
         vib_energy, enthalpy, entropy
+
+
+def load_one(lit: LineIterator, lit_hess: LineIterator = None) -> dict:
+    """Load data from a Q-Chem file format.
+
+    Parameters
+    ----------
+    lit : LineIterator
+        The line iterator to read the data from qchem output.
+    lit_hess : LineIterator, optional
+        The line iterator to read the hessian data.
+
+    Returns
+    -------
+    out
+        Output dictionary containing ``title``, ``atcoords``, ``atnums``, ``energy``,
+        ``obasis`` & ``mo`` keys and their corresponding values.
+
+    """
+    title, _, basis_name, _, _, _, _, _, _, atcoords, _, athessian, _, _, _, \
+        mol_charges, _, energy, _, _, _, _, _ = load_qchem_low(lit=lit, lit_hess=lit_hess)
+    basis_name = basis_name.lower()
+
+    return {
+        'title': title,
+        'obasis_name': basis_name,
+        # 'atnums': atnums,
+        'charge': mol_charges,
+        'atcoords': atcoords,
+        'athessian': athessian,
+        'energy': energy
+    }
