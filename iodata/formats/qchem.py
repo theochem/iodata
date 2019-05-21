@@ -29,7 +29,7 @@ import numpy as np
 # from ..basis import MolecularBasis, Shell
 # from ..overlap import gob_cart_normalization
 from ..periodic import sym2num
-# from ..orbitals import MolecularOrbitals
+from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, angstrom, amu, calorie, avogadro
 
 __all__ = []
@@ -45,7 +45,7 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
     lit : LineIterator
         The line iterator to read the data from qchem output.
     lit_hess : LineIterator, optional
-        The line iterator to read the hessian data.
+        The line iterator to read the athessian data.
 
     """
     # read sections of qchem file
@@ -57,30 +57,32 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
 
     # exchange and basis
     for line in lit:
+        if line.strip().startswith('jobtype'):
+            runtype = line.strip().split()[1].lower()
         if line.strip().startswith('EXCHANGE'):
             exchange = line.strip().split()[1]
         if line.strip().startswith('BASIS'):
             basis = line.strip().split()[1]
-        # get coordinates
+        # get atom coordinates
         if line.strip().startswith(
                 'Standard Nuclear Orientation (Angstroms)'):
             break
     next(lit)
     next(lit)
-    coordinates = []
-    atom_names = []
+    atcoords = []
+    atnames = []
     for line in lit:
         if line.strip().startswith('----'):
             break
         words = line.split()
-        atom_names.append(words[1])
+        atnames.append(words[1])
         coor = [float(words[2]), float(words[3]), float(words[4])]
-        coordinates.append(coor)
-    atom_names = np.array(atom_names, dtype=np.unicode_)
-    coordinates = np.array(coordinates, dtype=np.float) * angstrom
-    num_atoms = coordinates.shape[0]
+        atcoords.append(coor)
+    atnames = np.array(atnames, dtype=np.unicode_)
+    atcoords = np.array(atcoords, dtype=np.float) * angstrom
+    num_atoms = atcoords.shape[0]
 
-    atomic_num = np.array([sym2num[i] for i in atom_names], dtype=np.int)
+    atomic_num = np.array([sym2num[i] for i in atnames], dtype=np.int)
 
     # nuclear repulsion energy in hartrees
     for line in lit:
@@ -89,8 +91,7 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
     nucl_repul_energy = np.array(line.split()[4], dtype=np.float)
     # electrons
     for line in lit:
-        if line.strip().startswith('There are') and \
-                line.strip().endswith('electrons'):
+        if line.strip().startswith('There are') and line.strip().endswith('electrons'):
             break
     num_alpha_electron = np.array(line.split()[2], dtype=np.int)
     num_beta_electron = np.array(line.split()[5], dtype=np.int)
@@ -150,7 +151,7 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
     polar_matrix = np.array(polar_matrix, dtype=np.float)
 
     # Get Hessian of the SCF energy
-    hessian = np.zeros((3 * num_atoms, 3 * num_atoms), float)
+    athessian = np.zeros((3 * num_atoms, 3 * num_atoms), float)
     if lit_hess is None:
         for line in lit:
             if line.strip().startswith(
@@ -164,7 +165,7 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
             for line in lit:
                 words = line.split()
                 # / angstrom**2
-                hessian[row, 6 * i:6 * (i + 1)] = np.array(
+                athessian[row, 6 * i:6 * (i + 1)] = np.array(
                     sum([[float(word)] for word in words[1:]], []))
                 row += 1
                 if row >= 3 * num_atoms:
@@ -174,14 +175,14 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
         row = 0
         col = 0
         for line in lit_hess:
-            hessian[row, col] = float(line.split()[0]) * 1000 * calorie / avogadro / angstrom ** 2
+            athessian[row, col] = float(line.split()[0]) * 1000 * calorie / avogadro / angstrom ** 2
             col += 1
             if col >= 3 * num_atoms:
                 row += 1
                 col = row
         for i in range(len(lit_hess)):
             for j in range(0, i):
-                hessian[i, j] = hessian[j, i]
+                athessian[i, j] = athessian[j, i]
 
     # get masses in atomic units
     masses = np.zeros(num_atoms, np.float)
@@ -203,16 +204,16 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
     for line in lit:
         if line.strip().startswith('Rotational Symmetry Number is'):
             num_sym = np.array(line.split()[-1], dtype=np.int)
-        # Enthalply in kcal/mol
+        # Enthalpy in kcal/mol
         if line.strip().startswith('Total Enthalpy'):
-            enthalply = np.array(line.strip().split()[-2], dtype=np.float)
+            enthalpy = np.array(line.strip().split()[-2], dtype=np.float)
         # Entropy in cal/mol.K
         if line.strip().startswith('Total Entropy'):
             entropy = np.array(line.strip().split()[-2], dtype=np.float)
             break
 
-    return title, basis, exchange, atom_names, atomic_num, num_atoms, num_sym, \
-        masses, coordinates, polar_matrix, hessian, nucl_repul_energy, \
+    return title, runtype, basis, exchange, atnames, atomic_num, num_atoms, num_sym, \
+        masses, atcoords, polar_matrix, athessian, nucl_repul_energy, \
         num_alpha_electron, num_beta_electron, mol_charges, \
         mulliken_charges, energy, alpha_mo_energy, beta_mo_energy, \
-        vib_energy, enthalply, entropy
+        vib_energy, enthalpy, entropy
