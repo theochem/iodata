@@ -55,8 +55,8 @@ def test_load_molden_li2_orca():
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
-    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsa, olp)
+    check_orthonormal(mol.mo.coeffsb, olp)
 
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
@@ -79,7 +79,7 @@ def test_load_molden_h2o_orca():
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    check_orthonormal(mol.mo.coeffs, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffs, olp)
 
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
@@ -96,6 +96,11 @@ def test_load_molden_nh3_molden_pure():
     assert_equal(mol.atnums, [7, 1, 1, 1])
     assert_allclose(mol.atcoords[0] / angstrom, [-0.007455, 0.044763, 0.054913])
     assert_allclose(mol.atcoords[2] / angstrom, [-0.313244, -0.879581, 0.283126])
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp, atol=1e-4)  # low precision in file
+
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
@@ -164,12 +169,21 @@ def test_load_molden_low_nh3_molden_cart():
         38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51])
     assert_equal(signs, [1] * 52)
 
+    # Check normalization
+    olp = compute_overlap(obasis, data['atcoords'])
+    check_orthonormal(data['mo'].coeffs, olp, atol=1e-4)  # low precision in file
+
 
 def test_load_molden_nh3_molden_cart():
     # The file tested here is created with molden. It should be read in
     # properly without altering normalization and sign conventions.
     with path('iodata.test.data', 'nh3_molden_cart.molden') as fn_molden:
         mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp, atol=1e-4)  # low precision in file
+
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
@@ -182,6 +196,11 @@ def test_load_molden_nh3_orca():
     # properly by altering normalization and sign conventions.
     with path('iodata.test.data', 'nh3_orca.molden') as fn_molden:
         mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
@@ -194,6 +213,11 @@ def test_load_molden_nh3_psi4():
     # properly by altering normalization conventions.
     with path('iodata.test.data', 'nh3_psi4_1.0.molden') as fn_molden:
         mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
@@ -206,6 +230,11 @@ def test_load_molden_nh3_psi4_1():
     # It should be read in properly by renormalizing the contractions.
     with path('iodata.test.data', 'nh3_psi4_1.0.molden') as fn_molden:
         mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
@@ -218,6 +247,11 @@ def test_load_molden_he2_ghost_psi4_1():
     with path('iodata.test.data', 'he2_ghost_psi4_1.0.molden') as fn_molden:
         mol = load_one(str(fn_molden))
     np.testing.assert_equal(mol.atcorenums, np.array([0.0, 2.0]))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
@@ -229,6 +263,11 @@ def test_load_molden_nh3_molpro2012():
     # The file tested here is created with MOLPRO2012.
     with path('iodata.test.data', 'nh3_molpro2012.molden') as fn_molden:
         mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
     # Check Mulliken charges.
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
@@ -241,6 +280,11 @@ def test_load_molden_neon_turbomole():
     with path('iodata.test.data',
               'neon_turbomole_def2-qzvp.molden') as fn_molden:
         mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
     # Check Mulliken charges.
     charges = compute_mulliken_charges(mol)
     assert abs(charges).max() < 1e-3
@@ -250,6 +294,11 @@ def test_load_molden_nh3_turbomole():
     # The file tested here is created with Turbomole 7.1
     with path('iodata.test.data', 'nh3_turbomole.molden') as fn_molden:
         mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
     # Check Mulliken charges.
     # Comparison with numbers from the Turbomole output.
     # These are slightly different than in the other tests because we are using
@@ -262,6 +311,12 @@ def test_load_molden_nh3_turbomole():
 def test_load_molden_f():
     with path('iodata.test.data', 'F.molden') as fn_molden:
         mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
+    check_orthonormal(mol.mo.coeffsb, olp)
+
     assert_allclose(mol.mo.occsa[:6], [1, 1, 1, 1, 1, 0])
     assert_allclose(mol.mo.occsb[:6], [1, 1, 1, 1, 0, 0])
     assert_equal(mol.mo.irrepsa[:6], ['Ag', 'Ag', 'B3u', 'B2u', 'B1u', 'B3u'])
