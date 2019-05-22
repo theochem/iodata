@@ -26,9 +26,10 @@ from numpy.testing import assert_equal, assert_allclose
 import pytest
 
 from ..api import load_one, load_many
-from ..formats.fchk import load_one as load_fchk
 from ..overlap import compute_overlap
-from ..utils import check_dm, LineIterator
+from ..utils import check_dm
+
+from .common import check_orthonormal
 
 try:
     from importlib_resources import path
@@ -92,6 +93,8 @@ def test_load_fchk_hf_sto3g_num():
     assert_allclose(mol.atcharges['mulliken'], [0.45000000E+00, 4.22300000E+00])
     assert_allclose(mol.atcharges['npa'], [3.50000000E+00, 1.32000000E+00])
     assert_allclose(mol.atcharges['esp'], [0.77700000E+00, 0.66600000E+00])
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
 
 
 def test_load_fchk_h_sto3g_num():
@@ -103,6 +106,8 @@ def test_load_fchk_h_sto3g_num():
     assert len(mol.atcoords) == len(mol.atnums)
     assert mol.atcoords.shape[1] == 3
     assert len(mol.atnums) == 1
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
     assert_allclose(mol.energy, -4.665818503844346E-01)
 
 
@@ -114,6 +119,8 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     assert len(mol.obasis.shells) == 20
     assert mol.obasis.nbasis == 60
     assert mol.natom == 2
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
     assert_allclose(mol.energy, -1.495944878699246E+02)
 
 
@@ -124,6 +131,8 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     assert len(mol.atcoords) == len(mol.atnums)
     assert mol.atcoords.shape[1] == 3
     assert len(mol.atnums) == 2
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
     assert_allclose(mol.energy, -1.495953594545721E+02)
 
 
@@ -145,6 +154,8 @@ def test_load_fchk_water_sto3g_hf():
     assert_equal(mol.mo.occs.min(), 0.0)
     assert_equal(mol.mo.occs.max(), 2.0)
     assert_allclose(mol.energy, -7.495929232844363E+01)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
 
 
 def test_load_fchk_lih_321g_hf():
@@ -180,6 +191,9 @@ def test_load_fchk_lih_321g_hf():
     assert_equal(mol.mo.occsa.shape[0], mol.mo.coeffsa.shape[0])
     assert_equal(mol.mo.occsb.shape[0], mol.mo.coeffsb.shape[0])
 
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
+
 
 def test_load_fchk_ghost_atoms():
     # Load fchk file with ghost atoms
@@ -190,6 +204,8 @@ def test_load_fchk_ghost_atoms():
     assert_equal(mol.atcorenums, [1.0, 8.0, 1.0, 0.0, 0.0, 0.0])
     assert_equal(mol.atcoords.shape[0], 6)
     assert_equal(mol.atcharges['mulliken'].shape[0], 6)
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
 
 
 def test_load_fchk_ch3_rohf_g03():
@@ -199,6 +215,8 @@ def test_load_fchk_ch3_rohf_g03():
     assert_equal(mol.mo.occs.min(), 0.0)
     assert_equal(mol.mo.occs.max(), 2.0)
     assert 'scf' not in mol.one_rdms
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
 
 
 def check_load_azirine(key, numbers):
@@ -208,6 +226,8 @@ def check_load_azirine(key, numbers):
     dm = mol.one_rdms['post_scf']
     assert_equal(dm[0, 0], numbers[0])
     assert_equal(dm[32, 32], numbers[1])
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
 
 
 def test_load_azirine_cc():
@@ -233,6 +253,10 @@ def check_load_nitrogen(key, numbers, numbers_spin):
     dm = mol.one_rdms['post_scf']
     assert_equal(dm[0, 0], numbers[0])
     assert_equal(dm[8, 8], numbers[1])
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
+    check_dm(dm, olp, eps=1e-3, occ_max=2)
+    assert_allclose(np.einsum('ab,ba', olp, dm), 7.0, atol=1.e-7, rtol=0)
     dm_spin = mol.one_rdms['post_scf_spin']
     assert_equal(dm_spin[0, 0], numbers_spin[0])
     assert_equal(dm_spin[8, 8], numbers_spin[1])
@@ -258,9 +282,10 @@ def check_normalization_dm_azirine(key):
     """Perform some basic checks on a 2h-azirine fchk file."""
     mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
     olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
     dm = mol.one_rdms['post_scf']
     check_dm(dm, olp, eps=1e-2, occ_max=2)
-    assert_allclose(np.einsum('ab,ba', olp, dm), 22.0, atol=1.e-3)
+    assert_allclose(np.einsum('ab,ba', olp, dm), 22.0, atol=1.e-8, rtol=0)
 
 
 def test_normalization_dm_azirine_cc():
@@ -308,6 +333,8 @@ def test_load_monosilicic_acid_hf_lan():
                      -1.38159653E-02,  # yz
                      -3.63312087E+00])  # zz
     assert_allclose(mol.atgradient[0], [0.0, 0.0, 0.0])
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
 
 
 def load_fchk_trj_helper(fn_fchk):

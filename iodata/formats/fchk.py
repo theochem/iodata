@@ -47,7 +47,7 @@ CONVENTIONS = {
     (2, 'p'): HORTON2_CONVENTIONS[(2, 'p')],
     (0, 'c'): ['1'],
     (1, 'c'): ['x', 'y', 'z'],
-    (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'yz', 'xz'],
+    (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
     (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
     (4, 'c'): HORTON2_CONVENTIONS[(4, 'c')][::-1],
     (5, 'c'): HORTON2_CONVENTIONS[(5, 'c')][::-1],
