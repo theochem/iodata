@@ -165,8 +165,7 @@ def volume(cellvecs: np.ndarray) -> float:
     raise ValueError("Argument cellvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
-def derive_naturals(dm: np.ndarray, overlap: np.ndarray) \
-        -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Derive natural orbitals from a given density matrix.
 
     Parameters
@@ -186,9 +185,6 @@ def derive_naturals(dm: np.ndarray, overlap: np.ndarray) \
     occs
         Orbital occupations
         shape=(nfn, )
-    energies
-        Orbital energies
-        shape=(nfn, )
 
     """
     # Transform density matrix to Fock-like form
@@ -198,8 +194,7 @@ def derive_naturals(dm: np.ndarray, overlap: np.ndarray) \
     coeffs = np.zeros_like(overlap)
     coeffs = evecs[:, :coeffs.shape[1]]
     occs = evals
-    energies = np.zeros(overlap.shape[0])
-    return coeffs, occs, energies
+    return coeffs, occs
 
 
 def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: float = 1.0):
