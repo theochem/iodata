@@ -110,6 +110,8 @@ def test_load_fchk_h_sto3g_num():
     check_orthonormal(mol.mo.coeffsa, olp)
     check_orthonormal(mol.mo.coeffsb, olp)
     assert_allclose(mol.energy, -4.665818503844346E-01)
+    assert_allclose(mol.one_rdms['scf'], mol.one_rdms['scf'].T)
+    assert_allclose(mol.one_rdms['scf_spin'], mol.one_rdms['scf_spin'].T)
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
@@ -123,6 +125,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)
     assert_allclose(mol.energy, -1.495944878699246E+02)
+    assert_allclose(mol.one_rdms['scf'], mol.one_rdms['scf'].T)
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
@@ -135,6 +138,7 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)
     assert_allclose(mol.energy, -1.495953594545721E+02)
+    assert_allclose(mol.one_rdms['scf'], mol.one_rdms['scf'].T)
 
 
 def test_load_fchk_water_sto3g_hf():
@@ -157,6 +161,8 @@ def test_load_fchk_water_sto3g_hf():
     assert_allclose(mol.energy, -7.495929232844363E+01)
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)
+    check_orthonormal(mol.mo.coeffsa, olp)
+    assert_allclose(mol.one_rdms['scf'], mol.one_rdms['scf'].T)
 
 
 def test_load_fchk_lih_321g_hf():
@@ -195,6 +201,8 @@ def test_load_fchk_lih_321g_hf():
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp)
     check_orthonormal(mol.mo.coeffsb, olp)
+    assert_allclose(mol.one_rdms['scf'], mol.one_rdms['scf'].T)
+    assert_allclose(mol.one_rdms['scf_spin'], mol.one_rdms['scf_spin'].T)
 
 
 def test_load_fchk_ghost_atoms():
@@ -216,7 +224,7 @@ def test_load_fchk_ch3_rohf_g03():
     assert_equal(mol.mo.occs.sum(), 9.0)
     assert_equal(mol.mo.occs.min(), 0.0)
     assert_equal(mol.mo.occs.max(), 2.0)
-    assert 'scf' not in mol.one_rdms
+    assert 'scf' not in mol.one_rdms  # It should be skipped when loading fchk.
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp)
     check_orthonormal(mol.mo.coeffsb, olp)
@@ -317,11 +325,11 @@ def test_load_water_hfs_321g():
     assert_allclose(mol.moments[(1, 'c')],
                     [-5.82654324E-17, 0.00000000E+00, -8.60777067E-01])
     assert_allclose(mol.moments[(2, 'c')],
-                    [-8.89536026E-01,  # xx
-                     8.28408371E-17,  # xy
-                     4.89353090E-17,  # xz
-                     1.14114241E+00,  # yy
-                     -5.47382213E-48,  # yz
+                    [-8.89536026E-01,   # xx
+                     8.28408371E-17,    # xy
+                     4.89353090E-17,    # xz
+                     1.14114241E+00,    # yy
+                     -5.47382213E-48,   # yz
                      -2.51606382E-01])  # zz
 
 
@@ -330,11 +338,11 @@ def test_load_monosilicic_acid_hf_lan():
     assert_allclose(mol.moments[(1, 'c')],
                     [-6.05823053E-01, -9.39656399E-03, 4.18948869E-01])
     assert_allclose(mol.moments[(2, 'c')],
-                    [2.73609152E+00,  # xx
-                     -6.65787832E-02,  # xy
-                     2.11973730E-01,  # xz
-                     8.97029351E-01,  # yy
-                     -1.38159653E-02,  # yz
+                    [2.73609152E+00,    # xx
+                     -6.65787832E-02,   # xy
+                     2.11973730E-01,    # xz
+                     8.97029351E-01,    # yy
+                     -1.38159653E-02,   # yz
                      -3.63312087E+00])  # zz
     assert_allclose(mol.atgradient[0], [0.0, 0.0, 0.0])
     olp = compute_overlap(mol.obasis, mol.atcoords)
