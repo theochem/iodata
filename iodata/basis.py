@@ -117,7 +117,7 @@ class Shell(NamedTuple):
         result = 0
         for angmom, kind in zip(self.angmoms, self.kinds):
             if kind == 'c':  # Cartesian
-                result += int((angmom + 1) * (angmom + 2) / 2)
+                result += ((angmom + 1) * (angmom + 2)) // 2
             elif kind == 'p' and angmom >= 2:
                 result += 2 * angmom + 1
             else:
