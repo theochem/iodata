@@ -1,0 +1,263 @@
+24978498
+  -OEChem-10250806042D
+
+ 16 15  0     1  0  0  0  0  0999 V2000
+    2.8660   -0.4400    0.0000 S   0  0  0  0  0  0  0  0  0  0  0  0
+    5.4641    1.0600    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    4.5981    2.5600    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8660   -1.4400    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000   -1.9400    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8660    1.5600    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7321    1.0600    0.0000 C   0  0  1  0  0  0  0  0  0  0  0  0
+    3.7321    0.0600    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    4.5981    1.5600    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    3.7321    1.6800    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    3.9441   -0.5226    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    4.3426    0.1677    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.3291    1.2500    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8660    2.1800    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    6.0010    1.3700    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000   -2.5600    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  4  1  0  0  0  0
+  1  8  1  0  0  0  0
+  2  9  1  0  0  0  0
+  2 15  1  0  0  0  0
+  3  9  2  0  0  0  0
+  4  5  1  0  0  0  0
+  5 16  1  0  0  0  0
+  7  6  1  6  0  0  0
+  6 13  1  0  0  0  0
+  6 14  1  0  0  0  0
+  7  8  1  0  0  0  0
+  7  9  1  0  0  0  0
+  7 10  1  0  0  0  0
+  8 11  1  0  0  0  0
+  8 12  1  0  0  0  0
+M  END
+> <PUBCHEM_COMPOUND_CID>
+24978498
+
+> <PUBCHEM_COMPOUND_CANONICALIZED>
+1
+
+> <PUBCHEM_CACTVS_COMPLEXITY>
+97.8
+
+> <PUBCHEM_CACTVS_HBOND_ACCEPTOR>
+5
+
+> <PUBCHEM_CACTVS_HBOND_DONOR>
+3
+
+> <PUBCHEM_CACTVS_ROTATABLE_BOND>
+4
+
+> <PUBCHEM_CACTVS_SUBSKEYS>
+AAADcYBCOABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHgQQDAAACCjFwASACABAAgIIAACQCAAAAAAAAAAAAIGAAAACAAAAAAAAQAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+
+> <PUBCHEM_IUPAC_OPENEYE_NAME>
+(2R)-2-amino-3-hydroperoxysulfanyl-propanoic acid
+
+> <PUBCHEM_IUPAC_CAS_NAME>
+(2R)-2-amino-3-(hydroperoxythio)propanoic acid
+
+> <PUBCHEM_IUPAC_NAME>
+(2R)-2-amino-3-hydroperoxysulfanylpropanoic acid
+
+> <PUBCHEM_IUPAC_SYSTEMATIC_NAME>
+(2R)-2-amino-3-hydroperoxysulfanyl-propanoic acid
+
+> <PUBCHEM_IUPAC_TRADITIONAL_NAME>
+(2R)-2-amino-3-(hydroperoxythio)propionic acid
+
+> <PUBCHEM_NIST_INCHI>
+InChI=1/C3H7NO4S/c4-2(3(5)6)1-9-8-7/h2,7H,1,4H2,(H,5,6)/t2-/m0/s1/f/h5H
+
+> <PUBCHEM_CACTVS_XLOGP>
+-3.2
+
+> <PUBCHEM_EXACT_MASS>
+153.009578
+
+> <PUBCHEM_MOLECULAR_FORMULA>
+C3H7NO4S
+
+> <PUBCHEM_MOLECULAR_WEIGHT>
+153.15698
+
+> <PUBCHEM_OPENEYE_CAN_SMILES>
+C(C(C(=O)O)N)SOO
+
+> <PUBCHEM_OPENEYE_ISO_SMILES>
+C([C@@H](C(=O)O)N)SOO
+
+> <PUBCHEM_CACTVS_TPSA>
+92.8
+
+> <PUBCHEM_MONOISOTOPIC_WEIGHT>
+153.009578
+
+> <PUBCHEM_TOTAL_CHARGE>
+0
+
+> <PUBCHEM_HEAVY_ATOM_COUNT>
+9
+
+> <PUBCHEM_ATOM_DEF_STEREO_COUNT>
+1
+
+> <PUBCHEM_ATOM_UDEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_BOND_DEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_BOND_UDEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_ISOTOPIC_ATOM_COUNT>
+0
+
+> <PUBCHEM_COMPONENT_COUNT>
+1
+
+> <PUBCHEM_CACTVS_TAUTO_COUNT>
+1
+
+> <PUBCHEM_BONDANNOTATIONS>
+7  6  6
+
+$$$$
+24978481
+  -OEChem-10250806042D
+
+ 21 19  0     0  0  0  0  0  0999 V2000
+    2.2690    1.9030    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4030    1.4030    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5369    0.9030    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.9030    2.2690    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.9030    0.5369    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4030    5.3429    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    0.2269    1.4399    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    0.5930    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8469    0.3660    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.4399    2.5790    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.5930    2.8059    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.3660    1.9590    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.3660    0.2269    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.2130    0.0000    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.4399    0.8469    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.8059    1.5930    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    2.2690    2.5230    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.9399    5.6529    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    0.8660    5.0329    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0930    5.8798    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+    1.7130    4.8059    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1 16  1  0  0  0  0
+  1 17  1  0  0  0  0
+  2  3  1  0  0  0  0
+  2  4  1  0  0  0  0
+  2  5  1  0  0  0  0
+  3  7  1  0  0  0  0
+  3  8  1  0  0  0  0
+  3  9  1  0  0  0  0
+  4 10  1  0  0  0  0
+  4 11  1  0  0  0  0
+  4 12  1  0  0  0  0
+  5 13  1  0  0  0  0
+  5 14  1  0  0  0  0
+  5 15  1  0  0  0  0
+  6 18  1  0  0  0  0
+  6 19  1  0  0  0  0
+  6 20  1  0  0  0  0
+  6 21  1  0  0  0  0
+M  END
+> <PUBCHEM_COMPOUND_CID>
+24978481
+
+> <PUBCHEM_COMPOUND_CANONICALIZED>
+1
+
+> <PUBCHEM_CACTVS_COMPLEXITY>
+25.1
+
+> <PUBCHEM_CACTVS_HBOND_ACCEPTOR>
+1
+
+> <PUBCHEM_CACTVS_HBOND_DONOR>
+1
+
+> <PUBCHEM_CACTVS_ROTATABLE_BOND>
+0
+
+> <PUBCHEM_CACTVS_SUBSKEYS>
+AAADccBiAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHAAQAAAADIiBAAACAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+
+> <PUBCHEM_IUPAC_OPENEYE_NAME>
+methane; 2-methylpropan-2-amine
+
+> <PUBCHEM_IUPAC_CAS_NAME>
+methane; 2-methylpropan-2-amine
+
+> <PUBCHEM_IUPAC_NAME>
+methane; 2-methylpropan-2-amine
+
+> <PUBCHEM_IUPAC_SYSTEMATIC_NAME>
+methane; 2-methylpropan-2-amine
+
+> <PUBCHEM_IUPAC_TRADITIONAL_NAME>
+tert-butylamine; methane
+
+> <PUBCHEM_NIST_INCHI>
+InChI=1/C4H11N.CH4/c1-4(2,3)5;/h5H2,1-3H3;1H4
+
+> <PUBCHEM_EXACT_MASS>
+89.120449
+
+> <PUBCHEM_MOLECULAR_FORMULA>
+C5H15N
+
+> <PUBCHEM_MOLECULAR_WEIGHT>
+89.1793
+
+> <PUBCHEM_OPENEYE_CAN_SMILES>
+C.CC(C)(C)N
+
+> <PUBCHEM_OPENEYE_ISO_SMILES>
+C.CC(C)(C)N
+
+> <PUBCHEM_CACTVS_TPSA>
+26
+
+> <PUBCHEM_MONOISOTOPIC_WEIGHT>
+89.120449
+
+> <PUBCHEM_TOTAL_CHARGE>
+0
+
+> <PUBCHEM_HEAVY_ATOM_COUNT>
+6
+
+> <PUBCHEM_ATOM_DEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_ATOM_UDEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_BOND_DEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_BOND_UDEF_STEREO_COUNT>
+0
+
+> <PUBCHEM_ISOTOPIC_ATOM_COUNT>
+0
+
+> <PUBCHEM_COMPONENT_COUNT>
+2
+
+> <PUBCHEM_CACTVS_TAUTO_COUNT>
+1
+
+$$$$
