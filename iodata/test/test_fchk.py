@@ -42,13 +42,6 @@ def test_load_fchk_nonexistent():
             load_one(str(fn))
 
 
-def load_fchk_helper_internal(fn_fchk):
-    """Load a testing fchk file with iodata.formats.fchk.load directly."""
-    with path('iodata.test.data', fn_fchk) as fn:
-        lit = LineIterator(fn)
-        return load_fchk(lit)
-
-
 def load_fchk_helper(fn_fchk):
     """Load a testing fchk file with iodata.iodata.load_one."""
     with path('iodata.test.data', fn_fchk) as fn:
@@ -102,15 +95,15 @@ def test_load_fchk_hf_sto3g_num():
 
 
 def test_load_fchk_h_sto3g_num():
-    fields = load_fchk_helper_internal('h_sto3g.fchk')
-    assert fields['title'] == 'h_sto3g'
-    assert len(fields['obasis'].shells) == 1
-    assert fields['obasis'].nbasis == 1
-    assert fields['obasis'].shells[0].nprim == 3
-    assert len(fields['atcoords']) == len(fields['atnums'])
-    assert fields['atcoords'].shape[1] == 3
-    assert len(fields['atnums']) == 1
-    assert_allclose(fields['energy'], -4.665818503844346E-01)
+    mol = load_fchk_helper('h_sto3g.fchk')
+    assert mol.title == 'h_sto3g'
+    assert len(mol.obasis.shells) == 1
+    assert mol.obasis.nbasis == 1
+    assert mol.obasis.shells[0].nprim == 3
+    assert len(mol.atcoords) == len(mol.atnums)
+    assert mol.atcoords.shape[1] == 3
+    assert len(mol.atnums) == 1
+    assert_allclose(mol.energy, -4.665818503844346E-01)
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
@@ -125,35 +118,33 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    fields = load_fchk_helper_internal('o2_cc_pvtz_cart.fchk')
-    assert len(fields['obasis'].shells) == 20
-    assert fields['obasis'].nbasis == 70
-    assert len(fields['atcoords']) == len(fields['atnums'])
-    assert fields['atcoords'].shape[1] == 3
-    assert len(fields['atnums']) == 2
-    assert_allclose(fields['energy'], -1.495953594545721E+02)
+    mol = load_fchk_helper('o2_cc_pvtz_cart.fchk')
+    assert len(mol.obasis.shells) == 20
+    assert mol.obasis.nbasis == 70
+    assert len(mol.atcoords) == len(mol.atnums)
+    assert mol.atcoords.shape[1] == 3
+    assert len(mol.atnums) == 2
+    assert_allclose(mol.energy, -1.495953594545721E+02)
 
 
 def test_load_fchk_water_sto3g_hf():
-    fields = load_fchk_helper_internal('water_sto3g_hf_g03.fchk')
-    assert len(fields['obasis'].shells) == 4
-    assert fields['obasis'].nbasis == 7
-    assert len(fields['atcoords']) == len(fields['atnums'])
-    assert fields['atcoords'].shape[1] == 3
-    assert len(fields['atnums']) == 3
-    mo = fields['mo']
-    assert_allclose(mo.energies[0], -2.02333942E+01, atol=1.e-7)
-    assert_allclose(mo.energies[-1], 7.66134805E-01, atol=1.e-7)
-    assert_allclose(mo.coeffs[0, 0], 0.99410, atol=1.e-4)
-    assert_allclose(mo.coeffs[1, 0], 0.02678, atol=1.e-4)
-    assert_allclose(mo.coeffs[-1, 2], -0.44154, atol=1.e-4)
-    assert abs(mo.coeffs[3, -1]) < 1e-4
-    assert_allclose(mo.coeffs[4, -1], -0.82381, atol=1.e-4)
-    assert_equal(mo.occs.sum(), 10)
-    assert_equal(mo.occs.min(), 0.0)
-    assert_equal(mo.occs.max(), 2.0)
-    energy = fields['energy']
-    assert_allclose(energy, -7.495929232844363E+01)
+    mol = load_fchk_helper('water_sto3g_hf_g03.fchk')
+    assert len(mol.obasis.shells) == 4
+    assert mol.obasis.nbasis == 7
+    assert len(mol.atcoords) == len(mol.atnums)
+    assert mol.atcoords.shape[1] == 3
+    assert len(mol.atnums) == 3
+    assert_allclose(mol.mo.energies[0], -2.02333942E+01, atol=1.e-7)
+    assert_allclose(mol.mo.energies[-1], 7.66134805E-01, atol=1.e-7)
+    assert_allclose(mol.mo.coeffs[0, 0], 0.99410, atol=1.e-4)
+    assert_allclose(mol.mo.coeffs[1, 0], 0.02678, atol=1.e-4)
+    assert_allclose(mol.mo.coeffs[-1, 2], -0.44154, atol=1.e-4)
+    assert abs(mol.mo.coeffs[3, -1]) < 1e-4
+    assert_allclose(mol.mo.coeffs[4, -1], -0.82381, atol=1.e-4)
+    assert_equal(mol.mo.occs.sum(), 10)
+    assert_equal(mol.mo.occs.min(), 0.0)
+    assert_equal(mol.mo.occs.max(), 2.0)
+    assert_allclose(mol.energy, -7.495929232844363E+01)
 
 
 def test_load_fchk_lih_321g_hf():
