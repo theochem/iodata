@@ -25,7 +25,8 @@ from pytest import raises
 
 from ..basis import (angmom_sti, angmom_its, Shell, MolecularBasis,
                      convert_convention_shell, convert_conventions,
-                     iter_cart_alphabet, HORTON2_CONVENTIONS, PSI4_CONVENTIONS)
+                     iter_cart_alphabet, HORTON2_CONVENTIONS, PSI4_CONVENTIONS,
+                     GBASIS_CONVENTIONS)
 from ..formats.cp2k import CONVENTIONS as CP2K_CONVENTIONS
 
 
@@ -249,15 +250,22 @@ def test_iter_cart_alphabet():
 
 
 def test_conventions():
-    for angmom in range(24):
+    for angmom in range(25):
         assert HORTON2_CONVENTIONS[(angmom, 'c')] == PSI4_CONVENTIONS[(angmom, 'c')]
+    for angmom in range(2, 25):
+        assert GBASIS_CONVENTIONS[(angmom, 'p')] == PSI4_CONVENTIONS[(angmom, 'p')]
     assert HORTON2_CONVENTIONS[(0, 'c')] == ['1']
+    assert GBASIS_CONVENTIONS[(0, 'c')] == ['1']
     assert HORTON2_CONVENTIONS[(1, 'c')] == ['x', 'y', 'z']
+    assert GBASIS_CONVENTIONS[(1, 'c')] == ['z', 'y', 'x']
     assert HORTON2_CONVENTIONS[(2, 'c')] == ['xx', 'xy', 'xz', 'yy', 'yz', 'zz']
+    assert GBASIS_CONVENTIONS[(2, 'c')] == ['zz', 'yz', 'yy', 'xz', 'xy', 'xx']
     assert (0, 'p') not in HORTON2_CONVENTIONS
     assert (0, 'p') not in PSI4_CONVENTIONS
+    assert (0, 'p') not in GBASIS_CONVENTIONS
     assert (1, 'p') not in HORTON2_CONVENTIONS
     assert (1, 'p') not in PSI4_CONVENTIONS
+    assert (1, 'p') not in GBASIS_CONVENTIONS
     assert HORTON2_CONVENTIONS[(2, 'p')] == ['dc0', 'dc1', 'ds1', 'dc2', 'ds2']
     assert PSI4_CONVENTIONS[(2, 'p')] == ['ds2', 'ds1', 'dc0', 'dc1', 'dc2']
     assert HORTON2_CONVENTIONS[(3, 'p')] == ['fc0', 'fc1', 'fs1', 'fc2', 'fs2', 'fc3', 'fs3']
