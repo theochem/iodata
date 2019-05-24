@@ -364,3 +364,27 @@ def test_load_dump_consistency_nh3_molden_cart(tmpdir):
 
 def test_load_dump_consistency_he2_ghost_psi4_1(tmpdir):
     check_load_dump_consistency('he2_ghost_psi4_1.0.molden', tmpdir)
+
+
+def test_dump_molden_from_fchk_restricted(tmpdir):
+    with path('iodata.test.data', 'hf_sto3g.fchk') as file_name:
+        mol = load_one(str(file_name))
+        fn_tmp = os.path.join(tmpdir, 'hf_sto3g.molden')
+        dump_one(mol, fn_tmp)
+        assert os.path.isfile(fn_tmp)
+
+
+def test_dump_molden_from_fchk_unrestricted(tmpdir):
+    with path('iodata.test.data', 'h_sto3g.fchk') as file_name:
+        mol = load_one(str(file_name))
+        fn_tmp = os.path.join(tmpdir, 'h_sto3g.molden')
+        dump_one(mol, fn_tmp)
+        assert os.path.isfile(fn_tmp)
+
+
+def test_dump_molden_from_fchk_rohf(tmpdir):
+    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as file_name:
+        mol = load_one(str(file_name))
+        fn_tmp = os.path.join(tmpdir, 'ch3_rohf_sto3g_g03.molden')
+        dump_one(mol, fn_tmp)
+        assert os.path.isfile(fn_tmp)

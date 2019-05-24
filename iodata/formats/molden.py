@@ -654,17 +654,26 @@ def dump_one(f: TextIO, data: IOData):
     # Print the mean-field orbitals
     if data.mo.kind == 'unrestricted':
         f.write('[MO]\n')
+        irrepsa = data.mo.irrepsa
+        if irrepsa is None:
+            irrepsa = ['1a'] * data.mo.norba
         _dump_helper_orb(f, 'Alpha', data.mo.occsa,
                          data.mo.coeffsa[permutation] * signs.reshape(-1, 1),
-                         data.mo.energiesa, data.mo.irrepsa)
+                         data.mo.energiesa, irrepsa)
+        irrepsb = data.mo.irrepsb
+        if irrepsb is None:
+            irrepsb = ['1a'] * data.mo.norbb
         _dump_helper_orb(f, 'Beta', data.mo.occsb,
                          data.mo.coeffsb[permutation] * signs.reshape(-1, 1),
-                         data.mo.energiesb, data.mo.irrepsb)
+                         data.mo.energiesb, irrepsb)
     elif data.mo.kind == 'restricted':
         f.write('[MO]\n')
+        irreps = data.mo.irreps
+        if irreps is None:
+            irreps = ['1a'] * data.mo.norb
         _dump_helper_orb(f, 'Alpha', data.mo.occs,
                          data.mo.coeffs[permutation] * signs.reshape(-1, 1),
-                         data.mo.energies, data.mo.irreps)
+                         data.mo.energies, irreps)
     else:
         raise NotImplementedError
 
