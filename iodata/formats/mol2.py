@@ -57,8 +57,11 @@ def load_one(lit: LineIterator) -> dict:
                     lit.back(line)
                     break
                 title = next(lit).strip()
+                words = next(lit).split()
+                natoms = int(words[0])
+                nbonds = int(words[1])
             if words[0] == "@<TRIPOS>ATOM":
-                atnums, atcoords, atchgs, attypes = _load_helper_atoms(lit)
+                atnums, atcoords, atchgs, attypes = _load_helper_atoms(lit, natoms)
                 atcharges = {"mol2charges": atchgs}
                 atffparams = {"attypes": attypes}
                 result = {
@@ -70,37 +73,53 @@ def load_one(lit: LineIterator) -> dict:
                 if title is not None:
                     result['title'] = title
                 molecule_found = True
+            if words[0] == "@<TRIPOS>BOND":
+                bonds = _load_helper_bonds(lit, nbonds)
+                result['bonds'] = bonds
     if molecule_found is False:
         raise lit.error("Molecule could not be read")
     return result
 
 
-def _load_helper_atoms(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray, np.ndarray, tuple]:
+def _load_helper_atoms(lit: LineIterator, natoms: int)\
+        -> Tuple[np.ndarray, np.ndarray, np.ndarray, tuple]:
     """Load element numbers, coordinates and atomic charges."""
-    atnums = []
-    atcoords = []
-    atchgs = []
+    atnums = np.empty(natoms)
+    atcoords = np.empty((natoms, 3))
+    atchgs = np.empty(natoms)
     attypes = []
-    for line in lit:
-        words = line.split()
-        if len(words) <= 6:
-            break
+    for i in range(natoms):
+        words = next(lit).split()
         # Assume that the first character of atom type is the element
         try:
-            atnums.append(sym2num.get(words[5][0].title()))
+            atnums[i] = sym2num.get(words[5][0].title())
         except ValueError:
             print(f'Can not convert atom type {words[5][0]} to element')
         attypes.append(words[5])
-        atcoords.append([float(words[2]), float(words[3]), float(words[4])])
+        atcoords[i] = [float(words[2]), float(words[3]), float(words[4])]
         if len(words) == 9:
-            atchgs.append(float(words[8]))
+            atchgs[i] = float(words[8])
         else:
-            atchgs.append(0.0000)
-    atnums = np.array(atnums, int)
-    atcoords = np.array(atcoords) * angstrom
-    atchgs = np.array(atchgs)
+            atchgs[i] = 0.0000
+    atcoords = atcoords * angstrom
     attypes = tuple(attypes)
     return atnums, atcoords, atchgs, attypes
+
+
+def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
+    """Load bond information."""
+    bonds = np.empty((nbonds, 3))
+    for i in range(nbonds):
+        words = next(lit).split()
+        if words[3] == 'am':
+            words[3] = 4
+        try:
+            # Substract one because of numbering starting at 0
+            bond = [int(words[1]) - 1, int(words[2]) - 1, int(words[3])]
+            bonds[i] = bond
+        except ValueError:
+            lit.error('Something wrong in the bond section')
+    return bonds
 
 
 @document_load_many("MOL2", ['atcoords', 'atnums', 'atcharges', 'atffparams'], ['title'])
@@ -123,6 +142,11 @@ def dump_one(f: TextIO, data: IOData):
     print("\n\n\n\n\n", file=f)
     print("@<TRIPOS>MOLECULE", file=f)
     print(data.title or 'Created with IOData', file=f)
+    if data.bonds is not None:
+        bonds = len(data.bonds)
+        print(f'{data.natom:5d} {bonds:6d} {0:6d} {0:6d}', file=f)
+    else:
+        print(f'{data.natom:5d} {0:6d} {0:6d} {0:6d}', file=f)
     print("@<TRIPOS>ATOM", file=f)
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
@@ -130,22 +154,30 @@ def dump_one(f: TextIO, data: IOData):
         out1 = f'{i+1:7d} {n:2s} {x:15.4f} {y:9.4f} {z:9.4f} '
         atcharges = data.atcharges.get('mol2charges')
         attypes = data.atffparams.get('attypes')
-        if atcharges is not None:
+        if atcharges is not None and attypes is not None:
             charge = atcharges[i]
-            if attypes is not None:
-                attype = attypes[i]
-                out2 = f'{attype:6s} {1:4d} XXX {charge:14.4f}'
-            else:
-                out2 = f'{n:6s} {1:4d} XXX {charge:14.4f}'
-            print(out1 + out2, file=f)
+            attype = attypes[i]
+            out2 = f'{attype:6s} {1:4d} XXX {charge:14.4f}'
+        elif atcharges is not None:
+            charge = atcharges[i]
+            out2 = f'{n:6s} {1:4d} XXX {charge:14.4f}'
+        elif attypes is not None:
+            charge = 0.0000
+            attype = attypes[i]
+            out2 = f'{attype:6s} {1:4d} XXX {charge:14.4f}'
         else:
             charge = 0.0000
-            if attypes is not None:
-                attype = attypes[i]
-                out2 = f'{attype:6s} {1:4d} XXX {charge:14.4f}'
+            out2 = f'{n:6s} {1:4d} XXX {charge:14.4f}'
+        print(out1 + out2, file=f)
+    if data.bonds is not None:
+        print("@<TRIPOS>BOND", file=f)
+        bonds = data.bonds
+        for i, bond in enumerate(bonds):
+            if bond[2] == 4:
+                print(f'{i+1:6d} {bond[0]+1:4d} {bond[1]+1:4d} am',
+                      file=f)
             else:
-                out2 = f'{n:6s} {1:4d} XXX {charge:14.4f}'
-            print(out1 + out2, file=f)
+                print(f'{i+1:6d} {bond[0]+1:4d} {bond[1]+1:4d} {bond[2]:1d}', file=f)
 
 
 @document_dump_many("MOL2", ['atcoords', 'atnums', 'atcharges'], ['title'])

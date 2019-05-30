@@ -62,19 +62,24 @@ def check_example(mol):
     assert_allclose(atcoords_ang[23], [0.5705, -0.5340, 5.0055])
     assert_allclose(mol.atcharges['mol2charges'][0], 0.0684)
     assert_allclose(mol.atcharges['mol2charges'][23], 0.0949)
+    bonds = mol.bonds
+    assert_equal(len(bonds), 25)
+    assert_allclose(bonds[0], [0, 1, 1])
+    assert_allclose(bonds[24], [13, 23, 1])
 
 
 def check_load_dump_consistency(tmpdir, fn):
-    """Check if dumping and loading an SDF file results in the same data."""
+    """Check if dumping and loading an MOL2 file results in the same data."""
     mol0 = load_one(str(fn))
-    # write sdf file in a temporary folder & then read it
+    # write mol2 file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test.mol2')
     dump_one(mol0, fn_tmp, fmt='mol2')
     mol1 = load_one(fn_tmp)
-    # check two sdf files
+    # check two mol2 files
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
     assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+    assert_equal(mol0.bonds, mol1.bonds)
 
 
 def test_load_dump_consistency(tmpdir):
