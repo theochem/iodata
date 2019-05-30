@@ -60,8 +60,8 @@ def check_example(mol):
     assert_allclose(atcoords_ang[1], [0.0021, -0.0041, 0.0020])
     assert_allclose(atcoords_ang[22], [0.5971, -2.2951, 5.2627])
     assert_allclose(atcoords_ang[23], [0.5705, -0.5340, 5.0055])
-    assert_allclose(mol.atcharges['mol2'][0], 0.0684)
-    assert_allclose(mol.atcharges['mol2'][23], 0.0949)
+    assert_allclose(mol.atcharges['mol2charges'][0], 0.0684)
+    assert_allclose(mol.atcharges['mol2charges'][23], 0.0949)
 
 
 def check_load_dump_consistency(tmpdir, fn):

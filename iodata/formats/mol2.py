@@ -59,7 +59,7 @@ def load_one(lit: LineIterator) -> dict:
                 title = next(lit).strip()
             if words[0] == "@<TRIPOS>ATOM":
                 atnums, atcoords, atchgs, attypes = _load_helper_atoms(lit)
-                atcharges = {"mol2": atchgs}
+                atcharges = {"mol2charges": atchgs}
                 atffparams = {"attypes": attypes}
                 result = {
                     'atcoords': atcoords,
@@ -95,7 +95,7 @@ def _load_helper_atoms(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray, np.nd
         if len(words) == 9:
             atchgs.append(float(words[8]))
         else:
-            atchg.append(0.0)
+            atchgs.append(0.0000)
     atnums = np.array(atnums, int)
     atcoords = np.array(atcoords) * angstrom
     atchgs = np.array(atchgs)
@@ -115,7 +115,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             return
 
 
-@document_dump_one("MOL2", ['atcoords', 'atnums'], ['atcharges', 'atffparams',  'title'])
+@document_dump_one("MOL2", ['atcoords', 'atnums'], ['atcharges', 'atffparams', 'title'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     # The first six lines are reserved for comments
@@ -127,20 +127,24 @@ def dump_one(f: TextIO, data: IOData):
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         x, y, z = data.atcoords[i] / angstrom
-        out1 = f'{i:6d} {n:2s} {x:10.4f} {y:10.4f} {z:10.4f} '
-        if not data.atcharges:
-            # Will write the first atomic charge key of the dictionary
-            charge = data.atcharges[0][i]
-            if not data.attparams:
-                for param, value in data.atffparams.items():
-                    if param == 'attypes':
-                        attype = values[i]
-                        out2 = f'{attype:3s} 1 XXX {charge:1.5f}'
+        out1 = f'{i+1:7d} {n:2s} {x:15.4f} {y:9.4f} {z:9.4f} '
+        atcharges = data.atcharges.get('mol2charges')
+        attypes = data.atffparams.get('attypes')
+        if atcharges is not None:
+            charge = atcharges[i]
+            if attypes is not None:
+                attype = attypes[i]
+                out2 = f'{attype:6s} {1:4d} XXX {charge:14.4f}'
             else:
-                out2 = f'{n:2s} 1 XXX {charge:1.5f}'
+                out2 = f'{n:6s} {1:4d} XXX {charge:14.4f}'
             print(out1 + out2, file=f)
         else:
-            out2 = f'{n:2s} 1 XXX 0.0000'
+            charge = 0.0000
+            if attypes is not None:
+                attype = attypes[i]
+                out2 = f'{attype:6s} {1:4d} XXX {charge:14.4f}'
+            else:
+                out2 = f'{n:6s} {1:4d} XXX {charge:14.4f}'
             print(out1 + out2, file=f)
 
 
