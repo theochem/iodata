@@ -20,6 +20,7 @@
 
 
 from typing import Tuple, NamedTuple
+import warnings
 
 import numpy as np
 import scipy.constants as spc
@@ -37,6 +38,14 @@ angstrom: float = spc.angstrom / spc.value(u'atomic unit of length')
 electronvolt: float = 1 / spc.value(u'hartree-electron volt relationship')
 # atomic mass unit (not atomic unit of mass!)
 amu: float = 1e-3 / (spc.value(u'electron mass') * spc.value(u'Avogadro constant'))
+
+
+class FileFormatError(IOError):
+    """Raised when incorrect content is encountered when loading files."""
+
+
+class FileFormatWarning(Warning):
+    """Raised when incorrect content is encountered and fixed when loading files."""
 
 
 class LineIterator:
@@ -80,7 +89,19 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        raise IOError("{}:{} {}".format(self.filename, self.lineno, msg))
+        raise FileFormatError("{}:{} {}".format(self.filename, self.lineno, msg))
+
+    def warn(self, msg: str):
+        """Raise a warning while reading a file.
+
+        Parameters
+        ----------
+        msg
+            Message to raise alongside filename and line number.
+
+        """
+        warnings.warn("{}:{} {}".format(self.filename, self.lineno, msg),
+                      FileFormatWarning, 2)
 
     def back(self, line):
         """Go one line back and decrease the lineno attribute by one."""

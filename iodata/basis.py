@@ -233,10 +233,8 @@ def convert_convention_shell(conv1: List[str], conv2: List[str], reverse=False) 
     if len(conv2) != len(set(conv2)):
         raise TypeError('Argument conv2 contains duplicates.')
     if set(conv1) != set(conv2):
-        print(sorted(conv1))
-        print(sorted(conv2))
         raise TypeError('Without the minus signs, conv1 and conv2 must contain '
-                        'the same elements.')
+                        'the same elements. Got {} and {}.'.format(conv1, conv2))
     # Get the permutation
     if reverse:
         permutation = [conv2.index(el1) for el1 in conv1]

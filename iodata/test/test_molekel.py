@@ -20,11 +20,12 @@
 """Test iodata.formats.molekel module."""
 
 from numpy.testing import assert_equal, assert_allclose
+import pytest
 
 from .common import check_orthonormal
 from ..api import load_one
 from ..overlap import compute_overlap
-from ..utils import angstrom
+from ..utils import angstrom, FileFormatWarning
 
 try:
     from importlib_resources import path
@@ -34,7 +35,10 @@ except ImportError:
 
 def test_load_mkl_ethanol():
     with path('iodata.test.data', 'ethanol.mkl') as fn_mkl:
-        mol = load_one(str(fn_mkl))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_mkl))
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
 
     # Direct checks with mkl file
     assert_equal(mol.atnums.shape, (9,))
@@ -69,7 +73,10 @@ def test_load_mkl_ethanol():
 
 def test_load_mkl_li2():
     with path('iodata.test.data', 'li2.mkl') as fn_mkl:
-        mol = load_one(str(fn_mkl))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_mkl))
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
     # check mo normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp)
@@ -78,7 +85,10 @@ def test_load_mkl_li2():
 
 def test_load_mkl_h2():
     with path('iodata.test.data', 'h2_sto3g.mkl') as fn_mkl:
-        mol = load_one(str(fn_mkl))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_mkl))
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
     # check mo normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)
