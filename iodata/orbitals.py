@@ -137,6 +137,8 @@ class MolecularOrbitals(NamedTuple):
     @property
     def irrepsa(self):
         """Return alpha irreps."""
+        if self.irreps is None:
+            return None
         if self.kind == 'restricted':
             return self.irreps
         if self.kind == 'unrestricted':
@@ -146,6 +148,8 @@ class MolecularOrbitals(NamedTuple):
     @property
     def irrepsb(self):
         """Return beta irreps."""
+        if self.irreps is None:
+            return None
         if self.kind == 'restricted':
             return self.irreps
         if self.kind == 'unrestricted':

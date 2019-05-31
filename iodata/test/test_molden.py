@@ -20,15 +20,17 @@
 """Test iodata.formats.molden module."""
 
 import os
+
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
+import pytest
 
 from .common import compute_mulliken_charges, compare_mols, check_orthonormal
 from ..api import load_one, dump_one
 from ..basis import convert_conventions
 from ..formats.molden import _load_low
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
-from ..utils import LineIterator, angstrom
+from ..utils import LineIterator, angstrom, FileFormatWarning
 
 
 try:
@@ -39,7 +41,10 @@ except ImportError:
 
 def test_load_molden_li2_orca():
     with path('iodata.test.data', 'li2.molden.input') as fn_molden:
-        mol = load_one(str(fn_molden))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
 
     # Checkt title
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=li2'
@@ -66,7 +71,10 @@ def test_load_molden_li2_orca():
 
 def test_load_molden_h2o_orca():
     with path('iodata.test.data', 'h2o.molden.input') as fn_molden:
-        mol = load_one(str(fn_molden))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
 
     # Checkt title
     assert mol.title == 'Molden file created by orca_2mkl for BaseName=h2o'
@@ -195,7 +203,10 @@ def test_load_molden_nh3_orca():
     # The file tested here is created with ORCA. It should be read in
     # properly by altering normalization and sign conventions.
     with path('iodata.test.data', 'nh3_orca.molden') as fn_molden:
-        mol = load_one(str(fn_molden))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -211,8 +222,11 @@ def test_load_molden_nh3_orca():
 def test_load_molden_nh3_psi4():
     # The file tested here is created with PSI4 (pre 1.0). It should be read in
     # properly by altering normalization conventions.
-    with path('iodata.test.data', 'nh3_psi4_1.0.molden') as fn_molden:
-        mol = load_one(str(fn_molden))
+    with path('iodata.test.data', 'nh3_psi4.molden') as fn_molden:
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "PSI4" in record[0].message.args[0]
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -229,7 +243,10 @@ def test_load_molden_nh3_psi4_1():
     # The file tested here is created with PSI4 (version 1.0).
     # It should be read in properly by renormalizing the contractions.
     with path('iodata.test.data', 'nh3_psi4_1.0.molden') as fn_molden:
-        mol = load_one(str(fn_molden))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "unnormalized" in record[0].message.args[0]
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -277,9 +294,11 @@ def test_load_molden_nh3_molpro2012():
 
 def test_load_molden_neon_turbomole():
     # The file tested here is created with Turbomole 7.1.
-    with path('iodata.test.data',
-              'neon_turbomole_def2-qzvp.molden') as fn_molden:
-        mol = load_one(str(fn_molden))
+    with path('iodata.test.data', 'neon_turbomole_def2-qzvp.molden') as fn_molden:
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "Turbomole" in record[0].message.args[0]
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -293,7 +312,10 @@ def test_load_molden_neon_turbomole():
 def test_load_molden_nh3_turbomole():
     # The file tested here is created with Turbomole 7.1
     with path('iodata.test.data', 'nh3_turbomole.molden') as fn_molden:
-        mol = load_one(str(fn_molden))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "Turbomole" in record[0].message.args[0]
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -310,7 +332,10 @@ def test_load_molden_nh3_turbomole():
 
 def test_load_molden_f():
     with path('iodata.test.data', 'F.molden') as fn_molden:
-        mol = load_one(str(fn_molden))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "PSI4" in record[0].message.args[0]
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -343,15 +368,24 @@ def check_load_dump_consistency(fn, tmpdir):
 
 
 def test_load_dump_consistency_h2o(tmpdir):
-    check_load_dump_consistency('h2o.molden.input', tmpdir)
+    with pytest.warns(FileFormatWarning) as record:
+        check_load_dump_consistency('h2o.molden.input', tmpdir)
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
 
 
 def test_load_dump_consistency_li2(tmpdir):
-    check_load_dump_consistency('li2.molden.input', tmpdir)
+    with pytest.warns(FileFormatWarning) as record:
+        check_load_dump_consistency('li2.molden.input', tmpdir)
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
 
 
 def test_load_dump_consistency_f(tmpdir):
-    check_load_dump_consistency('F.molden', tmpdir)
+    with pytest.warns(FileFormatWarning) as record:
+        check_load_dump_consistency('F.molden', tmpdir)
+    assert len(record) == 1
+    assert "PSI4" in record[0].message.args[0]
 
 
 def test_load_dump_consistency_nh3_molden_pure(tmpdir):
@@ -364,3 +398,27 @@ def test_load_dump_consistency_nh3_molden_cart(tmpdir):
 
 def test_load_dump_consistency_he2_ghost_psi4_1(tmpdir):
     check_load_dump_consistency('he2_ghost_psi4_1.0.molden', tmpdir)
+
+
+def test_dump_molden_from_fchk_restricted(tmpdir):
+    with path('iodata.test.data', 'hf_sto3g.fchk') as file_name:
+        mol = load_one(str(file_name))
+        fn_tmp = os.path.join(tmpdir, 'hf_sto3g.molden')
+        dump_one(mol, fn_tmp)
+        assert os.path.isfile(fn_tmp)
+
+
+def test_dump_molden_from_fchk_unrestricted(tmpdir):
+    with path('iodata.test.data', 'h_sto3g.fchk') as file_name:
+        mol = load_one(str(file_name))
+        fn_tmp = os.path.join(tmpdir, 'h_sto3g.molden')
+        dump_one(mol, fn_tmp)
+        assert os.path.isfile(fn_tmp)
+
+
+def test_dump_molden_from_fchk_rohf(tmpdir):
+    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as file_name:
+        mol = load_one(str(file_name))
+        fn_tmp = os.path.join(tmpdir, 'ch3_rohf_sto3g_g03.molden')
+        dump_one(mol, fn_tmp)
+        assert os.path.isfile(fn_tmp)
