@@ -231,5 +231,5 @@ def load_one(lit: LineIterator) -> dict:
         'obasis': obasis,
         'mo': mo,
     }
-    _fix_molden_from_buggy_codes(result, lit.filename)
+    _fix_molden_from_buggy_codes(result, lit)
     return result
