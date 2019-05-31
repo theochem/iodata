@@ -40,11 +40,18 @@ def test_mol2_load_one():
 
 
 def test_mol2_formaterror(tmpdir):
-    # test if sdf file has the wrong ending without $$$$
+    # test if mol2 file has the wrong ending
     with path('iodata.test.data', 'caffeine.mol2') as fn_test:
         with truncated_file(fn_test, 2, 0, tmpdir) as fn:
             with pytest.raises(IOError):
                 load_one(str(fn))
+
+
+def test_mol2_symbol():
+    # test mol2 files with element symbols with two characters
+    with path('iodata.test.data', 'silioh3.mol2') as fn_mol:
+        mol = load_one(str(fn_mol))
+    assert_equal(mol.atnums, [14, 3, 8, 1, 8, 1, 8, 1])
 
 
 def check_example(mol):
