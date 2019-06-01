@@ -22,7 +22,7 @@
 import attr
 import numpy as np
 
-from .basis import MolecularBasis
+from .basis import MolecularBasis, Shell
 from .orbitals import MolecularOrbitals
 from .utils import Cube
 
@@ -329,3 +329,109 @@ class IOData:
             self._spinpol = spinpol
         else:
             raise TypeError("spinpol cannot be set when orbitals are present.")
+
+    def gbasis_basis(self):
+        """Return the basis set used in the gbasis module.
+
+        Returns
+        -------
+        basis : tuple of gbasis.contraciton.GeneralizedContractionShell
+            Basis set object used within the gbasis module.
+            GeneralizedContractionShell corresponds to the Shell object within iodata.basis.
+
+        """
+        from gbasis.contractions import GeneralizedContractionShell
+
+        molbasis = self.obasis
+
+        cart_conventions = {i[0]: j for i, j in molbasis.conventions.items() if i[1] == "c"}
+        sph_conventions = {i[0]: j for i, j in molbasis.conventions.items() if i[1] == "p"}
+
+        class IODataShell(GeneralizedContractionShell):
+            """Shell object that is compatible with gbasis' shell object.
+
+            See `gbasis.contractions.GeneralizedContractionShell` for the documentation.
+
+            """
+
+            @property
+            def angmom_components_cart(self):
+                r"""Return the angular momentum components as ordered within the MolecularBasis.
+
+                Returns
+                -------
+                angmom_components_cart : np.ndarray(L, 3)
+                    The x, y, and z components of the angular momentum vectors
+                    (:math:`\vec{a} = (a_x, a_y, a_z)` where :math:`a_x + a_y + a_z = \ell`).
+                    :math:`L` is the number of Cartesian contracted Gaussian functions for the given
+                    angular momentum, i.e. :math:`(angmom + 1) * (angmom + 2) / 2`
+
+                """
+                if self.angmom == 0:
+                    return np.array([[0, 0, 0]])
+                return np.array(
+                    [
+                        (j.count("x"), j.count("y"), j.count("z"))
+                        for j in cart_conventions[self.angmom]
+                    ]
+                )
+
+            @property
+            def angmom_components_sph(self):
+                """Return the ordering of the magnetic quantum numbers for the given angmom.
+
+                Returns
+                -------
+                angmom_components_sph : tuple of int
+                    Tuple of magnetic quantum numbers of the contractions that specifies the
+                    ordering after transforming the contractions from the Cartesian to spherical
+                    coordinate system.
+
+                """
+                if self.angmom == 0:
+                    return (0,)
+                raise NotImplementedError(
+                    "Iodata seems to be using 'Wikipedia-ordered real solid spherical harmonics', "
+                    "which isn't really documented anywhere. Until it's documented, spherical "
+                    "contractions will not be supported. Reference: {}".format(sph_conventions)
+                )
+
+        if molbasis.primitive_normalization != "L2":
+            raise ValueError("Within gbasis, only the L2 normalization scheme is supported.")
+
+        basis = []
+        coord_types = []
+        for grouped_shell in molbasis.shells:
+            # segment the shell if not every contraction within the shell has the same angular
+            # momentum and "kind"
+            if len(set(grouped_shell.angmoms)) != 1 or len(set(grouped_shell.kinds)) != 1:
+                shells = []
+                for angmom, kind, coeffs in zip(
+                        grouped_shell.angmoms, grouped_shell.kinds, grouped_shell.coeffs.T
+                ):
+                    shells.append(
+                        Shell(
+                            grouped_shell.icenter,
+                            [angmom],
+                            [kind],
+                            grouped_shell.exponents,
+                            coeffs.reshape(-1, 1),
+                        )
+                    )
+            else:
+                shells = [grouped_shell]
+
+            for shell in shells:
+                # get angular momentum
+                # NOTE: GeneralizedContractionShell only accepts angular momentum as an int.
+                angmom = int(shell.angmoms[0])
+
+                # get type
+                coord_types.append(shell.kinds[0])
+
+                # pylint: disable=E1136
+                basis.append(
+                    IODataShell(angmom, self.atcoords[shell.icenter], shell.coeffs, shell.exponents)
+                )
+
+        return basis

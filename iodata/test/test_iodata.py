@@ -147,3 +147,57 @@ def test_natom():
     assert IOData(atfrozen=[False, True, False, True]).natom == 4
     assert IOData(atmasses=[0, 0, 0, 0]).natom == 4
     assert IOData(atnums=[1, 1, 1, 1]).natom == 4
+
+
+def test_gbasis_basis():
+    """Test IOData.gbasis_basis."""
+    pytest.importorskip("gbasis")
+    from gbasis.contractions import GeneralizedContractionShell
+
+    with path("iodata.test.data", "water_sto3g_hf_g03.fchk") as fn_fchk:
+        mol = load_one(str(fn_fchk))
+
+    basis = mol.gbasis_basis()
+
+    assert all(isinstance(i, GeneralizedContractionShell) for i in basis)
+    assert basis[0].angmom == 0
+    assert np.allclose(basis[0].coord, mol.atcoords[0])
+    assert np.allclose(basis[0].exps, np.array([130.7093214, 23.80886605, 6.443608313]))
+    assert np.allclose(
+        basis[0].coeffs, np.array([0.1543289673, 0.5353281423, 0.4446345422]).reshape(-1, 1)
+    )
+
+    assert basis[1].angmom == 0
+    assert np.allclose(basis[1].coord, mol.atcoords[0])
+    assert np.allclose(basis[1].exps, np.array([5.033151319, 1.169596125, 0.3803889600]))
+    assert np.allclose(
+        basis[1].coeffs, np.array([-0.09996722919, 0.3995128261, 0.7001154689]).reshape(-1, 1)
+    )
+
+    assert basis[2].angmom == 1
+    assert np.allclose(basis[2].coord, mol.atcoords[0])
+    assert np.allclose(basis[2].exps, np.array([5.033151319, 1.169596125, 0.3803889600]))
+    assert np.allclose(
+        basis[2].coeffs, np.array([0.1559162750, 0.6076837186, 0.3919573931]).reshape(-1, 1)
+    )
+
+    assert basis[3].angmom == 0
+    assert np.allclose(basis[3].coord, mol.atcoords[1])
+    assert np.allclose(basis[3].exps, np.array([3.425250914, 0.6239137298, 0.1688554040]))
+    assert np.allclose(
+        basis[3].coeffs, np.array([0.1543289673, 0.5353281423, 0.4446345422]).reshape(-1, 1)
+    )
+
+    assert basis[4].angmom == 0
+    assert np.allclose(basis[4].coord, mol.atcoords[2])
+    assert np.allclose(basis[4].exps, np.array([3.425250914, 0.6239137298, 0.1688554040]))
+    assert np.allclose(
+        basis[4].coeffs, np.array([0.1543289673, 0.5353281423, 0.4446345422]).reshape(-1, 1)
+    )
+
+    with pytest.raises(NotImplementedError):
+        basis[2].angmom_components_sph  # pylint: disable=W0104
+
+    with pytest.raises(ValueError):
+        mol.obasis = mol.obasis._replace(primitive_normalization="L1")
+        mol.gbasis_basis()
