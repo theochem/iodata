@@ -68,8 +68,8 @@ def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     fchk = _load_fchk_low(lit, [
         "Number of electrons", "Number of basis functions",
-        "Number of independant functions",
-        "Number of independent functions",
+        "Number of independant functions",  # independ__a__nt (g03)
+        "Number of independent functions",  # independ__e__nt (g09, g16, ...)
         "Number of alpha electrons", "Number of beta electrons",
         "Atomic numbers", "Current cartesian coordinates",
         "Real atomic weights",
@@ -168,8 +168,10 @@ def load_one(lit: LineIterator) -> dict:
         result['one_rdms'] = one_rdms
 
     # D) Load the wavefunction
-    # Handle small difference in fchk files from g03 and g09
-    nbasis_indep = fchk.get("Number of independant functions", nbasis)
+    # Handle small difference in spelling in fchk files from g03 and g09:
+    # "independ__e__nt" versus "independ__a__nt".
+    nbasis_indep = fchk.get("Number of independant functions",
+                            fchk.get("Number of independent functions", nbasis))
 
     # Load orbitals
     nalpha = fchk['Number of alpha electrons']

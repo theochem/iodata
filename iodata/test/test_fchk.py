@@ -20,6 +20,8 @@
 """Test iodata.formats.fchk module."""
 
 
+import os
+
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
@@ -498,3 +500,17 @@ def test_nelec_charge():
         mol2.nelec = 4
     with pytest.raises(TypeError):
         mol2.charge = 0
+
+
+def test_load_nbasis_indep(tmpdir):
+    # Normal case
+    mol1 = load_fchk_helper('li2_g09_nbasis_indep.fchk')
+    assert mol1.mo.coeffs.shape == (38, 37)
+    # Fake an old g03 fchk file by rewriting one line
+    with path('iodata.test.data', 'li2_g09_nbasis_indep.fchk') as fnin:
+        fnout = os.path.join(tmpdir, 'tmpg03.fchk')
+        with open(fnin) as fin, open(fnout, "w") as fout:
+            for line in fin:
+                fout.write(line.replace("independent", "independant"))
+    mol2 = load_one(fnout)
+    assert mol2.mo.coeffs.shape == (38, 37)
