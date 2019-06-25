@@ -23,25 +23,17 @@
 import os
 import subprocess
 
-import sys
-
 
 # -- Fragile tricks for RTD -----------------------------------------------
 
+# Normally sphinx-build should be called after iodata is installed somehow.
+# An in-place build can also work, provided the necessary environment variables
+# are set accordingly.
+
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
-    sys.path.insert(0, os.path.abspath('..'))
-    branch = os.environ.get("READTHEDOCS_VERSION", "latest")
-    conda_prefix = "/home/docs/checkouts/readthedocs.org/user_builds/iodata/conda/{}".format(branch)
-    os.environ["PATH"] = "{}:{}/bin".format(os.environ["PATH"], conda_prefix)
-    os.environ["CC"] = "{}/bin/x86_64-conda_cos6-linux-gnu-cc".format(conda_prefix)
-    os.environ["LD"] = "{}/bin/x86_64-conda_cos6-linux-gnu-ld".format(conda_prefix)
-
-    os.chdir("../")
-    print(os.listdir())
-    subprocess.call(['python', 'setup.py', 'build_ext', '-i'])
-    os.chdir("doc")
-    subprocess.call('./gen_docs.sh', shell=True)
+    subprocess.run(['python', '-m', 'pip', 'install', '..'], )
+    subprocess.run(['./gen_docs.sh'], shell=True)
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

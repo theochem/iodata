@@ -1,0 +1,2 @@
+# Requirements for building documentation on RTD
+sphinx_autodoc_typehints
