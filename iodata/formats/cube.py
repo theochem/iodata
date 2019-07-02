@@ -162,12 +162,15 @@ def _write_cube_header(f: TextIO, title: str, atcoords: np.ndarray, atnums: np.n
         print(f'{atnums[i]:5d} {q: 11.6f} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
 
 
-def _write_cube_data(f: TextIO, cube_data: np.ndarray):
+def _write_cube_data(f: TextIO, cube_data: np.ndarray, block_size: int):
     counter = 0
     for value in cube_data.flat:
         f.write(f' {value: 12.5E}')
         if counter % 6 == 5:
             f.write('\n')
+        if counter % block_size == block_size -1:
+            f.write('\n')
+            counter = -1
         counter += 1
 
 
@@ -176,4 +179,4 @@ def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     title = data.title or 'Created with IOData'
     _write_cube_header(f, title, data.atcoords, data.atnums, data.cube, data.atcorenums)
-    _write_cube_data(f, data.cube.data)
+    _write_cube_data(f, data.cube.data, data.cube.shape[2])
