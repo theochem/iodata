@@ -168,7 +168,7 @@ def _write_cube_data(f: TextIO, cube_data: np.ndarray, block_size: int):
         f.write(f' {value: 12.5E}')
         if counter % 6 == 5:
             f.write('\n')
-        if counter % block_size == block_size -1:
+        if (block_size % 6 != 0) and (counter % block_size == block_size - 1):
             f.write('\n')
             counter = -1
         counter += 1
