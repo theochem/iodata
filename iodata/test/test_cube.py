@@ -66,6 +66,26 @@ def test_load_dump_load_aelta(tmpdir):
     dump_one(mol1, fn_cube2)
     mol2 = load_one(fn_cube2)
 
+    with open(fn_cube2) as f:
+        line_counter = 0
+        block_counter = 0
+        for line in f:
+            line_counter += 1
+            if line_counter > 6 + len(mol2.atnums):
+                if mol2.cube.shape[2] % 6 == 0:
+                    assert len(line.split()) == 6
+                if mol2.cube.shape[2] % 6 != 0:
+                    block_line_counter = line_counter - (
+                        6
+                        + len(mol2.atnums)
+                        + block_counter * (mol2.cube.shape[2] // 6 + 1)
+                    )
+                    if 1 <= block_line_counter <= mol2.cube.shape[2] // 6:
+                        assert len(line.split()) == 6
+                    if block_line_counter == mol2.cube.shape[2] // 6 + 1:
+                        assert len(line.split()) == mol2.cube.shape[2] % 6
+
+
     assert mol1.title == mol2.title
     assert_allclose(mol1.atcoords, mol2.atcoords, atol=1.e-4)
     assert_equal(mol1.atnums, mol2.atnums)
