@@ -61,7 +61,7 @@ lit
 Returns
 -------
 data
-    A dictionary with IOData attributes. The following attribtues are guaranteed to be
+    A dictionary with IOData attributes. The following attributes are guaranteed to be
     loaded: {guaranteed}.{ifpresent}
 
 Notes
