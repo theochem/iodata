@@ -85,7 +85,6 @@ def test_load_dump_load_aelta(tmpdir):
                     if block_line_counter == mol2.cube.shape[2] // 6 + 1:
                         assert len(line.split()) == mol2.cube.shape[2] % 6
 
-
     assert mol1.title == mol2.title
     assert_allclose(mol1.atcoords, mol2.atcoords, atol=1.e-4)
     assert_equal(mol1.atnums, mol2.atnums)
@@ -95,3 +94,42 @@ def test_load_dump_load_aelta(tmpdir):
     assert_equal(cube1.shape, cube2.shape)
     assert_allclose(mol1.cube.data, mol2.cube.data, atol=1.e-4)
     assert_allclose(mol1.atcorenums, mol2.atcorenums, atol=1.e-4)
+
+
+def test_load_dump_h2o_5points(tmpdir):
+    # load cube file
+    with path('iodata.test.data', 'cubegen_h2o_5points.cube') as fn_cube1:
+        mol1 = load_one(str(fn_cube1))
+    # write cube file in a temporary directory
+    fn_cube2 = tmpdir.join('iodata_h2o_5points.cube')
+    dump_one(mol1, fn_cube2)
+    # read the contents as string (skip the first 2 lines) & compare
+    content1 = open(fn_cube1, "r").read().split("\n", 2)[-1]
+    content2 = fn_cube2.read().split("\n", 2)[-1]
+    assert content1 == content2
+
+
+def test_load_dump_ch4_6points(tmpdir):
+    # load cube file
+    with path('iodata.test.data', 'cubegen_ch4_6points.cube') as fn_cube1:
+        mol1 = load_one(str(fn_cube1))
+    # write cube file in a temporary directory
+    fn_cube2 = tmpdir.join('iodata_ch4_6points.cube')
+    dump_one(mol1, fn_cube2)
+    # read the contents as string (skip the first 2 lines) & compare
+    content1 = open(fn_cube1, "r").read().split("\n", 2)[-1]
+    content2 = fn_cube2.read().split("\n", 2)[-1]
+    assert content1 == content2
+
+
+def test_load_dump_nh3_7points(tmpdir):
+    # load cube file
+    with path('iodata.test.data', 'cubegen_nh3_7points.cube') as fn_cube1:
+        mol1 = load_one(str(fn_cube1))
+    # write cube file in a temporary directory
+    fn_cube2 = tmpdir.join('iodata_nh3_7points.cube')
+    dump_one(mol1, fn_cube2)
+    # read the contents as string (skip the first 2 lines) & compare
+    content1 = open(fn_cube1, "r").read().split("\n", 2)[-1]
+    content2 = fn_cube2.read().split("\n", 2)[-1]
+    assert content1 == content2
