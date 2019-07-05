@@ -64,6 +64,19 @@ API Reference
 
    pyapi/modules
 
+
+Acknowledgments
+===============
+
+This software was developed using funding from a variety of international
+sources including, but not limited to: Canarie, the Canada Research Chairs,
+Compute Canada, the European Union's Horizon 2020 Marie Sklodowska-Curie grant
+(No 800130), the Foundation of Scientific Research--Flanders (FWO), McMaster
+University, the National Fund for Scientific and Technological Development of
+Chile (FONDECYT), the Natural Sciences and Engineering Research Council of
+Canada (NSERC), the Research Board of Ghent University (BOF), and Sharcnet.
+
+
 Indices and tables
 ==================
 
