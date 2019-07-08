@@ -379,3 +379,62 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
     obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
     assert obasis.nbasis == nbasis
     return obasis, permutation
+
+
+def load_one(filename: str) -> dict:
+    """Do not edit this docstring. It will be overwritten."""
+    title, keywords, model_name, atom_names, num_atoms, num_primitives, \
+    num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
+    num_beta_electron, num_spin_multi, charge, energy, \
+    virial_ratio, nuclear_virial, full_virial_ratio, mo_count, \
+    atom_numbers, mo_spin_type, atcoords, icenters, \
+    type_assignments, exponents, mo_occ, mo_energy, gradient_atoms, \
+    gradient, mo_coefficients = load_wfx_low(filename)
+
+    # Build the basis set and the permutation needed to regroup shells.
+    obasis, permutation = build_obasis(icenters, type_assignments, exponents)
+    # Re-order the mo coefficients.
+    mo_coefficients = mo_coefficients[permutation]
+    # Get the normalization of the un-normalized Cartesian basis functions.
+    # Use these to rescale the mo_coefficients.
+    scales = []
+    for shell in obasis.shells:
+        angmom = shell.angmoms[0]
+        for name in obasis.conventions[(angmom, 'c')]:
+            if name == '1':
+                nx, ny, nz = 0, 0, 0
+            else:
+                nx = name.count('x')
+                ny = name.count('y')
+                nz = name.count('z')
+            scales.append(gob_cart_normalization(shell.exponents[0], np.array([nx, ny, nz])))
+    scales = np.array(scales)
+    mo_coefficients /= scales.reshape(-1, 1)
+    norb = mo_coefficients.shape[1]
+    # make the wavefunction
+    if mo_occ.max() > 1.0:
+        # closed-shell system
+        mo = MolecularOrbitals(
+            'restricted', norb, norb,
+            mo_occ, mo_coefficients, mo_energy, None)
+    else:
+        # open-shell system
+        # counting the number of alpha orbitals
+        norba = 1
+        while (norba < mo_coefficients.shape[1]
+               and mo_energy[norba] >= mo_energy[norba - 1]
+               and mo_count[norba] == mo_count[norba - 1] + 1):
+            norba += 1
+        mo = MolecularOrbitals(
+            'unrestricted', norba, norb - norba,
+            mo_occ, mo_coefficients, mo_energy, None)
+
+    result = {
+        'title': title,
+        'atcoords': atcoords,
+        'atnums': atnums,
+        'obasis': obasis,
+        'mo': mo,
+        'energy': energy,
+    }
+    return result
