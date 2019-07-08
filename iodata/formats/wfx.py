@@ -18,12 +18,16 @@
 # --
 """AIM/AIMAll WFX file format."""
 
-
 from typing import Tuple, List, TextIO
 import re
 
 import numpy as np
 
+from ..basis import MolecularBasis, Shell
+# from ..docstrings import document_load_one
+from ..overlap import gob_cart_normalization
+from ..orbitals import MolecularOrbitals
+from ..formats.wfn import CONVENTIONS
 
 __all__ = []
 
@@ -106,7 +110,7 @@ def load_wfx_low(filename: str) -> tuple:
         num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
         num_beta_electron, num_spin_multi, charge, energy, \
         virial_ratio, nuclear_virial, full_virial_ratio, mo_count, \
-        atom_numbers, mo_spin_type, atcoords, centers, \
+        atom_numbers, mo_spin_type, atcoords, icenters, \
         primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
         gradient, mo_coefficients
 
@@ -284,3 +288,94 @@ def _check_tag(f_content: str):
         assert (tag_header == tag_tail), \
             "Tag header %s and tail %s do not match." \
             % (tag_header, tag_tail)
+
+
+# pylint: disable=too-many-branches
+def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
+                 exponents: np.ndarray) -> Tuple[MolecularBasis, np.ndarray]:
+    """Construct a basis set using the arrays read from a WFX file.
+
+    Parameters
+    ----------
+    icenters
+        The center indices for all basis functions. shape=(nbasis,). Lowest
+        index is zero.
+    type_assignments
+        Integer codes for basis function names. shape=(nbasis,). Lowest index
+        is zero.
+    exponents
+        The Gaussian exponents of all basis functions. shape=(nbasis,)
+
+    """
+    # Build the basis set, keeping track of permutations in case there are
+    # deviations from the default ordering of primitives in a WFN file.
+    shells = []
+    ibasis = 0
+    nbasis = len(icenters)
+    permutation = np.zeros(nbasis, dtype=int)
+    # Loop over all (batches of primitive) basis functions and extract shells.
+    while ibasis < nbasis:
+        # Determine the angular moment of the shell
+        type_assignment = type_assignments[ibasis]
+        if type_assignment == 0:
+            angmom = 0
+        else:
+            # multiple different type assignments (codes for individual basis
+            # functions) can match one angular momentum.
+            angmom = len(PRIMITIVE_NAMES[type_assignments[ibasis]])
+        # The number of cartesian functions for the current angular momentum
+        ncart = len(CONVENTIONS[(angmom, 'c')])
+        # Determine how many shells are to be read in one batch. E.g. for a
+        # contracted p shell, the WFN format contains first all px basis
+        # functions, the all py, finally all pz. These need to be regrouped into
+        # shells.
+        # This pattern can almost be used to reverse-engineer contractions.
+        # One should also check (i) if the corresponding mo-coefficients are the
+        # same (after fixing them for normalization) and (ii) if the functions
+        # are centered on the same atom.
+        # For now, this implementation makes no attempt to reverse-engineer
+        # contractions, but it can be done.
+        ncon = 1  # the contraction length
+        if angmom > 0:
+            # batches for s-type functions are not necessary and may result in
+            # multiple centers being pulled into one batch.
+            while (ibasis + ncon < len(type_assignments)
+                   and type_assignments[ibasis + ncon] == type_assignment):
+                ncon += 1
+        # Check if the type assignment is consistent for remaining basis
+        # functions in this batch.
+        for ifn in range(ncart):
+            if not (type_assignments[ibasis + ncon * ifn: ibasis + ncon * (ifn + 1)]
+                    == type_assignments[ibasis + ncon * ifn]).all():
+                IOError("Inconcsistent type assignments in current batch of shells.")
+        # Check if all basis functions in the current batch sit on
+        # the same center. If not, IOData cannot read this file.
+        icenter = icenters[ibasis]
+        if not (icenters[ibasis: ibasis + ncon * ncart] == icenter).all():
+            IOError("Incomplete shells in WFN file not supported by IOData.")
+        # Check if the same exponent is used for corresponding basis functions.
+        batch_exponents = exponents[ibasis: ibasis + ncon]
+        for ifn in range(ncart):
+            if not (exponents[ibasis + ncon * ifn: ibasis + ncon * (ifn + 1)]
+                    == batch_exponents).all():
+                IOError("Exponents must be the same for corresponding basis functions.")
+        # A permutation is needed because we need to regroup basis functions
+        # into shells.
+        batch_primitive_names = [
+            PRIMITIVE_NAMES[type_assignments[ibasis + ifn * ncon]]
+            for ifn in range(ncart)]
+        for irep in range(ncon):
+            for i, primitive_name in enumerate(batch_primitive_names):
+                ifn = CONVENTIONS[(angmom, 'c')].index(primitive_name)
+                permutation[ibasis + irep * ncart + ifn] = ibasis + irep + i * ncon
+        # WFN uses non-normalized primitives, which will be corrected for
+        # when processing the MO coefficients. Normalized primitives will
+        # be used here. No attempt is made here to reconstruct the contraction.
+        for exponent in batch_exponents:
+            shells.append(Shell(icenter, [angmom], ['c'], np.array([exponent]),
+                                np.array([[1.0]])))
+        # Move on to the next contraction
+        ibasis += ncart * ncon
+    obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
+    assert obasis.nbasis == nbasis
+    return obasis, permutation
