@@ -27,7 +27,7 @@ from ..basis import MolecularBasis, Shell
 # from ..docstrings import document_load_one
 from ..overlap import gob_cart_normalization
 from ..orbitals import MolecularOrbitals
-from ..formats.wfn import CONVENTIONS
+from ..formats.wfn import CONVENTIONS, PRIMITIVE_NAMES
 
 __all__ = []
 
@@ -79,7 +79,7 @@ def load_wfx_low(filename: str) -> tuple:
                 f_content=fc, start='<Nuclear Cartesian Coordinates>',
                 end='</Nuclear Cartesian Coordinates>', line_break=True),
             dtype=np.float).reshape(-1, 3)
-        centers = np.array(_helper_section(
+        icenters = np.array(_helper_section(
             f_content=fc, start='<Primitive Centers>',
             end='</Primitive Centers>', line_break=True), dtype=np.int)
         # primitive types
@@ -383,13 +383,9 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
 
 def load_one(filename: str) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    title, keywords, model_name, atom_names, num_atoms, num_primitives, \
-    num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
-    num_beta_electron, num_spin_multi, charge, energy, \
-    virial_ratio, nuclear_virial, full_virial_ratio, mo_count, \
-    atom_numbers, mo_spin_type, atcoords, icenters, \
-    type_assignments, exponents, mo_occ, mo_energy, gradient_atoms, \
-    gradient, mo_coefficients = load_wfx_low(filename)
+    title, _, _, _, atnums, _, _, _, _, _, _, num_spin_multi, _, energy, _, _, _, mo_count,\
+        _, mo_spin_type, atcoords, icenters, type_assignments, exponents, mo_occ, mo_energy,\
+        _, _, mo_coefficients = load_wfx_low(filename)
 
     # Build the basis set and the permutation needed to regroup shells.
     obasis, permutation = build_obasis(icenters, type_assignments, exponents)
