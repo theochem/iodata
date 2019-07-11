@@ -23,7 +23,11 @@ import pytest
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
+from .common import compute_mulliken_charges, check_orthonormal
+from ..api import load_one
 from ..formats.wfx import load_wfx_low
+from ..overlap import compute_overlap
+from ..utils import LineIterator
 
 try:
     from importlib_resources import path
@@ -31,10 +35,17 @@ except ImportError:
     from importlib.resources import path
 
 
+# def helper_load_wfx_low(fn_wfx):
+#     """Load a testing WFX file with iodata.formats.wfx.load_wfx_low."""
+#     with path('iodata.test.data', fn_wfx) as fx:
+#         lit = LineIterator(str(fx))
+#         return load_wfx_low(lit)
+
+
 def test_load_wfx_low_h2():
     """Test load_wfx_low with h2_ub3lyp_ccpvtz.wfx."""
-    with path('iodata.test.data', 'h2_ub3lyp_ccpvtz.wfx') as fn_wfx:
-        data = load_wfx_low(str(fn_wfx))
+    lit = LineIterator('iodata/test/data/h2_ub3lyp_ccpvtz.wfx')
+    data = load_wfx_low(lit=lit)
     # unpack data
     title, keywords, model_name, atom_names, num_atoms, num_primitives, \
         num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
@@ -60,8 +71,8 @@ def test_load_wfx_low_h2():
     assert_allclose(virial_ratio, [2.036441983763e+00])
     assert_allclose(nuclear_virial, [1.008787649881e-08])
     assert_allclose(full_virial_ratio, [2.036441992623e+00])
-    assert_equal(atom_names, np.array([['H1', 'H2']]))
-    assert_equal(atom_numbers, np.array([[1, 1]]))
+    assert_equal(atom_names, np.array(['H1', 'H2']))
+    assert_equal(atom_numbers, np.array([1, 1]))
     assert_equal(mo_spin_type, np.array(
         [['Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
           'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
@@ -168,8 +179,8 @@ def test_load_wfx_low_h2():
 
 def test_load_wfx_low_water():
     """Test load_wfx_low with water_sto3g_hf.wfx."""
-    with path('iodata.test.data', 'water_sto3g_hf.wfx') as fn_wfx:
-        data = load_wfx_low(str(fn_wfx))
+    lit = LineIterator('iodata/test/data/water_sto3g_hf.wfx')
+    data = load_wfx_low(lit=lit)
     # unpack data
     title, keywords, model_name, atom_names, num_atoms, num_primitives, \
         num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
@@ -195,8 +206,8 @@ def test_load_wfx_low_water():
     assert_allclose(virial_ratio, [2.00599838291596E+000])
     assert_equal(nuclear_virial, np.array(None))
     assert_allclose(full_virial_ratio, [2.00600662884992E+000])
-    assert_equal(atom_names, np.array([['O1', 'H2', 'H3']]))
-    assert_equal(atom_numbers, np.array([[8, 1, 1]]))
+    assert_equal(atom_names, np.array(['O1', 'H2', 'H3']))
+    assert_equal(atom_numbers, np.array([8, 1, 1]))
     assert_equal(mo_spin_type, np.array([['Alpha',
                                           'Beta',
                                           'Alpha',
@@ -278,4 +289,33 @@ def test_load_wfx_low_water():
 def test_load_wfx_low_missing_tag_h2o():
     """Test load_wfx_low with h2o_error.wfx with missing tag."""
     with pytest.raises(IOError):
-        load_wfx_low(filename='iodata/test/data/h2o_error.wfx')
+        lit = LineIterator('iodata/test/data/h2o_error.wfx')
+        load_wfx_low(lit)
+
+
+# def check_wfx(fn_wfn, nbasis, energy, charges_mulliken):
+#     """Check that MO are orthonormal & energy and charges match expected values."""
+#     # load file
+#     with path('iodata.test.data', fn_wfn) as file_wfn:
+#         mol = load_one(str(file_wfn))
+#     # check number of basis functions
+#     assert mol.obasis.nbasis == nbasis
+#     # check orthonormal mo
+#     olp = compute_overlap(mol.obasis, mol.atcoords)
+#     check_orthonormal(mol.mo.coeffsa, olp, 1.e-5)
+#     if mol.mo.kind == 'unrestricted':
+#         check_orthonormal(mol.mo.coeffsb, olp, 1.e-5)
+#     # check energy & atomic charges
+#     if energy is not None:
+#         assert_allclose(mol.energy, energy, rtol=0., atol=1.e-5)
+#     if charges_mulliken is not None:
+#         charges = compute_mulliken_charges(mol)
+#         assert_allclose(charges_mulliken, charges, rtol=0., atol=1.e-5)
+#     return mol
+#
+#
+# def test_load_wfn_h2o_sto3g():
+#     """Test load_one() for wfx format."""
+#     mol = check_wfx(fn_wfn='water_sto3g_hf.wfx', nbasis=21,
+#                     energy=-74.949659011707870, charges_mulliken=)
+#
