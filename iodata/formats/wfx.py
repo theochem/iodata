@@ -18,8 +18,8 @@
 # --
 """AIM/AIMAll WFX file format."""
 
-from typing import Tuple, List, TextIO
-import re
+from typing import Tuple
+
 import warnings
 
 import numpy as np
@@ -36,220 +36,125 @@ __all__ = []
 PATTERNS = ['*.wfx']
 
 
-def load_wfx_low(lit: LineIterator) -> tuple:
-    """Load data from a WFX file into arrays."""
+def load_data_wfx(lit: LineIterator) -> dict:
+    """Process loaded WFX data."""
     # Check tag
-    _check_tag(lit)
-    # string type properties
-    title, keywords, model_name = _helper_str(lit).values()
-    # todo: Check keywords
-    # assert (keywords in ['GTO', 'GIAO', 'CGST']), \
-    #     "The keywords should be one out of GTO, GIAO and CGST."
+    # _check_tag(lit)
 
-    # int type properties
-    num_atoms, num_occ_mo, num_perturbations, num_electrons, \
-        num_alpha_electron, num_beta_electron, num_spin_multi, \
-        num_primitives = _helper_int(lit).values()
-    # Check number of perturbations, num_perturbations
-    perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
-    assert (num_perturbations == perturbation_check[keywords[0]]).all(), \
-        "Number of perturbations is not equal to 0, 3 or 6."
-    # float type properties
-    charge, energy, virial_ratio, nuclear_virial, full_virial_ratio = \
-        _helper_float(lit).values()
-    # list type properties
-    atom_names = np.array(_helper_section(lit,
-                                          start='<Nuclear Names>',
-                                          end='</Nuclear Names>'),
-                          dtype=np.unicode_)
-    atom_numbers = np.array(_helper_section(lit,
-                                            start='<Atomic Numbers>',
-                                            end='</Atomic Numbers>'),
-                            dtype=np.int)
-    mo_spin_list = _helper_section(lit,
-                                   start='<Molecular Orbital Spin Types>',
-                                   end='</Molecular Orbital Spin Types>',
-                                   line_break=True)
-    mo_spin_list = [i.split() for i in mo_spin_list]
+    labels_str = {
+        '<Title>': 'title',
+        '<Keywords>': 'keywords',
+        '<Model>': 'model_name',
+    }
+    labels_number = {
+        # integer numbers
+        '<Number of Nuclei>': 'num_atoms',
+        '<Number of Occupied Molecular Orbitals>': 'num_occ_mo',
+        '<Number of Perturbations>': 'num_perturbations',
+        '<Number of Electrons>': 'num_electrons',
+        '<Number of Core Electrons>': 'num_core_electrons',
+        '<Number of Alpha Electrons>': 'num_alpha_electron',
+        '<Number of Beta Electrons>': 'num_beta_electron',
+        '<Number of Primitives>': 'num_primitives',
+        '<Electronic Spin Multiplicity>': 'spin_multi',
+        # float numbers
+        '<Net Charge>': 'charge',
+        '<Energy = T + Vne + Vee + Vnn>': 'energy',
+        '<Virial Ratio (-V/T)>': 'virial_ratio',
+        '<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>': 'nuc_viral',
+        '<Full Virial Ratio, -(V - W)/T>': 'full_virial_ratio',
+    }
+    labels_array = {
+        '<Nuclear Cartesian Coordinates>': 'atcoords',
+        '<Nuclear Charges>': 'nuclear_charge',
+        '<Atomic Numbers>': 'atnums',
+        '<Primitive Exponents>': 'exponents',
+        '<Primitive Centers>': 'centers',
+        '<Primitive Types>': 'types',
+        '<Molecular Orbital Energies>': 'mo_energy',
+        '<Molecular Orbital Occupation Numbers>': 'mo_occ',
+        '<Molecular Orbital Primitive Coefficients>': 'mo_coeff',
+    }
+    labels_other = {
+        '<Nuclear Names>': 'nuclear_names',
+        '<Molecular Orbital Spin Types>': 'mo_spin',
+        '<Nuclear Cartesian Energy Gradients>': 'nuclear_gradient',
+    }
+
+    # load raw data
+    data = parse_wfx(lit)
+    # process raw data
+    result = {}
+    for key, value in data.items():
+        if key in labels_str:
+            result[labels_str[key]] = value[0]
+        elif key in labels_number:
+            result[labels_number[key]] = np.array(eval(value[0]))
+        elif key in labels_array:
+            breakdown = [eval(item) for line in value for item in line.split()]
+            result[labels_array[key]] = np.array(breakdown)
+        elif key in labels_other:
+            result[labels_other[key]] = value
+        else:
+            warnings.warn("Not recognized label, skip {0}".format(key))
+
+    # reshape some arrays
+    result['atcoords'] = result['atcoords'].reshape(-1, 3)
+    result['mo_coeff'] = result['mo_coeff'].reshape(result['num_primitives'], -1, order='F')
+    # process mo spin type
+    mo_spin_list = [i.split() for i in result['mo_spin']]
     mo_spin_type = np.array(mo_spin_list, dtype=np.unicode_).reshape(-1, 1)
-    mo_spin_type = mo_spin_type[mo_spin_type[:, 0] != 'and']
-
-    atcoords = _helper_section(lit,
-                               start='<Nuclear Cartesian Coordinates>',
-                               end='</Nuclear Cartesian Coordinates>', line_break=True)
-    atcoords = np.array(atcoords, dtype=np.float).reshape(-1, 3)
-    icenters = _helper_section(lit, start='<Primitive Centers>',
-                               end='</Primitive Centers>', line_break=True)
-    icenters = np.array(icenters, dtype=np.int)
-    # primitive types
-    primitives_types = _helper_section(lit, start='<Primitive Types>',
-                                       end='</Primitive Types>', line_break=True)
-    primitives_types = np.array(primitives_types, dtype=np.int)
-    # primitives exponents
-    exponent = _helper_section(lit, start='<Primitive Exponents>',
-                               end='</Primitive Exponents>', line_break=True)
-    exponent = np.array(exponent, dtype=np.float)
-    # molecular orbital
-    mo_occ = _helper_section(lit,
-                             start='<Molecular Orbital Occupation Numbers>',
-                             end='</Molecular Orbital Occupation Numbers>',
-                             line_break=True)
-    mo_occ = np.array(mo_occ, dtype=np.float)
-    mo_energy = _helper_section(lit,
-                                start='<Molecular Orbital Energies>',
-                                end='</Molecular Orbital Energies>',
-                                line_break=True)
-    mo_energy = np.array(mo_energy, dtype=np.float)
-    # energy gradient
-    gradient_atoms, gradient = _energy_gradient(lit)
-    # molecular orbital
-    mo_count, mo_coefficients = _helper_mo(lit, num_primitives=num_primitives)
-
-    return \
-        title, keywords, model_name, atom_names, num_atoms, num_primitives, \
-        num_occ_mo, num_perturbations, num_electrons, num_alpha_electron, \
-        num_beta_electron, num_spin_multi, charge, energy, \
-        virial_ratio, nuclear_virial, full_virial_ratio, mo_count, \
-        atom_numbers, mo_spin_type, atcoords, icenters, \
-        primitives_types, exponent, mo_occ, mo_energy, gradient_atoms, \
-        gradient, mo_coefficients
+    result['mo_spin'] = mo_spin_type[mo_spin_type[:, 0] != 'and']
+    # process nuclear gradient
+    gradient_mix = np.array([i.split() for i in result.pop('nuclear_gradient')]).reshape(-1, 4)
+    result['gradient_atoms'] = gradient_mix[:, 0].astype(np.unicode_)
+    result['gradient'] = gradient_mix[:, 1:].astype(float)
+    # check number of perturbations
+    perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
+    if result['num_perturbations'] != perturbation_check[result['keywords']]:
+        raise ValueError("Number of perturbations is not equal to 0, 3 or 6.")
+    if result['keywords'] not in ['GTO', 'GIAO', 'CGST']:
+        raise ValueError("The keywords should be one out of GTO, GIAO and CGST.")
+    return result
 
 
-# def _helper_section(f_content: TextIO, start: str, end: str,
-#                     line_break: bool = False) -> list:
-#     """Extract the information based on the given name."""
-#     section = re.findall(start + '\n(.*?)\n' + end, f_content,
-#                          re.DOTALL)
-#     section = [i.strip() for i in section]
-#     if line_break:
-#         section = [i.split() for i in section]
-#
-#     return section
+def parse_wfx(lit: LineIterator) -> dict:
+    """Load data in all sections existing in the given WFX file LineIterator."""
+    data = {}
+    while True:
+        # get a new line
+        try:
+            line = next(lit).strip()
+        except StopIteration:
+            break
 
+        # read mo primitive coefficients
+        if line == "<Molecular Orbital Primitive Coefficients>":
+            section = []
+            section_start = "<Molecular Orbital Primitive Coefficients>"
+            section_end = "</Molecular Orbital Primitive Coefficients>"
+            line = next(lit).strip()
+            while line != section_end:
+                # skip mo number section
+                if line == '<MO Number>':
+                    for _ in range(3):
+                        line = next(lit).strip()
+                section.append(line)
+                line = next(lit).strip()
 
-def _helper_section(lit: LineIterator, start: str, end: str, line_break: bool = False) -> List:
-    """Extract the information based on the given head and tail tags."""
-    section = []
-    try:
-        while True:
-            line = next(lit)
-            if line.startswith(start):
-                break
-
-        while True:
-            line = next(lit)
-            if not line.startswith(end):
-                section.append(line.strip())
-            else:
-                break
-    except StopIteration:
-        item = start.strip('<').strip('>')
-        warn_info = "Information about " + item + " not found after reading the whole file."
-        warnings.warn(warn_info)
-        section = None
-    if line_break:
-        section = [i for item in section for i in item.split()]
-    return section
-
-
-def _helper_str(lit: LineIterator) -> dict:
-    """Compute the string type values."""
-    str_label = {
-        'title': ['<Title>', '</Title>'],
-        'keywords': ['<Keywords>', '</Keywords>'],
-        'model_name': ['<Model>', '</Model>']
-    }
-
-    dict_str = {}
-    for key, val in str_label.items():
-        str_info = _helper_section(lit=lit, start=val[0], end=val[1])
-        dict_str[key] = str_info
-
-    return dict_str
-
-
-def _helper_int(lit: LineIterator) -> dict:
-    """Compute the init type values."""
-    int_label = {
-        'num_atoms': ['<Number of Nuclei>', '</Number of Nuclei>'],
-        'num_occ_mo': ['<Number of Occupied Molecular Orbitals>',
-                       '</Number of Occupied Molecular Orbitals>'],
-        'num_perturbations': ['<Number of Perturbations>',
-                              '</Number of Perturbations>'],
-        'num_electrons': ['<Number of Electrons>',
-                          '</Number of Electrons>'],
-        'num_alpha_electron': ['<Number of Alpha Electrons>',
-                               '</Number of Alpha Electrons>'],
-        'num_beta_electron': ['<Number of Beta Electrons>',
-                              '</Number of Beta Electrons>'],
-        'spin_multi': ['<Electronic Spin Multiplicity>',
-                       '</Electronic Spin Multiplicity>'],
-        'num_primitives': ['<Number of Primitives>',
-                           '</Number of Primitives>']
-    }
-
-    dict_int = {}
-    for key, val in int_label.items():
-        int_info = _helper_section(lit=lit, start=val[0], end=val[1])
-
-        if int_info is not None:
-            dict_int[key] = np.array(int_info, dtype=np.int)
+        # read rest of the sections
+        if line.startswith("<") and not line.startswith("</"):
+            section = []
+            section_start = line
+            section_end = line[:1] + "/" + line[1:]
+        elif line.startswith("</"):
+            if line != section_end:
+                lit.error("Expected line {0} but got {1}".format(section_end, line))
+            data[section_start] = section
         else:
-            dict_int[key] = None
-    return dict_int
+            section.append(line)
 
-
-def _helper_float(lit: LineIterator) -> dict:
-    """Compute the float type values."""
-    float_label = {
-        'charge': ['<Net Charge>', '</Net Charge>'],
-        'energy': ['<Energy = T + Vne + Vee + Vnn>',
-                   '</Energy = T + Vne + Vee + Vnn>'],
-        'virial_ratio': ['<Virial Ratio (-V/T)>', '</Virial Ratio (-V/T)>'],
-        'nuclear_viral': ['<Nuclear Virial of Energy-Gradient-Based '
-                          'Forces on Nuclei, W>',
-                          '</Nuclear Virial of Energy-Gradient-Based '
-                          'Forces on Nuclei, W>'],
-        'full_virial_ratio': ['<Full Virial Ratio, -(V - W)/T>',
-                              '</Full Virial Ratio, -(V - W)/T>']
-    }
-    dict_float = {}
-    for key, val in float_label.items():
-        float_info = _helper_section(lit=lit, start=val[0], end=val[1])
-        if float_info is not None:
-            dict_float[key] = np.array(float_info, dtype=float)
-        else:
-            dict_float[key] = None
-
-    return dict_float
-
-
-def _energy_gradient(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]:
-    gradient_list = _helper_section(lit,
-                                    start='<Nuclear Cartesian Energy Gradients>',
-                                    end='</Nuclear Cartesian Energy Gradients>')
-    # build structured array
-    gradient_mix = np.array([i.split() for i in gradient_list]).reshape(-1, 4)
-    gradient_atoms = gradient_mix[:, 0].astype(np.unicode_)
-    gradient = gradient_mix[:, 1:].astype(float)
-    return gradient_atoms, gradient
-
-
-def _helper_mo(lit: LineIterator, num_primitives: int) -> Tuple[List, np.ndarray]:
-    mo_info = _helper_section(lit,
-                              start='<Molecular Orbital Primitive Coefficients>',
-                              end='</Molecular Orbital Primitive Coefficients>')
-
-    mo_count = [i for item in mo_info for i in item.split() if
-                (item.isdigit() and (item not in ['<MO Number>', '</MO Number>']))]
-    mo_count = np.array(mo_count, np.int)
-    # raw-primitive expansion coefficients for MO
-    mo_coefficients = [i for item in mo_info for i in item.split() if
-                       (not item.isdigit() and (item not in ['<MO Number>', '</MO Number>']))]
-    mo_coefficients = np.array(mo_coefficients, dtype=np.float).reshape(-1, num_primitives)
-    mo_coefficients = np.transpose(mo_coefficients)
-
-    return mo_count, mo_coefficients
+    return data
 
 
 def _check_tag(lit: LineIterator):
@@ -404,16 +309,14 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
     return obasis, permutation
 
 
-def load_one(filename: str) -> dict:
+def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    title, _, _, _, atnums, _, _, _, _, _, _, num_spin_multi, _, energy, _, _, _, mo_count,\
-        _, mo_spin_type, atcoords, icenters, type_assignments, exponents, mo_occ, mo_energy,\
-        _, _, mo_coefficients = load_wfx_low(filename)
+    data = load_data_wfx(lit)
 
     # Build the basis set and the permutation needed to regroup shells.
-    obasis, permutation = build_obasis(icenters, type_assignments, exponents)
+    obasis, permutation = build_obasis(data['icenters'], data['type'], data['exponents'])
     # Re-order the mo coefficients.
-    mo_coefficients = mo_coefficients[permutation]
+    mo_coefficients = data['mo_coeff'][permutation]
     # Get the normalization of the un-normalized Cartesian basis functions.
     # Use these to rescale the mo_coefficients.
     scales = []
@@ -429,31 +332,32 @@ def load_one(filename: str) -> dict:
             scales.append(gob_cart_normalization(shell.exponents[0], np.array([nx, ny, nz])))
     scales = np.array(scales)
     mo_coefficients /= scales.reshape(-1, 1)
+    mo_count = np.arange(data['mo_coeff'].shape[1])
     norb = mo_coefficients.shape[1]
     # make the wavefunction
-    if mo_occ.max() > 1.0:
+    if data['mo_occ'].max() > 1.0:
         # closed-shell system
         mo = MolecularOrbitals(
             'restricted', norb, norb,
-            mo_occ, mo_coefficients, mo_energy, None)
+            data['mo_occ'], data['mo_coeff'], data['mo_energy'], None)
     else:
         # open-shell system
         # counting the number of alpha orbitals
         norba = 1
         while (norba < mo_coefficients.shape[1]
-               and mo_energy[norba] >= mo_energy[norba - 1]
+               and data['mo_energy'][norba] >= data['mo_energy'][norba - 1]
                and mo_count[norba] == mo_count[norba - 1] + 1):
             norba += 1
         mo = MolecularOrbitals(
             'unrestricted', norba, norb - norba,
-            mo_occ, mo_coefficients, mo_energy, None)
+            data['mo_occ'], data['mo_coeff'], data['mo_energy'], None)
 
     result = {
-        'title': title,
-        'atcoords': atcoords,
-        'atnums': atnums,
+        'title': data['title'],
+        'atcoords': data['atcoords'],
+        'atnums': data['atnums'],
         'obasis': obasis,
         'mo': mo,
-        'energy': energy,
+        'energy': data['energy'],
     }
     return result
