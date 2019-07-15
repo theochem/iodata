@@ -66,16 +66,18 @@ def load_data_wfx(lit: LineIterator) -> dict:
         '<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>': 'nuc_viral',
         '<Full Virial Ratio, -(V - W)/T>': 'full_virial_ratio',
     }
-    labels_array = {
-        '<Nuclear Cartesian Coordinates>': 'atcoords',
-        '<Nuclear Charges>': 'nuclear_charge',
+    labels_array_int = {
         '<Atomic Numbers>': 'atnums',
-        '<Primitive Exponents>': 'exponents',
         '<Primitive Centers>': 'centers',
         '<Primitive Types>': 'types',
+    }
+    labels_array_float = {
+        '<Nuclear Cartesian Coordinates>': 'atcoords',
+        '<Nuclear Charges>': 'nuclear_charge',
+        '<Primitive Exponents>': 'exponents',
         '<Molecular Orbital Energies>': 'mo_energy',
         '<Molecular Orbital Occupation Numbers>': 'mo_occ',
-        '<Molecular Orbital Primitive Coefficients>': 'mo_coeff',
+        '<Molecular Orbital Primitive Coefficients>': 'mo_coeff'
     }
     labels_other = {
         '<Nuclear Names>': 'nuclear_names',
@@ -94,9 +96,14 @@ def load_data_wfx(lit: LineIterator) -> dict:
             result[labels_int[key]] = int(value[0])
         elif key in labels_float:
             result[labels_float[key]] = float(value[0])
-        elif key in labels_array:
-            breakdown = [float(item) for line in value for item in line.split()]
-            result[labels_array[key]] = np.array(breakdown)
+        elif key in labels_array_float:
+            result[labels_array_float[key]] = np.fromstring(" ".join(value),
+                                                            dtype=np.float,
+                                                            sep=" ")
+        elif key in labels_array_int:
+            result[labels_array_int[key]] = np.fromstring(" ".join(value),
+                                                          dtype=np.int,
+                                                          sep=" ")
         elif key in labels_other:
             result[labels_other[key]] = value
         else:
