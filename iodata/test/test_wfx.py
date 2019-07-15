@@ -18,7 +18,7 @@
 # --
 """Test iodata.formats.wfn module."""
 
-# import pytest
+import pytest
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
@@ -245,11 +245,11 @@ def test_load_wfx_data_water():
     assert_allclose(data['mo_coeff'][1, 3], -4.27845789719456E-001)
 
 
-# def test_load_wfx_low_missing_tag_h2o():
-#     """Test load_wfx_low with h2o_error.wfx with missing tag."""
-#     with pytest.raises(IOError):
-#         lit = LineIterator('iodata/test/data/h2o_error.wfx')
-#         load_data_wfx(lit)
+def test_load_wfx_low_missing_tag_h2o():
+    """Test load_wfx_low with h2o_error.wfx with missing tag."""
+    with pytest.raises(IOError):
+        lit = LineIterator('iodata/test/data/h2o_error.wfx')
+        load_data_wfx(lit)
 
 
 # def check_wfx(fn_wfn, nbasis, energy, charges_mulliken):
