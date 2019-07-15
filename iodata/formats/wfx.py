@@ -46,8 +46,8 @@ def load_data_wfx(lit: LineIterator) -> dict:
         '<Keywords>': 'keywords',
         '<Model>': 'model_name',
     }
-    labels_number = {
-        # integer numbers
+    # integer numbers
+    labels_int = {
         '<Number of Nuclei>': 'num_atoms',
         '<Number of Occupied Molecular Orbitals>': 'num_occ_mo',
         '<Number of Perturbations>': 'num_perturbations',
@@ -56,8 +56,10 @@ def load_data_wfx(lit: LineIterator) -> dict:
         '<Number of Alpha Electrons>': 'num_alpha_electron',
         '<Number of Beta Electrons>': 'num_beta_electron',
         '<Number of Primitives>': 'num_primitives',
-        '<Electronic Spin Multiplicity>': 'spin_multi',
-        # float numbers
+        '<Electronic Spin Multiplicity>': 'spin_multi'
+    }
+    # float numbers
+    labels_float = {
         '<Net Charge>': 'charge',
         '<Energy = T + Vne + Vee + Vnn>': 'energy',
         '<Virial Ratio (-V/T)>': 'virial_ratio',
@@ -88,10 +90,12 @@ def load_data_wfx(lit: LineIterator) -> dict:
     for key, value in data.items():
         if key in labels_str:
             result[labels_str[key]] = value[0]
-        elif key in labels_number:
-            result[labels_number[key]] = np.array(eval(value[0]))
+        elif key in labels_int:
+            result[labels_int[key]] = int(value[0])
+        elif key in labels_float:
+            result[labels_float[key]] = float(value[0])
         elif key in labels_array:
-            breakdown = [eval(item) for line in value for item in line.split()]
+            breakdown = [float(item) for line in value for item in line.split()]
             result[labels_array[key]] = np.array(breakdown)
         elif key in labels_other:
             result[labels_other[key]] = value
