@@ -109,6 +109,36 @@ def load_data_wfx(lit: LineIterator) -> dict:
         else:
             warnings.warn("Not recognized label, skip {0}".format(key))
 
+    # check required properties in WFX
+    required_prop = {'<Title>': 'title',
+                     '<Keywords>': 'keywords',
+                     '<Number of Nuclei>': 'num_atoms',
+                     '<Number of Primitives>': 'num_primitives',
+                     '<Number of Occupied Molecular Orbitals>': 'num_occ_mo',
+                     '<Number of Perturbations>': 'num_perturbations',
+                     '<Nuclear Names>': 'nuclear_names',
+                     '<Nuclear Charges>': 'nuclear_charge',
+                     '<Nuclear Cartesian Coordinates>': 'atcoords',
+                     '<Net Charge>': 'charge',
+                     '<Number of Electrons>': 'num_electrons',
+                     '<Number of Alpha Electrons>': 'num_alpha_electron',
+                     '<Number of Beta Electrons>': 'num_beta_electron',
+                     '<Primitive Centers>': 'centers',
+                     '<Primitive Types>': 'types',
+                     '<Primitive Exponents>': 'exponents',
+                     '<Molecular Orbital Occupation Numbers>': 'mo_occ',
+                     '<Molecular Orbital Energies>': 'mo_energy',
+                     '<Molecular Orbital Spin Types>': 'mo_spin',
+                     '<Molecular Orbital Primitive Coefficients>': 'mo_coeff',
+                     '<Energy = T + Vne + Vee + Vnn>': 'energy',
+                     '<Virial Ratio (-V/T)>': 'virial_ratio'
+                     }
+    for prop_tag, prop_name in required_prop.items():
+        if prop_name not in result.keys():
+            error_info = 'The required information about '\
+                         + prop_tag.strip('<').strip('>') + ' is not found in WFX file.'
+            raise IOError(error_info)
+
     # reshape some arrays
     result['atcoords'] = result['atcoords'].reshape(-1, 3)
     result['mo_coeff'] = result['mo_coeff'].reshape(result['num_primitives'], -1, order='F')
