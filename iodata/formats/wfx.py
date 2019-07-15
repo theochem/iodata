@@ -135,7 +135,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
                      }
     for prop_tag, prop_name in required_prop.items():
         if prop_name not in result.keys():
-            error_info = 'The required information about '\
+            error_info = 'The required information about ' \
                          + prop_tag.strip('<').strip('>') + ' is not found in WFX file.'
             raise IOError(error_info)
 
@@ -196,67 +196,6 @@ def parse_wfx(lit: LineIterator) -> dict:
             section.append(line)
 
     return data
-
-
-def _check_tag(lit: LineIterator):
-    """Check tags."""
-    tags_header = []
-    tags_tail = []
-    for line in lit:
-        if line.strip('\n').startswith('</'):
-            tags_tail.append(line.lstrip('<//').rstrip('>\n'))
-        elif line.strip('\n').startswith('<') and not line.strip('\n').startswith('</'):
-            tags_header.append(line.lstrip('<//').rstrip('>\n'))
-        else:
-            pass
-    # Check if header or tail tags match
-    # head and tail tags of Molecular Orbital Primitive Coefficients are
-    # not matched paired because there are MO between
-    assert ('Molecular Orbital Primitive Coefficients' in tags_header) and \
-           ('Molecular Orbital Primitive Coefficients' in tags_tail), \
-        "Molecular Orbital Primitive Coefficients tags are not shown in " \
-        "WFX inputfile pairwise or both are missing."
-    # Check if all required tags/fields are present
-    tags_required = ['Title',
-                     'Keywords',
-                     'Number of Nuclei',
-                     'Number of Primitives',
-                     'Number of Occupied Molecular Orbitals',
-                     'Number of Perturbations',
-                     'Nuclear Names',
-                     'Nuclear Charges',
-                     'Nuclear Cartesian Coordinates',
-                     'Net Charge',
-                     'Number of Electrons',
-                     'Number of Alpha Electrons',
-                     'Number of Beta Electrons',
-                     'Primitive Centers',
-                     'Primitive Types',
-                     'Primitive Exponents',
-                     'Molecular Orbital Occupation Numbers',
-                     'Molecular Orbital Energies',
-                     'Molecular Orbital Spin Types',
-                     'Molecular Orbital Primitive Coefficients',
-                     'MO Number',
-                     'Energy = T + Vne + Vee + Vnn',
-                     'Virial Ratio (-V/T)']
-    if set(tags_header).intersection(set(tags_required)) != \
-            set(tags_required):
-        diff = set(tags_required) - set(tags_header).intersection(
-            set(tags_required))
-        error_str = ', '.join(diff)
-        error_str += ' are required but not present in the WFX file.'
-        raise IOError(error_str)
-        # warnings.warn(error_str)
-    # check others
-    tags_header_check = [i for i in tags_header
-                         if i != 'Molecular Orbital Primitive Coefficients']
-    tags_tail_check = [i for i in tags_tail
-                       if i != 'Molecular Orbital Primitive Coefficients']
-    for tag_header, tag_tail in zip(tags_header_check, tags_tail_check):
-        assert (tag_header == tag_tail), \
-            "Tag header %s and tail %s do not match." \
-            % (tag_header, tag_tail)
 
 
 # pylint: disable=too-many-branches
