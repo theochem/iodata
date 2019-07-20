@@ -38,8 +38,6 @@ PATTERNS = ['*.wfx']
 
 def load_data_wfx(lit: LineIterator) -> dict:
     """Process loaded WFX data."""
-    # Check tag
-    # _check_tag(lit)
 
     labels_str = {
         '<Title>': 'title',
@@ -85,8 +83,20 @@ def load_data_wfx(lit: LineIterator) -> dict:
         '<Nuclear Cartesian Energy Gradients>': 'nuclear_gradient',
     }
 
-    # load raw data
-    data = parse_wfx(lit)
+    # list of required section tags
+    required_tags = list(labels_str.keys()) + list(labels_int.keys()) + list(labels_float)
+    required_tags += list(labels_array_int) + list(labels_array_float) + list(labels_other)
+    required_tags.remove('<Model>')
+    required_tags.remove('<Number of Core Electrons>')
+    required_tags.remove('<Electronic Spin Multiplicity>')
+    required_tags.remove('<Atomic Numbers>')
+    required_tags.remove('<Full Virial Ratio, -(V - W)/T>')
+    required_tags.remove('<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>')
+    required_tags.remove('<Nuclear Cartesian Energy Gradients>')
+
+    # load raw data & check required tags
+    data = parse_wfx(lit, required_tags)
+
     # process raw data
     result = {}
     for key, value in data.items():
@@ -109,36 +119,6 @@ def load_data_wfx(lit: LineIterator) -> dict:
         else:
             warnings.warn("Not recognized label, skip {0}".format(key))
 
-    # check required properties in WFX
-    required_prop = {'<Title>': 'title',
-                     '<Keywords>': 'keywords',
-                     '<Number of Nuclei>': 'num_atoms',
-                     '<Number of Primitives>': 'num_primitives',
-                     '<Number of Occupied Molecular Orbitals>': 'num_occ_mo',
-                     '<Number of Perturbations>': 'num_perturbations',
-                     '<Nuclear Names>': 'nuclear_names',
-                     '<Nuclear Charges>': 'nuclear_charge',
-                     '<Nuclear Cartesian Coordinates>': 'atcoords',
-                     '<Net Charge>': 'charge',
-                     '<Number of Electrons>': 'num_electrons',
-                     '<Number of Alpha Electrons>': 'num_alpha_electron',
-                     '<Number of Beta Electrons>': 'num_beta_electron',
-                     '<Primitive Centers>': 'centers',
-                     '<Primitive Types>': 'types',
-                     '<Primitive Exponents>': 'exponents',
-                     '<Molecular Orbital Occupation Numbers>': 'mo_occ',
-                     '<Molecular Orbital Energies>': 'mo_energy',
-                     '<Molecular Orbital Spin Types>': 'mo_spin',
-                     '<Molecular Orbital Primitive Coefficients>': 'mo_coeff',
-                     '<Energy = T + Vne + Vee + Vnn>': 'energy',
-                     '<Virial Ratio (-V/T)>': 'virial_ratio'
-                     }
-    for prop_tag, prop_name in required_prop.items():
-        if prop_name not in result.keys():
-            error_info = 'The required information about ' \
-                         + prop_tag.strip('<').strip('>') + ' is not found in WFX file.'
-            raise IOError(error_info)
-
     # reshape some arrays
     result['atcoords'] = result['atcoords'].reshape(-1, 3)
     result['mo_coeff'] = result['mo_coeff'].reshape(result['num_primitives'], -1, order='F')
@@ -159,7 +139,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
     return result
 
 
-def parse_wfx(lit: LineIterator) -> dict:
+def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
     """Load data in all sections existing in the given WFX file LineIterator."""
     data = {}
     while True:
@@ -195,6 +175,11 @@ def parse_wfx(lit: LineIterator) -> dict:
         else:
             section.append(line)
 
+    # check required section tags
+    if required_tags is not None:
+        for section_tag in required_tags:
+            if section_tag not in data.keys():
+                raise IOError(f'The {section_tag} section is missing!')
     return data
 
 
