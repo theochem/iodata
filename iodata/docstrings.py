@@ -16,17 +16,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
+# pylint: disable=dangerous-default-value
 """Docstring decorators for file format implementations."""
 
 
-from typing import List
+from typing import List, Dict
 
 
 __all__ = ['document_load_one', 'document_load_many', 'document_dump_one', 'document_dump_many']
 
 
 def _document_load(template: str, fmt: str, guaranteed: List[str], ifpresent: List[str] = None,
-                   notes: str = None):
+                   kwdocs: Dict[str, str] = {}, notes: str = None):
     ifpresent = ifpresent or []
 
     def decorator(func):
@@ -40,11 +41,14 @@ def _document_load(template: str, fmt: str, guaranteed: List[str], ifpresent: Li
             fmt=fmt,
             guaranteed=', '.join("``{}``".format(word) for word in guaranteed),
             ifpresent=ifpresent_sentence,
+            kwdocs="\n".join("{}\n    {}".format(name, docu.replace("\n", " "))
+                             for name, docu in sorted(kwdocs.items())),
             notes=(notes or ""),
         )
         func.fmt = fmt
         func.guaranteed = guaranteed
         func.ifpresent = ifpresent
+        func.kwdocs = kwdocs
         func.notes = notes
         return func
     return decorator
@@ -57,7 +61,7 @@ Parameters
 ----------
 lit
     The line iterator to read the data from.
-
+{kwdocs}
 Returns
 -------
 data
@@ -73,7 +77,7 @@ Notes
 
 
 def document_load_one(fmt: str, guaranteed: List[str], ifpresent: List[str] = None,
-                      notes: str = None):
+                      kwdocs: Dict[str, str] = {}, notes: str = None):
     """Decorate a load_one function to generate a docstring.
 
     Parameters
@@ -84,6 +88,12 @@ def document_load_one(fmt: str, guaranteed: List[str], ifpresent: List[str] = No
         A list of IOData attributes this format can certainly read.
     ifpresent
         A list of IOData attributes this format reads of present in the file.
+    kwdocs
+        A dictionary with documentation for keyword arguments. Each key is a
+        keyword argument name and the corresponding value is text explaining the
+        argument.
+    notes
+        Additional information to be added to the docstring.
 
     Returns
     -------
@@ -91,11 +101,11 @@ def document_load_one(fmt: str, guaranteed: List[str], ifpresent: List[str] = No
         A decorator function.
 
     """
-    return _document_load(LOAD_ONE_DOC_TEMPLATE, fmt, guaranteed, ifpresent, notes)
+    return _document_load(LOAD_ONE_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 
 LOAD_MANY_DOC_TEMPLATE = """\
-Load a multiple frame from a {fmt} file.
+Load multiple frame from a {fmt} file.
 
 Parameters
 ----------
@@ -107,7 +117,7 @@ Yields
 data
     A dictionary with IOData attributes. The following attribtues are guaranteed to be
     loaded: {guaranteed}.{ifpresent}
-
+{kwdocs}
 Notes
 -----
 
@@ -117,7 +127,7 @@ Notes
 
 
 def document_load_many(fmt: str, guaranteed: List[str], ifpresent: List[str] = None,
-                       notes: str = None):
+                       kwdocs: Dict[str, str] = {}, notes: str = None):
     """Decorate a load_many function to generate a docstring.
 
     Parameters
@@ -128,6 +138,12 @@ def document_load_many(fmt: str, guaranteed: List[str], ifpresent: List[str] = N
         A list of IOData attributes this format can certainly read.
     ifpresent
         A list of IOData attributes this format reads of present in the file.
+    kwdocs
+        A dictionary with documentation for keyword arguments. Each key is a
+        keyword argument name and the corresponding value is text explaining the
+        argument.
+    notes
+        Additional information to be added to the docstring.
 
     Returns
     -------
@@ -135,11 +151,11 @@ def document_load_many(fmt: str, guaranteed: List[str], ifpresent: List[str] = N
         A decorator function.
 
     """
-    return _document_load(LOAD_ONE_DOC_TEMPLATE, fmt, guaranteed, ifpresent, notes)
+    return _document_load(LOAD_ONE_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 
 def _document_dump(template: str, fmt: str, required: List[str], optional: List[str] = None,
-                   notes: str = None):
+                   kwdocs: Dict[str, str] = {}, notes: str = None):
     optional = optional or []
 
     def decorator(func):
@@ -154,11 +170,14 @@ def _document_dump(template: str, fmt: str, required: List[str], optional: List[
             fmt=fmt,
             required=', '.join("``{}``".format(word) for word in required),
             optional=optional_sentence,
+            kwdocs="\n".join("{}\n    {}".format(name, docu.replace("\n", " "))
+                             for name, docu in sorted(kwdocs.items())),
             notes=notes,
         )
         func.fmt = fmt
         func.required = required
         func.optional = optional
+        func.kwdocs = kwdocs
         func.notes = notes
         return func
     return decorator
@@ -174,6 +193,9 @@ f
 data
     An IOData instance which must have the following attributes initialized:
     {required}.{optional}
+{kwdocs}
+Notes
+-----
 
 {notes}
 
@@ -181,7 +203,7 @@ data
 
 
 def document_dump_one(fmt: str, required: List[str], optional: List[str] = None,
-                      notes: str = None):
+                      kwdocs: Dict[str, str] = {}, notes: str = None):
     """Decorate a dump_one function to generate a docstring.
 
     Parameters
@@ -192,6 +214,12 @@ def document_dump_one(fmt: str, required: List[str], optional: List[str] = None,
         A list of mandatory IOData attributes needed to write the file.
     optional
         A list of optional IOData attributes which can be include when writing the file.
+    kwdocs
+        A dictionary with documentation for keyword arguments. Each key is a
+        keyword argument name and the corresponding value is text explaining the
+        argument.
+    notes
+        Additional information to be added to the docstring.
 
     Returns
     -------
@@ -199,11 +227,11 @@ def document_dump_one(fmt: str, required: List[str], optional: List[str] = None,
         A decorator function.
 
     """
-    return _document_dump(DUMP_ONE_DOC_TEMPLATE, fmt, required, optional, notes)
+    return _document_dump(DUMP_ONE_DOC_TEMPLATE, fmt, required, optional, kwdocs, notes)
 
 
 DUMP_MANY_DOC_TEMPLATE = """\
-Dump a multiple frames into a {fmt} file.
+Dump multiple frames into a {fmt} file.
 
 Parameters
 ----------
@@ -212,6 +240,7 @@ f
 data
     An IOData instance which must have the following attributes initialized:
     {required}.{optional}
+{kwdocs}
 
 {notes}
 
@@ -219,7 +248,7 @@ data
 
 
 def document_dump_many(fmt: str, required: List[str], optional: List[str] = None,
-                       notes: str = None):
+                       kwdocs: Dict[str, str] = {}, notes: str = None):
     """Decorate a dump_many function to generate a docstring.
 
     Parameters
@@ -230,6 +259,12 @@ def document_dump_many(fmt: str, required: List[str], optional: List[str] = None
         A list of mandatory IOData attributes needed to write the file.
     optional
         A list of optional IOData attributes which can be include when writing the file.
+    kwdocs
+        A dictionary with documentation for keyword arguments. Each key is a
+        keyword argument name and the corresponding value is text explaining the
+        argument.
+    notes
+        Additional information to be added to the docstring.
 
     Returns
     -------
@@ -237,4 +272,4 @@ def document_dump_many(fmt: str, required: List[str], optional: List[str] = None
         A decorator function.
 
     """
-    return _document_dump(DUMP_MANY_DOC_TEMPLATE, fmt, required, optional, notes)
+    return _document_dump(DUMP_MANY_DOC_TEMPLATE, fmt, required, optional, kwdocs, notes)
