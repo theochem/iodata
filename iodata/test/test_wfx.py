@@ -19,12 +19,13 @@
 """Test iodata.formats.wfn module."""
 
 import pytest
+import warnings
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 # from ..api import load_one
-from ..formats.wfx import load_data_wfx
+from ..formats.wfx import load_data_wfx, parse_wfx
 from ..utils import LineIterator
 
 try:
@@ -247,9 +248,17 @@ def test_load_wfx_data_water():
 
 def test_load_wfx_low_missing_tag_h2o():
     """Test load_wfx_low with h2o_error.wfx with missing tag."""
-    with pytest.raises(IOError):
+    with pytest.raises(IOError) as error:
         lit = LineIterator('iodata/test/data/h2o_error.wfx')
         load_data_wfx(lit)
+    assert str(error.value) == "The <Title> section is missing!"
+
+
+def test_parse_wfx_h2o():
+    lit = LineIterator('iodata/test/data/h2o_error.wfx')
+    data = parse_wfx(lit, required_tags=None)
+    # check that sections without a closing tag are skipped
+    assert '<Number of Nuclei>' not in data.keys()
 
 
 # def check_wfx(fn_wfn, nbasis, energy, charges_mulliken):

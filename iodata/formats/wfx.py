@@ -163,7 +163,7 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
                 section.append(line)
                 line = next(lit).strip()
 
-        # read rest of the sections
+        # read rest of the sections; this skips sections without a closing tag
         if line.startswith("<") and not line.startswith("</"):
             section = []
             section_start = line
