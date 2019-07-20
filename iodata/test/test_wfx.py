@@ -135,10 +135,9 @@ def test_load_wfx_data_h2():
          3.807665977092e+00, 4.345665616275e+00,
          5.386560784523e+00, 5.386560784523e+00,
          5.448122593462e+00, 6.522366660004e+00]]))
-    assert np.all(data['gradient_atoms'] == ['H1', 'H2'])
     expected = np.array([[9.744384163503e-17, -2.088844408785e-16, -7.185657679987e-09],
                          [-9.744384163503e-17, 2.088844408785e-16, 7.185657679987e-09]])
-    assert np.allclose(data['gradient'], expected)
+    assert np.allclose(data['atgradient'], expected)
     assert data['mo_coeff'].shape == (34, 56)
     exponent_expected = np.array([
         5.054717669172e-02, 9.116391481072e-02,
@@ -216,10 +215,9 @@ def test_load_wfx_data_water():
         [-2.02515479000000E+001, -1.25760928000000E+000,
          -5.93941119000000E-001, -4.59728723000000E-001,
          -3.92618460000000E-001]]))
-    assert np.all(data['gradient_atoms'] == ['O1', 'H2', 'H3'])
     expected = np.array([[6.09070231000000E-016, -5.55187875000000E-016, -2.29270172000000E-004],
                          [-2.46849911000000E-016, -1.18355659000000E-004, 1.14635086000000E-004]])
-    assert np.allclose(data['gradient'][:2, :], expected)
+    assert np.allclose(data['atgradient'][:2, :], expected)
     assert_equal(data['mo_coeff'].shape, (21, 5))
     exponent_expected = np.array([4.22735025664585E+000,
                                   4.08850914632625E+000,

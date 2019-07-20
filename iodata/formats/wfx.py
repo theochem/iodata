@@ -128,8 +128,10 @@ def load_data_wfx(lit: LineIterator) -> dict:
     result['mo_spin'] = mo_spin_type[mo_spin_type[:, 0] != 'and']
     # process nuclear gradient
     gradient_mix = np.array([i.split() for i in result.pop('nuclear_gradient')]).reshape(-1, 4)
-    result['gradient_atoms'] = gradient_mix[:, 0].astype(np.unicode_)
-    result['gradient'] = gradient_mix[:, 1:].astype(float)
+    gradient_atoms = gradient_mix[:, 0].astype(np.unicode_)
+    index = [result['nuclear_names'].index(atom) for atom in gradient_atoms]
+    result['atgradient'] = np.full((len(result['nuclear_names']), 3), np.nan)
+    result['atgradient'][index] = gradient_mix[:, 1:].astype(float)
     # check number of perturbations
     perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
     if result['num_perturbations'] != perturbation_check[result['keywords']]:
@@ -335,7 +337,7 @@ def load_one(lit: LineIterator) -> dict:
         'obasis': obasis,
         'mo': mo,
         'energy': data['energy'],
-        'atgradient': {'gradient_atoms': data['gradient_atoms'], 'gradient': data['gradient']},
+        'atgradient': data['atgradient'],
         'charge': data['charge'],
         'extra': data_extra
     }
