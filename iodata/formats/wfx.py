@@ -331,7 +331,6 @@ def load_one(lit: LineIterator) -> dict:
         'mo': mo,
         'energy': data['energy'],
         'atgradient': data['atgradient'],
-        'charge': data['charge'],
         'extra': extra,
     }
     return result
