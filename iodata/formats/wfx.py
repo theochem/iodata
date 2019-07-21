@@ -319,16 +319,9 @@ def load_one(lit: LineIterator) -> dict:
             'unrestricted', norba, norb - norba,
             data['mo_occ'], data['mo_coeff'], data['mo_energy'], None)
 
-    data_extra = {}
-    extra_list = ['keywords', 'model_name', 'num_perturbations', 'num_electrons',
-                  'num_core_electrons', 'num_alpha_electron', 'num_beta_electron',
-                  'num_primitives', 'spin_multi', 'charge', 'virial_ratio', 'nuc_viral',
-                  'full_virial_ratio', 'centers', 'types', 'exponents', 'mo_spin']
-    for extra_label in extra_list:
-        try:
-            data_extra[extra_label] = data[extra_label]
-        except KeyError:
-            data_extra[extra_label] = None
+    extra_items = ['keywords', 'model_name', 'num_perturbations', 'num_core_electrons',
+                   'spin_multi', 'virial_ratio', 'nuc_viral', 'full_virial_ratio', 'mo_spin']
+    extra = {item: data.setdefault(item, None) for item in extra_items}
 
     result = {
         'title': data['title'],
@@ -339,6 +332,6 @@ def load_one(lit: LineIterator) -> dict:
         'energy': data['energy'],
         'atgradient': data['atgradient'],
         'charge': data['charge'],
-        'extra': data_extra
+        'extra': extra,
     }
     return result
