@@ -54,7 +54,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
         '<Number of Alpha Electrons>': 'num_alpha_electron',
         '<Number of Beta Electrons>': 'num_beta_electron',
         '<Number of Primitives>': 'num_primitives',
-        '<Electronic Spin Multiplicity>': 'spin_multi'
+        '<Electronic Spin Multiplicity>': 'spin_multi',
     }
     # float numbers
     labels_float = {
@@ -75,7 +75,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
         '<Primitive Exponents>': 'exponents',
         '<Molecular Orbital Energies>': 'mo_energy',
         '<Molecular Orbital Occupation Numbers>': 'mo_occ',
-        '<Molecular Orbital Primitive Coefficients>': 'mo_coeff'
+        '<Molecular Orbital Primitive Coefficients>': 'mo_coeff',
     }
     labels_other = {
         '<Nuclear Names>': 'nuclear_names',
