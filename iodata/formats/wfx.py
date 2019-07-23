@@ -281,7 +281,7 @@ def load_one(lit: LineIterator) -> dict:
     data = load_data_wfx(lit)
 
     # Build the basis set and the permutation needed to regroup shells.
-    obasis, permutation = build_obasis(data['icenters'], data['type'], data['exponents'])
+    obasis, permutation = build_obasis(data['centers'], data['types']-1, data['exponents'])
     # Re-order the mo coefficients.
     mo_coefficients = data['mo_coeff'][permutation]
     # Get the normalization of the un-normalized Cartesian basis functions.
