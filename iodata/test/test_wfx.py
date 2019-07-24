@@ -19,7 +19,6 @@
 """Test iodata.formats.wfn module."""
 
 import pytest
-import warnings
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
