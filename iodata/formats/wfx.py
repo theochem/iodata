@@ -38,7 +38,6 @@ PATTERNS = ['*.wfx']
 
 def load_data_wfx(lit: LineIterator) -> dict:
     """Process loaded WFX data."""
-
     labels_str = {
         '<Title>': 'title',
         '<Keywords>': 'keywords',
