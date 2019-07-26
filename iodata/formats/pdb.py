@@ -1,0 +1,132 @@
+# IODATA is an input and output module for quantum chemistry.
+# Copyright (C) 2011-2019 The IODATA Development Team
+#
+# This file is part of IODATA.
+#
+# IODATA is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+#
+# IODATA is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <http://www.gnu.org/licenses/>
+# --
+"""PDB file format.
+
+There are different formats of pdb files.
+"""
+
+
+from typing import TextIO, Iterator
+
+import numpy as np
+
+from ..docstrings import (document_load_one, document_load_many, document_dump_one,
+                          document_dump_many)
+from ..iodata import IOData
+from ..periodic import sym2num, num2sym
+from ..utils import angstrom, LineIterator
+
+
+__all__ = []
+
+
+PATTERNS = ['*.pdb']
+
+
+@document_load_one("PDB", ['atcoords', 'atnums'], ['title'])
+def load_one(lit: LineIterator) -> dict:
+    """Do not edit this docstring. It will be overwritten."""
+    nums = []
+    coords = []
+    attypes = []
+    restypes = []
+    molecule_found = False
+    while True:
+        try:
+            line = next(lit)
+        except StopIteration:
+            break
+        if line.startswith("TITLE") or line.startswith("COMPND"):
+            words = line.split()
+            title = words[1:]
+        else:
+            title = "Pdb file from Iodata"
+        if line[0:4] == "ATOM" or line[0:6] == "HETATM":
+            try:
+                # Try reading element from position 77:79 referenced in pdb format
+                words = line[77:79].split()
+                if not words:
+                    # If not guess it from the atom type
+                    words = line[13:16].split()
+                symbol = words[0].title()
+                nums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
+            except ValueError:
+                # When the position 77:79 does not exist also use the atom type
+                symbol = line[13:16].title()
+                nums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
+            x = float(line[30:38])
+            y = float(line[38:46])
+            z = float(line[46:54])
+            coords.append([x, y, z])
+            attypes.append(line[13:16].strip())
+            restypes.append(line[18:20].strip())
+            molecule_found = True
+        if line[0:3] == "END" and molecule_found:
+            atnums = np.array(nums)
+            atcoords = np.array(coords) * angstrom
+            attypes = tuple(attypes)
+            restypes = tuple(restypes)
+            atffparams = {"attypes": attypes, "restypes": restypes}
+            result = {
+                'atcoords': atcoords,
+                'atnums': atnums,
+                'atffparams': atffparams,
+                'title': title
+            }
+            break
+    if molecule_found is False:
+        raise lit.error("Molecule could not be read")
+    return result
+
+
+@document_load_many("PDB", ['atcoords', 'atnums', 'atffparams'], ['title'])
+def load_many(lit: LineIterator) -> Iterator[dict]:
+    """Do not edit this docstring. It will be overwritten."""
+    # PDB files with more molecules are a simple concatenation of individual MOL2 files,'
+    # making it trivial to load many frames.
+    while True:
+        try:
+            yield load_one(lit)
+        except IOError:
+            return
+
+
+@document_dump_one("PDB", ['atcoords', 'atnums'], ['atffparams', 'title'])
+def dump_one(f: TextIO, data: IOData):
+    """Do not edit this docstring. It will be overwritten."""
+    print(str("TITLE    " + data.title) or "TITLE    Created with IOdata", file=f)
+    attypes = data.atffparams.get('attypes')
+    restypes = data.atffparams.get('restypes')
+    for i in range(data.natom):
+        n = num2sym[data.atnums[i]]
+        x, y, z = data.atcoords[i] / angstrom
+        attype = str(n + str(i + 1)) if attypes is None else attypes[i]
+        restype = "XXX" if restypes is None else restypes[i]
+        out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} A{i+1:>4d}    '
+        out2 = f'{x:8.3f}{y:8.3f}{z:8.3f} {n:>23s}'
+        print("ATOM  " + out1 + out2, file=f)
+    print("END", file=f)
+
+
+@document_dump_many("PDB", ['atcoords', 'atnums'], ['atffparams', 'title'])
+def dump_many(f: TextIO, datas: Iterator[IOData]):
+    """Do not edit this docstring. It will be overwritten."""
+    # Similar to load_many, this is relatively easy.
+    for data in datas:
+        dump_one(f, data)
