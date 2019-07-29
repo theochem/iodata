@@ -40,7 +40,7 @@ atomic forces.
          (lambda word: -float(word)),
          (lambda value: "{:15.10f}".format(-value)))
     ]
-    
+
     mol = load_one("test.xyz", atom_columns=atom_columns)
     # The following attributes are present:
     print(mol.atnums)
@@ -97,32 +97,35 @@ def load_one(lit: LineIterator, atom_columns=None) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     if atom_columns is None:
         atom_columns = DEFAULT_ATOM_COLUMNS
-    # Load the header
+    # Load the header.
     natom = int(next(lit))
     data = {"title": next(lit).strip()}
+    # Initialize the arrays to be loaded from the XYZ file.
+    for attrname, keyname, shapesuffix, dtype, _loadword, _dumpword in atom_columns:
+        array = np.zeros((natom,) + shapesuffix, dtype=dtype)
+        if keyname is None:
+            # Store the initial array as a normal attribute.
+            data[attrname] = array
+        else:
+            # Store the initial array as a value in an dictionary attribute.
+            data.setdefault(attrname, {})[keyname] = array
     # Load the atom lines.
     for iatom in range(natom):
         words = next(lit).split()
-        for attrname, keyname, shapesuffix, dtype, loadword, _dumpword in atom_columns:
-            if iatom == 0:
-                # In case of the first atom, the array with atomic properties
-                # is created and put in the right place.
-                dest = np.zeros((natom,) + shapesuffix, dtype=dtype)
-                if keyname is None:
-                    data[attrname] = dest
-                else:
-                    data.setdefault(attrname, {})[keyname] = dest
-                dest = dest[:1]
+        for attrname, keyname, _shapesuffix, _dtype, loadword, _dumpword in atom_columns:
+            # Get the slice of the array where properties for the current atom
+            # must be stored.
+            if keyname is None:
+                # The array is a normal attribute.
+                atom_array = data[attrname][iatom: iatom + 1]
             else:
-                # For all remaining atoms, the array with atomic properties is
-                # just retrieved.
-                if keyname is None:
-                    dest = data[attrname][iatom: iatom + 1]
-                else:
-                    dest = data[attrname][keyname][iatom: iatom + 1]
-            # Fill in array elements with atomic properties.
-            for ifield in range(dest.size):
-                dest.flat[ifield] = loadword(words.pop(0))
+                # The array is a value of a dictionary attribute.
+                atom_array = data[attrname][keyname][iatom: iatom + 1]
+            # Fill in array elements with atomic properties. For each new value
+            # to be loaded, the first element of the list words is consumed and
+            # converted to the right format for IOData.
+            for ifield in range(atom_array.size):
+                atom_array.flat[ifield] = loadword(words.pop(0))
     return data
 
 
@@ -154,6 +157,7 @@ def dump_one(f: TextIO, data: IOData, atom_columns=None):
         for attrname, keyname, _shapesuffix, _dtype, _loadword, dumpword in atom_columns:
             values = getattr(data, attrname)
             if keyname is not None:
+                # The data to be written is a value of a dictionary attribute.
                 values = values[keyname]
             for value in values[iatom].flat:
                 words.append(dumpword(value))
