@@ -25,6 +25,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one, load_many, dump_one, dump_many
 from ..utils import angstrom
+from ..formats.xyz import DEFAULT_ATOM_COLUMNS
 try:
     from importlib_resources import path
 except ImportError:
@@ -59,32 +60,71 @@ def check_water(mol):
         mol.atcoords[0] - mol.atcoords[2]) / angstrom, 1.568, atol=1.e-3)
 
 
-def check_load_dump_consistency(tmpdir, fn):
+FCC_ATOM_COLUMNS = DEFAULT_ATOM_COLUMNS + [
+    # Storing the atomic numbers as zs in the extras attribute makes sense
+    # for testing.
+    ("extra", "zs", (), int, int, "{:2d}".format),
+    # Note that in IOData, the energy gradient is stored, which contains the
+    # negative forces.
+    ("atgradient", None, (3,), float,
+     (lambda word: -float(word)),
+     (lambda value: "{:15.10f}".format(-value)))
+]
+
+
+def test_load_fcc_columns():
+    with path('iodata.test.data', 'al_fcc.xyz') as fn_xyz:
+        mol = load_one(str(fn_xyz), atom_columns=FCC_ATOM_COLUMNS)
+    assert "zs" in mol.extra
+    assert mol.extra["zs"].dtype == int
+    assert_equal(mol.extra["zs"], [13] * mol.natom)
+    assert mol.atgradient.shape == (mol.natom, 3)
+    assert_allclose(mol.atgradient[0, 0], -0.285831)
+    assert_allclose(mol.atgradient[2, 1], 0.268537)
+    assert_allclose(mol.atgradient[-1, -1], -0.928032)
+
+
+def check_load_dump_consistency(tmpdir, fn, atom_columns=None):
     """Check if dumping and loading an XYZ file results in the same data."""
-    mol0 = load_one(str(fn))
+    if atom_columns is None:
+        atom_columns = DEFAULT_ATOM_COLUMNS
+    if fn.endswith(".xyz"):
+        mol0 = load_one(str(fn), atom_columns=atom_columns)
+    else:
+        mol0 = load_one(str(fn))
     # write xyz file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test.xyz')
-    dump_one(mol0, fn_tmp)
-    mol1 = load_one(fn_tmp)
+    dump_one(mol0, fn_tmp, atom_columns=atom_columns)
+    mol1 = load_one(fn_tmp, atom_columns=atom_columns)
     # check two xyz files
     assert mol0.title == mol1.title
-    assert_equal(mol0.atnums, mol1.atnums)
-    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+    for attrname, keyname, _shapesuffix, _dtype, _loadword, _dumpword in atom_columns:
+        value0 = getattr(mol0, attrname)
+        value1 = getattr(mol1, attrname)
+        if keyname is not None:
+            value0 = value0[keyname]
+            value1 = value1[keyname]
+        assert_allclose(value0, value1, atol=1e-5)
 
 
 def test_load_dump_consistency(tmpdir):
     with path('iodata.test.data', 'ch3_hf_sto3g.fchk') as fn_fchk:
-        check_load_dump_consistency(tmpdir, fn_fchk)
+        check_load_dump_consistency(tmpdir, str(fn_fchk))
 
 
 def test_dump_xyz_water_element(tmpdir):
     with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
-        check_load_dump_consistency(tmpdir, fn_xyz)
+        check_load_dump_consistency(tmpdir, str(fn_xyz))
 
 
 def test_dump_xyz_water_number(tmpdir):
     with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
-        check_load_dump_consistency(tmpdir, fn_xyz)
+        check_load_dump_consistency(tmpdir, str(fn_xyz))
+
+
+def test_dump_xyz_fcc(tmpdir):
+    with path('iodata.test.data', 'al_fcc.xyz') as fn_xyz:
+        check_load_dump_consistency(tmpdir, str(fn_xyz), FCC_ATOM_COLUMNS)
 
 
 def test_load_many():

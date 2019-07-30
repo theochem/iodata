@@ -364,7 +364,7 @@ ATOM input file, in the section ``ATOM%PRINT``:
 @document_load_one(
     "CP2K ATOM outupt",
     ['atcoords', 'atcorenums', 'atnums', 'energy', 'mo', 'obasis'],
-    [], LOAD_ONE_NOTES)
+    [], {}, LOAD_ONE_NOTES)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Find the element number

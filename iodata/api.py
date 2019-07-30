@@ -78,7 +78,7 @@ def _select_format_module(filename: str, attrname: str, fmt: str = None) -> Modu
         attrname, filename))
 
 
-def load_one(filename: str, fmt: str = None) -> IOData:
+def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
     """Load data from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -92,6 +92,8 @@ def load_one(filename: str, fmt: str = None) -> IOData:
     fmt
         The name of the file format module to use. When not given, it is guessed
         from the filename.
+    **kwargs
+        Keyword arguments are passed on to the format-specific load_one function.
 
     Returns
     -------
@@ -102,12 +104,12 @@ def load_one(filename: str, fmt: str = None) -> IOData:
     format_module = _select_format_module(filename, 'load_one', fmt)
     lit = LineIterator(filename)
     try:
-        return IOData(**format_module.load_one(lit))
+        return IOData(**format_module.load_one(lit, **kwargs))
     except StopIteration:
         raise lit.error("File ended before all data was read.")
 
 
-def load_many(filename: str, fmt: str = None) -> Iterator[IOData]:
+def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
     """Load multiple IOData instances from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -121,6 +123,8 @@ def load_many(filename: str, fmt: str = None) -> Iterator[IOData]:
     fmt
         The name of the file format module to use. When not given, it is guessed
         from the filename.
+    **kwargs
+        Keyword arguments are passed on to the format-specific load_many function.
 
     Yields
     ------
@@ -130,14 +134,14 @@ def load_many(filename: str, fmt: str = None) -> Iterator[IOData]:
     """
     format_module = _select_format_module(filename, 'load_many', fmt)
     lit = LineIterator(filename)
-    for data in format_module.load_many(lit):
+    for data in format_module.load_many(lit, **kwargs):
         try:
             yield IOData(**data)
         except StopIteration:
             return
 
 
-def dump_one(iodata: IOData, filename: str, fmt: str = None):
+def dump_one(iodata: IOData, filename: str, fmt: str = None, **kwargs):
     """Write data to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -153,14 +157,16 @@ def dump_one(iodata: IOData, filename: str, fmt: str = None):
     fmt
         The name of the file format module to use. When not given, it is guessed
         from the filename.
+    **kwargs
+        Keyword arguments are passed on to the format-specific dump_one function.
 
     """
     format_module = _select_format_module(filename, 'dump_one', fmt)
     with open(filename, 'w') as f:
-        format_module.dump_one(f, iodata)
+        format_module.dump_one(f, iodata, **kwargs)
 
 
-def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None):
+def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None, **kwargs):
     """Write multiple IOData instances to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -175,8 +181,10 @@ def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None):
         The file to write the data to.
     fmt
         The name of the file format module to use.
+    **kwargs
+        Keyword arguments are passed on to the format-specific dump_many function.
 
     """
     format_module = _select_format_module(filename, 'dump_many', fmt)
     with open(filename, 'w') as f:
-        format_module.dump_many(f, iodatas)
+        format_module.dump_many(f, iodatas, **kwargs)

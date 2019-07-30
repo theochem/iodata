@@ -246,7 +246,7 @@ attribute:
 """
 
 @document_load_many("XYZ", ['atcoords', 'atgradient', 'atnums', 'atcorenums',
-                            'energy', 'extra', 'title'], [], LOAD_MANY_NOTES)
+                            'energy', 'extra', 'title'], [], {}, LOAD_MANY_NOTES)
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     fchk = _load_fchk_low(lit, [
