@@ -266,7 +266,7 @@ def test_conventions():
     assert (1, 'p') not in HORTON2_CONVENTIONS
     assert (1, 'p') not in PSI4_CONVENTIONS
     assert (1, 'p') not in GBASIS_CONVENTIONS
-    assert HORTON2_CONVENTIONS[(2, 'p')] == ['dc0', 'dc1', 'ds1', 'dc2', 'ds2']
-    assert PSI4_CONVENTIONS[(2, 'p')] == ['ds2', 'ds1', 'dc0', 'dc1', 'dc2']
-    assert HORTON2_CONVENTIONS[(3, 'p')] == ['fc0', 'fc1', 'fs1', 'fc2', 'fs2', 'fc3', 'fs3']
-    assert PSI4_CONVENTIONS[(3, 'p')] == ['fs3', 'fs2', 'fs1', 'fc0', 'fc1', 'fc2', 'fc3']
+    assert HORTON2_CONVENTIONS[(2, 'p')] == ['c0', 'c1', 's1', 'c2', 's2']
+    assert PSI4_CONVENTIONS[(2, 'p')] == ['s2', 's1', 'c0', 'c1', 'c2']
+    assert HORTON2_CONVENTIONS[(3, 'p')] == ['c0', 'c1', 's1', 'c2', 's2', 'c3', 's3']
+    assert PSI4_CONVENTIONS[(3, 'p')] == ['s3', 's2', 's1', 'c0', 'c1', 'c2', 'c3']
