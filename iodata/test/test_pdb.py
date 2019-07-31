@@ -65,8 +65,31 @@ def check_load_dump_consistency(tmpdir, fn):
 
 
 def test_load_dump_consistency(tmpdir):
-    with path('iodata.test.data', 'water.pdb') as fn_fchk:
-        check_load_dump_consistency(tmpdir, fn_fchk)
+    with path('iodata.test.data', 'water.pdb') as fn_pdb:
+        check_load_dump_consistency(tmpdir, fn_pdb)
+
+
+def check_load_dump_xyz_consistency(tmpdir, fn):
+    """Check if dumping PDB from an xyz file results in the same data."""
+    mol0 = load_one(str(fn))
+    # write xyz file in a temporary folder & then read it
+    fn_tmp = os.path.join(tmpdir, 'test.pdb')
+    dump_one(mol0, fn_tmp)
+    mol1 = load_one(fn_tmp)
+    # check two molecule classes to be the same
+    assert mol0.title == mol1.title
+    assert_equal(mol0.atnums, mol1.atnums)
+    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-2)
+    # check if the general restype and attype are correct
+    restypes = mol1.atffparams.get('restypes')
+    attypes = mol1.atffparams.get('attypes')
+    assert restypes[0] == "XXX"
+    assert attypes == ("H1", "O2", "H3")
+
+
+def test_load_dump_xyz_consistency(tmpdir):
+    with path('iodata.test.data', 'water.xyz') as fn_xyz:
+        check_load_dump_xyz_consistency(tmpdir, fn_xyz)
 
 
 def test_load_peptide():
@@ -78,7 +101,14 @@ def test_load_peptide():
 
 def check_peptide(mol):
     """Test some things on a peptide file."""
+    assert mol.title.startswith("INTEGRIN")
     assert_equal(len(mol.atnums), 547)
+    restypes = mol.atffparams.get('restypes')
+    assert restypes[0] == "LYS"
+    assert restypes[-1] == "LYS"
+    attypes = mol.atffparams.get('attypes')
+    assert attypes[0] == "N"
+    assert attypes[-1] == "O"
 
 
 def test_load_many():

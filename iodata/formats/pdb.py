@@ -18,7 +18,9 @@
 # --
 """PDB file format.
 
-There are different formats of pdb files.
+There are different formats of pdb files. The convention used here is the
+last updated one and is described in this link:
+http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html
 """
 
 
@@ -47,35 +49,30 @@ def load_one(lit: LineIterator) -> dict:
     attypes = []
     restypes = []
     molecule_found = False
+    title = "PDB file from Iodata"
     while True:
         try:
             line = next(lit)
         except StopIteration:
             break
+        # If the PDB file has a title replace it.
         if line.startswith("TITLE") or line.startswith("COMPND"):
-            words = line.split()
-            title = words[1:]
-        else:
-            title = "Pdb file from Iodata"
-        if line[0:4] == "ATOM" or line[0:6] == "HETATM":
-            try:
-                # Try reading element from position 77:79 referenced in pdb format
-                words = line[77:79].split()
-                if not words:
-                    # If not guess it from the atom type
-                    words = line[13:16].split()
-                symbol = words[0].title()
-                nums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
-            except ValueError:
-                # When the position 77:79 does not exist also use the atom type
-                symbol = line[13:16].title()
-                nums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
+            title = line[10:].rstrip()
+        if line.startswith("ATOM") or line.startswith("HETATM"):
+            # Try reading element from position 77:78 referenced in pdb format
+            # (76:78 due to python string slicing)
+            words = line[76:78].split()
+            if not words:
+                # If not guess it from the atom type
+                words = line[12:16].split()
+            symbol = words[0].title()
+            nums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
             x = float(line[30:38])
             y = float(line[38:46])
             z = float(line[46:54])
             coords.append([x, y, z])
-            attypes.append(line[13:16].strip())
-            restypes.append(line[18:20].strip())
+            attypes.append(line[12:16].strip())
+            restypes.append(line[17:20].strip())
             molecule_found = True
         if line[0:3] == "END" and molecule_found:
             atnums = np.array(nums)
@@ -98,7 +95,7 @@ def load_one(lit: LineIterator) -> dict:
 @document_load_many("PDB", ['atcoords', 'atnums', 'atffparams'], ['title'])
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
-    # PDB files with more molecules are a simple concatenation of individual MOL2 files,'
+    # PDB files with more molecules are a simple concatenation of individual PDB files,'
     # making it trivial to load many frames.
     while True:
         try:
@@ -110,9 +107,9 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
 @document_dump_one("PDB", ['atcoords', 'atnums'], ['atffparams', 'title'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    print(str("TITLE    " + data.title) or "TITLE    Created with IOdata", file=f)
-    attypes = data.atffparams.get('attypes')
-    restypes = data.atffparams.get('restypes')
+    print(str("TITLE     " + data.title) or "TITLE      Created with IOdata", file=f)
+    attypes = data.atffparams.get('attypes', None)
+    restypes = data.atffparams.get('restypes', None)
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         x, y, z = data.atcoords[i] / angstrom
