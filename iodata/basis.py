@@ -158,8 +158,10 @@ class MolecularBasis(NamedTuple):
                 ### Conventions for pure functions.
                 # The notation is referring to real solid spherical harmonics.
                 # See https://en.wikipedia.org/wiki/Solid_harmonics#Real_form
-                # c = cosine of the azimuthal angle
-                # s = sine of the azimuthal angle
+                # 'c{m}' = solid harmonic containing cos(m phi)
+                # 's{m}' = solid harmonic containing sin(m phi)
+                # where m is the magnetic quantum number and phi is the
+                # azimuthal angle.
                 # For example, wikipedia-ordered real spherical harmonics,
                 # see https://en.wikipedia.org/wiki/Spherical_harmonics#Real_form
                 (2, 'p'): ['s2', 's1', 'c0', 'c1', 'c2'],
@@ -167,7 +169,8 @@ class MolecularBasis(NamedTuple):
                 # orderings and sign conventions. E.g. Molden files written
                 # by Orca use the following convention for pure f functions:
                 (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
-                # Note the sign change of the last two basis functions.
+                # Note that the minus sign in the last two basis functions
+                # denotes that the signs of these harmonics have been changed.
             }
 
         The basis function strings in the conventions dictionary are documented
