@@ -77,8 +77,8 @@ def load_one(lit: LineIterator) -> dict:
         if line[0:3] == "END" and molecule_found:
             atnums = np.array(nums)
             atcoords = np.array(coords) * angstrom
-            attypes = tuple(attypes)
-            restypes = tuple(restypes)
+            attypes = np.array(attypes)
+            restypes = np.array(restypes)
             atffparams = {"attypes": attypes, "restypes": restypes}
             result = {
                 'atcoords': atcoords,

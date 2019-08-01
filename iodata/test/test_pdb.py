@@ -84,7 +84,7 @@ def check_load_dump_xyz_consistency(tmpdir, fn):
     restypes = mol1.atffparams.get('restypes')
     attypes = mol1.atffparams.get('attypes')
     assert restypes[0] == "XXX"
-    assert attypes == ("H1", "O2", "H3")
+    assert attypes[0] == "H1"
 
 
 def test_load_dump_xyz_consistency(tmpdir):
