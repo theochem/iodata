@@ -379,11 +379,11 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
     orca_conventions = {
         (0, 'c'): ['1'],
         (1, 'c'): ['x', 'y', 'z'],
-        (2, 'p'): ['dc0', 'dc1', 'ds1', 'dc2', 'ds2'],
+        (2, 'p'): ['c0', 'c1', 's1', 'c2', 's2'],
         (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-        (3, 'p'): ['fc0', 'fc1', 'fs1', 'fc2', 'fs2', '-fc3', '-fs3'],
+        (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
         (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-        (4, 'p'): ['gc0', 'gc1', 'gs1', 'gc2', 'gs2', '-gc3', '-gs3', '-gc4', '-gs4'],
+        (4, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4'],
         (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
                    'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
     }
