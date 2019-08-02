@@ -153,7 +153,7 @@ regular solid harmonics into the real forms, one obtains:
         P_\ell^m(\cos{\theta}) \,
         \cos(m \phi)
         \quad m = 1\ldots \ell \\
-    S_{\ell m}(r,\theta,\phi) & = 
+    S_{\ell m}(r,\theta,\phi) & =
         \sqrt{\frac{2(\ell-m)!}{(\ell+m)!}} \,
         r^\ell \,
         P_\ell^m(\cos{\theta}) \,
@@ -205,7 +205,7 @@ is a dictionary,
 * whose keys are tuples denoting a shell type ``(angmom, char)`` where
   ``angmom`` is a positive integer denoting the angular momentum and ``char`` is
   either ``'c'`` or ``'p'`` for Cartesian are pure, respectively
-  
+
 * and whose values are lists of `basis function strings`, where each string
   denotes one basis function.
 
