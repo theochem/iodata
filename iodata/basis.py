@@ -174,7 +174,7 @@ class MolecularBasis(NamedTuple):
             }
 
         The basis function strings in the conventions dictionary are documented
-        here: TODO.
+        in :ref:`basis_conventions`.
 
     primitive_normalization
         Either 'L1' or 'L2'.
