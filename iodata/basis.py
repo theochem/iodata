@@ -26,8 +26,7 @@ import numpy as np
 
 __all__ = ['angmom_sti', 'angmom_its', 'Shell', 'MolecularBasis',
            'convert_convention_shell', 'convert_conventions',
-           'iter_cart_alphabet', 'HORTON2_CONVENTIONS', 'PSI4_CONVENTIONS',
-           'GBASIS_CONVENTIONS']
+           'iter_cart_alphabet', 'HORTON2_CONVENTIONS', 'PSI4_CONVENTIONS']
 
 ANGMOM_CHARS = 'spdfghiklmnoqrtuvwxyzabce'
 
@@ -338,14 +337,12 @@ def get_default_conventions():
     """
     horton2 = {(0, 'c'): ['1']}
     psi4 = horton2.copy()
-    gbasis = horton2.copy()
     for angmom in range(1, 25):
         conv_cart = list('x' * nx + 'y' * ny + 'z' * nz
                          for nx, ny, nz in iter_cart_alphabet(angmom))
         key = (angmom, 'c')
         horton2[key] = conv_cart
         psi4[key] = conv_cart
-        gbasis[key] = conv_cart[::-1]
         if angmom > 1:
             conv_pure = ['c0']
             for absm in range(1, angmom + 1):
@@ -354,8 +351,7 @@ def get_default_conventions():
             key = (angmom, 'p')
             horton2[key] = conv_pure
             psi4[key] = conv_pure[:1:-2] + conv_pure[:1] + conv_pure[1::2]
-            gbasis[key] = psi4[key]
-    return horton2, psi4, gbasis
+    return horton2, psi4
 
 
-HORTON2_CONVENTIONS, PSI4_CONVENTIONS, GBASIS_CONVENTIONS = get_default_conventions()
+HORTON2_CONVENTIONS, PSI4_CONVENTIONS = get_default_conventions()
