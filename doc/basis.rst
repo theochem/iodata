@@ -196,11 +196,11 @@ The ``conventions`` attribute
 =============================
 
 
-Not all file formats supported by IOData use the same ordering basis functions
-within one *shell*. Also the sign conventions may differ from the definitions
-given above. The ``conventions`` attribute of :py:class:`iodata.basis.MolecularBasis`
-specifies the ordering and sign flips relative to the above definitions. It
-is a dictionary,
+Different file formats supported by IOData have an incompatible ordering of
+basis functions within one *shell*. Also the sign conventions may differ from
+the definitions given above. The ``conventions`` attribute of
+:py:class:`iodata.basis.MolecularBasis` specifies the ordering and sign flips
+relative to the above definitions. It is a dictionary,
 
 * whose keys are tuples denoting a shell type ``(angmom, char)`` where
   ``angmom`` is a positive integer denoting the angular momentum and ``char`` is
@@ -221,19 +221,34 @@ pure polynomials defined above.
   angular momentum quantum number is not included because it is implied by the
   key in the ``conventions`` dictionary.
 
-Each of basis function string can be prefixed with a minus sign, to denote a
+Each basis function string can be prefixed with a minus sign, to denote a
 sign flip with respect to the definitions on this page. The order of the string
 in the list defines the order of the corresponding basis functions within one
 shell.
+
+For example, pure and Cartesian s, p and d functions in Gaussian FCHK files
+adhere to the following convention:
+
+.. code-block:: python
+
+    conventions = {
+        (0, 'c'): ['1'],
+        (1, 'c'): ['x', 'y', 'z'],
+        (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
+        (2, 'p'): ['c0', 'c1', 's1', 'c2', 's2'],
+    }
+
+(Pure s and p functions are never used in a Gaussian FCHK file.)
 
 
 Notes on other conventions
 ==========================
 
-In IOData, negative angular quantum numbers are never used to label pure
-functions, to avoid confusion. The following is the most common convention used
-in the literature (e.g. in the book *Molecular Electronic-Structure Theory* by
-Helgaker, Jørgensen and Olsen):
+To avoid confusion, negative magnetic quantum numbers are never used to label
+pure functions in IOData. The basis strings contain `'c'` and `'s'` instead. In
+the literature, e.g. in the book *Molecular Electronic-Structure Theory* by
+Helgaker, Jørgensen and Olsen, negative magnetic quantum numbers for pure
+functions are usually referring to sine-like functions:
 
 .. math::
     R_{\ell, m} &= C_{\ell m} \quad m = 0 \ldots \ell \\
