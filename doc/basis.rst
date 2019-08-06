@@ -95,8 +95,8 @@ In practice one combines all basis functions of a given angular momentum (or
 algebraic order) into one *shell*. A basis specification typically only mentions
 the total angular momentum, and it is assumed that all polynomials of that order
 are included in the basis set. The number of basis functions, i.e. the number of
-polynomials, for a given angular momentum, :math:`n=n_x+n_y+n_z`, is
-:math:`(n+1)(n+2)/2`.
+polynomials, for a given angular momentum, :math:`\ell=n_x+n_y+n_z`, is
+:math:`(\ell+1)(\ell+2)/2`.
 
 
 Pure or harmonic basis functions
@@ -161,10 +161,10 @@ regular solid harmonics into the real forms, one obtains:
         \quad m = 1\ldots \ell \\
 
 These expressions show that cosine-like functions contain a factor :math:`\cos(m
-\phi)`, and similarly the sine-like contain a factor :math:`\sin(m \phi)`.
-The factor :math:`r^\ell` causes real regular solid harmonics to be homogeneous
-Cartesian polynomials, i.e. linear combinations of the Cartesian polynomials
-defined in the previous subsection.
+\phi)`, and similarly the sine-like functions contain a factor
+:math:`\sin(m \phi)`. The factor :math:`r^\ell` causes real regular solid
+harmonics to be homogeneous Cartesian polynomials, i.e. linear combinations of
+the Cartesian polynomials defined in the previous subsection.
 
 Real regular solid harmonics are used because the pure s- and p-type functions
 are consistent with their Cartesian counterparts:
