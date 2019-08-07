@@ -46,6 +46,7 @@ User Documentation
    install
    getting_started
    formats
+   basis
    changelog
 
 Developer Documentation
