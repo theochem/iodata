@@ -49,7 +49,7 @@ def load_one(lit: LineIterator) -> dict:
     attypes = []
     restypes = []
     molecule_found = False
-    title = "PDB file from Iodata"
+    title = "PDB file from IOData"
     while True:
         try:
             line = next(lit)
@@ -74,7 +74,7 @@ def load_one(lit: LineIterator) -> dict:
             attypes.append(line[12:16].strip())
             restypes.append(line[17:20].strip())
             molecule_found = True
-        if line[0:3] == "END" and molecule_found:
+        if line.startswith("END") and molecule_found:
             atnums = np.array(nums)
             atcoords = np.array(coords) * angstrom
             attypes = np.array(attypes)
@@ -107,7 +107,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
 @document_dump_one("PDB", ['atcoords', 'atnums'], ['atffparams', 'title'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    print(str("TITLE     " + data.title) or "TITLE      Created with IOdata", file=f)
+    print(str("TITLE     " + data.title) or "TITLE      Created with IOData", file=f)
     attypes = data.atffparams.get('attypes', None)
     restypes = data.atffparams.get('restypes', None)
     for i in range(data.natom):
