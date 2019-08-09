@@ -18,14 +18,17 @@
 # --
 """Test iodata.formats.wfn module."""
 
-import pytest
 
+import pytest
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one
 from ..formats.wfx import load_data_wfx, parse_wfx
+from ..overlap import compute_overlap
 from ..utils import LineIterator
+
+from .common import check_orthonormal
 
 try:
     from importlib_resources import path
@@ -248,7 +251,7 @@ def test_load_wfx_low_missing_tag_h2o():
     with pytest.raises(IOError) as error:
         lit = LineIterator('iodata/test/data/h2o_error.wfx')
         load_data_wfx(lit)
-    assert str(error.value) == "The <Title> section is missing!"
+    assert str(error.value).endswith("The <Title> section is missing.")
 
 
 def test_parse_wfx_h2o():
@@ -262,53 +265,72 @@ def test_wfx_load_one_h2o():
     """Test load_one with h2o sto-3g WFX input."""
     with path('iodata.test.data', 'water_sto3g_hf.wfx') as file_wfx:
         mol = load_one(str(file_wfx))
-    assert mol.title == 'H2O HF/STO-3G//HF/STO-3G'
     assert_allclose(mol.atcoords,
                     np.array([[0.00000000e+00, 0.00000000e+00, 2.40242907e-01],
                               [0.00000000e+00, 1.43244242e+00, -9.60971627e-01],
                               [-1.75417809e-16, -1.43244242e+00, -9.60971627e-01]]),
                     rtol=0., atol=1.e-6)
-    assert_equal(mol.atnums, np.array([8, 1, 1]))
-    assert_equal(mol.mo.coeffs.shape, (21, 5))
-    assert_equal(mol.obasis.nbasis, 21)
-    assert mol.obasis.primitive_normalization == 'L2'
-    assert_allclose([shell.exponents[0] for shell in mol.obasis.shells[:5]],
-                    [130.709321, 23.8088661, 6.44360831, 5.03315132, 1.16959612])
-    assert mol.obasis_name is None
-    assert_allclose(mol.mo.coeffs[:3],
-                    np.array([[4.22735026, -0.99393403, 0., -0.44237495, 0.],
-                              [4.08850915, -0.96128972, 0., -0.42784579, 0.],
-                              [1.27420972, -0.29959202, 0., -0.13334084, 0.]]),
-                    rtol=0, atol=1.e-6)
-    # assert_allclose(mol.mo.energies,
-    #                 np.array([-20.2515479, -1.25760928,
-    #                           -0.59394112, -0.45972872,
-    #                           -0.39261846]), rtol=0, atol=1.e-6)
-    assert_equal(mol.mo.occs, np.array([2., 2., 2., 2., 2.]))
-    assert_equal(mol.mo.occsa, np.array([1., 1., 1., 1., 1.]))
-    assert_equal(mol.mo.spinpol, 0.)
-    assert_equal(mol.mo.nbasis, 21)
-    assert_allclose(mol.energy, -74.965901170787, rtol=0, atol=1.e-6)
     assert_allclose(mol.atgradient,
                     np.array([[6.09070231e-16, -5.55187875e-16, -2.29270172e-04],
                               [-2.46849911e-16, -1.18355659e-04, 1.14635086e-04],
                               [-3.62220320e-16, 1.18355659e-04, 1.14635086e-04]]),
                     rtol=0, atol=1.e-6)
+    assert_equal(mol.atnums, np.array([8, 1, 1]))
+    assert_equal(mol.mo.coeffs.shape, (21, 5))
+    assert_allclose(mol.energy, -74.965901170787, rtol=0, atol=1.e-6)
     assert mol.extra['keywords'] == 'GTO'
     assert mol.extra['virial_ratio'] == 2.00599838291596
+    assert mol.mo.kind == "restricted"
+    assert_allclose(mol.mo.coeffs[:3],
+                    np.array([[4.22735026, -0.99393403, 0., -0.44237495, 0.],
+                              [4.08850915, -0.96128972, 0., -0.42784579, 0.],
+                              [1.27420972, -0.29959202, 0., -0.13334084, 0.]]),
+                    rtol=0, atol=1.e-6)
+    assert_allclose(mol.mo.energies,
+                    np.array([-20.2515479, -1.25760928,
+                              -0.59394112, -0.45972872,
+                              -0.39261846]), rtol=0, atol=1.e-6)
+    assert_equal(mol.mo.occs, np.array([2., 2., 2., 2., 2.]))
+    assert_equal(mol.mo.occsa, np.array([1., 1., 1., 1., 1.]))
+    assert_equal(mol.mo.spinpol, 0.)
+    assert_equal(mol.mo.nbasis, 21)
+    assert_equal(mol.obasis.nbasis, 21)
+    assert mol.obasis.primitive_normalization == 'L2'
+    assert [shell.icenter for shell in mol.obasis.shells] == [0] * 9 + [1] * 3 + [2] * 3
+    assert [shell.kinds for shell in mol.obasis.shells] == [['c']] * 15
+    assert_allclose([shell.exponents for shell in mol.obasis.shells[:6]],
+                    [[130.709321], [23.8088661], [6.44360831], [5.03315132],
+                     [1.16959612], [0.38038896]])
+    assert_allclose([shell.exponents for shell in mol.obasis.shells[6:9]],
+                    [[5.03315132], [1.16959612], [0.38038896]])
+    assert_allclose([shell.exponents for shell in mol.obasis.shells[9:15]],
+                    [[3.42525091], [0.62391373], [0.168855404],
+                     [3.42525091], [0.62391373], [0.168855404]])
+    assert_allclose([shell.coeffs for shell in mol.obasis.shells], [[[1]]] * 15)
+    assert mol.obasis_name is None
+    assert mol.title == 'H2O HF/STO-3G//HF/STO-3G'
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1.e-5)
 
 
 def test_wfx_load_one_h2():
     """Test load_one with h2 ub3lyp_ccpvtz WFX input."""
     with path('iodata.test.data', 'h2_ub3lyp_ccpvtz.wfx') as file_wfx:
         mol = load_one(str(file_wfx))
-    assert mol.title == 'h2 ub3lyp/cc-pvtz opt-stable-freq'
-    assert_equal(mol.mo.coeffs.shape, (34, 56))
+    assert_allclose(mol.atcoords,
+                    np.array([[0.0, 0.0, 0.7019452462164],
+                              [0.0, 0.0, -0.7019452462164]]),
+                    rtol=0, atol=1.e-6)
+    assert_allclose(mol.atgradient,
+                    np.array([[9.74438416e-17, -2.08884441e-16, -7.18565768e-09],
+                              [-9.74438416e-17, 2.08884441e-16, 7.18565768e-09]]),
+                    rtol=0, atol=1.e-6)
     assert_equal(mol.atnums, np.array([1, 1]))
-    assert_equal(mol.obasis.nbasis, 34)
-    assert mol.obasis.primitive_normalization == 'L2'
-    assert_allclose([shell.exponents[0] for shell in mol.obasis.shells[:5]],
-                    [33.87, 5.095, 1.159, 0.3258, 0.1027])
+    assert_allclose(mol.energy, -1.179998789924, rtol=0, atol=1.e-6)
+    assert mol.extra['keywords'] == 'GTO'
+    assert mol.extra['num_perturbations'] == 0
+    assert_equal(mol.mo.coeffs.shape, (34, 56))
     assert_allclose(mol.mo.coeffs[2],
                     np.array([1.34421139e-01, 6.11933065e-02, -5.61205198e-02, -1.02987252e-01,
                               -1.98016939e-15, -1.66018616e-16, 3.26300326e-03, -1.52111861e-15,
@@ -332,37 +354,18 @@ def test_wfx_load_one_h2():
     assert_equal(mol.mo.occsa.sum(), 1)
     assert_equal(mol.mo.spinpol, 0.)
     assert_equal(mol.mo.nbasis, 34)
-    assert_allclose(mol.energy, -1.179998789924, rtol=0, atol=1.e-6)
-    assert_allclose(mol.atgradient,
-                    np.array([[9.74438416e-17, -2.08884441e-16, -7.18565768e-09],
-                              [-9.74438416e-17, 2.08884441e-16, 7.18565768e-09]]),
-                    rtol=0, atol=1.e-6)
-    assert mol.extra['keywords'] == 'GTO'
-    assert mol.extra['num_perturbations'] == 0
-
-# def check_wfx(fn_wfn, nbasis, energy, charges_mulliken):
-#     """Check that MO are orthonormal & energy and charges match expected values."""
-#     # load file
-#     with path('iodata.test.data', fn_wfn) as file_wfn:
-#         mol = load_one(str(file_wfn))
-#     # check number of basis functions
-#     assert mol.obasis.nbasis == nbasis
-#     # check orthonormal mo
-#     olp = compute_overlap(mol.obasis, mol.atcoords)
-#     check_orthonormal(mol.mo.coeffsa, olp, 1.e-5)
-#     if mol.mo.kind == 'unrestricted':
-#         check_orthonormal(mol.mo.coeffsb, olp, 1.e-5)
-#     # check energy & atomic charges
-#     if energy is not None:
-#         assert_allclose(mol.energy, energy, rtol=0., atol=1.e-5)
-#     if charges_mulliken is not None:
-#         charges = compute_mulliken_charges(mol)
-#         assert_allclose(charges_mulliken, charges, rtol=0., atol=1.e-5)
-#     return mol
-#
-#
-# def test_load_wfn_h2o_sto3g():
-#     """Test load_one() for wfx format."""
-#     mol = check_wfx(fn_wfn='water_sto3g_hf.wfx', nbasis=21,
-#                     energy=-74.949659011707870, charges_mulliken=)
-#
+    assert mol.mo.kind == "unrestricted"
+    assert_equal(mol.obasis.nbasis, 34)
+    assert mol.obasis.primitive_normalization == 'L2'
+    assert [shell.icenter for shell in mol.obasis.shells] == [0] * 8 + [1] * 8
+    assert [shell.kinds for shell in mol.obasis.shells] == [['c']] * 16
+    assert_allclose([shell.exponents for shell in mol.obasis.shells],
+                    2 * [[33.87], [5.095], [1.159], [0.3258], [0.1027], [1.407], [0.388], [1.057]])
+    assert_allclose([shell.coeffs for shell in mol.obasis.shells], [[[1]]] * 16)
+    assert mol.obasis_name is None
+    assert mol.title == 'h2 ub3lyp/cc-pvtz opt-stable-freq'
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1.e-5)
+    if mol.mo.kind == 'unrestricted':
+        check_orthonormal(mol.mo.coeffsb, olp, 1.e-5)

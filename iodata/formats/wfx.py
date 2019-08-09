@@ -16,20 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""AIM/AIMAll WFX file format."""
+"""AIM/AIMAll WFX file format.
 
-from typing import Tuple
+See http://aim.tkgristmill.com/wfxformat.html
+"""
 
 import warnings
 
 import numpy as np
 
-from ..basis import MolecularBasis, Shell
 from ..utils import LineIterator
-# from ..docstrings import document_load_one
-from ..overlap import gob_cart_normalization
+from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
-from ..formats.wfn import CONVENTIONS, PRIMITIVE_NAMES
+
+from .wfn import build_obasis, get_mocoeff_scales
+
 
 __all__ = []
 
@@ -83,8 +84,10 @@ def load_data_wfx(lit: LineIterator) -> dict:
     }
 
     # list of required section tags
-    required_tags = list(labels_str.keys()) + list(labels_int.keys()) + list(labels_float)
-    required_tags += list(labels_array_int) + list(labels_array_float) + list(labels_other)
+    required_tags = (
+        list(labels_str) + list(labels_int) + list(labels_float)
+        + list(labels_array_int) + list(labels_array_float) + list(labels_other)
+    )
     required_tags.remove('<Model>')
     required_tags.remove('<Number of Core Electrons>')
     required_tags.remove('<Electronic Spin Multiplicity>')
@@ -134,9 +137,9 @@ def load_data_wfx(lit: LineIterator) -> dict:
     # check number of perturbations
     perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
     if result['num_perturbations'] != perturbation_check[result['keywords']]:
-        raise ValueError("Number of perturbations is not equal to 0, 3 or 6.")
+        lit.error("Number of perturbations is not equal to 0, 3 or 6.")
     if result['keywords'] not in ['GTO', 'GIAO', 'CGST']:
-        raise ValueError("The keywords should be one out of GTO, GIAO and CGST.")
+        lit.error("The keywords should be one out of GTO, GIAO and CGST.")
     return result
 
 
@@ -166,14 +169,14 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
                 line = next(lit).strip()
 
         # read rest of the sections; this skips sections without a closing tag
-        if line.startswith("<") and not line.startswith("</"):
-            section = []
-            section_start = line
-            section_end = line[:1] + "/" + line[1:]
-        elif line.startswith("</"):
+        if line.startswith("</"):
             if line != section_end:
                 lit.error("Expected line {0} but got {1}".format(section_end, line))
             data[section_start] = section
+        elif line.startswith("<"):
+            section = []
+            section_start = line
+            section_end = line[:1] + "/" + line[1:]
         else:
             section.append(line)
 
@@ -181,133 +184,31 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
     if required_tags is not None:
         for section_tag in required_tags:
             if section_tag not in data.keys():
-                raise IOError(f'The {section_tag} section is missing!')
+                lit.error(f'The {section_tag} section is missing.')
     return data
 
 
-# pylint: disable=too-many-branches
-def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
-                 exponents: np.ndarray) -> Tuple[MolecularBasis, np.ndarray]:
-    """Construct a basis set using the arrays read from a WFX file.
-
-    Parameters
-    ----------
-    icenters
-        The center indices for all basis functions. shape=(nbasis,). Lowest
-        index is zero.
-    type_assignments
-        Integer codes for basis function names. shape=(nbasis,). Lowest index
-        is zero.
-    exponents
-        The Gaussian exponents of all basis functions. shape=(nbasis,)
-
-    """
-    # Build the basis set, keeping track of permutations in case there are
-    # deviations from the default ordering of primitives in a WFN file.
-    shells = []
-    ibasis = 0
-    nbasis = len(icenters)
-    permutation = np.zeros(nbasis, dtype=int)
-    # Loop over all (batches of primitive) basis functions and extract shells.
-    while ibasis < nbasis:
-        # Determine the angular moment of the shell
-        type_assignment = type_assignments[ibasis]
-        if type_assignment == 0:
-            angmom = 0
-        else:
-            # multiple different type assignments (codes for individual basis
-            # functions) can match one angular momentum.
-            angmom = len(PRIMITIVE_NAMES[type_assignments[ibasis]])
-        # The number of cartesian functions for the current angular momentum
-        ncart = len(CONVENTIONS[(angmom, 'c')])
-        # Determine how many shells are to be read in one batch. E.g. for a
-        # contracted p shell, the WFN format contains first all px basis
-        # functions, the all py, finally all pz. These need to be regrouped into
-        # shells.
-        # This pattern can almost be used to reverse-engineer contractions.
-        # One should also check (i) if the corresponding mo-coefficients are the
-        # same (after fixing them for normalization) and (ii) if the functions
-        # are centered on the same atom.
-        # For now, this implementation makes no attempt to reverse-engineer
-        # contractions, but it can be done.
-        ncon = 1  # the contraction length
-        if angmom > 0:
-            # batches for s-type functions are not necessary and may result in
-            # multiple centers being pulled into one batch.
-            while (ibasis + ncon < len(type_assignments)
-                   and type_assignments[ibasis + ncon] == type_assignment):
-                ncon += 1
-        # Check if the type assignment is consistent for remaining basis
-        # functions in this batch.
-        for ifn in range(ncart):
-            if not (type_assignments[ibasis + ncon * ifn: ibasis + ncon * (ifn + 1)]
-                    == type_assignments[ibasis + ncon * ifn]).all():
-                IOError("Inconcsistent type assignments in current batch of shells.")
-        # Check if all basis functions in the current batch sit on
-        # the same center. If not, IOData cannot read this file.
-        icenter = icenters[ibasis]
-        if not (icenters[ibasis: ibasis + ncon * ncart] == icenter).all():
-            IOError("Incomplete shells in WFN file not supported by IOData.")
-        # Check if the same exponent is used for corresponding basis functions.
-        batch_exponents = exponents[ibasis: ibasis + ncon]
-        for ifn in range(ncart):
-            if not (exponents[ibasis + ncon * ifn: ibasis + ncon * (ifn + 1)]
-                    == batch_exponents).all():
-                IOError("Exponents must be the same for corresponding basis functions.")
-        # A permutation is needed because we need to regroup basis functions
-        # into shells.
-        batch_primitive_names = [
-            PRIMITIVE_NAMES[type_assignments[ibasis + ifn * ncon]]
-            for ifn in range(ncart)]
-        for irep in range(ncon):
-            for i, primitive_name in enumerate(batch_primitive_names):
-                ifn = CONVENTIONS[(angmom, 'c')].index(primitive_name)
-                permutation[ibasis + irep * ncart + ifn] = ibasis + irep + i * ncon
-        # WFN uses non-normalized primitives, which will be corrected for
-        # when processing the MO coefficients. Normalized primitives will
-        # be used here. No attempt is made here to reconstruct the contraction.
-        for exponent in batch_exponents:
-            shells.append(Shell(icenter, [angmom], ['c'], np.array([exponent]),
-                                np.array([[1.0]])))
-        # Move on to the next contraction
-        ibasis += ncart * ncon
-    obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
-    assert obasis.nbasis == nbasis
-    return obasis, permutation
-
-
+@document_load_one("WFX", ['atcoords', 'atgradient', 'atnums', 'energy',
+                           'exrtra', 'mo', 'obasis', 'title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     data = load_data_wfx(lit)
-
     # Build the basis set and the permutation needed to regroup shells.
-    obasis, permutation = build_obasis(data['centers'], data['types'] - 1, data['exponents'])
+    obasis, permutation = build_obasis(
+        data['centers'] - 1, data['types'] - 1, data['exponents'], lit)
     # Re-order the mo coefficients.
     mo_coefficients = data['mo_coeff'][permutation]
-    # Get the normalization of the un-normalized Cartesian basis functions.
-    # Use these to rescale the mo_coefficients.
-    scales = []
-    for shell in obasis.shells:
-        angmom = shell.angmoms[0]
-        for name in obasis.conventions[(angmom, 'c')]:
-            if name == '1':
-                nx, ny, nz = 0, 0, 0
-            else:
-                nx = name.count('x')
-                ny = name.count('y')
-                nz = name.count('z')
-            scales.append(gob_cart_normalization(shell.exponents[0], np.array([nx, ny, nz])))
-    scales = np.array(scales)
-    mo_coefficients /= scales.reshape(-1, 1)
-    mo_count = np.arange(data['mo_coeff'].shape[1])
-    norb = mo_coefficients.shape[1]
+    # Fix normalization
+    mo_coefficients /= get_mocoeff_scales(obasis).reshape(-1, 1)
     # make the wavefunction
+    norb = mo_coefficients.shape[1]
     if data['mo_occ'].max() > 1.0:
         # closed-shell system
         mo = MolecularOrbitals(
             'restricted', norb, norb,
             data['mo_occ'], data['mo_coeff'], data['mo_energy'], None)
     else:
+        mo_count = np.arange(data['mo_coeff'].shape[1])
         # open-shell system
         # counting the number of alpha orbitals
         norba = 1
@@ -318,19 +219,18 @@ def load_one(lit: LineIterator) -> dict:
         mo = MolecularOrbitals(
             'unrestricted', norba, norb - norba,
             data['mo_occ'], data['mo_coeff'], data['mo_energy'], None)
+    # Store WFX-specific data
+    extra_labels = ['keywords', 'model_name', 'num_perturbations', 'num_core_electrons',
+                    'spin_multi', 'virial_ratio', 'nuc_viral', 'full_virial_ratio', 'mo_spin']
+    extra = {label: data.get(label, None) for label in extra_labels}
 
-    extra_items = ['keywords', 'model_name', 'num_perturbations', 'num_core_electrons',
-                   'spin_multi', 'virial_ratio', 'nuc_viral', 'full_virial_ratio', 'mo_spin']
-    extra = {item: data.setdefault(item, None) for item in extra_items}
-
-    result = {
-        'title': data['title'],
+    return {
         'atcoords': data['atcoords'],
-        'atnums': data['atnums'],
-        'obasis': obasis,
-        'mo': mo,
-        'energy': data['energy'],
         'atgradient': data['atgradient'],
+        'atnums': data['atnums'],
+        'energy': data['energy'],
         'extra': extra,
+        'mo': mo,
+        'obasis': obasis,
+        'title': data['title'],
     }
-    return result

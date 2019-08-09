@@ -210,7 +210,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
 # pylint: disable=too-many-branches
 def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
                  exponents: np.ndarray, lit: LineIterator) -> Tuple[MolecularBasis, np.ndarray]:
-    """Construct a basis set using the arrays read from a WFN file.
+    """Construct a basis set using the arrays read from a WFN or WFX file.
 
     Parameters
     ----------
@@ -298,17 +298,21 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
     return obasis, permutation
 
 
-@document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title'])
-def load_one(lit: LineIterator) -> dict:
-    """Do not edit this docstring. It will be overwritten."""
-    (title, atnums, atcoords, icenters, type_assignments, exponents,
-     mo_count, mo_occ, mo_energy, mo_coefficients, energy) = load_wfn_low(lit)
-    # Build the basis set and the permutation needed to regroup shells.
-    obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
-    # Re-order the mo coefficients.
-    mo_coefficients = mo_coefficients[permutation]
-    # Get the normalization of the un-normalized Cartesian basis functions.
-    # Use these to rescale the mo_coefficients.
+def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
+    """Get the normalization of the un-normalized Cartesian basis functions.
+
+    Parameters
+    ----------
+    obasis
+        The molecular orbital basis.
+
+    Returns
+    -------
+    scales
+        Scaling factors to be multiplied into the molecular orbital
+        coefficients.
+
+    """
     scales = []
     for shell in obasis.shells:
         angmom = shell.angmoms[0]
@@ -320,8 +324,20 @@ def load_one(lit: LineIterator) -> dict:
                 ny = name.count('y')
                 nz = name.count('z')
             scales.append(gob_cart_normalization(shell.exponents[0], np.array([nx, ny, nz])))
-    scales = np.array(scales)
-    mo_coefficients /= scales.reshape(-1, 1)
+    return np.array(scales)
+
+
+@document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title'])
+def load_one(lit: LineIterator) -> dict:
+    """Do not edit this docstring. It will be overwritten."""
+    (title, atnums, atcoords, icenters, type_assignments, exponents,
+     mo_count, mo_occ, mo_energy, mo_coefficients, energy) = load_wfn_low(lit)
+    # Build the basis set and the permutation needed to regroup shells.
+    obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
+    # Re-order the mo coefficients.
+    mo_coefficients = mo_coefficients[permutation]
+    # Fix normalization
+    mo_coefficients /= get_mocoeff_scales(obasis).reshape(-1, 1)
     norb = mo_coefficients.shape[1]
     # make the wavefunction
     if mo_occ.max() > 1.0:
