@@ -1,5 +1,6 @@
 project:
   name: iodata
+  conda_requirements: [sympy]
   packages:
     - conda_name: iodata
       tools:
