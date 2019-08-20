@@ -327,8 +327,35 @@ def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
     return np.array(scales)
 
 
-def build_mo(mo_coefficients, mo_occs, mo_energies, mo_numbers, obasis, permutation):
-    """Construct the molecular orbitals."""
+def build_mo(mo_coefficients: np.ndarray, mo_occs: np.ndarray,
+             mo_energies: np.ndarray, mo_numbers: np.ndarray,
+             obasis: MolecularBasis, permutation: np.ndarray) -> MolecularOrbitals:
+    """Construct the molecular orbitals from WFN or WFX data.
+
+    Parameters
+    ----------
+    mo_coefficients
+        The molecular orbital coefficients, as they are read from the WFN or
+        WFX file. These will be reordered and rescaled to match IOData
+        conventions.
+    mo_occs
+        The occupation numbers of the molecular orbitals.
+    mo_energies
+        The orbital energies.
+    mo_numbers
+        An index for the molecular orbitals.
+    obasis
+        The orbital basis.
+    permutation
+        The permutation of mo coefficients, derived when creating the orbital
+        basis.
+
+    Returns
+    -------
+    mo
+        The molecular orbitals.
+
+    """
     # Re-order the mo coefficients.
     mo_coefficients = mo_coefficients[permutation]
     # Fix normalization
