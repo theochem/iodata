@@ -28,7 +28,7 @@ from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
 from ..utils import LineIterator
 
-from .common import check_orthonormal
+from .common import check_orthonormal, truncated_file
 
 try:
     from importlib_resources import path
@@ -36,16 +36,16 @@ except ImportError:
     from importlib.resources import path
 
 
-def helper_load_wfx_low(fn_wfx):
-    """Load a testing WFX file with iodata.formats.wfx.load_wfx_low."""
+def helper_load_data_wfx(fn_wfx):
+    """Load a testing WFX file with iodata.formats.wfx.load_data_wfx."""
     with path('iodata.test.data', fn_wfx) as fx:
         lit = LineIterator(str(fx))
         return load_data_wfx(lit)
 
 
-def test_load_wfx_data_h2():
-    """Test load_wfx_low with h2_ub3lyp_ccpvtz.wfx."""
-    data = helper_load_wfx_low('h2_ub3lyp_ccpvtz.wfx')
+def test_load_data_wfx_h2():
+    """Test load_data_wfx with h2_ub3lyp_ccpvtz.wfx."""
+    data = helper_load_data_wfx('h2_ub3lyp_ccpvtz.wfx')
     # check loaded data
     assert data['title'] == 'h2 ub3lyp/cc-pvtz opt-stable-freq'
     assert data['keywords'] == 'GTO'
@@ -165,9 +165,9 @@ def test_load_wfx_data_h2():
     assert np.allclose(data['mo_coeff'][26, 36], -5.700424557682e-01)
 
 
-def test_load_wfx_data_water():
-    """Test load_wfx_low with water_sto3g_hf.wfx."""
-    data = helper_load_wfx_low('water_sto3g_hf.wfx')
+def test_load_data_wfx_water():
+    """Test load_data_wfx with water_sto3g_hf.wfx."""
+    data = helper_load_data_wfx('water_sto3g_hf.wfx')
     # check loaded data
     assert data['title'] == 'H2O HF/STO-3G//HF/STO-3G'
     assert data['keywords'] == 'GTO'
@@ -246,19 +246,31 @@ def test_load_wfx_data_water():
     assert_allclose(data['mo_coeff'][1, 3], -4.27845789719456E-001)
 
 
-def test_load_wfx_low_missing_tag_h2o():
-    """Test load_wfx_low with h2o_error.wfx with missing tag."""
+def test_parse_wfx_missing_tag_h2o():
+    """Check that missing sections result in an exception."""
+    lit = LineIterator('iodata/test/data/water_sto3g_hf.wfx')
     with pytest.raises(IOError) as error:
-        lit = LineIterator('iodata/test/data/h2o_error.wfx')
-        load_data_wfx(lit)
-    assert str(error.value).endswith("The <Title> section is missing.")
+        parse_wfx(lit, required_tags=["<Foo Bar>"])
+    assert str(error.value).endswith("Section <Foo Bar> is missing.")
 
 
-def test_parse_wfx_h2o():
+def test_load_data_wfx_h2o_error():
+    """Check that sections without a closing tag result in an exception."""
     lit = LineIterator('iodata/test/data/h2o_error.wfx')
-    data = parse_wfx(lit, required_tags=None)
-    # check that sections without a closing tag are skipped
-    assert '<Number of Nuclei>' not in data.keys()
+    with pytest.raises(IOError) as error:
+        load_data_wfx(lit)
+    assert str(error.value).endswith(
+        "Expecting line </Number of Nuclei> but got </Number of Primitives>.")
+
+
+def test_load_truncated_h2o(tmpdir):
+    """Check that a truncated file raises an exception."""
+    with path('iodata.test.data', 'water_sto3g_hf.wfx') as fn_test:
+        with truncated_file(fn_test, 152, 0, tmpdir) as fn:
+            with pytest.raises(IOError) as error:
+                load_one(str(fn))
+    assert str(error.value).endswith(
+        "Section <Full Virial Ratio, -(V - W)/T> is not closed at end of file.")
 
 
 def test_wfx_load_one_h2o():

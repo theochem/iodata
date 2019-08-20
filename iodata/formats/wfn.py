@@ -158,10 +158,10 @@ def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[str, str, str, np.nd
     line = next(lit)
     assert line.startswith('MO')
     words = line.split()
-    count = words[1]
+    number = words[1]
     occ, energy = words[-5], words[-1]
     coeffs = _load_helper_section(lit, nprim, ' ', 0, float)
-    return count, occ, energy, coeffs
+    return number, occ, energy, coeffs
 
 
 def _load_helper_energy(lit: LineIterator) -> float:
@@ -195,16 +195,16 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
     # the basis functions.
     type_assignments = _load_helper_section(lit, nprim, 'TYPE ASSIGNMENTS', 2, int) - 1
     exponent = _load_helper_section(lit, nprim, 'EXPONENTS', 1, float)
-    mo_count = np.empty(num_mo, int)
-    mo_occ = np.empty(num_mo, float)
-    mo_energy = np.empty(num_mo, float)
+    mo_numbers = np.empty(num_mo, int)
+    mo_occs = np.empty(num_mo, float)
+    mo_energies = np.empty(num_mo, float)
     mo_coefficients = np.empty([nprim, num_mo], float)
     for mo in range(num_mo):
-        mo_count[mo], mo_occ[mo], mo_energy[mo], mo_coefficients[:, mo] = \
+        mo_numbers[mo], mo_occs[mo], mo_energies[mo], mo_coefficients[:, mo] = \
             _load_helper_mo(lit, nprim)
     energy = _load_helper_energy(lit)
     return title, atnums, atcoords, icenters, type_assignments, exponent, \
-        mo_count, mo_occ, mo_energy, mo_coefficients, energy
+        mo_numbers, mo_occs, mo_energies, mo_coefficients, energy
 
 
 # pylint: disable=too-many-branches
@@ -327,37 +327,44 @@ def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
     return np.array(scales)
 
 
-@document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title'])
-def load_one(lit: LineIterator) -> dict:
-    """Do not edit this docstring. It will be overwritten."""
-    (title, atnums, atcoords, icenters, type_assignments, exponents,
-     mo_count, mo_occ, mo_energy, mo_coefficients, energy) = load_wfn_low(lit)
-    # Build the basis set and the permutation needed to regroup shells.
-    obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
+def build_mo(mo_coefficients, mo_occs, mo_energies, mo_numbers, obasis, permutation):
+    """Construct the molecular orbitals."""
     # Re-order the mo coefficients.
     mo_coefficients = mo_coefficients[permutation]
     # Fix normalization
     mo_coefficients /= get_mocoeff_scales(obasis).reshape(-1, 1)
     norb = mo_coefficients.shape[1]
     # make the wavefunction
-    if mo_occ.max() > 1.0:
+    if mo_occs.max() > 1.0:
         # closed-shell system
         mo = MolecularOrbitals(
             'restricted', norb, norb,
-            mo_occ, mo_coefficients, mo_energy, None)
+            mo_occs, mo_coefficients, mo_energies, None)
     else:
         # open-shell system
         # counting the number of alpha orbitals
         norba = 1
         while (norba < mo_coefficients.shape[1]
-               and mo_energy[norba] >= mo_energy[norba - 1]
-               and mo_count[norba] == mo_count[norba - 1] + 1):
+               and mo_energies[norba] >= mo_energies[norba - 1]
+               and mo_numbers[norba] == mo_numbers[norba - 1] + 1):
             norba += 1
         mo = MolecularOrbitals(
             'unrestricted', norba, norb - norba,
-            mo_occ, mo_coefficients, mo_energy, None)
+            mo_occs, mo_coefficients, mo_energies, None)
+    return mo
 
-    result = {
+
+@document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title'])
+def load_one(lit: LineIterator) -> dict:
+    """Do not edit this docstring. It will be overwritten."""
+    (title, atnums, atcoords, icenters, type_assignments, exponents,
+     mo_numbers, mo_occ, mo_energies, mo_coefficients, energy) = load_wfn_low(lit)
+    # Build the basis set and the permutation needed to regroup shells.
+    obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
+    # Build the molecular orbitals
+    mo = build_mo(mo_coefficients, mo_occ, mo_energies, mo_numbers, obasis, permutation)
+
+    return {
         'title': title,
         'atcoords': atcoords,
         'atnums': atnums,
@@ -365,4 +372,3 @@ def load_one(lit: LineIterator) -> dict:
         'mo': mo,
         'energy': energy,
     }
-    return result

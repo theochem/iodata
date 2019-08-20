@@ -27,9 +27,8 @@ import numpy as np
 
 from ..utils import LineIterator
 from ..docstrings import document_load_one
-from ..orbitals import MolecularOrbitals
 
-from .wfn import build_obasis, get_mocoeff_scales
+from .wfn import build_obasis, build_mo
 
 
 __all__ = []
@@ -68,6 +67,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
         '<Atomic Numbers>': 'atnums',
         '<Primitive Centers>': 'centers',
         '<Primitive Types>': 'types',
+        '<MO Numbers>': 'mo_numbers',  # This is constructed in parse_wfx.
     }
     labels_array_float = {
         '<Nuclear Cartesian Coordinates>': 'atcoords',
@@ -143,10 +143,11 @@ def load_data_wfx(lit: LineIterator) -> dict:
     return result
 
 
-# pylint: disable=too-many-branches
 def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
     """Load data in all sections existing in the given WFX file LineIterator."""
     data = {}
+    mo_start = "<Molecular Orbital Primitive Coefficients>"
+    section_start = None
     while True:
         # get a new line
         try:
@@ -154,37 +155,35 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
         except StopIteration:
             break
 
-        # read mo primitive coefficients
-        if line == "<Molecular Orbital Primitive Coefficients>":
-            section = []
-            section_start = "<Molecular Orbital Primitive Coefficients>"
-            section_end = "</Molecular Orbital Primitive Coefficients>"
-            line = next(lit).strip()
-            while line != section_end:
-                # skip mo number section
-                if line == '<MO Number>':
-                    for _ in range(3):
-                        line = next(lit).strip()
-                section.append(line)
-                line = next(lit).strip()
-
-        # read rest of the sections; this skips sections without a closing tag
-        if line.startswith("</"):
-            if line != section_end:
-                lit.error("Expected line {0} but got {1}".format(section_end, line))
-            data[section_start] = section
-        elif line.startswith("<"):
+        if section_start is None and line.startswith("<"):
             section = []
             section_start = line
+            data[section_start] = section
             section_end = line[:1] + "/" + line[1:]
+            # Special handling of MO coeffs
+            if section_start == mo_start:
+                mo_numbers = []
+                data['<MO Numbers>'] = mo_numbers
+        elif section_start is not None and line.startswith("</"):
+            # read rest of the sections; this skips sections without a closing tag
+            if line != section_end:
+                lit.error("Expecting line {} but got {}.".format(section_end, line))
+            section_start = None
+        elif section_start == mo_start and line == '<MO Number>':
+            # Special handling of MO coeffs: read mo number
+            mo_numbers.append(next(lit).strip())
+            next(lit)  # skip '</MO Number>'
         else:
             section.append(line)
 
+    # check if last section was closed
+    if section_start is not None:
+        lit.error("Section {} is not closed at end of file.".format(section_start))
     # check required section tags
     if required_tags is not None:
         for section_tag in required_tags:
             if section_tag not in data.keys():
-                lit.error(f'The {section_tag} section is missing.')
+                lit.error(f'Section {section_tag} is missing.')
     return data
 
 
@@ -196,29 +195,9 @@ def load_one(lit: LineIterator) -> dict:
     # Build the basis set and the permutation needed to regroup shells.
     obasis, permutation = build_obasis(
         data['centers'] - 1, data['types'] - 1, data['exponents'], lit)
-    # Re-order the mo coefficients.
-    mo_coefficients = data['mo_coeff'][permutation]
-    # Fix normalization
-    mo_coefficients /= get_mocoeff_scales(obasis).reshape(-1, 1)
-    # make the wavefunction
-    norb = mo_coefficients.shape[1]
-    if data['mo_occ'].max() > 1.0:
-        # closed-shell system
-        mo = MolecularOrbitals(
-            'restricted', norb, norb,
-            data['mo_occ'], mo_coefficients, data['mo_energy'], None)
-    else:
-        mo_count = np.arange(mo_coefficients.shape[1])
-        # open-shell system
-        # counting the number of alpha orbitals
-        norba = 1
-        while (norba < mo_coefficients.shape[1]
-               and data['mo_energy'][norba] >= data['mo_energy'][norba - 1]
-               and mo_count[norba] == mo_count[norba - 1] + 1):
-            norba += 1
-        mo = MolecularOrbitals(
-            'unrestricted', norba, norb - norba,
-            data['mo_occ'], mo_coefficients, data['mo_energy'], None)
+    # Build the molecular orbitals
+    mo = build_mo(data['mo_coeff'], data['mo_occ'], data['mo_energy'],
+                  data['mo_numbers'], obasis, permutation)
     # Store WFX-specific data
     extra_labels = ['keywords', 'model_name', 'num_perturbations', 'num_core_electrons',
                     'spin_multi', 'virial_ratio', 'nuc_viral', 'full_virial_ratio', 'mo_spin']
