@@ -206,9 +206,9 @@ def load_one(lit: LineIterator) -> dict:
         # closed-shell system
         mo = MolecularOrbitals(
             'restricted', norb, norb,
-            data['mo_occ'], data['mo_coeff'], data['mo_energy'], None)
+            data['mo_occ'], mo_coefficients, data['mo_energy'], None)
     else:
-        mo_count = np.arange(data['mo_coeff'].shape[1])
+        mo_count = np.arange(mo_coefficients.shape[1])
         # open-shell system
         # counting the number of alpha orbitals
         norba = 1
@@ -218,7 +218,7 @@ def load_one(lit: LineIterator) -> dict:
             norba += 1
         mo = MolecularOrbitals(
             'unrestricted', norba, norb - norba,
-            data['mo_occ'], data['mo_coeff'], data['mo_energy'], None)
+            data['mo_occ'], mo_coefficients, data['mo_energy'], None)
     # Store WFX-specific data
     extra_labels = ['keywords', 'model_name', 'num_perturbations', 'num_core_electrons',
                     'spin_multi', 'virial_ratio', 'nuc_viral', 'full_virial_ratio', 'mo_spin']
