@@ -124,8 +124,8 @@ PRIMITIVE_NAMES = sum([CONVENTIONS[(angmom, 'c')] for angmom in range(6)], [])
 def _load_helper_num(lit: LineIterator) -> List[int]:
     """Read number of orbitals, primitives and atoms."""
     line = next(lit)
-    if not line.startswith('GAUSSIAN'):
-        lit.error("Expecting line to start with GAUSSIAN.")
+    if not line.startswith('G'):
+        lit.error("Expecting line to start with G.")
     return [int(i) for i in line.split() if i.isdigit()]
 
 
@@ -134,9 +134,17 @@ def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, n
     atnums = np.empty(num_atoms, int)
     atcoords = np.empty((num_atoms, 3), float)
     for atom in range(num_atoms):
-        words = next(lit).split()
-        atnums[atom] = sym2num[words[0].title()]
-        atcoords[atom, :] = [words[4], words[5], words[6]]
+        # WFN files created with AIMAll have the symbol and index combined
+        # in one word.
+        line = next(lit)
+        symbol = line[:12].strip().title()[:2]
+        atnum = sym2num.get(symbol)
+        if atnum is None:
+            atnum = sym2num[symbol[0]]
+        atnums[atom] = atnum
+        # extract atomic coordinates
+        words = line[23:].split()
+        atcoords[atom, :] = [words[0], words[1], words[2]]
     return atnums, atcoords
 
 
@@ -327,69 +335,42 @@ def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
     return np.array(scales)
 
 
-def build_mo(mo_coefficients: np.ndarray, mo_occs: np.ndarray,
-             mo_energies: np.ndarray, mo_numbers: np.ndarray,
-             obasis: MolecularBasis, permutation: np.ndarray) -> MolecularOrbitals:
-    """Construct the molecular orbitals from WFN or WFX data.
+@document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title'])
+def load_one(lit: LineIterator) -> dict:
+    """Do not edit this docstring. It will be overwritten."""
+    (title, atnums, atcoords, icenters, type_assignments, exponents,
+     mo_numbers, mo_occs, mo_energies, mo_coefficients, energy) = load_wfn_low(lit)
+    # Build the basis set and the permutation needed to regroup shells.
+    obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
 
-    Parameters
-    ----------
-    mo_coefficients
-        The molecular orbital coefficients, as they are read from the WFN or
-        WFX file. These will be reordered and rescaled to match IOData
-        conventions.
-    mo_occs
-        The occupation numbers of the molecular orbitals.
-    mo_energies
-        The orbital energies.
-    mo_numbers
-        An index for the molecular orbitals.
-    obasis
-        The orbital basis.
-    permutation
-        The permutation of mo coefficients, derived when creating the orbital
-        basis.
-
-    Returns
-    -------
-    mo
-        The molecular orbitals.
-
-    """
+    # Build the molecular orbitals
+    # ----------------------------
     # Re-order the mo coefficients.
     mo_coefficients = mo_coefficients[permutation]
     # Fix normalization
     mo_coefficients /= get_mocoeff_scales(obasis).reshape(-1, 1)
     norb = mo_coefficients.shape[1]
-    # make the wavefunction
+    # Make the wavefunction.
     if mo_occs.max() > 1.0:
-        # closed-shell system
+        # Restricted wavefunction.
+        print(mo_occs)
         mo = MolecularOrbitals(
             'restricted', norb, norb,
             mo_occs, mo_coefficients, mo_energies, None)
     else:
-        # open-shell system
-        # counting the number of alpha orbitals
+        # Unrestricted wavefunction.
+        # The number of alpha and beta orbitals are derived using heuristics.
+        # The WFN format does not explicitly specify which orbitals are alpha or
+        # beta. The heuristics may still fail in some corner cases.
         norba = 1
         while (norba < mo_coefficients.shape[1]
                and mo_energies[norba] >= mo_energies[norba - 1]
+               and mo_occs[norba] <= mo_occs[norba - 1]
                and mo_numbers[norba] == mo_numbers[norba - 1] + 1):
             norba += 1
         mo = MolecularOrbitals(
             'unrestricted', norba, norb - norba,
             mo_occs, mo_coefficients, mo_energies, None)
-    return mo
-
-
-@document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title'])
-def load_one(lit: LineIterator) -> dict:
-    """Do not edit this docstring. It will be overwritten."""
-    (title, atnums, atcoords, icenters, type_assignments, exponents,
-     mo_numbers, mo_occ, mo_energies, mo_coefficients, energy) = load_wfn_low(lit)
-    # Build the basis set and the permutation needed to regroup shells.
-    obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
-    # Build the molecular orbitals
-    mo = build_mo(mo_coefficients, mo_occ, mo_energies, mo_numbers, obasis, permutation)
 
     return {
         'title': title,

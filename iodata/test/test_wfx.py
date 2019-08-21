@@ -63,18 +63,9 @@ def test_load_data_wfx_h2():
     assert np.allclose(data['virial_ratio'], 2.036441983763e+00)
     assert np.allclose(data['nuc_viral'], 1.008787649881e-08)
     assert np.allclose(data['full_virial_ratio'], 2.036441992623e+00)
-    assert np.all(data['nuclear_names'] == ['H1', 'H2'])
-    assert np.all(data['atnums'] == np.array([1, 1]))
-    expect = np.array(
-        ['Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
-         'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
-         'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
-         'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha', 'Alpha',
-         'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
-         'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
-         'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta',
-         'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta', 'Beta'])
-    assert np.all(data['mo_spin'] == np.array([expect]).T)
+    assert_equal(data['nuclear_names'], ['H1', 'H2'])
+    assert_equal(data['atnums'], np.array([1, 1]))
+    assert_equal(data['mo_spins'], np.array(['Alpha'] * 28 + ['Beta'] * 28).T)
     coords = np.array([[0., 0., 0.7019452462164], [0., 0., -0.7019452462164]])
     assert np.allclose(data['atcoords'], coords)
     assert np.allclose(data['centers'], np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -102,13 +93,13 @@ def test_load_data_wfx_h2():
          1.057000000000e+00, 1.057000000000e+00,
          1.057000000000e+00, 1.057000000000e+00,
          1.057000000000e+00, 1.057000000000e+00]]))
-    assert np.allclose(data['mo_occ'], np.array([
+    assert np.allclose(data['mo_occs'], np.array([
         [1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
          0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
          0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.,
          0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
          0., 0., 0., 0., 0., 0., 0., 0.]]))
-    assert np.allclose(data['mo_energy'], np.array([
+    assert np.allclose(data['mo_energies'], np.array([
         [-4.340830854172e-01, 5.810590098068e-02,
          1.957476339319e-01, 4.705943952631e-01,
          5.116003517961e-01, 5.116003517961e-01,
@@ -140,7 +131,7 @@ def test_load_data_wfx_h2():
     expected = np.array([[9.744384163503e-17, -2.088844408785e-16, -7.185657679987e-09],
                          [-9.744384163503e-17, 2.088844408785e-16, 7.185657679987e-09]])
     assert np.allclose(data['atgradient'], expected)
-    assert data['mo_coeff'].shape == (34, 56)
+    assert data['mo_coeffs'].shape == (34, 56)
     exponent_expected = np.array([
         5.054717669172e-02, 9.116391481072e-02,
         1.344211391235e-01, 8.321037376208e-02,
@@ -159,10 +150,10 @@ def test_load_data_wfx_h2():
         -3.124765025186e-04, -3.124765025186e-04,
         6.249530050373e-04, -6.548275062740e-16,
         4.865003740982e-17, -1.099855647247e-16])
-    assert np.allclose(data['mo_coeff'][:, 0], exponent_expected)
-    assert np.allclose(data['mo_coeff'][2, 9], 1.779549601504e-02)
-    assert np.allclose(data['mo_coeff'][19, 14], -1.027984391469e-15)
-    assert np.allclose(data['mo_coeff'][26, 36], -5.700424557682e-01)
+    assert np.allclose(data['mo_coeffs'][:, 0], exponent_expected)
+    assert np.allclose(data['mo_coeffs'][2, 9], 1.779549601504e-02)
+    assert np.allclose(data['mo_coeffs'][19, 14], -1.027984391469e-15)
+    assert np.allclose(data['mo_coeffs'][26, 36], -5.700424557682e-01)
 
 
 def test_load_data_wfx_water():
@@ -185,10 +176,9 @@ def test_load_data_wfx_water():
     assert np.allclose(data['virial_ratio'], 2.00599838291596E+000)
     # assert np.allclose(data['nuclear_virial'], np.array(None))
     assert np.allclose(data['full_virial_ratio'], 2.00600662884992E+000)
-    assert np.all(data['nuclear_names'] == ['O1', 'H2', 'H3'])
-    assert np.all(data['atnums'] == np.array([8, 1, 1]))
-    expect = ['Alpha', 'Beta', 'Alpha', 'Beta', 'Alpha', 'Beta', 'Alpha', 'Beta', 'Alpha', 'Beta']
-    assert np.all(data['mo_spin'] == np.array([expect]).T)
+    assert_equal(data['nuclear_names'], ['O1', 'H2', 'H3'])
+    assert_equal(data['atnums'], np.array([8, 1, 1]))
+    assert_equal(data['mo_spins'], np.array(['Alpha and Beta'] * 5).T)
     expected = np.array([[0.00000000000000, 0.00000000000000, 2.40242907000000E-1],
                          [0.00000000000000, 1.43244242000000, -9.60971627000000E-1],
                          [-1.75417809000000e-16, -1.43244242000000, -9.60971627000000E-1]])
@@ -209,18 +199,18 @@ def test_load_data_wfx_water():
          6.23913730000000E-001, 1.68855404000000E-001,
          3.42525091000000E+000, 6.23913730000000E-001,
          1.68855404000000E-001]]))
-    assert np.allclose(data['mo_occ'], np.array([
+    assert np.allclose(data['mo_occs'], np.array([
         2.00000000000000E+000, 2.00000000000000E+000,
         2.00000000000000E+000, 2.00000000000000E+000,
         2.00000000000000E+000]))
-    assert np.allclose(data['mo_energy'], np.array([
+    assert np.allclose(data['mo_energies'], np.array([
         [-2.02515479000000E+001, -1.25760928000000E+000,
          -5.93941119000000E-001, -4.59728723000000E-001,
          -3.92618460000000E-001]]))
     expected = np.array([[6.09070231000000E-016, -5.55187875000000E-016, -2.29270172000000E-004],
                          [-2.46849911000000E-016, -1.18355659000000E-004, 1.14635086000000E-004]])
     assert np.allclose(data['atgradient'][:2, :], expected)
-    assert_equal(data['mo_coeff'].shape, (21, 5))
+    assert_equal(data['mo_coeffs'].shape, (21, 5))
     exponent_expected = np.array([4.22735025664585E+000,
                                   4.08850914632625E+000,
                                   1.27420971692421E+000,
@@ -242,8 +232,8 @@ def test_load_data_wfx_water():
                                   -1.54680714141406E-003,
                                   -1.49600452906993E-003,
                                   -4.66239267760156E-004])
-    assert np.allclose(data['mo_coeff'][:, 0], exponent_expected, rtol=0., atol=1.e-8)
-    assert_allclose(data['mo_coeff'][1, 3], -4.27845789719456E-001)
+    assert np.allclose(data['mo_coeffs'][:, 0], exponent_expected, rtol=0., atol=1.e-8)
+    assert_allclose(data['mo_coeffs'][1, 3], -4.27845789719456E-001)
 
 
 def test_parse_wfx_missing_tag_h2o():
@@ -273,7 +263,7 @@ def test_load_truncated_h2o(tmpdir):
         "Section <Full Virial Ratio, -(V - W)/T> is not closed at end of file.")
 
 
-def test_wfx_load_one_h2o():
+def test_load_one_h2o():
     """Test load_one with h2o sto-3g WFX input."""
     with path('iodata.test.data', 'water_sto3g_hf.wfx') as file_wfx:
         mol = load_one(str(file_wfx))
@@ -321,7 +311,7 @@ def test_wfx_load_one_h2o():
     check_orthonormal(mol.mo.coeffsa, olp, 1.e-5)
 
 
-def test_wfx_load_one_h2():
+def test_load_one_h2():
     """Test load_one with h2 ub3lyp_ccpvtz WFX input."""
     with path('iodata.test.data', 'h2_ub3lyp_ccpvtz.wfx') as file_wfx:
         mol = load_one(str(file_wfx))
@@ -357,6 +347,61 @@ def test_wfx_load_one_h2():
     assert mol.title == 'h2 ub3lyp/cc-pvtz opt-stable-freq'
     # check orthonormal mo
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    check_orthonormal(mol.mo.coeffsa, olp, 1.e-5)
-    if mol.mo.kind == 'unrestricted':
-        check_orthonormal(mol.mo.coeffsb, olp, 1.e-5)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def test_load_one_lih_cation_cisd():
+    with path('iodata.test.data', 'lih_cation_cisd.wfx') as file_wfx:
+        mol = load_one(str(file_wfx))
+    # check number of orbitals and occupation numbers
+    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.norba == 11
+    assert mol.mo.norbb == 11
+    assert mol.mo.norb == 22
+    assert_equal(mol.mo.occsa, [
+        9.99999999804784E-1, 9.99999998539235E-1, 2.26431690664012E-10,
+        5.38480519435475E-11, 0.0, 0.0, 0.0, 0.0, -5.97822590358596E-13,
+        -6.01428138426375E-12, -9.12834417514434E-12])
+    assert_equal(mol.mo.occsb, [
+        9.99999997403326E-1, 6.03380142010587E-11, 4.36865874834240E-12,
+        4.14106040987552E-13, 0.0, 0.0, 0.0, 0.0, -5.69902692731031E-13,
+        -1.60216470544366E-11, -3.25430470734432E-10,
+    ])
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def test_load_one_lih_cation_uhf():
+    with path('iodata.test.data', 'lih_cation_uhf.wfx') as file_wfx:
+        mol = load_one(str(file_wfx))
+    # check number of orbitals and occupation numbers
+    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.norba == 2
+    assert mol.mo.norbb == 1
+    assert mol.mo.norb == 3
+    assert_equal(mol.mo.occsa, [1.0, 1.0])
+    assert_equal(mol.mo.occsb, [1.0])
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def test_load_one_lih_cation_rohf():
+    with path('iodata.test.data', 'lih_cation_rohf.wfx') as file_wfx:
+        mol = load_one(str(file_wfx))
+    # check number of orbitals and occupation numbers
+    assert mol.mo.kind == 'restricted'
+    assert mol.mo.norba == 2
+    assert mol.mo.norbb == 2
+    assert mol.mo.norb == 2
+    assert_equal(mol.mo.occs, [2.0, 1.0])
+    assert_equal(mol.mo.occsa, [1.0, 1.0])
+    assert_equal(mol.mo.occsb, [1.0, 0.0])
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)

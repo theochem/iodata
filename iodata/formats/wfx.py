@@ -22,13 +22,15 @@ See http://aim.tkgristmill.com/wfxformat.html
 """
 
 import warnings
+from typing import List
 
 import numpy as np
 
-from ..utils import LineIterator
 from ..docstrings import document_load_one
+from ..orbitals import MolecularOrbitals
+from ..utils import LineIterator
 
-from .wfn import build_obasis, build_mo
+from .wfn import build_obasis, get_mocoeff_scales
 
 
 __all__ = []
@@ -73,13 +75,13 @@ def load_data_wfx(lit: LineIterator) -> dict:
         '<Nuclear Cartesian Coordinates>': 'atcoords',
         '<Nuclear Charges>': 'nuclear_charge',
         '<Primitive Exponents>': 'exponents',
-        '<Molecular Orbital Energies>': 'mo_energy',
-        '<Molecular Orbital Occupation Numbers>': 'mo_occ',
-        '<Molecular Orbital Primitive Coefficients>': 'mo_coeff',
+        '<Molecular Orbital Energies>': 'mo_energies',
+        '<Molecular Orbital Occupation Numbers>': 'mo_occs',
+        '<Molecular Orbital Primitive Coefficients>': 'mo_coeffs',
     }
     labels_other = {
         '<Nuclear Names>': 'nuclear_names',
-        '<Molecular Orbital Spin Types>': 'mo_spin',
+        '<Molecular Orbital Spin Types>': 'mo_spins',
         '<Nuclear Cartesian Energy Gradients>': 'nuclear_gradient',
     }
 
@@ -121,20 +123,17 @@ def load_data_wfx(lit: LineIterator) -> dict:
         else:
             warnings.warn("Not recognized label, skip {0}".format(key))
 
-    # reshape some arrays
+    # Reshape some arrays.
     result['atcoords'] = result['atcoords'].reshape(-1, 3)
-    result['mo_coeff'] = result['mo_coeff'].reshape(result['num_primitives'], -1, order='F')
-    # process mo spin type
-    mo_spin_list = [i.split() for i in result['mo_spin']]
-    mo_spin_type = np.array(mo_spin_list, dtype=np.unicode_).reshape(-1, 1)
-    result['mo_spin'] = mo_spin_type[mo_spin_type[:, 0] != 'and']
-    # process nuclear gradient
-    gradient_mix = np.array([i.split() for i in result.pop('nuclear_gradient')]).reshape(-1, 4)
-    gradient_atoms = gradient_mix[:, 0].astype(np.unicode_)
-    index = [result['nuclear_names'].index(atom) for atom in gradient_atoms]
-    result['atgradient'] = np.full((len(result['nuclear_names']), 3), np.nan)
-    result['atgradient'][index] = gradient_mix[:, 1:].astype(float)
-    # check number of perturbations
+    result['mo_coeffs'] = result['mo_coeffs'].reshape(result['num_primitives'], -1, order='F')
+    # Process nuclear gradient, if present.
+    if 'nuclear_gradient' in result:
+        gradient_mix = np.array([i.split() for i in result.pop('nuclear_gradient')]).reshape(-1, 4)
+        gradient_atoms = gradient_mix[:, 0].astype(np.unicode_)
+        index = [result['nuclear_names'].index(atom) for atom in gradient_atoms]
+        result['atgradient'] = np.full((len(result['nuclear_names']), 3), np.nan)
+        result['atgradient'][index] = gradient_mix[:, 1:].astype(float)
+    # Check number of perturbations.
     perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
     if result['num_perturbations'] != perturbation_check[result['keywords']]:
         lit.error("Number of perturbations is not equal to 0, 3 or 6.")
@@ -165,8 +164,9 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
                 mo_numbers = []
                 data['<MO Numbers>'] = mo_numbers
         elif section_start is not None and line.startswith("</"):
-            # read rest of the sections; this skips sections without a closing tag
-            if line != section_end:
+            # Check if the closing tag is correct. In some cases, closing
+            # tags have a different number of spaces. 8-[
+            if line.replace(" ", "") != section_end.replace(" ", ""):
                 lit.error("Expecting line {} but got {}.".format(section_end, line))
             section_start = None
         elif section_start == mo_start and line == '<MO Number>':
@@ -195,9 +195,45 @@ def load_one(lit: LineIterator) -> dict:
     # Build the basis set and the permutation needed to regroup shells.
     obasis, permutation = build_obasis(
         data['centers'] - 1, data['types'] - 1, data['exponents'], lit)
+
     # Build the molecular orbitals
-    mo = build_mo(data['mo_coeff'], data['mo_occ'], data['mo_energy'],
-                  data['mo_numbers'], obasis, permutation)
+    # ----------------------------
+    # Re-order the mo coefficients.
+    data['mo_coeffs'] = data['mo_coeffs'][permutation]
+    # Fix normalization
+    data['mo_coeffs'] /= get_mocoeff_scales(obasis).reshape(-1, 1)
+    # Process mo_spins. Convert this into restricted or unrestricted and
+    # corresponding occupation numbers.
+    if any("and" in word for word in data['mo_spins']):
+        # Restricted case.
+        norbb = data['mo_spins'].count("Alpha and Beta")
+        norba = norbb + data['mo_spins'].count("Alpha")
+        # Check that the mo_spin list contains no surprises.
+        if data['mo_spins'] != ["Alpha and Beta"] * norbb + ["Alpha"] * (norba - norbb):
+            lit.error("Unsupported molecular orbital spin types.")
+        if norba != data['mo_coeffs'].shape[1]:
+            lit.error("Number of orbitals inconsistent with orbital spin types.")
+        # Create orbitals. For restricted wavefunctions, IOData uses the
+        # occupation numbers to identify the spin types. IOData also has different
+        # conventions for norba and norbb, see orbitals.py for details.
+        mo = MolecularOrbitals(
+            "restricted", norba, norba,  # This is not a typo!
+            data['mo_occs'], data['mo_coeffs'], data['mo_energies'], None)
+    else:
+        # unrestricted case
+        norba = data['mo_spins'].count("Alpha")
+        norbb = data['mo_spins'].count("Beta")
+        # Check that the mo_spin list contains no surprises
+        if data['mo_spins'] != ["Alpha"] * norba + ["Beta"] * norbb:
+            lit.error("Unsupported molecular orbital spin types.")
+        if norba + norbb != data['mo_coeffs'].shape[1]:
+            lit.error("Number of orbitals inconsistent with orbital spin types.")
+        # Create orbitals. For unrestricted wavefunctions, IOData uses the same
+        # conventions as WFX.
+        mo = MolecularOrbitals(
+            "unrestricted", norba, norbb,
+            data['mo_occs'], data['mo_coeffs'], data['mo_energies'], None)
+
     # Store WFX-specific data
     extra_labels = ['keywords', 'model_name', 'num_perturbations', 'num_core_electrons',
                     'spin_multi', 'virial_ratio', 'nuc_viral', 'full_virial_ratio', 'mo_spin']
@@ -205,7 +241,7 @@ def load_one(lit: LineIterator) -> dict:
 
     return {
         'atcoords': data['atcoords'],
-        'atgradient': data['atgradient'],
+        'atgradient': data.get('atgradient'),
         'atnums': data['atnums'],
         'energy': data['energy'],
         'extra': extra,

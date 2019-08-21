@@ -237,3 +237,52 @@ def test_load_wfn_lih_cation_fci():
     assert_equal(mol.mo.occs.shape, (11,))
     assert_allclose(mol.mo.occs.sum(), 3., rtol=0., atol=1.e-6)
     # assert abs(mol.mo.occsa.sum() - 1.5) < 1.e-6
+
+
+def test_load_one_lih_cation_cisd():
+    with path('iodata.test.data', 'lih_cation_cisd.wfn') as file_wfx:
+        mol = load_one(str(file_wfx))
+    # check number of orbitals and occupation numbers
+    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.norba == 11
+    assert mol.mo.norbb == 11
+    assert mol.mo.norb == 22
+    assert_equal(mol.mo.occsa, [1.0] * 2 + [0.0] * 9)
+    assert_equal(mol.mo.occsb, [1.0] + [0.0] * 10)
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def test_load_one_lih_cation_uhf():
+    with path('iodata.test.data', 'lih_cation_uhf.wfn') as file_wfx:
+        mol = load_one(str(file_wfx))
+    # check number of orbitals and occupation numbers
+    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.norba == 2
+    assert mol.mo.norbb == 1
+    assert mol.mo.norb == 3
+    assert_equal(mol.mo.occsa, [1.0, 1.0])
+    assert_equal(mol.mo.occsb, [1.0])
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def test_load_one_lih_cation_rohf():
+    with path('iodata.test.data', 'lih_cation_rohf.wfn') as file_wfx:
+        mol = load_one(str(file_wfx))
+    # check number of orbitals and occupation numbers
+    assert mol.mo.kind == 'restricted'
+    assert mol.mo.norba == 2
+    assert mol.mo.norbb == 2
+    assert mol.mo.norb == 2
+    assert_equal(mol.mo.occs, [2.0, 1.0])
+    assert_equal(mol.mo.occsa, [1.0, 1.0])
+    assert_equal(mol.mo.occsb, [1.0, 0.0])
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
