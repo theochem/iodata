@@ -203,7 +203,8 @@ def load_one(lit: LineIterator) -> dict:
     # Fix normalization
     data['mo_coeffs'] /= get_mocoeff_scales(obasis).reshape(-1, 1)
     # Process mo_spins. Convert this into restricted or unrestricted and
-    # corresponding occupation numbers.
+    # corresponding occupation numbers. We are not using the <Model> section
+    # because it is not guaranteed to be present.
     if any("and" in word for word in data['mo_spins']):
         # Restricted case.
         norbb = data['mo_spins'].count("Alpha and Beta")
