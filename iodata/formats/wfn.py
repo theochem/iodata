@@ -206,13 +206,13 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
     mo_numbers = np.empty(num_mo, int)
     mo_occs = np.empty(num_mo, float)
     mo_energies = np.empty(num_mo, float)
-    mo_coefficients = np.empty([nprim, num_mo], float)
+    mo_coeffs = np.empty([nprim, num_mo], float)
     for mo in range(num_mo):
-        mo_numbers[mo], mo_occs[mo], mo_energies[mo], mo_coefficients[:, mo] = \
+        mo_numbers[mo], mo_occs[mo], mo_energies[mo], mo_coeffs[:, mo] = \
             _load_helper_mo(lit, nprim)
     energy = _load_helper_energy(lit)
     return title, atnums, atcoords, icenters, type_assignments, exponent, \
-        mo_numbers, mo_occs, mo_energies, mo_coefficients, energy
+        mo_numbers, mo_occs, mo_energies, mo_coeffs, energy
 
 
 # pylint: disable=too-many-branches
@@ -339,38 +339,38 @@ def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     (title, atnums, atcoords, icenters, type_assignments, exponents,
-     mo_numbers, mo_occs, mo_energies, mo_coefficients, energy) = load_wfn_low(lit)
+     mo_numbers, mo_occs, mo_energies, mo_coeffs, energy) = load_wfn_low(lit)
     # Build the basis set and the permutation needed to regroup shells.
     obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
 
     # Build the molecular orbitals
     # ----------------------------
     # Re-order the mo coefficients.
-    mo_coefficients = mo_coefficients[permutation]
+    mo_coeffs = mo_coeffs[permutation]
     # Fix normalization
-    mo_coefficients /= get_mocoeff_scales(obasis).reshape(-1, 1)
-    norb = mo_coefficients.shape[1]
+    mo_coeffs /= get_mocoeff_scales(obasis).reshape(-1, 1)
+    norb = mo_coeffs.shape[1]
     # Make the wavefunction.
     if mo_occs.max() > 1.0:
         # Restricted wavefunction.
         print(mo_occs)
         mo = MolecularOrbitals(
             'restricted', norb, norb,
-            mo_occs, mo_coefficients, mo_energies, None)
+            mo_occs, mo_coeffs, mo_energies, None)
     else:
         # Unrestricted wavefunction.
         # The number of alpha and beta orbitals are derived using heuristics.
         # The WFN format does not explicitly specify which orbitals are alpha or
         # beta. The heuristics may still fail in some corner cases.
         norba = 1
-        while (norba < mo_coefficients.shape[1]
+        while (norba < mo_coeffs.shape[1]
                and mo_energies[norba] >= mo_energies[norba - 1]
                and mo_occs[norba] <= mo_occs[norba - 1]
                and mo_numbers[norba] == mo_numbers[norba - 1] + 1):
             norba += 1
         mo = MolecularOrbitals(
             'unrestricted', norba, norb - norba,
-            mo_occs, mo_coefficients, mo_energies, None)
+            mo_occs, mo_coeffs, mo_energies, None)
 
     return {
         'title': title,
