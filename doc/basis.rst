@@ -356,10 +356,10 @@ These equations show that real regular solid harmonics are homogeneous
 polynomials in :math:`x`, :math:`y` and :math:`z`. Advantages of this approach
 are (i) the absence of trigonometric expressions and (ii) the similarity between
 cosine and sine expressions. (Coefficients can be reused.) These recursion
-relations should be reasonably numerically stable for the computation of real
-regular solid harmonics, given the Cartesian coordinates. They can also be used
-to build a transformation matrix from Cartesian mononomials into real regular
-solid harmonics.
+relations should be numerically stable for the computation of real regular solid
+harmonics as a function of Cartesian coordinates. They can also be used to build
+a transformation matrix from Cartesian mononomials into real regular solid
+harmonics.
 
 
 Transformation matrices without normalization
@@ -413,8 +413,8 @@ Taking into account normalization
 ---------------------------------
 
 For the calculation of the overlap matrix, the transformations need to be
-modified, to transformed normalized Cartesian functions into normalized pure
-functions. Accounting for the normalization yields slightly different matrices
+modified, to transform normalized Cartesian functions into normalized pure
+functions. Accounting for normalization yields slightly different matrices
 shown below. These were obtained by running:
 
 .. code-block:: bash

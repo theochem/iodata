@@ -61,8 +61,21 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_bare_transforms(lmax):
-    """Build transformation matrices without normalization constants up to lmax."""
+def get_bare_transforms(lmax: int):
+    """Build transformation matrices up to lmax, without normalization constants.
+
+    Parameters
+    ----------
+    lmax
+        Matrices for l going from 0 to lmax (inclusive) are returned.
+
+    Returns
+    -------
+    tfs
+        A list of transformation matrices. Each matrix is a NumPy array of
+        SymPy expressions.
+
+    """
     x, y, z = sp.symbols("x y z", real=True)
     rrsh = real_regular_solid_harmonics(x, y, z, lmax, sqrt=sp.sqrt)
     rrsh.pop(0)
