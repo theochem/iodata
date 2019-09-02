@@ -22,7 +22,6 @@ See http://aim.tkgristmill.com/wfxformat.html
 """
 
 import warnings
-from typing import List
 
 import numpy as np
 
