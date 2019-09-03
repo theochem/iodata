@@ -194,27 +194,28 @@ def test_load_data_wfx_water():
 
 def test_parse_wfx_missing_tag_h2o():
     """Check that missing sections result in an exception."""
-    lit = LineIterator('iodata/test/data/water_sto3g_hf.wfx')
-    with pytest.raises(IOError) as error:
-        parse_wfx(lit, required_tags=["<Foo Bar>"])
+    with path('iodata.test.data', 'water_sto3g_hf.wfx') as fn_wfx:
+        lit = LineIterator(fn_wfx)
+        with pytest.raises(IOError) as error:
+            parse_wfx(lit, required_tags=["<Foo Bar>"])
     assert str(error.value).endswith("Section <Foo Bar> is missing.")
 
 
 def test_load_data_wfx_h2o_error():
     """Check that sections without a closing tag result in an exception."""
-    lit = LineIterator('iodata/test/data/h2o_error.wfx')
-    with pytest.raises(IOError) as error:
-        load_data_wfx(lit)
+    with path('iodata.test.data', 'h2o_error.wfx') as fn_wfx:
+        with pytest.raises(IOError) as error:
+            load_one(str(fn_wfx))
     assert str(error.value).endswith(
         "Expecting line </Number of Nuclei> but got </Number of Primitives>.")
 
 
 def test_load_truncated_h2o(tmpdir):
     """Check that a truncated file raises an exception."""
-    with path('iodata.test.data', 'water_sto3g_hf.wfx') as fn_test:
-        with truncated_file(fn_test, 152, 0, tmpdir) as fn:
+    with path('iodata.test.data', 'water_sto3g_hf.wfx') as fn_wfx:
+        with truncated_file(str(fn_wfx), 152, 0, tmpdir) as fn_truncated:
             with pytest.raises(IOError) as error:
-                load_one(str(fn))
+                load_one(str(fn_truncated))
     assert str(error.value).endswith(
         "Section <Full Virial Ratio, -(V - W)/T> is not closed at end of file.")
 
