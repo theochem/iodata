@@ -32,8 +32,8 @@ import subprocess
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
-    subprocess.run(['python', '-m', 'pip', 'install', '..'], )
-    subprocess.run(['./gen_docs.sh'], shell=True)
+    subprocess.run(['python', '-m', 'pip', 'install', '..'], check=True)
+    subprocess.run(['./gen_docs.sh'], shell=True, check=True)
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.

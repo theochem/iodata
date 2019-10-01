@@ -1,3 +1,4 @@
+abs: true  # Force absolute comparison for cardboardlint
 project:
   name: iodata
   conda_requirements: [sympy]
