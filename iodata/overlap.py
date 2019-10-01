@@ -23,7 +23,7 @@ import numpy as np
 from scipy.special import factorialk
 
 from .overlap_accel import add_overlap
-from .overlap_helper import tfs
+from .overlap_cartpure import tfs
 from .basis import convert_conventions, iter_cart_alphabet, MolecularBasis
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
 
