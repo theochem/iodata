@@ -68,7 +68,7 @@ def _select_format_module(filename: str, attrname: str, fmt: str = None) -> Modu
     """
     basename = os.path.basename(filename)
     if fmt is None:
-        for name, format_module in FORMAT_MODULES.items():
+        for format_module in FORMAT_MODULES.values():
             if any(fnmatch(basename, pattern) for pattern in format_module.PATTERNS):
                 if hasattr(format_module, attrname):
                     return format_module

@@ -58,7 +58,7 @@ def load_one(lit: LineIterator) -> dict:
         line = next(lit)
         if line.startswith(" Normal termination of Gaussian"):
             break
-        elif line.startswith(' *** Overlap ***'):
+        if line.startswith(' *** Overlap ***'):
             one_ints['olp'] = _load_twoindex_g09(lit, nbasis)
         elif line.startswith(' *** Kinetic Energy ***'):
             one_ints['kin_ao'] = _load_twoindex_g09(lit, nbasis)

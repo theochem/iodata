@@ -393,7 +393,7 @@ def load_one(lit: LineIterator) -> dict:
             if 'U' in line:
                 restricted = False
                 break
-            elif 'R' in line:
+            if 'R' in line:
                 restricted = True
                 break
 
@@ -404,7 +404,7 @@ def load_one(lit: LineIterator) -> dict:
             atcorenum = float(line[70:])
             assert atcorenum == int(atcorenum)
             break
-        elif line.startswith(' Electronic structure'):
+        if line.startswith(' Electronic structure'):
             atcorenum = float(atnum)
             break
 

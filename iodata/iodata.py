@@ -58,6 +58,7 @@ def validate_shape(*shape):
     return validator
 
 
+# pylint: disable=too-many-instance-attributes
 @attr.s(auto_attribs=True, slots=True)
 class IOData:
     """A container class for data loaded from (or to be written to) a file.
