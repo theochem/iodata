@@ -75,11 +75,11 @@ def test_angmom_its():
 
 def test_shell_info_propertes():
     shells = [
-        Shell(0, [0], ['c'], np.zeros(6), np.zeros((6, 2))),
-        Shell(0, [0, 1], ['c', 'c'], np.zeros(3), np.zeros((3, 1))),
-        Shell(0, [0, 1], ['c', 'c'], np.zeros(1), np.zeros((1, 3))),
-        Shell(0, [2], ['p'], np.zeros(2), np.zeros((2, 2))),
-        Shell(0, [2, 3, 4], ['c', 'p', 'p'], np.zeros(1), np.zeros((1, 2)))]
+        Shell(0, [0], ['c'], np.zeros(6), np.zeros((6, 1))),
+        Shell(0, [0, 1], ['c', 'c'], np.zeros(3), np.zeros((3, 2))),
+        Shell(0, [0, 1], ['c', 'c'], np.zeros(1), np.zeros((1, 2))),
+        Shell(0, [2], ['p'], np.zeros(2), np.zeros((2, 1))),
+        Shell(0, [2, 3, 4], ['c', 'p', 'p'], np.zeros(1), np.zeros((1, 3)))]
 
     assert shells[0].nbasis == 1
     assert shells[1].nbasis == 4
@@ -106,28 +106,38 @@ def test_shell_info_propertes():
 
 
 def test_shell_validators():
+    Shell(0, [0, 0], ['c', 'c'], np.zeros(6), np.zeros((6, 2)))
     with pytest.raises(TypeError):
-        Shell(0, [0], ['c'], np.zeros(6), np.zeros((6, 3, 3)))
+        Shell(0, [0, 0], ['c', 'c'], np.zeros(6), np.zeros((6, 2, 2)))
     with pytest.raises(TypeError):
         Shell(0, [0], ['c'], np.zeros(6), np.zeros(6,))
     with pytest.raises(TypeError):
-        Shell(0, [0], ['c'], np.zeros((6, 2)), None)
+        Shell(0, [0], ['c'], np.zeros((6, 2)), np.zeros((6, 1)))
+    with pytest.raises(TypeError):
+        Shell(0, [0, 0], ['c', 'c'], np.zeros((6, 2)), np.zeros((6, 1)))
+    with pytest.raises(TypeError):
+        Shell(0, [0], ['c', 'c'], np.zeros(6), np.zeros((6, 2)))
+    with pytest.raises(TypeError):
+        Shell(0, [0, 0], ['c'], np.zeros(6), np.zeros((6, 2)))
 
 
 def test_shell_exceptions():
+    Shell(0, [0, 0, 0], ['e', 'e', 'e'], np.zeros(6), np.zeros((6, 3)))
     with pytest.raises(TypeError):
-        _ = Shell(0, [0], ['e'], np.zeros(6), np.zeros((6, 3))).nbasis
+        _ = Shell(0, [0, 0, 0], ['e', 'e', 'e'], np.zeros(6), np.zeros((6, 3))).nbasis
+    Shell(0, [0, 0, 0], ['p', 'p', 'p'], np.zeros(6), np.zeros((6, 3)))
     with pytest.raises(TypeError):
-        _ = Shell(0, [0], ['p'], np.zeros(6), np.zeros((6, 3))).nbasis
+        _ = Shell(0, [0, 0, 0], ['p', 'p', 'p'], np.zeros(6), np.zeros((6, 3))).nbasis
+    Shell(0, [1, 1, 1], ['p', 'p', 'p'], np.zeros(6), np.zeros((6, 3)))
     with pytest.raises(TypeError):
-        _ = Shell(0, [1], ['p'], np.zeros(6), np.zeros((6, 3))).nbasis
+        _ = Shell(0, [1, 1, 1], ['p', 'p', 'p'], np.zeros(6), np.zeros((6, 3))).nbasis
 
 
 def test_nbasis1():
     obasis = MolecularBasis([
-        Shell(0, [0], ['c'], np.zeros(16), np.zeros((16, 3))),
-        Shell(0, [1], ['c'], np.zeros(16), np.zeros((16, 3))),
-        Shell(0, [2], ['p'], np.zeros(16), np.zeros((16, 3))),
+        Shell(0, [0], ['c'], np.zeros(16), np.zeros((16, 1))),
+        Shell(0, [1], ['c'], np.zeros(16), np.zeros((16, 1))),
+        Shell(0, [2], ['p'], np.zeros(16), np.zeros((16, 1))),
     ], CP2K_CONVENTIONS, 'L2')
     assert obasis.nbasis == 9
 
@@ -214,10 +224,10 @@ def test_convert_convention_shell():
 
 def test_convert_convention_obasis():
     obasis = MolecularBasis(
-        [Shell(0, [0], ['c'], np.zeros(3), np.zeros((3, 2))),
+        [Shell(0, [0], ['c'], np.zeros(3), np.zeros((3, 1))),
          Shell(0, [0, 1], ['c', 'c'], np.zeros(3), np.zeros((3, 2))),
          Shell(0, [0, 1], ['c', 'c'], np.zeros(3), np.zeros((3, 2))),
-         Shell(0, [2], ['p'], np.zeros(3), np.zeros((3, 2)))],
+         Shell(0, [2], ['p'], np.zeros(3), np.zeros((3, 1)))],
         {(0, 'c'): ['s'],
          (1, 'c'): ['x', 'z', '-y'],
          (2, 'p'): ['dc0', 'dc1', '-ds1', 'dc2', '-ds2']},

@@ -25,6 +25,9 @@ from typing import List, Dict, NamedTuple, Tuple, Union
 import attr
 import numpy as np
 
+from .attrutils import validate_shape
+
+
 __all__ = ['angmom_sti', 'angmom_its', 'Shell', 'MolecularBasis',
            'convert_convention_shell', 'convert_conventions',
            'iter_cart_alphabet', 'HORTON2_CONVENTIONS', 'PSI4_CONVENTIONS']
@@ -82,16 +85,6 @@ def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
     return ANGMOM_CHARS[angmom]
 
 
-def validate_ndim(ndim):
-    """Return a function to validate the dimensionality of an array."""
-    def validator(obj, attribute, value):
-        if value.ndim != ndim:
-            raise TypeError("Attribute {} should have dimensionality {}. {}.ndim={}".format(
-                attribute.name, ndim, attribute.name, value.ndim
-            ))
-    return validator
-
-
 @attr.s(auto_attribs=True, slots=True)
 class Shell:
     """Describe a single shell in a molecular basis set.
@@ -118,10 +111,10 @@ class Shell:
     """
 
     icenter: int
-    angmoms: List[int]
-    kinds: List[str]
-    exponents: np.ndarray = attr.ib(validator=validate_ndim(1))
-    coeffs: np.ndarray = attr.ib(validator=validate_ndim(2))
+    angmoms: List[int] = attr.ib(validator=validate_shape(("coeffs", 1)))
+    kinds: List[str] = attr.ib(validator=validate_shape(("coeffs", 1)))
+    exponents: np.ndarray = attr.ib(validator=validate_shape(("coeffs", 0)))
+    coeffs: np.ndarray = attr.ib(validator=validate_shape(("exponents", 0), ("kinds", 0)))
 
     @property
     def nbasis(self) -> int:
