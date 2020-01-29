@@ -41,20 +41,20 @@ def convert_array_to(dtype):
 
 def validate_shape(*shape):
     """Return a function to validate the shape of an array."""
-    def validator(obj, attrname, value):
+    def validator(obj, attribute, value):
         if value is None:
             return
         myshape = tuple([obj.natom if size == 'natom' else size for size in shape])
         if len(myshape) != len(value.shape):
             raise TypeError('Expect ndim {} for attribute {}, got {}'.format(
-                len(myshape), attrname, len(value.shape)))
+                len(myshape), attribute.name, len(value.shape)))
         for axis, size in enumerate(myshape):
             if size is None:
                 continue
             if size != value.shape[axis]:
                 raise TypeError(
                     'Expect size {} for axis {} of attribute {}, got {}'.format(
-                        size, axis, attrname, value.shape[axis]))
+                        size, axis, attribute.name, value.shape[axis]))
     return validator
 
 

@@ -22,6 +22,7 @@ from functools import wraps
 from numbers import Integral
 from typing import List, Dict, NamedTuple, Tuple, Union
 
+import attr
 import numpy as np
 
 __all__ = ['angmom_sti', 'angmom_its', 'Shell', 'MolecularBasis',
@@ -81,7 +82,18 @@ def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
     return ANGMOM_CHARS[angmom]
 
 
-class Shell(NamedTuple):
+def validate_ndim(ndim):
+    """Return a function to validate the dimensionality of an array."""
+    def validator(obj, attribute, value):
+        if value.ndim != ndim:
+            raise TypeError("Attribute {} should have dimensionality {}. {}.ndim={}".format(
+                attribute.name, ndim, attribute.name, value.ndim
+            ))
+    return validator
+
+
+@attr.s(auto_attribs=True, slots=True)
+class Shell:
     """Describe a single shell in a molecular basis set.
 
     Attributes
@@ -108,8 +120,8 @@ class Shell(NamedTuple):
     icenter: int
     angmoms: List[int]
     kinds: List[str]
-    exponents: np.ndarray
-    coeffs: np.ndarray
+    exponents: np.ndarray = attr.ib(validator=validate_ndim(1))
+    coeffs: np.ndarray = attr.ib(validator=validate_ndim(2))
 
     @property
     def nbasis(self) -> int:
@@ -133,6 +145,15 @@ class Shell(NamedTuple):
     def ncon(self) -> int:
         """Return the number of contractions."""
         return len(self.angmoms)
+
+    def evolve(self, **kwargs):
+        """Return a copy with some modified attributes."""
+        # This method is implemented to give users access to this feature of
+        # attr without them having to import attr directly.
+        # This method was previously implemented by NamedTuple._replace.
+        # That old name is no longer used because of the underscore and because
+        # "replace" is not a good description.
+        return attr.evolve(self, **kwargs)
 
 
 class MolecularBasis(NamedTuple):

@@ -490,7 +490,7 @@ def _fix_obasis_normalize_contractions(obasis: MolecularBasis) -> MolecularBasis
     fixed_shells = []
     for shell in obasis.shells:
         shell_obasis = MolecularBasis(
-            [shell._replace(icenter=0)],
+            [shell.evolve(icenter=0)],
             obasis.conventions,
             obasis.primitive_normalization
         )
