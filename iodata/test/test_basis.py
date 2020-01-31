@@ -19,6 +19,7 @@
 """Unit tests for iodata.obasis."""
 
 
+import attr
 import numpy as np
 from numpy.testing import assert_equal
 import pytest
@@ -106,7 +107,12 @@ def test_shell_info_propertes():
 
 
 def test_shell_validators():
-    Shell(0, [0, 0], ['c', 'c'], np.zeros(6), np.zeros((6, 2)))
+    # The following line constructs a Shell instance with valid arguments.
+    # It should not raise a TypeError.
+    shell = Shell(0, [0, 0], ['c', 'c'], np.zeros(6), np.zeros((6, 2)))
+    # Rerun the validators as a double check.
+    attr.validate(shell)
+    # Tests with invalid constructor arguments.
     with pytest.raises(TypeError):
         Shell(0, [0, 0], ['c', 'c'], np.zeros(6), np.zeros((6, 2, 2)))
     with pytest.raises(TypeError):
