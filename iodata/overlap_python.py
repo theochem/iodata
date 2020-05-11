@@ -23,7 +23,7 @@ import numpy as np
 from typing import Tuple
 from scipy.special import binom, factorialk
 
-from .overlap_helper import tfs
+from .overlap_cartpure import tfs
 
 
 def compute_overlap_matrix(centers: np.ndarray, shell_index: np.ndarray, shell_type: np.ndarray,
