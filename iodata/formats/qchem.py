@@ -34,7 +34,7 @@ from ..utils import LineIterator, angstrom, amu, calorie, avogadro
 
 __all__ = []
 
-patterns = ['*.qchem']
+PATTERNS = ['qchem']
 
 
 def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
