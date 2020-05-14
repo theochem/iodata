@@ -75,6 +75,14 @@ def test_load_dump_consistency_li2(tmpdir):
     assert "ORCA" in record[0].message.args[0]
 
 
+def check_load_molden_dump_molekel_li2(tmpdir):
+    check_load_dump_consistency('li2.molden.input', tmpdir)
+
+
+def check_load_fchk_dump_molekel_li2(tmpdir):
+    check_load_dump_consistency('li2_g09_nbasis_indep.fchk', tmpdir)
+
+
 def test_load_mkl_ethanol():
     with path('iodata.test.data', 'ethanol.mkl') as fn_mkl:
         with pytest.warns(FileFormatWarning) as record:
