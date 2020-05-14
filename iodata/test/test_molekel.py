@@ -47,6 +47,9 @@ def test_load_mkl_ethanol():
     assert_equal(mol.atcoords.shape, (9, 3))
     assert_allclose(mol.atcoords[2, 1] / angstrom, 2.239037, atol=1.e-5)
     assert_allclose(mol.atcoords[5, 2] / angstrom, 0.948420, atol=1.e-5)
+    assert_equal(mol.atcharges['mulliken'].shape, (9,))
+    q = [0.143316, -0.445861, 0.173045, 0.173021, 0.024542, 0.143066, 0.143080, -0.754230, 0.400021]
+    assert_allclose(mol.atcharges['mulliken'], q)
     assert mol.obasis.nbasis == 39
     assert_allclose(mol.obasis.shells[0].exponents[0], 18.731137000)
     assert_allclose(mol.obasis.shells[4].exponents[0], 7.868272400)
@@ -77,6 +80,8 @@ def test_load_mkl_li2():
             mol = load_one(str(fn_mkl))
     assert len(record) == 1
     assert "ORCA" in record[0].message.args[0]
+    assert_equal(mol.atcharges['mulliken'].shape, (2,))
+    assert_allclose(mol.atcharges['mulliken'], [0.5, 0.5])
     # check mo normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp)
@@ -89,6 +94,8 @@ def test_load_mkl_h2():
             mol = load_one(str(fn_mkl))
     assert len(record) == 1
     assert "ORCA" in record[0].message.args[0]
+    assert_equal(mol.atcharges['mulliken'].shape, (2,))
+    assert_allclose(mol.atcharges['mulliken'], [0, 0])
     # check mo normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)

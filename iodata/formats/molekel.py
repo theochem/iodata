@@ -47,6 +47,17 @@ def _load_helper_charge_spinpol(lit: LineIterator) -> List[int]:
     return charge, spinpol
 
 
+def _load_helper_charges(lit: LineIterator) -> dict:
+    atcharges = []
+    for line in lit:
+        line = line.strip()
+        if line == '$END':
+            break
+        atcharges.append(float(line))
+
+    return {'mulliken': np.array(atcharges)}
+
+
 def _load_helper_atoms(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]:
     atnums = []
     atcoords = []
@@ -149,7 +160,7 @@ def _load_helper_occ(lit: LineIterator) -> np.ndarray:
 
 
 # pylint: disable=too-many-branches,too-many-statements
-@document_load_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'])
+@document_load_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcharges'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     charge = None
@@ -162,6 +173,7 @@ def load_one(lit: LineIterator) -> dict:
     coeffsb = None
     energiesb = None
     occsb = None
+    atcharges = None
     # Using a loop because we're not entirely sure if sections in an MKL file
     # have a fixed order.
     while True:
@@ -173,6 +185,8 @@ def load_one(lit: LineIterator) -> dict:
             break
         if line == '$CHAR_MULT':
             charge, spinpol = _load_helper_charge_spinpol(lit)
+        elif line == '$CHARGES':
+            atcharges = _load_helper_charges(lit)
         elif line == '$COORD':
             atnums, atcoords = _load_helper_atoms(lit)
         elif line == '$BASIS':
@@ -230,6 +244,7 @@ def load_one(lit: LineIterator) -> dict:
         'atnums': atnums,
         'obasis': obasis,
         'mo': mo,
+        'atcharges': atcharges,
     }
     _fix_molden_from_buggy_codes(result, lit)
     return result
