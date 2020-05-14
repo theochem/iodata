@@ -23,14 +23,16 @@ This format is used by two programs:
 `Orca <https://orcaforum.cec.mpg.de/>`_.
 """
 
+import warnings
 
-from typing import Tuple, List
+from typing import Tuple, List, TextIO
 
 import numpy as np
 
 from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
-from ..basis import angmom_sti, MolecularBasis, Shell
-from ..docstrings import document_load_one
+from ..basis import angmom_sti, angmom_its, convert_conventions, MolecularBasis, Shell
+from ..docstrings import document_load_one, document_dump_one
+from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..utils import angstrom, LineIterator
 
@@ -248,3 +250,144 @@ def load_one(lit: LineIterator) -> dict:
     }
     _fix_molden_from_buggy_codes(result, lit)
     return result
+
+
+@document_dump_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'])
+def dump_one(f: TextIO, data: IOData):
+    """Do not edit this docstring. It will be overwritten."""
+    # Header
+    f.write('$MKL\n')
+    f.write('#\n')
+    f.write('# MKL format file produced by ORCA\n')
+    f.write('#\n')
+
+    # CHAR_MUL
+    f.write('$CHAR_MULT\n')
+    f.write('  {:.0f} {:.0f}\n'.format(data.charge, data.spinpol + 1))
+    f.write('$END\n')
+    f.write('\n')
+
+    # COORD
+    atcoords = data.atcoords / angstrom
+    f.write('$COORD\n')
+    for x in range(len(data.atnums)):
+        f.write('   {:d}   {: ,.6f}  {: ,.6f}  {: ,.6f}\n'.format(data.atnums[x],
+                                                                  atcoords[x][0], atcoords[x][1],
+                                                                  atcoords[x][2]))
+
+    f.write('$END\n')
+    f.write('\n')
+
+    # CHARGES
+    if 'mulliken' in data.atcharges:
+        charges = data.atcharges['mulliken']
+    else:
+        charges = {}
+        warnings.warn('Mulliken charges not stored in IOData. Proceding without printing them')
+    f.write('$CHARGES\n')
+    for charge in charges:
+        f.write('  {: ,.6f}\n'.format(charge))
+
+    f.write('$END\n')
+    f.write('\n')
+
+    # BASIS
+    f.write('$BASIS\n')
+
+    iatom_new = 0
+    iatom_last = 0
+    for shell in data.obasis.shells:
+        iatom_new = shell.icenter
+        if iatom_new != iatom_last:
+            f.write('$$\n')
+
+        for iangmom, angmom in enumerate(shell.angmoms):
+            iatom_last = shell.icenter
+            f.write(' {} {:1s} 1.00\n'.format(shell.nbasis,
+                                              angmom_its(angmom).capitalize()))
+            for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
+                f.write('{:20.10f} {:17.10f}\n'.format(exponent, coeff))
+
+    f.write('\n')
+    f.write('$END\n')
+    f.write('\n')
+
+    if data.mo.kind == 'restricted':
+        # COEFF_ALPHA
+        f.write('$COEFF_ALPHA\n')
+        _dump_helper_coeffs(f, data, spin='a')
+
+        # OCC_ALPHA
+        f.write('$OCC_ALPHA\n')
+        _dump_helper_occ(f, data, spin='ab')
+
+    # Not taking into account genralized.
+    elif data.mo.kind == 'unrestricted':
+        # COEFF_ALPHA
+        f.write('$COEFF_ALPHA\n')
+        _dump_helper_coeffs(f, data, spin='a')
+
+        # OCC_ALPHA
+        f.write('$OCC_ALPHA\n')
+        _dump_helper_occ(f, data, spin='a')
+        f.write('\n')
+
+        # COEFF_BETA
+        f.write('$COEFF_BETA\n')
+        _dump_helper_coeffs(f, data, spin='b')
+
+        # OCC_BETA
+        f.write('$OCC_BETA\n')
+        _dump_helper_occ(f, data, spin='b')
+
+
+# Defining help dumping functions
+def _dump_helper_coeffs(f, data, spin=None):
+    permutation, signs = convert_conventions(data.obasis, CONVENTIONS)
+    if spin == 'a':
+        norb = data.mo.norba
+        coeff = data.mo.coeffsa[permutation] * signs.reshape(-1, 1)
+        ener = data.mo.energiesa
+    elif spin == 'b':
+        norb = data.mo.norbb
+        coeff = data.mo.coeffsb[permutation] * signs.reshape(-1, 1)
+        ener = data.mo.energiesb
+    else:
+        raise IOError('A spin must be specified')
+
+    for j in range(0, norb, 5):
+        if norb < 5:
+            f.write(' a1g' * norb + '\n')
+        elif norb - j < 5:
+            f.write(' a1g' * (norb - j) + '\n')
+        else:
+            f.write(' a1g' * 5 + '\n')
+
+        en = ' '.join(['   {: ,.7f}'.format(e) for e in ener[j:j + 5]])
+        f.write(en + '\n')
+        for orb in coeff[:, j:j + 5]:
+            coeffs = ' '.join(['  {: ,.7f}'.format(c) for c in orb])
+            f.write(coeffs + '\n')
+
+    f.write(' $END\n')
+    f.write('\n')
+
+
+def _dump_helper_occ(f, data, spin=None):
+    if spin == 'a':
+        norb = data.mo.norba
+        occ = data.mo.occsa
+    elif spin == 'b':
+        norb = data.mo.norbb
+        occ = data.mo.occsb
+    elif spin == 'ab':
+        norb = data.mo.norba
+        occ = data.mo.occs
+    else:
+        raise IOError('A spin must be specified')
+
+    for j in range(0, norb, 5):
+        occs = ' '.join(['  {: ,.7f}'.format(o) for o in occ[j:j + 5]])
+        f.write(occs + '\n')
+
+    f.write(' $END\n')

@@ -19,11 +19,13 @@
 # pylint: disable=unsubscriptable-object,no-member
 """Test iodata.formats.molekel module."""
 
+import os
+
 from numpy.testing import assert_equal, assert_allclose
 import pytest
 
-from .common import check_orthonormal
-from ..api import load_one
+from .common import check_orthonormal, compare_mols
+from ..api import load_one, dump_one
 from ..overlap import compute_overlap
 from ..utils import angstrom, FileFormatWarning
 
@@ -31,6 +33,46 @@ try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
+
+
+def check_load_dump_consistency(fn, tmpdir):
+    """Check if data is preserved after dumping and loading a Molekel file.
+
+    Parameters
+    ----------
+    fn : str
+        The Molekel filename to load
+    tmpdir : str
+        The temporary directory to dump and load the file.
+
+    """
+    with path('iodata.test.data', fn) as file_name:
+        mol1 = load_one(str(file_name))
+    fn_tmp = os.path.join(tmpdir, 'foo.bar')
+    dump_one(mol1, fn_tmp, fmt='molekel')
+    mol2 = load_one(fn_tmp, fmt='molekel')
+    compare_mols(mol1, mol2)
+
+
+def test_load_dump_consistency_h2(tmpdir):
+    with pytest.warns(FileFormatWarning) as record:
+        check_load_dump_consistency('h2_sto3g.mkl', tmpdir)
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
+
+
+def test_load_dump_consistency_ethanol(tmpdir):
+    with pytest.warns(FileFormatWarning) as record:
+        check_load_dump_consistency('ethanol.mkl', tmpdir)
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
+
+
+def test_load_dump_consistency_li2(tmpdir):
+    with pytest.warns(FileFormatWarning) as record:
+        check_load_dump_consistency('li2.mkl', tmpdir)
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
 
 
 def test_load_mkl_ethanol():
