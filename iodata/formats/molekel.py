@@ -252,7 +252,7 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
-@document_dump_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'])
+@document_dump_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcharges'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     # Header
@@ -271,10 +271,8 @@ def dump_one(f: TextIO, data: IOData):
     atcoords = data.atcoords / angstrom
     f.write('$COORD\n')
     for x in range(len(data.atnums)):
-        f.write('   {:d}   {: ,.6f}  {: ,.6f}  {: ,.6f}\n'.format(data.atnums[x],
-                                                                  atcoords[x][0], atcoords[x][1],
-                                                                  atcoords[x][2]))
-
+        f.write('   {:d}   {: ,.6f}  {: ,.6f}  {: ,.6f}\n'.format(data.atnums[x], atcoords[x][0],
+                                                                  atcoords[x][1], atcoords[x][2]))
     f.write('$END\n')
     f.write('\n')
 
@@ -283,31 +281,25 @@ def dump_one(f: TextIO, data: IOData):
         charges = data.atcharges['mulliken']
     else:
         charges = {}
-        warnings.warn('Mulliken charges not stored in IOData. Proceding without printing them')
+        warnings.warn('Mulliken charges not stored in IOData. Proceeding without printing them.')
     f.write('$CHARGES\n')
     for charge in charges:
         f.write('  {: ,.6f}\n'.format(charge))
-
     f.write('$END\n')
     f.write('\n')
 
     # BASIS
     f.write('$BASIS\n')
-
-    iatom_new = 0
     iatom_last = 0
     for shell in data.obasis.shells:
         iatom_new = shell.icenter
         if iatom_new != iatom_last:
             f.write('$$\n')
-
         for iangmom, angmom in enumerate(shell.angmoms):
             iatom_last = shell.icenter
-            f.write(' {} {:1s} 1.00\n'.format(shell.nbasis,
-                                              angmom_its(angmom).capitalize()))
+            f.write(' {} {:1s} 1.00\n'.format(shell.nbasis, angmom_its(angmom).capitalize()))
             for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
                 f.write('{:20.10f} {:17.10f}\n'.format(exponent, coeff))
-
     f.write('\n')
     f.write('$END\n')
     f.write('\n')
@@ -321,7 +313,7 @@ def dump_one(f: TextIO, data: IOData):
         f.write('$OCC_ALPHA\n')
         _dump_helper_occ(f, data, spin='ab')
 
-    # Not taking into account genralized.
+    # Not taking into account generalized.
     elif data.mo.kind == 'unrestricted':
         # COEFF_ALPHA
         f.write('$COEFF_ALPHA\n')
@@ -389,5 +381,4 @@ def _dump_helper_occ(f, data, spin=None):
     for j in range(0, norb, 5):
         occs = ' '.join(['  {: ,.7f}'.format(o) for o in occ[j:j + 5]])
         f.write(occs + '\n')
-
     f.write(' $END\n')
