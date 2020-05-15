@@ -127,8 +127,7 @@ def load_qchem_low(lit: LineIterator, lit_hess: LineIterator = None) -> Tuple:
     for line in lit:
         if line.strip().startswith('---'):
             break
-        else:
-            mulliken_charges.append(line.split()[2])
+        mulliken_charges.append(line.split()[2])
 
     mulliken_charges = np.array(mulliken_charges, dtype=np.float)
     # atomic mol_charges
