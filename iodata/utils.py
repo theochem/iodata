@@ -43,6 +43,7 @@ avogadro = spc.value('Avogadro constant')
 # calorie
 calorie = spc.calorie
 
+
 class FileFormatError(IOError):
     """Raised when incorrect content is encountered when loading files."""
 

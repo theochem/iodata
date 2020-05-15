@@ -154,4 +154,3 @@ def test_load_qchem_h2o2_hf():
     print(type(mol.athessian))
     assert_equal(mol.charge, 0.000000)
     assert_allclose(mol.energy, -148.7649966058)
-
