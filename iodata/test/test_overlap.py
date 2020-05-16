@@ -127,7 +127,8 @@ def test_overlap_small():
 def test_overlap_matrix_big():
     import time
     # load overlap and atomic basis data (s, p & pure d shells)
-    with path('iodata.test.data', "F.molden") as fn_npy:
+    with path('iodata.test.data', "c8h10n4o2_q+0_uhf_ccpvtz.fchk") as fn_npy:
+    # with path('iodata.test.data', "big.molden") as fn_npy:
         data = load_one(fn_npy)
 
     # d = {key: value for key, value in d.items()}

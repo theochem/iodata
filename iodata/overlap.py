@@ -90,13 +90,6 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
                     s1 = scales[i1][iexp1]
                     n0 = np.vstack(list(iter_cart_alphabet(shell0.angmoms[0])))
                     n1 = np.vstack(list(iter_cart_alphabet(shell1.angmoms[0])))
-                    # print("cc0 = ", cc0)
-                    # print("a0  = ", a0)
-                    # print("s0  = ", s0)
-                    # print("r0  = ", r0)
-                    # print("n0  = ", n0)
-                    # print("result = ", result)
-                    # print("")
                     add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, n0, n1, result)
 
             # END of Cartesian coordinate system (if going to pure coordinates)
