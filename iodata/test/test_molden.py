@@ -32,6 +32,7 @@ from ..formats.molden import _load_low
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 from ..utils import LineIterator, angstrom, FileFormatWarning
 
+from .. overlap_python import compute_overlap_matrix
 
 try:
     from importlib_resources import path
@@ -422,3 +423,29 @@ def test_dump_molden_from_fchk_rohf(tmpdir):
         fn_tmp = os.path.join(tmpdir, 'ch3_rohf_sto3g_g03.molden')
         dump_one(mol, fn_tmp)
         assert os.path.isfile(fn_tmp)
+
+
+def test_overlap_matrix_big():
+    # load overlap and atomic basis data (s, p & pure d shells)
+#     with path('iodata.test.data', "big.molden") as fn_npy:
+#     with path('iodata.test.data', "h_sto3g.fchk") as fn_npy:
+    with path('iodata.test.data', "li2.molden.input") as fn_npy:
+        print(fn_npy)
+        data = load_one(fn_npy)
+    old = compute_overlap(data.obasis, data.atcoords)
+    print("Overlap OLD")
+    print(old)
+    obasis = data.obasis
+    print(obasis)
+    print("nbasis = ", obasis.nbasis)
+    print("#shells = ", len(obasis.shells))
+    # dn = {"centers": obasis["centers"],
+    #       "shell_index": obasis["shell_map"],
+    #       "shell_type": obasis["shell_types"],
+    #       "shell_nprim": obasis["nprims"],
+    #       "prim_alpha": obasis["alphas"],
+    #       "prim_coeff": obasis["con_coeffs"]}
+    new = compute_overlap_matrix(data.obasis, data.atcoords)
+    print(abs(old - new).max())
+    assert abs(old - new).max() < 1.e-6
+    assert 5 == 6

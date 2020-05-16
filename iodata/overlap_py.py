@@ -20,18 +20,18 @@
 
 
 import numpy as np
-from scipy.special import factorialk
+from scipy.special import binom, factorialk
 
-from .overlap_accel import add_overlap
+from .overlap_python import compute_overlap_gaussian_3d
 from .overlap_cartpure import tfs
 from .basis import convert_conventions, iter_cart_alphabet, MolecularBasis
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
 
 
-__all__ = ['OVERLAP_CONVENTIONS', 'compute_overlap', 'gob_cart_normalization']
+__all__ = ['OVERLAP_CONVENTIONS', 'compute_overlap_py', 'gob_cart_normalization']
 
 
-def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
+def compute_overlap_py(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
     r"""Compute overlap matrix for the given molecular basis set.
 
     .. math::
@@ -83,21 +83,21 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
             result = np.zeros((len(scales[i0][0]), len(scales[i1][0])))
             # Loop over primitives in shell0 (Cartesian)
             for iexp0, (a0, cc0) in enumerate(zip(shell0.exponents, shell0.coeffs[:, 0])):
-                s0 = scales[i0][iexp0]
+                scales0 = scales[i0][iexp0]
 
                 # Loop over primitives in shell1 (Cartesian)
                 for iexp1, (a1, cc1) in enumerate(zip(shell1.exponents, shell1.coeffs[:, 0])):
-                    s1 = scales[i1][iexp1]
-                    n0 = np.vstack(list(iter_cart_alphabet(shell0.angmoms[0])))
-                    n1 = np.vstack(list(iter_cart_alphabet(shell1.angmoms[0])))
-                    # print("cc0 = ", cc0)
-                    # print("a0  = ", a0)
-                    # print("s0  = ", s0)
-                    # print("r0  = ", r0)
-                    # print("n0  = ", n0)
-                    # print("result = ", result)
-                    # print("")
-                    add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, n0, n1, result)
+                    scales1 = scales[i1][iexp1]
+                    iterpow0 = np.vstack(list(iter_cart_alphabet(shell0.angmoms[0])))
+                    iterpow1 = np.vstack(list(iter_cart_alphabet(shell1.angmoms[0])))
+
+                    for s0, n0, in enumerate(iterpow0):
+                        for s1, n1, in enumerate(iterpow1):
+                            v = compute_overlap_gaussian_3d(r0, r1, a0, a1, n0, n1)
+                            v *= cc0 * cc1 * scales0[s0] * scales1[s1]
+                            result[s0, s1] += v
+                    # coeff, alpha0, alpha1, scales0, scales1, r0, r1, iterpow0, iterpow1, result
+                    # add_overlap(cc0 * cc1, a0, a1, s0, s1, r0, r1, n0, n1, result)
 
             # END of Cartesian coordinate system (if going to pure coordinates)
 
@@ -119,6 +119,34 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
     overlap = overlap[permutation] * signs.reshape(-1, 1)
     overlap = overlap[:, permutation] * signs
     return overlap
+
+
+def compute_overlap_gaussian_3d(r1, r2, a1, a2, n1, n2):
+    """Compute overlap integral of two Gaussian functions in three-dimensions."""
+    value = compute_overlap_gaussian_1d(r1[0], r2[0], a1, a2, n1[0], n2[0])
+    value *= compute_overlap_gaussian_1d(r1[1], r2[1], a1, a2, n1[1], n2[1])
+    value *= compute_overlap_gaussian_1d(r1[2], r2[2], a1, a2, n1[2], n2[2])
+    return value
+
+
+def compute_overlap_gaussian_1d(x1, x2, a1, a2, n1, n2):
+    """Compute overlap integral of two Gaussian functions in one-dimensions."""
+    # compute total exponent and new x
+    at = a1 + a2
+    xn = (a1 * x1 + a2 * x2) / at
+    pf = np.exp(-a1 * a2 * (x1 - x2) ** 2 / at)
+    x1 = xn - x1
+    x2 = xn - x2
+    # compute overlap
+    value = 0
+    for i in range(n1 + 1):
+        pf_i = binom(n1, i) * x1 ** (n1 - i)
+        for j in range(n2 + 1):
+            if (i + j) % 2 == 0:
+                integ = factorialk(i + j - 1, 2) / (2 * at) ** ((i + j) / 2)
+                value += pf_i * binom(n2, j) * x2 ** (n2 - j) * integ
+    value *= pf * np.sqrt(np.pi / at)
+    return value
 
 
 def _compute_cart_shell_normalizations(shell: 'Shell') -> np.ndarray:
