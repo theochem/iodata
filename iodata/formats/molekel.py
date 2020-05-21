@@ -20,7 +20,7 @@
 
 This format is used by two programs:
 `Molekel <http://ugovaretto.github.io/molekel/wiki/pmwiki.php/Main/HomePage.html>`_ and
-`Orca <https://orcaforum.cec.mpg.de/>`_.
+`Orca <https://sites.google.com/site/orcainputlibrary/>`_.
 """
 
 import warnings

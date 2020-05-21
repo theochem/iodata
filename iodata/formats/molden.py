@@ -19,7 +19,7 @@
 """Molden file format.
 
 Many QC codes can write out Molden files, e.g. `Molpro <https://www.molpro.net/>`_,
-`Orca <https://orcaforum.cec.mpg.de/>`_, `PSI4 <http://www.psicode.org/>`_,
+`Orca <https://sites.google.com/site/orcainputlibrary/>`_, `PSI4 <http://www.psicode.org/>`_,
 `Molden <http://www.cmbi.ru.nl/molden/>`_, `Turbomole <http://www.turbomole.com/>`_. Keep
 in mind that several of these write incorrect versions of the file format, but these
 errors are corrected when loading them with IOData.
