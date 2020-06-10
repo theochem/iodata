@@ -245,6 +245,7 @@ attribute:
 - ``reaction_coordinate`` is only present in case of an IRC calculation.
 """
 
+
 @document_load_many("XYZ", ['atcoords', 'atgradient', 'atnums', 'atcorenums',
                             'energy', 'extra', 'title'], [], {}, LOAD_MANY_NOTES)
 def load_many(lit: LineIterator) -> Iterator[dict]:
