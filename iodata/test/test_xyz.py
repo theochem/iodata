@@ -140,6 +140,30 @@ def test_load_many():
     assert_allclose(mols[-1].atcoords[1] / angstrom, [-2.123423, -3.355326, -3.353739])
 
 
+def test_load_many_dataset_emptylines():
+    with path('iodata.test.data', 'dataset_blanklines.xyz') as fn_xyz:
+        mols = list(load_many(str(fn_xyz)))
+    assert len(mols) == 3
+    # Check 1st item
+    assert mols[0].title == "H2O molecule"
+    assert_equal(mols[0].atnums, [8, 1, 1])
+    assert mols[0].atcoords.shape == (3, 3)
+    assert_allclose(mols[0].atcoords[0] / angstrom, [3.340669, 0.264248, 2.537911])
+    assert_allclose(mols[0].atcoords[1] / angstrom, [3.390790, -0.626971, 2.171608])
+    assert_allclose(mols[0].atcoords[2] / angstrom, [2.864329, 0.114369, 3.363500])
+    # Check 2nd item
+    assert mols[1].title == "N atom"
+    assert_equal(mols[1].atnums, [7])
+    assert mols[1].atcoords.shape == (1, 3)
+    assert_allclose(mols[1].atcoords, np.array([[0.0, 0.0, 0.0]]))
+    # Check 3rd item
+    assert mols[2].title == "CH4 molecule"
+    assert_equal(mols[2].atnums, [6, 1, 1, 1, 1])
+    assert mols[2].atcoords.shape == (5, 3)
+    assert_allclose(mols[2].atcoords[1] / angstrom, [0.5518800034, 0.7964000023, 0.4945200020])
+    assert_allclose(mols[2].atcoords[-1] / angstrom, [-0.4574600021, 0.3858400016, -0.9084400049])
+
+
 def test_load_dump_many_consistency(tmpdir):
     with path('iodata.test.data', 'water_trajectory.xyz') as fn_xyz:
         mols0 = list(load_many(str(fn_xyz)))
