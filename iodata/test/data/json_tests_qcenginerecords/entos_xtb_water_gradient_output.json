@@ -1,0 +1,60 @@
+{
+  "molecule": {
+    "symbols": [
+      "O",
+      "H",
+      "H"
+    ],
+    "geometry": [
+      0.0,
+      0.0,
+      -0.12947694,
+      0.0,
+      -1.49418734,
+      1.02744651,
+      0.0,
+      1.49418734,
+      1.02744651
+    ],
+    "connectivity": [
+      [
+        0,
+        1,
+        1.0
+      ],
+      [
+        0,
+        2,
+        1.0
+      ]
+    ]
+  },
+  "driver": "gradient",
+  "model": {
+    "method": "XTB"
+  },
+  "id": null,
+  "schema_name": "qcschema_output",
+  "schema_version": 1,
+  "provenance": {
+    "creator": "QCElemental",
+    "version": "v0.2.6",
+    "routine": "qcelemental.models.results"
+  },
+  "success": true,
+  "return_result": [
+      -5.5576756606626808e-17,
+      -2.8537718350680210e-16,
+      -4.2307529781663702e-02,
+       5.0446434076244206e-17,
+      -2.5275798507216667e-02,
+       2.1153764890831817e-02,
+       5.1303225303826035e-18,
+       2.5275798507216958e-02,
+       2.1153764890831900e-02
+    ],
+  "properties": {
+    "scf_total_energy": -5.7659905206521511
+  },
+  "error": null
+}

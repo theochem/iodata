@@ -1,0 +1,64 @@
+{
+  "id": null,
+  "schema_name": "qcschema_input",
+  "schema_version": 1,
+  "molecule": {
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2,
+    "validated": true,
+    "symbols": [
+    ],
+    "geometry": [
+    ],
+    "name": "dummy",
+    "identifiers": null,
+    "comment": null,
+    "molecular_charge": 0,
+    "molecular_multiplicity": 1,
+    "masses": [
+    ],
+    "real": [
+    ],
+    "atom_labels": [
+    ],
+    "atomic_numbers": [
+    ],
+    "mass_numbers": [
+    ],
+    "connectivity": [
+    ],
+    "fragments": [
+      [
+      ]
+    ],
+    "fragment_charges": [
+      0
+    ],
+    "fragment_multiplicities": [
+      1
+    ],
+    "fix_com": false,
+    "fix_orientation": false,
+    "fix_symmetry": null,
+    "provenance": {
+      "creator": "dummy",
+      "version": "dummy",
+      "routine": "dummy"
+    },
+    "id": null,
+    "extras": null
+  },
+  "driver": "energy",
+  "model": {
+    "method": "dummy",
+    "basis": null
+  },
+  "keywords": {},
+  "protocols": {},
+  "extras": {},
+  "provenance": {
+    "creator": "dummy",
+    "version": "dummy",
+    "routine": "dummy"
+  }
+}

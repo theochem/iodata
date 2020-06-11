@@ -1,0 +1,20 @@
+{
+    "molecule": {
+        "geometry": [
+            0.0, 0.0, -0.1294769411935893, 0.0, -1.494187339479985,
+            1.0274465079245698, 0.0, 1.494187339479985, 1.0274465079245698
+        ],
+	"molecular_charge": 1,
+	"molecular_multiplicity": 2,
+        "symbols": ["O", "H", "H"],
+        "connectivity": [[0, 1, 1], [0, 2, 1]]
+    },
+    "driver": "energy",
+    "keywords": {
+        "df": "def2-svp-jfit"
+    },
+    "model": {
+        "method": "PBE",
+        "basis": "def2-svp"
+    }
+}

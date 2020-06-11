@@ -1,0 +1,64 @@
+{
+  "molecule": {
+    "symbols": [
+      "O",
+      "H",
+      "H"
+    ],
+    "geometry": [
+      0.0,
+      0.0,
+      -0.12947694,
+      0.0,
+      -1.49418734,
+      1.02744651,
+      0.0,
+      1.49418734,
+      1.02744651
+    ],
+    "connectivity": [
+      [
+        0,
+        1,
+        1.0
+      ],
+      [
+        0,
+        2,
+        1.0
+      ]
+    ]
+  },
+  "driver": "gradient",
+  "model": {
+    "method": "LDA",
+    "basis": "def2-svp"
+  },
+  "id": null,
+  "schema_name": "qcschema_output",
+  "schema_version": 1,
+  "keywords": {
+    "df": "def2-svp-jkfit"
+  },
+  "provenance": {
+    "creator": "QCElemental",
+    "version": "v0.2.6",
+    "routine": "qcelemental.models.results"
+  },
+  "success": true,
+  "return_result" : [
+    0.0,
+    0.0,
+    -0.022776959739855274,
+    0.0,
+    -0.020543726323679429,
+    0.011388481237180531,
+    0.0,
+    0.020543722924969171,
+    0.011388478502673022
+  ],
+  "properties": {
+    "scf_total_energy": -75.7944540387
+  },
+  "error": null
+}

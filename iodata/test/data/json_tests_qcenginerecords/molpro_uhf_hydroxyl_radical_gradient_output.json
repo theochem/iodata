@@ -1,0 +1,40 @@
+{
+  "molecule": {
+    "symbols": ["O", "H"],
+    "geometry": [
+      0.0,  0.0,       -0.12947694,
+      0.0, -1.49418734, 1.02744651
+    ],
+    "connectivity": [[0, 1, 1]],
+    "fix_orientation": true,
+    "fix_symmetry": "c1"
+  },
+  "driver": "gradient",
+  "model": {
+    "method": "HF",
+    "basis": "sto-3g"
+  },
+  "id": null,
+  "schema_name": "qcschema_output",
+  "schema_version": 1,
+  "keywords": {"reference": "unrestricted"},
+  "provenance": {
+    "creator": "QCElemental",
+    "version": "v0.2.6",
+    "routine": "qcelemental.models.results"
+  },
+  "success": true,
+  "return_result": [
+    -0.000000000000,  -0.012808016979,  0.009917026321,
+     0.000000000000,  0.012808016979,  -0.009917026321
+  ],
+  "properties": {
+    "nuclear_repulsion_energy": 4.23341599787008,
+    "scf_dipole_moment": [0.0, -0.387012938614475, 0.299657433943379],
+    "scf_total_energy": -74.3646755742112,
+    "calcinfo_nalpha": 5,
+    "calcinfo_nbeta": 4,
+    "calcinfo_nbasis": 6
+  },
+  "error": null
+}

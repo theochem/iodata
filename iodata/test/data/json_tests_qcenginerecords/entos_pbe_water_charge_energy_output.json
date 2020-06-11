@@ -1,0 +1,62 @@
+{
+  "molecule": {
+    "symbols": [
+      "O",
+      "H",
+      "H"
+    ],
+    "molecular_charge": 1,
+    "molecular_multiplicity": 2,
+    "geometry": [
+      0.0,
+      0.0,
+      -0.12947694,
+      0.0,
+      -1.49418734,
+      1.02744651,
+      0.0,
+      1.49418734,
+      1.02744651
+    ],
+    "connectivity": [
+      [
+        0,
+        1,
+        1.0
+      ],
+      [
+        0,
+        2,
+        1.0
+      ]
+    ]
+  },
+  "driver": "energy",
+  "model": {
+    "method": "PBE",
+    "basis": "def2-svp"
+  },
+  "id": null,
+  "schema_name": "qcschema_output",
+  "schema_version": 1,
+  "keywords": {
+    "df": "def2-svp-jfit"
+  },
+  "provenance": {
+    "creator": "QCElemental",
+    "version": "v0.2.6",
+    "routine": "qcelemental.models.results"
+  },
+  "success": true,
+  "return_result": -7.5823009117205473e+01,
+  "properties": {
+    "scf_total_energy": -7.5823009117205473e+01,
+    "scf_iterations": 8,
+    "calcinfo_nbasis": 24,
+    "calcinfo_natom": 3
+  },
+  "extras": {
+    "scf_converged": true
+  },
+  "error": null
+}

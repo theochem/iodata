@@ -1,0 +1,130 @@
+{
+    "molecule": {
+        "symbols": [
+            "O",
+            "H",
+            "H"
+        ],
+        "geometry": [
+            0.0,
+            0.0,
+            -0.12947694,
+            0.0,
+            -1.49418734,
+            1.02744651,
+            0.0,
+            1.49418734,
+            1.02744651
+        ],
+        "schema_name": "qcschema_molecule",
+        "schema_version": 2,
+        "name": "H2O",
+        "molecular_charge": 0.0,
+        "molecular_multiplicity": 1,
+        "masses": [
+            15.99491461957,
+            1.00782503223,
+            1.00782503223
+        ],
+        "real": [
+            true,
+            true,
+            true
+        ],
+        "atom_labels": [
+            "",
+            "",
+            ""
+        ],
+        "atomic_numbers": [
+            8,
+            1,
+            1
+        ],
+        "mass_numbers": [
+            16,
+            1,
+            1
+        ],
+        "connectivity": [
+            [
+                0,
+                1,
+                1.0
+            ],
+            [
+                0,
+                2,
+                1.0
+            ]
+        ],
+        "fragments": [
+            [
+                0,
+                1,
+                2
+            ]
+        ],
+        "fragment_charges": [
+            0.0
+        ],
+        "fragment_multiplicities": [
+            1
+        ],
+        "fix_com": false,
+        "fix_orientation": false,
+        "provenance": {
+            "creator": "QCElemental",
+            "version": "v0.3.3",
+            "routine": "qcelemental.molparse.from_schema"
+        }
+    },
+    "driver": "gradient",
+    "model": {
+        "method": "HF",
+        "basis": "sto-3g"
+    },
+    "id": null,
+    "schema_name": "qcschema_output",
+    "schema_version": 1,
+    "keywords": {
+        "levelshift": "yes",
+        "levelshiftvalb": "0.1",
+        "level    shiftvala": "1.0",
+        "gpus": "1",
+        "maxit": "500",
+        "scf": "diis+a",
+        "method": "ub3lyp"
+    },
+    "extras": {},
+    "provenance": {
+        "creator": "QCElemental",
+        "version": "v0.3.3",
+        "routine": "qcelemental.models.results"
+    },
+    "properties": {
+        "nuclear_repulsion_energy": 8.801462697763,
+        "scf_dipole_moment": [
+            -1.8e-05,
+            -0.0,
+            1.607331
+        ],
+        "scf_total_energy": -75.3197341833,
+        "scf_iterations": 28
+    },
+    "return_result": [
+        -1.62579e-05,
+        -8.6e-09,
+        0.0521081813,
+        8.1296e-06,
+        0.0073112882,
+        -0.0260540725,
+        8.1284e-06,
+        -0.0073112796,
+        -0.0260541076
+    ],
+    "success": true,
+    "stdout": null,
+    "stderr": null,
+    "error": null
+}

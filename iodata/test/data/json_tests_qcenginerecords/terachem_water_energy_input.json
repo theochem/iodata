@@ -1,0 +1,16 @@
+{
+    "molecule": {
+        "geometry": [
+            0.0, 0.0, -0.1294769411935893, 0.0, -1.494187339479985,
+            1.0274465079245698, 0.0, 1.494187339479985, 1.0274465079245698
+        ],
+        "symbols": ["O", "H", "H"],
+        "connectivity": [[0, 1, 1], [0, 2, 1]]
+    },
+    "driver": "energy",
+    "keywords": {"levelshift":"yes", "levelshiftvalb":"0.1", "level    shiftvala":"1.0", "gpus":"1", "maxit":"500", "scf":"diis+a", "method":"ub3lyp"},
+    "model": {
+        "method": "HF",
+        "basis": "sto-3g"
+    }
+}

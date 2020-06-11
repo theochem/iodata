@@ -1,0 +1,66 @@
+{
+  "molecule": {
+    "symbols": [
+      "O",
+      "H",
+      "H"
+    ],
+    "geometry": [
+      0.0,
+      0.0,
+      -0.12947694,
+      0.0,
+      -1.49418734,
+      1.02744651,
+      0.0,
+      1.49418734,
+      1.02744651
+    ],
+    "connectivity": [
+      [
+        0,
+        1,
+        1.0
+      ],
+      [
+        0,
+        2,
+        1.0
+      ]
+    ],
+    "fix_orientation": true,
+    "fix_symmetry": "c1"
+  },
+  "driver": "gradient",
+  "model": {
+    "method": "CCSD",
+    "basis": "sto-3g"
+  },
+  "id": null,
+  "schema_name": "qcschema_output",
+  "schema_version": 1,
+  "keywords": {},
+  "provenance": {
+    "creator": "QCElemental",
+    "version": "v0.2.6",
+    "routine": "qcelemental.models.results"
+  },
+  "success": true,
+  "return_result": [
+     -0.000000000000,   0.000000000000,   0.054946241330,
+     -0.000000000000,   0.006718475866,  -0.027473120665,
+      0.000000000000,  -0.006718475866,  -0.027473120665
+  ],
+  "properties": {
+    "nuclear_repulsion_energy": 8.80146205625184,
+    "scf_dipole_moment": [0.0, 0.0, 0.65662910269302],
+    "ccsd_dipole_moment": [0.0, 0.0, 0.606460519247069],
+    "scf_total_energy": -74.9646625166939,
+    "ccsd_correlation_energy": -0.0549792917918461,
+    "ccsd_total_energy": -75.0196418084857,
+    "calcinfo_nalpha": 5,
+    "calcinfo_nbeta": 5,
+    "calcinfo_nbasis": 7
+  },
+  "error": null
+}

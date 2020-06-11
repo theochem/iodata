@@ -1,0 +1,60 @@
+{
+  "molecule": {
+    "symbols": [
+      "O",
+      "H",
+      "H"
+    ],
+    "geometry": [
+      0.0,
+      0.0,
+      -0.12947694,
+      0.0,
+      -1.49418734,
+      1.02744651,
+      0.0,
+      1.49418734,
+      1.02744651
+    ],
+    "connectivity": [
+      [
+        0,
+        1,
+        1.0
+      ],
+      [
+        0,
+        2,
+        1.0
+      ]
+    ]
+  },
+  "driver": "energy",
+  "model": {
+    "method": "LDA",
+    "basis": "def2-svp"
+  },
+  "id": null,
+  "schema_name": "qcschema_output",
+  "schema_version": 1,
+  "keywords": {
+    "df": "def2-svp-jkfit"
+  },
+  "provenance": {
+    "creator": "QCElemental",
+    "version": "v0.2.6",
+    "routine": "qcelemental.models.results"
+  },
+  "success": true,
+  "return_result": -75.7944540387,
+  "properties": {
+    "scf_total_energy": -75.7944540387,
+    "scf_iterations": 9,
+    "calcinfo_nbasis": 24,
+    "calcinfo_natom": 3
+  },
+  "extras": {
+    "scf_converged": true
+  },
+  "error": null
+}

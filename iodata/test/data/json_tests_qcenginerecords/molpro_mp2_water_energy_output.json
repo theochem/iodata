@@ -1,0 +1,38 @@
+{
+    "molecule": {
+        "symbols": ["O", "H", "H"],
+        "geometry": [0.0, 0.0, -0.12947694, 0.0, -1.49418734, 1.02744651, 0.0, 1.49418734, 1.02744651],
+        "connectivity": [[0, 1, 1.0], [0, 2, 1.0]],
+        "fix_orientation": true,
+        "fix_symmetry": "c1"
+    },
+    "driver": "energy",
+    "model": {
+        "method": "MP2",
+        "basis": "sto-3g"
+    },
+    "id": null,
+    "schema_name": "qcschema_output",
+    "schema_version": 1,
+    "keywords": {},
+    "provenance": {
+        "creator": "QCElemental",
+        "version": "v0.2.6",
+        "routine": "qcelemental.models.results"
+    },
+    "success": true,
+    "return_result": -75.0037274835668,
+    "properties": {
+        "nuclear_repulsion_energy": 8.80146205625184,
+        "scf_dipole_moment": [0.0, 0.0, 0.65662910269302],
+        "scf_total_energy": -74.9646625166939,
+        "mp2_same_spin_correlation_energy": -0.0022925061427209533,
+        "mp2_opposite_spin_correlation_energy": -0.03677246073014658,
+        "mp2_correlation_energy": -0.0390649668728675,
+        "mp2_total_energy": -75.0037274835668,
+        "calcinfo_nalpha": 5,
+        "calcinfo_nbeta": 5,
+        "calcinfo_nbasis": 7
+    },
+    "error": null
+}
