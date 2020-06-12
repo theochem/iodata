@@ -137,6 +137,11 @@ def load_many(lit: LineIterator, atom_columns=None) -> Iterator[dict]:
     # making it trivial to load many frames.
     while True:
         try:
+            # Check for and skip empty lines at the end of file
+            line = next(lit)
+            if line.strip() == "":
+                return
+            lit.back(line)
             yield load_one(lit, atom_columns)
         except StopIteration:
             return
