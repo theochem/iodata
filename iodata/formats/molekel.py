@@ -295,9 +295,10 @@ def dump_one(f: TextIO, data: IOData):
         iatom_new = shell.icenter
         if iatom_new != iatom_last:
             f.write('$$\n')
-        for iangmom, angmom in enumerate(shell.angmoms):
+        for iangmom, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
             iatom_last = shell.icenter
-            f.write(' {} {:1s} 1.00\n'.format(shell.nbasis, angmom_its(angmom).capitalize()))
+            nbasis = len(CONVENTIONS[(angmom, kind)])
+            f.write(' {} {:1s} 1.00\n'.format(nbasis, angmom_its(angmom).capitalize()))
             for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
                 f.write('{:20.10f} {:17.10f}\n'.format(exponent, coeff))
     f.write('\n')
@@ -355,10 +356,10 @@ def _dump_helper_coeffs(f, data, spin=None):
         else:
             f.write(' a1g' * 5 + '\n')
 
-        en = ' '.join(['   {: ,.7f}'.format(e) for e in ener[j:j + 5]])
+        en = ' '.join(['   {: ,.12f}'.format(e) for e in ener[j:j + 5]])
         f.write(en + '\n')
         for orb in coeff[:, j:j + 5]:
-            coeffs = ' '.join(['  {: ,.7f}'.format(c) for c in orb])
+            coeffs = ' '.join(['  {: ,.12f}'.format(c) for c in orb])
             f.write(coeffs + '\n')
 
     f.write(' $END\n')

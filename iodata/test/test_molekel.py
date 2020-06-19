@@ -25,6 +25,7 @@ from numpy.testing import assert_equal, assert_allclose
 import pytest
 
 from .common import check_orthonormal, compare_mols
+from ..basis import convert_conventions
 from ..api import load_one, dump_one
 from ..overlap import compute_overlap
 from ..utils import angstrom, FileFormatWarning
@@ -33,6 +34,22 @@ try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
+
+
+def compare_mols_diff_formats(mol1, mol2):
+    """Compare two IOData objects loaded from different formats."""
+    assert_equal(mol1.atnums, mol2.atnums)
+    assert_equal(mol1.atcorenums, mol2.atcorenums)
+    # Atol set to 1e-15 to be able to treat values with really low exponents as 0
+    assert_allclose(mol1.atcoords, mol2.atcoords, rtol=1e-07, atol=1e-15)
+
+    # wfn
+    assert mol1.obasis.primitive_normalization == mol2.obasis.primitive_normalization
+    permutation, signs = convert_conventions(mol1.obasis, mol2.obasis.conventions)
+    assert mol1.mo.kind == mol2.mo.kind
+    assert_allclose(mol1.mo.occs, mol2.mo.occs)
+    assert_allclose(mol1.mo.coeffs[permutation] * signs.reshape(-1, 1), mol2.mo.coeffs, atol=1e-8)
+    assert_allclose(mol1.mo.energies, mol2.mo.energies)
 
 
 def check_load_dump_consistency(fn, tmpdir):
@@ -51,7 +68,13 @@ def check_load_dump_consistency(fn, tmpdir):
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt='molekel')
     mol2 = load_one(fn_tmp, fmt='molekel')
-    compare_mols(mol1, mol2)
+    form = fn.split('.')
+    if 'molden' in form:
+        compare_mols_diff_formats(mol1, mol2)
+    elif 'fchk' in form:
+        compare_mols_diff_formats(mol1, mol2)
+    else:
+        compare_mols(mol1, mol2)
 
 
 def test_load_dump_consistency_h2(tmpdir):
@@ -75,11 +98,11 @@ def test_load_dump_consistency_li2(tmpdir):
     assert "ORCA" in record[0].message.args[0]
 
 
-def check_load_molden_dump_molekel_li2(tmpdir):
+def test_load_molden_dump_molekel_li2(tmpdir):
     check_load_dump_consistency('li2.molden.input', tmpdir)
 
 
-def check_load_fchk_dump_molekel_li2(tmpdir):
+def test_load_fchk_dump_molekel_li2(tmpdir):
     check_load_dump_consistency('li2_g09_nbasis_indep.fchk', tmpdir)
 
 
