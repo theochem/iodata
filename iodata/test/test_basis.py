@@ -26,7 +26,7 @@ from pytest import raises
 from ..basis import (angmom_sti, angmom_its, Shell, MolecularBasis,
                      convert_convention_shell, convert_conventions,
                      iter_cart_alphabet, HORTON2_CONVENTIONS, PSI4_CONVENTIONS)
-from ..formats.cp2k import CONVENTIONS as CP2K_CONVENTIONS
+from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 
 
 def test_angmom_sti():
