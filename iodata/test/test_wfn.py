@@ -286,3 +286,23 @@ def test_load_one_lih_cation_rohf():
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def test_load_one_cah110_hf_sto3g_g09():
+    with path('iodata.test.data', 'cah110_hf_sto3g_g09.wfn') as file_wfx:
+        mol = load_one(str(file_wfx))
+    # check number of orbitals and occupation numbers
+    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.norba == 123
+    assert mol.mo.norbb == 123
+    assert mol.mo.norb == 246
+    occs = np.zeros(246)
+    occs[0] = 1.0
+    occsa, occsb = np.split(occs, 2)
+    assert_equal(mol.mo.occs, occs)
+    assert_equal(mol.mo.occsa, occsa)
+    assert_equal(mol.mo.occsb, occsb)
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)

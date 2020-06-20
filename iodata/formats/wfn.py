@@ -26,7 +26,7 @@ Gaussian functions.
 """
 
 
-from typing import Tuple, List
+from typing import Tuple, List, TextIO
 
 import numpy as np
 
@@ -125,8 +125,12 @@ def _load_helper_num(lit: LineIterator) -> List[int]:
     """Read number of orbitals, primitives and atoms."""
     line = next(lit)
     if not line.startswith('G'):
-        lit.error("Expecting line to start with G.")
-    return [int(i) for i in line.split() if i.isdigit()]
+        lit.error("Expecting line to start with 'G'")
+    # FORMAT (20X,I3,17X,I3,17X,I3)
+    num_mo = int(line[20:23])
+    nprim = int(line[40:43])
+    num_atoms = int(line[60:63])
+    return num_mo, nprim, num_atoms
 
 
 def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
@@ -134,50 +138,58 @@ def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, n
     atnums = np.empty(num_atoms, int)
     atcoords = np.empty((num_atoms, 3), float)
     for atom in range(num_atoms):
-        # WFN files created with AIMAll have the symbol and index combined
-        # in one word.
         line = next(lit)
-        symbol = line[:12].strip().title()[:2]
+        # FORMAT (A8,16X,3F12.8)
+        symbol = line[:8].strip().title()[:2]
+        atcoords[atom, 0] = float(line[24:36])
+        atcoords[atom, 1] = float(line[36:48])
+        atcoords[atom, 2] = float(line[48:60])
         atnum = sym2num.get(symbol)
+        # WFN files created with AIMAll have the symbol and index combined in one word.
         if atnum is None:
             atnum = sym2num[symbol[0]]
         atnums[atom] = atnum
-        # extract atomic coordinates
-        words = line[23:].split()
-        atcoords[atom, :] = [words[0], words[1], words[2]]
     return atnums, atcoords
 
 
-def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
+def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int, step: int,
                          dtype: np.dtype) -> np.ndarray:
     """Read CENTRE ASSIGNMENTS, TYPE ASSIGNMENTS, and EXPONENTS sections."""
     section = []
     while len(section) < nprim:
         line = next(lit)
-        assert line.startswith(start)
-        words = line.split()
-        section.extend(words[skip:])
-    assert len(section) == nprim
-    return np.array([word.replace('D', 'E') for word in section]).astype(dtype)
+        if not line.startswith(start):
+            lit.error(f"Expecting line to start with '{start}'")
+        line = line[skip:]
+        while len(line) >= step:
+            section.append(dtype(line[:step].replace('D', 'E')))
+            line = line[step:]
+    if len(section) != nprim:
+        lit.error("Number of elements in section do not match 'nprim'")
+    return np.array(section, dtype=dtype)
 
 
-def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[str, str, str, np.ndarray]:
+def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[int, float, float, np.ndarray]:
     """Read one section of MO information."""
     line = next(lit)
-    assert line.startswith('MO')
-    words = line.split()
-    number = words[1]
-    occ, energy = words[-5], words[-1]
-    coeffs = _load_helper_section(lit, nprim, ' ', 0, float)
+    if not line.startswith('MO'):
+        lit.error("Expecting line to start with 'MO'")
+    # FORMAT (4X,3I,27X,F13.7,15X,F12.6)
+    number = int(line[4:7])
+    occ = float(line[34:47])
+    energy = float(line[62:74])
+    # FORMAT (5E16.8)
+    coeffs = _load_helper_section(lit, nprim, '', 0, 16, float)
     return number, occ, energy, coeffs
 
 
 def _load_helper_energy(lit: LineIterator) -> float:
     """Read energy."""
-    line = next(lit).lower()
-    while 'energy' not in line and line is not None:
-        line = next(lit).lower()
-    energy = float(line.split('energy =')[1].split()[0])
+    line = next(lit)
+    while 'ENERGY' not in line and line is not None:
+        line = next(lit)
+    # FORMAT (17X,F18.12)
+    energy = float(line[17:35])
     return energy
 
 
@@ -195,14 +207,14 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
     num_mo, nprim, num_atoms = _load_helper_num(lit)
     atnums, atcoords = _load_helper_atoms(lit, num_atoms)
     # centers are indexed from zero in HORTON
-    icenters = _load_helper_section(lit, nprim, 'CENTRE ASSIGNMENTS', 2, int) - 1
+    icenters = _load_helper_section(lit, nprim, 'CENTRE ASSIGNMENTS', 20, 3, int) - 1
     # The type assignments are integer indices for individual basis functions,
     # while in IOData, only the order within shells is fixed by configurable
     # conventions. In principle, the wfn format makes it possible for two
     # shells with the same angular momentum to have a different ordering of
     # the basis functions.
-    type_assignments = _load_helper_section(lit, nprim, 'TYPE ASSIGNMENTS', 2, int) - 1
-    exponent = _load_helper_section(lit, nprim, 'EXPONENTS', 1, float)
+    type_assignments = _load_helper_section(lit, nprim, 'TYPE ASSIGNMENTS', 20, 3, int) - 1
+    exponent = _load_helper_section(lit, nprim, 'EXPONENTS', 10, 14, float)
     mo_numbers = np.empty(num_mo, int)
     mo_occs = np.empty(num_mo, float)
     mo_energies = np.empty(num_mo, float)
@@ -342,7 +354,7 @@ def load_one(lit: LineIterator) -> dict:
      mo_numbers, mo_occs, mo_energies, mo_coeffs, energy) = load_wfn_low(lit)
     # Build the basis set and the permutation needed to regroup shells.
     obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
-
+    # ----------------------------
     # Build the molecular orbitals
     # ----------------------------
     # Re-order the mo coefficients.
@@ -353,7 +365,6 @@ def load_one(lit: LineIterator) -> dict:
     # Make the wavefunction.
     if mo_occs.max() > 1.0:
         # Restricted wavefunction.
-        print(mo_occs)
         mo = MolecularOrbitals(
             'restricted', norb, norb,
             mo_occs, mo_coeffs, mo_energies, None)
@@ -371,7 +382,6 @@ def load_one(lit: LineIterator) -> dict:
         mo = MolecularOrbitals(
             'unrestricted', norba, norb - norba,
             mo_occs, mo_coeffs, mo_energies, None)
-
     return {
         'title': title,
         'atcoords': atcoords,
