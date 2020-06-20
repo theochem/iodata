@@ -408,7 +408,7 @@ def _parse_output_keys(lit: LineIterator, result: dict, driver: str) -> dict:
         extra["provenance"] = result["provenance"]
     # Load properties (all calculation results)
     # TODO: load properties
-    properties = result["properties"]
+    properties = _parse_properties(result["properties"])
 
     # Check success
     extra["calc_success"] = bool(result["success"])
@@ -439,3 +439,265 @@ def _parse_output_keys(lit: LineIterator, result: dict, driver: str) -> dict:
 
     output_dict["extra"] = extra
     return output_dict
+
+
+def _parse_properties(properties: dict) -> dict:
+    """Load all property keys.
+
+    Parameters
+    ----------
+    properties
+        All QC program calculation results stored in a QCSchema instance.
+
+    Returns
+    -------
+    properties_dict
+        Parsed QC program calculation results.
+
+    Notes
+    -----
+    CalcInfo properties:
+    calcinfo_nbasis
+        The number of basis functions for the computation.
+
+    calcinfo_nmo
+        The number of molecular orbitals for the computation.
+
+    calcinfo_nalpha
+        The number of alpha electrons in the computation.
+
+    calcinfo_nbeta
+        The number of beta electrons in the computation.
+
+    calcinfo_natom
+        The number of atoms in the computation.
+
+    return_energy
+        The energy of the requested method, identical to `return_value` for energy computations.
+
+    SCF properties:
+    scf_one_electron_energy
+        The one-electron (core Hamiltonian) energy contribution to the total SCF energy.,
+
+    scf_two_electron_energy
+        The two-electron energy contribution to the total SCF energy.
+
+    nuclear_repulsion_energy
+        The nuclear repulsion energy contribution to the total SCF energy.
+
+    scf_vv10_energy
+        The VV10 functional energy contribution to the total SCF energy.
+
+    scf_xc_energy
+        The functional energy contribution to the total SCF energy.
+
+    scf_dispersion_correction_energy
+        The dispersion correction appended to an underlying functional
+        when a DFT-D method is requested.
+
+    scf_dipole_moment
+        The X, Y, and Z dipole components.,
+
+    scf_total_energy
+        The total electronic energy of the SCF stage of the calculation.
+        This is represented as the sum of the ... quantities.
+
+    scf_iterations
+        The number of SCF iterations taken before convergence.
+
+    MP2 properties
+    mp2_same_spin_correlation_energy
+        The portion of MP2 doubles correlation energy from same-spin (i.e. triplet) correlations,
+        without any user scaling.
+
+    mp2_opposite_spin_correlation_energy
+        The portion of MP2 doubles correlation energy from opposite-spin (i.e. singlet)
+        correlations, without any user scaling.
+
+    mp2_singles_energy
+        The singles portion of the MP2 correlation energy. Zero except in ROHF.
+
+    mp2_doubles_energy
+        The doubles portion of the MP2 correlation energy including same-spin
+        and opposite-spin correlations.
+
+    mp2_correlation_energy
+        The MP2 correlation energy.
+
+    mp2_total_energy
+        The total MP2 energy (MP2 correlation energy + HF energy).
+
+    mp2_dipole_moment
+        The MP2 X, Y, and Z dipole components.
+
+    CC properties
+    ccsd_same_spin_correlation_energy
+        The portion of CCSD doubles correlation energy from same-spin (i.e. triplet)
+        correlations, without any user scaling.
+
+    ccsd_opposite_spin_correlation_energy
+        The portion of CCSD doubles correlation energy from opposite-spin (i.e. singlet)
+        correlations, without any user scaling.
+
+    ccsd_singles_energy
+        The singles portion of the CCSD correlation energy. Zero except in ROHF.
+
+    ccsd_doubles_energy
+        The doubles portion of the CCSD correlation energy including same-spin and
+        opposite-spin correlations.
+
+    ccsd_correlation_energy
+        The CCSD correlation energy.
+
+    ccsd_total_energy
+        The total CCSD energy (CCSD correlation energy + HF energy).
+
+    ccsd_prt_pr_correlation_energy
+        The CCSD(T) correlation energy.
+
+    ccsd_prt_pr_total_energy
+        The total CCSD(T) energy (CCSD(T) correlation energy + HF energy).
+
+    ccsdt_correlation_energy
+        The CCSDT correlation energy.
+
+    ccsdt_total_energy
+        The total CCSDT energy (CCSDT correlation energy + HF energy).
+
+    ccsdtq_correlation_energy
+        The CCSDTQ correlation energy.
+
+    ccsdtq_total_energy
+        The total CCSDTQ energy (CCSDTQ correlation energy + HF energy).
+
+    ccsd_dipole_moment
+        The CCSD X, Y, and Z dipole components.,
+
+    ccsd_prt_pr_dipole_moment
+        The CCSD(T) X, Y, and Z dipole components.,
+
+    ccsdt_dipole_moment
+        The CCSDT X, Y, and Z dipole components.,
+
+    ccsdtq_dipole_moment
+        The CCSDTQ X, Y, and Z dipole components.,
+
+    ccsd_iterations
+        The number of CCSD iterations taken before convergence.
+
+    ccsdt_iterations
+        The number of CCSDT iterations taken before convergence.
+
+    ccsdtq_iterations
+        The number of CCSDTQ iterations taken before convergence.
+
+    """
+    properties_dict = dict()
+    properties_dict["extra"] = dict()
+
+    # Load any calcinfo properties
+    # TODO: place these
+    if "calcinfo_nbasis" in properties:
+        nbasis = int(properties["calcinfo_nbasis"])
+    if "calcinfo_nmo" in properties:
+        nmo = int(properties['calcinfo_nmo'])
+    if "calcinfo_nalpha" in properties:
+        nalpha = int(properties['calcinfo_nalpha'])
+    if "calcinfo_nbeta" in properties:
+        nbeta = int(properties['calcinfo_nbeta'])
+    if "calcinfo_natom" in properties:
+        natom = int(properties['calcinfo_natom'])
+    if "calcinfo_return_energy" in properties:
+        properties_dict["energy"] = float(properties['return_energy'])
+
+    # Load SCF properties
+    scf_keys = {
+        "scf_one_electron_energy",
+        "scf_two_electron_energy",
+        "nuclear_repulsion_energy",
+        "scf_vv10_energy",
+        "scf_xc_energy",
+        "scf_dispersion_correction_energy",
+        "scf_dipole_moment",
+        "scf_total_energy",
+        "scf_iterations",
+    }
+    scf_dict = dict()
+    for scf_key in scf_keys.intersection(properties):
+        value = properties[scf_key]
+        # Ensure correct output type
+        if scf_key == "scf_iterations":
+            scf_dict["iterations"] = int(value)
+        elif scf_key == "scf_dipole_moment":
+            scf_dict["dipole_moment"] = [float(x) for x in value]
+        else:
+            # Slice out the "scf_" part
+            if scf_key[:4] == "scf_":
+                scf_key = scf_key[4:]
+            scf_dict[scf_key] = float(value)
+
+    # Load MP properties (apparently only MP2 right now)
+    mp_keys = {
+        "mp2_same_spin_correlation_energy",
+        "mp2_opposite_spin_correlation_energy",
+        "mp2_singles_energy",
+        "mp2_doubles_energy",
+        "mp2_correlation_energy",
+        "mp2_total_energy",
+        "mp2_dipole_moment",
+    }
+    mp_dict = dict()
+    for mp_key in mp_keys.intersection(properties):
+        value = properties[mp_key]
+        if mp_key == "mp2_dipole_moment":
+            mp_dict["dipole_moment"] = [float(x) for x in value]
+        else:
+            # Slice out the "mp_" part
+            if mp_key[:4] == "mp2_":
+                mp_key = mp_key[4:]
+            mp_dict[mp_key] = float(value)
+
+    # Load CC properties
+    cc_keys = {
+        "ccsd_same_spin_correlation_energy",
+        "ccsd_opposite_spin_correlation_energy",
+        "ccsd_singles_energy",
+        "ccsd_doubles_energy",
+        "ccsd_correlation_energy",
+        "ccsd_total_energy",
+        "ccsd_prt_pr_correlation_energy",
+        "ccsd_prt_pr_total_energy",
+        "ccsdt_correlation_energy",
+        "ccsdt_total_energy",
+        "ccsdtq_correlation_energy",
+        "ccsdtq_total_energy",
+        "ccsd_dipole_moment",
+        "ccsd_prt_pr_dipole_moment",
+        "ccsdt_dipole_moment",
+        "ccsdtq_dipole_moment",
+        "ccsd_iterations",
+        "ccsdt_iterations",
+        "ccsdtq_iterations",
+    }
+    cc_dict = dict()
+    for cc_key in cc_keys.intersection(properties):
+        value = properties[cc_key]
+        # Slice out the "cc_" part
+        if cc_key[:3] == "cc_":
+            cc_key = cc_key[3:]
+        if cc_key[-10:] == "iterations":
+            cc_dict[cc_key] = int(value)
+        elif cc_key[-13:] == "dipole_moment":
+            cc_dict[cc_key] = [float(x) for x in value]
+        else:
+            cc_dict[cc_key] = float(value)
+
+    # Bundle all dicts
+    # TODO: combine dipole moments
+    if scf_dict:
+        properties_dict["extra"]["scf"] = scf_dict
+    if mp_dict:
+        properties_dict["extra"]["mp"] = mp_dict
+    if cc_dict:
+        properties_dict["extra"]["cc"] = cc_dict
+    return properties_dict

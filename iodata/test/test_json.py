@@ -100,6 +100,8 @@ def test_basis():
 
     https://github.com/MolSSI/QCElemental/blob/master/qcelemental/tests/test_model_results.py
 
+    random_data is from basissetexchange.com
+
     """
     center_data = {
         "bs_sto3g_h": {
