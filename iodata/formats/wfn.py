@@ -26,7 +26,7 @@ Gaussian functions.
 """
 
 
-from typing import Tuple, List, TextIO
+from typing import Tuple, List
 
 import numpy as np
 
