@@ -298,7 +298,7 @@ def test_load_one_cah110_hf_sto3g_g09():
     assert mol.mo.norb == 246
     occs = np.zeros(246)
     occs[0] = 1.0
-    occsa, occsb = np.split(occs, 2)
+    occsa, occsb = occs[:123], occs[123:]
     assert_equal(mol.mo.occs, occs)
     assert_equal(mol.mo.occsa, occsa)
     assert_equal(mol.mo.occsb, occsb)
