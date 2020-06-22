@@ -1,0 +1,65 @@
+{
+  "schema_name": "qc_schema_output",
+  "schema_version": 1,
+  "molecule": {
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2,
+    "geometry": [
+      0.0,
+      0.0,
+      -0.1294769411935893,
+      0.0,
+      -1.494187339479985,
+      1.0274465079245698,
+      0.0,
+      1.494187339479985,
+      1.0274465079245698
+    ],
+    "symbols": [
+      "O",
+      "H",
+      "H"
+    ]
+  },
+  "driver": "gradient",
+  "model": {
+    "method": "HF",
+    "basis": "cc-pVDZ"
+  },
+  "keywords": {},
+  "provenance": {
+    "creator": "QM Program",
+    "version": "1.1",
+    "routine": "module.json.run_json"
+  },
+  "return_result": [
+    -6.58523098414244e-32,
+    0.0,
+    -0.05958554087087453,
+    1.317925793870093e-18,
+    -0.043046723178883806,
+    0.029792770435425053,
+    -1.3179257938700183e-18,
+    0.043046723178883806,
+    0.029792770435425053
+  ],
+  "success": true,
+  "properties": {
+    "calcinfo_nbasis": 24,
+    "calcinfo_nmo": 24,
+    "calcinfo_nalpha": 5,
+    "calcinfo_nbeta": 5,
+    "calcinfo_natom": 3,
+    "return_energy": -76.02141836717794,
+    "scf_one_electron_energy": -122.44534536383044,
+    "scf_two_electron_energy": 37.622464940400654,
+    "nuclear_repulsion_energy": 8.80146205625184,
+    "scf_dipole_moment": [
+      0.0,
+      0.0,
+      2.0954702423504834
+    ],
+    "scf_iterations": 10,
+    "scf_total_energy": -76.02141836717794
+  }
+}

@@ -1,0 +1,40 @@
+{
+    "schema_name": "qc_schema_input",
+    "schema_version": 1,
+    "provenance": {
+        "creator": "My QM Program",
+        "version": "1.1rc1",
+        "database": "https://pqr.pitt.edu/mol/HEFNNWSXXWATRW-JTQLQIEISA-N"
+    },
+    "molecule": {
+        "geometry": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+        ],
+        "symbols": [
+            "He",
+            "He"
+        ]
+    },
+    "driver": "energy",
+    "keywords": {
+        "method": "SCF",
+        "basis": "sto-3g"
+    },
+    "properties": {
+        "scf_something": 2,
+        "scf_dipole_moment": 0.0,
+        "scf_total_energy": -5.433191881443323,
+        "scf_one_electron_energy": -11.67399006298957,
+        "scf_two_electron_energy": 4.124089347186247,
+        "nuclear_repulsion_energy": 2.11670883436
+    },
+    "error": "",
+    "success": true,
+    "raw_output": "Output storing was not requested."
+}
+

@@ -1,0 +1,20 @@
+{
+    "schema_name": "qc_schema_input",
+    "schema_version": 1,
+    "molecule": {
+        "geometry": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+        ]
+    },
+    "driver": "energy",
+    "keywords": {
+        "method": "SCF",
+        "basis": "sto-3g"
+    }
+}
+

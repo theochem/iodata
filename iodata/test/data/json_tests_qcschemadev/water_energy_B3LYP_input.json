@@ -1,0 +1,34 @@
+{
+  "schema_name": "qc_schema_input",
+  "schema_version": 1,
+  "molecule": {
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2,
+    "geometry": [
+      0.0,
+      0.0,
+      -0.1294769411935893,
+      0.0,
+      -1.494187339479985,
+      1.0274465079245698,
+      0.0,
+      1.494187339479985,
+      1.0274465079245698
+    ],
+    "symbols": [
+      "O",
+      "H",
+      "H"
+    ],
+    "connectivity": [
+      [0, 1, 1],
+      [0, 2, 1]
+    ]
+  },
+  "driver": "energy",
+  "model": {
+    "method": "B3LYP",
+    "basis": "cc-pVDZ"
+  },
+  "keywords": {}
+}

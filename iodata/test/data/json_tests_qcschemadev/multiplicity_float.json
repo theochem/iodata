@@ -1,0 +1,25 @@
+{
+    "schema_name": "qc_schema_input",
+    "schema_version": 1,
+    "molecule": {
+        "geometry": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            1
+        ],
+        "symbols": [
+            "He",
+            "He"
+        ],
+        "multiplicity": 5.5
+    },
+    "driver": "energy",
+    "keywords": {
+        "method": "SCF",
+        "basis": "sto-3g"
+    }
+}
+
