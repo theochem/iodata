@@ -126,10 +126,10 @@ def _load_helper_num(lit: LineIterator) -> List[int]:
     line = next(lit)
     if not line.startswith('G'):
         lit.error("Expecting line to start with 'G'")
-    # FORMAT (20X,I3,17X,I3,17X,I3)
-    num_mo = int(line[20:23])
-    nprim = int(line[40:43])
-    num_atoms = int(line[60:63])
+    # FORMAT (16X,I7,13X,I7,11X,I9)
+    num_mo = int(line[16:23])
+    nprim = int(line[36:43])
+    num_atoms = int(line[54:63])
     return num_mo, nprim, num_atoms
 
 
@@ -174,8 +174,8 @@ def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[int, float, float, n
     line = next(lit)
     if not line.startswith('MO'):
         lit.error("Expecting line to start with 'MO'")
-    # FORMAT (4X,3I,27X,F13.7,15X,F12.6)
-    number = int(line[4:7])
+    # FORMAT (2X,5I,27X,F13.7,15X,F12.6)
+    number = int(line[2:7])
     occ = float(line[34:47])
     energy = float(line[62:74])
     # FORMAT (5E16.8)
