@@ -18,17 +18,18 @@
 # --
 """Test iodata.formats.wfn module."""
 
+import os
 
 import pytest
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..api import load_one
+from ..api import load_one, dump_one
 from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
 from ..utils import LineIterator
 
-from .common import check_orthonormal, truncated_file
+from .common import check_orthonormal, truncated_file, compare_mols
 
 try:
     from importlib_resources import path
@@ -41,6 +42,42 @@ def helper_load_data_wfx(fn_wfx):
     with path('iodata.test.data', fn_wfx) as fx:
         lit = LineIterator(str(fx))
         return load_data_wfx(lit)
+
+def check_load_dump_consistency(fn, tmpdir):
+    """Check if data is preserved after dumping and loading a Wfx file.
+    Parameters
+    ----------
+    fn : str
+        The Molekel filename to load
+    tmpdir : str
+        The temporary directory to dump and load the file.
+    """
+    with path('iodata.test.data', fn) as file_name:
+        mol1 = load_one(str(file_name), fmt='wfx')
+    fn_tmp = os.path.join(tmpdir, 'foo.bar')
+    print(fn_tmp)
+    dump_one(mol1, fn_tmp, fmt='wfx')
+    mol2 = load_one(fn_tmp, fmt='wfx')
+    compare_mols(mol1, mol2)
+
+
+def test_load_dump_consistency_water(tmpdir):
+    check_load_dump_consistency('water_sto3g_hf.wfx', tmpdir)
+
+def test_load_dump_consistency_h2(tmpdir):
+    check_load_dump_consistency('h2_ub3lyp_ccpvtz.wfx', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_cisd(tmpdir):
+    check_load_dump_consistency('lih_cation_cisd.wfx', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_uhf(tmpdir):
+    check_load_dump_consistency('lih_cation_uhf.wfx', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_rohf(tmpdir):
+    check_load_dump_consistency('lih_cation_rohf.wfx', tmpdir)
 
 
 def test_load_data_wfx_h2():
