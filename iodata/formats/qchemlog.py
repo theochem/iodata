@@ -24,6 +24,7 @@ import re
 import numpy as np
 
 from ..docstrings import document_load_one
+from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
 from ..utils import LineIterator
 
@@ -33,10 +34,48 @@ PATTERNS = ['*.log']
 
 
 # todo: fix @document_load_one argument with the results from load_one
-@document_load_one("Q-Chem Log", [])
+@document_load_one('Q-Chem Log', [])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    pass
+    result = {}
+    data = load_qchemlog_low(lit)
+    result['atcoords'] = data['atcoords']
+    result['athessian'] = data['hessian']
+    result['atmasses'] = data['atmasses']
+    result['atnums'] = data['atnums']
+    result['charge'] = data['charge']
+    result['energy'] = data['energy']
+    result['g_rot'] = data['g_rot']
+    # build molecular orbitals
+    # todo: double check if this is right
+    # mo_energies
+    if not data['unrestricted']:
+        mo_energies = np.concatenate(
+            (data['alpha_mo_occupied'], data['alpha_mo_unoccupied']), axis=0)
+        mo = MolecularOrbitals("restricted", data['norba'], data['norba'],
+                               None, None, mo_energies, None)
+    else:
+        mo_energies = np.concatenate(
+            (data['alpha_mo_occupied'], data['alpha_mo_unoccupied'],
+             data['beta_mo_occupied'], data['beta_mo_unoccupied']), axis=0)
+        mo = MolecularOrbitals("unrestricted", data['norba'], data['norbb'],
+                               None, None, mo_energies, None)
+    result['mo'] = mo
+    result['lot'] = data['method']
+    result['nelec'] = data['alpha_elec'] + data['beta_elec']
+    result['obasis_name'] = data['basis_set'].lower()
+    result['run_type'] = data['run_type']
+    # moments
+    moments_labels = ['dipole_moment', 'quadrupole_moments', 'dipole_tol']
+    moments = {label: data.get(label, None) for label in moments_labels}
+    # extra information
+    extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
+                    'mulliken_charges', 'polarizability_tensor',
+                    'imaginary_freq', 'vib_energy', 'enthalpy_dict', 'entropy_dict']
+    extra = {label: data.get(label, None) for label in extra_labels}
+    extra['moments'] = moments
+    result['extra'] = extra
+    return result
 
 
 def load_qchemlog_low(lit: LineIterator) -> dict:
@@ -51,57 +90,60 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
 
         # get the atomic information
         if line.startswith('$molecule'):
-            data['charge'], spin_multi, data['natom'], \
-            atnums, data['atcoords'] = _helper_atoms(lit)
-            natoms = len(atnums)
-            data['atnum'] = atnums
+            data['charge'], data['spin_multi'], data['natom'], \
+            data['atnums'], data['atcoords'] = _helper_atoms(lit)
+            natoms = len(data['atnums'])
             # print(lit.lineno)
             # 145
         # job specifications
         elif line.startswith('$rem'):
-            data['run_type'], method, basis_set, unrestricted, data['g_rot'] = _helper_job(lit)
+            data['run_type'], data['method'], data['basis_set'], \
+            data['unrestricted'], data['g_rot'] = _helper_job(lit)
             # print(lit.lineno)
             # 166
         # standard nuclear orientation
         elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
-            atnums, alpha_elec, beta_elec, nuclear_replusion_energy, energy, atcoords = \
-                _helper_electron(lit)
+            # atnums, alpha_elec, beta_elec, nuclear_repulsion_energy, energy, atcoords = \
+            #     _helper_electron(lit)
+            _, data['alpha_elec'], data['beta_elec'], data['nuclear_repulsion_energy'], \
+            data['energy'], _ = _helper_electron(lit)
             # print(lit.lineno)
             # 236
         # orbital energies
         elif line.startswith('Orbital Energies (a.u.)'):
-            alpha_mo_occupied, beta_mo_occupied, alpha_mo_unoccupied, beta_mo_unoccupied, \
-            norba, norbb, energies = _helper_orbital_energies(lit)
+            data['alpha_mo_occupied'], data['beta_mo_occupied'], data['alpha_mo_unoccupied'], \
+            data['beta_mo_unoccupied'], data['norba'], data['norbb'] = _helper_orbital_energies(lit)
             # print(lit.lineno)
-            #  266
+            # 266
         # mulliken charges
         elif line.startswith('Ground-State Mulliken Net Atomic Charges'):
-            mulliken_charges = _helper_mulliken(lit)
+            data['mulliken_charges'] = _helper_mulliken(lit)
             # print(lit.lineno)
             # 275
         #  cartesian multipole moments
         elif line.startswith('Cartesian Multipole Moments'):
-            dipole = _helper_dipole_moments(lit)
+            data['dipole_moment'], data['quadrupole_moments'], data[
+                'dipole_tol'] = _helper_dipole_moments(lit)
             # print(lit.lineno)
             # 286
         # polarizability matrix
         elif line.startswith('Polarizability Matrix (a.u.)'):
-            polarizability_tensor = _helper_polar(lit)
+            data['polarizability_tensor'] = _helper_polar(lit)
             # print(lit.lineno)
             # 325
         # hessian matrix
         elif line.startswith('Hessian of the SCF Energy'):
             hessian = _helper_hessian(lit)
-            hessian = hessian.reshape(natoms * 3, natoms * 3)
+            data['hessian'] = hessian.reshape(natoms * 3, natoms * 3)
             # print(lit.lineno)
             # 355
         # vibrational analysis
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
-            imaginary_freq, vib_energy = _helper_vibrational(lit)
+            data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)
             # print(lit.lineno)
             # 383
         elif line.startswith('Rotational Symmetry Number'):
-            enthalpy_dict, entropy_dict = _helper_thermo(lit)
+            data['enthalpy_dict'], data['entropy_dict'] = _helper_thermo(lit)
             # print(lit.lineno)
             # 407
     return data
@@ -185,26 +227,24 @@ def _helper_electron(lit):
 def _helper_orbital_energies(lit):
     """Load orbital energies."""
     # alpha occupied MOs
-    alpha_mo_occupied = _helper_section("-- Occupied --", "-- Virtual --", lit, backward=True)
+    alpha_mo_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # alpha unoccupied MOs
-    alpha_mo_unoccupied = _helper_section("-- Virtual --", "", lit, backward=False)
+    alpha_mo_unoccupied = _helper_section('-- Virtual --', '', lit, backward=False)
     # beta occupied MOs
-    beta_mo_occupied = _helper_section("-- Occupied --", "-- Virtual --", lit, backward=True)
+    beta_mo_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # beta unoccupied MOs
-    beta_mo_unoccupied = _helper_section("-- Virtual --", "-" * 62, lit, backward=False)
+    beta_mo_unoccupied = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
 
     # number of alpha molecular orbitals
     norba = len(alpha_mo_occupied + alpha_mo_unoccupied)
     # number of beta molecular orbitals
     norbb = len(beta_mo_occupied + beta_mo_unoccupied)
-    # energies
-    energies = None
-    # todo: not sure how to arrange the four type of molecular orbitals here
+    # todo: not sure how to arrange the four type of molecular orbital energies here
     return np.array(alpha_mo_occupied, dtype=np.float), \
            np.array(beta_mo_occupied, dtype=np.float), \
            np.array(alpha_mo_unoccupied, dtype=np.float), \
            np.array(beta_mo_unoccupied, dtype=np.float), \
-           norba, norbb, energies
+           norba, norbb
 
 
 def _helper_section(start, end, lit, backward=False):
@@ -244,15 +284,21 @@ def _helper_mulliken(lit):
 def _helper_dipole_moments(lit):
     """Load cartesian multiple moments."""
     for line in lit:
-        if line.strip().startswith("Dipole Moment (Debye)"):
+        if line.strip().startswith('Dipole Moment (Debye)'):
             break
-    dipole_moments = next(lit).strip().split()
+    dipole_moment = next(lit).strip().split()
     # only load the float numbers
-    dipole_moments = [dipole for idx, dipole in enumerate(dipole_moments) if idx % 2 != 0]
+    dipole_moment = [dipole for idx, dipole in enumerate(dipole_moment) if idx % 2 != 0]
     # total dipole_moments
     dipole_tol = float(next(lit).strip().split()[-1])
-    # todo:  check if need other moments as well
-    return np.array(dipole_moments, dtype=np.float), dipole_tol
+    # quadrupole_moments
+    next(lit)
+    quadrupole_moments = []
+    quadrupole_moments.extend(next(lit).strip().split())
+    quadrupole_moments.extend(next(lit).strip().split())
+    quadrupole_moments = [dipole for idx, dipole in enumerate(quadrupole_moments) if idx % 2 != 0]
+    return np.array(dipole_moment, dtype=np.float), \
+           np.array(quadrupole_moments, dtype=np.float), dipole_tol
 
 
 # this one works
@@ -296,7 +342,15 @@ def _helper_vibrational(lit):
     imaginary_freq = int(line.strip().split()[3])
     # todo: unit conversions
     vib_energy = float(next(lit).strip().split()[-2])
-    return imaginary_freq, vib_energy
+    next(lit)
+    atmasses = []
+    for line in lit:
+        if line.strip().startswith('Molecular Mass:'):
+            break
+        else:
+            atmasses.append(line.strip().split()[-1])
+    atmasses = np.array(atmasses, dtype=np.float)
+    return imaginary_freq, vib_energy, atmasses
 
 
 # this one works
@@ -307,25 +361,25 @@ def _helper_thermo(lit):
     entropy_dict = {}
     for line in lit:
         line_str = line.strip()
-        if line_str.startswith("Archival summary:"):
+        if line_str.startswith('Archival summary:'):
             break
         else:
-            if line_str.startswith("Translational Enthalpy"):
-                enthalpy_dict["trans_enthalpy"] = float(line_str.split()[-2])
-            elif line_str.startswith("Rotational Enthalpy"):
-                enthalpy_dict["rot_enthalpy"] = float(line_str.split()[-2])
-            elif line_str.startswith("Vibrational Enthalpy"):
-                enthalpy_dict["vib_enthalpy"] = float(line_str.split()[-2])
-            elif line_str.startswith("Total Enthalpy"):
-                enthalpy_dict["enthalpy_total"] = float(line_str.split()[-2])
-            elif line_str.startswith("Translational Entropy"):
-                entropy_dict["trans_entropy"] = float(line_str.split()[-2])
-            elif line_str.startswith("Rotational Entropy"):
-                entropy_dict["rot_entropy"] = float(line_str.split()[-2])
-            elif line_str.startswith("Vibrational Entropy"):
-                entropy_dict["vib_entropy"] = float(line_str.split()[-2])
-            elif line_str.startswith("Total Entropy"):
-                entropy_dict["entropy_total"] = float(line_str.split()[-2])
+            if line_str.startswith('Translational Enthalpy'):
+                enthalpy_dict['trans_enthalpy'] = float(line_str.split()[-2])
+            elif line_str.startswith('Rotational Enthalpy'):
+                enthalpy_dict['rot_enthalpy'] = float(line_str.split()[-2])
+            elif line_str.startswith('Vibrational Enthalpy'):
+                enthalpy_dict['vib_enthalpy'] = float(line_str.split()[-2])
+            elif line_str.startswith('Total Enthalpy'):
+                enthalpy_dict['enthalpy_total'] = float(line_str.split()[-2])
+            elif line_str.startswith('Translational Entropy'):
+                entropy_dict['trans_entropy'] = float(line_str.split()[-2])
+            elif line_str.startswith('Rotational Entropy'):
+                entropy_dict['rot_entropy'] = float(line_str.split()[-2])
+            elif line_str.startswith('Vibrational Entropy'):
+                entropy_dict['vib_entropy'] = float(line_str.split()[-2])
+            elif line_str.startswith('Total Entropy'):
+                entropy_dict['entropy_total'] = float(line_str.split()[-2])
             else:
                 continue
     return enthalpy_dict, entropy_dict
