@@ -20,13 +20,14 @@
 
 """
 import re
+from typing import List, Tuple
 
 import numpy as np
 
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
-from ..utils import kcalmol, LineIterator
+from ..utils import LineIterator, kcalmol
 
 __all__ = []
 
@@ -34,7 +35,7 @@ PATTERNS = ['*.qchemlog']
 
 
 @document_load_one("qchemlog", ['atcoords', 'athessian', 'atmasses', 'atnums', 'charge', 'energy',
-                                 'g_rot', 'mo', 'lot', 'nelec', 'obasis_name', 'run_type', 'extra'])
+                                'g_rot', 'mo', 'lot', 'nelec', 'obasis_name', 'run_type', 'extra'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     data = load_qchemlog_low(lit)
@@ -130,7 +131,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
     return data
 
 
-def _helper_atoms(lit: LineIterator) -> tuple:
+def _helper_atoms(lit: LineIterator) -> Tuple:
     """Load list of coordinates from an Q-Chem log output file format."""
     # net charge and spin multiplicity
     charge, spin_multi = [int(i) for i in next(lit).strip().split()]
@@ -150,7 +151,7 @@ def _helper_atoms(lit: LineIterator) -> tuple:
     return charge, spin_multi, natom, atnums, atcoords
 
 
-def _helper_job(lit):
+def _helper_job(lit: LineIterator) -> Tuple:
     """Load job specifications from Q-Chem log out file format."""
     for line in lit:
         if line.strip() == '$end':
@@ -175,7 +176,7 @@ def _helper_job(lit):
     return run_type, method, basis_set, unrestricted, g_rot
 
 
-def _helper_electron(lit):
+def _helper_electron(lit: LineIterator) -> Tuple:
     """Load electron information from Q-Chem log out file format."""
     next(lit)
     next(lit)
@@ -202,7 +203,7 @@ def _helper_electron(lit):
     return atnums, alpha_elec, beta_elec, nuclear_replusion_energy, energy, atcoords
 
 
-def _helper_orbital_energies(lit):
+def _helper_orbital_energies(lit: LineIterator) -> Tuple:
     """Load orbital energies."""
     # alpha occupied MOs
     alpha_mo_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
@@ -225,7 +226,7 @@ def _helper_orbital_energies(lit):
            norba, norbb
 
 
-def _helper_section(start, end, lit, backward=False):
+def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = False) -> List:
     """Load data between starting and ending strings."""
     data = []
     for line in lit:
@@ -242,7 +243,7 @@ def _helper_section(start, end, lit, backward=False):
     return data
 
 
-def _helper_mulliken(lit):
+def _helper_mulliken(lit: LineIterator) -> np.ndarray:
     """Load mulliken net atomic charges."""
     while True:
         line = next(lit).strip()
@@ -257,7 +258,7 @@ def _helper_mulliken(lit):
     return np.array(mulliken_charges, dtype=np.float)
 
 
-def _helper_dipole_moments(lit):
+def _helper_dipole_moments(lit: LineIterator) -> Tuple:
     """Load cartesian multiple moments."""
     for line in lit:
         if line.strip().startswith('Dipole Moment (Debye)'):
@@ -277,7 +278,7 @@ def _helper_dipole_moments(lit):
            np.array(quadrupole_moments, dtype=np.float), dipole_tol
 
 
-def _helper_polar(lit):
+def _helper_polar(lit: LineIterator) -> np.ndarray:
     """Load polarizability matrix."""
     next(lit)
     polarizability_tensor = []
@@ -289,7 +290,7 @@ def _helper_polar(lit):
     return np.array(polarizability_tensor, dtype=np.float)
 
 
-def _helper_hessian(lit):
+def _helper_hessian(lit: LineIterator) -> np.ndarray:
     """Load hessian matrix."""
     # hessian in Cartesian coordinates, shape(3 * natom, 3 * natom)
     next(lit)
@@ -303,7 +304,7 @@ def _helper_hessian(lit):
     return np.array(hessian, dtype=np.float)
 
 
-def _helper_vibrational(lit):
+def _helper_vibrational(lit: LineIterator) -> Tuple:
     """Load vibrational analysis."""
     for line in lit:
         if line.strip().startswith('This Molecule has'):
@@ -321,7 +322,7 @@ def _helper_vibrational(lit):
     return imaginary_freq, vib_energy, atmasses
 
 
-def _helper_thermo(lit):
+def _helper_thermo(lit: LineIterator) -> Tuple:
     """Load thermodynamics properties."""
     enthalpy_dict = {}
     entropy_dict = {}
