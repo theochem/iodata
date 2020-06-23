@@ -30,11 +30,11 @@ from ..utils import LineIterator
 
 __all__ = []
 
-PATTERNS = ['*.log']
+PATTERNS = ['*.qchemlog']
 
 
-# todo: fix @document_load_one argument with the results from load_one
-@document_load_one('Q-Chem Log', [])
+@document_load_one("qchemlog", ['atcoords', 'athessian', 'atmasses', 'atnums', 'charge', 'energy',
+                                 'g_rot', 'mo', 'lot', 'nelec', 'obasis_name', 'run_type', 'extra'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     result = {}
