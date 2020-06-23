@@ -26,7 +26,7 @@ import numpy as np
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
-from ..utils import LineIterator
+from ..utils import kcalmol, LineIterator
 
 __all__ = []
 
@@ -37,15 +37,10 @@ PATTERNS = ['*.qchemlog']
                                  'g_rot', 'mo', 'lot', 'nelec', 'obasis_name', 'run_type', 'extra'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    result = {}
     data = load_qchemlog_low(lit)
-    result['atcoords'] = data['atcoords']
-    result['athessian'] = data['hessian']
-    result['atmasses'] = data['atmasses']
-    result['atnums'] = data['atnums']
-    result['charge'] = data['charge']
-    result['energy'] = data['energy']
-    result['g_rot'] = data['g_rot']
+    result_labels = ['atcoords', 'hessian', 'atmasses', 'atnums',
+                     'charge', 'energy', 'g_rot', 'run_type']
+    result = {label: data.get(label, None) for label in result_labels}
     # build molecular orbitals
     # todo: double check if this is right
     # mo_energies
@@ -64,15 +59,20 @@ def load_one(lit: LineIterator) -> dict:
     result['lot'] = data['method']
     result['nelec'] = data['alpha_elec'] + data['beta_elec']
     result['obasis_name'] = data['basis_set'].lower()
-    result['run_type'] = data['run_type']
     # moments
     moments_labels = ['dipole_moment', 'quadrupole_moments', 'dipole_tol']
     moments = {label: data.get(label, None) for label in moments_labels}
     # extra information
+    # convert kcal/mol to atomic units
+    enthalpy_dict = {k: v * kcalmol for k, v in data['enthalpy_dict'].items()}
+    # todo: unit conversions for entropy
+    result['enthalpy_dict'] = enthalpy_dict
     extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
                     'mulliken_charges', 'polarizability_tensor',
-                    'imaginary_freq', 'vib_energy', 'enthalpy_dict', 'entropy_dict']
+                    'imaginary_freq', 'vib_energy', '', 'entropy_dict']
     extra = {label: data.get(label, None) for label in extra_labels}
+    # unit conversions for vibrational energy
+    extra['vib_energy'] = extra.get('vib_energy') * kcalmol
     extra['moments'] = moments
     result['extra'] = extra
     return result
@@ -91,61 +91,42 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
         # get the atomic information
         if line.startswith('$molecule'):
             data['charge'], data['spin_multi'], data['natom'], \
-            data['atnums'], data['atcoords'] = _helper_atoms(lit)
+              data['atnums'], data['atcoords'] = _helper_atoms(lit)
             natoms = len(data['atnums'])
-            # print(lit.lineno)
-            # 145
         # job specifications
         elif line.startswith('$rem'):
             data['run_type'], data['method'], data['basis_set'], \
             data['unrestricted'], data['g_rot'] = _helper_job(lit)
-            # print(lit.lineno)
-            # 166
         # standard nuclear orientation
         elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
             # atnums, alpha_elec, beta_elec, nuclear_repulsion_energy, energy, atcoords = \
             #     _helper_electron(lit)
             _, data['alpha_elec'], data['beta_elec'], data['nuclear_repulsion_energy'], \
-            data['energy'], _ = _helper_electron(lit)
-            # print(lit.lineno)
-            # 236
+              data['energy'], _ = _helper_electron(lit)
         # orbital energies
         elif line.startswith('Orbital Energies (a.u.)'):
             data['alpha_mo_occupied'], data['beta_mo_occupied'], data['alpha_mo_unoccupied'], \
-            data['beta_mo_unoccupied'], data['norba'], data['norbb'] = _helper_orbital_energies(lit)
-            # print(lit.lineno)
-            # 266
+              data['beta_mo_unoccupied'], data['norba'], data['norbb'] = _helper_orbital_energies(lit)
         # mulliken charges
         elif line.startswith('Ground-State Mulliken Net Atomic Charges'):
             data['mulliken_charges'] = _helper_mulliken(lit)
-            # print(lit.lineno)
-            # 275
         #  cartesian multipole moments
         elif line.startswith('Cartesian Multipole Moments'):
             data['dipole_moment'], data['quadrupole_moments'], data[
                 'dipole_tol'] = _helper_dipole_moments(lit)
-            # print(lit.lineno)
-            # 286
         # polarizability matrix
         elif line.startswith('Polarizability Matrix (a.u.)'):
             data['polarizability_tensor'] = _helper_polar(lit)
-            # print(lit.lineno)
-            # 325
         # hessian matrix
         elif line.startswith('Hessian of the SCF Energy'):
             hessian = _helper_hessian(lit)
             data['hessian'] = hessian.reshape(natoms * 3, natoms * 3)
-            # print(lit.lineno)
-            # 355
         # vibrational analysis
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
             data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)
-            # print(lit.lineno)
-            # 383
         elif line.startswith('Rotational Symmetry Number'):
             data['enthalpy_dict'], data['entropy_dict'] = _helper_thermo(lit)
-            # print(lit.lineno)
-            # 407
+
     return data
 
 
@@ -165,7 +146,6 @@ def _helper_atoms(lit: LineIterator) -> tuple:
             natom += 1
     atnums = np.array([sym2num[i] for i in atom_symbols])
     # coordinates in angstroms
-    # todo: check should use the 'Standard Nuclear Orientation (Angstrom)' or just here
     atcoords = np.array(atcoords)
     return charge, spin_multi, natom, atnums, atcoords
 
@@ -180,7 +160,6 @@ def _helper_job(lit):
             # https://manual.q-chem.com/5.2/A3.S4.html
             # ideriv: the order of derivatives that are evaluated analytically
             # incdft: iteration number after which incremental Fock matrix algorithm is initiated
-
             # job type
             if line_str.startswith('jobtype'):
                 run_type = line_str.split()[1]
@@ -196,7 +175,6 @@ def _helper_job(lit):
     return run_type, method, basis_set, unrestricted, g_rot
 
 
-# this version works
 def _helper_electron(lit):
     """Load electron information from Q-Chem log out file format."""
     next(lit)
@@ -264,7 +242,6 @@ def _helper_section(start, end, lit, backward=False):
     return data
 
 
-# this one works
 def _helper_mulliken(lit):
     """Load mulliken net atomic charges."""
     while True:
@@ -280,7 +257,6 @@ def _helper_mulliken(lit):
     return np.array(mulliken_charges, dtype=np.float)
 
 
-# this one works
 def _helper_dipole_moments(lit):
     """Load cartesian multiple moments."""
     for line in lit:
@@ -301,7 +277,6 @@ def _helper_dipole_moments(lit):
            np.array(quadrupole_moments, dtype=np.float), dipole_tol
 
 
-# this one works
 def _helper_polar(lit):
     """Load polarizability matrix."""
     next(lit)
@@ -314,7 +289,6 @@ def _helper_polar(lit):
     return np.array(polarizability_tensor, dtype=np.float)
 
 
-# this one works
 def _helper_hessian(lit):
     """Load hessian matrix."""
     # hessian in Cartesian coordinates, shape(3 * natom, 3 * natom)
@@ -329,18 +303,12 @@ def _helper_hessian(lit):
     return np.array(hessian, dtype=np.float)
 
 
-# this one works
 def _helper_vibrational(lit):
     """Load vibrational analysis."""
-    # for line in lit:
-    #     if line.strip().startswith('Mode:'):
-    #         break
-    # todo:  check what information we need to include here
     for line in lit:
         if line.strip().startswith('This Molecule has'):
             break
     imaginary_freq = int(line.strip().split()[3])
-    # todo: unit conversions
     vib_energy = float(next(lit).strip().split()[-2])
     next(lit)
     atmasses = []
@@ -353,10 +321,8 @@ def _helper_vibrational(lit):
     return imaginary_freq, vib_energy, atmasses
 
 
-# this one works
 def _helper_thermo(lit):
     """Load thermodynamics properties."""
-    # unit conversion
     enthalpy_dict = {}
     entropy_dict = {}
     for line in lit:
