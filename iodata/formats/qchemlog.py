@@ -120,8 +120,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             data['polarizability_tensor'] = _helper_polar(lit)
         # hessian matrix
         elif line.startswith('Hessian of the SCF Energy'):
-            hessian = _helper_hessian(lit)
-            data['hessian'] = hessian.reshape(natoms * 3, natoms * 3)
+            data['hessian'] = _helper_hessian(lit, natoms)
         # vibrational analysis
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
             data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)
@@ -290,18 +289,22 @@ def _helper_polar(lit: LineIterator) -> np.ndarray:
     return np.array(polarizability_tensor, dtype=np.float)
 
 
-def _helper_hessian(lit: LineIterator) -> np.ndarray:
+def _helper_hessian(lit: LineIterator, natoms: int) -> np.ndarray:
     """Load hessian matrix."""
     # hessian in Cartesian coordinates, shape(3 * natom, 3 * natom)
-    next(lit)
-    hessian = []
+    col_idx = [int(i) for i in next(lit).strip().split()]
+    hessian = np.empty((natoms*3, natoms*3), dtype=object)
     for line in lit:
         if line.strip().startswith('****************'):
             break
         else:
-            hessian.extend(line.strip().split()[1:])
-    hessian = [i for i in hessian if not i.isdigit()]
-    return np.array(hessian, dtype=np.float)
+            if not line.startswith('            '):
+                line_list = line.strip().split()
+                row_idx = int(line_list[0]) - 1
+                hessian[row_idx, col_idx[0]-1:col_idx[-1]] = line_list[1:]
+            else:
+                col_idx = [int(i) for i in line.strip().split()]
+    return hessian.astype(np.float)
 
 
 def _helper_vibrational(lit: LineIterator) -> Tuple:
