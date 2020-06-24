@@ -113,6 +113,7 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
 def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.ndarray]:
     coeffs = []
     energies = []
+    irreps = []
 
     in_orb = 0
     for line in lit:
@@ -125,7 +126,8 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.
             ncol = len(words)
             assert ncol > 0
             for word in words:
-                assert word == 'a1g'
+                # assert word == 'a1g'
+                irreps.append(word)
             cols = [np.zeros((nbasis, 1), float) for _ in range(ncol)]
             in_orb = 1
         elif in_orb == 1:
@@ -147,7 +149,7 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.
                 in_orb = 0
                 coeffs.extend(cols)
 
-    return np.hstack(coeffs), np.array(energies)
+    return np.hstack(coeffs), np.array(energies), irreps
 
 
 def _load_helper_occ(lit: LineIterator) -> np.ndarray:
@@ -176,6 +178,8 @@ def load_one(lit: LineIterator) -> dict:
     energiesb = None
     occsb = None
     atcharges = None
+    irrepsa = None
+    irrepsb = None
     # Using a loop because we're not entirely sure if sections in an MKL file
     # have a fixed order.
     while True:
@@ -194,11 +198,11 @@ def load_one(lit: LineIterator) -> dict:
         elif line == '$BASIS':
             obasis = _load_helper_obasis(lit)
         elif line == '$COEFF_ALPHA':
-            coeffsa, energiesa = _load_helper_coeffs(lit, obasis.nbasis)
+            coeffsa, energiesa, irrepsa = _load_helper_coeffs(lit, obasis.nbasis)
         elif line == '$OCC_ALPHA':
             occsa = _load_helper_occ(lit)
         elif line == '$COEFF_BETA':
-            coeffsb, energiesb = _load_helper_coeffs(lit, obasis.nbasis)
+            coeffsb, energiesb, irrepsb = _load_helper_coeffs(lit, obasis.nbasis)
         elif line == '$OCC_BETA':
             occsb = _load_helper_occ(lit)
 
@@ -220,7 +224,7 @@ def load_one(lit: LineIterator) -> dict:
         assert abs(occsa.sum() - nelec) < 1e-7
         mo = MolecularOrbitals(
             'restricted', coeffsa.shape[1], coeffsa.shape[1],
-            occsa, coeffsa, energiesa, None)
+            occsa, coeffsa, energiesa, irrepsa)
     else:
         if occsb is None:
             lit.error('Beta occupation numbers not found in mkl file while '
@@ -239,7 +243,7 @@ def load_one(lit: LineIterator) -> dict:
             np.concatenate((occsa, occsb), axis=0),
             np.concatenate((coeffsa, coeffsb), axis=1),
             np.concatenate((energiesa, energiesb), axis=0),
-            None)
+            irrepsa + irrepsb)
 
     result = {
         'atcoords': atcoords,
@@ -341,22 +345,25 @@ def _dump_helper_coeffs(f, data, spin=None):
         norb = data.mo.norba
         coeff = data.mo.coeffsa[permutation] * signs.reshape(-1, 1)
         ener = data.mo.energiesa
+        if data.mo.irreps is not None:
+            irreps = data.mo.irreps[:norb]
+        else:
+            irreps = ['a1g'] * norb
     elif spin == 'b':
         norb = data.mo.norbb
         coeff = data.mo.coeffsb[permutation] * signs.reshape(-1, 1)
         ener = data.mo.energiesb
+        if data.mo.irreps is not None:
+            irreps = data.mo.irreps[norb:]
+        else:
+            irreps = ['a1g'] * norb
     else:
         raise IOError('A spin must be specified')
 
     for j in range(0, norb, 5):
-        if norb < 5:
-            f.write(' a1g' * norb + '\n')
-        elif norb - j < 5:
-            f.write(' a1g' * (norb - j) + '\n')
-        else:
-            f.write(' a1g' * 5 + '\n')
-
         en = ' '.join(['   {: ,.12f}'.format(e) for e in ener[j:j + 5]])
+        irre = ' '.join(['{}'.format(irr) for irr in irreps[j:j + 5]])
+        f.write(irre + '\n')
         f.write(en + '\n')
         for orb in coeff[:, j:j + 5]:
             coeffs = ' '.join(['  {: ,.12f}'.format(c) for c in orb])
