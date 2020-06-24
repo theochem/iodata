@@ -97,7 +97,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
         # job specifications
         elif line.startswith('$rem'):
             data['run_type'], data['method'], data['basis_set'], \
-            data['unrestricted'], data['g_rot'] = _helper_job(lit)
+              data['unrestricted'], data['symm'] = _helper_job(lit)
         # standard nuclear orientation
         elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
             # atnums, alpha_elec, beta_elec, nuclear_repulsion_energy, energy, atcoords = \
@@ -125,6 +125,8 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
             data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)
         elif line.startswith('Rotational Symmetry Number'):
+            # rotational symmetry number
+            data['g_rot'] = int(line.split()[-1])
             data['enthalpy_dict'], data['entropy_dict'] = _helper_thermo(lit)
 
     return data
@@ -171,8 +173,8 @@ def _helper_job(lit: LineIterator) -> Tuple:
                 basis_set = line_str.split()[1]
             # the symmetry
             elif line_str.startswith('symmetry'):
-                g_rot = int(line_str.split()[1])
-    return run_type, method, basis_set, unrestricted, g_rot
+                symm = int(line_str.split()[1])
+    return run_type, method, basis_set, unrestricted, symm
 
 
 def _helper_electron(lit: LineIterator) -> Tuple:
@@ -193,7 +195,7 @@ def _helper_electron(lit: LineIterator) -> Tuple:
     # nuclear_replusion_energy = float(re.findall('\d+\.\d+', next(line).strip())[-2])
     nuclear_replusion_energy = float(next(lit).strip().split()[-2])
     # number of num alpha electron and beta elections
-    alpha_elec, beta_elec = [int(i) for i in re.findall('\d', next(lit).strip())]
+    alpha_elec, beta_elec = [int(i) for i in re.findall(r'\d', next(lit).strip())]
     # total energy
     for line in lit:
         if line.strip().startswith('Total energy in the final basis set'):
