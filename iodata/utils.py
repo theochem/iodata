@@ -38,6 +38,7 @@ angstrom: float = spc.angstrom / spc.value(u'atomic unit of length')
 electronvolt: float = 1 / spc.value(u'hartree-electron volt relationship')
 # atomic mass unit (not atomic unit of mass!)
 amu: float = 1e-3 / (spc.value(u'electron mass') * spc.value(u'Avogadro constant'))
+kcalmol: float = 1e3 * spc.calorie / spc.value('Avogadro constant') / spc.value('Hartree energy')
 
 
 class FileFormatError(IOError):
