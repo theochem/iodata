@@ -21,6 +21,7 @@
 import numpy as np
 from numpy.testing import assert_equal
 
+from ..api import load_one
 from ..formats.qchemlog import load_qchemlog_low
 from ..utils import LineIterator
 
@@ -130,3 +131,77 @@ def test_load_data_qchemlog_h2o():
                          1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01,
                          3.144706e-01]])
     assert_equal(data['hessian'], hessian)
+
+
+def test_load_one_qchemlog():
+    with path('iodata.test.data', 'water_hf_ccpvtz_freq_qchem.out') as fn_qchemlog:
+        mol = load_one(str(fn_qchemlog), fmt='qchemlog')
+    assert mol.charge == 0
+    assert mol.energy == -76.0571936393
+    assert mol.g_rot == 1
+    assert mol.nelec == 10
+    assert mol.run_type == 'freq'
+    assert mol.lot == 'hf'
+    assert mol.obasis_name == 'cc-pvtz'
+    # todo: the implementation of qchem log file lead to charge=NaN, resulting in an error of charge
+    # put charge to extra dictionary for now
+    assert mol.extra['charge'] == 0
+    assert mol.extra['spin_multi'] == 1
+    assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
+    assert mol.extra['nbasis'] == 58
+    assert mol.extra['imaginary_freq'] == 0
+    assert mol.extra['vib_energy'] == 0.022122375167392933
+    # todo: unit conversion for entropy terms
+    assert mol.extra['entropy_dict']['trans_entropy'] == 34.608
+    assert mol.extra['entropy_dict']['rot_entropy'] == 11.82
+    assert mol.extra['entropy_dict']['vib_entropy'] == 0.003
+    assert mol.extra['entropy_dict']['entropy_total'] == 46.432
+    assert mol.extra['enthalpy_dict']['trans_enthalpy'] == 0.0014167116787071256
+    assert mol.extra['enthalpy_dict']['rot_enthalpy'] == 0.0014167116787071256
+    assert mol.extra['enthalpy_dict']['vib_enthalpy'] == 0.022123968768831298
+    assert mol.extra['enthalpy_dict']['enthalpy_total'] == 0.025900804177758054
+    assert mol.extra['moments']['dipole_tol'] == 2.0231
+
+    assert_equal(mol.extra['moments']['dipole_moment'], np.array([1.4989, 1.1097, -0.784]))
+    assert_equal(mol.extra['moments']['quadrupole_moments'],
+                 np.array([-6.1922, 0.2058, -5.0469, -0.9308, 1.1096, -5.762]))
+    assert_equal(mol.extra['mulliken_charges'], np.array([-0.482641, 0.241321, 0.241321]))
+    polarizability_tensor = np.array([[-6.1256608, -0.1911917, 0.8593603],
+                                      [-0.1911917, -7.180854, -1.0224452],
+                                      [0.8593603, -1.0224452, -6.52088]])
+    assert_equal(mol.extra['polarizability_tensor'], polarizability_tensor)
+    atcoords = np.array([[0.00575, 0.00426, -0.00301],
+                         [0.27588, 0.88612, 0.25191],
+                         [0.60257, -0.23578, -0.7114]])
+    assert_equal(mol.atcoords, atcoords)
+    assert_equal(mol.atmasses, np.array([15.99491, 1.00783, 1.00783]))
+    assert_equal(mol.atnums, np.array([8, 1, 1]))
+
+    hessian = np.array([[3.162861e-01, 8.366060e-02, -2.326701e-01, -8.253820e-02,
+                         -1.226155e-01, -2.676000e-03, -2.337479e-01, 3.895480e-02,
+                         2.353461e-01],
+                        [8.366060e-02, 5.460341e-01, 2.252114e-01, -1.647100e-01,
+                         -4.652302e-01, -1.071603e-01, 8.104940e-02, -8.080390e-02,
+                         -1.180510e-01],
+                        [-2.326701e-01, 2.252114e-01, 3.738573e-01, -2.713570e-02,
+                         -1.472865e-01, -7.031900e-02, 2.598057e-01, -7.792490e-02,
+                         -3.035382e-01],
+                        [-8.253820e-02, -1.647100e-01, -2.713570e-02, 7.455040e-02,
+                         1.315365e-01, 1.474740e-02, 7.987800e-03, 3.317350e-02,
+                         1.238830e-02],
+                        [-1.226155e-01, -4.652302e-01, -1.472865e-01, 1.315365e-01,
+                         4.787640e-01, 1.470895e-01, -8.921000e-03, -1.353380e-02,
+                         1.970000e-04],
+                        [-2.676000e-03, -1.071603e-01, -7.031900e-02, 1.474740e-02,
+                         1.470895e-01, 8.125140e-02, -1.207140e-02, -3.992910e-02,
+                         -1.093230e-02],
+                        [-2.337479e-01, 8.104940e-02, 2.598057e-01, 7.987800e-03,
+                         -8.921000e-03, -1.207140e-02, 2.257601e-01, -7.212840e-02,
+                         -2.477343e-01],
+                        [3.895480e-02, -8.080390e-02, -7.792490e-02, 3.317350e-02,
+                         -1.353380e-02, -3.992910e-02, -7.212840e-02, 9.433770e-02,
+                         1.178541e-01],
+                        [2.353461e-01, -1.180510e-01, -3.035382e-01, 1.238830e-02,
+                         1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01,
+                         3.144706e-01]])
+    assert_equal(mol.extra['hessian'], hessian)
