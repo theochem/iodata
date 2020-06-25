@@ -31,6 +31,7 @@ from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
 from ..iodata import IOData
 from ..utils import LineIterator
+from ..overlap import gob_cart_normalization
 
 from .wfn import build_obasis, get_mocoeff_scales
 
@@ -275,15 +276,27 @@ def dump_one(f: TextIO, data: IOData):
     # required = [labels_all[tag] for tag in required_tags]
     # flip keys and values for further use
     labels_all = {v: k for k, v in labels_all.items()}
-    # todo: check if all mandatory properties are present (not checked)
+    check = data.obasis.shells[0]
+    shell_info = []
+    for shell in data.obasis.shells:
+        # Creating a list with information of shells. Mostly to get sp split into two different
+        # shells. Instead of doing this maybe I can create a new obasis object
+        for _ in zip(shell.angmoms, shell.kinds, shell.coeffs.T):
+            shell_info.append(list(_))
+            shell_info[-1].append(shell.exponents)
+            shell_info[-1].append(shell.icenter)
 
+    #print(shell_info)
     # write string labels
     # _write_string(data=data, labels_all=labels_all, file=f)
     title = data.title or '<Created with IOData>'
     _write_xml_single(tag=labels_all["title"], info=title, file=f)
 
     # keywords
-    keywords = data.extra["keywords"]
+    if check.exponents.shape[0] > 1:
+        keywords = 'GTO'
+    else:
+        keywords = data.extra["keywords"]
     _write_xml_single(tag=labels_all["keywords"], info=keywords, file=f)
 
     # number of atoms
@@ -291,15 +304,26 @@ def dump_one(f: TextIO, data: IOData):
     _write_xml_single(tag=labels_all["num_atoms"], info=num_atoms, file=f)
 
     # number of primitives
-    num_prim = data.obasis.nbasis
+    if check.exponents.shape[0] > 1:
+        num_prim = 0
+        for shell in shell_info:
+            num_prim += len(data.obasis.conventions[shell[0], 'c']) * shell[2].shape[0]
+    else:
+        num_prim = data.obasis.nbasis
     _write_xml_single(tag=labels_all["num_primitives"], info=num_prim, file=f)
 
     # number of occupied mo
-    num_mo = data.mo.occs.shape[0]
+    if check.exponents.shape[0] > 1:
+        num_mo = len(data.mo.occs[data.mo.occs > 0.5])
+    else:
+        num_mo = data.mo.occs.shape[0]
     _write_xml_single(tag=labels_all["num_occ_mo"], info=num_mo, file=f)
 
     # number of perturbations
-    num_perturbations = data.extra["num_perturbations"]
+    if check.exponents.shape[0] > 1:
+        num_perturbations = 0
+    else:
+        num_perturbations = data.extra["num_perturbations"]
     _write_xml_single(tag=labels_all["num_perturbations"], info=num_perturbations, file=f)
 
     # Nuclear names
@@ -342,20 +366,33 @@ def dump_one(f: TextIO, data: IOData):
 
     # todo:  spin multiplicity
     # molecular orbital spin types
-    if data.extra["spin_multi"] != None:
-        mo_spin = data.extra["spin_multi"]
+    if check.exponents.shape[0] > 1:
+        mo_spin = int(data.spinpol + 1)
         _write_xml_single(tag=labels_all["spin_multi"], info=mo_spin, file=f)
+    else:
+        if data.extra["spin_multi"] != None:
+            mo_spin = data.extra["spin_multi"]
+            _write_xml_single(tag=labels_all["spin_multi"], info=mo_spin, file=f)
 
     # model name
-    model = data.extra["model_name"]
+    if check.exponents.shape[0] > 1:
+        model = data.lot
+    else:
+        model = data.extra["model_name"]
     _write_xml_single(tag=labels_all["model_name"], info=model, file=f)
 
     # todo: primitive centers and types
     # Primitive centers
     prim_centers = []
-    for shell in data.obasis.shells:
-        rang = len(data.obasis.conventions[shell.angmoms[0], 'c'])
-        prim_centers.extend([(shell.icenter + 1) for ao in range(rang)])
+    if check.exponents.shape[0] > 1:
+        for s in shell_info:
+            # Decontraction of C-GTO shells into shells of primitives
+            rang = len(data.obasis.conventions[s[0], 'c']) * s[3].shape[0]
+            prim_centers.extend([(s[4] + 1) for ao in range(rang)])
+    else:
+        for shell in data.obasis.shells:
+            rang = len(data.obasis.conventions[shell.angmoms[0], 'c'])
+            prim_centers.extend([(shell.icenter + 1) for ao in range(rang)])
 
     print("<Primitive Centers>", file=f)
     for j in range(0, len(prim_centers), 10):
@@ -363,7 +400,12 @@ def dump_one(f: TextIO, data: IOData):
     print("</Primitive Centers>", file=f)
 
     # Primitive types
-    raw_types = [shell.angmoms[0] for shell in data.obasis.shells]
+    if check.exponents.shape[0] > 1:
+        raw_types = []
+        for s in shell_info:
+            raw_types.extend([s[0] for ang in range(s[2].shape[0])])
+    else:
+        raw_types = [shell.angmoms[0] for shell in data.obasis.shells]
     ran_0 = [len(data.obasis.conventions[angmom, 'c']) for angmom in raw_types]
     ran_1 = [sum([len(data.obasis.conventions[x, 'c']) for x in range(ang+1)]) for ang in raw_types]
 
@@ -382,11 +424,17 @@ def dump_one(f: TextIO, data: IOData):
     # todo: unit conversions
     # primitive exponents
     exponents = []
-    for shell in data.obasis.shells:
-        rang = len(data.obasis.conventions[shell.angmoms[0], 'c'])
-        exponents.extend([shell.exponents[0] for ex in range(rang)])
+    if check.exponents.shape[0] > 1:
+        raw_exponents = []
+        for s in shell_info:
+            rang = len(data.obasis.conventions[s[0], 'c'])
+            raw_exponents.extend([[exp] * rang for exp in s[3]])
+            exponents = [exp for sublist in raw_exponents for exp in sublist]
+    else:
+        for shell in data.obasis.shells:
+            rang = len(data.obasis.conventions[shell.angmoms[0], 'c'])
+            exponents.extend([shell.exponents[0] for ex in range(rang)])
     print("<Primitive Exponents>", file=f)
-    print(exponents)
     for j in range(0, len(exponents), 4):
         print(' '.join(['{: ,.14E}'.format(e) for e in exponents[j:j + 4]]), file=f)
     print("</Primitive Exponents>", file=f)
@@ -416,14 +464,52 @@ def dump_one(f: TextIO, data: IOData):
 
     # todo: primitive mo numbers and Coefficients, line 213 in wfx.py
     # Molecular Orbital Primitive Coefficients
-    coeffs_data = np.copy(data.mo.coeffs)
-    coeffs_data *= get_mocoeff_scales(data.obasis).reshape(-1,1)
+    if check.exponents.shape[0] > 1:
+        raw_data = []
+        raw_scales = []
+        for s in shell_info:
+            # Store for each AO its primitives
+            rang = len(data.obasis.conventions[s[0], 'c'])
+            raw_data.extend(list(s[2]) for _ in range(rang))
+            # Copied directly from get wfn.py get_mocoeff_scales. Getting normalization constants
+            # for each primitive of each shell
+            for name in data.obasis.conventions[(s[0], 'c')]:
+                if name == '1':
+                    nx, ny, nz = 0, 0, 0
+                else:
+                    nx = name.count('x')
+                    ny = name.count('y')
+                    nz = name.count('z')
+                raw_scales.append(list(gob_cart_normalization(s[3], np.array([nx, ny, nz]))))
+
+        #Creating arrays for AO-primitive coefficients and normalization constants
+        max_prim = len(max(raw_data, key=len))
+        prim_coeff = np.zeros((data.obasis.nbasis, len(max(raw_data, key=len))))
+        scales = np.zeros((data.obasis.nbasis, len(max(raw_data, key=len))))
+        for index in range(len(raw_data)):
+            zero = (max_prim - len(raw_data[index])) * [0]
+            elem_prim = raw_data[index] + zero
+            elem_scales = raw_scales[index] + zero
+            prim_coeff[index] = elem_prim
+            scales[index] = elem_scales
+
+        # Un-normalizing molecular coefficients (not really....)
+        coeffs_data = data.mo.coeffs.T[:, :, None] * (prim_coeff * scales)
+        coeffs_data = coeffs_data[:len(data.mo.occs[data.mo.occs > 0.5])]
+        coeffs_data = coeffs_data.reshape(len(data.mo.occs[data.mo.occs > 0.5]), -1)
+        coeffs_data = coeffs_data.T
+
+    else:
+        coeffs_data = np.copy(data.mo.coeffs)
+        coeffs_data *= get_mocoeff_scales(data.obasis).reshape(-1,1)
+
     print("<Molecular Orbital Primitive Coefficients>", file=f)
-    for mo in range(data.mo.coeffs.T.shape[0]):
+    for mo in range(len(data.mo.occs[data.mo.occs > 0.5])):
         print("<MO Number>", file=f)
         print(str(mo + 1), file=f)
         print("</MO Number>", file=f)
-        for j in range(0, data.obasis.nbasis, 4):
+        #for j in range(0, data.obasis.nbasis, 4):
+        for j in range(0, num_prim, 4):
             print(' '.join(['{: ,.14E}'.format(c) for c in coeffs_data.T[mo][j:j + 4]]), file=f)
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
