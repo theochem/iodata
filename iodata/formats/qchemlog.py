@@ -18,7 +18,10 @@
 # --
 """Q-Chem Log file format.
 
+This module will load Q-Chem log file into IODATA.
 """
+
+
 import re
 from typing import List, Tuple
 
@@ -39,7 +42,7 @@ PATTERNS = ['*.qchemlog']
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     data = load_qchemlog_low(lit)
-    result_labels = ['atcoords', 'atmasses', 'atnums','charge',
+    result_labels = ['atcoords', 'atmasses', 'atnums', 'charge',
                      'charge', 'energy', 'g_rot', 'run_type']
     result = {label: data.get(label, None) for label in result_labels}
     # build molecular orbitals
@@ -99,21 +102,22 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
         # get the atomic information
         if line.startswith('$molecule'):
             data['charge'], data['spin_multi'], data['natom'], \
-              data['atnums'], data['atcoords'] = _helper_atoms(lit)
+                data['atnums'], data['atcoords'] = _helper_atoms(lit)
             natoms = len(data['atnums'])
         # job specifications
         elif line.startswith('$rem'):
             data['run_type'], data['method'], data['basis_set'], \
-              data['unrestricted'], data['symm'] = _helper_job(lit)
+                data['unrestricted'], data['symm'] = _helper_job(lit)
         # standard nuclear orientation
         elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
             # atnums, alpha_elec, beta_elec, nbasis, nuclear_replusion_energy, energy, atcoords
             _, data['alpha_elec'], data['beta_elec'], data['nbasis'], \
-              data['nuclear_repulsion_energy'], data['energy'], _ = _helper_electron(lit)
+                data['nuclear_repulsion_energy'], data['energy'], _ = _helper_electron(lit)
         # orbital energies
         elif line.startswith('Orbital Energies (a.u.)'):
             data['alpha_mo_occupied'], data['beta_mo_occupied'], data['alpha_mo_unoccupied'], \
-              data['beta_mo_unoccupied'], data['norba'], data['norbb'] = _helper_orbital_energies(lit)
+                data['beta_mo_unoccupied'], data['norba'], \
+                data['norbb'] = _helper_orbital_energies(lit)
         # mulliken charges
         elif line.startswith('Ground-State Mulliken Net Atomic Charges'):
             data['mulliken_charges'] = _helper_mulliken(lit)
@@ -230,10 +234,10 @@ def _helper_orbital_energies(lit: LineIterator) -> Tuple:
     norbb = len(beta_mo_occupied + beta_mo_unoccupied)
     # todo: not sure how to arrange the four type of molecular orbital energies here
     return np.array(alpha_mo_occupied, dtype=np.float), \
-           np.array(beta_mo_occupied, dtype=np.float), \
-           np.array(alpha_mo_unoccupied, dtype=np.float), \
-           np.array(beta_mo_unoccupied, dtype=np.float), \
-           norba, norbb
+        np.array(beta_mo_occupied, dtype=np.float), \
+        np.array(alpha_mo_unoccupied, dtype=np.float), \
+        np.array(beta_mo_unoccupied, dtype=np.float), \
+        norba, norbb
 
 
 def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = False) -> List:
@@ -285,7 +289,7 @@ def _helper_dipole_moments(lit: LineIterator) -> Tuple:
     quadrupole_moments.extend(next(lit).strip().split())
     quadrupole_moments = [dipole for idx, dipole in enumerate(quadrupole_moments) if idx % 2 != 0]
     return np.array(dipole_moment, dtype=np.float), \
-           np.array(quadrupole_moments, dtype=np.float), dipole_tol
+        np.array(quadrupole_moments, dtype=np.float), dipole_tol
 
 
 def _helper_polar(lit: LineIterator) -> np.ndarray:
@@ -304,7 +308,7 @@ def _helper_hessian(lit: LineIterator, natoms: int) -> np.ndarray:
     """Load hessian matrix."""
     # hessian in Cartesian coordinates, shape(3 * natom, 3 * natom)
     col_idx = [int(i) for i in next(lit).strip().split()]
-    hessian = np.empty((natoms*3, natoms*3), dtype=object)
+    hessian = np.empty((natoms * 3, natoms * 3), dtype=object)
     for line in lit:
         if line.strip().startswith('****************'):
             break
@@ -312,7 +316,7 @@ def _helper_hessian(lit: LineIterator, natoms: int) -> np.ndarray:
             if not line.startswith('            '):
                 line_list = line.strip().split()
                 row_idx = int(line_list[0]) - 1
-                hessian[row_idx, col_idx[0]-1:col_idx[-1]] = line_list[1:]
+                hessian[row_idx, col_idx[0] - 1:col_idx[-1]] = line_list[1:]
             else:
                 col_idx = [int(i) for i in line.strip().split()]
     return hessian.astype(np.float)
