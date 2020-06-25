@@ -19,7 +19,7 @@
 """Test iodata.formats.qchemlog module."""
 
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one
 from ..formats.qchemlog import load_qchemlog_low
@@ -150,7 +150,6 @@ def test_load_one_qchemlog():
     assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
     assert mol.extra['nbasis'] == 58
     assert mol.extra['imaginary_freq'] == 0
-    assert mol.extra['vib_energy'] == 0.022122375167392933
     # todo: unit conversion for entropy terms
     assert mol.extra['entropy_dict']['trans_entropy'] == 34.608
     assert mol.extra['entropy_dict']['rot_entropy'] == 11.82
@@ -161,6 +160,7 @@ def test_load_one_qchemlog():
     assert mol.extra['enthalpy_dict']['vib_enthalpy'] == 0.022123968768831298
     assert mol.extra['enthalpy_dict']['enthalpy_total'] == 0.025900804177758054
     assert mol.extra['moments']['dipole_tol'] == 2.0231
+    assert_allclose(mol.extra['vib_energy'], 0.022122375167392933)
 
     assert_equal(mol.extra['moments']['dipole_moment'], np.array([1.4989, 1.1097, -0.784]))
     assert_equal(mol.extra['moments']['quadrupole_moments'],
