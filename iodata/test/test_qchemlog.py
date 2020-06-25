@@ -151,11 +151,11 @@ def test_load_one_qchemlog():
     assert mol.extra['nbasis'] == 58
     assert mol.extra['imaginary_freq'] == 0
     # todo: unit conversion for entropy terms
-    assert mol.extra['entropy_dict']['trans_entropy'] == 34.608
-    assert mol.extra['entropy_dict']['rot_entropy'] == 11.82
-    assert mol.extra['entropy_dict']['vib_entropy'] == 0.003
-    assert mol.extra['entropy_dict']['entropy_total'] == 46.432
-    assert mol.extra['moments']['dipole_tol'] == 2.0231
+    assert_allclose(mol.extra['entropy_dict']['trans_entropy'], 34.608)
+    assert_allclose(mol.extra['entropy_dict']['rot_entropy'], 11.82)
+    assert_allclose(mol.extra['entropy_dict']['vib_entropy'], 0.003)
+    assert_allclose(mol.extra['entropy_dict']['entropy_total'], 46.432)
+    assert_allclose(mol.extra['moments']['dipole_tol'], 2.0231)
     assert_allclose(mol.extra['vib_energy'], 0.022122375167392933)
     assert_allclose(mol.extra['enthalpy_dict']['trans_enthalpy'], 0.0014167116787071256)
     assert_allclose(mol.extra['enthalpy_dict']['rot_enthalpy'], 0.0014167116787071256)
