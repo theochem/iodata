@@ -155,13 +155,12 @@ def test_load_one_qchemlog():
     assert mol.extra['entropy_dict']['rot_entropy'] == 11.82
     assert mol.extra['entropy_dict']['vib_entropy'] == 0.003
     assert mol.extra['entropy_dict']['entropy_total'] == 46.432
-    assert mol.extra['enthalpy_dict']['trans_enthalpy'] == 0.0014167116787071256
-    assert mol.extra['enthalpy_dict']['rot_enthalpy'] == 0.0014167116787071256
-    assert mol.extra['enthalpy_dict']['vib_enthalpy'] == 0.022123968768831298
-    assert mol.extra['enthalpy_dict']['enthalpy_total'] == 0.025900804177758054
     assert mol.extra['moments']['dipole_tol'] == 2.0231
     assert_allclose(mol.extra['vib_energy'], 0.022122375167392933)
-
+    assert_allclose(mol.extra['enthalpy_dict']['trans_enthalpy'], 0.0014167116787071256)
+    assert_allclose(mol.extra['enthalpy_dict']['rot_enthalpy'], 0.0014167116787071256)
+    assert_allclose(mol.extra['enthalpy_dict']['vib_enthalpy'], 0.022123968768831298)
+    assert_allclose(mol.extra['enthalpy_dict']['enthalpy_total'], 0.025900804177758054)
     assert_equal(mol.extra['moments']['dipole_moment'], np.array([1.4989, 1.1097, -0.784]))
     assert_equal(mol.extra['moments']['quadrupole_moments'],
                  np.array([-6.1922, 0.2058, -5.0469, -0.9308, 1.1096, -5.762]))
