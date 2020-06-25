@@ -65,10 +65,9 @@ def test_load_water_mp2_energy():
 def test_big_fileset_for_crashes():
     """Try loading lots of JSON to look for errors.
 
-    Both invalid files in `invalid` are dummy files.
-
     Notes
     -----
+    _file_data.txt Contains the keys for each file, to narrow them down soon.
     qchem_logonly_dft_watercluster_gradient_input.json is some sort of dummy file.
     qchem_logonly_dft_watercluster_gradient_output.json is the first file where I noticed that
         QCEngine will put in null values for optional fields.
@@ -79,6 +78,7 @@ def test_big_fileset_for_crashes():
     import os
 
     invalid = [
+        "_file_data.txt",
         "qchem_logonly_dft_watercluster_gradient_input.json",
         "qchem_logonly_rimp2_watercluster_gradient_input.json",
         "dftd3_water_energy_output.json",
@@ -91,6 +91,28 @@ def test_big_fileset_for_crashes():
                 mol = load_one(
                     os.path.join(
                         "C:/Users/wilha/iodata/iodata/test/data/json_tests_qcenginerecords", f
+                    )
+                )
+
+
+def test_qcschema_dev_for_crashes():
+    """Try loading lots of JSON to look for errors.
+
+    Notes
+    -----
+    basis_waterZr_energy_B3LYP_STO3G_DEF2_input.json is missing schema_name in basis
+
+    """
+    import os
+
+    invalid = []
+    for f in os.listdir("C:/Users/wilha/iodata/iodata/test/data/json_tests_qcschemadev"):
+        if f not in invalid:
+            print(f)
+            with path("iodata.test.data.json_tests_qcschemadev", f) as json_in:
+                mol = load_one(
+                    os.path.join(
+                        "C:/Users/wilha/iodata/iodata/test/data/json_tests_qcschemadev", f
                     )
                 )
 
