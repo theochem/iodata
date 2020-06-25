@@ -1,0 +1,144 @@
+dftd3_water_energy_input.json
+dict_keys(['driver', 'keywords', 'model', 'molecule'])
+dftd3_water_gradient_input.json
+dict_keys(['driver', 'keywords', 'model', 'molecule'])
+entos_hf_water_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'protocols', 'model'])
+entos_hf_water_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'protocols', 'provenance', 'success', 'return_result', 'properties', 'wavefunction', 'extras'])
+entos_hf_water_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+entos_hf_water_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+entos_hf_water_hessian_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+entos_hf_water_hessian_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties', 'extras'])
+entos_lda_water_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+entos_lda_water_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties', 'extras'])
+entos_lda_water_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+entos_lda_water_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+entos_pbe_water_charge_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+entos_pbe_water_charge_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties', 'extras'])
+entos_uhf_hydroxyl_radical_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+entos_uhf_hydroxyl_radical_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties', 'extras'])
+entos_uhf_hydroxyl_radical_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+entos_uhf_hydroxyl_radical_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+entos_xtb_water_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+entos_xtb_water_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'provenance', 'success', 'return_result', 'properties', 'extras'])
+entos_xtb_water_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+entos_xtb_water_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'provenance', 'success', 'return_result', 'properties'])
+molpro_ccsd_prt_pr_water_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_ccsd_prt_pr_water_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_ccsd_prt_pr_water_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_ccsd_prt_pr_water_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_ccsd_water_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_ccsd_water_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_ccsd_water_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_ccsd_water_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_mp2_water_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_mp2_water_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_mp2_water_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_mp2_water_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_rhf_water_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_rhf_water_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_rks_water_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_rks_water_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_rks_water_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_rks_water_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_uhf_hydroxyl_radical_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_uhf_hydroxyl_radical_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+molpro_uks_hydroxyl_radical_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+molpro_uks_hydroxyl_radical_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'provenance', 'success', 'return_result', 'properties'])
+qchem_hf_water_energy_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'protocols', 'extras', 'provenance'])
+qchem_hf_water_energy_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'protocols', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+qchem_hf_water_gradient_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'protocols', 'extras', 'provenance'])
+qchem_hf_water_gradient_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'protocols', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+qchem_hf_water_hessian_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'protocols', 'extras', 'provenance'])
+qchem_hf_water_hessian_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'protocols', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+qchem_logonly_dft_watercluster_gradient_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'protocols', 'extras', 'provenance', 'properties', 'return_result', 'success'])
+qchem_logonly_rimp2_watercluster_gradient_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'protocols', 'extras', 'provenance', 'properties', 'return_result', 'success'])
+terachem_water_energy_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+terachem_water_energy_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'success'])
+terachem_water_gradient_input.json
+dict_keys(['molecule', 'driver', 'keywords', 'model'])
+terachem_water_gradient_output.json
+dict_keys(['molecule', 'driver', 'model', 'schema_name', 'schema_version', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'success'])
+turbomole_water_energy_hf_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance'])
+turbomole_water_energy_hf_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+turbomole_water_energy_pbe0_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance'])
+turbomole_water_energy_pbe0_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+turbomole_water_energy_ricc2_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance'])
+turbomole_water_energy_ricc2_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+turbomole_water_energy_rimp2_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance'])
+turbomole_water_energy_rimp2_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+turbomole_water_gradient_hf_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance'])
+turbomole_water_gradient_hf_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+turbomole_water_gradient_pbe0_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance'])
+turbomole_water_gradient_pbe0_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+turbomole_water_gradient_ricc2_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance'])
+turbomole_water_gradient_ricc2_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
+turbomole_water_gradient_rimp2_input.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance'])
+turbomole_water_gradient_rimp2_output.json
+dict_keys(['schema_name', 'schema_version', 'molecule', 'driver', 'model', 'keywords', 'extras', 'provenance', 'properties', 'return_result', 'stdout', 'success'])
