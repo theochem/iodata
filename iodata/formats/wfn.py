@@ -189,7 +189,8 @@ def _load_helper_energy(lit: LineIterator) -> float:
     while 'ENERGY' not in line and line is not None:
         line = next(lit)
     # FORMAT (17X,F20.12)
-    # this differs between AIMPAC and GAUSSIAN so use split() to extract energy
+    # Note: this differs between *.WFN files -- in some files the energy field ends at
+    # column 35 instead of column 37 -- so use split() to extract energy
     energy = float(line[17:37].split()[0])
     return energy
 
