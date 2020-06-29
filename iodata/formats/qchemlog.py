@@ -108,9 +108,9 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
 
         # get the atomic information
         if line.startswith('$molecule'):
-            data['charge'], data['spin_multi'], data['natom'], \
-                data['atnums'], data['atcoords'] = _helper_atoms(lit)
-            natoms = len(data['atnums'])
+            result = _helper_atoms(lit)
+            data['charge'], data['spin_multi'], data['atnums'], data['atcoords'] = result
+            data['natom'] = len(data['atnums'])
         # job specifications
         elif line.startswith('$rem'):
             data['run_type'], data['method'], data['basis_set'], \
@@ -137,7 +137,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             data['polarizability_tensor'] = _helper_polar(lit)
         # hessian matrix
         elif line.startswith('Hessian of the SCF Energy'):
-            data['hessian'] = _helper_hessian(lit, natoms)
+            data['hessian'] = _helper_hessian(lit, data['natom'])
         # vibrational analysis
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
             data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)
@@ -153,20 +153,17 @@ def _helper_atoms(lit: LineIterator) -> Tuple:
     """Load list of coordinates from an Q-Chem log output file format."""
     # net charge and spin multiplicity
     charge, spin_multi = [int(i) for i in next(lit).strip().split()]
-    natom = 0
+    # atomic numbers and atomic coordinates (in Angstrom)
     atom_symbols = []
     atcoords = []
     for line in lit:
         if line.strip() == '$end':
             break
-        else:
-            atom_symbols.append(line.strip().split()[0])
-            atcoords.append([float(i) for i in line.strip().split()[1:]])
-            natom += 1
+        atom_symbols.append(line.strip().split()[0])
+        atcoords.append([float(i) for i in line.strip().split()[1:]])
     atnums = np.array([sym2num[i] for i in atom_symbols])
-    # coordinates in angstroms
     atcoords = np.array(atcoords)
-    return charge, spin_multi, natom, atnums, atcoords
+    return charge, spin_multi, atnums, atcoords
 
 
 def _helper_job(lit: LineIterator) -> Tuple:
