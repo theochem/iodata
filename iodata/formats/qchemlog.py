@@ -171,23 +171,22 @@ def _helper_job(lit: LineIterator) -> Tuple:
     for line in lit:
         if line.strip() == '$end':
             break
-        else:
-            line_str = line.strip()
-            # https://manual.q-chem.com/5.2/A3.S4.html
-            # ideriv: the order of derivatives that are evaluated analytically
-            # incdft: iteration number after which incremental Fock matrix algorithm is initiated
-            # job type
-            if line_str.startswith('jobtype'):
-                run_type = line_str.split()[1]
-            elif line_str.startswith('method'):
-                method = line_str.split()[1]
-            elif line_str.startswith('unrestricted'):
-                unrestricted = int(line_str.split()[1])
-            elif line_str.startswith('basis'):
-                basis_set = line_str.split()[1]
-            # the symmetry
-            elif line_str.startswith('symmetry'):
-                symm = int(line_str.split()[1])
+        line_str = line.strip()
+        # https://manual.q-chem.com/5.2/A3.S4.html
+        # ideriv: the order of derivatives that are evaluated analytically
+        # incdft: iteration number after which incremental Fock matrix algorithm is initiated
+        # job type
+        if line_str.startswith('jobtype'):
+            run_type = line_str.split()[1]
+        elif line_str.startswith('method'):
+            method = line_str.split()[1]
+        elif line_str.startswith('unrestricted'):
+            unrestricted = int(line_str.split()[1])
+        elif line_str.startswith('basis'):
+            basis_set = line_str.split()[1]
+        # the symmetry
+        elif line_str.startswith('symmetry'):
+            symm = int(line_str.split()[1])
     return run_type, method, basis_set, unrestricted, symm
 
 
@@ -200,10 +199,9 @@ def _helper_electron(lit: LineIterator) -> Tuple:
     for line in lit:
         if line.strip().startswith('-------------'):
             break
-        else:
-            # print(line.strip())
-            atom_symbols.append(line.strip().split()[1])
-            atcoords.append([float(i) for i in line.strip().split()[2:]])
+        # print(line.strip())
+        atom_symbols.append(line.strip().split()[1])
+        atcoords.append([float(i) for i in line.strip().split()[2:]])
     atnums = np.array([sym2num[i] for i in atom_symbols])
     atcoords = np.array(atcoords)
     # nuclear_replusion_energy = float(re.findall('\d+\.\d+', next(line).strip())[-2])
@@ -271,8 +269,7 @@ def _helper_mulliken(lit: LineIterator) -> np.ndarray:
     for line in lit:
         if line.strip().startswith('--------'):
             break
-        else:
-            mulliken_charges.append(line.strip().split()[-2])
+        mulliken_charges.append(line.strip().split()[-2])
     return np.array(mulliken_charges, dtype=np.float)
 
 
@@ -303,8 +300,7 @@ def _helper_polar(lit: LineIterator) -> np.ndarray:
     for line in lit:
         if line.strip().startswith('Calculating analytic Hessian'):
             break
-        else:
-            polarizability_tensor.append(line.strip().split()[1:])
+        polarizability_tensor.append(line.strip().split()[1:])
     return np.array(polarizability_tensor, dtype=np.float)
 
 
@@ -316,13 +312,12 @@ def _helper_hessian(lit: LineIterator, natoms: int) -> np.ndarray:
     for line in lit:
         if line.strip().startswith('****************'):
             break
+        if not line.startswith('            '):
+            line_list = line.strip().split()
+            row_idx = int(line_list[0]) - 1
+            hessian[row_idx, col_idx[0] - 1:col_idx[-1]] = line_list[1:]
         else:
-            if not line.startswith('            '):
-                line_list = line.strip().split()
-                row_idx = int(line_list[0]) - 1
-                hessian[row_idx, col_idx[0] - 1:col_idx[-1]] = line_list[1:]
-            else:
-                col_idx = [int(i) for i in line.strip().split()]
+            col_idx = [int(i) for i in line.strip().split()]
     return hessian.astype(np.float)
 
 
@@ -338,8 +333,7 @@ def _helper_vibrational(lit: LineIterator) -> Tuple:
     for line in lit:
         if line.strip().startswith('Molecular Mass:'):
             break
-        else:
-            atmasses.append(line.strip().split()[-1])
+        atmasses.append(line.strip().split()[-1])
     atmasses = np.array(atmasses, dtype=np.float)
     return imaginary_freq, vib_energy, atmasses
 
@@ -352,23 +346,20 @@ def _helper_thermo(lit: LineIterator) -> Tuple:
         line_str = line.strip()
         if line_str.startswith('Archival summary:'):
             break
-        else:
-            if line_str.startswith('Translational Enthalpy'):
-                enthalpy_dict['trans_enthalpy'] = float(line_str.split()[-2])
-            elif line_str.startswith('Rotational Enthalpy'):
-                enthalpy_dict['rot_enthalpy'] = float(line_str.split()[-2])
-            elif line_str.startswith('Vibrational Enthalpy'):
-                enthalpy_dict['vib_enthalpy'] = float(line_str.split()[-2])
-            elif line_str.startswith('Total Enthalpy'):
-                enthalpy_dict['enthalpy_total'] = float(line_str.split()[-2])
-            elif line_str.startswith('Translational Entropy'):
-                entropy_dict['trans_entropy'] = float(line_str.split()[-2])
-            elif line_str.startswith('Rotational Entropy'):
-                entropy_dict['rot_entropy'] = float(line_str.split()[-2])
-            elif line_str.startswith('Vibrational Entropy'):
-                entropy_dict['vib_entropy'] = float(line_str.split()[-2])
-            elif line_str.startswith('Total Entropy'):
-                entropy_dict['entropy_total'] = float(line_str.split()[-2])
-            else:
-                continue
+        if line_str.startswith('Translational Enthalpy'):
+            enthalpy_dict['trans_enthalpy'] = float(line_str.split()[-2])
+        elif line_str.startswith('Rotational Enthalpy'):
+            enthalpy_dict['rot_enthalpy'] = float(line_str.split()[-2])
+        elif line_str.startswith('Vibrational Enthalpy'):
+            enthalpy_dict['vib_enthalpy'] = float(line_str.split()[-2])
+        elif line_str.startswith('Total Enthalpy'):
+            enthalpy_dict['enthalpy_total'] = float(line_str.split()[-2])
+        elif line_str.startswith('Translational Entropy'):
+            entropy_dict['trans_entropy'] = float(line_str.split()[-2])
+        elif line_str.startswith('Rotational Entropy'):
+            entropy_dict['rot_entropy'] = float(line_str.split()[-2])
+        elif line_str.startswith('Vibrational Entropy'):
+            entropy_dict['vib_entropy'] = float(line_str.split()[-2])
+        elif line_str.startswith('Total Entropy'):
+            entropy_dict['entropy_total'] = float(line_str.split()[-2])
     return enthalpy_dict, entropy_dict
