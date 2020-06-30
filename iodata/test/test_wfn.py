@@ -48,7 +48,7 @@ def test_load_wfn_low_he_s():
     data = helper_load_wfn_low('he_s_orbital.wfn')
     # unpack data
     title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, mo_spins = data[5:]
     assert title == 'He atom - decontracted 6-31G basis set'
     assert_equal(atnums.shape, (1,))
     assert_equal(atnums, [2])
@@ -78,7 +78,7 @@ def test_load_wfn_low_h2o():
     data = helper_load_wfn_low('h2o_sto3g.wfn')
     # unpack data
     title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, mo_spins = data[5:]
     assert title == 'H2O Optimization'
     assert_equal(atnums.shape, (3,))
     assert_equal(atcoords.shape, (3, 3))

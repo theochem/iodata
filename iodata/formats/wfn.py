@@ -152,11 +152,11 @@ def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, n
     return atnums, atcoords
 
 
-def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int, step: int,
+def _load_helper_section(lit: LineIterator, n: int, start: str, skip: int, step: int,
                          dtype: np.dtype) -> np.ndarray:
     """Read CENTRE ASSIGNMENTS, TYPE ASSIGNMENTS, and EXPONENTS sections."""
     section = []
-    while len(section) < nprim:
+    while len(section) < n:
         line = next(lit)
         if not line.startswith(start):
             lit.error(f"Expecting line to start with '{start}'")
@@ -164,8 +164,8 @@ def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int, s
         while len(line) >= step:
             section.append(dtype(line[:step].replace('D', 'E')))
             line = line[step:]
-    if len(section) != nprim:
-        lit.error("Number of elements in section do not match 'nprim'")
+    if len(section) != n:
+        lit.error("Number of elements in section do not match 'n'")
     return np.array(section, dtype=dtype)
 
 
@@ -193,6 +193,14 @@ def _load_helper_energy(lit: LineIterator) -> float:
     # column 35 instead of column 37 -- so use split() to extract energy
     energy = float(line[17:37].split()[0])
     return energy
+
+
+def _load_helper_multiwfn(lit: LineIterator, num_mo: int) -> np.ndarray:
+    """Read MO spin information from MULTIWFN extension."""
+    for line in lit:
+        if "$MOSPIN $END" in line:
+            return _load_helper_section(lit, num_mo, '', 0, 2, int)
+    return np.empty((0,), dtype=int)
 
 
 def load_wfn_low(lit: LineIterator) -> Tuple:
@@ -225,8 +233,9 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
         mo_numbers[mo], mo_occs[mo], mo_energies[mo], mo_coeffs[:, mo] = \
             _load_helper_mo(lit, nprim)
     energy = _load_helper_energy(lit)
+    mo_spin = _load_helper_multiwfn(lit, num_mo)
     return title, atnums, atcoords, icenters, type_assignments, exponent, \
-        mo_numbers, mo_occs, mo_energies, mo_coeffs, energy
+        mo_numbers, mo_occs, mo_energies, mo_coeffs, energy, mo_spin
 
 
 # pylint: disable=too-many-branches
@@ -349,40 +358,57 @@ def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
     return np.array(scales)
 
 
-@document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title'])
+@document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title', 'extra'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     (title, atnums, atcoords, icenters, type_assignments, exponents,
-     mo_numbers, mo_occs, mo_energies, mo_coeffs, energy) = load_wfn_low(lit)
+     mo_numbers, mo_occs, mo_energies, mo_coeffs, energy, mo_spin) = load_wfn_low(lit)
     # Build the basis set and the permutation needed to regroup shells.
     obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
+    # Extra dict to return.
+    extra = {}
     # ----------------------------
     # Build the molecular orbitals
     # ----------------------------
     # Re-order the mo coefficients.
     mo_coeffs = mo_coeffs[permutation]
-    # Fix normalization
+    # Fix normalization.
     mo_coeffs /= get_mocoeff_scales(obasis).reshape(-1, 1)
     norb = mo_coeffs.shape[1]
-    # Make the wavefunction.
-    if mo_occs.max() > 1.0:
+    # Determine norb_a,norb_b,norb_ab from mo_spin information.
+    if mo_spin.size:
+        norb_a = np.sum(mo_spin == 1)
+        norb_b = np.sum(mo_spin == 2)
+        norb_ab = np.sum(mo_spin == 3)
+        if (norb_a + norb_b + norb_ab != norb) or (norb_b and norb_ab):
+            lit.error("Invalid mo_spin information.")
+        extra['mo_spin'] = mo_spin
+    # Determine norb_a,norb_b,norb_ab for restricted wave function by heuristic.
+    elif mo_occs.max() > 1.0:
+        norb_a = norb
+        norb_b = 0
+        norb_ab = norb
+    # Determine norb_a,norb_b,norb_ab for unrestricted wave function by heuristic.
+    # This may still fail in some corner cases.
+    else:
+        norb_a = 1
+        while (norb_a < mo_coeffs.shape[1]
+            and mo_energies[norb_a] >= mo_energies[norb_a - 1]
+            and mo_occs[norb_a] <= mo_occs[norb_a - 1]
+            and mo_numbers[norb_a] == mo_numbers[norb_a - 1] + 1):
+            norb_a += 1
+        norb_b = norb - norb_a
+        norb_ab = 0
+    # Make wavefunction.
+    if norb_ab:
         # Restricted wavefunction.
         mo = MolecularOrbitals(
-            'restricted', norb, norb,
+            'restricted', norb_a, norb_ab,
             mo_occs, mo_coeffs, mo_energies, None)
     else:
         # Unrestricted wavefunction.
-        # The number of alpha and beta orbitals are derived using heuristics.
-        # The WFN format does not explicitly specify which orbitals are alpha or
-        # beta. The heuristics may still fail in some corner cases.
-        norba = 1
-        while (norba < mo_coeffs.shape[1]
-               and mo_energies[norba] >= mo_energies[norba - 1]
-               and mo_occs[norba] <= mo_occs[norba - 1]
-               and mo_numbers[norba] == mo_numbers[norba - 1] + 1):
-            norba += 1
         mo = MolecularOrbitals(
-            'unrestricted', norba, norb - norba,
+            'unrestricted', norb_a, norb_b,
             mo_occs, mo_coeffs, mo_energies, None)
     return {
         'title': title,
@@ -391,4 +417,5 @@ def load_one(lit: LineIterator) -> dict:
         'obasis': obasis,
         'mo': mo,
         'energy': energy,
+        'extra': extra,
     }
