@@ -250,10 +250,10 @@ def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = Fa
         if line_str == start:
             break
     for line in lit:
-        if line.strip() == end:
-            break
-        else:
+        if line.strip() != end:
             data.extend(line.strip().split())
+        else:
+            break
     if backward:
         lit.back(line)
     return data
@@ -326,6 +326,7 @@ def _helper_vibrational(lit: LineIterator) -> Tuple:
     for line in lit:
         if line.strip().startswith('This Molecule has'):
             break
+    # pylint: disable= W0631
     imaginary_freq = int(line.strip().split()[3])
     vib_energy = float(next(lit).strip().split()[-2])
     next(lit)
