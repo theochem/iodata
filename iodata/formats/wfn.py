@@ -174,7 +174,7 @@ def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[int, float, float, n
     line = next(lit)
     if not line.startswith('MO'):
         lit.error("Expecting line to start with 'MO'")
-    # FORMAT (2X,5I,27X,F13.7,15X,F12.6)
+    # FORMAT (2X,I5,27X,F13.7,15X,F12.6)
     number = int(line[2:7])
     occ = float(line[34:47])
     energy = float(line[62:74])
@@ -199,6 +199,7 @@ def _load_helper_multiwfn(lit: LineIterator, num_mo: int) -> np.ndarray:
     """Read MO spin information from MULTIWFN extension."""
     for line in lit:
         if "$MOSPIN $END" in line:
+            # FORMAT (40I2)
             return _load_helper_section(lit, num_mo, '', 0, 2, int)
     return np.empty((0,), dtype=int)
 
@@ -380,12 +381,12 @@ def load_one(lit: LineIterator) -> dict:
         norb_a = np.sum(mo_spin == 1)
         norb_b = np.sum(mo_spin == 2)
         norb_ab = np.sum(mo_spin == 3)
-        if (norb_a + norb_b + norb_ab != norb) or (norb_b and norb_ab):
-            lit.error("Invalid mo_spin information.")
+        if norb_a + norb_b + norb_ab != norb or (norb_b and norb_ab):
+            lit.error("Invalid orbital spin types.")
         extra['mo_spin'] = mo_spin
     # Determine norb_a,norb_b,norb_ab for restricted wave function by heuristic.
     elif mo_occs.max() > 1.0:
-        norb_a = norb
+        norb_a = 0
         norb_b = 0
         norb_ab = norb
     # Determine norb_a,norb_b,norb_ab for unrestricted wave function by heuristic.
@@ -393,9 +394,9 @@ def load_one(lit: LineIterator) -> dict:
     else:
         norb_a = 1
         while (norb_a < mo_coeffs.shape[1]
-            and mo_energies[norb_a] >= mo_energies[norb_a - 1]
-            and mo_occs[norb_a] <= mo_occs[norb_a - 1]
-            and mo_numbers[norb_a] == mo_numbers[norb_a - 1] + 1):
+               and mo_energies[norb_a] >= mo_energies[norb_a - 1]
+               and mo_occs[norb_a] <= mo_occs[norb_a - 1]
+               and mo_numbers[norb_a] == mo_numbers[norb_a - 1] + 1):
             norb_a += 1
         norb_b = norb - norb_a
         norb_ab = 0
@@ -403,7 +404,7 @@ def load_one(lit: LineIterator) -> dict:
     if norb_ab:
         # Restricted wavefunction.
         mo = MolecularOrbitals(
-            'restricted', norb_a, norb_a,
+            'restricted', norb_a + norb_ab, norb_a + norb_ab,
             mo_occs, mo_coeffs, mo_energies, None)
     else:
         # Unrestricted wavefunction.
