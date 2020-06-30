@@ -48,24 +48,31 @@ def load_one(lit: LineIterator) -> dict:
     # build molecular orbitals
     # todo: double check if this is right
     # mo_energies
-    # # restricted case
-    # if not data['unrestricted']:
-    #     mo_energies = np.concatenate(
-    #         (data['alpha_mo_occupied'], data['alpha_mo_unoccupied']), axis=0)
-    #     mo_coeffs = np.empty((data['nbasis'], data['norba'])) * np.nan
-    #     mo_occs = np.zeros(mo_coeffs.shape[1]) * np.nan
-    #     mo = MolecularOrbitals("restricted", data['norba'], data['norba'],
-    #                            mo_occs, mo_coeffs, mo_energies, None)
-    # # unrestricted case
-    # else:
-    #     mo_energies = np.concatenate(
-    #         (data['alpha_mo_occupied'], data['alpha_mo_unoccupied'],
-    #          data['beta_mo_occupied'], data['beta_mo_unoccupied']), axis=0)
-    #     mo_coeffs = np.empty((data['nbasis'], data['norba']+data['norbb'])) * np.nan
-    #     mo_occs = np.zeros(mo_coeffs.shape[1]) * np.nan
-    #     mo = MolecularOrbitals("unrestricted", data['norba'], data['norbb'],
-    #                            mo_occs, mo_coeffs, mo_energies, None)
-    # result['mo'] = mo
+    # restricted case
+    if not data['unrestricted']:
+        mo_energies = np.concatenate(
+            (data['alpha_mo_occupied'], data['alpha_mo_unoccupied']), axis=0)
+        mo_coeffs = np.empty((data['nbasis'], data['norba'])) * np.nan
+        mo_occs = np.zeros(mo_coeffs.shape[1])
+        mo_occs[:data['alpha_elec']] = 1.0
+        mo_occs[:data['beta_elec']] += 1.0
+        mo = MolecularOrbitals("restricted", data['norba'], data['norba'],
+                               mo_occs, mo_coeffs, mo_energies, None)
+    # unrestricted case
+    else:
+        mo_energies = np.concatenate(
+            (data['alpha_mo_occupied'], data['alpha_mo_unoccupied'],
+             data['beta_mo_occupied'], data['beta_mo_unoccupied']), axis=0)
+        mo_coeffs = np.empty((data['nbasis'], data['norba']+data['norbb'])) * np.nan
+        mo_occs = np.zeros(mo_coeffs.shape[1])
+        # number of alpha & beta electrons and number of alpha molecular orbitals
+        na, nb = data['alpha_elec'], data['beta_elec']
+        na_mo = len(data['alpha_mo_occupied']) + len(data['alpha_mo_unoccupied'])
+        mo_occs[:na] = 1.0
+        mo_occs[na_mo: na_mo + nb] = 1.0
+        mo = MolecularOrbitals("unrestricted", data['norba'], data['norbb'],
+                               mo_occs, mo_coeffs, mo_energies, None)
+    result['mo'] = mo
 
     result['lot'] = data['method']
     result['nelec'] = data['alpha_elec'] + data['beta_elec']
