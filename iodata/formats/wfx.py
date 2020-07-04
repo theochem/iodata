@@ -101,38 +101,31 @@ def _wfx_labels() -> tuple:
     required_tags.remove('<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>')
     required_tags.remove('<Nuclear Cartesian Energy Gradients>')
 
-    return labels_str, labels_int, labels_float, labels_array_int, \
-           labels_array_float, labels_other, required_tags
-
-
-labels_str, labels_int, labels_float, labels_array_int, \
-labels_array_float, labels_other, required_tags = _wfx_labels()
+    return (labels_str, labels_int, labels_float, labels_array_int, labels_array_float,
+            labels_other, required_tags)
 
 
 def load_data_wfx(lit: LineIterator) -> dict:
     """Process loaded WFX data."""
     # load raw data & check required tags
+    lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, required_tags = _wfx_labels()
     data = parse_wfx(lit, required_tags)
 
     # process raw data
     result = {}
     for key, value in data.items():
-        if key in labels_str:
-            result[labels_str[key]] = value[0]
-        elif key in labels_int:
-            result[labels_int[key]] = int(value[0])
-        elif key in labels_float:
-            result[labels_float[key]] = float(value[0])
-        elif key in labels_array_float:
-            result[labels_array_float[key]] = np.fromstring(" ".join(value),
-                                                            dtype=np.float,
-                                                            sep=" ")
-        elif key in labels_array_int:
-            result[labels_array_int[key]] = np.fromstring(" ".join(value),
-                                                          dtype=np.int,
-                                                          sep=" ")
-        elif key in labels_other:
-            result[labels_other[key]] = value
+        if key in lbs_str:
+            result[lbs_str[key]] = value[0]
+        elif key in lbs_int:
+            result[lbs_int[key]] = int(value[0])
+        elif key in lbs_float:
+            result[lbs_float[key]] = float(value[0])
+        elif key in lbs_afloat:
+            result[lbs_afloat[key]] = np.fromstring(" ".join(value), dtype=np.float, sep=" ")
+        elif key in lbs_aint:
+            result[lbs_aint[key]] = np.fromstring(" ".join(value), dtype=np.int, sep=" ")
+        elif key in lbs_other:
+            result[lbs_other[key]] = value
         else:
             warnings.warn("Not recognized label, skip {0}".format(key))
 
@@ -272,8 +265,8 @@ def load_one(lit: LineIterator) -> dict:
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     # all the labels
-    labels_all = {**labels_str, **labels_int, **labels_float, **labels_array_int,
-                  **labels_array_float, **labels_other}
+    lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, required_tags = _wfx_labels()
+    labels_all = {**lbs_str, **lbs_int, **lbs_float, **lbs_aint, **lbs_afloat, **lbs_other}
     # the required_tags for WFX files
     # required = [labels_all[tag] for tag in required_tags]
     # flip keys and values for further use
