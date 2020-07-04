@@ -82,24 +82,25 @@ def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
 
 
 class Shell(NamedTuple):
-    """Describe a single shell in a molecular basis set.
+    """A shell in a molecular basis representing (generalized) contractions with the same exponents.
 
     Attributes
     ----------
     icenter
-        An integer referring to a row in the array atcoords in an IOData object.
+        An integer index specifying the row in the atcoords array of IOData object.
     angmoms
         An integer array of angular momentum quantum numbers, non-negative, with
         shape (ncon,).
     kinds
-        List of strings describing the kind of contraction: 'c' for Cartesian
+        List of strings describing the kind of contractions: 'c' for Cartesian
         and 'p' for pure. Pure functions are only allowed for angmom>1.
         The length equals the number of contractions: len(angmoms)=ncon.
     exponents
-        an array of exponents of primitives, with shape (nprim,).
+        The array containing the exponents of the primitives, with shape (nprim,).
     coeffs
-        an array with contraction coefficients, with shape (nprim, ncon). These
-        coefficients assume that the primitives are L2 (orbitals) or L1
+        The array containing the coefficients of the normalized primitives in each contraction;
+        shape = (nprim, ncon).
+        These coefficients assume that the primitives are L2 (orbitals) or L1
         (densities) normalized, but contractions are not necessarily normalized.
         (This depends on the code which generated the contractions.)
 
@@ -113,7 +114,7 @@ class Shell(NamedTuple):
 
     @property
     def nbasis(self) -> int:
-        """Return the number of basis functions."""
+        """Number of basis functions (e.g. 3 for a P shell and 4 for an SP shell)."""
         result = 0
         for angmom, kind in zip(self.angmoms, self.kinds):
             if kind == 'c':  # Cartesian
@@ -121,17 +122,17 @@ class Shell(NamedTuple):
             elif kind == 'p' and angmom >= 2:
                 result += 2 * angmom + 1
             else:
-                raise TypeError('Unknown shell kind \'{}\'.'.format(kind))
+                raise TypeError('Unknown shell kind \'{}\'; expected \'c\' or \'p\'.'.format(kind))
         return result
 
     @property
     def nprim(self) -> int:
-        """Return the number of primitives. Also known as the contraction length."""
+        """Number of primitives, also known as the contraction length."""
         return len(self.exponents)
 
     @property
     def ncon(self) -> int:
-        """Return the number of contractions."""
+        """Number of contractions. This is usually 1; e.g., it would be 2 for an SP shell."""
         return len(self.angmoms)
 
 
