@@ -153,34 +153,38 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
     data = {}
     mo_start = "<Molecular Orbital Primitive Coefficients>"
     section_start = None
+
     while True:
         # get a new line
         try:
             line = next(lit).strip()
         except StopIteration:
             break
-
+        # check whether line is the start of a section
         if section_start is None and line.startswith("<"):
-            section = []
+            # set start & end of the section and add it to data dictionary
             section_start = line
-            data[section_start] = section
+            data[section_start] = []
             section_end = line[:1] + "/" + line[1:]
-            # Special handling of MO coeffs
+            # special handling of <Molecular Orbital Primitive Coefficients> section
             if section_start == mo_start:
-                mo_numbers = []
-                data['<MO Numbers>'] = mo_numbers
+                data['<MO Numbers>'] = []
+        # check whether line is the (correct) end of the section
         elif section_start is not None and line.startswith("</"):
-            # Check if the closing tag is correct. In some cases, closing
-            # tags have a different number of spaces. 8-[
+            # In some cases, closing tags have a different number of spaces. 8-[
             if line.replace(" ", "") != section_end.replace(" ", ""):
                 lit.error("Expecting line {} but got {}.".format(section_end, line))
+            # reset section_start variable to signal that section ended
             section_start = None
+        # handle <MO Number> line under <Molecular Orbital Primitive Coefficients> section
         elif section_start == mo_start and line == '<MO Number>':
-            # Special handling of MO coeffs: read mo number
-            mo_numbers.append(next(lit).strip())
-            next(lit)  # skip '</MO Number>'
+            # add MO Number to list
+            data['<MO Numbers>'].append(next(lit).strip())
+            # skip '</MO Number>' line
+            next(lit)
+        # add section content to the corresponding list in data dictionary
         else:
-            section.append(line)
+            data[section_start].append(line)
 
     # check if last section was closed
     if section_start is not None:
@@ -189,7 +193,7 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
     if required_tags is not None:
         for section_tag in required_tags:
             if section_tag not in data.keys():
-                lit.error(f'Section {section_tag} is missing.')
+                lit.error(f'Section {section_tag} is missing from loaded WFX data.')
     return data
 
 

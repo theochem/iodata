@@ -235,7 +235,7 @@ def test_parse_wfx_missing_tag_h2o():
         lit = LineIterator(fn_wfx)
         with pytest.raises(IOError) as error:
             parse_wfx(lit, required_tags=["<Foo Bar>"])
-    assert str(error.value).endswith("Section <Foo Bar> is missing.")
+    assert str(error.value).endswith("Section <Foo Bar> is missing from loaded WFX data.")
 
 
 def test_load_data_wfx_h2o_error():
