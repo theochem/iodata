@@ -137,15 +137,17 @@ class Shell(NamedTuple):
 
 
 class MolecularBasis(NamedTuple):
-    """Describe a complete molecular orbital or density basis set.
+    """A complete molecular orbital or density basis set.
 
     Attributes
     ----------
     shells
-        a list of objects of the type Shell
+        A list of objects of type Shell which can support generalized contractions.
     conventions
-        a dictionary with as key a typle of angular momentum integer and kind
-        character, and as value a list of basis function strings, e.g.
+        A dictionary specifying the ordered basis functions for a given angular momentum and kind.
+        The key is a tuple of angular momentum integer and kind character ('c' for Cartesian
+        and 'p' for pure/spherical) and the value is a list of basis function strings.
+        For example,
 
         .. code-block:: python
 
@@ -167,7 +169,7 @@ class MolecularBasis(NamedTuple):
                 (2, 'p'): ['s2', 's1', 'c0', 'c1', 'c2'],
                 # Different quantum-chemistry codes may use incompatible
                 # orderings and sign conventions. E.g. Molden files written
-                # by Orca use the following convention for pure f functions:
+                # by ORCA use the following convention for pure f functions:
                 (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
                 # Note that the minus sign in the last two basis functions
                 # denotes that the signs of these harmonics have been changed.
@@ -177,7 +179,8 @@ class MolecularBasis(NamedTuple):
         in :ref:`basis_conventions`.
 
     primitive_normalization
-        Either 'L1' or 'L2'.
+        The normalization convention of primitives, which can be 'L2' (orbitals) or 'L1'
+        (densities) normalized.
 
     """
 
@@ -187,7 +190,7 @@ class MolecularBasis(NamedTuple):
 
     @property
     def nbasis(self) -> int:
-        """Return the number of basis functions."""
+        """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
 
     def get_segmented(self):
