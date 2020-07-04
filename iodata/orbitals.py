@@ -28,31 +28,29 @@ __all__ = ['MolecularOrbitals']
 
 
 class MolecularOrbitals(NamedTuple):
-    """Molecular Orbitals base Class.
+    """Class of Orthonormal Molecular Orbitals.
 
     Attributes
     ----------
     kind
-        'restricted', 'unrestricted', 'generalized'
-    norba : int
-        Number of alpha molecular orbitals. None in case of type=='generalized'.
-    norbb : int
-        Number of beta molecular orbitals. None in case of type=='generalized'.
+        Type of molecular orbitals, which can be 'restricted', 'unrestricted', or 'generalized'.
+    norba
+        Number of alpha molecular orbitals, set to `None` in case of type=='generalized'.
+    norbb
+        Number of beta molecular orbitals, set to `None` in case of type=='generalized'.
+        This is expected to be equal to `norba` for the `restricted` kind.
     occs
-        Molecular orbital occupation numbers. The number of elements equals the
-        number of columns of coeffs.
+        Molecular orbital occupation numbers. The length equals the number of columns of coeffs.
     coeffs
-        Molecular orbital basis coefficients.
-        In case of restricted: shape = (nbasis, norb_a) = (nbasis, norb_b).
-        In case of unrestricted: shape = (nbasis, norb_a + norb_b).
-        In case of generalized: shape = (2*nbasis, norb), where norb is the
+        Molecular orbital coefficients.
+        In case of restricted: shape = (nbasis, norba) = (nbasis, norbb).
+        In case of unrestricted: shape = (nbasis, norba + norbb).
+        In case of generalized: shape = (2 * nbasis, norb), where norb is the
         total number of orbitals.
     energies
-        Molecular orbital energies. The number of elements equals the
-        number of columns of coeffs.
+        Molecular orbital energies. The length equals the number of columns of coeffs.
     irreps
-        Irreducible representation. The number of elements equals the
-        number of columns of coeffs.
+        Irreducible representation. The length equals the number of columns of coeffs.
 
     Warning: the interpretation of the occupation numbers may only be suitable
     for single-reference orbitals (not fractionally occupied natural orbitals.)

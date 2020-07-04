@@ -307,7 +307,7 @@ def build_obasis(icenters: np.ndarray, type_assignments: np.ndarray,
 
 
 def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
-    """Get the normalization of the un-normalized Cartesian basis functions.
+    """Get the L2-normalization of the un-normalized Cartesian basis functions.
 
     Parameters
     ----------
