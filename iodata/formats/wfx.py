@@ -43,12 +43,15 @@ PATTERNS = ['*.wfx']
 
 def _wfx_labels() -> tuple:
     """Build labels for wfx parser."""
+    # labels of various sections in WFX file grouped based on their data type
+
+    # section labels with string data types
     labels_str = {
         '<Title>': 'title',
         '<Keywords>': 'keywords',
         '<Model>': 'model_name',
     }
-    # integer numbers
+    # section labels with integer number data types
     labels_int = {
         '<Number of Nuclei>': 'num_atoms',
         '<Number of Occupied Molecular Orbitals>': 'num_occ_mo',
@@ -60,7 +63,7 @@ def _wfx_labels() -> tuple:
         '<Number of Primitives>': 'num_primitives',
         '<Electronic Spin Multiplicity>': 'spin_multi',
     }
-    # float numbers
+    # section labels with float number data types
     labels_float = {
         '<Net Charge>': 'charge',
         '<Energy = T + Vne + Vee + Vnn>': 'energy',
@@ -68,12 +71,14 @@ def _wfx_labels() -> tuple:
         '<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>': 'nuc_viral',
         '<Full Virial Ratio, -(V - W)/T>': 'full_virial_ratio',
     }
+    # section labels with array of integer data types
     labels_array_int = {
         '<Atomic Numbers>': 'atnums',
         '<Primitive Centers>': 'centers',
         '<Primitive Types>': 'types',
         '<MO Numbers>': 'mo_numbers',  # This is constructed in parse_wfx.
     }
+    # section labels with array of float data types
     labels_array_float = {
         '<Nuclear Cartesian Coordinates>': 'atcoords',
         '<Nuclear Charges>': 'nuclear_charge',
@@ -82,17 +87,17 @@ def _wfx_labels() -> tuple:
         '<Molecular Orbital Occupation Numbers>': 'mo_occs',
         '<Molecular Orbital Primitive Coefficients>': 'mo_coeffs',
     }
+    # section labels with other data types
     labels_other = {
         '<Nuclear Names>': 'nuclear_names',
         '<Molecular Orbital Spin Types>': 'mo_spins',
         '<Nuclear Cartesian Energy Gradients>': 'nuclear_gradient',
     }
 
-    # list of required section tags
-    required_tags = (
-            list(labels_str) + list(labels_int) + list(labels_float)
-            + list(labels_array_int) + list(labels_array_float) + list(labels_other)
-    )
+    # list of tags corresponding to required sections based on WFX format specifications
+    required_tags = list(labels_str) + list(labels_int) + list(labels_float)
+    required_tags += list(labels_array_float) + list(labels_array_int) + list(labels_other)
+    # remove tags corresponding to optional sections
     required_tags.remove('<Model>')
     required_tags.remove('<Number of Core Electrons>')
     required_tags.remove('<Electronic Spin Multiplicity>')
