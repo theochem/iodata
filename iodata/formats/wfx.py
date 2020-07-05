@@ -175,6 +175,8 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
         if section_start is None and line.startswith("<"):
             # set start & end of the section and add it to data dictionary
             section_start = line
+            if section_start in data.keys():
+                lit.error("Section with tag={} is repeated!".format(section_start))
             data[section_start] = []
             section_end = line[:1] + "/" + line[1:]
             # special handling of <Molecular Orbital Primitive Coefficients> section
