@@ -143,8 +143,6 @@ def test_load_one_qchemlog():
     assert mol.run_type == 'freq'
     assert mol.lot == 'hf'
     assert mol.obasis_name == 'cc-pvtz'
-    # todo: the implementation of qchem log file lead to charge=NaN, resulting in an error of charge
-    # put charge to extra dictionary for now
     assert mol.extra['charge'] == 0
     assert mol.extra['spin_multi'] == 1
     assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
@@ -204,3 +202,27 @@ def test_load_one_qchemlog():
                          1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01,
                          3.144706e-01]])
     assert_equal(mol.extra['hessian'], hessian)
+    # molecule orbital related
+    # check number of orbitals and occupation numbers
+    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.norba == 58
+    assert mol.mo.norbb == 58
+    assert mol.mo.norb == 116
+    assert_equal(mol.mo.occsa, [1, 1, 1, 1, 1] + [0] * 53)
+    assert_equal(mol.mo.occsb, [1, 1, 1, 1, 1] + [0] * 53)
+    # alpha occupied orbital energies
+    occupied = np.array([-20.5546, -1.3458, -0.7102, -0.5776, -0.5045])
+    assert_allclose(mol.mo.energies[:5], occupied)
+    # beta occupied orbital energies
+    assert_allclose(mol.mo.energies[58:63], occupied)
+    # alpha virtual orbital energies
+    virtual = np.array([0.1423, 0.2041, 0.5445, 0.6021, 0.6682, 0.7874, 0.8014, 0.8052,
+                        0.8610, 0.9557, 1.1314, 1.1970, 1.5276, 1.5667, 2.0366, 2.0520,
+                        2.0664, 2.1712, 2.2342, 2.5910, 2.9639, 3.3568, 3.4919, 3.5814,
+                        3.6562, 3.8012, 3.8795, 3.8849, 3.9617, 4.0196, 4.0768, 4.1932,
+                        4.3149, 4.3900, 4.5839, 4.6857, 4.8666, 5.1595, 5.2529, 5.5288,
+                        6.0522, 6.5707, 6.9264, 6.9442, 7.0027, 7.0224, 7.0680, 7.1668,
+                        7.2377, 7.4574, 7.7953, 8.2906, 12.8843])
+    assert_allclose(mol.mo.energies[5:58], virtual)
+    # beta virtual orbital energies
+    assert_allclose(mol.mo.energies[63:], virtual)
