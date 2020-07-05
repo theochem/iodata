@@ -45,8 +45,8 @@ def test_load_water_number():
     assert_allclose(np.linalg.norm(
         mol.atcoords[1] - mol.atcoords[2]) / angstrom, 1.5513, atol=1.e-4)
     # check energies of scf cycles
-    energies = np.array(-76.34739931, -76.34740001,  -76.34740005, -76.34740029)
-    assert_allclose(mol.extras['scf_energies'], energies)
+    energies = np.array([-76.34739931, -76.34740001, -76.34740005, -76.34740029])
+    assert_allclose(mol.extra['scf_energies'], energies)
     # check scf energy
     assert_allclose(mol.energy, -76.347791524303, atol=1e-8)
     # check dipole moment
