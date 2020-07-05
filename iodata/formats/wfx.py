@@ -214,42 +214,70 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
                            'exrtra', 'mo', 'obasis', 'title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
+    # get data contained in WFX file with the proper type & shape
     data = load_data_wfx(lit)
-    # Build the basis set and the permutation needed to regroup shells.
+
+    # Build molecular basis
+    # ---------------------
+    # build molecular basis and permutation needed to regroup shells
     obasis, permutation = build_obasis(
         data['centers'] - 1, data['types'] - 1, data['exponents'], lit)
 
-    # Build the molecular orbitals
-    # ----------------------------
-    # Re-order the mo coefficients.
+    # Build molecular orbitals
+    # ------------------------
+    # re-order MO coefficients because the loaded expansion coefficients from WFX typically
+    # corresponds to basis sets grouped based on their type; that is, all MO coefficients of px
+    # basis functions are listed together first, then MO coefficients of py basis functions, and
+    # finally MO coefficients of pz (the same is true for higher angular momentum). However, IOData
+    # stores basis shells (instead of basis functions), so the p shell with angmom=1 represents
+    # the px, py, pz basis functions. These shells are used by MolecularBasis (obasis) in
+    # constructing the basis function. If that is the case for the loaded MO coefficients from WFX,
+    # they need to be permuted to match obasis expansion of basis set (i.e. to appear in shells).
     data['mo_coeffs'] = data['mo_coeffs'][permutation]
-    # Fix normalization
+    # fix normalization because the loaded expansion coefficients from WFX corresponds to
+    # un-normalized primitives for each normalized MO (which means the primitive normalization
+    # constants has been included in the MO coefficients). However, IOData expects normalized
+    # primitives (either L2 or L1 as recorded in MolecularBasis primitive types), so we need to
+    # divide the MO coefficients by the primitive normalization constants to have them correspond
+    # to expansion coefficients for normalized primitives. Here, we assume primitives are
+    # L2-normalized (as stored in obasis.primitive_normalization) which is used in scaling MO
+    # coefficients to be stored in MolecularOrbitals instance.
     data['mo_coeffs'] /= get_mocoeff_scales(obasis).reshape(-1, 1)
-    # Process mo_spins. Convert this into restricted or unrestricted and
-    # corresponding occupation numbers. We are not using the <Model> section
-    # because it is not guaranteed to be present.
+
+    # process mo_spins and convert it into restricted or unrestricted & count alpha/beta orbitals
+    # we do not using the <Model> section for this because it is not guaranteed to be present
+
+    # check whether restricted case with "Alpha and Beta" in mo_spins
     if any("and" in word for word in data['mo_spins']):
-        # Restricted case.
+        # count number of alpha & beta molecular orbitals
         norbb = data['mo_spins'].count("Alpha and Beta")
         norba = norbb + data['mo_spins'].count("Alpha")
-        # Check that the mo_spin list contains no surprises.
+        # check that mo_spin list contains no surprises
         if data['mo_spins'] != ["Alpha and Beta"] * norbb + ["Alpha"] * (norba - norbb):
-            lit.error("Unsupported molecular orbital spin types.")
+            lit.error("Unsupported <Molecular Orbital Spin Types> values.")
         if norba != data['mo_coeffs'].shape[1]:
             lit.error("Number of orbitals inconsistent with orbital spin types.")
-        # Create orbitals. For restricted wavefunctions, IOData uses the
+        # create molecular orbitals, which requires knowing the number of alpha and beta molecular
+        # orbitals. These are expected to be the same for 'restricted' case, however, the number of
+        # Alpha/Beta counts might not be the same for the restricted WFX (e.g., restricted
+        # open-shell calculations that do not print virtual orbitals), so it is safer to use
+        # `norba` to denote number of both alpha and beta orbitals in MolecularOrbitals.
+        # See orbitals.py for details to see how number of orbitals are dealt with.
+        # For restricted wavefunctions, IOData uses the
         # occupation numbers to identify the spin types. IOData also has different
         # conventions for norba and norbb, see orbitals.py for details.
         mo = MolecularOrbitals(
             "restricted", norba, norba,  # This is not a typo!
             data['mo_occs'], data['mo_coeffs'], data['mo_energies'], None)
+
+    # unrestricted case with "Alpha" and "Beta" in mo_spins
     else:
-        # unrestricted case
         norba = data['mo_spins'].count("Alpha")
         norbb = data['mo_spins'].count("Beta")
-        # Check that the mo_spin list contains no surprises
+        # check that mo_spin list contains no surprises
         if data['mo_spins'] != ["Alpha"] * norba + ["Beta"] * norbb:
             lit.error("Unsupported molecular orbital spin types.")
+        # check that number of orbitals match number of MO coefficients
         if norba + norbb != data['mo_coeffs'].shape[1]:
             lit.error("Number of orbitals inconsistent with orbital spin types.")
         # Create orbitals. For unrestricted wavefunctions, IOData uses the same
@@ -258,7 +286,7 @@ def load_one(lit: LineIterator) -> dict:
             "unrestricted", norba, norbb,
             data['mo_occs'], data['mo_coeffs'], data['mo_energies'], None)
 
-    # Store WFX-specific data
+    # prepare WFX-specific data for IOData
     extra_labels = ['keywords', 'model_name', 'num_perturbations', 'num_core_electrons',
                     'spin_multi', 'virial_ratio', 'nuc_viral', 'full_virial_ratio', 'mo_spin']
     extra = {label: data.get(label, None) for label in extra_labels}
