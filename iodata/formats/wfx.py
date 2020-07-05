@@ -112,18 +112,22 @@ def _wfx_labels() -> tuple:
 
 def load_data_wfx(lit: LineIterator) -> dict:
     """Process loaded WFX data."""
-    # load raw data & check required tags
+    # get all section labels and required labels for WFX files
     lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, required_tags = _wfx_labels()
+    # load sections in WFX and check required tags exists
     data = parse_wfx(lit, required_tags)
 
-    # process raw data
+    # process raw data to convert them to proper type based on their label
     result = {}
     for key, value in data.items():
         if key in lbs_str:
+            assert len(value) == 1
             result[lbs_str[key]] = value[0]
         elif key in lbs_int:
+            assert len(value) == 1
             result[lbs_int[key]] = int(value[0])
         elif key in lbs_float:
+            assert len(value) == 1
             result[lbs_float[key]] = float(value[0])
         elif key in lbs_afloat:
             result[lbs_afloat[key]] = np.fromstring(" ".join(value), dtype=np.float, sep=" ")
@@ -132,24 +136,26 @@ def load_data_wfx(lit: LineIterator) -> dict:
         elif key in lbs_other:
             result[lbs_other[key]] = value
         else:
-            warnings.warn("Not recognized label, skip {0}".format(key))
+            warnings.warn("Not recognized section label, skip {0}".format(key))
 
-    # Reshape some arrays.
+    # reshape some arrays
     result['atcoords'] = result['atcoords'].reshape(-1, 3)
     result['mo_coeffs'] = result['mo_coeffs'].reshape(result['num_primitives'], -1, order='F')
-    # Process nuclear gradient, if present.
+    # process nuclear gradient, if present
     if 'nuclear_gradient' in result:
         gradient_mix = np.array([i.split() for i in result.pop('nuclear_gradient')]).reshape(-1, 4)
         gradient_atoms = gradient_mix[:, 0].astype(np.unicode_)
         index = [result['nuclear_names'].index(atom) for atom in gradient_atoms]
         result['atgradient'] = np.full((len(result['nuclear_names']), 3), np.nan)
         result['atgradient'][index] = gradient_mix[:, 1:].astype(float)
-    # Check number of perturbations.
+    # check keywords & number of perturbations
     perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
-    if result['num_perturbations'] != perturbation_check[result['keywords']]:
-        lit.error("Number of perturbations is not equal to 0, 3 or 6.")
-    if result['keywords'] not in ['GTO', 'GIAO', 'CGST']:
-        lit.error("The keywords should be one out of GTO, GIAO and CGST.")
+    key = result['keywords']
+    num = result['num_perturbations']
+    if key not in perturbation_check.keys():
+        lit.error(f"The keywords is {key}, but it should be either GTO, GIAO or CGST")
+    if num != perturbation_check[key]:
+        lit.error(f"Number of perturbations of {key} is {num}, expected {perturbation_check[key]}")
     return result
 
 
