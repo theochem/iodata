@@ -33,7 +33,7 @@ __all__ = []
 PATTERNS = ['*.out']
 
 
-@document_load_one("Orca output", ['atcoords', 'atnums', 'energy', 'moments'])
+@document_load_one("Orca output", ['atcoords', 'atnums', 'energy', 'moments', 'extras'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     result = {}
@@ -50,6 +50,10 @@ def load_one(lit: LineIterator) -> dict:
         # to maintain the ones from the final SCF iteration in e.g. optimization run
         if line.startswith('CARTESIAN COORDINATES (A.U.)'):
             result['atnums'], result['atcoords'] = _helper_geometry(lit, natom)
+        # Read the energies of each SCF cycle in iodata.extras
+        if line.startswith('ITER'):
+            scf_energies = _helper_scf_energies(lit)
+            result['extras'] = {'scf_energies': scf_energies}}
         # The final SCF energy is obtained
         if line.startswith('FINAL SINGLE POINT ENERGY'):
             words = line.split()
@@ -115,3 +119,28 @@ def _helper_geometry(lit: TextIO, natom: int) -> Tuple[np.ndarray, np.ndarray]:
         atcoords[i, 1] = float(words[6])
         atcoords[i, 2] = float(words[7])
     return atnums, atcoords
+
+
+def _helper_scf_energies(lit: TextIO) -> Tuple[np.ndarray, np.ndarray]:
+    """Load energies from each SCF cycle from a ORCA output file format.
+
+    Parameters
+    ----------
+    lit
+        The line iterator to read the data from.
+
+    Returns
+    -------
+    energies: array_like
+        The energies of each scf cycle in 1D-array.
+
+    """
+    energies = []
+    # read the next line until
+    line = next(lit)
+    while 'SUCCESS' not in line:
+        words = line.split()
+        if words[0].isdigit():
+            energies.append(float(words[1]))
+        line = next(lit)
+    return np.asarray(energies)
