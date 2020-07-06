@@ -355,8 +355,7 @@ def dump_one(f: TextIO, data: IOData):
     _write_xml_single(tag=lbs["num_perturbations"], info=data.extra["num_perturbations"], file=f)
 
     # write nuclear names, atomic numbers, and nuclear charges
-    # TODO: Add nuclear index to nuclear symbols
-    nuclear_names = [num2sym[i] for i in data.atnums]
+    nuclear_names = [f' {num2sym[num]}{index + 1}' for index, num in enumerate(data.atnums)]
     _write_xml_iterator(tag=lbs["nuclear_names"], info=nuclear_names, file=f)
     _write_xml_iterator(tag=lbs["atnums"], info=data.atnums, file=f)
     _write_xml_iterator(tag=lbs["nuclear_charge"], info=data.atcharges, file=f)
