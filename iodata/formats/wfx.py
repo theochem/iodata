@@ -358,7 +358,7 @@ def dump_one(f: TextIO, data: IOData):
     nuclear_names = [f' {num2sym[num]}{index + 1}' for index, num in enumerate(data.atnums)]
     _write_xml_iterator(tag=lbs["nuclear_names"], info=nuclear_names, file=f)
     _write_xml_iterator(tag=lbs["atnums"], info=data.atnums, file=f)
-    _write_xml_iterator(tag=lbs["nuclear_charge"], info=data.atcharges, file=f)
+    _write_xml_iterator_scientific(tag=lbs["nuclear_charge"], info=data.atnums, file=f)
 
     # write nuclear cartesian coordinates
     print("<Nuclear Cartesian Coordinates>", file=f)
@@ -558,7 +558,7 @@ def _write_xml_iterator(tag: str, info: Iterator, file: TextIO) -> None:
     print('</' + tag.lstrip('<'), file=file)
 
 
-def _write_xml_iterator_scientific(tag: str, info: str, file: TextIO) -> None:
+def _write_xml_iterator_scientific(tag: str, info: Iterator, file: TextIO) -> None:
     """Write list of arrays to file."""
     print(tag, file=file)
     # for list or 1d array works
