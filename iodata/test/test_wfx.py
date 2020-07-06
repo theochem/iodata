@@ -43,6 +43,7 @@ def helper_load_data_wfx(fn_wfx):
         lit = LineIterator(str(fx))
         return load_data_wfx(lit)
 
+
 def check_load_dump_consistency(fn, tmpdir):
     """Check if data is preserved after dumping and loading a Wfx file.
     Parameters
@@ -63,6 +64,7 @@ def check_load_dump_consistency(fn, tmpdir):
 
 def test_load_dump_consistency_water(tmpdir):
     check_load_dump_consistency('water_sto3g_hf.wfx', tmpdir)
+
 
 def test_load_dump_consistency_h2(tmpdir):
     check_load_dump_consistency('h2_ub3lyp_ccpvtz.wfx', tmpdir)
