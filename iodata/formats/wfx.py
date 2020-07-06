@@ -21,7 +21,7 @@
 See http://aim.tkgristmill.com/wfxformat.html
 """
 
-from typing import TextIO
+from typing import TextIO, Iterator
 import warnings
 
 import numpy as np
@@ -309,13 +309,11 @@ def load_one(lit: LineIterator) -> dict:
                            'exrtra', 'mo', 'obasis', 'title'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    # all the labels
+    # get all tags/labels that can be written into a WFX file
     lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, required_tags = _wfx_labels()
-    labels_all = {**lbs_str, **lbs_int, **lbs_float, **lbs_aint, **lbs_afloat, **lbs_other}
-    # the required_tags for WFX files
-    # required = [labels_all[tag] for tag in required_tags]
-    # flip keys and values for further use
-    labels_all = {v: k for k, v in labels_all.items()}
+    # put all labels in one dictionary and flip key and value for easier use
+    lbs = {**lbs_str, **lbs_int, **lbs_float, **lbs_aint, **lbs_afloat, **lbs_other}
+    lbs = {v: k for k, v in lbs.items()}
 
     # Creating new obasis in primitive basis set for contracted basis set IOData objects (e.g fchk)
     if data.obasis.shells[0].exponents.shape[0] > 1:
@@ -340,74 +338,54 @@ def dump_one(f: TextIO, data: IOData):
     else:
         obasis = data.obasis
 
-    # write string labels
-    # _write_string(data=data, labels_all=labels_all, file=f)
-    title = data.title or '<Created with IOData>'
-    _write_xml_single(tag=labels_all["title"], info=title, file=f)
+    # write title & keywords
+    _write_xml_single(tag=lbs["title"], info=data.title or '<Created with IOData>', file=f)
+    _write_xml_single(tag=lbs["keywords"], info=data.extra["keywords"], file=f)
 
-    keywords = data.extra["keywords"]
-    _write_xml_single(tag=labels_all["keywords"], info=keywords, file=f)
+    # write number of nuclei & number of primitives
+    _write_xml_single(tag=lbs["num_atoms"], info=data.natom, file=f)
+    _write_xml_single(tag=lbs["num_primitives"], info=obasis.nbasis, file=f)
 
-    # number of atoms
-    num_atoms = data.natom
-    _write_xml_single(tag=labels_all["num_atoms"], info=num_atoms, file=f)
-
-    num_prim = obasis.nbasis
-    _write_xml_single(tag=labels_all["num_primitives"], info=num_prim, file=f)
-
+    # write number of occupied molecular orbitals
+    # TODO: This is not correct when mo contains virtual orbitals
     num_mo = data.mo.occs.shape[0]
-    _write_xml_single(tag=labels_all["num_occ_mo"], info=num_mo, file=f)
+    _write_xml_single(tag=lbs["num_occ_mo"], info=num_mo, file=f)
 
-    num_perturbations = data.extra["num_perturbations"]
-    _write_xml_single(tag=labels_all["num_perturbations"], info=num_perturbations, file=f)
+    # write number of perturbations
+    _write_xml_single(tag=lbs["num_perturbations"], info=data.extra["num_perturbations"], file=f)
 
-    # Nuclear names
+    # write nuclear names, atomic numbers, and nuclear charges
+    # TODO: Add nuclear index to nuclear symbols
     nuclear_names = [num2sym[i] for i in data.atnums]
-    _write_xml_iterator(tag=labels_all["nuclear_names"], info=nuclear_names, file=f)
+    _write_xml_iterator(tag=lbs["nuclear_names"], info=nuclear_names, file=f)
+    _write_xml_iterator(tag=lbs["atnums"], info=data.atnums, file=f)
+    _write_xml_iterator(tag=lbs["nuclear_charge"], info=data.atcharges, file=f)
 
-    # atomic  numbers
-    atnums = data.atnums
-    _write_xml_iterator(tag=labels_all["atnums"], info=atnums, file=f)
-
-    # nuclear charges
-    nuclear_charges = data.atcharges
-    _write_xml_iterator(tag=labels_all["nuclear_charge"], info=nuclear_charges, file=f)
-
-    # nuclear cartesian coordinates
-    atcoords = data.atcoords
+    # write nuclear cartesian coordinates
     print("<Nuclear Cartesian Coordinates>", file=f)
-    for x in range(len(data.atnums)):
-        print('{: ,.14E} {: ,.14E} {: ,.14E}'.format(atcoords[x][0],
-                                                       atcoords[x][1], atcoords[x][2]), file=f)
+    for item in data.atcoords:
+        print('{: ,.14E} {: ,.14E} {: ,.14E}'.format(item[0], item[1], item[2]), file=f)
     print("</Nuclear Cartesian Coordinates>", file=f)
 
-    # net charge
-    net_charge = data.charge
-    _write_xml_single_scientific(tag=labels_all["charge"], info=net_charge, file=f)
-
-    # number of electrons
-    nelect = data.nelec
-    _write_xml_single(tag=labels_all["num_electrons"], info=int(round(nelect)), file=f)
-
-    # number of alpha electrons
+    # write net charge, number of electrons, number of alpha electrons, and number beta electrons
+    _write_xml_single_scientific(tag=lbs["charge"], info=data.charge, file=f)
+    _write_xml_single(tag=lbs["num_electrons"], info=int(data.nelec), file=f)
+    # TODO: This needs to be clarified
     num_alpha_elec = data.mo.occsa[data.mo.occsa > 0.5]
     num_alpha_elec = sum(num_alpha_elec)
-    _write_xml_single(tag=labels_all["num_alpha_electron"], info=int(round(num_alpha_elec)), file=f)
-
-    # number of beta electrons
+    _write_xml_single(tag=lbs["num_alpha_electron"], info=int(round(num_alpha_elec)), file=f)
+    # TODO: This needs to be clarified
     num_beta_elec = data.mo.occsb[data.mo.occsb > 0.5]
     num_beta_elec = sum(num_beta_elec)
-    _write_xml_single(tag=labels_all["num_beta_electron"], info=int(round(num_beta_elec)), file=f)
+    _write_xml_single(tag=lbs["num_beta_electron"], info=int(round(num_beta_elec)), file=f)
 
-    # molecular orbital spin types
+    # write electronic spin multiplicity and model (both optional)
     if data.extra["spin_multi"] is not None:
-        mo_spin = data.extra["spin_multi"]
-        _write_xml_single(tag=labels_all["spin_multi"], info=mo_spin, file=f)
+        _write_xml_single(tag=lbs["spin_multi"], info=data.extra["spin_multi"], file=f)
+    if data.extra["model_name"] is not None:
+        _write_xml_single(tag=lbs["model_name"], info=data.extra["model_name"], file=f)
 
-    model = data.extra["model_name"]
-    _write_xml_single(tag=labels_all["model_name"], info=model, file=f)
-
-    # Primitive centers
+    # write primitive centers
     prim_centers = []
     for shell in obasis.shells:
         rang = len(obasis.conventions[shell.angmoms[0], 'c'])
@@ -418,10 +396,10 @@ def dump_one(f: TextIO, data: IOData):
         print(' '.join(['{:d}'.format(c) for c in prim_centers[j:j + 10]]), file=f)
     print("</Primitive Centers>", file=f)
 
-    # Primitive types
+    # write primitive types
     raw_types = [shell.angmoms[0] for shell in obasis.shells]
     ran_0 = [len(obasis.conventions[angmom, 'c']) for angmom in raw_types]
-    ran_1 = [sum([len(obasis.conventions[x, 'c']) for x in range(ang+1)]) for ang in raw_types]
+    ran_1 = [sum([len(obasis.conventions[x, 'c']) for x in range(ang + 1)]) for ang in raw_types]
 
     prim_types = []
     for elem in zip(ran_0, ran_1):
@@ -435,7 +413,7 @@ def dump_one(f: TextIO, data: IOData):
         print(' '.join(['{:d}'.format(c) for c in prim_types[j:j + 10]]), file=f)
     print("</Primitive Types>", file=f)
 
-    # primitive exponents
+    # write primitive exponents
     exponents = []
     for shell in obasis.shells:
         rang = len(obasis.conventions[shell.angmoms[0], 'c'])
@@ -445,15 +423,15 @@ def dump_one(f: TextIO, data: IOData):
         print(' '.join(['{: ,.14E}'.format(e) for e in exponents[j:j + 4]]), file=f)
     print("</Primitive Exponents>", file=f)
 
-    # molecular orbital occupation numbers
+    # write molecular orbital occupation numbers
     mo_occs = data.mo.occs
-    _write_xml_iterator_scientific(tag=labels_all["mo_occs"], info=mo_occs, file=f)
+    _write_xml_iterator_scientific(tag=lbs["mo_occs"], info=mo_occs, file=f)
 
-    # molecular orbital energies
+    # write molecular orbital energies
     mo_energies = data.mo.energies
-    _write_xml_iterator_scientific(tag=labels_all["mo_energies"], info=mo_energies, file=f)
+    _write_xml_iterator_scientific(tag=lbs["mo_energies"], info=mo_energies, file=f)
 
-    # Molecular orbital spin types
+    # write molecular orbital spin types
     print("<Molecular Orbital Spin Types>", file=f)
     if data.mo.kind == 'restricted':
         for mo in data.mo.occs:
@@ -466,7 +444,7 @@ def dump_one(f: TextIO, data: IOData):
 
     print("</Molecular Orbital Spin Types>", file=f)
 
-    # Molecular Orbital Primitive Coefficients
+    # write molecular orbital primitive coefficients
     if data.obasis.shells[0].exponents.shape[0] > 1:
         shell_info = []
         raw_data = []
@@ -494,7 +472,7 @@ def dump_one(f: TextIO, data: IOData):
                     nz = name.count('z')
                 raw_scales.append(list(gob_cart_normalization(s[3], np.array([nx, ny, nz]))))
 
-        #Creating arrays for AO-primitive coefficients and normalization constants
+        # create arrays for AO-primitive coefficients and normalization constants
         max_prim = len(max(raw_data, key=len))
         prim_coeff = np.zeros((data.obasis.nbasis, len(max(raw_data, key=len))))
         scales = np.zeros((data.obasis.nbasis, len(max(raw_data, key=len))))
@@ -517,7 +495,7 @@ def dump_one(f: TextIO, data: IOData):
 
     else:
         coeffs_data = np.copy(data.mo.coeffs)
-        coeffs_data *= get_mocoeff_scales(obasis).reshape(-1,1)
+        coeffs_data *= get_mocoeff_scales(obasis).reshape(-1, 1)
         coeffs_data = coeffs_data[data.extra["permutations"]]
         coeffs_data = coeffs_data.T
 
@@ -526,19 +504,15 @@ def dump_one(f: TextIO, data: IOData):
         print("<MO Number>", file=f)
         print(str(mo + 1), file=f)
         print("</MO Number>", file=f)
-        for j in range(0, num_prim, 4):
+        for j in range(0, obasis.nbasis, 4):
             print(' '.join(['{: ,.14E}'.format(c) for c in coeffs_data[mo][j:j + 4]]), file=f)
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
-    # energy
-    energy = data.energy
-    _write_xml_single_scientific(tag=labels_all["energy"], info=energy, file=f)
+    # write energy and virial ratio
+    _write_xml_single_scientific(tag=lbs["energy"], info=data.energy, file=f)
+    _write_xml_single_scientific(tag=lbs["virial_ratio"], info=data.extra["virial_ratio"], file=f)
 
-    # virial ratio
-    virial_ratio = data.extra["virial_ratio"]
-    _write_xml_single_scientific(tag=labels_all["virial_ratio"], info=virial_ratio, file=f)
-
-    #Nuclear Cartesian Energy Gradients
+    # write nuclear Cartesian energy gradients
     if isinstance(data.atgradient, np.ndarray):
         nuc_cart_energy_grad = list(zip(nuclear_names,  data.atgradient))
         print("<Nuclear Cartesian Energy Gradients>", file=f)
@@ -549,27 +523,26 @@ def dump_one(f: TextIO, data: IOData):
     # nuclear virial of energy gradient based forces on nuclei
     if data.extra["nuc_viral"] is not None:
         nuc_viral = data.extra["nuc_viral"]
-        _write_xml_single_scientific(tag=labels_all["nuc_viral"], info=nuc_viral, file=f)
+        _write_xml_single_scientific(tag=lbs["nuc_viral"], info=nuc_viral, file=f)
 
     # full virial ratio
     if data.extra["full_virial_ratio"] is not None:
         full_virial_ratio = data.extra["full_virial_ratio"]
-        _write_xml_single_scientific(tag=labels_all["full_virial_ratio"], info=full_virial_ratio, file=f)
+        _write_xml_single_scientific(tag=lbs["full_virial_ratio"], info=full_virial_ratio, file=f)
 
     # number of core electrons
     if data.extra["num_core_electrons"] is not None:
         num_core_electrons = data.extra["num_core_electrons"]
-        _write_xml_single(tag=labels_all["num_core_electrons"], info=num_core_electrons, file=f)
+        _write_xml_single(tag=lbs["num_core_electrons"], info=num_core_electrons, file=f)
 
 
-def _write_xml_single(tag: str, info: str, file: TextIO) -> None:
+def _write_xml_single(tag: str, info: [str, int], file: TextIO) -> None:
     """Write header, tail and the data between them into the file."""
     print(tag, file=file)
     print(info, file=file)
     print('</' + tag.lstrip('<'), file=file)
 
 
-        # todo: check precision
 def _write_xml_single_scientific(tag: str, info: str, file: TextIO) -> None:
     """Write header, tail and the data between them into the file."""
     print(tag, file=file)
@@ -577,7 +550,7 @@ def _write_xml_single_scientific(tag: str, info: str, file: TextIO) -> None:
     print('</' + tag.lstrip('<'), file=file)
 
 
-def _write_xml_iterator(tag: str, info: str, file: TextIO) -> None:
+def _write_xml_iterator(tag: str, info: Iterator, file: TextIO) -> None:
     """Write list of arrays to file."""
     print(tag, file=file)
     # for list or 1d array works
@@ -586,7 +559,6 @@ def _write_xml_iterator(tag: str, info: str, file: TextIO) -> None:
     print('</' + tag.lstrip('<'), file=file)
 
 
-    # todo: check precision
 def _write_xml_iterator_scientific(tag: str, info: str, file: TextIO) -> None:
     """Write list of arrays to file."""
     print(tag, file=file)
@@ -594,71 +566,3 @@ def _write_xml_iterator_scientific(tag: str, info: str, file: TextIO) -> None:
     for info_line in info:
         print('{: ,.14E}'.format(info_line), file=file)
     print('</' + tag.lstrip('<'), file=file)
-
-
-    # write array fload labels
-
-    # write other labels
-
-  #  # molecular orbital spin types
-   # mo_spin = data.extra["mo_spin"]
-   # _write_xml_iterator(tag=labels_all["mo_spin"], info=mo_spin, file=f)
-    ## nuclear gradient
-   # nuclear_gradient0 = data.atgradient
-   # atom_list = np.array([atom + str(idx) for idx, atom in enumerate(nuclear_names)]).reshape(-1, 1)
-   # nuclear_gradient = np.concatenate((atom_list, nuclear_gradient0), axis=1)
-    #for line in nuclear_gradient:
-   #     print(' '.join(line), file=f)
-    #
-
-    # todo: check if this is right
-    # http://www.computationalscience.org/ccce/Lesson2/Notebook%202%20Lecture.pdf
-    # number of primitives
-    # spin multiplicity
- #   spin_multi = data.mo.spinol * 2 + 1
- #   _write_xml_single(tag=labels_all["spin_multi"], info=spin_multi, file=f)
-
-    # primitive centers
-  #  centers = [shell.icenter + 1 for idx, shell in enumerate(data.obasis.shells)]
-  #  print(labels_all["centers"], file=f)
-  #  # todo: this is not the best way
-  #  for info_line, idx in enumerate(centers):
-  #      if idx % 10 == 0:
-  #          print(info_line, end="\n", file=f)
-  #      else:
-  #          print(info_line, end=" ", file=f)
-
-   # tail = '</' + labels_all["centers"].lstrip('<')
-   # print(tail, file=f)
-
-    # primitive exponents
-    # todo: unit conversions
-    # todo: this is not the best way
-#    for info_line, idx in enumerate(exponents):
-#        if idx % 3 == 0:
-#            print(info_line, end="\n", file=f)
-#        else:
-#            print(info_line, end=" ", file=f)
-
-#    tail = '</' + labels_all["exponents"].lstrip('<')
-#    print(tail, file=f)
-
-
-
-
-
-
-
-
-
-
-# def _write_string(data: IOData, labels_all: dict,  file: TextIO) -> None:
-#     """Write string data into the file."""
-#     title = data.title or '<Created with IOData>'
-#     _write_xml_single(tag=labels_all["title"], info=title, file=file)
-#     # keywords
-#     keywords = data.extra["keywords"]
-#     _write_xml_single(tag=labels_all["keywords"], info=keywords, file=file)
-#     # model name
-#     model = data.extra["model_name"]
-#     _write_xml_single(tag=labels_all["model_name"], info=model, file=file)
