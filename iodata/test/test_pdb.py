@@ -109,6 +109,10 @@ def check_peptide(mol):
     attypes = mol.atffparams.get('attypes')
     assert attypes[0] == "N"
     assert attypes[-1] == "O"
+    occupancy = mol.extra.get('occupancy')
+    assert_allclose(occupancy[0], 1.00)
+    bfactor = mol.extra.get('bfactor')
+    assert_allclose(bfactor[-1], 0.00)
 
 
 def test_load_many():

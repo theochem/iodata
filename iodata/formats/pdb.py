@@ -41,11 +41,13 @@ __all__ = []
 PATTERNS = ['*.pdb']
 
 
-@document_load_one("PDB", ['atcoords', 'atnums'], ['title'])
+@document_load_one("PDB", ['atcoords', 'atnums', 'extra'], ['title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     nums = []
     coords = []
+    bfactor = []
+    occupancy = []
     attypes = []
     restypes = []
     molecule_found = False
@@ -70,7 +72,11 @@ def load_one(lit: LineIterator) -> dict:
             x = float(line[30:38])
             y = float(line[38:46])
             z = float(line[46:54])
+            occ = float(line[54:60])
+            b = float(line[60:66])
             coords.append([x, y, z])
+            occupancy.append(occ)
+            bfactor.append(b)
             attypes.append(line[12:16].strip())
             restypes.append(line[17:20].strip())
             molecule_found = True
@@ -80,11 +86,15 @@ def load_one(lit: LineIterator) -> dict:
             attypes = np.array(attypes)
             restypes = np.array(restypes)
             atffparams = {"attypes": attypes, "restypes": restypes}
+            occupancy = np.array(occupancy)
+            bfactor = np.array(bfactor)
+            extra = {"occupancy": occupancy, "bfactor": bfactor}
             result = {
                 'atcoords': atcoords,
                 'atnums': atnums,
                 'atffparams': atffparams,
-                'title': title
+                'title': title,
+                'extra': extra
             }
             break
     if molecule_found is False:
@@ -92,7 +102,7 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
-@document_load_many("PDB", ['atcoords', 'atnums', 'atffparams'], ['title'])
+@document_load_many("PDB", ['atcoords', 'atnums', 'atffparams', 'extra'], ['title'])
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # PDB files with more molecules are a simple concatenation of individual PDB files,'
@@ -104,19 +114,23 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             return
 
 
-@document_dump_one("PDB", ['atcoords', 'atnums'], ['atffparams', 'title'])
+@document_dump_one("PDB", ['atcoords', 'atnums', 'extra'], ['atffparams', 'title'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     print(str("TITLE     " + data.title) or "TITLE      Created with IOData", file=f)
     attypes = data.atffparams.get('attypes', None)
     restypes = data.atffparams.get('restypes', None)
+    occupancy = data.extra.get('occupancy', None)
+    bfactor = data.extra.get('bfactor', None)
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         x, y, z = data.atcoords[i] / angstrom
+        occ = occupancy[i]
+        b = bfactor[i]
         attype = str(n + str(i + 1)) if attypes is None else attypes[i]
         restype = "XXX" if restypes is None else restypes[i]
         out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} A{i+1:>4d}    '
-        out2 = f'{x:8.3f}{y:8.3f}{z:8.3f} {n:>23s}'
+        out2 = f'{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}'
         print("ATOM  " + out1 + out2, file=f)
     print("END", file=f)
 
