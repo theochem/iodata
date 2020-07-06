@@ -563,41 +563,41 @@ def dump_one(f: TextIO, data: IOData):
 
 
 def _write_xml_single(tag: str, info: str, file: TextIO, end: str = "\n") -> None:
-        """Write header, tail and the data between them into the file."""
-        print(tag, file=file)
-        print(info, end=end, file=file)
-        tail = '</' + tag.lstrip('<')
-        print(tail, file=file)
+    """Write header, tail and the data between them into the file."""
+    print(tag, file=file)
+    print(info, end=end, file=file)
+    tail = '</' + tag.lstrip('<')
+    print(tail, file=file)
 
 
         # todo: check precision
 def _write_xml_single_scientific(tag: str, info: str, file: TextIO, end: str = "\n") -> None:
-        """Write header, tail and the data between them into the file."""
-        print(tag, file=file)
-        print('{: ,.14E}'.format(info), end=end, file=file)
-        tail = '</' + tag.lstrip('<')
-        print(tail, file=file)
+    """Write header, tail and the data between them into the file."""
+    print(tag, file=file)
+    print('{: ,.14E}'.format(info), end=end, file=file)
+    tail = '</' + tag.lstrip('<')
+    print(tail, file=file)
 
 
 def _write_xml_iterator(tag: str, info: str, file: TextIO, end: str = "\n") -> None:
-        """Write list of arrays to file."""
-        print(tag, file=file)
-        # for list or 1d array works
-        for info_line in info:
-            print(info_line, end=end, file=file)
-        tail = '</' + tag.lstrip('<')
-        print(tail, file=file)
+    """Write list of arrays to file."""
+    print(tag, file=file)
+    # for list or 1d array works
+    for info_line in info:
+        print(info_line, end=end, file=file)
+    tail = '</' + tag.lstrip('<')
+    print(tail, file=file)
 
 
     # todo: check precision
 def _write_xml_iterator_scientific(tag: str, info: str, file: TextIO, end: str = "\n") -> None:
-        """Write list of arrays to file."""
-        print(tag, file=file)
-        # for list or 1d array works
-        for info_line in info:
-            print('{: ,.14E}'.format(info_line), end=end, file=file)
-        tail = '</' + tag.lstrip('<')
-        print(tail, file=file)
+    """Write list of arrays to file."""
+    print(tag, file=file)
+    # for list or 1d array works
+    for info_line in info:
+        print('{: ,.14E}'.format(info_line), end=end, file=file)
+    tail = '</' + tag.lstrip('<')
+    print(tail, file=file)
 
 
     # write array fload labels
