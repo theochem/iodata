@@ -125,8 +125,8 @@ def dump_one(f: TextIO, data: IOData):
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         x, y, z = data.atcoords[i] / angstrom
-        occ = str(1.00) if occupancy is None else occupancy[i]
-        b = str(0.00) if bfactor is None else bfactor[i]
+        occ = 1.00 if occupancy is None else occupancy[i]
+        b = 0.00 if bfactor is None else bfactor[i]
         attype = str(n + str(i + 1)) if attypes is None else attypes[i]
         restype = "XXX" if restypes is None else restypes[i]
         out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} A{i+1:>4d}    '
