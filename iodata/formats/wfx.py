@@ -392,17 +392,12 @@ def dump_one(f: TextIO, data: IOData):
     print("</Primitive Centers>", file=f)
 
     # write primitive types
-    raw_types = [shell.angmoms[0] for shell in obasis.shells]
-    ran_0 = [len(obasis.conventions[angmom, 'c']) for angmom in raw_types]
-    ran_1 = [sum([len(obasis.conventions[x, 'c']) for x in range(ang + 1)]) for ang in raw_types]
-
-    prim_types = []
-    for elem in zip(ran_0, ran_1):
-        if elem[0] != elem[1]:
-            prim_types.extend(range((elem[1]-elem[0])+1, elem[1]+1))
-        else:
-            prim_types.append(1)
-
+    angmom_prim = {}
+    count = 1
+    for angmom in range(max([shell.angmoms[0] for shell in obasis.shells]) + 1):
+        angmom_prim[angmom] = [count + i for i in range(len(obasis.conventions[angmom, 'c']))]
+        count += len(obasis.conventions[angmom, 'c'])
+    prim_types = [item for shell in obasis.shells for item in angmom_prim[shell.angmoms[0]]]
     print("<Primitive Types>", file=f)
     for j in range(0, len(prim_types), 10):
         print(' '.join(['{:d}'.format(c) for c in prim_types[j:j + 10]]), file=f)
