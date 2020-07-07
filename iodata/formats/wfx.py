@@ -360,6 +360,9 @@ def dump_one(f: TextIO, data: IOData):
     for index in range(mo_coeffs.shape[1]):
         mo_coeffs[:, index] *= contractions * scales
 
+    # TODO: Take care of basis set conversion
+    # TODO: Ghost atom
+
     # set required values if not available
     data.extra.setdefault("keywords", 'GTO')
     data.extra.setdefault("num_perturbations", 0)
@@ -451,22 +454,19 @@ def dump_one(f: TextIO, data: IOData):
     _write_xml_iterator_scientific(tag=lbs["mo_energies"], info=mo_energies, file=f)
 
     # write molecular orbital spin types
-    print("<Molecular Orbital Spin Types>", file=f)
     if data.mo.kind == 'restricted':
         mo_spin = ['Alpha and Beta '] * len(data.mo.occs)
     else:
         mo_spin = ['Alpha'] * len(data.mo.occsa) + ['Beta'] * len(data.mo.occsb)
-    print('\n'.join(mo_spin), file=f)
-    print("</Molecular Orbital Spin Types>", file=f)
+    _write_xml_iterator(tag=lbs["mo_spins"], info=mo_spin, file=f)
 
-    mo_coeffs = mo_coeffs.T
     print("<Molecular Orbital Primitive Coefficients>", file=f)
     for mo in range(len(data.mo.occs)):
         print("<MO Number>", file=f)
         print(str(mo + 1), file=f)
         print("</MO Number>", file=f)
         for j in range(0, obasis.nbasis, 4):
-            print(' '.join(['{: ,.14E}'.format(c) for c in mo_coeffs[mo][j:j + 4]]), file=f)
+            print(' '.join(['{: ,.14E}'.format(c) for c in mo_coeffs.T[mo][j:j + 4]]), file=f)
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
     # write energy and virial ratio
@@ -475,10 +475,11 @@ def dump_one(f: TextIO, data: IOData):
 
     # write nuclear Cartesian energy gradients
     if isinstance(data.atgradient, np.ndarray):
-        nuc_cart_energy_grad = list(zip(nuclear_names,  data.atgradient))
+        nuc_cart_energy_grad = list(zip(nuclear_names, data.atgradient))
         print("<Nuclear Cartesian Energy Gradients>", file=f)
         for atom in nuc_cart_energy_grad:
-            print(atom[0], '{: ,.14E} {: ,.14E} {: ,.14E}'.format(atom[1][0], atom[1][1], atom[1][2]), file=f)
+            print(atom[0], '{: ,.14E} {: ,.14E} {: ,.14E}'.format(atom[1][0], atom[1][1],
+                                                                  atom[1][2]), file=f)
         print("</Nuclear Cartesian Energy Gradients>", file=f)
 
     # nuclear virial of energy gradient based forces on nuclei
@@ -514,7 +515,6 @@ def _write_xml_single_scientific(tag: str, info: str, file: TextIO) -> None:
 def _write_xml_iterator(tag: str, info: Iterator, file: TextIO) -> None:
     """Write list of arrays to file."""
     print(tag, file=file)
-    # for list or 1d array works
     for info_line in info:
         print(info_line, file=file)
     print('</' + tag.lstrip('<'), file=file)
