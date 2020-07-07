@@ -409,10 +409,7 @@ def dump_one(f: TextIO, data: IOData):
     print("</Primitive Types>", file=f)
 
     # write primitive exponents
-    exponents = []
-    for shell in obasis.shells:
-        rang = len(obasis.conventions[shell.angmoms[0], 'c'])
-        exponents.extend([shell.exponents[0] for ex in range(rang)])
+    exponents = [shell.exponents[0] for shell in obasis.shells for _ in range(shell.nbasis)]
     print("<Primitive Exponents>", file=f)
     for j in range(0, len(exponents), 4):
         print(' '.join(['{: ,.14E}'.format(e) for e in exponents[j:j + 4]]), file=f)
