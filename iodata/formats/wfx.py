@@ -385,11 +385,7 @@ def dump_one(f: TextIO, data: IOData):
         _write_xml_single(tag=lbs["model_name"], info=data.extra["model_name"], file=f)
 
     # write primitive centers
-    prim_centers = []
-    for shell in obasis.shells:
-        rang = len(obasis.conventions[shell.angmoms[0], 'c'])
-        prim_centers.extend([(shell.icenter + 1) for ao in range(rang)])
-
+    prim_centers = [shell.icenter + 1 for shell in obasis.shells for _ in range(shell.nbasis)]
     print("<Primitive Centers>", file=f)
     for j in range(0, len(prim_centers), 10):
         print(' '.join(['{:d}'.format(c) for c in prim_centers[j:j + 10]]), file=f)
