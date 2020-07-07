@@ -29,7 +29,7 @@ from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
 from ..utils import LineIterator
 
-from .common import check_orthonormal, truncated_file, compare_mols
+from .common import check_orthonormal, truncated_file, compare_mols, compute_mulliken_charges
 
 try:
     from importlib_resources import path
@@ -56,10 +56,13 @@ def check_load_dump_consistency(fn, tmpdir):
     with path('iodata.test.data', fn) as file_name:
         mol1 = load_one(str(file_name), fmt='wfx')
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
-    print(fn_tmp)
     dump_one(mol1, fn_tmp, fmt='wfx')
     mol2 = load_one(fn_tmp, fmt='wfx')
     compare_mols(mol1, mol2)
+    # compare Mulliken charges
+    charges1 = compute_mulliken_charges(mol1)
+    charges2 = compute_mulliken_charges(mol2)
+    assert_allclose(charges2, charges1, rtol=1.0e-7, atol=0.0)
 
 
 def test_load_dump_consistency_water(tmpdir):
@@ -80,6 +83,47 @@ def test_load_dump_consistency_lih_cation_uhf(tmpdir):
 
 def test_load_dump_consistency_lih_cation_rohf(tmpdir):
     check_load_dump_consistency('lih_cation_rohf.wfx', tmpdir)
+
+
+def compare_mulliken_charges(fname, tmpdir):
+    with path('iodata.test.data', fname) as file_name:
+        mol1 = load_one(str(file_name))
+    # dump WFX and check that file exists
+    fn_tmp = os.path.join(tmpdir, f"{fname}.wfx")
+    dump_one(mol1, fn_tmp)
+    assert os.path.isfile(fn_tmp)
+    # load dumped file and compare Mulliken charges
+    mol2 = load_one(fn_tmp)
+    charges1 = compute_mulliken_charges(mol1)
+    charges2 = compute_mulliken_charges(mol2)
+    assert_allclose(charges1, charges2, rtol=1.0e-7, atol=0)
+
+
+def test_dump_one_from_fchk_h2o(tmpdir):
+    compare_mulliken_charges('h2o_sto3g.fchk', tmpdir)
+    compare_mulliken_charges('water_hfs_321g.fchk', tmpdir)
+    compare_mulliken_charges('water_sto3g_hf_g03.fchk', tmpdir)
+
+
+def test_dump_one_from_fchk_ch3_restricted(tmpdir):
+    compare_mulliken_charges('ch3_hf_sto3g.fchk', tmpdir)
+
+
+def test_dump_one_from_fchk_ch3_unrestricted(tmpdir):
+    compare_mulliken_charges('ch3_rohf_sto3g_g03.fchk', tmpdir)
+
+
+def test_dump_one_from_wfn_h2o(tmpdir):
+    compare_mulliken_charges('h2o_sto3g.wfn', tmpdir)
+    compare_mulliken_charges('h2o_sto3g_decontracted.wfn', tmpdir)
+
+
+def test_dump_one_from_wfn_lih(tmpdir):
+    compare_mulliken_charges('lif_fci.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_uhf.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_rohf.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_cisd.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_fci.wfn', tmpdir)
 
 
 def test_load_data_wfx_h2():
