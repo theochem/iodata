@@ -433,14 +433,10 @@ def dump_one(f: TextIO, data: IOData):
     # write molecular orbital spin types
     print("<Molecular Orbital Spin Types>", file=f)
     if data.mo.kind == 'restricted':
-        for mo in data.mo.occs:
-            print('Alpha and Beta ', file=f)
+        mo_spin = ['Alpha and Beta '] * len(data.mo.occs)
     else:
-        for mo in data.mo.occsa:
-            print('Alpha', file=f)
-        for mo in data.mo.occsb:
-            print('Beta', file=f)
-
+        mo_spin = ['Alpha'] * len(data.mo.occsa) + ['Beta'] * len(data.mo.occsb)
+    print('\n'.join(mo_spin), file=f)
     print("</Molecular Orbital Spin Types>", file=f)
 
     # write molecular orbital primitive coefficients
