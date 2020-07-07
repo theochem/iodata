@@ -315,7 +315,9 @@ def dump_one(f: TextIO, data: IOData):
     lbs = {**lbs_str, **lbs_int, **lbs_float, **lbs_aint, **lbs_afloat, **lbs_other}
     lbs = {v: k for k, v in lbs.items()}
 
-    # create new obasis in primitive basis set for contracted basis set IOData objects (e.g fchk)
+    # de-contract data.obasis
+    # -----------------------
+    # get shells for the de-contracted basis
     shells = []
     for shell in data.obasis.shells:
         for i, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
@@ -324,50 +326,39 @@ def dump_one(f: TextIO, data: IOData):
                     raise ValueError("WFX can be generated only for Cartesian MolecularBasis!")
                 shells.append(Shell(shell.icenter, [angmom], [kind], np.array([exponent]),
                                     coeff.reshape(-1, 1)))
-
+    # make a new instance of MolecularBasis with de-contracted basis shells; ideally for WFX we
+    # want the primitive basis set, but IOData only supports shells.
     obasis = MolecularBasis(shells, data.obasis.conventions, data.obasis.primitive_normalization)
 
-    # create new mo
-    repeat = []
+    # expand mo.coeffs in de-contracted basis primitives
+    # --------------------------------------------------
+    # expand mo.coeffs in the new basis by repeating de-contracted basis coefficients
+    mo_coeffs = np.zeros((obasis.nbasis, data.mo.norb))
+    index_mo_old, index_mo_new = 0, 0
+    # loop over the shells of the old basis
     for shell in data.obasis.shells:
         for angmom, kind in zip(shell.angmoms, shell.kinds):
-            if kind != 'c':
-                raise NotImplementedError
-            repeat.extend([shell.nprim] * len(data.obasis.conventions[(angmom, kind)]))
-
-    permutation = np.zeros(obasis.nbasis, dtype=int)
-    ibasis = 0
-    for ishell, shell in enumerate(obasis.shells):  # shells
-        nprims = 0
-        for ic, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):  # contractions
-            primitive_names = obasis.conventions[(angmom, kind)]
-            ncart = len(primitive_names)
-            for ip, primitive in enumerate(primitive_names):  # basis
-                index = ibasis + nprims + ic * ncart + ip
-                replace = ishell + nprims + ip * ncart
-                if primitive_names == ['1']:
-                    permutation[index] = index
-                else:
-                    permutation[index] = replace
-            nprims += ncart
-        ibasis += shell.nbasis
-
-    if data.extra.setdefault('permutations', None) is not None:
-        permutation = data.extra['permutations']
-
-    scales = get_mocoeff_scales(obasis)[permutation]
+            n = len(data.obasis.conventions[angmom, kind])
+            c = data.mo.coeffs[index_mo_old: index_mo_old + n]
+            for j in range(shell.nprim):
+                mo_coeffs[index_mo_new: index_mo_new + n] = c
+                index_mo_new += n
+            index_mo_old += n
+    # fix MO coefficients
+    # 1) expansion coefficients in WFX correspond to un-normalized primitives, so the primitive
+    # normalization constants should be included in the MO coefficients. However, IOData stores
+    # normalized primitives (either L2 or L1 as recorded in MolecularBasis primitive types), so
+    # we need to multiply the MO coefficients by the primitive normalization constants
+    scales = get_mocoeff_scales(obasis)
+    # 2) expansion coefficients in WFX represent the primitive basis coefficients, so contraction
+    # coefficients needs to be multiplied by the MO expansion coefficients.
     contractions = []
-    for i, shell in enumerate(obasis.shells):
-        count = (shell.angmoms[0] + 1) * (shell.angmoms[0] + 2) // 2
-        contractions.extend(np.repeat(shell.coeffs.ravel(), [count], axis=0))
-    contractions = np.array(contractions)[permutation]
-
-    # expand MO coeffs in the new basis
-    coeffs_data = np.repeat(data.mo.coeffs, repeat, axis=0)
-    if np.all(repeat == np.ones_like(repeat)):
-        coeffs_data = coeffs_data[permutation]
-    for index in range(coeffs_data.shape[1]):
-        coeffs_data[:, index] *= contractions * scales
+    for shell in obasis.shells:
+        contractions.extend(np.repeat(shell.coeffs.ravel(), [shell.nbasis], axis=0))
+    contractions = np.array(contractions)
+    # update MO coefficients to include primitives contraction coefficients & normalization
+    for index in range(mo_coeffs.shape[1]):
+        mo_coeffs[:, index] *= contractions * scales
 
     # set required values if not available
     data.extra.setdefault("keywords", 'GTO')
@@ -439,7 +430,6 @@ def dump_one(f: TextIO, data: IOData):
         angmom_prim[angmom] = [count + i for i in range(len(obasis.conventions[angmom, 'c']))]
         count += len(obasis.conventions[angmom, 'c'])
     prim_types = [item for shell in obasis.shells for item in angmom_prim[shell.angmoms[0]]]
-    prim_types = np.array(prim_types)[permutation]
     print("<Primitive Types>", file=f)
     for j in range(0, len(prim_types), 10):
         print(' '.join(['{:d}'.format(c) for c in prim_types[j:j + 10]]), file=f)
@@ -447,7 +437,6 @@ def dump_one(f: TextIO, data: IOData):
 
     # write primitive exponents
     exponents = [shell.exponents[0] for shell in obasis.shells for _ in range(shell.nbasis)]
-    exponents = np.array(exponents)[permutation]
     print("<Primitive Exponents>", file=f)
     for j in range(0, len(exponents), 4):
         print(' '.join(['{: ,.14E}'.format(e) for e in exponents[j:j + 4]]), file=f)
@@ -470,14 +459,14 @@ def dump_one(f: TextIO, data: IOData):
     print('\n'.join(mo_spin), file=f)
     print("</Molecular Orbital Spin Types>", file=f)
 
-    coeffs_data = coeffs_data.T
+    mo_coeffs = mo_coeffs.T
     print("<Molecular Orbital Primitive Coefficients>", file=f)
     for mo in range(len(data.mo.occs)):
         print("<MO Number>", file=f)
         print(str(mo + 1), file=f)
         print("</MO Number>", file=f)
         for j in range(0, obasis.nbasis, 4):
-            print(' '.join(['{: ,.14E}'.format(c) for c in coeffs_data[mo][j:j + 4]]), file=f)
+            print(' '.join(['{: ,.14E}'.format(c) for c in mo_coeffs[mo][j:j + 4]]), file=f)
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
     # write energy and virial ratio
