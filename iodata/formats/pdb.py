@@ -135,7 +135,7 @@ def dump_one(f: TextIO, data: IOData):
     print("END", file=f)
 
 
-@document_dump_many("PDB", ['atcoords', 'atnums'], ['atffparams', 'title'])
+@document_dump_many("PDB", ['atcoords', 'atnums', 'extra'], ['atffparams', 'title'])
 def dump_many(f: TextIO, datas: Iterator[IOData]):
     """Do not edit this docstring. It will be overwritten."""
     # Similar to load_many, this is relatively easy.
