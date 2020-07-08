@@ -24,7 +24,7 @@ import os
 from numpy.testing import assert_equal, assert_allclose
 import pytest
 
-from .common import check_orthonormal, compare_mols
+from .common import check_orthonormal, compare_mols, compute_mulliken_charges
 from ..basis import convert_conventions
 from ..api import load_one, dump_one
 from ..overlap import compute_overlap
@@ -50,6 +50,10 @@ def compare_mols_diff_formats(mol1, mol2):
     assert_allclose(mol1.mo.occs, mol2.mo.occs)
     assert_allclose(mol1.mo.coeffs[permutation] * signs.reshape(-1, 1), mol2.mo.coeffs, atol=1e-8)
     assert_allclose(mol1.mo.energies, mol2.mo.energies)
+    # compute and compare Mulliken charges
+    charges1 = compute_mulliken_charges(mol1)
+    charges2 = compute_mulliken_charges(mol2)
+    assert_allclose(charges1, charges2, rtol=0.0, atol=1.0e-6)
 
 
 def check_load_dump_consistency(fn, tmpdir):
