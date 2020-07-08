@@ -62,6 +62,13 @@ def check_load_dump_consistency(tmpdir, fn):
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
     assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+    if mol0.atffparams:
+        assert_equal(mol0.atffparams.get('attypes'), mol1.atffparams.get('attypes'))
+        assert_equal(mol0.atffparams.get('restypes'), mol1.atffparams.get('restypes'))
+        assert_equal(mol0.atffparams.get('resnums'), mol1.atffparams.get('resnums'))
+    if mol0.extra:
+        assert_equal(mol0.extra.get('occupancy'), mol1.extra.get('occupancy'))
+        assert_equal(mol0.extra.get('bfactor'), mol1.extra.get('bfactor'))
 
 
 def test_load_dump_consistency(tmpdir):
