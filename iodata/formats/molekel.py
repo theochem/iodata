@@ -126,7 +126,6 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.
             ncol = len(words)
             assert ncol > 0
             for word in words:
-                # assert word == 'a1g'
                 irreps.append(word)
             cols = [np.zeros((nbasis, 1), float) for _ in range(ncol)]
             in_orb = 1
@@ -262,7 +261,7 @@ def dump_one(f: TextIO, data: IOData):
     # Header
     f.write('$MKL\n')
     f.write('#\n')
-    f.write('# MKL format file produced by ORCA\n')
+    f.write('# MKL format file produced by IOData\n')
     f.write('#\n')
 
     # CHAR_MUL
@@ -274,9 +273,8 @@ def dump_one(f: TextIO, data: IOData):
     # COORD
     atcoords = data.atcoords / angstrom
     f.write('$COORD\n')
-    for x in range(len(data.atnums)):
-        f.write('   {:d}   {: ,.6f}  {: ,.6f}  {: ,.6f}\n'.format(data.atnums[x], atcoords[x][0],
-                                                                  atcoords[x][1], atcoords[x][2]))
+    for n, coord in zip(data.atnums, atcoords):
+        f.write('   {:d}   {: ,.6f}  {: ,.6f}  {: ,.6f}\n'.format(n, coord[0], coord[1], coord[2]))
     f.write('$END\n')
     f.write('\n')
 
@@ -285,7 +283,7 @@ def dump_one(f: TextIO, data: IOData):
         charges = data.atcharges['mulliken']
     else:
         charges = {}
-        warnings.warn('Mulliken charges not stored in IOData. Proceeding without printing them.')
+        warnings.warn('Skip writing Mulliken charges, because they are not stored in IOData.')
     f.write('$CHARGES\n')
     for charge in charges:
         f.write('  {: ,.6f}\n'.format(charge))
@@ -336,6 +334,9 @@ def dump_one(f: TextIO, data: IOData):
         # OCC_BETA
         f.write('$OCC_BETA\n')
         _dump_helper_occ(f, data, spin='b')
+
+    else:
+        raise ValueError(f"The MKL format does not support {data.mo.kind} orbitals.")
 
 
 # Defining help dumping functions
