@@ -85,6 +85,9 @@ def check_load_dump_xyz_consistency(tmpdir, fn):
     attypes = mol1.atffparams.get('attypes')
     assert restypes[0] == "XXX"
     assert attypes[0] == "H1"
+    # check if resnums are correct
+    resnums = mol1.extra.get('resnums')
+    assert_equal(resnums[0], -1)
 
 
 def test_load_dump_xyz_consistency(tmpdir):
@@ -109,6 +112,9 @@ def check_peptide(mol):
     attypes = mol.atffparams.get('attypes')
     assert attypes[0] == "N"
     assert attypes[-1] == "O"
+    resnums = mol.extra.get('resnums')
+    assert_equal(resnums[0], 1)
+    assert_equal(resnums[-1], 35)
     occupancy = mol.extra.get('occupancy')
     assert_allclose(occupancy[0], 1.00)
     bfactor = mol.extra.get('bfactor')

@@ -45,6 +45,7 @@ PATTERNS = ['*.pdb']
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     nums = []
+    resnums = []
     coords = []
     bfactor = []
     occupancy = []
@@ -69,11 +70,13 @@ def load_one(lit: LineIterator) -> dict:
                 words = line[12:16].split()
             symbol = words[0].title()
             nums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
+            resnum = int(line[23:26])
             x = float(line[30:38])
             y = float(line[38:46])
             z = float(line[46:54])
             occ = float(line[54:60])
             b = float(line[60:66])
+            resnums.append(resnum)
             coords.append([x, y, z])
             occupancy.append(occ)
             bfactor.append(b)
@@ -86,9 +89,10 @@ def load_one(lit: LineIterator) -> dict:
             attypes = np.array(attypes)
             restypes = np.array(restypes)
             atffparams = {"attypes": attypes, "restypes": restypes}
+            resnums = np.array(resnums)
             occupancy = np.array(occupancy)
             bfactor = np.array(bfactor)
-            extra = {"occupancy": occupancy, "bfactor": bfactor}
+            extra = {"resnums": resnums, "occupancy": occupancy, "bfactor": bfactor}
             result = {
                 'atcoords': atcoords,
                 'atnums': atnums,
@@ -120,16 +124,18 @@ def dump_one(f: TextIO, data: IOData):
     print(str("TITLE     " + data.title) or "TITLE      Created with IOData", file=f)
     attypes = data.atffparams.get('attypes', None)
     restypes = data.atffparams.get('restypes', None)
+    resnums = data.extra.get('resnums', None)
     occupancy = data.extra.get('occupancy', None)
     bfactor = data.extra.get('bfactor', None)
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
+        resnum = -1 if resnums is None else resnums[i]
         x, y, z = data.atcoords[i] / angstrom
         occ = 1.00 if occupancy is None else occupancy[i]
         b = 0.00 if bfactor is None else bfactor[i]
         attype = str(n + str(i + 1)) if attypes is None else attypes[i]
         restype = "XXX" if restypes is None else restypes[i]
-        out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} A{i+1:>4d}    '
+        out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} A{resnum:>4d}    '
         out2 = f'{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}'
         print("ATOM  " + out1 + out2, file=f)
     print("END", file=f)
