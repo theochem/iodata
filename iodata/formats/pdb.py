@@ -88,11 +88,11 @@ def load_one(lit: LineIterator) -> dict:
             atcoords = np.array(coords) * angstrom
             attypes = np.array(attypes)
             restypes = np.array(restypes)
-            atffparams = {"attypes": attypes, "restypes": restypes}
             resnums = np.array(resnums)
+            atffparams = {"attypes": attypes, "restypes": restypes, "resnums": resnums}
             occupancy = np.array(occupancy)
             bfactor = np.array(bfactor)
-            extra = {"resnums": resnums, "occupancy": occupancy, "bfactor": bfactor}
+            extra = {"occupancy": occupancy, "bfactor": bfactor}
             result = {
                 'atcoords': atcoords,
                 'atnums': atnums,
@@ -124,7 +124,7 @@ def dump_one(f: TextIO, data: IOData):
     print(str("TITLE     " + data.title) or "TITLE      Created with IOData", file=f)
     attypes = data.atffparams.get('attypes', None)
     restypes = data.atffparams.get('restypes', None)
-    resnums = data.extra.get('resnums', None)
+    resnums = data.atffparams.get('resnums', None)
     occupancy = data.extra.get('occupancy', None)
     bfactor = data.extra.get('bfactor', None)
     for i in range(data.natom):
