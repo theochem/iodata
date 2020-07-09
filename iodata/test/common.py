@@ -105,6 +105,10 @@ def compare_mols(mol1, mol2):
             s2 = set(word.lstrip('-') for word in mol2.obasis.conventions[key])
             assert s1 == s2, (s1, s2)
         assert mol1.obasis.primitive_normalization == mol2.obasis.primitive_normalization
+        # compute and compare Mulliken charges
+        charges1 = compute_mulliken_charges(mol1)
+        charges2 = compute_mulliken_charges(mol2)
+        assert_allclose(charges1, charges2, rtol=0.0, atol=1.0e-6)
     else:
         assert mol2.obasis is None
     # wfn
