@@ -325,7 +325,42 @@ to avoid duplicate efforts.
     results in minor corrections at worst. We'll do our best to avoid larger
     problems in step 1.
 
+
+Notes on attrs
+--------------
+
+IOData uses the `attrs`_ library, not to be confused with the `attr`_ library,
+for classes representing data loaded from files: ``IOData``, ``MolecularBasis``,
+``Shell``, ``MolecularOrbitals`` and ``Cube``. This enables basic attribute
+validation, which eliminates potentially silly bugs. The following two tricks
+might be convenient with working with these classes:
+
+- The data can be turned into plain Python data types with the ``attr.asdict``
+  function. Make sure you add the ``retain_collection_types=True`` option, to
+  avoid the following issue: https://github.com/python-attrs/attrs/issues/646
+  For example.
+
+  .. code-block:: python
+
+      from iodata import load_one
+      import attr
+      iodata = load_one("example.xyz")
+      fields = attr.asdict(iodata, retain_collection_types=True)
+
+- A shallow copy with a few modified attributes can be created with the evolve
+  method, which is a wrapper for ``attr.evolve``:
+
+  .. code-block:: python
+
+      from iodata import load_one
+      import attr
+      iodata1 = load_one("example.xyz")
+      iodata2 = iodata1.evolve(title="another title")
+
+
 .. _Bash: https://en.wikipedia.org/wiki/Bash_(Unix_shell)
 .. _Python: https://en.wikipedia.org/wiki/Python_(programming_language)
 .. _type hinting: https://docs.python.org/3/library/typing.html
 .. _PEP 0563: https://www.python.org/dev/peps/pep-0563/
+.. _attrs: https://www.attrs.org/en/stable/
+.. _attr: https://github.com/denis-ryzhkov/attr

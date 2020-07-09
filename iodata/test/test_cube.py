@@ -38,7 +38,7 @@ def test_load_aelta():
     assert_equal(mol.natom, 72)
     assert_allclose(mol.atcoords[5, 0], 27.275511, atol=1.e-5)
     assert_allclose(mol.atcoords[-2, 2], 26.460812, atol=1.e-5)
-    assert_equal(mol.cube.shape, 12)
+    assert_equal(mol.cube.shape, (12, 12, 12))
     my_cellvecs = np.array([[1.8626, 0.1, 0.0],
                             [0.0, 1.8626, 0.0],
                             [0.0, 0.0, 1.8626]], dtype=np.float) * 12

@@ -136,6 +136,7 @@ def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     title, atcoords, atnums, cellvecs, cube, atcorenums = _read_cube_header(lit)
     _read_cube_data(lit, cube)
+    del cube["shape"]
     return {
         'title': title,
         'atcoords': atcoords,

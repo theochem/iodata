@@ -193,7 +193,7 @@ def _compute_cart_shell_normalizations(shell: 'Shell') -> np.ndarray:
         shell is pure.
 
     """
-    shell = shell._replace(kinds=['c'] * shell.ncon)
+    shell = shell.evolve(kinds=['c'] * shell.ncon)
     result = []
     for angmom in shell.angmoms:
         for exponent in shell.exponents:
