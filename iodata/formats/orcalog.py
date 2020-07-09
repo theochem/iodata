@@ -51,7 +51,7 @@ def load_one(lit: LineIterator) -> dict:
         if line.startswith('CARTESIAN COORDINATES (A.U.)'):
             result['atnums'], result['atcoords'] = _helper_geometry(lit, natom)
         # Read the energies of each SCF cycle in iodata.extra
-        if line.startswith('ITER'):
+        if line.startswith('SCF ITERATIONS'):
             scf_energies = _helper_scf_energies(lit)
             result['extra'] = {'scf_energies': scf_energies}
         # The final SCF energy is obtained
