@@ -21,6 +21,7 @@
 
 import os
 
+import attr
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import pytest
@@ -453,7 +454,7 @@ def test_load_dump_consistency(tmpdir, fn, match):
     mol1.obasis = mol1.obasis.get_segmented()
     # - Set default irreps in mol1, if not present.
     if mol1.mo.irreps is None:
-        mol1.mo = mol1.mo._replace(irreps=['1a'] * mol1.mo.norb)
+        mol1.mo = attr.evolve(mol1.mo, irreps=['1a'] * mol1.mo.norb)
     # - Remove the one_rdms from mol1.
     mol1.one_rdms = {}
     compare_mols(mol1, mol2)
