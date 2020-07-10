@@ -62,6 +62,13 @@ def check_load_dump_consistency(tmpdir, fn):
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
     assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+    if mol0.atffparams:
+        assert_equal(mol0.atffparams.get('attypes'), mol1.atffparams.get('attypes'))
+        assert_equal(mol0.atffparams.get('restypes'), mol1.atffparams.get('restypes'))
+        assert_equal(mol0.atffparams.get('resnums'), mol1.atffparams.get('resnums'))
+    if mol0.extra:
+        assert_equal(mol0.extra.get('occupancy'), mol1.extra.get('occupancy'))
+        assert_equal(mol0.extra.get('bfactor'), mol1.extra.get('bfactor'))
 
 
 def test_load_dump_consistency(tmpdir):
@@ -85,6 +92,9 @@ def check_load_dump_xyz_consistency(tmpdir, fn):
     attypes = mol1.atffparams.get('attypes')
     assert restypes[0] == "XXX"
     assert attypes[0] == "H1"
+    # check if resnums are correct
+    resnums = mol1.atffparams.get('resnums')
+    assert_equal(resnums[0], -1)
 
 
 def test_load_dump_xyz_consistency(tmpdir):
@@ -109,6 +119,13 @@ def check_peptide(mol):
     attypes = mol.atffparams.get('attypes')
     assert attypes[0] == "N"
     assert attypes[-1] == "O"
+    resnums = mol.atffparams.get('resnums')
+    assert_equal(resnums[0], 1)
+    assert_equal(resnums[-1], 35)
+    occupancy = mol.extra.get('occupancy')
+    assert_allclose(occupancy[0], 1.00)
+    bfactor = mol.extra.get('bfactor')
+    assert_allclose(bfactor[-1], 0.00)
 
 
 def test_load_many():
