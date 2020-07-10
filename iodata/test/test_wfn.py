@@ -48,7 +48,7 @@ def test_load_wfn_low_he_s():
     data = helper_load_wfn_low('he_s_orbital.wfn')
     # unpack data
     title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, _ = data[5:]
     assert title == 'He atom - decontracted 6-31G basis set'
     assert_equal(atnums.shape, (1,))
     assert_equal(atnums, [2])
@@ -78,7 +78,7 @@ def test_load_wfn_low_h2o():
     data = helper_load_wfn_low('h2o_sto3g.wfn')
     # unpack data
     title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy = data[5:]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, _ = data[5:]
     assert title == 'H2O Optimization'
     assert_equal(atnums.shape, (3,))
     assert_equal(atcoords.shape, (3, 3))
@@ -282,6 +282,26 @@ def test_load_one_lih_cation_rohf():
     assert_equal(mol.mo.occs, [2.0, 1.0])
     assert_equal(mol.mo.occsa, [1.0, 1.0])
     assert_equal(mol.mo.occsb, [1.0, 0.0])
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def test_load_one_cah110_hf_sto3g_g09():
+    with path('iodata.test.data', 'cah110_hf_sto3g_g09.wfn') as file_wfx:
+        mol = load_one(str(file_wfx))
+    # check number of orbitals and occupation numbers
+    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.norba == 123
+    assert mol.mo.norbb == 123
+    assert mol.mo.norb == 246
+    occs = np.zeros(246)
+    occs[0] = 1.0
+    occsa, occsb = occs[:123], occs[123:]
+    assert_equal(mol.mo.occs, occs)
+    assert_equal(mol.mo.occsa, occsa)
+    assert_equal(mol.mo.occsb, occsb)
     # check orthonormal mo
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
