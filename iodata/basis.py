@@ -82,24 +82,25 @@ def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
 
 
 class Shell(NamedTuple):
-    """Describe a single shell in a molecular basis set.
+    """A shell in a molecular basis representing (generalized) contractions with the same exponents.
 
     Attributes
     ----------
     icenter
-        An integer referring to a row in the array atcoords in an IOData object.
+        An integer index specifying the row in the atcoords array of IOData object.
     angmoms
         An integer array of angular momentum quantum numbers, non-negative, with
         shape (ncon,).
     kinds
-        List of strings describing the kind of contraction: 'c' for Cartesian
+        List of strings describing the kind of contractions: 'c' for Cartesian
         and 'p' for pure. Pure functions are only allowed for angmom>1.
         The length equals the number of contractions: len(angmoms)=ncon.
     exponents
-        an array of exponents of primitives, with shape (nprim,).
+        The array containing the exponents of the primitives, with shape (nprim,).
     coeffs
-        an array with contraction coefficients, with shape (nprim, ncon). These
-        coefficients assume that the primitives are L2 (orbitals) or L1
+        The array containing the coefficients of the normalized primitives in each contraction;
+        shape = (nprim, ncon).
+        These coefficients assume that the primitives are L2 (orbitals) or L1
         (densities) normalized, but contractions are not necessarily normalized.
         (This depends on the code which generated the contractions.)
 
@@ -112,8 +113,8 @@ class Shell(NamedTuple):
     coeffs: np.ndarray
 
     @property
-    def nbasis(self) -> int:
-        """Return the number of basis functions."""
+    def nbasis(self) -> int:   # noqa: D401
+        """Number of basis functions (e.g. 3 for a P shell and 4 for an SP shell)."""
         result = 0
         for angmom, kind in zip(self.angmoms, self.kinds):
             if kind == 'c':  # Cartesian
@@ -121,30 +122,32 @@ class Shell(NamedTuple):
             elif kind == 'p' and angmom >= 2:
                 result += 2 * angmom + 1
             else:
-                raise TypeError('Unknown shell kind \'{}\'.'.format(kind))
+                raise TypeError('Unknown shell kind \'{}\'; expected \'c\' or \'p\'.'.format(kind))
         return result
 
     @property
-    def nprim(self) -> int:
-        """Return the number of primitives. Also known as the contraction length."""
+    def nprim(self) -> int:   # noqa: D401
+        """Number of primitives, also known as the contraction length."""
         return len(self.exponents)
 
     @property
-    def ncon(self) -> int:
-        """Return the number of contractions."""
+    def ncon(self) -> int:   # noqa: D401
+        """Number of contractions. This is usually 1; e.g., it would be 2 for an SP shell."""
         return len(self.angmoms)
 
 
 class MolecularBasis(NamedTuple):
-    """Describe a complete molecular orbital or density basis set.
+    """A complete molecular orbital or density basis set.
 
     Attributes
     ----------
     shells
-        a list of objects of the type Shell
+        A list of objects of type Shell which can support generalized contractions.
     conventions
-        a dictionary with as key a typle of angular momentum integer and kind
-        character, and as value a list of basis function strings, e.g.
+        A dictionary specifying the ordered basis functions for a given angular momentum and kind.
+        The key is a tuple of angular momentum integer and kind character ('c' for Cartesian
+        and 'p' for pure/spherical) and the value is a list of basis function strings.
+        For example,
 
         .. code-block:: python
 
@@ -166,7 +169,7 @@ class MolecularBasis(NamedTuple):
                 (2, 'p'): ['s2', 's1', 'c0', 'c1', 'c2'],
                 # Different quantum-chemistry codes may use incompatible
                 # orderings and sign conventions. E.g. Molden files written
-                # by Orca use the following convention for pure f functions:
+                # by ORCA use the following convention for pure f functions:
                 (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
                 # Note that the minus sign in the last two basis functions
                 # denotes that the signs of these harmonics have been changed.
@@ -176,7 +179,8 @@ class MolecularBasis(NamedTuple):
         in :ref:`basis_conventions`.
 
     primitive_normalization
-        Either 'L1' or 'L2'.
+        The normalization convention of primitives, which can be 'L2' (orbitals) or 'L1'
+        (densities) normalized.
 
     """
 
@@ -185,8 +189,8 @@ class MolecularBasis(NamedTuple):
     primitive_normalization: str
 
     @property
-    def nbasis(self) -> int:
-        """Return the number of basis functions."""
+    def nbasis(self) -> int:   # noqa: D401
+        """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
 
     def get_segmented(self):
