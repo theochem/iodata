@@ -41,7 +41,7 @@ __all__ = []
 PATTERNS = ['*.pdb']
 
 
-@document_load_one("PDB", ['atcoords', 'atnums', 'extra'], ['title'])
+@document_load_one("PDB", ['atcoords', 'atnums', 'atffparams', 'extra'], ['title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     nums = []
