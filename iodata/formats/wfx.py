@@ -361,8 +361,6 @@ def dump_one(f: TextIO, data: IOData):
     for index in range(mo_coeffs.shape[1]):
         mo_coeffs[:, index] *= contractions * scales
 
-    # TODO: Ghost atom
-
     # set required values if not available
     data.extra.setdefault("keywords", 'GTO')
     data.extra.setdefault("num_perturbations", 0)
@@ -392,6 +390,8 @@ def dump_one(f: TextIO, data: IOData):
     _write_xml_single(tag=lbs["num_perturbations"], info=data.extra["num_perturbations"], file=f)
 
     # write nuclear names, atomic numbers, and nuclear charges
+    # add ghost atom, represented by Bq and atomic number 0
+    num2sym.update({0: 'Bq'})
     nuclear_names = [f' {num2sym[num]}{index + 1}' for index, num in enumerate(data.atnums)]
     _write_xml_iterator(tag=lbs["nuclear_names"], info=nuclear_names, file=f)
     _write_xml_iterator(tag=lbs["atnums"], info=data.atnums, file=f)
