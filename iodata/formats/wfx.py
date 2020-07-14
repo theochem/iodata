@@ -382,7 +382,9 @@ def dump_one(f: TextIO, data: IOData):
     _write_xml_single(tag=lbs["num_primitives"], info=obasis.nbasis, file=f)
 
     # write number of occupied molecular orbitals
-    # TODO: This is not correct when mo contains virtual orbitals
+    # in practice wfx prints the total number of MO, even though the section title specifies
+    # "Number of Occupied Molecular Orbitals", which is different from total number of MO when
+    # you print virtual orbitals in wfx file.
     num_mo = data.mo.occs.shape[0]
     _write_xml_single(tag=lbs["num_occ_mo"], info=num_mo, file=f)
 
