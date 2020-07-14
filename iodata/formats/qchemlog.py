@@ -30,7 +30,7 @@ import numpy as np
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
-from ..utils import LineIterator, kcalmol
+from ..utils import LineIterator, kcalmol, calmol
 
 __all__ = []
 
@@ -83,14 +83,16 @@ def load_one(lit: LineIterator) -> dict:
     # extra information
     extra_labels = ['spin_multi', 'nuclear_repulsion_energy', 'nbasis', 'charge',
                     'mulliken_charges', 'polarizability_tensor', 'hessian',
-                    'imaginary_freq', 'vib_energy', 'entropy_dict']
+                    'imaginary_freq', 'vib_energy']
     extra = {label: data.get(label, None) for label in extra_labels}
     # unit conversions for vibrational energy
     extra['vib_energy'] = extra.get('vib_energy') * kcalmol
     # convert kcal/mol to atomic units
     enthalpy_dict = {k: v * kcalmol for k, v in data['enthalpy_dict'].items()}
-    # todo: unit conversions for entropy
     extra['enthalpy_dict'] = enthalpy_dict
+    # unit conversions for entropy, atomic units + Kalvin
+    entropy_dict = {k: v * calmol for k, v in data['entropy_dict'].items()}
+    extra['entropy_dict'] = entropy_dict
     extra['moments'] = moments
     result['extra'] = extra
     return result
