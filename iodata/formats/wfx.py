@@ -31,8 +31,7 @@ from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
 from ..iodata import IOData
 from ..utils import LineIterator
-from ..overlap import gob_cart_normalization
-from ..basis import MolecularBasis, Shell
+from ..basis import MolecularBasis, Shell, convert_conventions
 
 from .wfn import build_obasis, get_mocoeff_scales, CONVENTIONS
 
@@ -333,13 +332,15 @@ def dump_one(f: TextIO, data: IOData):
     # expand mo.coeffs in de-contracted basis primitives
     # --------------------------------------------------
     # expand mo.coeffs in the new basis by repeating de-contracted basis coefficients
+    permutation, signs = convert_conventions(data.obasis, CONVENTIONS)
+    raw_coeffs = data.mo.coeffs[permutation] * signs.reshape(-1, 1)
     mo_coeffs = np.zeros((obasis.nbasis, data.mo.norb))
     index_mo_old, index_mo_new = 0, 0
     # loop over the shells of the old basis
     for shell in data.obasis.shells:
         for angmom, kind in zip(shell.angmoms, shell.kinds):
             n = len(data.obasis.conventions[angmom, kind])
-            c = data.mo.coeffs[index_mo_old: index_mo_old + n]
+            c = raw_coeffs[index_mo_old: index_mo_old + n]
             for j in range(shell.nprim):
                 mo_coeffs[index_mo_new: index_mo_new + n] = c
                 index_mo_new += n
@@ -360,7 +361,6 @@ def dump_one(f: TextIO, data: IOData):
     for index in range(mo_coeffs.shape[1]):
         mo_coeffs[:, index] *= contractions * scales
 
-    # TODO: Take care of basis set conversion
     # TODO: Ghost atom
 
     # set required values if not available
