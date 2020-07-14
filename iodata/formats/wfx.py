@@ -406,14 +406,10 @@ def dump_one(f: TextIO, data: IOData):
     # write net charge, number of electrons, number of alpha electrons, and number beta electrons
     _write_xml_single_scientific(tag=lbs["charge"], info=data.charge, file=f)
     _write_xml_single(tag=lbs["num_electrons"], info=int(data.nelec), file=f)
-    # TODO: This needs to be clarified
-    num_alpha_elec = data.mo.occsa[data.mo.occsa > 0.5]
-    num_alpha_elec = sum(num_alpha_elec)
-    _write_xml_single(tag=lbs["num_alpha_electron"], info=int(round(num_alpha_elec)), file=f)
-    # TODO: This needs to be clarified
-    num_beta_elec = data.mo.occsb[data.mo.occsb > 0.5]
-    num_beta_elec = sum(num_beta_elec)
-    _write_xml_single(tag=lbs["num_beta_electron"], info=int(round(num_beta_elec)), file=f)
+    # wfx expects integer values for number of alpha/beta electrons but int rounds down the float
+    # so round is used before turning it to integer to get the correct number.
+    _write_xml_single(tag=lbs["num_alpha_electron"], info=int(round(sum(data.mo.occsa))), file=f)
+    _write_xml_single(tag=lbs["num_beta_electron"], info=int(round(sum(data.mo.occsb))), file=f)
 
     # write electronic spin multiplicity and model (both optional)
     if data.extra["spin_multi"] is not None:
