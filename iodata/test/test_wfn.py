@@ -51,7 +51,7 @@ def test_load_wfn_low_he_s():
     data = helper_load_wfn_low('he_s_orbital.wfn')
     # unpack data
     title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy, _ = data[5:]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, _, _ = data[5:]
     assert title == 'He atom - decontracted 6-31G basis set'
     assert_equal(atnums.shape, (1,))
     assert_equal(atnums, [2])
@@ -81,7 +81,7 @@ def test_load_wfn_low_h2o():
     data = helper_load_wfn_low('h2o_sto3g.wfn')
     # unpack data
     title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy, _ = data[5:]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, _, _ = data[5:]
     assert title == 'H2O Optimization'
     assert_equal(atnums.shape, (3,))
     assert_equal(atcoords.shape, (3, 3))
@@ -313,12 +313,14 @@ def test_load_one_cah110_hf_sto3g_g09():
 
 def check_load_dump_consistency(fn, tmpdir):
     """Check if data is preserved after dumping and loading a WFN file.
+
     Parameters
     ----------
     fn : str
         The Molekel filename to load
     tmpdir : str
         The temporary directory to dump and load the file.
+
     """
     with path('iodata.test.data', fn) as file_name:
         mol1 = load_one(str(file_name), fmt='wfn')
@@ -329,7 +331,7 @@ def check_load_dump_consistency(fn, tmpdir):
     # compare Mulliken charges
     charges1 = compute_mulliken_charges(mol1)
     charges2 = compute_mulliken_charges(mol2)
-    assert_allclose(charges2, charges1, rtol=1.0e-7, atol=0.0)
+    assert_allclose(charges2, charges1, rtol=1.0e-6, atol=0.0)
 
 
 def test_load_dump_consistency_lih_cation_cisd(tmpdir):

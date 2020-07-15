@@ -193,7 +193,8 @@ def _load_helper_energy(lit: LineIterator) -> float:
     # Note: this differs between *.WFN files -- in some files the energy field ends at
     # column 35 instead of column 37 -- so use split() to extract energy
     energy = float(line[17:37].split()[0])
-    return energy
+    virial = float(line[55:68])
+    return energy, virial
 
 
 def _load_helper_multiwfn(lit: LineIterator, num_mo: int) -> np.ndarray:
@@ -234,10 +235,10 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
     for mo in range(num_mo):
         mo_numbers[mo], mo_occs[mo], mo_energies[mo], mo_coeffs[:, mo] = \
             _load_helper_mo(lit, nprim)
-    energy = _load_helper_energy(lit)
+    energy, virial = _load_helper_energy(lit)
     mo_spin = _load_helper_multiwfn(lit, num_mo)
     return title, atnums, atcoords, icenters, type_assignments, exponent, \
-        mo_numbers, mo_occs, mo_energies, mo_coeffs, energy, mo_spin
+        mo_numbers, mo_occs, mo_energies, mo_coeffs, energy, virial, mo_spin
 
 
 # pylint: disable=too-many-branches
@@ -363,12 +364,13 @@ def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
 @document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title', 'extra'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    (title, atnums, atcoords, icenters, type_assignments, exponents,
-     mo_numbers, mo_occs, mo_energies, mo_coeffs, energy, mo_spin) = load_wfn_low(lit)
+
+    (title, atnums, atcoords, icenters, type_assignments, exponents, mo_numbers, mo_occs,
+     mo_energies, mo_coeffs, energy, virial, mo_spin) = load_wfn_low(lit)
     # Build the basis set and the permutation needed to regroup shells.
     obasis, permutation = build_obasis(icenters, type_assignments, exponents, lit)
     # Extra dict to return.
-    extra = {}
+    extra = {'virial_ratio': virial}
     # ----------------------------
     # Build the molecular orbitals
     # ----------------------------
@@ -538,7 +540,8 @@ def dump_one(f: TextIO, data: IOData) -> None:
 
     # Write energy and virial coefficient
     print('END DATA', file=f)
-    print(FMT_ENERGY.format(data.energy, 0), file=f)
+    print(FMT_ENERGY.format(data.energy, data.extra.get('virial_ratio', 0.)), file=f)
+
     # Write MOSPIN extension section
     if 'mo_spin' in data.extra:
         print(' $MOSPIN $END\n\n', file=f)
