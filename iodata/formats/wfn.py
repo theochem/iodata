@@ -431,7 +431,7 @@ def _format_helper_section(header: str, skip: int, spec: str, nline: int) -> Tup
 
 def _dump_helper_section(f: TextIO, data: np.ndarray, fmt: str, skip: int, step: int, nline: int):
     """Write a CENTRE_ASSIGMENTS, TYPE_ASSIGNMENTS, or EXPONENTS section to file ``f``."""
-    while len(data):
+    while len(data) > 0:
         chunk = data[:nline]
         n_chunk = len(chunk)
         print(fmt[:skip + n_chunk * step].format(*chunk), file=f)
@@ -485,7 +485,7 @@ def dump_one(f: TextIO, data: IOData) -> None:
         for angmom, kind in zip(shell.angmoms, shell.kinds):
             n = len(data.obasis.conventions[angmom, kind])
             c = raw_coeffs[index_mo_old: index_mo_old + n]
-            for j in range(shell.nprim):
+            for _ in range(shell.nprim):
                 mo_coeffs[index_mo_new: index_mo_new + n] = c
                 index_mo_new += n
             index_mo_old += n
