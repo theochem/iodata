@@ -175,7 +175,7 @@ def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[int, float, float, n
     line = next(lit)
     if not line.startswith('MO'):
         lit.error("Expecting line to start with 'MO'")
-    # FORMAT (2X,I5,27X,F13.7,15X,F12.6)
+    # FORMAT (2X,I5,27X,F13.7,15X,F12.8)
     number = int(line[2:7])
     occ = float(line[34:47])
     energy = float(line[62:74])
@@ -364,7 +364,6 @@ def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
 @document_load_one("WFN", ['atcoords', 'atnums', 'energy', 'mo', 'obasis', 'title', 'extra'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-
     (title, atnums, atcoords, icenters, type_assignments, exponents, mo_numbers, mo_occs,
      mo_energies, mo_coeffs, energy, virial, mo_spin) = load_wfn_low(lit)
     # Build the basis set and the permutation needed to regroup shells.
@@ -444,7 +443,7 @@ FMT_NUM = 'GAUSSIAN        {0:7d} MOL ORBITALS{1:7d} PRIMITIVES{2:9d} NUCLEI'
 # FORMAT (2X,A3,I3,11X,I3,2X,3F12.8,10X,F5.1)
 FMT_ATM = '  {0:3s}{1:3d}    (CENTRE{2:3d}) {3:12.8f}{4:12.8f}{5:12.8f}  CHARGE ={6:5.1f}'
 # FORMAT (2X,5I,8X,F3.1,16X,F13.7,15X,F12.6)
-FMT_MOS = 'MO{0:5d}     MO {1:3.1f}        OCC NO ={2:13.7f}  ORB. ENERGY ={3:12.6f}'
+FMT_MOS = 'MO{0:5d}     MO {1:3.1f}        OCC NO ={2:13.7f}  ORB. ENERGY ={3:12.8f}'
 # FORMAT (17X,F20.12,18X,F13.8)
 FMT_ENERGY = ' TOTAL ENERGY =  {0:20.12f} THE VIRIAL(-V/T)={1:13.8f}'
 # FORMAT (20X,20I3)

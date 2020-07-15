@@ -331,7 +331,7 @@ def check_load_dump_consistency(fn, tmpdir):
     # compare Mulliken charges
     charges1 = compute_mulliken_charges(mol1)
     charges2 = compute_mulliken_charges(mol2)
-    assert_allclose(charges2, charges1, rtol=1.0e-6, atol=0.0)
+    assert_allclose(charges2, charges1, rtol=1.0e-7, atol=0.0)
 
 
 def test_load_dump_consistency_lih_cation_cisd(tmpdir):
@@ -344,4 +344,3 @@ def test_load_dump_consistency_lih_cation_uhf(tmpdir):
 
 def test_load_dump_consistency_lih_cation_rohf(tmpdir):
     check_load_dump_consistency('lih_cation_rohf.wfn', tmpdir)
-
