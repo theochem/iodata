@@ -35,7 +35,7 @@ from ..docstrings import document_load_one, document_dump_one
 from ..iodata import IOData
 from ..overlap import gob_cart_normalization
 from ..orbitals import MolecularOrbitals
-from ..periodic import sym2num
+from ..periodic import num2sym, sym2num
 from ..utils import LineIterator
 
 
@@ -505,6 +505,16 @@ def dump_one(f: TextIO, data: IOData) -> None:
     # update MO coefficients to include primitives contraction coefficients & normalization
     for index in range(mo_coeffs.shape[1]):
         mo_coeffs[:, index] *= contractions * scales
+
+    # Extract centre, type assignments and exponents from new obasis
+    cntrs = [shell.icenter + 1 for shell in obasis.shells for _ in range(shell.nbasis)]
+    expns = [shell.exponents[0] for shell in obasis.shells for _ in range(shell.nbasis)]
+    angmom_prim = {}
+    count = 1
+    for angmom in range(max([shell.angmoms[0] for shell in obasis.shells]) + 1):
+        angmom_prim[angmom] = [count + i for i in range(len(obasis.conventions[angmom, 'c']))]
+        count += len(obasis.conventions[angmom, 'c'])
+    types = [item for shell in obasis.shells for item in angmom_prim[shell.angmoms[0]]]
 
     # Write header (title, # MOs, # primitives, # atoms)
     print(f' {data.title if data.title else DEFAULT_WFN_TTL}', file=f)

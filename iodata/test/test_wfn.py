@@ -18,13 +18,16 @@
 # --
 """Test iodata.formats.wfn module."""
 
+import os
+
+import pytest
 
 import numpy as np
 
 from numpy.testing import assert_equal, assert_allclose
 
-from .common import compute_mulliken_charges, check_orthonormal
-from ..api import load_one
+from .common import compute_mulliken_charges, check_orthonormal, compare_mols
+from ..api import load_one, dump_one
 from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
 from ..utils import LineIterator
@@ -240,8 +243,8 @@ def test_load_wfn_lih_cation_fci():
 
 
 def test_load_one_lih_cation_cisd():
-    with path('iodata.test.data', 'lih_cation_cisd.wfn') as file_wfx:
-        mol = load_one(str(file_wfx))
+    with path('iodata.test.data', 'lih_cation_cisd.wfn') as file_wfn:
+        mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
     assert mol.mo.norba == 11
@@ -256,8 +259,8 @@ def test_load_one_lih_cation_cisd():
 
 
 def test_load_one_lih_cation_uhf():
-    with path('iodata.test.data', 'lih_cation_uhf.wfn') as file_wfx:
-        mol = load_one(str(file_wfx))
+    with path('iodata.test.data', 'lih_cation_uhf.wfn') as file_wfn:
+        mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
     assert mol.mo.norba == 2
@@ -272,8 +275,8 @@ def test_load_one_lih_cation_uhf():
 
 
 def test_load_one_lih_cation_rohf():
-    with path('iodata.test.data', 'lih_cation_rohf.wfn') as file_wfx:
-        mol = load_one(str(file_wfx))
+    with path('iodata.test.data', 'lih_cation_rohf.wfn') as file_wfn:
+        mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'restricted'
     assert mol.mo.norba == 2
@@ -289,8 +292,8 @@ def test_load_one_lih_cation_rohf():
 
 
 def test_load_one_cah110_hf_sto3g_g09():
-    with path('iodata.test.data', 'cah110_hf_sto3g_g09.wfn') as file_wfx:
-        mol = load_one(str(file_wfx))
+    with path('iodata.test.data', 'cah110_hf_sto3g_g09.wfn') as file_wfn:
+        mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
     assert mol.mo.norba == 123
@@ -306,3 +309,37 @@ def test_load_one_cah110_hf_sto3g_g09():
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def check_load_dump_consistency(fn, tmpdir):
+    """Check if data is preserved after dumping and loading a WFN file.
+    Parameters
+    ----------
+    fn : str
+        The Molekel filename to load
+    tmpdir : str
+        The temporary directory to dump and load the file.
+    """
+    with path('iodata.test.data', fn) as file_name:
+        mol1 = load_one(str(file_name), fmt='wfn')
+    fn_tmp = os.path.join(tmpdir, 'foo.bar')
+    dump_one(mol1, fn_tmp, fmt='wfn')
+    mol2 = load_one(fn_tmp, fmt='wfn')
+    compare_mols(mol1, mol2)
+    # compare Mulliken charges
+    charges1 = compute_mulliken_charges(mol1)
+    charges2 = compute_mulliken_charges(mol2)
+    assert_allclose(charges2, charges1, rtol=1.0e-7, atol=0.0)
+
+
+def test_load_dump_consistency_lih_cation_cisd(tmpdir):
+    check_load_dump_consistency('lih_cation_cisd.wfn', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_uhf(tmpdir):
+    check_load_dump_consistency('lih_cation_uhf.wfn', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_rohf(tmpdir):
+    check_load_dump_consistency('lih_cation_rohf.wfn', tmpdir)
+
