@@ -37,8 +37,9 @@ __all__ = []
 PATTERNS = ['*.qchemlog']
 
 
-@document_load_one("qchemlog", ['atcoords', 'athessian', 'atmasses', 'atnums', 'charge', 'energy',
-                                'g_rot', 'mo', 'lot', 'nelec', 'obasis_name', 'run_type', 'extra'])
+@document_load_one("qchemlog", ['atcoords', 'atmasses', 'atnums', 'charge', 'energy', 'g_rot',
+                                'mo', 'lot', 'nelec', 'obasis_name', 'run_type', 'extra'],
+                   ['athessian'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     data = load_qchemlog_low(lit)
