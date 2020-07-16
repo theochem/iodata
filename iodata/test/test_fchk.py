@@ -27,7 +27,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 import pytest
 
-from ..api import load_one, load_many
+from ..api import load_one, load_many, dump_one, dump_many
 from ..overlap import compute_overlap
 from ..utils import check_dm
 
@@ -514,3 +514,29 @@ def test_load_nbasis_indep(tmpdir):
                 fout.write(line.replace("independent", "independant"))
     mol2 = load_one(fnout)
     assert mol2.mo.coeffs.shape == (38, 37)
+
+
+def check_load_dump_consistency(tmpdir, fn):
+    """ Check if dumping and loading an FCHK file results in the same data."""
+    mol0 = load_fchk_helper(str(fn))
+    # Write fchk file in a temporary folder and then read it
+    
+    fn_tmp = os.path.join(tmpdir, 'test.fchk')
+    dump_one(mol0,fn_tmp)
+    mol1 = load_one(fn_tmp)
+    # Check the files
+    assert mol0.title == mol1.title 
+    assert_allclose(mol0.atcoords,mol1.atcoords)
+    assert_allclose(mol0.atcharges['mulliken'],mol1.atcharges['mulliken'])
+    assert_allclose(mol0.energy,mol1.energy)
+    assert mol0.lot == mol1.lot
+    assert mol0.mo.kind == mol1.mo.kind
+    assert mol0.mo.norba == mol1.mo.norba
+    assert mol0.mo.norbb == mol1.mo.norbb
+    assert_allclose(mol0.mo.occs, mol1.mo.occs)
+    assert_allclose(mol0.mo.coeffs, mol1.mo.coeffs)
+    assert_allclose(mol0.mo.energies, mol1.mo.energies)
+
+def test_dump_fchk_consistency_h2o_sto3g(tmpdir):
+    check_load_dump_consistency(tmpdir,'h2o_sto3g.fchk')
+

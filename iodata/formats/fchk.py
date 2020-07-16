@@ -20,13 +20,14 @@
 
 
 from fnmatch import fnmatch
-from typing import List, Tuple, Iterator
+from typing import List, Tuple, Iterator, TextIO
 
 import numpy as np
 
 from ..iodata import IOData
 from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS
 from ..docstrings import document_load_one, document_load_many
+from ..docstrings import document_dump_one, document_dump_many
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, amu
 
@@ -942,7 +943,7 @@ def dump_one(f: TextIO, data: IOData):
     ['atcharges', 'atcoords', 'atnums', 'atcorenums', 'energy', 'lot', 'mo', 'obasis',
      'obasis_name', 'run_type', 'title'],
     ['atfrozen', 'atgradient', 'athessian', 'atmasses', 'one_rdms', 'extra', 'moments'])
-def dump_one(f: TextIO, datas: Iterator[IOData]):
+def dump_many(f: TextIO, datas: Iterator[IOData]):
     """Do not edit this docstring. It will be overwritten."""
     for data in datas:
         dump_one(f, data)
