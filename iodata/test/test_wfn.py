@@ -325,11 +325,7 @@ def check_load_dump_consistency(fn, tmpdir):
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt='wfn')
     mol2 = load_one(fn_tmp, fmt='wfn')
-    compare_mols(mol1, mol2)
-    # compare Mulliken charges
-    charges1 = compute_mulliken_charges(mol1)
-    charges2 = compute_mulliken_charges(mol2)
-    assert_allclose(charges2, charges1, rtol=1.0e-7, atol=0.0)
+    compare_mols(mol1, mol2, atol=1.0e-6)
 
 
 def test_load_dump_consistency_lih_cation_cisd(tmpdir):

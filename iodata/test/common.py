@@ -83,7 +83,7 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
     yield fn_truncated
 
 
-def compare_mols(mol1, mol2):
+def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
     """Compare two IOData objects."""
     assert mol1.title == mol2.title
     assert_equal(mol1.atnums, mol2.atnums)
@@ -97,8 +97,8 @@ def compare_mols(mol1, mol2):
             assert shell1.icenter == shell2.icenter
             assert_equal(shell1.angmoms, shell2.angmoms)
             assert shell1.kinds == shell2.kinds
-            assert_allclose(shell1.exponents, shell2.exponents, atol=1e-8)
-            assert_allclose(shell1.coeffs, shell2.coeffs, atol=1e-8)
+            assert_allclose(shell1.exponents, shell2.exponents, atol=atol, rtol=rtol)
+            assert_allclose(shell1.coeffs, shell2.coeffs, atol=atol, rtol=rtol)
         assert len(mol1.obasis.conventions) == len(mol2.obasis.conventions)
         for key, conv in mol1.obasis.conventions.items():
             s1 = set(word.lstrip('-') for word in conv)
@@ -108,15 +108,15 @@ def compare_mols(mol1, mol2):
         # compute and compare Mulliken charges
         charges1 = compute_mulliken_charges(mol1)
         charges2 = compute_mulliken_charges(mol2)
-        assert_allclose(charges1, charges2, rtol=0.0, atol=1.0e-6)
+        assert_allclose(charges1, charges2, atol=atol, rtol=rtol)
     else:
         assert mol2.obasis is None
     # wfn
-    permutation, signs = convert_conventions(mol1.obasis, mol2.obasis.conventions)
+    perm, sgn = convert_conventions(mol1.obasis, mol2.obasis.conventions)
     assert mol1.mo.kind == mol2.mo.kind
     assert_allclose(mol1.mo.occs, mol2.mo.occs)
-    assert_allclose(mol1.mo.coeffs[permutation] * signs.reshape(-1, 1), mol2.mo.coeffs, atol=1e-8)
-    assert_allclose(mol1.mo.energies, mol2.mo.energies)
+    assert_allclose(mol1.mo.coeffs[perm] * sgn.reshape(-1, 1), mol2.mo.coeffs, atol=atol, rtol=rtol)
+    assert_allclose(mol1.mo.energies, mol2.mo.energies, atol=atol, rtol=rtol)
     assert_equal(mol1.mo.irreps, mol2.mo.irreps)
     # operators and density matrices
     cases = [
@@ -131,8 +131,8 @@ def compare_mols(mol1, mol2):
             if key in d1:
                 assert key in d2
                 matrix1 = d1[key]
-                matrix1 = matrix1[permutation] * signs.reshape(-1, 1)
-                matrix1 = matrix1[:, permutation] * signs
+                matrix1 = matrix1[perm] * sgn.reshape(-1, 1)
+                matrix1 = matrix1[:, perm] * sgn
                 matrix2 = d2[key]
                 np.testing.assert_equal(matrix1, matrix2)
             else:
