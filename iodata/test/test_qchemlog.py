@@ -146,7 +146,7 @@ def test_load_one_qchemlog():
     assert_allclose(mol.atcharges['mulliken'], np.array([-0.482641, 0.241321, 0.241321]))
     assert_equal(mol.moments[(1, 'c')], np.array([1.4989, 1.1097, -0.784]))
     assert_equal(mol.moments[(2, 'c')],
-                 np.array([-6.1922,  0.2058, -0.9308, -5.0469,  1.1096, -5.762]))
+                 np.array([-6.1922, 0.2058, -0.9308, -5.0469, 1.1096, -5.762]))
     hessian = np.array([[3.162861e-01, 8.366060e-02, -2.326701e-01, -8.253820e-02,
                          -1.226155e-01, -2.676000e-03, -2.337479e-01, 3.895480e-02,
                          2.353461e-01],
