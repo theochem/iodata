@@ -85,7 +85,7 @@ def test_load_dump_consistency_lih_cation_rohf(tmpdir):
     check_load_dump_consistency('lih_cation_rohf.wfx', tmpdir)
 
 
-def compare_mulliken_charges(fname, tmpdir):
+def compare_mulliken_charges(fname, tmpdir, rtol=1.0e-7, atol=0.0):
     with path('iodata.test.data', fname) as file_name:
         mol1 = load_one(str(file_name))
     # dump WFX and check that file exists
@@ -96,7 +96,7 @@ def compare_mulliken_charges(fname, tmpdir):
     mol2 = load_one(fn_tmp)
     charges1 = compute_mulliken_charges(mol1)
     charges2 = compute_mulliken_charges(mol2)
-    assert_allclose(charges1, charges2, rtol=1.0e-7, atol=0)
+    assert_allclose(charges1, charges2, rtol=rtol, atol=atol)
 
 
 def test_dump_one_from_fchk_h2o(tmpdir):
@@ -116,6 +116,14 @@ def test_dump_one_from_fchk_ch3_unrestricted(tmpdir):
 def test_dump_one_from_wfn_h2o(tmpdir):
     compare_mulliken_charges('h2o_sto3g.wfn', tmpdir)
     compare_mulliken_charges('h2o_sto3g_decontracted.wfn', tmpdir)
+
+def test_dump_one_from_molden(tmpdir):
+    compare_mulliken_charges('h2o.molden.input', tmpdir)
+    compare_mulliken_charges('he2_ghost_psi4_1.0.molden', tmpdir)
+    compare_mulliken_charges('neon_turbomole_def2-qzvp.molden', tmpdir, atol=1.0e-10)
+    compare_mulliken_charges('nh3_molden_cart.molden', tmpdir)
+    compare_mulliken_charges('nh3_molpro2012.molden', tmpdir)
+    compare_mulliken_charges('nh3_turbomole.molden', tmpdir)
 
 
 def test_dump_one_from_wfn_lih(tmpdir):
