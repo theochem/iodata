@@ -144,34 +144,6 @@ def test_load_one_qchemlog():
     assert mol.lot == 'hf'
     assert mol.obasis_name == 'cc-pvtz'
     assert_allclose(mol.atcharges['mulliken'], np.array([-0.482641, 0.241321, 0.241321]))
-    assert mol.extra['spin_multi'] == 1
-    assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
-    assert mol.extra['imaginary_freq'] == 0
-    # unit conversion for entropy terms, used atomic units + Kalvin
-    assert_allclose(mol.extra['entropy_dict']['trans_entropy'], 34.608 * 1.593601437640628e-06)
-    assert_allclose(mol.extra['entropy_dict']['rot_entropy'], 11.82 * 1.593601437640628e-06)
-    assert_allclose(mol.extra['entropy_dict']['vib_entropy'], 0.003 * 1.593601437640628e-06)
-    assert_allclose(mol.extra['entropy_dict']['entropy_total'], 46.432 * 1.593601437640628e-06)
-    assert_allclose(mol.extra['moments']['dipole_tol'], 2.0231)
-    assert_allclose(mol.extra['vib_energy'], 0.022122375167392933)
-    assert_allclose(mol.extra['enthalpy_dict']['trans_enthalpy'], 0.0014167116787071256)
-    assert_allclose(mol.extra['enthalpy_dict']['rot_enthalpy'], 0.0014167116787071256)
-    assert_allclose(mol.extra['enthalpy_dict']['vib_enthalpy'], 0.022123968768831298)
-    assert_allclose(mol.extra['enthalpy_dict']['enthalpy_total'], 0.025900804177758054)
-    assert_equal(mol.extra['moments']['dipole_moment'], np.array([1.4989, 1.1097, -0.784]))
-    assert_equal(mol.extra['moments']['quadrupole_moments'],
-                 np.array([-6.1922, 0.2058, -5.0469, -0.9308, 1.1096, -5.762]))
-    polarizability_tensor = np.array([[-6.1256608, -0.1911917, 0.8593603],
-                                      [-0.1911917, -7.180854, -1.0224452],
-                                      [0.8593603, -1.0224452, -6.52088]])
-    assert_equal(mol.extra['polarizability_tensor'], polarizability_tensor)
-    atcoords = np.array([[0.00575, 0.00426, -0.00301],
-                         [0.27588, 0.88612, 0.25191],
-                         [0.60257, -0.23578, -0.7114]])
-    assert_equal(mol.atcoords, atcoords)
-    assert_equal(mol.atmasses, np.array([15.99491, 1.00783, 1.00783]))
-    assert_equal(mol.atnums, np.array([8, 1, 1]))
-
     hessian = np.array([[3.162861e-01, 8.366060e-02, -2.326701e-01, -8.253820e-02,
                          -1.226155e-01, -2.676000e-03, -2.337479e-01, 3.895480e-02,
                          2.353461e-01],
@@ -199,7 +171,34 @@ def test_load_one_qchemlog():
                         [2.353461e-01, -1.180510e-01, -3.035382e-01, 1.238830e-02,
                          1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01,
                          3.144706e-01]])
-    assert_equal(mol.extra['hessian'], hessian)
+    assert_equal(mol.athessian, hessian)
+    assert mol.extra['spin_multi'] == 1
+    assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
+    assert mol.extra['imaginary_freq'] == 0
+    # unit conversion for entropy terms, used atomic units + Kalvin
+    assert_allclose(mol.extra['entropy_dict']['trans_entropy'], 34.608 * 1.593601437640628e-06)
+    assert_allclose(mol.extra['entropy_dict']['rot_entropy'], 11.82 * 1.593601437640628e-06)
+    assert_allclose(mol.extra['entropy_dict']['vib_entropy'], 0.003 * 1.593601437640628e-06)
+    assert_allclose(mol.extra['entropy_dict']['entropy_total'], 46.432 * 1.593601437640628e-06)
+    assert_allclose(mol.extra['moments']['dipole_tol'], 2.0231)
+    assert_allclose(mol.extra['vib_energy'], 0.022122375167392933)
+    assert_allclose(mol.extra['enthalpy_dict']['trans_enthalpy'], 0.0014167116787071256)
+    assert_allclose(mol.extra['enthalpy_dict']['rot_enthalpy'], 0.0014167116787071256)
+    assert_allclose(mol.extra['enthalpy_dict']['vib_enthalpy'], 0.022123968768831298)
+    assert_allclose(mol.extra['enthalpy_dict']['enthalpy_total'], 0.025900804177758054)
+    assert_equal(mol.extra['moments']['dipole_moment'], np.array([1.4989, 1.1097, -0.784]))
+    assert_equal(mol.extra['moments']['quadrupole_moments'],
+                 np.array([-6.1922, 0.2058, -5.0469, -0.9308, 1.1096, -5.762]))
+    polarizability_tensor = np.array([[-6.1256608, -0.1911917, 0.8593603],
+                                      [-0.1911917, -7.180854, -1.0224452],
+                                      [0.8593603, -1.0224452, -6.52088]])
+    assert_equal(mol.extra['polarizability_tensor'], polarizability_tensor)
+    atcoords = np.array([[0.00575, 0.00426, -0.00301],
+                         [0.27588, 0.88612, 0.25191],
+                         [0.60257, -0.23578, -0.7114]])
+    assert_equal(mol.atcoords, atcoords)
+    assert_equal(mol.atmasses, np.array([15.99491, 1.00783, 1.00783]))
+    assert_equal(mol.atnums, np.array([8, 1, 1]))
     # molecule orbital related
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'

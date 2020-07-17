@@ -46,6 +46,8 @@ def load_one(lit: LineIterator) -> dict:
     result_labels = ['atcoords', 'atmasses', 'atnums', 'charge',
                      'charge', 'energy', 'g_rot', 'run_type']
     result = {label: data.get(label, None) for label in result_labels}
+    # hessian matrix
+    result["athessian"] = data.get("hessian")
     # mulliken charges
     result["atcharges"] = {"mulliken": data.get("mulliken_charges")}
     # build molecular orbitals
@@ -85,8 +87,7 @@ def load_one(lit: LineIterator) -> dict:
     moments = {label: data.get(label, None) for label in moments_labels}
     # extra information
     extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
-                    'polarizability_tensor', 'hessian',
-                    'imaginary_freq', 'vib_energy']
+                    'polarizability_tensor', 'imaginary_freq', 'vib_energy']
     extra = {label: data.get(label, None) for label in extra_labels}
     # unit conversions for vibrational energy
     extra['vib_energy'] = extra.get('vib_energy') * kcalmol
