@@ -144,7 +144,6 @@ def test_load_one_qchemlog():
     assert mol.lot == 'hf'
     assert mol.obasis_name == 'cc-pvtz'
     assert_allclose(mol.atcharges['mulliken'], np.array([-0.482641, 0.241321, 0.241321]))
-    assert mol.extra['charge'] == 0
     assert mol.extra['spin_multi'] == 1
     assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
     assert mol.extra['imaginary_freq'] == 0
