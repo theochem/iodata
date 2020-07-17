@@ -83,8 +83,14 @@ def load_one(lit: LineIterator) -> dict:
     result['nelec'] = data['alpha_elec'] + data['beta_elec']
     result['obasis_name'] = data['basis_set'].lower()
     # moments
-    moments_labels = ['dipole_moment', 'quadrupole_moments', 'dipole_tol']
-    moments = {label: data.get(label, None) for label in moments_labels}
+    moments = {}
+    if 'dipole_moment' in data:
+        moments[(1, 'c')] = data['dipole_moment']
+    if 'quadrupole_moments' in data:
+        # Convert to alphabetical ordering: xx, xy, xz, yy, yz, zz
+        moments[(2, 'c')] = data['quadrupole_moments'][[0, 1, 3, 2, 4, 5]]
+    if moments:
+        result['moments'] = moments
     # extra information
     extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
                     'polarizability_tensor', 'imaginary_freq', 'vib_energy']
@@ -97,7 +103,6 @@ def load_one(lit: LineIterator) -> dict:
     # unit conversions for entropy, atomic units + Kalvin
     entropy_dict = {k: v * calmol for k, v in data['entropy_dict'].items()}
     extra['entropy_dict'] = entropy_dict
-    extra['moments'] = moments
     result['extra'] = extra
     return result
 
