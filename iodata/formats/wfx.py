@@ -469,7 +469,11 @@ def dump_one(f: TextIO, data: IOData):
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
     # write energy and virial ratio
-    _write_xml_single_scientific(tag=lbs["energy"], info=data.energy, file=f)
+    if data.energy is None:
+        _write_xml_single(tag=lbs["energy"], info=' NAN', file=f)
+    else:
+        _write_xml_single_scientific(tag=lbs["energy"], info=data.energy, file=f)
+
     _write_xml_single_scientific(tag=lbs["virial_ratio"], info=data.extra["virial_ratio"], file=f)
 
     # write nuclear Cartesian energy gradients
@@ -504,7 +508,7 @@ def _write_xml_single(tag: str, info: [str, int], file: TextIO) -> None:
     print('</' + tag.lstrip('<'), file=file)
 
 
-def _write_xml_single_scientific(tag: str, info: str, file: TextIO) -> None:
+def _write_xml_single_scientific(tag: str, info: float, file: TextIO) -> None:
     """Write header, tail and the data between them into the file."""
     print(tag, file=file)
     print('{: ,.14E}'.format(info), file=file)
