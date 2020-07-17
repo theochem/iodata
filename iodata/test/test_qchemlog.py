@@ -143,6 +143,7 @@ def test_load_one_qchemlog():
     assert mol.run_type == 'freq'
     assert mol.lot == 'hf'
     assert mol.obasis_name == 'cc-pvtz'
+    assert_allclose(mol.atcharges['mulliken'], np.array([-0.482641, 0.241321, 0.241321]))
     assert mol.extra['charge'] == 0
     assert mol.extra['spin_multi'] == 1
     assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
@@ -162,7 +163,6 @@ def test_load_one_qchemlog():
     assert_equal(mol.extra['moments']['dipole_moment'], np.array([1.4989, 1.1097, -0.784]))
     assert_equal(mol.extra['moments']['quadrupole_moments'],
                  np.array([-6.1922, 0.2058, -5.0469, -0.9308, 1.1096, -5.762]))
-    assert_equal(mol.extra['mulliken_charges'], np.array([-0.482641, 0.241321, 0.241321]))
     polarizability_tensor = np.array([[-6.1256608, -0.1911917, 0.8593603],
                                       [-0.1911917, -7.180854, -1.0224452],
                                       [0.8593603, -1.0224452, -6.52088]])
