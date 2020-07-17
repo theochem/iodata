@@ -295,6 +295,7 @@ def load_one(lit: LineIterator) -> dict:
         'atcoords': data['atcoords'],
         'atgradient': data.get('atgradient'),
         'atnums': data['atnums'],
+        'atcorenums': data['nuclear_charge'],
         'energy': data['energy'],
         'extra': extra,
         'mo': mo,
@@ -392,10 +393,10 @@ def dump_one(f: TextIO, data: IOData):
     # write nuclear names, atomic numbers, and nuclear charges
     # add ghost atom, represented by Bq and atomic number 0
     num2sym.update({0: 'Bq'})
-    nuclear_names = [f' {num2sym[num]}{index + 1}' for index, num in enumerate(data.atnums)]
+    nuclear_names = [f' {num2sym[num]}{index + 1}' for index, num in enumerate(data.atcorenums)]
     _write_xml_iterator(tag=lbs["nuclear_names"], info=nuclear_names, file=f)
     _write_xml_iterator(tag=lbs["atnums"], info=data.atnums, file=f)
-    _write_xml_iterator_scientific(tag=lbs["nuclear_charge"], info=data.atnums, file=f)
+    _write_xml_iterator_scientific(tag=lbs["nuclear_charge"], info=data.atcorenums, file=f)
 
     # write nuclear cartesian coordinates
     print("<Nuclear Cartesian Coordinates>", file=f)
