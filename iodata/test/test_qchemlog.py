@@ -147,7 +147,6 @@ def test_load_one_qchemlog():
     assert mol.extra['charge'] == 0
     assert mol.extra['spin_multi'] == 1
     assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
-    assert mol.extra['nbasis'] == 58
     assert mol.extra['imaginary_freq'] == 0
     # unit conversion for entropy terms, used atomic units + Kalvin
     assert_allclose(mol.extra['entropy_dict']['trans_entropy'], 34.608 * 1.593601437640628e-06)

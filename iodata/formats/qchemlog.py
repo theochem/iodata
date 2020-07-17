@@ -84,7 +84,7 @@ def load_one(lit: LineIterator) -> dict:
     moments_labels = ['dipole_moment', 'quadrupole_moments', 'dipole_tol']
     moments = {label: data.get(label, None) for label in moments_labels}
     # extra information
-    extra_labels = ['spin_multi', 'nuclear_repulsion_energy', 'nbasis', 'charge',
+    extra_labels = ['spin_multi', 'nuclear_repulsion_energy', 'charge',
                     'polarizability_tensor', 'hessian',
                     'imaginary_freq', 'vib_energy']
     extra = {label: data.get(label, None) for label in extra_labels}
