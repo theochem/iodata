@@ -118,21 +118,67 @@ def test_dump_one_from_wfn_h2o(tmpdir):
     compare_mulliken_charges('h2o_sto3g_decontracted.wfn', tmpdir)
 
 
-def test_dump_one_from_molden(tmpdir):
+def test_dump_one_from_wfn_o2(tmpdir):
+    compare_mulliken_charges('o2_uhf.wfn', tmpdir)
+    compare_mulliken_charges('o2_uhf_virtual.wfn', tmpdir)
+
+
+def test_dump_one_from_wfn_atom(tmpdir):
+    # Li atom
+    compare_mulliken_charges('li_sp_orbital.wfn', tmpdir)
+    compare_mulliken_charges('li_sp_virtual.wfn', tmpdir)
+    # He atom
+    compare_mulliken_charges('he_s_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_s_virtual.wfn', tmpdir)
+    compare_mulliken_charges('he_p_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_d_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_sp_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_spd_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_spdf_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_spdfgh_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_spdfgh_virtual.wfn', tmpdir)
+
+
+def test_dump_one_from_wfn_lih(tmpdir):
+    compare_mulliken_charges('lih_cation_uhf.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_rohf.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_cisd.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_fci.wfn', tmpdir)
+
+
+def test_dump_one_from_wfn_lif(tmpdir):
+    compare_mulliken_charges('lif_fci.wfn', tmpdir)
+
+
+def test_dump_one_from_molden_h2o(tmpdir):
     compare_mulliken_charges('h2o.molden.input', tmpdir)
+
+
+def test_dump_one_from_molden_he2(tmpdir):
     compare_mulliken_charges('he2_ghost_psi4_1.0.molden', tmpdir)
+
+
+def test_dump_one_from_molden_neon(tmpdir):
     compare_mulliken_charges('neon_turbomole_def2-qzvp.molden', tmpdir, atol=1.0e-10)
+
+
+def test_dump_one_from_molden_nh3(tmpdir):
     compare_mulliken_charges('nh3_molden_cart.molden', tmpdir)
     compare_mulliken_charges('nh3_molpro2012.molden', tmpdir)
     compare_mulliken_charges('nh3_turbomole.molden', tmpdir)
 
 
-def test_dump_one_from_wfn_lih(tmpdir):
-    compare_mulliken_charges('lif_fci.wfn', tmpdir)
-    compare_mulliken_charges('lih_cation_uhf.wfn', tmpdir)
-    compare_mulliken_charges('lih_cation_rohf.wfn', tmpdir)
-    compare_mulliken_charges('lih_cation_cisd.wfn', tmpdir)
-    compare_mulliken_charges('lih_cation_fci.wfn', tmpdir)
+def test_dump_one_from_mkl_methanol(tmpdir):
+    compare_mulliken_charges('ethanol.mkl', tmpdir)
+
+
+def test_dump_one_from_mkl_h2(tmpdir):
+    compare_mulliken_charges('h2_sto3g.mkl', tmpdir)
+
+
+# add this test when pure to Cartesian basis set conversion is supported
+# def test_dump_one_from_mkl_li2(tmpdir):
+#     compare_mulliken_charges('li2.mkl', tmpdir)
 
 
 def test_load_data_wfx_h2():
