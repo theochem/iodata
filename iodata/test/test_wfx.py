@@ -87,6 +87,20 @@ def test_load_dump_consistency_lih_cation_rohf(tmpdir):
 
 
 def compare_mulliken_charges(fname, tmpdir, rtol=1.0e-7, atol=0.0):
+    """Check if charges are computed correctly after dumping and loading WFX file format.
+
+    Parameters
+    ----------
+    fname : str
+        The filename to be load.
+    tmpdir : str
+        The temporary directory to dump and load the file.
+    rtole : float, optional
+        Relative tolerance when comparing charges.
+    atol : float, optional
+        Absolute tolerance when comparing charges.
+
+    """
     with path('iodata.test.data', fname) as file_name:
         mol1 = load_one(str(file_name))
     # dump WFX and check that file exists

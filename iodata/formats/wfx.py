@@ -158,7 +158,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
     return result
 
 
-def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
+def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:   # noqa: R0912
     """Load data in all sections existing in the given WFX file LineIterator."""
     data = {}
     mo_start = "<Molecular Orbital Primitive Coefficients>"
@@ -307,10 +307,10 @@ def load_one(lit: LineIterator) -> dict:
 # todo: check document_dump_one
 @document_dump_one("WFX", ['atcoords', 'atgradient', 'atnums', 'energy',
                            'exrtra', 'mo', 'obasis', 'title'])
-def dump_one(f: TextIO, data: IOData):
+def dump_one(f: TextIO, data: IOData):   # noqa: R0912
     """Do not edit this docstring. It will be overwritten."""
     # get all tags/labels that can be written into a WFX file
-    lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, required_tags = _wfx_labels()
+    lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, _ = _wfx_labels()
     # put all labels in one dictionary and flip key and value for easier use
     lbs = {**lbs_str, **lbs_int, **lbs_float, **lbs_aint, **lbs_afloat, **lbs_other}
     lbs = {v: k for k, v in lbs.items()}
