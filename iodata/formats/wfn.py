@@ -541,7 +541,7 @@ def dump_one(f: TextIO, data: IOData) -> None:
     print('END DATA', file=f)
     print(FMT_ENERGY.format(data.energy or np.nan, data.extra.get('virial_ratio', np.nan)), file=f)
 
-    # Write MOSPIN extension section
-    if 'mo_spin' in data.extra:
+    # Write MOSPIN extension section (optional)
+    if data.extra.get('mo_spin') is not None:
         print(' $MOSPIN $END\n\n', file=f)
         _dump_helper_section(f, data.extra['mo_spin'], FMT_SPIN, 0, STEP_SPIN, 40)
