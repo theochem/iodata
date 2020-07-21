@@ -345,6 +345,10 @@ def test_load_dump_consistency_h2o(tmpdir):
     check_load_dump_consistency('h2o_sto3g_decontracted.wfn', tmpdir)
 
 
+def test_load_dump_consistency_lif(tmpdir):
+    check_load_dump_consistency('lif_fci.wfn', tmpdir)
+
+
 def test_load_dump_consistency_cah110(tmpdir):
     check_load_dump_consistency('cah110_hf_sto3g_g09.wfn', tmpdir)
 
