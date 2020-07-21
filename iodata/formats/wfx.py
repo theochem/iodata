@@ -304,9 +304,8 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
-# todo: check document_dump_one
-@document_dump_one("WFX", ['atcoords', 'atgradient', 'atnums', 'energy',
-                           'exrtra', 'mo', 'obasis', 'title'])
+@document_dump_one("WFX", ['atcoords', 'atnums', 'atcorenums', 'mo', 'obasis', 'charge'],
+                   ['title', 'energy', 'spinpol', 'lot', 'atgradient', 'extra'])
 def dump_one(f: TextIO, data: IOData):   # noqa: R0912
     """Do not edit this docstring. It will be overwritten."""
     # get all tags/labels that can be written into a WFX file
