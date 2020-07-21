@@ -27,11 +27,11 @@ from numpy.testing import assert_equal, assert_allclose
 
 import pytest
 
-from ..api import load_one, load_many, dump_one, dump_many
+from ..api import IOData, load_one, load_many, dump_one, dump_many
 from ..overlap import compute_overlap
 from ..utils import check_dm
 
-from .common import check_orthonormal
+from .common import check_orthonormal, compute_mulliken_charges
 
 try:
     from importlib_resources import path
@@ -517,26 +517,102 @@ def test_load_nbasis_indep(tmpdir):
 
 
 def check_load_dump_consistency(tmpdir, fn):
-    """ Check if dumping and loading an FCHK file results in the same data."""
+    """Check if dumping and loading an FCHK file results in the same data."""
     mol0 = load_fchk_helper(str(fn))
     # Write fchk file in a temporary folder and then read it
-    
+
     fn_tmp = os.path.join(tmpdir, 'test.fchk')
-    dump_one(mol0,fn_tmp)
+    dump_one(mol0, fn_tmp)
     mol1 = load_one(fn_tmp)
     # Check the files
-    assert mol0.title == mol1.title 
-    assert_allclose(mol0.atcoords,mol1.atcoords)
-    assert_allclose(mol0.atcharges['mulliken'],mol1.atcharges['mulliken'])
-    assert_allclose(mol0.energy,mol1.energy)
-    assert mol0.lot == mol1.lot
-    assert mol0.mo.kind == mol1.mo.kind
     assert mol0.mo.norba == mol1.mo.norba
     assert mol0.mo.norbb == mol1.mo.norbb
+    assert_allclose(mol0.atcoords, mol1.atcoords)
+    assert_allclose(mol0.energy, mol1.energy)
     assert_allclose(mol0.mo.occs, mol1.mo.occs)
     assert_allclose(mol0.mo.coeffs, mol1.mo.coeffs)
     assert_allclose(mol0.mo.energies, mol1.mo.energies)
+    # Compute and compare Mulliken charges
+    charges0 = compute_mulliken_charges(mol0)
+    charges1 = compute_mulliken_charges(mol1)
+    assert_allclose(charges0, charges1, rtol=0.0, atol=1.0e-6)
+
 
 def test_dump_fchk_consistency_h2o_sto3g(tmpdir):
-    check_load_dump_consistency(tmpdir,'h2o_sto3g.fchk')
+    check_load_dump_consistency(tmpdir, 'hf_sto3g.fchk')
+    check_load_dump_consistency(tmpdir, 'hf_sto3g.fchk')
+    check_load_dump_consistency(tmpdir, 'h2o_sto3g.fchk')
+    check_load_dump_consistency(tmpdir, 'peroxide_irc.fchk')
+    check_load_dump_consistency(tmpdir, 'he_spdfgh_virtual.fchk')
+    check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_cart.fchk')
+    check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_pure.fchk')
 
+
+def test_dump_void_fchk(tmpdir):
+    fn_tmp = os.path.join(tmpdir, 'test.fchk')
+    mol0 = IOData(nelec=10)
+    mol0.moments = {(1, 'c'): np.array([])}
+    mol0.moments = {(2, 'c'): np.array([])}
+    dump_one(mol0, fn_tmp)
+
+
+def test_triangle_fchk(tmpdir):
+    fn_tmp = os.path.join(tmpdir, 'test.fchk')
+    mol0 = IOData(nelec=10)
+    mol0.extra = {'polarizability_tensor': np.array([[1, 2, 3], [4, 5, 6]])}
+    mol0.one_rdms = {'other': np.array([[1, 2, 3], [4, 5, 6]])}
+    dump_one(mol0, fn_tmp)
+
+
+def test_dump_fchk_rdms_cc(tmpdir):
+    mol0 = load_fchk_helper("nitrogen-cc.fchk")
+    fn_tmp = os.path.join(tmpdir, 'test.fchk')
+    dump_one(mol0, fn_tmp)
+    mol1 = load_one(fn_tmp)
+    assert_allclose(mol0.mo.occs, mol1.mo.occs)
+    assert_allclose(mol0.mo.coeffs, mol1.mo.coeffs)
+    assert_allclose(mol0.mo.energies, mol1.mo.energies)
+    # Check the rdms
+    assert_allclose(mol0.one_rdms['scf'], mol1.one_rdms['scf'])
+    assert_allclose(mol0.one_rdms['post_scf'], mol1.one_rdms['post_scf'])
+    assert_allclose(mol0.one_rdms['scf_spin'], mol1.one_rdms['scf_spin'])
+    assert_allclose(mol0.one_rdms['post_scf_spin'], mol1.one_rdms['post_scf_spin'])
+
+
+def test_dump_fchk_rdms_ci(tmpdir):
+    mol0 = load_fchk_helper("nitrogen-ci.fchk")
+    fn_tmp = os.path.join(tmpdir, 'test.fchk')
+    dump_one(mol0, fn_tmp)
+    mol1 = load_one(fn_tmp)
+    # Check the rdms
+    assert_allclose(mol0.one_rdms['post_scf'], mol1.one_rdms['post_scf'])
+    assert_allclose(mol0.one_rdms['post_scf_spin'], mol1.one_rdms['post_scf_spin'])
+
+
+def test_dump_fchk_rdms_mp2(tmpdir):
+    mol0 = load_fchk_helper("nitrogen-mp2.fchk")
+    fn_tmp = os.path.join(tmpdir, 'test.fchk')
+    dump_one(mol0, fn_tmp)
+    mol1 = load_one(fn_tmp)
+    # Check the rdms
+    assert_allclose(mol0.one_rdms['post_scf'], mol1.one_rdms['post_scf'])
+    assert_allclose(mol0.one_rdms['post_scf_spin'], mol1.one_rdms['post_scf_spin'])
+
+
+def test_dump_fchk_rdms_mp3(tmpdir):
+    mol0 = load_fchk_helper("nitrogen-mp3.fchk")
+    fn_tmp = os.path.join(tmpdir, 'test.fchk')
+    dump_one(mol0, fn_tmp)
+    mol1 = load_one(fn_tmp)
+    # Check the rdms
+    assert_allclose(mol0.one_rdms['post_scf'], mol1.one_rdms['post_scf'])
+    assert_allclose(mol0.one_rdms['post_scf_spin'], mol1.one_rdms['post_scf_spin'])
+
+
+def test_dump_many_consistency(tmpdir):
+    trj = load_fchk_trj_helper("peroxide_opt.fchk")
+    # Write in temporary folder and then read it
+    for mol in trj:
+        mol.nelec = 18
+    fn_tmp = os.path.join(tmpdir, 'test')
+    dump_many(trj, fn_tmp, fmt='fchk')

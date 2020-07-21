@@ -439,198 +439,184 @@ def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
     return result
 
 
-# These are helper functions for dumping information into fchk file
-# A) The header of the fchk file, with the title, the run_type, level of theory (method)
-#    the name of the basis, an the file
-def _dump_head_fchk(title: str, run_type: str, method: str, basis: str, f):
-    """ Dump the header of a fchk file.
+def _dump_head_fchk(title: str, run_type: str, method: str, basis: str, f: TextIO):
+    """Dumper for the header of a fchk file with the title, the run_type and level of theory.
 
-        Parameters
-        ----------
-        title:
-            The title of the system.
-        run_type:
-            The run type, if run_type == "energy", we change to "SP".
-        method:
-            The level of theory (lot).
-        basis:
-            The name of the basis.
-        f:
-            The file where the information is dumped
-
+    Parameters
+    ----------
+    title:
+        The title of the system.
+    run_type:
+        The run type, if run_type == "energy", we change to "SP".
+    method:
+        The level of theory (lot).
+    basis:
+        The name of the basis.
+    f:
+        The file where the information is dumped.
     """
-    if( title is None):
-        title = "None"
+    if title is None:
+        title = "fchk file generated automatically by IOData of HORTON"
     try:
-        getattr(run_type,'upper')
+        getattr(run_type, 'upper')
     except AttributeError:
-        print(" The systen dosen't have a run_type")
-        work = "None"
+        work = "Not available"
     else:
         work = run_type.upper()
 
     try:
-        getattr(basis,'upper')
+        getattr(basis, 'upper')
     except AttributeError:
-        print(" The systen dosen't have a basis set")
-        basis = "None"
+        basis = "Not available"
 
     try:
-        getattr(method,'upper')
+        getattr(method, 'upper')
     except AttributeError:
-        print(" The systen dosen't have a level of theory")
-        method = "None"
+        method = "Not available"
 
-    if( work == "ENERGY" ):
+    if work == "ENERGY":
         work = "SP"
 
     print("{0:72}".format(title), file=f)
-    print("{0:10}{1:30}{2:>33}".format(work, method.upper(), basis.upper()),file=f)
+    print("{0:10}{1:30}{2:>33}".format(work, method.upper(), basis.upper()), file=f)
 
 
 # The fchk file has a very rigid format, to dump the information are
 # theses functions, both scalars and arrays, integer and real(float) variables
-def _dump_integer_scalars(name: str, val: int, f):
-    """ Dumper for a scalar integer."""
-    if( val is not None):
-        print("{0:40}   I     {1:12d}".format(name,int(val)), file=f)
+def _dump_integer_scalars(name: str, val: int, f: TextIO):
+    """Dumper for a scalar integer."""
+    if val is not None:
+        print("{0:40}   I     {1:12d}".format(name, int(val)), file=f)
 
 
-def _dump_real_scalars(name: str, val: float, f):
-    """ Dumper for a scalar float."""
-    if( val is not None):
-        print("{0:40}   R     {1:22.15}".format(name,float(val)),file=f)
+def _dump_real_scalars(name: str, val: float, f: TextIO):
+    """Dumper for a scalar float."""
+    if val is not None:
+        print("{0:40}   R     {1: 16.8E}".format(name, float(val)), file=f)
 
 
-def _dump_integer_arrays(name: str, val: np.ndarray, f):
-    """ Dumper for a array of integers."""
-    if( val is not None):
+def _dump_integer_arrays(name: str, val: np.ndarray, f: TextIO):
+    """Dumper for a array of integers."""
+    if val is not None:
         nval = val.size
-        if( nval != 0 ):
-            np.reshape(val,nval)
+        if nval != 0:
+            np.reshape(val, nval)
             print("{0:40}   I   N={1:12}".format(name, nval), file=f)
-            k=0
+            k = 0
             for i in range(nval):
-                print("{0:12}".format(int(val[i])),file=f,end='')
+                print("{0:12}".format(int(val[i])), file=f, end='')
                 k += 1
-                if( k == 6 or i == nval - 1):
-                    print("",file=f);
-                    k=0
+                if(k == 6 or i == nval - 1):
+                    print("", file=f)
+                    k = 0
 
 
-def _dump_real_arrays(name: str, val: np.ndarray, f):
-    """ Dumper for a array of float."""
-    if( val is not None):
-        nval = val.size 
-        if( nval != 0 ):
-            np.reshape(val,nval)
+def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
+    """Dumper for a array of float."""
+    if val is not None:
+        nval = val.size
+        if nval != 0:
+            np.reshape(val, nval)
             print("{0:40}   R   N={1:12}".format(name, nval), file=f)
-            k=0
-
+            k = 0
 
             for i in range(nval):
-                print("{0: 16.8E}".format(val[i]),file=f,end='')
+                print("{0: 16.8E}".format(val[i]), file=f, end='')
                 k += 1
-                if( k == 5 or i == nval - 1):
-                    print("",file=f);
-                    k=0
+                if(k == 5 or i == nval - 1):
+                    print("", file=f)
+                    k = 0
 
 
-# B) Get the coefficients if the system is restricted or unrestricted
 def _split_and_get_coefficients(coeffs: np.ndarray) -> (np.ndarray, np.ndarray):
-    """ The coefficients split depends of the shape of coeffs. If coeffs is a
-        square matrix, the sistem only has alpha orbitals with occupation 2.
-        If coeffs is not a square matrix, the system has alpha and beta orbitals
-        with occupation 1.
+    """Split the coeffs in alpha and/or beta coefficients.
 
-        Parameters
-        ----------
-        coeffs:
-            A numpy.ndarray with the information of orbital coefficients.
+    Parameters
+    ----------
+    coeffs:
+        A numpy.ndarray with the information of orbital coefficients.
 
-        Returns
-        -------
-        alphaCoeffs:
-            A numpy.ndarray with the information of the alpha orbital coefficients.
-        betaCoeffs:
-            A numpy.ndarray with the information of the beta orbital coefficients.
-
+    Returns
+    -------
+    alphaCoeffs:
+        A numpy.ndarray with the information of the alpha orbital coefficients.
+    betaCoeffs:
+        A numpy.ndarray with the information of the beta orbital coefficients.
     """
-    if ( coeffs is not None):
+    alphaCoeffs = np.array([])
+    betaCoeffs = np.array([])
+    if coeffs is not None:
         nrow, ncol = coeffs.shape
         # for a restricted system maybe another check could be made
-        if( nrow == ncol):
-            alphaCoeffs = coeffs[:,0:nrow]
-            betaCoeffs = np.array([])
-
+        if nrow == ncol:
+            alphaCoeffs = coeffs[:, 0:nrow]
             alphaCoeffs = alphaCoeffs.transpose().flatten()
         else:
-            alphaCoeffs = coeffs[:,0:nrow]
-            betaCoeffs = coeffs[:,nrow:]
+            alphaCoeffs = coeffs[:, 0:nrow]
+            betaCoeffs = coeffs[:, nrow:]
 
             alphaCoeffs = alphaCoeffs.transpose().flatten()
             betaCoeffs = betaCoeffs.transpose().flatten()
 
-        return alphaCoeffs,betaCoeffs
+    return alphaCoeffs, betaCoeffs
 
 
-# C) Get the multiplicity
 def _get_multiplicity(molorb: MolecularOrbitals) -> (int, int, int):
-    """ Returns the multiplicity and the number of alpha and beta electrons.
+    """Return the multiplicity and the number of alpha and beta electrons.
 
-        Parameters
-        ----------
-        molorb:
-            A instance of MolecularOrbitals.
+    Parameters
+    ----------
+    molorb:
+        A instance of MolecularOrbitals.
 
-        Returns
-        -------
-        nalpha:
-            The number of alpha electrons.
-        nbeta:
-            The number of beta electrons.
-        multiplicity:
-            The multiplicity of the system.
+    Returns
+    -------
+    nalpha:
+        The number of alpha electrons.
+    nbeta:
+        The number of beta electrons.
+    multiplicity:
+        The multiplicity of the system.
     """
     nalpha = 0
     nbeta = 0
     multiplicity = 0
-    if( molorb is not None):
-        if( molorb.norba == molorb.occs.size ):
-            nalpha = int(sum(molorb.occs)/2)
-            nbeta  = nalpha
+    if molorb is not None:
+        if molorb.norba == molorb.occs.size:
+            nalpha = int(sum(molorb.occs) / 2)
+            nbeta = nalpha
         else:
             nalpha = int(sum(molorb.occs[0:molorb.norba]))
             nbeta = int(sum(molorb.occs[molorb.norba:]))
 
         multiplicity = abs(nalpha - nbeta) + 1
 
-
     return nalpha, nbeta, multiplicity
 
-def _get_TriangleMat(matrix: np.ndarray) -> np.ndarray:
-    """ Transforms a dense matrix in a triangular matrix.
 
-        Parameters
-        ----------
-        matrix:
-            A numpy.ndarray of a square shape.
-       
-        Returns
-        -------
-        newmat:
-            A numpy.ndarray with the elements of the triangular matrix.
+def _get_TriangleMat(matrix: np.ndarray) -> np.ndarray:
+    """Transform a dense matrix in a triangular matrix.
+
+    Parameters
+    ----------
+    matrix:
+        A numpy.ndarray of a square shape.
+
+    Returns
+    -------
+    newmat:
+        A numpy.ndarray with the elements of the triangular matrix.
     """
     nrow, ncol = matrix.shape
-    if( nrow != ncol ):
-        print(" error, the system is not square")
-    newsize = int((nrow * (nrow + 1 )) / 2)
+    if nrow != ncol:
+        print("The system is not square")
+    newsize = int((nrow * (nrow + 1)) / 2)
 
     newmat = np.zeros(newsize)
     k = 0
-    for i in range (nrow):
-        for j in range (nrow):
-            if j <= i :
+    for i in range(nrow):
+        for j in range(nrow):
+            if j <= i:
                 newmat[k] = matrix[i][j]
                 k += 1
 
@@ -638,87 +624,84 @@ def _get_TriangleMat(matrix: np.ndarray) -> np.ndarray:
 
 
 def _sort_quadrupole(quadrupole: np.ndarray) -> np.ndarray:
-    """ Sorts the quadrupole momentum, in the format of FCHK.
+    """Sort the quadrupole momentum, in the format of FCHK.
 
-        Parameters
-        ----------
-        quadrupole:
-            A numpy.ndarray of size 6 ordered XX, XY, XZ, YY, YZ, ZZ.
-        
-        Returns
-        -------
-        newquadrupole:
-            A numpy.ndarray of size 6 ordered XX, YY, ZZ, XY, XZ, YZ.
+    Parameters
+    ----------
+    quadrupole:
+        A numpy.ndarray of size 6 ordered XX, XY, XZ, YY, YZ, ZZ.
+
+    Returns
+    -------
+    newquadrupole:
+        A numpy.ndarray of size 6 ordered XX, YY, ZZ, XY, XZ, YZ.
     """
-    if( quadrupole.size != 0 ):
+    if quadrupole.size != 0:
         newquadrupole = np.zeros(quadrupole.size)
         newquadrupole[0] = quadrupole[0]
         newquadrupole[1] = quadrupole[3]
-        newquadrupole[2] = quadrupole[5] 
-        newquadrupole[3] = quadrupole[1] 
-        newquadrupole[4] = quadrupole[2] 
-        newquadrupole[5] = quadrupole[4] 
+        newquadrupole[2] = quadrupole[5]
+        newquadrupole[3] = quadrupole[1]
+        newquadrupole[4] = quadrupole[2]
+        newquadrupole[5] = quadrupole[4]
     else:
         newquadrupole = np.array([])
 
     return newquadrupole
 
 
-# D) Get the type of shell take into account if is Cartesian o Spherical
 def _get_TypeShell(shell: Shell) -> int:
-    """ Gets the type of shell.
-        
-        Parameters
-        ----------
-        shell:
-            A instance of Shell.
-             
-        Returns
-        -------
-        kind:
-            The type of the shell. 
-            The format is: 0=s, 1=p, -1=sp, 2=6d, -2=5d, 3=10f, -3=7f...
+    """Get the type of shell.
+
+    Parameters
+    ----------
+    shell:
+        A instance of Shell.
+
+    Returns
+    -------
+    kind:
+        The type of the shell. The format is: 0=s, 1=p, -1=sp, 2=6d, -2=5d, 3=10f, -3=7f...
     """
-    if( len(shell.angmoms) == 1 ):
+    if len(shell.angmoms) == 1:
         kind = shell.angmoms[0]
-        if( shell.kinds[0] == 'p' and kind > 1):
+        if(shell.kinds[0] == 'p' and kind > 1):
             kind *= -1
 
-    # This part is for the SP basis  
-    if( len(shell.angmoms) == 2 ):
-        if( 2 * shell.exponents.size == shell.coeffs.size):
+    # This part is for the SP basis
+    if len(shell.angmoms) == 2:
+        if (2 * shell.exponents.size) == shell.coeffs.size:
             kind = -1
     return kind
 
 
-# E) Dump all the basis set information
-def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f):
-    """ Dumps the next basis information in a file.
-        - "Number of basis functions"
-        - "Number of independent functions"
-        - "Number of contracted shells"
-        - "Number of primitive shells"
-        - "Pure/Cartesian d shells"
-        - "Pure/Cartesian f shells"
-        - "Highest angular momentum"
-        - "Largest degree of contraction"
-        - "Shell types"
-        - "Number of primitives per shell"
-        - "Shell to atom map"
-        - "Primitive exponents"
-        - "Contraction coefficients"
-        - "P(S=P) Contraction coefficients"
-        - "Coordinates of each shell"
+def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
+    """Dump the next basis information in a file.
 
-        Parameters
-        ----------
-        basis:
-            A instance of MolecularBasis.
-        coords:
-            A numpy.ndarray with the information of the coordinates.
+    - "Number of basis functions"
+    - "Number of independent functions"
+    - "Number of contracted shells"
+    - "Number of primitive shells"
+    - "Pure/Cartesian d shells"
+    - "Pure/Cartesian f shells"
+    - "Highest angular momentum"
+    - "Largest degree of contraction"
+    - "Shell types"
+    - "Number of primitives per shell"
+    - "Shell to atom map"
+    - "Primitive exponents"
+    - "Contraction coefficients"
+    - "P(S=P) Contraction coefficients"
+    - "Coordinates of each shell"
+
+     Parameters
+     ----------
+     basis:
+        A instance of MolecularBasis.
+     coords:
+        A numpy.ndarray with the information of the coordinates.
     """
     numberContractedShells = len(basis.shells)
-    numberPrimitiveShells = 0
     numberBasis = 0
     pureDshells = 0
     pureFshells = 0
@@ -733,16 +716,16 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f):
     spcontractionCoeff = []
     coordinatesShell = []
 
-    totalprim=0
+    totalprim = 0
     nshell = len(basis.shells)
     for i in range(nshell):
         nprim = len(basis.shells[i].exponents)
 
-        if (nprim > largestDegreeContraction):
+        if nprim > largestDegreeContraction:
             largestDegreeContraction = nprim
 
         center = basis.shells[i].icenter
-        shellAtomMap.append(center+1)
+        shellAtomMap.append(center + 1)
         numberPrimitivesPerShell.append(nprim)
         coordinatesShell.append(coords[center])
 
@@ -752,7 +735,7 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f):
             primitiveExp.append(basis.shells[i].exponents[j])
             contractionCoeff.append(basis.shells[i].coeffs[j][0])
 
-            if( shellTypes[i] == -1 ):
+            if shellTypes[i] == -1:
                 spcontractionCoeff.append(basis.shells[i].coeffs[j][1])
             else:
                 spcontractionCoeff.append(0.)
@@ -760,25 +743,25 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f):
             totalprim += 1
 
     for i in range(nshell):
-        if( shellTypes[i] == 2):
+        if shellTypes[i] == 2:
             pureDshells += 1
-        if( shellTypes[i] == 3):
+        if shellTypes[i] == 3:
             pureFshells += 1
 
     for i in range(nshell):
-        if( shellTypes[i] == 0):
+        if shellTypes[i] == 0:
             numberBasis += 1
-        if( shellTypes[i] == 1):
+        if shellTypes[i] == 1:
             numberBasis += 3
-        if( shellTypes[i] == -1):
+        if shellTypes[i] == -1:
             numberBasis += 4
 
         angmomentum = abs(shellTypes[i])
-        if( angmomentum >= 2):
-            if( shellTypes[i] > 0 ):
-                numberBasis  += int((angmomentum + 1) * (angmomentum + 2) / 2)
+        if angmomentum >= 2:
+            if shellTypes[i] > 0:
+                numberBasis += int((angmomentum + 1) * (angmomentum + 2) / 2)
             else:
-                numberBasis  += int(2 * angmomentum + 1)
+                numberBasis += int(2 * angmomentum + 1)
 
     highestAngularMoment = np.amax(np.abs(np.array(shellTypes)))
 
@@ -791,37 +774,35 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f):
     _dump_integer_scalars("Highest angular momentum", highestAngularMoment, f)
     _dump_integer_scalars("Largest degree of contraction", largestDegreeContraction, f)
 
-    _dump_integer_arrays("Shell types",np.array(shellTypes), f)
+    _dump_integer_arrays("Shell types", np.array(shellTypes), f)
     _dump_integer_arrays("Number of primitives per shell", np.array(numberPrimitivesPerShell), f)
     _dump_integer_arrays("Shell to atom map", np.array(shellAtomMap), f)
 
     _dump_real_arrays("Primitive exponents", np.array(primitiveExp), f)
     _dump_real_arrays("Contraction coefficients", np.array(contractionCoeff), f)
 
-    if( -1 in shellTypes ):
+    if -1 in shellTypes:
         _dump_real_arrays("P(S=P) Contraction coefficients", np.array(spcontractionCoeff), f)
 
     _dump_real_arrays("Coordinates of each shell", np.array(coordinatesShell).flatten(), f)
 
 
-# F) Dump the one rdms matrix 
-def _dump_rdms(one_rdms: dict, lot_tmp: str, f):
-    """ Dumps the One reduce density matrix, depends if the system has
-        SCF, MP2, MP3, CC, CI densities, and spin density.
+def _dump_rdms(one_rdms: dict, lot_tmp: str, f: TextIO):
+    """Dump the One reduce density matrix.
 
-        Parameters
-        ----------
-        one_rdms:
-            A dictionary, where the key is related with the level of theory, and the
-            spin or total density matrix.
+    Parameters
+    ----------
+    one_rdms:
+        A dictionary, where the key is related with the level of theory, and the spin or total
+        density matrix.
 
-        lot_tmp:
-            A string with the level of theory.
+    lot_tmp:
+        A string with the level of theory.
     """
     try:
-        getattr(lot_tmp,'upper')
+        getattr(lot_tmp, 'upper')
     except AttributeError:
-        print(" The systen dosen't have a level of theory")
+        print("The system doesn't have a level of theory")
         lot_tmp = "None"
 
     lot = lot_tmp.upper()
@@ -831,28 +812,28 @@ def _dump_rdms(one_rdms: dict, lot_tmp: str, f):
 
         level = ['MP2', 'MP3', 'CC', 'CI']
         for i in level:
-            if(i in lot):
+            if i in lot:
                 namelevel = i
-        
-        if(key == "scf"):
-           title = "Total SCF Density"
-        elif(key == "scf_spin"):
-           title = "Spin SCF Density"
-        elif(key == "post_scf"):
-           title = "Total {0} Density".format(namelevel)
-        elif(key == "post_scf_spin"):
-           title = "Spin {0} Density".format(namelevel)
+
+        if key == "scf":
+            title = "Total SCF Density"
+        elif key == "scf_spin":
+            title = "Spin SCF Density"
+        elif key == "post_scf":
+            title = "Total {0} Density".format(namelevel)
+        elif key == "post_scf_spin":
+            title = "Spin {0} Density".format(namelevel)
         else:
-           title = "Total SCF Density"
+            title = "Total SCF Density"
 
         _dump_real_arrays(title, mat, f)
 
 
 @document_dump_one(
     "Gaussian Formatted Checkpoint",
-    ['atcharges', 'atcoords', 'atnums', 'atcorenums', 'energy', 'lot', 'mo', 'obasis',
-     'obasis_name', 'run_type', 'title'],
-    ['atfrozen', 'atgradient', 'athessian', 'atmasses', 'one_rdms', 'extra', 'moments'])
+    ['atcoords', 'atnums', 'energy', 'mo', 'obasis'],
+    ['atcharges', 'atcorenums', 'atfrozen', 'atgradient', 'athessian', 'atmasses', 'lot',
+     'one_rdms', 'obasis_name', 'extra', 'moments'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     _dump_head_fchk(data.title, data.run_type, data.lot, data.obasis_name, f)
@@ -863,17 +844,17 @@ def dump_one(f: TextIO, data: IOData):
     try:
         getattr(data.mo, 'coeffs')
     except AttributeError:
-        print(" The systen dosen't have orbital coefficients")
+        print("The system doesn't have orbital coefficients")
         alphaCoeffs = betaCoeffs = np.array([])
     else:
-         alphaCoeffs, betaCoeffs = _split_and_get_coefficients(data.mo.coeffs)
+        alphaCoeffs, betaCoeffs = _split_and_get_coefficients(data.mo.coeffs)
 
     masses = np.array([])
-    if(data.atmasses is not None):
-        masses = data.atmasses/amu
+    if data.atmasses is not None:
+        masses = data.atmasses / amu
 
     try:
-        getattr(data.mo,'coeffs')
+        getattr(data.mo, 'coeffs')
     except AttributeError:
         print("The system doesn't have atoms")
     else:
@@ -885,16 +866,16 @@ def dump_one(f: TextIO, data: IOData):
     _dump_integer_scalars("Number of alpha electrons", nalpha, f)
     _dump_integer_scalars("Number of beta electrons", nbeta, f)
     _dump_integer_arrays("Atomic numbers", data.atnums, f)
-    _dump_real_arrays("Nuclear charges", data._atcorenums, f)
+    _dump_real_arrays("Nuclear charges", data.atcorenums, f)
 
-    if(data.atcoords is not None):
+    if data.atcoords is not None:
         _dump_real_arrays("Current cartesian coordinates", data.atcoords.flatten(), f)
 
-    _dump_integer_arrays("Integer atomic weights", masses, f)
+    _dump_integer_arrays("Integer atomic weights", masses.round(), f)
     _dump_real_arrays("Real atomic weights", masses, f)
 
     try:
-        getattr(data.obasis,'shells')
+        getattr(data.obasis, 'shells')
     except AttributeError:
         print("The system doesn't have a basis set")
     else:
@@ -904,7 +885,7 @@ def dump_one(f: TextIO, data: IOData):
     _dump_real_scalars("Total Energy", data.energy, f)
 
     try:
-        getattr(data.mo,'energies')
+        getattr(data.mo, 'energies')
     except AttributeError:
         print("The system doesn't have molecular orbitals")
     else:
@@ -915,34 +896,35 @@ def dump_one(f: TextIO, data: IOData):
 
     _dump_rdms(data.one_rdms, data.lot, f)
 
-    if('mulliken' in data.atcharges):
+    if 'mulliken' in data.atcharges:
         _dump_real_arrays("Mulliken Charges", data.atcharges["mulliken"], f)
-    if('esp' in data.atcharges):
+    if 'esp' in data.atcharges:
         _dump_real_arrays("ESP Charges", data.atcharges["esp"], f)
-    if('npa' in data.atcharges):
+    if 'npa' in data.atcharges:
         _dump_real_arrays("NPA Charges", data.atcharges["npa"], f)
 
-    if(data.atgradient is not None):
+    if data.atgradient is not None:
         _dump_real_arrays("Cartesian Gradient", data.atgradient.flatten(), f)
 
-    if(data.athessian is not None):
+    if data.athessian is not None:
         _dump_real_arrays("Cartesian Force Constants", _get_TriangleMat(data.athessian), f)
 
-    if((1, 'c') in data.moments):
+    if (1, 'c') in data.moments:
         _dump_real_arrays("Dipole Moment", data.moments[(1, 'c')], f)
 
-    if((2, 'c') in data.moments):
+    if (2, 'c') in data.moments:
         _dump_real_arrays("Quadrupole Moment", _sort_quadrupole(data.moments[(2, 'c')]), f)
 
-    if('polarizability_tensor' in data.extra):
-        _dump_real_arrays("Polarizability", _get_TriangleMat(data.extra["polarizability_tensor"]), f)
+    if 'polarizability_tensor' in data.extra:
+        _dump_real_arrays("Polarizability",
+                          _get_TriangleMat(data.extra["polarizability_tensor"]), f)
 
 
 @document_dump_many(
     "Gaussian Formatted Checkpoint",
-    ['atcharges', 'atcoords', 'atnums', 'atcorenums', 'energy', 'lot', 'mo', 'obasis',
-     'obasis_name', 'run_type', 'title'],
-    ['atfrozen', 'atgradient', 'athessian', 'atmasses', 'one_rdms', 'extra', 'moments'])
+    ['atcoords', 'atnums', 'energy', 'mo', 'obasis'],
+    ['atcharges', 'atcorenums', 'atfrozen', 'atgradient', 'athessian', 'atmasses', 'lot',
+     'one_rdms', 'obasis_name', 'extra', 'moments'])
 def dump_many(f: TextIO, datas: Iterator[IOData]):
     """Do not edit this docstring. It will be overwritten."""
     for data in datas:
