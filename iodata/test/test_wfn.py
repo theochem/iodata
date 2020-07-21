@@ -338,3 +338,38 @@ def test_load_dump_consistency_lih_cation_uhf(tmpdir):
 
 def test_load_dump_consistency_lih_cation_rohf(tmpdir):
     check_load_dump_consistency('lih_cation_rohf.wfn', tmpdir)
+
+
+def test_load_dump_consistency_h2o(tmpdir):
+    check_load_dump_consistency('h2o_sto3g.wfn', tmpdir)
+    check_load_dump_consistency('h2o_sto3g_decontracted.wfn', tmpdir)
+
+
+def test_load_dump_consistency_cah110(tmpdir):
+    check_load_dump_consistency('cah110_hf_sto3g_g09.wfn', tmpdir)
+
+
+def test_load_dump_consistency_li(tmpdir):
+    check_load_dump_consistency('li_sp_orbital.wfn', tmpdir)
+    check_load_dump_consistency('li_sp_virtual.wfn', tmpdir)
+
+
+def test_load_dump_consistency_he(tmpdir):
+    check_load_dump_consistency('he_s_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_s_virtual.wfn', tmpdir)
+    check_load_dump_consistency('he_p_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_d_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_sp_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_spd_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_spdf_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_spdfgh_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_spdfgh_virtual.wfn', tmpdir)
+
+
+def test_load_dump_consistency_h2(tmpdir):
+    check_load_dump_consistency('h2_ccpvqz.wfn', tmpdir)
+
+
+def test_load_dump_consistency_o2(tmpdir):
+    check_load_dump_consistency('o2_uhf.wfn', tmpdir)
+    check_load_dump_consistency('o2_uhf_virtual.wfn', tmpdir)
