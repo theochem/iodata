@@ -43,9 +43,11 @@ PATTERNS = ['*.qchemlog']
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     data = load_qchemlog_low(lit)
-    result_labels = ['atcoords', 'atmasses', 'atnums', 'charge',
-                     'charge', 'energy', 'g_rot', 'run_type']
-    result = {label: data.get(label, None) for label in result_labels}
+
+    # add these labels if they are loaded
+    result_labels = ['atcoords', 'atmasses', 'atnums', 'charge', 'charge', 'energy', 'g_rot',
+                     'run_type']
+    result = {label: data[label] for label in result_labels if data.get(label) is not None}
     # hessian matrix
     result["athessian"] = data.get("hessian")
     # mulliken charges
@@ -91,10 +93,12 @@ def load_one(lit: LineIterator) -> dict:
         moments[(2, 'c')] = data['quadrupole_moments'][[0, 1, 3, 2, 4, 5]]
     if moments:
         result['moments'] = moments
-    # extra information
+
+    # extra dictionary
+    # add these labels if they are loaded
     extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
                     'polarizability_tensor', 'imaginary_freq', 'vib_energy']
-    extra = {label: data.get(label, None) for label in extra_labels}
+    extra = {label: data[label] for label in extra_labels if data.get(label) is not None}
     # unit conversions for vibrational energy
     extra['vib_energy'] = extra.get('vib_energy') * kcalmol
     # convert kcal/mol to atomic units
