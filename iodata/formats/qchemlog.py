@@ -46,7 +46,7 @@ def load_one(lit: LineIterator) -> dict:
 
     # add these labels if they are loaded
     result_labels = ['atcoords', 'atmasses', 'atnums', 'charge', 'charge', 'energy', 'g_rot',
-                     'run_type', 'athessian']
+                     'run_type', 'athessian', 'lot', 'obasis_name']
     result = {label: data[label] for label in result_labels if data.get(label) is not None}
 
     # mulliken charges
@@ -80,9 +80,7 @@ def load_one(lit: LineIterator) -> dict:
                                mo_occs, mo_coeffs, mo_energies, None)
     result['mo'] = mo
 
-    result['lot'] = data['method']
     result['nelec'] = data['alpha_elec'] + data['beta_elec']
-    result['obasis_name'] = data['basis_set'].lower()
     # moments
     moments = {}
     if 'dipole_moment' in data:
@@ -127,7 +125,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             data['natom'] = len(data['atnums'])
         # job specifications
         elif line.startswith('$rem'):
-            data['run_type'], data['method'], data['basis_set'], \
+            data['run_type'], data['lot'], data['obasis_name'], \
                 data['unrestricted'], data['symm'] = _helper_job(lit)
         # standard nuclear orientation
         elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
@@ -193,11 +191,11 @@ def _helper_job(lit: LineIterator) -> Tuple:
         if line_str.startswith('jobtype'):
             run_type = line_str.split()[1]
         elif line_str.startswith('method'):
-            method = line_str.split()[1]
+            method = line_str.split()[1].lower()
         elif line_str.startswith('unrestricted'):
             unrestricted = int(line_str.split()[1])
         elif line_str.startswith('basis'):
-            basis_set = line_str.split()[1]
+            basis_set = line_str.split()[1].lower()
         # the symmetry
         elif line_str.startswith('symmetry'):
             symm = int(line_str.split()[1])

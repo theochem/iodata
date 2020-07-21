@@ -46,8 +46,8 @@ def test_load_data_qchemlog_h2o():
     assert data['natom'] == 3
     assert data['spin_multi'] == 1
     assert data['run_type'] == 'freq'
-    assert data['method'] == 'hf'
-    assert data['basis_set'] == 'cc-pvtz'
+    assert data['lot'] == 'hf'
+    assert data['obasis_name'] == 'cc-pvtz'
     assert data['unrestricted'] == 1
     assert data['symm'] == 0
     assert data['g_rot'] == 1
