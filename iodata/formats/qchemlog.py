@@ -46,10 +46,9 @@ def load_one(lit: LineIterator) -> dict:
 
     # add these labels if they are loaded
     result_labels = ['atcoords', 'atmasses', 'atnums', 'charge', 'charge', 'energy', 'g_rot',
-                     'run_type']
+                     'run_type', 'athessian']
     result = {label: data[label] for label in result_labels if data.get(label) is not None}
-    # hessian matrix
-    result["athessian"] = data.get("hessian")
+
     # mulliken charges
     result["atcharges"] = {"mulliken": data.get("mulliken_charges")}
     # build molecular orbitals
@@ -152,7 +151,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             data['polarizability_tensor'] = _helper_polar(lit)
         # hessian matrix
         elif line.startswith('Hessian of the SCF Energy'):
-            data['hessian'] = _helper_hessian(lit, data['natom'])
+            data['athessian'] = _helper_hessian(lit, data['natom'])
         # vibrational analysis
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
             data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)

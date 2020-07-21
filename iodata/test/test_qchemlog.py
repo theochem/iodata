@@ -130,7 +130,7 @@ def test_load_data_qchemlog_h2o():
                         [2.353461e-01, -1.180510e-01, -3.035382e-01, 1.238830e-02,
                          1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01,
                          3.144706e-01]])
-    assert_equal(data['hessian'], hessian)
+    assert_equal(data['athessian'], hessian)
 
 
 def test_load_one_qchemlog():
