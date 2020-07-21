@@ -25,6 +25,7 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from .common import compute_mulliken_charges, check_orthonormal, compare_mols
+from .test_molekel import compare_mols_diff_formats
 from ..api import load_one, dump_one
 from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
@@ -309,23 +310,30 @@ def test_load_one_cah110_hf_sto3g_g09():
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
 
 
-def check_load_dump_consistency(fn, tmpdir):
+def check_load_dump_consistency(fn, tmpdir, fmt_from='wfn', fmt_to='wfn'):
     """Check if data is preserved after dumping and loading a WFN file.
 
     Parameters
     ----------
     fn : str
-        The Molekel filename to load
+        The filename to load
     tmpdir : str
         The temporary directory to dump and load the file.
+    fmt_from : str
+        Format filename to load.
+    fmt_to : str
+        Format of filename to dump and then load again.
 
     """
     with path('iodata.test.data', fn) as file_name:
-        mol1 = load_one(str(file_name), fmt='wfn')
+        mol1 = load_one(str(file_name), fmt=fmt_from)
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
-    dump_one(mol1, fn_tmp, fmt='wfn')
-    mol2 = load_one(fn_tmp, fmt='wfn')
-    compare_mols(mol1, mol2, atol=1.0e-6)
+    dump_one(mol1, fn_tmp, fmt=fmt_to)
+    mol2 = load_one(fn_tmp, fmt=fmt_to)
+    if fmt_from == fmt_to:
+        compare_mols(mol1, mol2, atol=1.0e-6)
+    else:
+        compare_mols_diff_formats(mol1, mol2)
 
 
 def test_load_dump_consistency_lih_cation_cisd(tmpdir):
@@ -377,3 +385,11 @@ def test_load_dump_consistency_h2(tmpdir):
 def test_load_dump_consistency_o2(tmpdir):
     check_load_dump_consistency('o2_uhf.wfn', tmpdir)
     check_load_dump_consistency('o2_uhf_virtual.wfn', tmpdir)
+
+
+def test_load_dump_consistency_from_fchk_h2o(tmpdir):
+    check_load_dump_consistency('h2o_sto3g.fchk', tmpdir, fmt_from='fchk', fmt_to='wfn')
+
+
+def test_load_dump_consistency_from_molden_nh3(tmpdir):
+    check_load_dump_consistency('nh3_molden_cart.molden', tmpdir, fmt_from='molden', fmt_to='wfn')
