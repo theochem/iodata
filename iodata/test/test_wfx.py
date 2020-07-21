@@ -117,6 +117,7 @@ def test_dump_one_from_wfn_h2o(tmpdir):
     compare_mulliken_charges('h2o_sto3g.wfn', tmpdir)
     compare_mulliken_charges('h2o_sto3g_decontracted.wfn', tmpdir)
 
+
 def test_dump_one_from_molden(tmpdir):
     compare_mulliken_charges('h2o.molden.input', tmpdir)
     compare_mulliken_charges('he2_ghost_psi4_1.0.molden', tmpdir)
