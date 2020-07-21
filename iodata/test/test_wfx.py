@@ -46,6 +46,7 @@ def helper_load_data_wfx(fn_wfx):
 
 def check_load_dump_consistency(fn, tmpdir):
     """Check if data is preserved after dumping and loading a Wfx file.
+
     Parameters
     ----------
     fn : str
