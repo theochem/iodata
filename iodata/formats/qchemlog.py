@@ -92,18 +92,23 @@ def load_one(lit: LineIterator) -> dict:
         result['moments'] = moments
 
     # extra dictionary
-    # add these labels if they are loaded
+    # ----------------
+    # add labels to extra dictionary if they are loaded
     extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
                     'polarizability_tensor', 'imaginary_freq', 'vib_energy']
     extra = {label: data[label] for label in extra_labels if data.get(label) is not None}
-    # unit conversions for vibrational energy
-    extra['vib_energy'] = extra.get('vib_energy') * kcalmol
-    # convert kcal/mol to atomic units
-    enthalpy_dict = {k: v * kcalmol for k, v in data['enthalpy_dict'].items()}
-    extra['enthalpy_dict'] = enthalpy_dict
-    # unit conversions for entropy, atomic units + Kalvin
-    entropy_dict = {k: v * calmol for k, v in data['entropy_dict'].items()}
-    extra['entropy_dict'] = entropy_dict
+    # if present, convert vibrational energy from kcal/mol to "atomic units + K"
+    if 'vib_energy' in extra:
+        extra['vib_energy'] *= kcalmol
+
+    # if present, convert enthalpy terms from kcal/mol to "atomic units + K"
+    if 'enthalpy_dict' in data:
+        extra['enthalpy_dict'] = {k: v * kcalmol for k, v in data['enthalpy_dict'].items()}
+
+    # if present, convert entropy terms from cal/mol.K to "atomic units + Kalvin"
+    if 'entropy_dict' in data:
+        extra['entropy_dict'] = {k: v * calmol for k, v in data['entropy_dict'].items()}
+
     result['extra'] = extra
     return result
 
