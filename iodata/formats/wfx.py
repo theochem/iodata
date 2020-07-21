@@ -362,19 +362,9 @@ def dump_one(f: TextIO, data: IOData):   # noqa: R0912
     for index in range(mo_coeffs.shape[1]):
         mo_coeffs[:, index] *= contractions * scales
 
-    # set required values if not available
-    data.extra.setdefault("keywords", 'GTO')
-    data.extra.setdefault("num_perturbations", 0)
-    data.extra.setdefault("model_name", data.lot)
-    data.extra.setdefault("spin_multi", int(data.spinpol + 1))
-    data.extra.setdefault("virial_ratio", np.nan)
-    data.extra.setdefault("nuc_viral", None)
-    data.extra.setdefault("full_virial_ratio", None)
-    data.extra.setdefault("num_core_electrons", None)
-
     # write title & keywords
     _write_xml_single(tag=lbs["title"], info=data.title or '<Created with IOData>', file=f)
-    _write_xml_single(tag=lbs["keywords"], info=data.extra["keywords"], file=f)
+    _write_xml_single(tag=lbs["keywords"], info=data.extra.get("keywords", "GTO"), file=f)
 
     # write number of nuclei & number of primitives
     _write_xml_single(tag=lbs["num_atoms"], info=data.natom, file=f)
@@ -384,11 +374,10 @@ def dump_one(f: TextIO, data: IOData):   # noqa: R0912
     # in practice wfx prints the total number of MO, even though the section title specifies
     # "Number of Occupied Molecular Orbitals", which is different from total number of MO when
     # you print virtual orbitals in wfx file.
-    num_mo = data.mo.occs.shape[0]
-    _write_xml_single(tag=lbs["num_occ_mo"], info=num_mo, file=f)
+    _write_xml_single(tag=lbs["num_occ_mo"], info=data.mo.occs.shape[0], file=f)
 
     # write number of perturbations
-    _write_xml_single(tag=lbs["num_perturbations"], info=data.extra["num_perturbations"], file=f)
+    _write_xml_single(lbs["num_perturbations"], data.extra.get("num_perturbations", 0), file=f)
 
     # write nuclear names, atomic numbers, and nuclear charges
     # add ghost atom, represented by Bq and atomic number 0
@@ -413,10 +402,10 @@ def dump_one(f: TextIO, data: IOData):   # noqa: R0912
     _write_xml_single(tag=lbs["num_beta_electron"], info=int(round(sum(data.mo.occsb))), file=f)
 
     # write electronic spin multiplicity and model (both optional)
-    if data.extra["spin_multi"] is not None:
-        _write_xml_single(tag=lbs["spin_multi"], info=data.extra["spin_multi"], file=f)
-    if data.extra["model_name"] is not None:
-        _write_xml_single(tag=lbs["model_name"], info=data.extra["model_name"], file=f)
+    if data.spinpol is not None:
+        _write_xml_single(tag=lbs["spin_multi"], info=int(data.spinpol + 1), file=f)
+    if data.lot is not None:
+        _write_xml_single(tag=lbs["model_name"], info=data.lot, file=f)
 
     # write primitive centers
     prim_centers = [shell.icenter + 1 for shell in obasis.shells for _ in range(shell.nbasis)]
@@ -445,12 +434,10 @@ def dump_one(f: TextIO, data: IOData):   # noqa: R0912
     print("</Primitive Exponents>", file=f)
 
     # write molecular orbital occupation numbers
-    mo_occs = data.mo.occs
-    _write_xml_iterator_scientific(tag=lbs["mo_occs"], info=mo_occs, file=f)
+    _write_xml_iterator_scientific(tag=lbs["mo_occs"], info=data.mo.occs, file=f)
 
     # write molecular orbital energies
-    mo_energies = data.mo.energies
-    _write_xml_iterator_scientific(tag=lbs["mo_energies"], info=mo_energies, file=f)
+    _write_xml_iterator_scientific(tag=lbs["mo_energies"], info=data.mo.energies, file=f)
 
     # write molecular orbital spin types
     if data.mo.kind == 'restricted':
@@ -459,6 +446,7 @@ def dump_one(f: TextIO, data: IOData):   # noqa: R0912
         mo_spin = ['Alpha'] * len(data.mo.occsa) + ['Beta'] * len(data.mo.occsb)
     _write_xml_iterator(tag=lbs["mo_spins"], info=mo_spin, file=f)
 
+    # write MO primitive coefficients
     print("<Molecular Orbital Primitive Coefficients>", file=f)
     for mo in range(len(data.mo.occs)):
         print("<MO Number>", file=f)
@@ -468,16 +456,12 @@ def dump_one(f: TextIO, data: IOData):   # noqa: R0912
             print(' '.join(['{: ,.14E}'.format(c) for c in mo_coeffs.T[mo][j:j + 4]]), file=f)
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
-    # write energy and virial ratio
-    if data.energy is None:
-        _write_xml_single(tag=lbs["energy"], info=' NAN', file=f)
-    else:
-        _write_xml_single_scientific(tag=lbs["energy"], info=data.energy, file=f)
+    # write energy and virial ratio; use ' NAN' when None (not available)
+    _write_xml_single_scientific(tag=lbs["energy"], info=data.energy or np.nan, file=f)
+    _write_xml_single_scientific(lbs["virial_ratio"], data.extra.get("virial_ratio", np.nan), f)
 
-    _write_xml_single_scientific(tag=lbs["virial_ratio"], info=data.extra["virial_ratio"], file=f)
-
-    # write nuclear Cartesian energy gradients
-    if isinstance(data.atgradient, np.ndarray):
+    # write nuclear Cartesian energy gradients (optional)
+    if data.atgradient is not None:
         nuc_cart_energy_grad = list(zip(nuclear_names, data.atgradient))
         print("<Nuclear Cartesian Energy Gradients>", file=f)
         for atom in nuc_cart_energy_grad:
@@ -485,20 +469,17 @@ def dump_one(f: TextIO, data: IOData):   # noqa: R0912
                                                                   atom[1][2]), file=f)
         print("</Nuclear Cartesian Energy Gradients>", file=f)
 
-    # nuclear virial of energy gradient based forces on nuclei
-    if data.extra["nuc_viral"] is not None:
-        nuc_viral = data.extra["nuc_viral"]
-        _write_xml_single_scientific(tag=lbs["nuc_viral"], info=nuc_viral, file=f)
+    # nuclear virial of energy-gradient-based forces on nuclei (optional)
+    if data.extra.get("nuc_viral") is not None:
+        _write_xml_single_scientific(tag=lbs["nuc_viral"], info=data.extra["nuc_viral"], file=f)
 
-    # full virial ratio
-    if data.extra["full_virial_ratio"] is not None:
-        full_virial_ratio = data.extra["full_virial_ratio"]
-        _write_xml_single_scientific(tag=lbs["full_virial_ratio"], info=full_virial_ratio, file=f)
+    # write full virial ratio (optional)
+    if data.extra.get("full_virial_ratio") is not None:
+        _write_xml_single_scientific(lbs["full_virial_ratio"], data.extra["full_virial_ratio"], f)
 
-    # number of core electrons
-    if data.extra["num_core_electrons"] is not None:
-        num_core_electrons = data.extra["num_core_electrons"]
-        _write_xml_single(tag=lbs["num_core_electrons"], info=num_core_electrons, file=f)
+    # number of core electrons (optional)
+    if data.extra.get("num_core_electrons") is not None:
+        _write_xml_single(lbs["num_core_electrons"], data.extra["num_core_electrons"], f)
 
 
 def _write_xml_single(tag: str, info: [str, int], file: TextIO) -> None:
@@ -526,7 +507,6 @@ def _write_xml_iterator(tag: str, info: Iterator, file: TextIO) -> None:
 def _write_xml_iterator_scientific(tag: str, info: Iterator, file: TextIO) -> None:
     """Write list of arrays to file."""
     print(tag, file=file)
-    # for list or 1d array works
     for info_line in info:
         print('{: ,.14E}'.format(info_line), file=file)
     print('</' + tag.lstrip('<'), file=file)
