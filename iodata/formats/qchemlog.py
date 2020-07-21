@@ -52,12 +52,10 @@ def load_one(lit: LineIterator) -> dict:
     # mulliken charges
     result["atcharges"] = {"mulliken": data.get("mulliken_charges")}
     # build molecular orbitals
-    # todo: double check if this is right
-    # mo_energies
+    # ------------------------
     # restricted case
     if not data['unrestricted']:
-        mo_energies = np.concatenate(
-            (data['alpha_mo_occupied'], data['alpha_mo_unoccupied']), axis=0)
+        mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir']), axis=0)
         mo_coeffs = np.empty((data['nbasis'], data['norba'])) * np.nan
         mo_occs = np.zeros(mo_coeffs.shape[1])
         mo_occs[:data['alpha_elec']] = 1.0
@@ -66,14 +64,13 @@ def load_one(lit: LineIterator) -> dict:
                                mo_occs, mo_coeffs, mo_energies, None)
     # unrestricted case
     else:
-        mo_energies = np.concatenate(
-            (data['alpha_mo_occupied'], data['alpha_mo_unoccupied'],
-             data['beta_mo_occupied'], data['beta_mo_unoccupied']), axis=0)
+        mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir'],
+                                      data['mo_b_occ'], data['mo_b_vir']), axis=0)
         mo_coeffs = np.empty((data['nbasis'], data['norba'] + data['norbb'])) * np.nan
         mo_occs = np.zeros(mo_coeffs.shape[1])
         # number of alpha & beta electrons and number of alpha molecular orbitals
         na, nb = data['alpha_elec'], data['beta_elec']
-        na_mo = len(data['alpha_mo_occupied']) + len(data['alpha_mo_unoccupied'])
+        na_mo = len(data['mo_a_occ']) + len(data['mo_a_vir'])
         mo_occs[:na] = 1.0
         mo_occs[na_mo: na_mo + nb] = 1.0
         mo = MolecularOrbitals("unrestricted", data['norba'], data['norbb'],
@@ -139,9 +136,11 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
                 data['nuclear_repulsion_energy'], data['energy'], _ = _helper_electron(lit)
         # orbital energies
         elif line.startswith('Orbital Energies (a.u.)'):
-            data['alpha_mo_occupied'], data['beta_mo_occupied'], data['alpha_mo_unoccupied'], \
-                data['beta_mo_unoccupied'], data['norba'], \
-                data['norbb'] = _helper_orbital_energies(lit)
+            result = _helper_orbital_energies(lit)
+            data['mo_a_occ'], data['mo_b_occ'], data['mo_a_vir'], data['mo_b_vir'] = result
+            # compute number of alpha and beta molecular orbitals
+            data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
+            data['norbb'] = len(data['mo_b_occ']) + len(data['mo_b_vir'])
         # mulliken charges
         elif line.startswith('Ground-State Mulliken Net Atomic Charges'):
             data['mulliken_charges'] = _helper_mulliken(lit)
@@ -237,29 +236,19 @@ def _helper_electron(lit: LineIterator) -> Tuple:
 
 
 def _helper_orbital_energies(lit: LineIterator) -> Tuple:
-    """Load orbital energies."""
+    """Load occupied and virtual orbital energies."""
     # alpha occupied MOs
-    alpha_mo_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
+    mo_a_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # alpha unoccupied MOs
-    alpha_mo_unoccupied = _helper_section('-- Virtual --', '', lit, backward=False)
+    mo_a_unoccupied = _helper_section('-- Virtual --', '', lit, backward=False)
     # beta occupied MOs
-    beta_mo_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
+    mo_b_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # beta unoccupied MOs
-    beta_mo_unoccupied = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
-
-    # number of alpha molecular orbitals
-    norba = len(alpha_mo_occupied + alpha_mo_unoccupied)
-    # number of beta molecular orbitals
-    norbb = len(beta_mo_occupied + beta_mo_unoccupied)
-    # todo: not sure how to arrange the four type of molecular orbital energies here
-    return np.array(alpha_mo_occupied, dtype=np.float), \
-        np.array(beta_mo_occupied, dtype=np.float), \
-        np.array(alpha_mo_unoccupied, dtype=np.float), \
-        np.array(beta_mo_unoccupied, dtype=np.float), \
-        norba, norbb
+    mo_b_unoccupied = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
+    return mo_a_occupied, mo_b_occupied, mo_a_unoccupied, mo_b_unoccupied
 
 
-def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = False) -> List:
+def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = False) -> np.ndarray:
     """Load data between starting and ending strings."""
     data = []
     for line in lit:
@@ -273,7 +262,7 @@ def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = Fa
             break
     if backward:
         lit.back(line)
-    return data
+    return np.array(data, dtype=np.float)
 
 
 def _helper_mulliken(lit: LineIterator) -> np.ndarray:

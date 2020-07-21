@@ -74,10 +74,8 @@ def test_load_data_qchemlog_h2o():
                          [0.27588, 0.88612, 0.25191],
                          [0.60257, -0.23578, -0.7114]])
     assert_equal(data['atcoords'], atcoords)
-    assert_equal(data['alpha_mo_occupied'],
-                 np.array([-20.5546, -1.3458, -0.7102, -0.5776, -0.5045]))
-    assert_equal(data['beta_mo_occupied'],
-                 np.array([-20.5546, -1.3458, -0.7102, -0.5776, -0.5045]))
+    assert_equal(data['mo_a_occ'], np.array([-20.5546, -1.3458, -0.7102, -0.5776, -0.5045]))
+    assert_equal(data['mo_b_occ'], np.array([-20.5546, -1.3458, -0.7102, -0.5776, -0.5045]))
     alpha_mo_unoccupied = np.array([0.1423, 0.2041, 0.5445, 0.6021, 0.6682, 0.7874, 0.8014,
                                     0.8052, 0.861, 0.9557, 1.1314, 1.197, 1.5276, 1.5667,
                                     2.0366, 2.052, 2.0664, 2.1712, 2.2342, 2.591, 2.9639,
@@ -86,7 +84,7 @@ def test_load_data_qchemlog_h2o():
                                     4.6857, 4.8666, 5.1595, 5.2529, 5.5288, 6.0522, 6.5707,
                                     6.9264, 6.9442, 7.0027, 7.0224, 7.068, 7.1668, 7.2377,
                                     7.4574, 7.7953, 8.2906, 12.8843])
-    assert_equal(data['alpha_mo_unoccupied'], alpha_mo_unoccupied)
+    assert_equal(data['mo_a_vir'], alpha_mo_unoccupied)
     beta_mo_unoccupied = np.array([0.1423, 0.2041, 0.5445, 0.6021, 0.6682, 0.7874, 0.8014,
                                    0.8052, 0.861, 0.9557, 1.1314, 1.197, 1.5276, 1.5667,
                                    2.0366, 2.052, 2.0664, 2.1712, 2.2342, 2.591, 2.9639,
@@ -95,7 +93,7 @@ def test_load_data_qchemlog_h2o():
                                    4.6857, 4.8666, 5.1595, 5.2529, 5.5288, 6.0522, 6.5707,
                                    6.9264, 6.9442, 7.0027, 7.0224, 7.068, 7.1668, 7.2377,
                                    7.4574, 7.7953, 8.2906, 12.8843])
-    assert_equal(data['beta_mo_unoccupied'], beta_mo_unoccupied)
+    assert_equal(data['mo_b_vir'], beta_mo_unoccupied)
     assert_equal(data['mulliken_charges'], np.array([-0.482641, 0.241321, 0.241321]))
     assert_equal(data['dipole_moment'], np.array([1.4989, 1.1097, -0.784]))
     assert_equal(data['quadrupole_moments'],
