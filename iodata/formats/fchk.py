@@ -849,10 +849,6 @@ def dump_one(f: TextIO, data: IOData):
     else:
         alphaCoeffs, betaCoeffs = _split_and_get_coefficients(data.mo.coeffs)
 
-    masses = np.array([])
-    if data.atmasses is not None:
-        masses = data.atmasses / amu
-
     try:
         getattr(data.mo, 'coeffs')
     except AttributeError:
@@ -871,8 +867,11 @@ def dump_one(f: TextIO, data: IOData):
     if data.atcoords is not None:
         _dump_real_arrays("Current cartesian coordinates", data.atcoords.flatten(), f)
 
-    _dump_integer_arrays("Integer atomic weights", masses.round(), f)
-    _dump_real_arrays("Real atomic weights", masses, f)
+    # write atomic weights
+    if data.atmasses is not None:
+        masses = data.atmasses / amu
+        _dump_integer_arrays("Integer atomic weights", masses.round(), f)
+        _dump_real_arrays("Real atomic weights", masses, f)
 
     try:
         getattr(data.obasis, 'shells')
