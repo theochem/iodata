@@ -538,12 +538,24 @@ def check_load_dump_consistency(tmpdir, fn):
     assert_allclose(charges0, charges1, rtol=0.0, atol=1.0e-6)
 
 
-def test_dump_fchk_consistency_h2o_sto3g(tmpdir):
+def test_dump_fchk_consistency_hf(tmpdir):
     check_load_dump_consistency(tmpdir, 'hf_sto3g.fchk')
     check_load_dump_consistency(tmpdir, 'hf_sto3g.fchk')
+
+
+def test_dump_fchk_consistency_h2o(tmpdir):
     check_load_dump_consistency(tmpdir, 'h2o_sto3g.fchk')
+
+
+def test_dump_fchk_consistency_peroxide_irc(tmpdir):
     check_load_dump_consistency(tmpdir, 'peroxide_irc.fchk')
+
+
+def test_dump_fchk_consistency_he(tmpdir):
     check_load_dump_consistency(tmpdir, 'he_spdfgh_virtual.fchk')
+
+
+def test_dump_fchk_consistency_o2(tmpdir):
     check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_cart.fchk')
     check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_pure.fchk')
 
