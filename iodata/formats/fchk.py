@@ -833,12 +833,8 @@ def dump_one(f: TextIO, data: IOData):
     else:
         alphaCoeffs, betaCoeffs = _split_and_get_coefficients(data.mo.coeffs)
 
-    try:
-        getattr(data.mo, 'coeffs')
-    except AttributeError:
-        print("The system doesn't have atoms")
-    else:
-        _dump_integer_scalars("Number of atoms", len(data.atcoords), f)
+    # write number of atoms
+    _dump_integer_scalars("Number of atoms", data.natom, f)
 
     _dump_integer_scalars("Charge", data.charge, f)
     _dump_integer_scalars("Multiplicity", multiplicity, f)
