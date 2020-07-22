@@ -702,7 +702,6 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
         A numpy.ndarray with the information of the coordinates.
     """
     numberContractedShells = len(basis.shells)
-    numberBasis = 0
     pureDshells = 0
     pureFshells = 0
     highestAngularMoment = 0
@@ -748,25 +747,10 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
         if shellTypes[i] == 3:
             pureFshells += 1
 
-    for i in range(nshell):
-        if shellTypes[i] == 0:
-            numberBasis += 1
-        if shellTypes[i] == 1:
-            numberBasis += 3
-        if shellTypes[i] == -1:
-            numberBasis += 4
-
-        angmomentum = abs(shellTypes[i])
-        if angmomentum >= 2:
-            if shellTypes[i] > 0:
-                numberBasis += int((angmomentum + 1) * (angmomentum + 2) / 2)
-            else:
-                numberBasis += int(2 * angmomentum + 1)
-
     highestAngularMoment = np.amax(np.abs(np.array(shellTypes)))
 
-    _dump_integer_scalars("Number of basis functions", numberBasis, f)
-    _dump_integer_scalars("Number of independent functions", numberBasis, f)
+    _dump_integer_scalars("Number of basis functions", basis.nbasis, f)
+    _dump_integer_scalars("Number of independent functions", basis.nbasis, f)
     _dump_integer_scalars("Number of contracted shells", numberContractedShells, f)
     _dump_integer_scalars("Number of primitive shells", totalprim, f)
     _dump_integer_scalars("Pure/Cartesian d shells", pureDshells, f)
