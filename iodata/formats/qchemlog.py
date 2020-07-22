@@ -50,7 +50,9 @@ def load_one(lit: LineIterator) -> dict:
     result = {label: data[label] for label in result_labels if data.get(label) is not None}
 
     # mulliken charges
-    result["atcharges"] = {"mulliken": data.get("mulliken_charges")}
+    if data.get("mulliken_charges") is not None:
+        result["atcharges"] = {"mulliken": data["mulliken_charges"]}
+
     # build molecular orbitals
     # ------------------------
     # restricted case
