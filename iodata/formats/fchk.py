@@ -771,12 +771,12 @@ def dump_one(f: TextIO, data: IOData):
     else:
         alphaCoeffs, betaCoeffs = _split_and_get_coefficients(data.mo.coeffs)
 
-    # write number of atoms
+    # write basic information (FCHK expected integer value for charge)
     _dump_integer_scalars("Number of atoms", data.natom, f)
-
-    _dump_integer_scalars("Charge", data.charge, f)
+    if data.charge is not None:
+        _dump_integer_scalars("Charge", int(data.charge), f)
     _dump_integer_scalars("Multiplicity", multiplicity, f)
-    _dump_integer_scalars("Number of electrons", data.nelec, f)
+    _dump_integer_scalars("Number of electrons", int(data.nelec), f)
     _dump_integer_scalars("Number of alpha electrons", na, f)
     _dump_integer_scalars("Number of beta electrons", nb, f)
     _dump_integer_arrays("Atomic numbers", data.atnums, f)
