@@ -486,35 +486,6 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
                     k = 0
 
 
-def _get_TriangleMat(matrix: np.ndarray) -> np.ndarray:
-    """Transform a dense matrix in a triangular matrix.
-
-    Parameters
-    ----------
-    matrix:
-        A numpy.ndarray of a square shape.
-
-    Returns
-    -------
-    newmat:
-        A numpy.ndarray with the elements of the triangular matrix.
-    """
-    nrow, ncol = matrix.shape
-    if nrow != ncol:
-        print("The system is not square")
-    newsize = int((nrow * (nrow + 1)) / 2)
-
-    newmat = np.zeros(newsize)
-    k = 0
-    for i in range(nrow):
-        for j in range(nrow):
-            if j <= i:
-                newmat[k] = matrix[i][j]
-                k += 1
-
-    return newmat
-
-
 def _sort_quadrupole(quadrupole: np.ndarray) -> np.ndarray:
     """Sort the quadrupole momentum, in the format of FCHK.
 
@@ -684,7 +655,8 @@ def _dump_rdms(one_rdms: dict, lot_tmp: str, f: TextIO):
     lot = lot_tmp.upper()
 
     for key in one_rdms:
-        mat = _get_TriangleMat(one_rdms[key])
+        arr = one_rdms[key]
+        mat = arr[np.tril_indices(arr.shape[0])]
 
         level = ['MP2', 'MP3', 'CC', 'CI']
         for i in level:
@@ -780,7 +752,8 @@ def dump_one(f: TextIO, data: IOData):
         _dump_real_arrays("Cartesian Gradient", data.atgradient.flatten(), f)
 
     if data.athessian is not None:
-        _dump_real_arrays("Cartesian Force Constants", _get_TriangleMat(data.athessian), f)
+        arr = data.athessian[np.tril_indices(data.athessian.shape[0])]
+        _dump_real_arrays("Cartesian Force Constants", arr, f)
 
     if (1, 'c') in data.moments:
         _dump_real_arrays("Dipole Moment", data.moments[(1, 'c')], f)
@@ -789,8 +762,9 @@ def dump_one(f: TextIO, data: IOData):
         _dump_real_arrays("Quadrupole Moment", _sort_quadrupole(data.moments[(2, 'c')]), f)
 
     if 'polarizability_tensor' in data.extra:
-        _dump_real_arrays("Polarizability",
-                          _get_TriangleMat(data.extra["polarizability_tensor"]), f)
+        arr = data.extra["polarizability_tensor"]
+        arr = arr[np.tril_indices(arr.shape[0])]
+        _dump_real_arrays("Polarizability", arr, f)
 
 
 @document_dump_many(
