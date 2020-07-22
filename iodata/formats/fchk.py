@@ -561,39 +561,6 @@ def _split_and_get_coefficients(coeffs: np.ndarray) -> (np.ndarray, np.ndarray):
     return alphaCoeffs, betaCoeffs
 
 
-def _get_multiplicity(molorb: MolecularOrbitals) -> (int, int, int):
-    """Return the multiplicity and the number of alpha and beta electrons.
-
-    Parameters
-    ----------
-    molorb:
-        A instance of MolecularOrbitals.
-
-    Returns
-    -------
-    nalpha:
-        The number of alpha electrons.
-    nbeta:
-        The number of beta electrons.
-    multiplicity:
-        The multiplicity of the system.
-    """
-    nalpha = 0
-    nbeta = 0
-    multiplicity = 0
-    if molorb is not None:
-        if molorb.norba == molorb.occs.size:
-            nalpha = int(sum(molorb.occs) / 2)
-            nbeta = nalpha
-        else:
-            nalpha = int(sum(molorb.occs[0:molorb.norba]))
-            nbeta = int(sum(molorb.occs[molorb.norba:]))
-
-        multiplicity = abs(nalpha - nbeta) + 1
-
-    return nalpha, nbeta, multiplicity
-
-
 def _get_TriangleMat(matrix: np.ndarray) -> np.ndarray:
     """Transform a dense matrix in a triangular matrix.
 
@@ -821,9 +788,14 @@ def _dump_rdms(one_rdms: dict, lot_tmp: str, f: TextIO):
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     _dump_head_fchk(data.title, data.run_type, data.lot, data.obasis_name, f)
-    multiplicity = 0
 
-    nalpha, nbeta, multiplicity = _get_multiplicity(data.mo)
+    # assign number of alpha and beta electrons
+    if data.mo is not None:
+        na = int(np.sum(data.mo.occsa))
+        nb = int(np.sum(data.mo.occsb))
+        multiplicity = abs(na - nb) + 1
+    else:
+        na, nb, multiplicity = 0, 0, 0
 
     try:
         getattr(data.mo, 'coeffs')
@@ -839,8 +811,8 @@ def dump_one(f: TextIO, data: IOData):
     _dump_integer_scalars("Charge", data.charge, f)
     _dump_integer_scalars("Multiplicity", multiplicity, f)
     _dump_integer_scalars("Number of electrons", data.nelec, f)
-    _dump_integer_scalars("Number of alpha electrons", nalpha, f)
-    _dump_integer_scalars("Number of beta electrons", nbeta, f)
+    _dump_integer_scalars("Number of alpha electrons", na, f)
+    _dump_integer_scalars("Number of beta electrons", nb, f)
     _dump_integer_arrays("Atomic numbers", data.atnums, f)
     _dump_real_arrays("Nuclear charges", data.atcorenums, f)
 
