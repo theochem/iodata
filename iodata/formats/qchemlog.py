@@ -189,22 +189,22 @@ def _helper_job(lit: LineIterator) -> Tuple:
     for line in lit:
         if line.strip() == '$end':
             break
-        line_str = line.strip()
+        line = line.strip()
         # https://manual.q-chem.com/5.2/A3.S4.html
         # ideriv: the order of derivatives that are evaluated analytically
         # incdft: iteration number after which incremental Fock matrix algorithm is initiated
         # job type
-        if line_str.startswith('jobtype'):
-            run_type = line_str.split()[1]
-        elif line_str.startswith('method'):
-            method = line_str.split()[1].lower()
-        elif line_str.startswith('unrestricted'):
-            unrestricted = int(line_str.split()[1])
-        elif line_str.startswith('basis'):
-            basis_set = line_str.split()[1].lower()
+        if line.lower().startswith('jobtype'):
+            run_type = line.split()[1].lower()
+        elif line.lower().startswith('method'):
+            method = line.split()[1].lower()
+        elif line.lower().startswith('unrestricted'):
+            unrestricted = int(line.split()[1])
+        elif line.lower().startswith('basis'):
+            basis_set = line.split()[1].lower()
         # the symmetry
-        elif line_str.startswith('symmetry'):
-            symm = int(line_str.split()[1])
+        elif line.lower().startswith('symmetry'):
+            symm = int(line.split()[1])
     return run_type, method, basis_set, unrestricted, symm
 
 
