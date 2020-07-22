@@ -486,39 +486,6 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
                     k = 0
 
 
-def _split_and_get_coefficients(coeffs: np.ndarray) -> (np.ndarray, np.ndarray):
-    """Split the coeffs in alpha and/or beta coefficients.
-
-    Parameters
-    ----------
-    coeffs:
-        A numpy.ndarray with the information of orbital coefficients.
-
-    Returns
-    -------
-    alphaCoeffs:
-        A numpy.ndarray with the information of the alpha orbital coefficients.
-    betaCoeffs:
-        A numpy.ndarray with the information of the beta orbital coefficients.
-    """
-    alphaCoeffs = np.array([])
-    betaCoeffs = np.array([])
-    if coeffs is not None:
-        nrow, ncol = coeffs.shape
-        # for a restricted system maybe another check could be made
-        if nrow == ncol:
-            alphaCoeffs = coeffs[:, 0:nrow]
-            alphaCoeffs = alphaCoeffs.transpose().flatten()
-        else:
-            alphaCoeffs = coeffs[:, 0:nrow]
-            betaCoeffs = coeffs[:, nrow:]
-
-            alphaCoeffs = alphaCoeffs.transpose().flatten()
-            betaCoeffs = betaCoeffs.transpose().flatten()
-
-    return alphaCoeffs, betaCoeffs
-
-
 def _get_TriangleMat(matrix: np.ndarray) -> np.ndarray:
     """Transform a dense matrix in a triangular matrix.
 
@@ -763,14 +730,6 @@ def dump_one(f: TextIO, data: IOData):
     else:
         na, nb, multiplicity = 0, 0, 0
 
-    try:
-        getattr(data.mo, 'coeffs')
-    except AttributeError:
-        print("The system doesn't have orbital coefficients")
-        alphaCoeffs = betaCoeffs = np.array([])
-    else:
-        alphaCoeffs, betaCoeffs = _split_and_get_coefficients(data.mo.coeffs)
-
     # write basic information (FCHK expected integer value for charge)
     _dump_integer_scalars("Number of atoms", data.natom, f)
     if data.charge is not None:
@@ -800,15 +759,13 @@ def dump_one(f: TextIO, data: IOData):
         _dump_real_scalars("SCF Energy", data.energy, f)
         _dump_real_scalars("Total Energy", data.energy, f)
 
-    try:
-        getattr(data.mo, 'energies')
-    except AttributeError:
-        print("The system doesn't have molecular orbitals")
-    else:
-        _dump_real_arrays("Alpha Orbital Energies", data.mo.energies[0:data.mo.norba], f)
-        _dump_real_arrays("Beta Orbital Energies", data.mo.energies[data.mo.norba:], f)
-        _dump_real_arrays("Alpha MO coefficients", alphaCoeffs, f)
-        _dump_real_arrays("Beta MO coefficients", betaCoeffs, f)
+    # write MO energies & coefficients
+    if data.mo is not None:
+        _dump_real_arrays("Alpha Orbital Energies", data.mo.energiesa, f)
+        _dump_real_arrays("Alpha MO coefficients", data.mo.coeffsa.transpose().flatten(), f)
+        if data.mo.kind == "unrestricted":
+            _dump_real_arrays("Beta Orbital Energies", data.mo.energiesb, f)
+            _dump_real_arrays("Beta MO coefficients", data.mo.coeffsb.transpose().flatten(), f)
 
     _dump_rdms(data.one_rdms, data.lot, f)
 
