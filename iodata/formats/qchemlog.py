@@ -23,7 +23,7 @@ This module will load Q-Chem log file into IODATA.
 
 
 import re
-from typing import List, Tuple
+from typing import Tuple
 
 import numpy as np
 
