@@ -791,11 +791,8 @@ def dump_one(f: TextIO, data: IOData):
         _dump_integer_arrays("Integer atomic weights", masses.round(), f)
         _dump_real_arrays("Real atomic weights", masses, f)
 
-    try:
-        getattr(data.obasis, 'shells')
-    except AttributeError:
-        print("The system doesn't have a basis set")
-    else:
+    # write molecular orbital basis set
+    if data.obasis is not None:
         _dump_basisInfo(data.obasis, data.atcoords, f)
 
     _dump_real_scalars("SCF Energy", data.energy, f)
