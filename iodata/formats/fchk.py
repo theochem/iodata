@@ -795,8 +795,10 @@ def dump_one(f: TextIO, data: IOData):
     if data.obasis is not None:
         _dump_basisInfo(data.obasis, data.atcoords, f)
 
-    _dump_real_scalars("SCF Energy", data.energy, f)
-    _dump_real_scalars("Total Energy", data.energy, f)
+    # write energy
+    if data.energy is not None:
+        _dump_real_scalars("SCF Energy", data.energy, f)
+        _dump_real_scalars("Total Energy", data.energy, f)
 
     try:
         getattr(data.mo, 'energies')
