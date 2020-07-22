@@ -48,6 +48,8 @@ def load_one(lit: LineIterator) -> dict:
     result_labels = ['atcoords', 'atmasses', 'atnums', 'charge', 'charge', 'energy', 'g_rot',
                      'run_type', 'athessian', 'lot', 'obasis_name']
     result = {label: data[label] for label in result_labels if data.get(label) is not None}
+    # add number of electrons
+    result['nelec'] = data['alpha_elec'] + data['beta_elec']
 
     # mulliken charges
     if data.get("mulliken_charges") is not None:
@@ -79,14 +81,13 @@ def load_one(lit: LineIterator) -> dict:
                                mo_occs, mo_coeffs, mo_energies, None)
     result['mo'] = mo
 
-    result['nelec'] = data['alpha_elec'] + data['beta_elec']
     # moments
     moments = {}
-    if 'dipole_moment' in data:
-        moments[(1, 'c')] = data['dipole_moment']
-    if 'quadrupole_moments' in data:
+    if 'dipole' in data:
+        moments[(1, 'c')] = data['dipole']
+    if 'quadrupole' in data:
         # Convert to alphabetical ordering: xx, xy, xz, yy, yz, zz
-        moments[(2, 'c')] = data['quadrupole_moments'][[0, 1, 3, 2, 4, 5]]
+        moments[(2, 'c')] = data['quadrupole'][[0, 1, 3, 2, 4, 5]]
     if moments:
         result['moments'] = moments
 
@@ -148,8 +149,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             data['mulliken_charges'] = _helper_mulliken(lit)
         #  cartesian multipole moments
         elif line.startswith('Cartesian Multipole Moments'):
-            data['dipole_moment'], data['quadrupole_moments'], data[
-                'dipole_tol'] = _helper_dipole_moments(lit)
+            data['dipole'], data['quadrupole'], data['dipole_tol'] = _helper_dipole_moments(lit)
         # polarizability matrix
         elif line.startswith('Polarizability Matrix (a.u.)'):
             data['polarizability_tensor'] = _helper_polar(lit)
@@ -159,8 +159,8 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
         # vibrational analysis
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
             data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)
+        # rotational symmetry number
         elif line.startswith('Rotational Symmetry Number'):
-            # rotational symmetry number
             data['g_rot'] = int(line.split()[-1])
             data['enthalpy_dict'], data['entropy_dict'] = _helper_thermo(lit)
 
@@ -286,19 +286,17 @@ def _helper_dipole_moments(lit: LineIterator) -> Tuple:
     for line in lit:
         if line.strip().startswith('Dipole Moment (Debye)'):
             break
-    dipole_moment = next(lit).strip().split()
-    # only load the float numbers
-    dipole_moment = [dipole for idx, dipole in enumerate(dipole_moment) if idx % 2 != 0]
-    # total dipole_moments
+    # parse dipole moment (only load the float numbers)
+    dipole = next(lit).strip().split()
+    dipole = np.array([float(dipole) for idx, dipole in enumerate(dipole) if idx % 2 != 0])
+    # parse total dipole moment
     dipole_tol = float(next(lit).strip().split()[-1])
-    # quadrupole_moments
+    # parse quadrupole moment
     next(lit)
-    quadrupole_moments = []
-    quadrupole_moments.extend(next(lit).strip().split())
-    quadrupole_moments.extend(next(lit).strip().split())
-    quadrupole_moments = [dipole for idx, dipole in enumerate(quadrupole_moments) if idx % 2 != 0]
-    return np.array(dipole_moment, dtype=np.float), \
-        np.array(quadrupole_moments, dtype=np.float), dipole_tol
+    quadrupole = next(lit).strip().split()
+    quadrupole.extend(next(lit).strip().split())
+    quadrupole = np.array([float(dipole) for idx, dipole in enumerate(quadrupole) if idx % 2 != 0])
+    return dipole, quadrupole, dipole_tol
 
 
 def _helper_polar(lit: LineIterator) -> np.ndarray:

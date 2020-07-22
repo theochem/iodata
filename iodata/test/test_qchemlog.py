@@ -95,8 +95,8 @@ def test_load_data_qchemlog_h2o():
                                    7.4574, 7.7953, 8.2906, 12.8843])
     assert_equal(data['mo_b_vir'], beta_mo_unoccupied)
     assert_equal(data['mulliken_charges'], np.array([-0.482641, 0.241321, 0.241321]))
-    assert_equal(data['dipole_moment'], np.array([1.4989, 1.1097, -0.784]))
-    assert_equal(data['quadrupole_moments'],
+    assert_equal(data['dipole'], np.array([1.4989, 1.1097, -0.784]))
+    assert_equal(data['quadrupole'],
                  np.array([-6.1922, 0.2058, -5.0469, -0.9308, 1.1096, -5.762]))
     assert_equal(data['polarizability_tensor'], np.array([[-6.1256608, -0.1911917, 0.8593603],
                                                           [-0.1911917, -7.180854, -1.0224452],
