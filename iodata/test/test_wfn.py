@@ -309,7 +309,7 @@ def test_load_one_cah110_hf_sto3g_g09():
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
 
 
-def check_load_dump_consistency(fn, tmpdir, fmt_from='wfn', fmt_to='wfn'):
+def check_load_dump_consistency(fn, tmpdir, fmt_from='wfn', fmt_to='wfn', atol=1.0e-6):
     """Check if data is preserved after dumping and loading a WFN file.
 
     Parameters
@@ -332,9 +332,9 @@ def check_load_dump_consistency(fn, tmpdir, fmt_from='wfn', fmt_to='wfn'):
     # compare Mulliken charges
     charges1 = compute_mulliken_charges(mol1)
     charges2 = compute_mulliken_charges(mol2)
-    assert_allclose(charges1, charges2, rtol=1.0e-6, atol=0.0)
+    assert_allclose(charges1, charges2, atol=atol)
     if fmt_from == fmt_to:
-        compare_mols(mol1, mol2, atol=1.0e-6)
+        compare_mols(mol1, mol2, atol=atol)
 
 
 def test_load_dump_consistency_lih_cation_cisd(tmpdir):
@@ -355,7 +355,7 @@ def test_load_dump_consistency_h2o(tmpdir):
 
 
 def test_load_dump_consistency_lif(tmpdir):
-    check_load_dump_consistency('lif_fci.wfn', tmpdir)
+    check_load_dump_consistency('lif_fci.wfn', tmpdir, atol=1.0e-6)
 
 
 def test_load_dump_consistency_cah110(tmpdir):

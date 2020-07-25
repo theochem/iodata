@@ -519,7 +519,7 @@ def dump_one(f: TextIO, data: IOData) -> None:
 
     # Write header (title, # MOs, # primitives, # atoms)
     print(f' {data.title if data.title else DEFAULT_WFN_TTL}', file=f)
-    print(FMT_NUM.format(data.mo.norb, data.mo.nbasis, data.natom), file=f)
+    print(FMT_NUM.format(data.mo.norb, obasis.nbasis, data.natom), file=f)
 
     # Write atoms (symbol, atom #, centre #, x pos., y pos., z pos., charge)
     for iatom, (n, (x, y, z)) in enumerate(zip(data.atnums, data.atcoords)):

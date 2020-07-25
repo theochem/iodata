@@ -114,7 +114,7 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
     # wfn
     perm, sgn = convert_conventions(mol1.obasis, mol2.obasis.conventions)
     assert mol1.mo.kind == mol2.mo.kind
-    assert_allclose(mol1.mo.occs, mol2.mo.occs)
+    assert_allclose(mol1.mo.occs, mol2.mo.occs, atol=atol, rtol=rtol)
     assert_allclose(mol1.mo.coeffs[perm] * sgn.reshape(-1, 1), mol2.mo.coeffs, atol=atol, rtol=rtol)
     assert_allclose(mol1.mo.energies, mol2.mo.energies, atol=atol, rtol=rtol)
     assert_equal(mol1.mo.irreps, mol2.mo.irreps)
