@@ -25,7 +25,6 @@ import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from .common import compute_mulliken_charges, check_orthonormal, compare_mols
-from .test_molekel import compare_mols_diff_formats
 from ..api import load_one, dump_one
 from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
@@ -330,10 +329,12 @@ def check_load_dump_consistency(fn, tmpdir, fmt_from='wfn', fmt_to='wfn'):
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt=fmt_to)
     mol2 = load_one(fn_tmp, fmt=fmt_to)
+    # compare Mulliken charges
+    charges1 = compute_mulliken_charges(mol1)
+    charges2 = compute_mulliken_charges(mol2)
+    assert_allclose(charges1, charges2, rtol=1.0e-6, atol=0.0)
     if fmt_from == fmt_to:
         compare_mols(mol1, mol2, atol=1.0e-6)
-    else:
-        compare_mols_diff_formats(mol1, mol2)
 
 
 def test_load_dump_consistency_lih_cation_cisd(tmpdir):
