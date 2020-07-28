@@ -532,9 +532,9 @@ def _get_TypeShell(shell: Shell) -> int:
             kind *= -1
 
     # This part is for the SP basis
-    if len(shell.angmoms) == 2:
-        if (2 * shell.exponents.size) == shell.coeffs.size:
-            kind = -1
+    if len(shell.angmoms) == 2 and (2 * shell.exponents.size) == shell.coeffs.size:
+        kind = -1
+
     return kind
 
 
@@ -720,6 +720,8 @@ def dump_one(f: TextIO, data: IOData):
     if data.energy is not None:
         _dump_real_scalars("SCF Energy", data.energy, f)
         _dump_real_scalars("Total Energy", data.energy, f)
+    else:
+        _dump_real_scalars("Total Energy", 0., f)
 
     # write MO energies & coefficients
     if data.mo is not None:
