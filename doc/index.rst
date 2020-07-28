@@ -45,6 +45,7 @@ User Documentation
 
    install
    getting_started
+   supported_format
    formats
    basis
    changelog
