@@ -564,11 +564,8 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
      coords:
         A numpy.ndarray with the information of the coordinates.
     """
-    numberContractedShells = len(basis.shells)
     pureDshells = 0
     pureFshells = 0
-    highestAngularMoment = 0
-    largestDegreeContraction = 0
 
     shellTypes = []
     numberPrimitivesPerShell = []
@@ -578,31 +575,25 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
     spcontractionCoeff = []
     coordinatesShell = []
 
-    totalprim = 0
     nshell = len(basis.shells)
-    for i in range(nshell):
-        nprim = len(basis.shells[i].exponents)
+    for shell in basis.shells:
+        nprim = len(shell.exponents)
 
-        if nprim > largestDegreeContraction:
-            largestDegreeContraction = nprim
-
-        center = basis.shells[i].icenter
+        center = shell.icenter
         shellAtomMap.append(center + 1)
         numberPrimitivesPerShell.append(nprim)
         coordinatesShell.append(coords[center])
-
-        shellTypes.append(_get_TypeShell(basis.shells[i]))
+        sType = _get_TypeShell(shell)
+        shellTypes.append(sType)
 
         for j in range(nprim):
-            primitiveExp.append(basis.shells[i].exponents[j])
-            contractionCoeff.append(basis.shells[i].coeffs[j][0])
+            primitiveExp.append(shell.exponents[j])
+            contractionCoeff.append(shell.coeffs[j][0])
 
-            if shellTypes[i] == -1:
-                spcontractionCoeff.append(basis.shells[i].coeffs[j][1])
+            if sType == -1:
+                spcontractionCoeff.append(shell.coeffs[j][1])
             else:
                 spcontractionCoeff.append(0.)
-
-            totalprim += 1
 
     for i in range(nshell):
         if shellTypes[i] == 2:
@@ -610,12 +601,14 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
         if shellTypes[i] == 3:
             pureFshells += 1
 
+    totalPrim = np.sum(np.array(numberPrimitivesPerShell))
     highestAngularMoment = np.amax(np.abs(np.array(shellTypes)))
+    largestDegreeContraction = np.amax(np.array(numberPrimitivesPerShell))
 
     _dump_integer_scalars("Number of basis functions", basis.nbasis, f)
     _dump_integer_scalars("Number of independent functions", basis.nbasis, f)
-    _dump_integer_scalars("Number of contracted shells", numberContractedShells, f)
-    _dump_integer_scalars("Number of primitive shells", totalprim, f)
+    _dump_integer_scalars("Number of contracted shells", len(basis.shells), f)
+    _dump_integer_scalars("Number of primitive shells", totalPrim, f)
     _dump_integer_scalars("Pure/Cartesian d shells", pureDshells, f)
     _dump_integer_scalars("Pure/Cartesian f shells", pureFshells, f)
     _dump_integer_scalars("Highest angular momentum", highestAngularMoment, f)
