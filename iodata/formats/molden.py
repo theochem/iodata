@@ -414,7 +414,7 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
 
 
 def _fix_obasis_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
-    """Return a new MolecularBasis correcting for errors from old PSI4 versions.
+    """Return a new MolecularBasis correcting for errors from PSI4 <= 1.0.
 
     Old PSI4 version used a different normalization of the primitives.
     """
@@ -503,6 +503,39 @@ def _fix_obasis_normalize_contractions(obasis: MolecularBasis) -> MolecularBasis
     return MolecularBasis(fixed_shells, obasis.conventions, obasis.primitive_normalization)
 
 
+def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
+    """Return correction values for the MO coefficients.
+
+    PSI4 <= 1.3.2 uses a different normalizationion conventions for Cartesian
+    AO basis functions. The coefficients need to be divided by the returned
+    correction factor.
+    """
+    correction = []
+    corrected = False
+    for shell in obasis.shells:
+        # We can safely assume segmented shells.
+        assert shell.ncon == 1
+        angmom = shell.angmoms[0]
+        kind = shell.kinds[0]
+        factors = None
+        if kind == "c":
+            if angmom == 2:
+                factors = np.sqrt([1] * 3 + [3] * 3)
+            elif angmom == 3:
+                factors = np.sqrt([1] * 3 + [5] * 6 + [15])
+            elif angmom == 4:
+                factors = np.sqrt([1] * 3 + [7] * 6 + [35 / 3] * 3 + [35] * 3)
+        if factors is None:
+            factors = np.ones(shell.nbasis)
+        else:
+            assert len(factors) == shell.nbasis
+            corrected = True
+        correction.append(factors)
+    if corrected:
+        return np.concatenate(correction)
+    return None
+
+
 def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
     """Detect errors in the data loaded from a molden or mkl file and correct.
 
@@ -540,11 +573,11 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         result['obasis'] = orca_obasis
         return
 
-    # --- PSI4
+    # --- PSI4 < 1.0
     psi4_obasis = _fix_obasis_psi4(obasis)
     if psi4_obasis is not None and \
        _is_normalized_properly(psi4_obasis, atcoords, coeffsa, coeffsb):
-        lit.warn('Corrected for old PSI4 errors in Molden/MKL file.')
+        lit.warn('Corrected for PSI4 < 1.0 errors in Molden/MKL file.')
         result['obasis'] = psi4_obasis
         return
 
@@ -563,11 +596,29 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         result['obasis'] = normed_obasis
         return
 
+    # --- PSI4 <= 1.3.2
+    psi4_coeff_correction = _fix_mo_coeffs_psi4(obasis)
+    if psi4_coeff_correction is not None:
+        coeffsa_psi4 = coeffsa / psi4_coeff_correction[:, np.newaxis]
+        if coeffsb is None:
+            coeffsb_psi4 = None
+        else:
+            coeffsb_psi4 = coeffsb / psi4_coeff_correction[:, np.newaxis]
+        if _is_normalized_properly(normed_obasis, atcoords, coeffsa_psi4, coeffsb_psi4):
+            lit.warn('Corrected for PSI4 <= 1.3.2 errors in Molden/MKL file.')
+            result['obasis'] = normed_obasis
+            if result['mo'].kind == 'restricted':
+                result['mo'].coeffs[:] = coeffsa_psi4
+            else:
+                result['mo'].coeffsa[:] = coeffsa_psi4
+                result['mo'].coeffsb[:] = coeffsb_psi4
+            return
+
     lit.error('Could not correct the data read from {}. The molden or mkl file '
               'you are trying to load contains errors. Please make an issue '
-              'here: https://github.com/theochem/iodata/issues, and attach a '
+              'here: https://github.com/theochem/iodata/issues, and attach '
               'this file. Please provide one or more small files causing this '
-              'error.')
+              'error. Thanks!')
 
 
 @document_dump_one("Molden", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcorenums', 'title'])
