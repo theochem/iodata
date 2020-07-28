@@ -259,6 +259,29 @@ def test_load_molden_nh3_psi4_1():
     assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
+def test_load_molden_high_am_zn_psi4():
+    # The file tested here is created with PSI4 1.3.2.
+    # This is a special case because it contains higher angular momenta than
+    # officially supported by the Molden format. Virtual orbitals were removed.
+    with path('iodata.test.data', 'psi4_zn_cc_pvqz_pure.molden') as fn_molden:
+        mol = load_one(str(fn_molden))
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
+
+def test_load_molden_high_am_mn_psi4():
+    # The file tested here is created with PSI4 1.3.2.
+    # This is a special case because it contains higher angular momenta than
+    # officially supported by the Molden format. Virtual orbitals were removed.
+    with path('iodata.test.data', 'psi4_mn_cc_pvqz_pure.molden') as fn_molden:
+        mol = load_one(str(fn_molden))
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
+    check_orthonormal(mol.mo.coeffsb, olp)
+
+
 def test_load_molden_he2_ghost_psi4_1():
     # The file tested here is created with PSI4 (version 1.0).
     with path('iodata.test.data', 'he2_ghost_psi4_1.0.molden') as fn_molden:
