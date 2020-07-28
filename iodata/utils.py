@@ -36,6 +36,11 @@ __all__ = ['LineIterator', 'Cube', 'set_four_index_element', 'volume',
 # - Conversion from atomic units: print(distance/angstrom)
 angstrom: float = spc.angstrom / spc.value(u'atomic unit of length')
 electronvolt: float = 1 / spc.value(u'hartree-electron volt relationship')
+# Unit conversion for Gromacs gro files
+meter: float = 1.0 / 0.5291772083e-10
+nanometer: float = 1e-9 * meter
+second: float = 1 / 2.418884326500e-17
+picosecond: float = 1e-12 * second
 # atomic mass unit (not atomic unit of mass!)
 amu: float = 1e-3 / (spc.value(u'electron mass') * spc.value(u'Avogadro constant'))
 
