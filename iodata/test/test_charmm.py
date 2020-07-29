@@ -23,6 +23,8 @@ from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one
 
+from ..utils import angstrom, amu
+
 try:
     from importlib_resources import path
 except ImportError:
@@ -30,20 +32,20 @@ except ImportError:
 
 
 def test_load_crambin():
-    # test gro file of one water
+    # test CHARMm crd file of crambin
     with path('iodata.test.data', 'crambin.crd') as fn_crd:
         mol = load_one(str(fn_crd))
-    check_crambin(mol)
-
-
-def check_crambin(mol):
-    """Test some things on a water file."""
     assert len(mol.title) == 125
     assert mol.atcoords.shape == (648, 3)
+    assert_allclose(mol.atcoords[-1] / angstrom, [7.35403, -5.09628, 2.73659])
+    assert mol.atffparams['attypes'].shape == (648,)
+    assert mol.atffparams['resnums'].shape == (648,)
+    assert mol.atffparams['resnames'].shape == (648,)
     assert mol.atffparams['attypes'][-1] == 'OT2'
-    assert_equal(mol.atffparams['atnumbers'], range(1, 649))
     assert_equal(mol.atffparams['resnums'][46:48], [4, 4])
     assert mol.atffparams['resnames'][-1] == 'ASN'
+    assert mol.extra['segid'].shape == (648,)
+    assert mol.extra['resid'].shape == (648,)
     assert mol.extra['segid'][-1] == 'MAIN'
     assert mol.extra['resid'][-1] == 46
-    assert_allclose(mol.extra['weights'][-1], 15.99900)
+    assert mol.atmasses[-1] == 15.99900 * amu

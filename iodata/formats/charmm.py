@@ -45,7 +45,7 @@ import numpy as np
 
 from ..docstrings import document_load_one
 
-from ..utils import angstrom, LineIterator
+from ..utils import angstrom, amu, LineIterator
 
 __all__ = []
 
@@ -53,7 +53,7 @@ __all__ = []
 PATTERNS = ['*.crd']
 
 
-@document_load_one('crd', ['atcoords', 'atffparams', 'extra'], ['title'])
+@document_load_one('crd', ['atcoords', 'atffparams', 'atmasses', 'extra'], ['title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     title = ''
@@ -72,33 +72,31 @@ def load_one(lit: LineIterator) -> dict:
                 title += text
         if title_end:
             data = _helper_read_crd(lit)
-            atnumbers = np.array(data[0])
-            resnums = np.array(data[1])
-            resnames = np.array(data[2])
-            attypes = np.array(data[3])
-            atcoords = data[4]
-            segid = np.array(data[5])
-            resid = np.array(data[6])
-            weights = np.array(data[7])
+            resnums = np.array(data[0])
+            resnames = np.array(data[1])
+            attypes = np.array(data[2])
+            atcoords = data[3]
+            segid = np.array(data[4])
+            resid = np.array(data[5])
+            atmasses = np.array(data[6])
             atffparams = {
                 'attypes': attypes,
-                'atnumbers': atnumbers,
                 'resnames': resnames,
                 'resnums': resnums
             }
             extra = {
                 'segid': segid,
                 'resid': resid,
-                'weights': weights
             }
             result = {
                 'atcoords': atcoords,
                 'atffparams': atffparams,
+                'atmasses': atmasses,
                 'extra': extra,
                 'title': title,
             }
             break
-    if title_end is False:
+    if not title_end:
         raise lit.error('CHARMm crd file could not be read')
     return result
 
@@ -113,18 +111,16 @@ def _helper_read_crd(lit: LineIterator) -> Tuple:
         except TypeError:
             print('The number of atoms must be and integer.')
     # Read the atom lines
-    atnumbers = []
     resnums = []
     resnames = []
     attypes = []
     pos = np.zeros((natoms, 3), np.float32)
     segid = []
     resid = []
-    weights = []
+    atmasses = []
     for i in range(natoms):
         line = next(lit)
         words = line.split()
-        atnumbers.append(int(words[0]))
         resnums.append(int(words[1]))
         resnames.append(words[2])
         attypes.append(words[3])
@@ -133,6 +129,6 @@ def _helper_read_crd(lit: LineIterator) -> Tuple:
         pos[i, 2] = float(words[6])
         segid.append(words[7])
         resid.append(int(words[8]))
-        weights.append(float(words[9]))
+        atmasses.append(float(words[9]) * amu)
     pos *= angstrom
-    return atnumbers, resnums, resnames, attypes, pos, segid, resid, weights
+    return resnums, resnames, attypes, pos, segid, resid, atmasses
