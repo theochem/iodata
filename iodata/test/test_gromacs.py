@@ -42,7 +42,6 @@ def check_water(mol):
     assert mol.title == 'MD of 2 waters'
     assert mol.atcoords.shape == (6, 3)
     assert mol.atffparams['attypes'][2] == 'HW3'
-    assert_equal(mol.atffparams['atnumbers'], range(1, 7))
     assert mol.atffparams['resnames'][-1] == 'WATER'
     assert_equal(mol.atffparams['resnums'][2:4], [1, 2])
     assert_allclose(mol.cellvecs[0][0], 1.82060 * nanometer, atol=1.e-5)

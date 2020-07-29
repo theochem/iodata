@@ -38,43 +38,28 @@ __all__ = []
 PATTERNS = ['*.gro']
 
 
-@document_load_one('GRO', ['atcoords', 'atffparams', 'cellvecs', 'extra'], ['title'])
+@document_load_one('GRO', ['atcoords', 'atffparams', 'cellvecs', 'extra', 'title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    title = None
     frame_found = False
     while True:
         try:
-            line = next(lit)
+            data = _helper_read_frame(lit)
         except StopIteration:
             break
-        # Get title from gro file. Time field is optional.
-        if 't=' in line:
-            title = line.split(',')[0]
+        if not isinstance(data, ValueError):
             frame_found = True
-            lit.back(line)
-            if frame_found:
-                data = _helper_read_frame(lit)
-                t = data[0]
-                resnums = data[1]
-                resnames = data[2]
-                attypes = data[3]
-                atnumbers = data[4]
-                pos = data[5]
-                vels = data[6]
-                cell = data[7]
-        if data:
-            time = t
-            resnums = np.array(resnums)
-            resnames = np.array(resnames)
-            attypes = np.array(attypes)
-            atnumbers = np.array(atnumbers)
-            atcoords = pos
-            velocities = vels
-            cellvecs = cell
+        if frame_found:
+            title = data[0]
+            time = data[1]
+            resnums = np.array(data[2])
+            resnames = np.array(data[3])
+            attypes = np.array(data[4])
+            atcoords = data[5]
+            velocities = data[6]
+            cellvecs = data[7]
             atffparams = {
                 'attypes': attypes,
-                'atnumbers': atnumbers,
                 'resnames': resnames,
                 'resnums': resnums
             }
@@ -90,12 +75,12 @@ def load_one(lit: LineIterator) -> dict:
                 'title': title,
             }
             break
-    if frame_found is False:
-        raise lit.error('gro file could not be read')
+    if not frame_found:
+        raise lit.error('Bad format. Gromacs gro file could not be read.')
     return result
 
 
-@document_load_many('GRO', ['atcoords', 'atffparams', 'cellvecs', 'extra'], ['title'])
+@document_load_many('GRO', ['atcoords', 'atffparams', 'cellvecs', 'extra', 'title'])
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # gro files can be used as trajectory by simply concatenating files,
@@ -107,11 +92,12 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             return
 
 
-def _helper_read_frame(lit: LineIterator) -> Tuple[float, np.ndarray, np.ndarray, np.ndarray]:
+def _helper_read_frame(lit: LineIterator) -> Tuple:
     """Read one frame."""
-    # Read the first line, ignore the title and try to get the time.
+    # Read the first line, get the title and try to get the time.
     # Time field is optional.
     line = next(lit)
+    title = line.split(',')[0] if 't=' in line else line[:-1]
     pos = line.rfind('t=')
     if pos >= 0:
         time = float(line[pos + 2:]) * picosecond
@@ -122,13 +108,12 @@ def _helper_read_frame(lit: LineIterator) -> Tuple[float, np.ndarray, np.ndarray
     if natoms is not None:
         try:
             natoms = int(natoms)
-        except TypeError:
-            print('The number of atoms must be and integer.')
+        except ValueError as err:
+            return err
     # Read the atom lines
     resnums = []
     resnames = []
     attypes = []
-    atnums = []
     pos = np.zeros((natoms, 3), np.float32)
     vel = np.zeros((natoms, 3), np.float32)
     for i in range(natoms):
@@ -136,7 +121,6 @@ def _helper_read_frame(lit: LineIterator) -> Tuple[float, np.ndarray, np.ndarray
         resnums.append(int(line[:5]))
         resnames.append(line[5:10].split()[-1])
         attypes.append(line[10:15].split()[-1])
-        atnums.append(int(line[15:20]))
         words = line[22:].split()
         pos[i, 0] = float(words[0])
         pos[i, 1] = float(words[1])
@@ -161,4 +145,4 @@ def _helper_read_frame(lit: LineIterator) -> Tuple[float, np.ndarray, np.ndarray
         cell[0, 2] = float(words[7])
         cell[1, 2] = float(words[8])
     cell *= nanometer
-    return time, resnums, resnames, attypes, atnums, pos, vel, cell
+    return title, time, resnums, resnames, attypes, pos, vel, cell
