@@ -26,9 +26,6 @@ import importlib
 import iodata
 
 
-__all__ = (write_rst_table, generate_table_rst)
-
-
 def _generate_all_format_parser():
     """Parse supported functionality from each module.
 
