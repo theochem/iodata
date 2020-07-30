@@ -41,6 +41,7 @@ def _generate_all_format_parser():
 
     fmt_names = {}  # storing supported format name and index(position) in table
     prop_with_mods = defaultdict(list)  # storing methods with format supporting it.
+    prop_ifpresent = defaultdict(list)
     for fmt_name, _ in format_modules:
         # inspect(import) target module
         fmt_module = importlib.import_module("iodata.formats." + fmt_name)
@@ -52,7 +53,9 @@ def _generate_all_format_parser():
         for i in fields:
             # add format to its supported property list
             prop_with_mods[i].append(fmt_name)
-    return fmt_names, prop_with_mods
+        for attribute in fmt_module.load_one.ifpresent:
+            prop_ifpresent[attribute].append(fmt_name)
+    return fmt_names, prop_with_mods, prop_ifpresent
 
 
 def generate_table_rst():
@@ -64,7 +67,7 @@ def generate_table_rst():
         table with rows of each property and columns of each format
     """
     table = []
-    methods_names, prop_with_mods = _generate_all_format_parser()
+    methods_names, prop_with_mods, prop_ifpresent = _generate_all_format_parser()
     # construct header
     header = ["Properties"] + list(methods_names.keys())
     table.append(header)
@@ -73,6 +76,8 @@ def generate_table_rst():
         row = [prop] + ["--"] * len(methods_names)
         for method in prop_with_mods[prop]:
             row[methods_names[method]] = u"\u2713"
+        for method in prop_ifpresent[prop]:
+            row[methods_names[method]] = 'm'
         table.append(row)
     return table
 
