@@ -104,21 +104,19 @@ def load_one(lit: LineIterator) -> dict:
 def _helper_read_crd(lit: LineIterator) -> Tuple:
     """Read CHARMm crd file."""
     # Read the line for number of atoms.
-    natoms = next(lit)
-    if natoms is not None:
-        try:
-            natoms = int(natoms)
-        except TypeError:
-            print('The number of atoms must be and integer.')
+    natom = next(lit)
+    if natom is None or not natom.strip().isdigit():
+        lit.error('The number of atoms must be an integer.')
+    natom = int(natom)
     # Read the atom lines
     resnums = []
     resnames = []
     attypes = []
-    pos = np.zeros((natoms, 3), np.float32)
+    pos = np.zeros((natom, 3), np.float32)
     segid = []
     resid = []
     atmasses = []
-    for i in range(natoms):
+    for i in range(natom):
         line = next(lit)
         words = line.split()
         resnums.append(int(words[1]))
