@@ -21,6 +21,8 @@
 Files with the gro file extension contain a molecular structure in Gromos87 format.
 gro files can be used as trajectory by simply concatenating files.
 
+http://manual.gromacs.org/current/reference-manual/file-formats.html#gro
+
 """
 
 
