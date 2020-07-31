@@ -228,6 +228,61 @@ def test_convert_convention_shell():
     assert_equal(vec2[permutation] * signs, vec1)
 
 
+def test_get_decontracted():
+    obasis = MolecularBasis(
+        [Shell(0, [0], ['c'], [0.01], np.array([[3.]])),
+         Shell(1, [0, 1], ['c', 'c'], [0.03, 0.04], np.array([[3., 4.], [1., 2.]])),
+         Shell(0, [2, 1, 2], ['p', 'c', 'c'], [0.05], np.array([[5., 5., 6.]]))],
+        {(0, 'c'): ['s'],
+         (1, 'c'): ['x', 'z', '-y'],
+         (2, 'p'): ['dc0', 'dc1', '-ds1', 'dc2', '-ds2']},
+        'L2'
+    )
+    obasis = obasis.get_decontracted()
+
+    ncontshells = 8  # Number of contracted shells now is equal to the number of primitives.
+    assert_equal(len(obasis.shells), ncontshells)
+    # Assert each shell has length one exponents
+    for i in range(0, ncontshells):
+        assert_equal(len(obasis.shells[0].exponents), 1)
+    # Assert they have the right exponents.
+    assert_equal(obasis.shells[0].exponents, 0.01)
+    assert_equal(obasis.shells[1].exponents, 0.03)
+    assert_equal(obasis.shells[2].exponents, 0.04)
+    assert_equal(obasis.shells[3].exponents, 0.03)
+    assert_equal(obasis.shells[4].exponents, 0.04)
+    assert_equal(obasis.shells[5].exponents, 0.05)
+    assert_equal(obasis.shells[6].exponents, 0.05)
+    assert_equal(obasis.shells[7].exponents, 0.05)
+    # Assert they have the right coefficients.
+    assert_equal(obasis.shells[0].coeffs, 3.)
+    assert_equal(obasis.shells[1].coeffs, np.array([[3.]]))
+    assert_equal(obasis.shells[2].coeffs, np.array([[1.]]))
+    assert_equal(obasis.shells[3].coeffs, np.array([[4.]]))
+    assert_equal(obasis.shells[4].coeffs, np.array([[2.]]))
+    assert_equal(obasis.shells[5].coeffs, np.array([[5.]]))
+    assert_equal(obasis.shells[6].coeffs, np.array([[5.]]))
+    assert_equal(obasis.shells[7].coeffs, np.array([[6.]]))
+    # Assert right centers
+    assert_equal(obasis.shells[0].icenter, 0)
+    assert_equal(obasis.shells[1].icenter, 1)
+    assert_equal(obasis.shells[2].icenter, 1)
+    assert_equal(obasis.shells[3].icenter, 1)
+    assert_equal(obasis.shells[4].icenter, 1)
+    assert_equal(obasis.shells[5].icenter, 0)
+    assert_equal(obasis.shells[6].icenter, 0)
+    assert_equal(obasis.shells[7].icenter, 0)
+    # Assert right kind
+    assert_equal(obasis.shells[0].kinds, ['c'])
+    assert_equal(obasis.shells[1].kinds, ['c'])
+    assert_equal(obasis.shells[2].kinds, ['c'])
+    assert_equal(obasis.shells[3].kinds, ['c'])
+    assert_equal(obasis.shells[4].kinds, ['c'])
+    assert_equal(obasis.shells[5].kinds, ['p'])
+    assert_equal(obasis.shells[6].kinds, ['c'])
+    assert_equal(obasis.shells[7].kinds, ['c'])
+
+
 def test_convert_convention_obasis():
     obasis = MolecularBasis(
         [Shell(0, [0], ['c'], np.zeros(3), np.zeros((3, 1))),
