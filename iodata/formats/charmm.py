@@ -56,48 +56,45 @@ PATTERNS = ['*.crd']
 @document_load_one('crd', ['atcoords', 'atffparams', 'atmasses', 'extra'], ['title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
+    # Read title section
     title = ''
-    title_end = False
     while True:
         try:
             line = next(lit)
         except StopIteration:
-            break
+            lit.error("Title section if CRD has no ending marker (bare *).")
         # Get title from crd file.
         if '*' in line:
             text = line.split('*')[-1]
             if len(text) == 1:  # line with '*' only.
-                title_end = True
+                break
             else:
                 title += text
-        if title_end:
-            data = _helper_read_crd(lit)
-            resnums = np.array(data[0])
-            resnames = np.array(data[1])
-            attypes = np.array(data[2])
-            atcoords = data[3]
-            segid = np.array(data[4])
-            resid = np.array(data[5])
-            atmasses = np.array(data[6])
-            atffparams = {
-                'attypes': attypes,
-                'resnames': resnames,
-                'resnums': resnums
-            }
-            extra = {
-                'segid': segid,
-                'resid': resid,
-            }
-            result = {
-                'atcoords': atcoords,
-                'atffparams': atffparams,
-                'atmasses': atmasses,
-                'extra': extra,
-                'title': title,
-            }
-            break
-    if not title_end:
-        raise lit.error('CHARMm crd file could not be read')
+    # Read actual data
+    data = _helper_read_crd(lit)
+    resnums = np.array(data[0])
+    resnames = np.array(data[1])
+    attypes = np.array(data[2])
+    atcoords = data[3]
+    segid = np.array(data[4])
+    resid = np.array(data[5])
+    atmasses = np.array(data[6])
+    atffparams = {
+        'attypes': attypes,
+        'resnames': resnames,
+        'resnums': resnums
+    }
+    extra = {
+        'segid': segid,
+        'resid': resid,
+    }
+    result = {
+        'atcoords': atcoords,
+        'atffparams': atffparams,
+        'atmasses': atmasses,
+        'extra': extra,
+        'title': title,
+    }
     return result
 
 
