@@ -41,11 +41,14 @@ def check_water(mol):
     """Test some things on a water file."""
     assert mol.title == 'MD of 2 waters'
     assert mol.atcoords.shape == (6, 3)
+    assert_allclose(mol.atcoords[-1] / nanometer, [1.326, 0.120, 0.568])
     assert mol.atffparams['attypes'][2] == 'HW3'
     assert mol.atffparams['resnames'][-1] == 'WATER'
     assert_equal(mol.atffparams['resnums'][2:4], [1, 2])
     assert_allclose(mol.cellvecs[0][0], 1.82060 * nanometer, atol=1.e-5)
     assert mol.extra['velocities'].shape == (6, 3)
+    vel = mol.extra['velocities'][-1]
+    assert_allclose(vel * (picosecond / nanometer), [1.9427, -0.8216, -0.0244])
 
 
 def test_load_many():
