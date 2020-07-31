@@ -43,15 +43,12 @@ PATTERNS = ['*.gro']
 @document_load_one('GRO', ['atcoords', 'atffparams', 'cellvecs', 'extra', 'title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    frame_found = False
     while True:
         try:
             data = _helper_read_frame(lit)
         except StopIteration:
             break
-        if not isinstance(data, ValueError):
-            frame_found = True
-        if frame_found:
+        if data is not None:
             title = data[0]
             time = data[1]
             resnums = np.array(data[2])
@@ -76,10 +73,8 @@ def load_one(lit: LineIterator) -> dict:
                 'extra': extra,
                 'title': title,
             }
-            break
-    if not frame_found:
-        raise lit.error('Bad format. Gromacs gro file could not be read.')
-    return result
+            return result
+    raise lit.error('Bad format. Gromacs gro file could not be read.')
 
 
 @document_load_many('GRO', ['atcoords', 'atffparams', 'cellvecs', 'extra', 'title'])
@@ -110,8 +105,8 @@ def _helper_read_frame(lit: LineIterator) -> Tuple:
     if natoms is not None:
         try:
             natoms = int(natoms)
-        except ValueError as err:
-            return err
+        except ValueError:
+            return None
     # Read the atom lines
     resnums = []
     resnames = []
