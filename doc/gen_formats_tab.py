@@ -84,7 +84,7 @@ def generate_table_rst():
 
     # order columns based on number of guaranteed and ifpresent entries for each format
     cols = []
-    for fmt in methods_names.keys():
+    for fmt in methods_names:
         count = sum([1 for value in prop_with_mods.values() if fmt in value])
         count += sum([1 for value in prop_ifpresent.values() if fmt in value])
         cols.append((count, fmt))
