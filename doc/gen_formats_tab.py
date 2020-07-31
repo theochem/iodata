@@ -19,11 +19,15 @@
 # --
 # pylint: disable=unused-argument,redefined-builtin
 """Generate formats.rst."""
+
 from collections import defaultdict
 import inspect
 import importlib
 
 import iodata
+
+
+__all__ = []
 
 
 def _generate_all_format_parser():
