@@ -56,69 +56,63 @@ PATTERNS = ['*.crd']
 @document_load_one('crd', ['atcoords', 'atffparams', 'atmasses', 'extra'], ['title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
+    # Read title section
     title = ''
-    title_end = False
     while True:
         try:
             line = next(lit)
         except StopIteration:
-            break
+            lit.error("Title section of CRD has no ending marker (missing bare *).")
         # Get title from crd file.
-        if '*' in line:
-            text = line.split('*')[-1]
-            if len(text) == 1:  # line with '*' only.
-                title_end = True
-            else:
-                title += text
-        if title_end:
-            data = _helper_read_crd(lit)
-            resnums = np.array(data[0])
-            resnames = np.array(data[1])
-            attypes = np.array(data[2])
-            atcoords = data[3]
-            segid = np.array(data[4])
-            resid = np.array(data[5])
-            atmasses = np.array(data[6])
-            atffparams = {
-                'attypes': attypes,
-                'resnames': resnames,
-                'resnums': resnums
-            }
-            extra = {
-                'segid': segid,
-                'resid': resid,
-            }
-            result = {
-                'atcoords': atcoords,
-                'atffparams': atffparams,
-                'atmasses': atmasses,
-                'extra': extra,
-                'title': title,
-            }
-            break
-    if not title_end:
-        raise lit.error('CHARMm crd file could not be read')
+        if line.startswith("*"):
+            text = line[1:]
+            if len(text.strip()) == 0:  # line with '*' only.
+                break
+            title += text
+    # Read actual data
+    data = _helper_read_crd(lit)
+    resnums = np.array(data[0])
+    resnames = np.array(data[1])
+    attypes = np.array(data[2])
+    atcoords = data[3]
+    segid = np.array(data[4])
+    resid = np.array(data[5])
+    atmasses = np.array(data[6])
+    atffparams = {
+        'attypes': attypes,
+        'resnames': resnames,
+        'resnums': resnums
+    }
+    extra = {
+        'segid': segid,
+        'resid': resid,
+    }
+    result = {
+        'atcoords': atcoords,
+        'atffparams': atffparams,
+        'atmasses': atmasses,
+        'extra': extra,
+        'title': title,
+    }
     return result
 
 
 def _helper_read_crd(lit: LineIterator) -> Tuple:
     """Read CHARMm crd file."""
     # Read the line for number of atoms.
-    natoms = next(lit)
-    if natoms is not None:
-        try:
-            natoms = int(natoms)
-        except TypeError:
-            print('The number of atoms must be and integer.')
+    natom = next(lit)
+    if natom is None or not natom.strip().isdigit():
+        lit.error('The number of atoms must be an integer.')
+    natom = int(natom)
     # Read the atom lines
     resnums = []
     resnames = []
     attypes = []
-    pos = np.zeros((natoms, 3), np.float32)
+    pos = np.zeros((natom, 3), np.float32)
     segid = []
     resid = []
     atmasses = []
-    for i in range(natoms):
+    for i in range(natom):
         line = next(lit)
         words = line.split()
         resnums.append(int(words[1]))
