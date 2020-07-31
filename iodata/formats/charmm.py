@@ -68,8 +68,7 @@ def load_one(lit: LineIterator) -> dict:
             text = line[1:]
             if len(text.strip()) == 0:  # line with '*' only.
                 break
-            else:
-                title += text
+            title += text
     # Read actual data
     data = _helper_read_crd(lit)
     resnums = np.array(data[0])
