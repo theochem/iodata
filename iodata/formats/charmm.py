@@ -62,7 +62,7 @@ def load_one(lit: LineIterator) -> dict:
         try:
             line = next(lit)
         except StopIteration:
-            lit.error("Title section if CRD has no ending marker (bare *).")
+            lit.error("Title section of CRD has no ending marker (missing bare *).")
         # Get title from crd file.
         if line.startswith("*"):
             text = line[1:]
