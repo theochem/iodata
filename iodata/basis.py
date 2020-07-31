@@ -211,6 +211,24 @@ class MolecularBasis:
         # pylint: disable=no-member
         return attr.evolve(self, shells=shells)
 
+    def get_decontracted(self):
+        r"""
+        Get Decontracted Molecular Basis from a Molecular Basis.
+
+        Decontracted Molecular basis is a Molecular basis where each contracted shell is a
+        primitive contracted shell (ie contracted shell with only one exponent and one kind).
+
+        """
+        shells = []
+        for shell in self.shells:
+            for i, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
+                for exponent, coeff in zip(shell.exponents, shell.coeffs[:, i]):
+                    shells.append(
+                        Shell(shell.icenter, [angmom], [kind], np.array([exponent]),
+                              coeff.reshape(-1, 1))
+                    )
+        # pylint: disable=no-member
+        return self._replace(shells=shells)
 
 def convert_convention_shell(conv1: List[str], conv2: List[str], reverse=False) \
         -> Tuple[np.ndarray, np.ndarray]:
