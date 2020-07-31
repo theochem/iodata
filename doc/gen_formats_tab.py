@@ -72,16 +72,28 @@ def generate_table_rst():
     """
     table = []
     methods_names, prop_with_mods, prop_ifpresent = _generate_all_format_parser()
+    # order rows based on number of formats having that attribute
+    rows = [(len(v + prop_ifpresent.get(k, [])), k) for k, v in prop_with_mods.items()]
+    # add properties that only exist in prop_ifpresent
+    rows.extend([(len(v), k) for k, v in prop_ifpresent.items() if k not in prop_with_mods.keys()])
+    rows = [item[1] for item in sorted(rows)[::-1]]
+    # order columns based on number of guaranteed and ifpresent entries for each format
+    cols = []
+    for fmt in methods_names.keys():
+        count = sum([1 for value in prop_with_mods.values() if fmt in value])
+        count += sum([1 for value in prop_ifpresent.values() if fmt in value])
+        cols.append((count, fmt))
+    cols = [item[1] for item in sorted(cols)[::-1]]
     # construct header
-    header = ["Properties"] + list(methods_names.keys())
+    header = ["Properties"] + cols
     table.append(header)
-    for prop in sorted(prop_with_mods.keys()):
+    for prop in rows:
         # construct each row contents
-        row = [prop] + ["--"] * len(methods_names)
-        for method in prop_with_mods[prop]:
-            row[methods_names[method]] = u"\u2713"
-        for method in prop_ifpresent[prop]:
-            row[methods_names[method]] = 'm'
+        row = [prop] + ["--"] * len(cols)
+        for fmt in prop_with_mods[prop]:
+            row[cols.index(fmt) + 1] = u"\u2713"
+        for fmt in prop_ifpresent[prop]:
+            row[cols.index(fmt) + 1] = 'm'
         table.append(row)
     return table
 
