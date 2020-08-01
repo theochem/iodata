@@ -608,6 +608,18 @@ def test_dump_fchk_rdms_cc(tmpdir):
     assert_allclose(mol0.one_rdms['post_scf_spin'], mol1.one_rdms['post_scf_spin'])
 
 
+def test_dump_fchk_from_molekel_h2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'h2_sto3g.mkl')
+
+
+def test_dump_fchk_from_molekel_ethanol(tmpdir):
+    check_load_dump_consistency(tmpdir, 'ethanol.mkl')
+
+
+# def test_dump_fchk_from_molekel_li2(tmpdir):
+#     check_load_dump_consistency(tmpdir, 'li2.mkl')
+
+
 def test_dump_fchk_rdms_ci(tmpdir):
     mol0 = load_fchk_helper("nitrogen-ci.fchk")
     fn_tmp = os.path.join(tmpdir, 'test.fchk')
