@@ -31,7 +31,8 @@ from ..api import load_one, load_many, dump_one, dump_many
 from ..overlap import compute_overlap
 from ..utils import check_dm
 
-from .common import check_orthonormal, compute_mulliken_charges, compare_mols
+from .common import check_orthonormal, compare_mols
+from .test_molekel import compare_mols_diff_formats
 
 try:
     from importlib_resources import path
@@ -524,41 +525,25 @@ def check_load_dump_consistency(tmpdir, fn):
     dump_one(mol1, fn_tmp, fmt='fchk')
     mol2 = load_one(fn_tmp, fmt='fchk')
     # compare molecules
-    compare_mols(mol1, mol2)
+    if fn.endswith('fchk'):
+        compare_mols(mol1, mol2)
+    else:
+        compare_mols_diff_formats(mol1, mol2)
 
 
-def check_load_dump_consistency_fchk_molden(tmpdir, fn):
-    """Check if dumping and loading an FCHK file and a MOLDEN file."""
-    mol0 = load_fchk_helper(str(fn))
-    # Write fchk file in a temporary folder and then read it
-    fn_tmp = os.path.join(tmpdir, 'test.fchk')
-    dump_one(mol0, fn_tmp)
-    mol1 = load_one(fn_tmp)
-    # Check the files
-    assert mol0.mo.norba == mol1.mo.norba
-    assert mol0.mo.norbb == mol1.mo.norbb
-    assert_allclose(mol0.atcoords, mol1.atcoords)
-    assert_allclose(mol0.mo.occs, mol1.mo.occs)
-    assert_allclose(mol0.mo.energies, mol1.mo.energies)
-    # Compute and compare Mulliken charges
-    charges0 = compute_mulliken_charges(mol0)
-    charges1 = compute_mulliken_charges(mol1)
-    assert_allclose(charges0, charges1, rtol=0.0, atol=1.0e-6)
-
-
-def test_dump_fchk_consistency_hf(tmpdir):
+def test_dump_fchk_from_fchk_hf(tmpdir):
     check_load_dump_consistency(tmpdir, 'hf_sto3g.fchk')
 
 
-def test_dump_fchk_consistency_h2o(tmpdir):
+def test_dump_fchk_from_fchk_h2o(tmpdir):
     check_load_dump_consistency(tmpdir, 'h2o_sto3g.fchk')
 
 
-def test_dump_fchk_consistency_peroxide_irc(tmpdir):
+def test_dump_fchk_from_fchk_peroxide_irc(tmpdir):
     check_load_dump_consistency(tmpdir, 'peroxide_irc.fchk')
 
 
-def test_dump_fchk_consistency_he(tmpdir):
+def test_dump_fchk_from_fchk_he(tmpdir):
     check_load_dump_consistency(tmpdir, 'he_s_orbital.fchk')
     check_load_dump_consistency(tmpdir, 'he_sp_orbital.fchk')
     check_load_dump_consistency(tmpdir, 'he_spd_orbital.fchk')
@@ -568,15 +553,15 @@ def test_dump_fchk_consistency_he(tmpdir):
     check_load_dump_consistency(tmpdir, 'he_spdfgh_virtual.fchk')
 
 
-def test_consistency_between_fchk_and_molden(tmpdir):
-    check_load_dump_consistency_fchk_molden(tmpdir, 'nh3_psi4_1.0.molden')
-    check_load_dump_consistency_fchk_molden(tmpdir, 'nh3_molden_cart.molden')
-    check_load_dump_consistency_fchk_molden(tmpdir, 'nh3_molden_pure.molden')
-
-
-def test_dump_fchk_consistency_o2(tmpdir):
+def test_dump_fchk_from_fchk_o2(tmpdir):
     check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_cart.fchk')
     check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_pure.fchk')
+
+
+def test_dump_fchk_from_molden(tmpdir):
+    check_load_dump_consistency(tmpdir, 'nh3_psi4_1.0.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_molden_cart.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_molden_pure.molden')
 
 
 def test_dump_fchk_rdms_cc(tmpdir):
