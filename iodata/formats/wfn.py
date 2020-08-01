@@ -430,7 +430,7 @@ def _format_helper_section(header: str, skip: int, spec: str, nline: int) -> Tup
 
 
 def _dump_helper_section(f: TextIO, data: np.ndarray, fmt: str, skip: int, step: int, nline: int):
-    """Write a CENTRE_ASSIGMENTS, TYPE_ASSIGNMENTS, or EXPONENTS section to file ``f``."""
+    """Write a CENTRE_ASSIGNMENTS, TYPE_ASSIGNMENTS, or EXPONENTS section to file ``f``."""
     while len(data) > 0:
         chunk = data[:nline]
         n_chunk = len(chunk)
