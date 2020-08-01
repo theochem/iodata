@@ -443,14 +443,12 @@ def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
 # theses functions, both scalars and arrays, integer and real(float) variables
 def _dump_integer_scalars(name: str, val: int, f: TextIO):
     """Dumper for a scalar integer."""
-    if val is not None:
-        print("{0:40}   I     {1:12d}".format(name, int(val)), file=f)
+    print("{0:40}   I     {1:12d}".format(name, int(val)), file=f)
 
 
 def _dump_real_scalars(name: str, val: float, f: TextIO):
     """Dumper for a scalar float."""
-    if val is not None:
-        print("{0:40}   R     {1: 16.8E}".format(name, float(val)), file=f)
+    print("{0:40}   R     {1: 16.8E}".format(name, float(val)), file=f)
 
 
 def _dump_integer_arrays(name: str, val: np.ndarray, f: TextIO):
