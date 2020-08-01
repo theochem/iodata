@@ -90,8 +90,8 @@ def generate_table_rst():
         cols.append((count, fmt))
     cols = [item[1] for item in sorted(cols)[::-1]]
 
-    # construct header
-    header = ["Properties"] + cols
+    # construct header with cross-referencing columns
+    header = ["Properties"] + [f':ref:`{col} <format_{col}>`' for col in cols]
     table.append(header)
     for prop in rows:
         # construct each row contents
