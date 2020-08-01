@@ -455,35 +455,33 @@ def _dump_real_scalars(name: str, val: float, f: TextIO):
 
 def _dump_integer_arrays(name: str, val: np.ndarray, f: TextIO):
     """Dumper for a array of integers."""
-    if val is not None:
-        nval = val.size
-        if nval != 0:
-            np.reshape(val, nval)
-            print("{0:40}   I   N={1:12}".format(name, nval), file=f)
-            k = 0
-            for i in range(nval):
-                print("{0:12}".format(int(val[i])), file=f, end='')
-                k += 1
-                if(k == 6 or i == nval - 1):
-                    print("", file=f)
-                    k = 0
+    nval = val.size
+    if nval != 0:
+        np.reshape(val, nval)
+        print("{0:40}   I   N={1:12}".format(name, nval), file=f)
+        k = 0
+        for i in range(nval):
+            print("{0:12}".format(int(val[i])), file=f, end='')
+            k += 1
+            if k == 6 or i == nval - 1:
+                print("", file=f)
+                k = 0
 
 
 def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
     """Dumper for a array of float."""
-    if val is not None:
-        nval = val.size
-        if nval != 0:
-            np.reshape(val, nval)
-            print("{0:40}   R   N={1:12}".format(name, nval), file=f)
-            k = 0
+    nval = val.size
+    if nval != 0:
+        np.reshape(val, nval)
+        print("{0:40}   R   N={1:12}".format(name, nval), file=f)
+        k = 0
 
-            for i in range(nval):
-                print("{0: 16.8E}".format(val[i]), file=f, end='')
-                k += 1
-                if(k == 5 or i == nval - 1):
-                    print("", file=f)
-                    k = 0
+        for i in range(nval):
+            print("{0: 16.8E}".format(val[i]), file=f, end='')
+            k += 1
+            if k == 5 or i == nval - 1:
+                print("", file=f)
+                k = 0
 
 
 def _get_TypeShell(shell: Shell) -> int:

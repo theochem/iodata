@@ -591,22 +591,6 @@ def test_dump_fchk_consistency_o2(tmpdir):
     check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_pure.fchk')
 
 
-def test_dump_void_fchk(tmpdir):
-    fn_tmp = os.path.join(tmpdir, 'test.fchk')
-    mol0 = IOData(nelec=10)
-    mol0.moments = {(1, 'c'): np.array([])}
-    mol0.moments = {(2, 'c'): np.array([])}
-    dump_one(mol0, fn_tmp)
-
-
-def test_triangle_fchk(tmpdir):
-    fn_tmp = os.path.join(tmpdir, 'test.fchk')
-    mol0 = IOData(nelec=10)
-    mol0.extra = {'polarizability_tensor': np.array([[1, 2, 3], [4, 5, 6]])}
-    mol0.one_rdms = {'other': np.array([[1, 2, 3], [4, 5, 6]])}
-    dump_one(mol0, fn_tmp)
-
-
 def test_dump_fchk_rdms_cc(tmpdir):
     mol0 = load_fchk_helper("nitrogen-cc.fchk")
     fn_tmp = os.path.join(tmpdir, 'test.fchk')
