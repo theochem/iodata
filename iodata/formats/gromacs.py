@@ -95,11 +95,9 @@ def _helper_read_frame(lit: LineIterator) -> Tuple:
     # Time field is optional.
     line = next(lit)
     title = line.split(',')[0] if 't=' in line else line[:-1]
-    pos = line.rfind('t=')
-    if pos >= 0:
-        time = float(line[pos + 2:]) * picosecond
-    else:
-        time = 0.0
+    time = 0.0
+    if 't=' in line:
+        time = float(line.split('t=')[1]) * picosecond
     # Read the second line for number of atoms.
     natoms = next(lit)
     if natoms is not None:
