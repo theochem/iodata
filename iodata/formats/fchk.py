@@ -486,33 +486,6 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
                     k = 0
 
 
-def _sort_quadrupole(quadrupole: np.ndarray) -> np.ndarray:
-    """Sort the quadrupole momentum, in the format of FCHK.
-
-    Parameters
-    ----------
-    quadrupole:
-        A numpy.ndarray of size 6 ordered XX, XY, XZ, YY, YZ, ZZ.
-
-    Returns
-    -------
-    newquadrupole:
-        A numpy.ndarray of size 6 ordered XX, YY, ZZ, XY, XZ, YZ.
-    """
-    if quadrupole.size != 0:
-        newquadrupole = np.zeros(quadrupole.size)
-        newquadrupole[0] = quadrupole[0]
-        newquadrupole[1] = quadrupole[3]
-        newquadrupole[2] = quadrupole[5]
-        newquadrupole[3] = quadrupole[1]
-        newquadrupole[4] = quadrupole[2]
-        newquadrupole[5] = quadrupole[4]
-    else:
-        newquadrupole = np.array([])
-
-    return newquadrupole
-
-
 def _get_TypeShell(shell: Shell) -> int:
     """Get the type of shell.
 
@@ -754,8 +727,11 @@ def dump_one(f: TextIO, data: IOData):
     # write moments
     if (1, 'c') in data.moments:
         _dump_real_arrays("Dipole Moment", data.moments[(1, 'c')], f)
-    if (2, 'c') in data.moments:
-        _dump_real_arrays("Quadrupole Moment", _sort_quadrupole(data.moments[(2, 'c')]), f)
+    if (2, 'c') in data.moments and len(data.moments[(2, 'c')]) != 0:
+        # quadrupole moments are stored as XX, XY, XZ, YY, YZ, ZZ in IOData, so they need to
+        # be permuted to have XX, YY, ZZ, XY, XZ, YZ order for FCHK.
+        quadrupole = data.moments[(2, 'c')][[0, 3, 5, 1, 2, 4]]
+        _dump_real_arrays("Quadrupole Moment", quadrupole, f)
 
     # write polarizability tensor
     if 'polarizability_tensor' in data.extra:
