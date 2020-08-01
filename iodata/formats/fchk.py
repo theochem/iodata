@@ -184,22 +184,22 @@ def load_one(lit: LineIterator) -> dict:
         raise ValueError('n_alpha={0} < n_beta={1} is not valid!'.format(nalpha, nbeta))
 
     norba = fchk['Alpha Orbital Energies'].shape[0]
-    mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
+    mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(norba, nbasis).T)
     mo_energies = np.copy(fchk['Alpha Orbital Energies'])
 
     if 'Beta Orbital Energies' in fchk:
         # unrestricted
         norbb = fchk['Beta Orbital Energies'].shape[0]
-        mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
+        mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(norbb, nbasis).T)
         mo_coeffs = np.concatenate((mo_coeffs, mo_coeffs_b), axis=1)
         mo_energies = np.concatenate((mo_energies, np.copy(fchk['Beta Orbital Energies'])), axis=0)
-        mo_occs = np.zeros(2 * nbasis_indep)
+        mo_occs = np.zeros(norba + norbb)
         mo_occs[:nalpha] = 1.0
-        mo_occs[nbasis_indep: nbasis_indep + nbeta] = 1.0
+        mo_occs[norba: norba + nbeta] = 1.0
         mo = MolecularOrbitals('unrestricted', norba, norbb, mo_occs, mo_coeffs, mo_energies, None)
     else:
         # restricted closed-shell and open-shell
-        mo_occs = np.zeros(nbasis_indep)
+        mo_occs = np.zeros(norba)
         mo_occs[:nalpha] = 1.0
         mo_occs[:nbeta] = 2.0
         if nalpha != nbeta:

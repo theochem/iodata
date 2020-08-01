@@ -564,6 +564,35 @@ def test_dump_fchk_from_molden(tmpdir):
     check_load_dump_consistency(tmpdir, 'nh3_molden_pure.molden')
 
 
+def test_dump_fchk_from_wfn_he(tmpdir):
+    check_load_dump_consistency(tmpdir, 'he_s_virtual.wfn')
+    # check_load_dump_consistency(tmpdir, 'he_spdfgh_virtual.wfn')
+
+
+def test_dump_fchk_from_wfn_li(tmpdir):
+    check_load_dump_consistency(tmpdir, 'li_sp_virtual.wfn')
+    check_load_dump_consistency(tmpdir, 'li_sp_orbital.wfn')
+
+
+def test_dump_fchk_from_wfn_lih_cation(tmpdir):
+    check_load_dump_consistency(tmpdir, 'lih_cation_uhf.wfn')
+    # check_load_dump_consistency(tmpdir, 'lih_cation_rohf.wfn')
+
+
+def test_dump_fchk_from_wfn_o2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'o2_uhf_virtual.wfn')
+    check_load_dump_consistency(tmpdir, 'o2_uhf.wfn')
+
+
+def test_dump_fchk_from_wfn_h2o(tmpdir):
+    check_load_dump_consistency(tmpdir, 'h2o_sto3g.wfn')
+    check_load_dump_consistency(tmpdir, 'h2o_sto3g_decontracted.wfn')
+
+
+def test_dump_fchk_from_wfn_cah110(tmpdir):
+    check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfn')
+
+
 def test_dump_fchk_rdms_cc(tmpdir):
     mol0 = load_fchk_helper("nitrogen-cc.fchk")
     fn_tmp = os.path.join(tmpdir, 'test.fchk')
