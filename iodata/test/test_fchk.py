@@ -27,11 +27,11 @@ from numpy.testing import assert_equal, assert_allclose
 
 import pytest
 
-from ..api import IOData, load_one, load_many, dump_one, dump_many
+from ..api import load_one, load_many, dump_one, dump_many
 from ..overlap import compute_overlap
 from ..utils import check_dm
 
-from .common import check_orthonormal, compute_mulliken_charges
+from .common import check_orthonormal, compute_mulliken_charges, compare_mols
 
 try:
     from importlib_resources import path
@@ -518,25 +518,13 @@ def test_load_nbasis_indep(tmpdir):
 
 def check_load_dump_consistency(tmpdir, fn):
     """Check if dumping and loading an FCHK file results in the same data."""
-    mol0 = load_fchk_helper(str(fn))
-    # Write fchk file in a temporary folder and then read it
-
-    fn_tmp = os.path.join(tmpdir, 'test.fchk')
-    dump_one(mol0, fn_tmp)
-    mol1 = load_one(fn_tmp)
-    # Check the files
-    assert mol0.mo.norba == mol1.mo.norba
-    assert mol0.mo.norbb == mol1.mo.norbb
-    assert_allclose(mol0.atcoords, mol1.atcoords)
-    assert_allclose(mol0.energy, mol1.energy)
-    assert_allclose(mol0.mo.occs, mol1.mo.occs)
-    assert_allclose(mol0.mo.coeffs, mol1.mo.coeffs)
-    assert_allclose(mol0.mo.energies, mol1.mo.energies)
-    assert_allclose(mol0.one_rdms['scf'], mol1.one_rdms['scf'])
-    # Compute and compare Mulliken charges
-    charges0 = compute_mulliken_charges(mol0)
-    charges1 = compute_mulliken_charges(mol1)
-    assert_allclose(charges0, charges1, rtol=0.0, atol=1.0e-6)
+    with path('iodata.test.data', fn) as file_name:
+        mol1 = load_one(str(file_name))
+    fn_tmp = os.path.join(tmpdir, 'foo.bar')
+    dump_one(mol1, fn_tmp, fmt='fchk')
+    mol2 = load_one(fn_tmp, fmt='fchk')
+    # compare molecules
+    compare_mols(mol1, mol2)
 
 
 def check_load_dump_consistency_fchk_molden(tmpdir, fn):
