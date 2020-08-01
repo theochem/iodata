@@ -539,7 +539,6 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
     pureFshells = 0
 
     shellTypes = []
-    numberPrimitivesPerShell = []
     shellAtomMap = []
     primitiveExp = []
     contractionCoeff = []
@@ -552,7 +551,6 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
 
         center = shell.icenter
         shellAtomMap.append(center + 1)
-        numberPrimitivesPerShell.append(nprim)
         coordinatesShell.append(coords[center])
         sType = _get_TypeShell(shell)
         shellTypes.append(sType)
@@ -572,21 +570,22 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
         if shellTypes[i] == 3:
             pureFshells += 1
 
-    totalPrim = np.sum(np.array(numberPrimitivesPerShell))
     highestAngularMoment = np.amax(np.abs(np.array(shellTypes)))
-    largestDegreeContraction = np.amax(np.array(numberPrimitivesPerShell))
+
+    # number of primitives per shell
+    nprims = np.array([shell.nprim for shell in basis.shells])
 
     _dump_integer_scalars("Number of basis functions", basis.nbasis, f)
     _dump_integer_scalars("Number of independent functions", basis.nbasis, f)
     _dump_integer_scalars("Number of contracted shells", len(basis.shells), f)
-    _dump_integer_scalars("Number of primitive shells", totalPrim, f)
+    _dump_integer_scalars("Number of primitive shells", nprims.sum(), f)
     _dump_integer_scalars("Pure/Cartesian d shells", pureDshells, f)
     _dump_integer_scalars("Pure/Cartesian f shells", pureFshells, f)
     _dump_integer_scalars("Highest angular momentum", highestAngularMoment, f)
-    _dump_integer_scalars("Largest degree of contraction", largestDegreeContraction, f)
+    _dump_integer_scalars("Largest degree of contraction", np.amax(nprims), f)
 
     _dump_integer_arrays("Shell types", np.array(shellTypes), f)
-    _dump_integer_arrays("Number of primitives per shell", np.array(numberPrimitivesPerShell), f)
+    _dump_integer_arrays("Number of primitives per shell", nprims, f)
     _dump_integer_arrays("Shell to atom map", np.array(shellAtomMap), f)
 
     _dump_real_arrays("Primitive exponents", np.array(primitiveExp), f)
