@@ -18,17 +18,18 @@
 # --
 """Test iodata.formats.wfn module."""
 
+import os
 
 import pytest
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
-from ..api import load_one
+from ..api import load_one, dump_one
 from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
 from ..utils import LineIterator
 
-from .common import check_orthonormal, truncated_file
+from .common import check_orthonormal, truncated_file, compare_mols, compute_mulliken_charges
 
 try:
     from importlib_resources import path
@@ -41,6 +42,158 @@ def helper_load_data_wfx(fn_wfx):
     with path('iodata.test.data', fn_wfx) as fx:
         lit = LineIterator(str(fx))
         return load_data_wfx(lit)
+
+
+def check_load_dump_consistency(fn, tmpdir):
+    """Check if data is preserved after dumping and loading a Wfx file.
+
+    Parameters
+    ----------
+    fn : str
+        The Molekel filename to load
+    tmpdir : str
+        The temporary directory to dump and load the file.
+    """
+    with path('iodata.test.data', fn) as file_name:
+        mol1 = load_one(str(file_name), fmt='wfx')
+    fn_tmp = os.path.join(tmpdir, 'foo.bar')
+    dump_one(mol1, fn_tmp, fmt='wfx')
+    mol2 = load_one(fn_tmp, fmt='wfx')
+    compare_mols(mol1, mol2)
+    # compare Mulliken charges
+    charges1 = compute_mulliken_charges(mol1)
+    charges2 = compute_mulliken_charges(mol2)
+    assert_allclose(charges2, charges1, rtol=1.0e-7, atol=0.0)
+
+
+def test_load_dump_consistency_water(tmpdir):
+    check_load_dump_consistency('water_sto3g_hf.wfx', tmpdir)
+
+
+def test_load_dump_consistency_h2(tmpdir):
+    check_load_dump_consistency('h2_ub3lyp_ccpvtz.wfx', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_cisd(tmpdir):
+    check_load_dump_consistency('lih_cation_cisd.wfx', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_uhf(tmpdir):
+    check_load_dump_consistency('lih_cation_uhf.wfx', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_rohf(tmpdir):
+    check_load_dump_consistency('lih_cation_rohf.wfx', tmpdir)
+
+
+def compare_mulliken_charges(fname, tmpdir, rtol=1.0e-7, atol=0.0):
+    """Check if charges are computed correctly after dumping and loading WFX file format.
+
+    Parameters
+    ----------
+    fname : str
+        The filename to be load.
+    tmpdir : str
+        The temporary directory to dump and load the file.
+    rtole : float, optional
+        Relative tolerance when comparing charges.
+    atol : float, optional
+        Absolute tolerance when comparing charges.
+
+    """
+    with path('iodata.test.data', fname) as file_name:
+        mol1 = load_one(str(file_name))
+    # dump WFX and check that file exists
+    fn_tmp = os.path.join(tmpdir, f"{fname}.wfx")
+    dump_one(mol1, fn_tmp)
+    assert os.path.isfile(fn_tmp)
+    # load dumped file and compare Mulliken charges
+    mol2 = load_one(fn_tmp)
+    charges1 = compute_mulliken_charges(mol1)
+    charges2 = compute_mulliken_charges(mol2)
+    assert_allclose(charges1, charges2, rtol=rtol, atol=atol)
+
+
+def test_dump_one_from_fchk_h2o(tmpdir):
+    compare_mulliken_charges('h2o_sto3g.fchk', tmpdir)
+    compare_mulliken_charges('water_hfs_321g.fchk', tmpdir)
+    compare_mulliken_charges('water_sto3g_hf_g03.fchk', tmpdir)
+
+
+def test_dump_one_from_fchk_ch3_restricted(tmpdir):
+    compare_mulliken_charges('ch3_hf_sto3g.fchk', tmpdir)
+
+
+def test_dump_one_from_fchk_ch3_unrestricted(tmpdir):
+    compare_mulliken_charges('ch3_rohf_sto3g_g03.fchk', tmpdir)
+
+
+def test_dump_one_from_wfn_h2o(tmpdir):
+    compare_mulliken_charges('h2o_sto3g.wfn', tmpdir)
+    compare_mulliken_charges('h2o_sto3g_decontracted.wfn', tmpdir)
+
+
+def test_dump_one_from_wfn_o2(tmpdir):
+    compare_mulliken_charges('o2_uhf.wfn', tmpdir)
+    compare_mulliken_charges('o2_uhf_virtual.wfn', tmpdir)
+
+
+def test_dump_one_from_wfn_atom(tmpdir):
+    # Li atom
+    compare_mulliken_charges('li_sp_orbital.wfn', tmpdir)
+    compare_mulliken_charges('li_sp_virtual.wfn', tmpdir)
+    # He atom
+    compare_mulliken_charges('he_s_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_s_virtual.wfn', tmpdir)
+    compare_mulliken_charges('he_p_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_d_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_sp_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_spd_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_spdf_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_spdfgh_orbital.wfn', tmpdir)
+    compare_mulliken_charges('he_spdfgh_virtual.wfn', tmpdir)
+
+
+def test_dump_one_from_wfn_lih(tmpdir):
+    compare_mulliken_charges('lih_cation_uhf.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_rohf.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_cisd.wfn', tmpdir)
+    compare_mulliken_charges('lih_cation_fci.wfn', tmpdir)
+
+
+def test_dump_one_from_wfn_lif(tmpdir):
+    compare_mulliken_charges('lif_fci.wfn', tmpdir)
+
+
+def test_dump_one_from_molden_h2o(tmpdir):
+    compare_mulliken_charges('h2o.molden.input', tmpdir)
+
+
+def test_dump_one_from_molden_he2(tmpdir):
+    compare_mulliken_charges('he2_ghost_psi4_1.0.molden', tmpdir)
+
+
+def test_dump_one_from_molden_neon(tmpdir):
+    compare_mulliken_charges('neon_turbomole_def2-qzvp.molden', tmpdir, atol=1.0e-10)
+
+
+def test_dump_one_from_molden_nh3(tmpdir):
+    compare_mulliken_charges('nh3_molden_cart.molden', tmpdir)
+    compare_mulliken_charges('nh3_molpro2012.molden', tmpdir)
+    compare_mulliken_charges('nh3_turbomole.molden', tmpdir)
+
+
+def test_dump_one_from_mkl_methanol(tmpdir):
+    compare_mulliken_charges('ethanol.mkl', tmpdir)
+
+
+def test_dump_one_from_mkl_h2(tmpdir):
+    compare_mulliken_charges('h2_sto3g.mkl', tmpdir)
+
+
+# add this test when pure to Cartesian basis set conversion is supported
+# def test_dump_one_from_mkl_li2(tmpdir):
+#     compare_mulliken_charges('li2.mkl', tmpdir)
 
 
 def test_load_data_wfx_h2():
@@ -198,7 +351,7 @@ def test_parse_wfx_missing_tag_h2o():
         lit = LineIterator(fn_wfx)
         with pytest.raises(IOError) as error:
             parse_wfx(lit, required_tags=["<Foo Bar>"])
-    assert str(error.value).endswith("Section <Foo Bar> is missing.")
+    assert str(error.value).endswith("Section <Foo Bar> is missing from loaded WFX data.")
 
 
 def test_load_data_wfx_h2o_error():
