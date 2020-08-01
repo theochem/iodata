@@ -226,7 +226,7 @@ def test_load_molden_nh3_psi4():
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
-    assert "PSI4" in record[0].message.args[0]
+    assert "PSI4 < 1.0" in record[0].message.args[0]
 
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -274,6 +274,46 @@ def test_load_molden_he2_ghost_psi4_1():
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([-0.0041, 0.0041])
     assert_allclose(charges, molden_charges, atol=5e-4)
+
+
+def test_load_molden_h2o_6_31g_d_cart_psi4():
+    # The file tested here is created with PSI4 1.3.2. It should be read in
+    # properly after fixing for errors in AO normalization conventions.
+    with path('iodata.test.data', 'h2o_psi4_1.3.2_6-31G_d_cart.molden') as fn_molden:
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "PSI4 <= 1.3.2" in record[0].message.args[0]
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
+    # Check Mulliken charges.
+    # Comparison with numbers from PSI4 output.
+    charges = compute_mulliken_charges(mol)
+    molden_charges = np.array([-0.86514, 0.43227, 0.43288])
+    assert_allclose(charges, molden_charges, atol=1.e-5)
+
+
+def test_load_molden_nh3_aug_cc_pvqz_cart_psi4():
+    # The file tested here is created with PSI4 1.3.2. It should be read in
+    # properly after fixing for errors in AO normalization conventions.
+    with path('iodata.test.data', 'nh3_psi4_1.3.2_aug_cc_pvqz_cart.molden') as fn_molden:
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "PSI4 <= 1.3.2" in record[0].message.args[0]
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
+    # Check Mulliken charges.
+    # Comparison with numbers from PSI4 output.
+    charges = compute_mulliken_charges(mol)
+    molden_charges = np.array([-0.74507, 0.35743, 0.24197, 0.14567])
+    assert_allclose(charges, molden_charges, atol=1.e-5)
 
 
 def test_load_molden_nh3_molpro2012():
