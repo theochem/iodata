@@ -484,81 +484,6 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
                 k = 0
 
 
-def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
-    """Dump the next basis information in a file.
-
-    - "Number of basis functions"
-    - "Number of independent functions"
-    - "Number of contracted shells"
-    - "Number of primitive shells"
-    - "Pure/Cartesian d shells"
-    - "Pure/Cartesian f shells"
-    - "Highest angular momentum"
-    - "Largest degree of contraction"
-    - "Shell types"
-    - "Number of primitives per shell"
-    - "Shell to atom map"
-    - "Primitive exponents"
-    - "Contraction coefficients"
-    - "P(S=P) Contraction coefficients"
-    - "Coordinates of each shell"
-
-     Parameters
-     ----------
-     basis:
-        A instance of MolecularBasis.
-     coords:
-        A numpy.ndarray with the information of the coordinates.
-    """
-    # number of primitives per shell
-    nprims = np.array([shell.nprim for shell in basis.shells])
-    exponents = np.array([exponent for shell in basis.shells for exponent in shell.exponents])
-    coeffs = np.array([shell.coeffs[i][0] for shell in basis.shells for i in range(shell.nprim)])
-    coordinates = np.array([coords[shell.icenter] for shell in basis.shells]).flatten()
-    shell_to_atom = np.array([shell.icenter + 1 for shell in basis.shells])
-
-    # get list of shell types: 0=s, 1=p, -1=sp, 2=6d, -2=5d, 3=10f, -3=7f...
-    shell_types = []
-    for shell in basis.shells:
-        if shell.ncon == 1 and shell.kinds == ['c']:
-            shell_types.append(shell.angmoms[0])
-        elif shell.ncon == 1 and shell.kinds == ['p']:
-            shell_types.append(-1 * shell.angmoms[0])
-        elif shell.ncon == 2 and shell.angmoms == [0, 1]:
-            shell_types.append(-1)
-        else:
-            raise ValueError("Cannot identify type of shell!")
-
-    num_pure_d_shells = sum([1 for st in shell_types if st == 2])
-    num_pure_f_shells = sum([1 for st in shell_types if st == 3])
-
-    _dump_integer_scalars("Number of basis functions", basis.nbasis, f)
-    _dump_integer_scalars("Number of independent functions", basis.nbasis, f)
-    _dump_integer_scalars("Number of contracted shells", len(basis.shells), f)
-    _dump_integer_scalars("Number of primitive shells", nprims.sum(), f)
-    _dump_integer_scalars("Pure/Cartesian d shells", num_pure_d_shells, f)
-    _dump_integer_scalars("Pure/Cartesian f shells", num_pure_f_shells, f)
-    _dump_integer_scalars("Highest angular momentum", np.amax(np.abs(shell_types)), f)
-    _dump_integer_scalars("Largest degree of contraction", np.amax(nprims), f)
-
-    _dump_integer_arrays("Shell types", np.array(shell_types), f)
-    _dump_integer_arrays("Number of primitives per shell", nprims, f)
-    _dump_integer_arrays("Shell to atom map", shell_to_atom, f)
-
-    _dump_real_arrays("Primitive exponents", exponents, f)
-    _dump_real_arrays("Contraction coefficients", coeffs, f)
-
-    if -1 in shell_types:
-        sp_coeffs = []
-        for (shell, shell_type) in zip(basis.shells, shell_types):
-            if shell_type == -1:
-                sp_coeffs.extend([shell.coeffs[i][1] for i in range(shell.nprim)])
-            else:
-                sp_coeffs.extend([0.0] * shell.nprim)
-        _dump_real_arrays("P(S=P) Contraction coefficients", np.array(sp_coeffs), f)
-    _dump_real_arrays("Coordinates of each shell", coordinates, f)
-
-
 def _dump_rdms(one_rdms: dict, lot_tmp: str, f: TextIO):
     """Dump the One reduce density matrix.
 
@@ -646,7 +571,54 @@ def dump_one(f: TextIO, data: IOData):
 
     # write molecular orbital basis set
     if data.obasis is not None:
-        _dump_basisInfo(data.obasis, data.atcoords, f)
+
+        # number of primitives per shell
+        nprims = np.array([shell.nprim for shell in data.obasis.shells])
+        exponents = np.array([item for shell in data.obasis.shells for item in shell.exponents])
+        coeffs = np.array([s.coeffs[i][0] for s in data.obasis.shells for i in range(s.nprim)])
+        coordinates = np.array([data.atcoords[shell.icenter] for shell in data.obasis.shells])
+        shell_to_atom = np.array([shell.icenter + 1 for shell in data.obasis.shells])
+
+        # get list of shell types: 0=s, 1=p, -1=sp, 2=6d, -2=5d, 3=10f, -3=7f...
+        shell_types = []
+        for shell in data.obasis.shells:
+            if shell.ncon == 1 and shell.kinds == ['c']:
+                shell_types.append(shell.angmoms[0])
+            elif shell.ncon == 1 and shell.kinds == ['p']:
+                shell_types.append(-1 * shell.angmoms[0])
+            elif shell.ncon == 2 and shell.angmoms == [0, 1]:
+                shell_types.append(-1)
+            else:
+                raise ValueError("Cannot identify type of shell!")
+
+        num_pure_d_shells = sum([1 for st in shell_types if st == 2])
+        num_pure_f_shells = sum([1 for st in shell_types if st == 3])
+
+        _dump_integer_scalars("Number of basis functions", data.obasis.nbasis, f)
+        _dump_integer_scalars("Number of independent functions", data.obasis.nbasis, f)
+        _dump_integer_scalars("Number of contracted shells", len(data.obasis.shells), f)
+        _dump_integer_scalars("Number of primitive shells", nprims.sum(), f)
+        _dump_integer_scalars("Pure/Cartesian d shells", num_pure_d_shells, f)
+        _dump_integer_scalars("Pure/Cartesian f shells", num_pure_f_shells, f)
+        _dump_integer_scalars("Highest angular momentum", np.amax(np.abs(shell_types)), f)
+        _dump_integer_scalars("Largest degree of contraction", np.amax(nprims), f)
+
+        _dump_integer_arrays("Shell types", np.array(shell_types), f)
+        _dump_integer_arrays("Number of primitives per shell", nprims, f)
+        _dump_integer_arrays("Shell to atom map", shell_to_atom, f)
+
+        _dump_real_arrays("Primitive exponents", exponents, f)
+        _dump_real_arrays("Contraction coefficients", coeffs, f)
+
+        if -1 in shell_types:
+            sp_coeffs = []
+            for (shell, shell_type) in zip(data.obasis.shells, shell_types):
+                if shell_type == -1:
+                    sp_coeffs.extend([shell.coeffs[i][1] for i in range(shell.nprim)])
+                else:
+                    sp_coeffs.extend([0.0] * shell.nprim)
+            _dump_real_arrays("P(S=P) Contraction coefficients", np.array(sp_coeffs), f)
+        _dump_real_arrays("Coordinates of each shell", coordinates.flatten(), f)
 
     # write energy
     if data.energy is not None:
