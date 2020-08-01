@@ -539,25 +539,16 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
     pureFshells = 0
 
     shellTypes = []
-    shellAtomMap = []
-    primitiveExp = []
-    contractionCoeff = []
     spcontractionCoeff = []
-    coordinatesShell = []
 
     nshell = len(basis.shells)
     for shell in basis.shells:
         nprim = len(shell.exponents)
 
-        center = shell.icenter
-        shellAtomMap.append(center + 1)
-        coordinatesShell.append(coords[center])
         sType = _get_TypeShell(shell)
         shellTypes.append(sType)
 
         for j in range(nprim):
-            primitiveExp.append(shell.exponents[j])
-            contractionCoeff.append(shell.coeffs[j][0])
 
             if sType == -1:
                 spcontractionCoeff.append(shell.coeffs[j][1])
@@ -574,6 +565,10 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
 
     # number of primitives per shell
     nprims = np.array([shell.nprim for shell in basis.shells])
+    exponents = np.array([exponent for shell in basis.shells for exponent in shell.exponents])
+    coeffs = np.array([shell.coeffs[i][0] for shell in basis.shells for i in range(shell.nprim)])
+    coordinates = np.array([coords[shell.icenter] for shell in basis.shells]).flatten()
+    shell_to_atom = np.array([shell.icenter + 1 for shell in basis.shells])
 
     _dump_integer_scalars("Number of basis functions", basis.nbasis, f)
     _dump_integer_scalars("Number of independent functions", basis.nbasis, f)
@@ -586,15 +581,15 @@ def _dump_basisInfo(basis: MolecularBasis, coords: np.ndarray, f: TextIO):
 
     _dump_integer_arrays("Shell types", np.array(shellTypes), f)
     _dump_integer_arrays("Number of primitives per shell", nprims, f)
-    _dump_integer_arrays("Shell to atom map", np.array(shellAtomMap), f)
+    _dump_integer_arrays("Shell to atom map", shell_to_atom, f)
 
-    _dump_real_arrays("Primitive exponents", np.array(primitiveExp), f)
-    _dump_real_arrays("Contraction coefficients", np.array(contractionCoeff), f)
+    _dump_real_arrays("Primitive exponents", exponents, f)
+    _dump_real_arrays("Contraction coefficients", coeffs, f)
 
     if -1 in shellTypes:
         _dump_real_arrays("P(S=P) Contraction coefficients", np.array(spcontractionCoeff), f)
 
-    _dump_real_arrays("Coordinates of each shell", np.array(coordinatesShell).flatten(), f)
+    _dump_real_arrays("Coordinates of each shell", coordinates, f)
 
 
 def _dump_rdms(one_rdms: dict, lot_tmp: str, f: TextIO):
