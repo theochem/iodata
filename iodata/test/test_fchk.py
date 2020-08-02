@@ -566,7 +566,14 @@ def test_dump_fchk_from_molden(tmpdir):
 
 def test_dump_fchk_from_wfn_he(tmpdir):
     check_load_dump_consistency(tmpdir, 'he_s_virtual.wfn')
-    # check_load_dump_consistency(tmpdir, 'he_spdfgh_virtual.wfn')
+    check_load_dump_consistency(tmpdir, 'he_s_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_p_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_d_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_sp_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_spd_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_spdf_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_spdfgh_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_spdfgh_virtual.wfn')
 
 
 def test_dump_fchk_from_wfn_li(tmpdir):
@@ -616,8 +623,8 @@ def test_dump_fchk_from_molekel_ethanol(tmpdir):
     check_load_dump_consistency(tmpdir, 'ethanol.mkl')
 
 
-# def test_dump_fchk_from_molekel_li2(tmpdir):
-#     check_load_dump_consistency(tmpdir, 'li2.mkl')
+def test_dump_fchk_from_molekel_li2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'li2.mkl')
 
 
 def test_dump_fchk_rdms_ci(tmpdir):

@@ -25,7 +25,7 @@ from typing import List, Tuple, Iterator, TextIO
 import numpy as np
 
 from ..iodata import IOData
-from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS
+from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_load_one, document_load_many
 from ..docstrings import document_dump_one, document_dump_many
 from ..orbitals import MolecularOrbitals
@@ -627,11 +627,15 @@ def dump_one(f: TextIO, data: IOData):
 
     # write MO energies & coefficients
     if data.mo is not None:
+        # convert to FCHK basis conventions
+        permutation, signs = convert_conventions(data.obasis, CONVENTIONS)
+        coeffsa = data.mo.coeffsa[permutation] * signs.reshape(-1, 1)
         _dump_real_arrays("Alpha Orbital Energies", data.mo.energiesa, f)
-        _dump_real_arrays("Alpha MO coefficients", data.mo.coeffsa.transpose().flatten(), f)
+        _dump_real_arrays("Alpha MO coefficients", coeffsa.transpose().flatten(), f)
         if data.mo.kind == "unrestricted":
+            coeffsb = data.mo.coeffsb[permutation] * signs.reshape(-1, 1)
             _dump_real_arrays("Beta Orbital Energies", data.mo.energiesb, f)
-            _dump_real_arrays("Beta MO coefficients", data.mo.coeffsb.transpose().flatten(), f)
+            _dump_real_arrays("Beta MO coefficients", coeffsb.transpose().flatten(), f)
 
     # write reduced density matrix if available
     _dump_rdms(data.one_rdms, data.lot, f)
