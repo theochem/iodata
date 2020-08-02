@@ -48,33 +48,32 @@ def load_one(lit: LineIterator) -> dict:
             data = _helper_read_frame(lit)
         except StopIteration:
             break
-        if data is not None:
-            title = data[0]
-            time = data[1]
-            resnums = np.array(data[2])
-            resnames = np.array(data[3])
-            attypes = np.array(data[4])
-            atcoords = data[5]
-            velocities = data[6]
-            cellvecs = data[7]
-            atffparams = {
-                'attypes': attypes,
-                'resnames': resnames,
-                'resnums': resnums
-            }
-            extra = {
-                'time': time,
-                'velocities': velocities
-            }
-            result = {
-                'atcoords': atcoords,
-                'atffparams': atffparams,
-                'cellvecs': cellvecs,
-                'extra': extra,
-                'title': title,
-            }
-            return result
-    raise lit.error('Bad format. Gromacs gro file could not be read.')
+        title = data[0]
+        time = data[1]
+        resnums = np.array(data[2])
+        resnames = np.array(data[3])
+        attypes = np.array(data[4])
+        atcoords = data[5]
+        velocities = data[6]
+        cellvecs = data[7]
+        atffparams = {
+            'attypes': attypes,
+            'resnames': resnames,
+            'resnums': resnums
+        }
+        extra = {
+            'time': time,
+            'velocities': velocities
+        }
+        result = {
+            'atcoords': atcoords,
+            'atffparams': atffparams,
+            'cellvecs': cellvecs,
+            'extra': extra,
+            'title': title,
+        }
+        return result
+    lit.error('Gromacs gro file could not be read.')
 
 
 @document_load_many('GRO', ['atcoords', 'atffparams', 'cellvecs', 'extra', 'title'])
