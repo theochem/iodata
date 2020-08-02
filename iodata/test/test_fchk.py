@@ -558,6 +558,10 @@ def test_dump_fchk_from_fchk_o2(tmpdir):
     check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_pure.fchk')
 
 
+def test_dump_fchk_from_fchk_water_dimer_ghost(tmpdir):
+    check_load_dump_consistency(tmpdir, 'water_dimer_ghost.fchk')
+
+
 def test_dump_fchk_from_molden_f(tmpdir):
     check_load_dump_consistency(tmpdir, 'F.molden')
 
@@ -566,8 +570,8 @@ def test_dump_fchk_from_molden_ne(tmpdir):
     check_load_dump_consistency(tmpdir, 'neon_turbomole_def2-qzvp.molden')
 
 
-# def test_dump_fchk_from_molden_he2(tmpdir):
-#     check_load_dump_consistency(tmpdir, 'he2_ghost_psi4_1.0.molden')
+def test_dump_fchk_from_molden_he2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'he2_ghost_psi4_1.0.molden')
 
 
 def test_dump_fchk_from_molden_nh3(tmpdir):
