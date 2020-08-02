@@ -620,6 +620,24 @@ def test_dump_fchk_from_wfn_cah110(tmpdir):
     check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfn')
 
 
+def test_dump_fchk_from_wfx_h2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'h2_ub3lyp_ccpvtz.wfx')
+
+
+def test_dump_fchk_from_wfx_water(tmpdir):
+    check_load_dump_consistency(tmpdir, 'water_sto3g_hf.wfx')
+
+
+def test_dump_fchk_from_wfx_lih_cation(tmpdir):
+    check_load_dump_consistency(tmpdir, 'lih_cation_uhf.wfx')
+    check_load_dump_consistency(tmpdir, 'lih_cation_rohf.wfx')
+    # check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfx')
+
+
+def test_dump_fchk_from_wfx_cah110(tmpdir):
+    check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfx')
+
+
 def test_dump_fchk_rdms_cc(tmpdir):
     mol0 = load_fchk_helper("nitrogen-cc.fchk")
     fn_tmp = os.path.join(tmpdir, 'test.fchk')
