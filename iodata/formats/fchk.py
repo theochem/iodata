@@ -483,49 +483,6 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
                 k = 0
 
 
-def _dump_rdms(one_rdms: dict, lot_tmp: str, f: TextIO):
-    """Dump the One reduce density matrix.
-
-    Parameters
-    ----------
-    one_rdms:
-        A dictionary, where the key is related with the level of theory, and the spin or total
-        density matrix.
-
-    lot_tmp:
-        A string with the level of theory.
-    """
-    try:
-        getattr(lot_tmp, 'upper')
-    except AttributeError:
-        print("The system doesn't have a level of theory")
-        lot_tmp = "None"
-
-    lot = lot_tmp.upper()
-
-    for key in one_rdms:
-        arr = one_rdms[key]
-        mat = arr[np.tril_indices(arr.shape[0])]
-
-        level = ['MP2', 'MP3', 'CC', 'CI']
-        for i in level:
-            if i in lot:
-                namelevel = i
-
-        if key == "scf":
-            title = "Total SCF Density"
-        elif key == "scf_spin":
-            title = "Spin SCF Density"
-        elif key == "post_scf":
-            title = "Total {0} Density".format(namelevel)
-        elif key == "post_scf_spin":
-            title = "Spin {0} Density".format(namelevel)
-        else:
-            title = "Total SCF Density"
-
-        _dump_real_arrays(title, mat, f)
-
-
 @document_dump_one(
     "Gaussian Formatted Checkpoint",
     ['atcoords', 'atnums', 'energy', 'mo', 'obasis'],
@@ -638,8 +595,28 @@ def dump_one(f: TextIO, data: IOData):
             _dump_real_arrays("Beta Orbital Energies", data.mo.energiesb, f)
             _dump_real_arrays("Beta MO coefficients", coeffsb.transpose().flatten(), f)
 
-    # write reduced density matrix if available
-    _dump_rdms(data.one_rdms, data.lot, f)
+    # write reduced density matrix, if available
+    # get level of theory, use 'NA' if not available
+    level = data.lot.upper() if data.lot is not None else 'NA'
+    for item in ['MP2', 'MP3', 'CC', 'CI']:
+        if item in level:
+            level = item
+    for key, arr in data.one_rdms.items():
+        # get lower triangular elements of RDM
+        mat = arr[np.tril_indices(arr.shape[0])]
+
+        # identify type of RDMs
+        if key == "scf":
+            title = "Total SCF Density"
+        elif key == "scf_spin":
+            title = "Spin SCF Density"
+        elif key == "post_scf":
+            title = "Total {0} Density".format(level)
+        elif key == "post_scf_spin":
+            title = "Spin {0} Density".format(level)
+        else:
+            title = "Total SCF Density"
+        _dump_real_arrays(title, mat, f)
 
     # write atomic charges
     if 'mulliken' in data.atcharges:
