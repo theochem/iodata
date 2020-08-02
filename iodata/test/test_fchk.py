@@ -657,8 +657,8 @@ def test_dump_fchk_from_wfx_lih_cation(tmpdir):
 #     check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfx')
 
 
-def test_dump_fchk_from_wfx_cah110(tmpdir):
-    check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfx')
+# def test_dump_fchk_from_wfx_cah110(tmpdir):
+#     check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfx')
 
 
 def test_dump_fchk_from_molekel_h2(tmpdir):

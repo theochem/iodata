@@ -172,8 +172,9 @@ def load_one(lit: LineIterator) -> dict:
     # D) Load the wavefunction
     # Handle small difference in spelling in fchk files from g03 and g09:
     # "independ__e__nt" versus "independ__a__nt".
-    nbasis_indep = fchk.get("Number of independant functions",
-                            fchk.get("Number of independent functions", nbasis))
+    # The nbasis_indep is not used, so it is commented because of pylint unused-variable error
+    # nbasis_indep = fchk.get("Number of independant functions",
+    #                         fchk.get("Number of independent functions", nbasis))
 
     # Load orbitals
     nalpha = fchk['Number of alpha electrons']
