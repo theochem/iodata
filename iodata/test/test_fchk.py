@@ -558,10 +558,26 @@ def test_dump_fchk_from_fchk_o2(tmpdir):
     check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_pure.fchk')
 
 
-def test_dump_fchk_from_molden(tmpdir):
+def test_dump_fchk_from_molden_f(tmpdir):
+    check_load_dump_consistency(tmpdir, 'F.molden')
+
+
+def test_dump_fchk_from_molden_ne(tmpdir):
+    check_load_dump_consistency(tmpdir, 'neon_turbomole_def2-qzvp.molden')
+
+
+# def test_dump_fchk_from_molden_he2(tmpdir):
+#     check_load_dump_consistency(tmpdir, 'he2_ghost_psi4_1.0.molden')
+
+
+def test_dump_fchk_from_molden_nh3(tmpdir):
+    check_load_dump_consistency(tmpdir, 'nh3_orca.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_psi4.molden')
     check_load_dump_consistency(tmpdir, 'nh3_psi4_1.0.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_molpro2012.molden')
     check_load_dump_consistency(tmpdir, 'nh3_molden_cart.molden')
     check_load_dump_consistency(tmpdir, 'nh3_molden_pure.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_turbomole.molden')
 
 
 def test_dump_fchk_from_wfn_he(tmpdir):
