@@ -638,21 +638,6 @@ def test_dump_fchk_from_wfx_cah110(tmpdir):
     check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfx')
 
 
-def test_dump_fchk_rdms_cc(tmpdir):
-    mol0 = load_fchk_helper("nitrogen-cc.fchk")
-    fn_tmp = os.path.join(tmpdir, 'test.fchk')
-    dump_one(mol0, fn_tmp)
-    mol1 = load_one(fn_tmp)
-    assert_allclose(mol0.mo.occs, mol1.mo.occs)
-    assert_allclose(mol0.mo.coeffs, mol1.mo.coeffs)
-    assert_allclose(mol0.mo.energies, mol1.mo.energies)
-    # Check the rdms
-    assert_allclose(mol0.one_rdms['scf'], mol1.one_rdms['scf'])
-    assert_allclose(mol0.one_rdms['post_scf'], mol1.one_rdms['post_scf'])
-    assert_allclose(mol0.one_rdms['scf_spin'], mol1.one_rdms['scf_spin'])
-    assert_allclose(mol0.one_rdms['post_scf_spin'], mol1.one_rdms['post_scf_spin'])
-
-
 def test_dump_fchk_from_molekel_h2(tmpdir):
     check_load_dump_consistency(tmpdir, 'h2_sto3g.mkl')
 
@@ -665,34 +650,20 @@ def test_dump_fchk_from_molekel_li2(tmpdir):
     check_load_dump_consistency(tmpdir, 'li2.mkl')
 
 
-def test_dump_fchk_rdms_ci(tmpdir):
-    mol0 = load_fchk_helper("nitrogen-ci.fchk")
-    fn_tmp = os.path.join(tmpdir, 'test.fchk')
-    dump_one(mol0, fn_tmp)
-    mol1 = load_one(fn_tmp)
-    # Check the rdms
-    assert_allclose(mol0.one_rdms['post_scf'], mol1.one_rdms['post_scf'])
-    assert_allclose(mol0.one_rdms['post_scf_spin'], mol1.one_rdms['post_scf_spin'])
+def test_dump_fchk_rdms_cc_nitrogen(tmpdir):
+    check_load_dump_consistency(tmpdir, "nitrogen-cc.fchk")
 
 
-def test_dump_fchk_rdms_mp2(tmpdir):
-    mol0 = load_fchk_helper("nitrogen-mp2.fchk")
-    fn_tmp = os.path.join(tmpdir, 'test.fchk')
-    dump_one(mol0, fn_tmp)
-    mol1 = load_one(fn_tmp)
-    # Check the rdms
-    assert_allclose(mol0.one_rdms['post_scf'], mol1.one_rdms['post_scf'])
-    assert_allclose(mol0.one_rdms['post_scf_spin'], mol1.one_rdms['post_scf_spin'])
+def test_dump_fchk_rdms_ci_nitrogen(tmpdir):
+    check_load_dump_consistency(tmpdir, "nitrogen-ci.fchk")
 
 
-def test_dump_fchk_rdms_mp3(tmpdir):
-    mol0 = load_fchk_helper("nitrogen-mp3.fchk")
-    fn_tmp = os.path.join(tmpdir, 'test.fchk')
-    dump_one(mol0, fn_tmp)
-    mol1 = load_one(fn_tmp)
-    # Check the rdms
-    assert_allclose(mol0.one_rdms['post_scf'], mol1.one_rdms['post_scf'])
-    assert_allclose(mol0.one_rdms['post_scf_spin'], mol1.one_rdms['post_scf_spin'])
+def test_dump_fchk_rdms_mp2_nitrogen(tmpdir):
+    check_load_dump_consistency(tmpdir, "nitrogen-mp2.fchk")
+
+
+def test_dump_fchk_rdms_mp3_nitrogen(tmpdir):
+    check_load_dump_consistency(tmpdir, "nitrogen-mp3.fchk")
 
 
 def test_dump_many_consistency(tmpdir):
