@@ -99,14 +99,7 @@ def _helper_read_frame(lit: LineIterator) -> Tuple:
     if 't=' in line:
         time = float(line.split('t=')[1]) * picosecond
     # Read the second line for number of atoms.
-    natoms = next(lit)
-    # Just a checkpoint. This line must be a number.
-    # If is not, the data is not parsed.
-    if natoms is not None:
-        try:
-            natoms = int(natoms)
-        except ValueError:
-            return None
+    natoms = int(next(lit))
     # Read the atom lines
     resnums = []
     resnames = []
