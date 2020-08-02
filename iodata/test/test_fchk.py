@@ -583,7 +583,7 @@ def test_dump_fchk_from_wfn_li(tmpdir):
 
 def test_dump_fchk_from_wfn_lih_cation(tmpdir):
     check_load_dump_consistency(tmpdir, 'lih_cation_uhf.wfn')
-    # check_load_dump_consistency(tmpdir, 'lih_cation_rohf.wfn')
+    check_load_dump_consistency(tmpdir, 'lih_cation_rohf.wfn')
 
 
 def test_dump_fchk_from_wfn_o2(tmpdir):
@@ -594,6 +594,10 @@ def test_dump_fchk_from_wfn_o2(tmpdir):
 def test_dump_fchk_from_wfn_h2o(tmpdir):
     check_load_dump_consistency(tmpdir, 'h2o_sto3g.wfn')
     check_load_dump_consistency(tmpdir, 'h2o_sto3g_decontracted.wfn')
+
+
+def test_dump_fchk_from_wfn_ch3(tmpdir):
+    check_load_dump_consistency(tmpdir, 'ch3_rohf_sto3g_g03.fchk')
 
 
 def test_dump_fchk_from_wfn_cah110(tmpdir):
