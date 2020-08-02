@@ -602,6 +602,22 @@ def test_dump_fchk_from_wfn_lih_cation(tmpdir):
     check_load_dump_consistency(tmpdir, 'lih_cation_rohf.wfn')
 
 
+def test_dump_fchk_from_wfn_cisd_lih_cation(tmpdir):
+    check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfn')
+
+
+# def test_dump_fchk_from_wfn_fci_lih_cation(tmpdir):
+#     check_load_dump_consistency(tmpdir, 'lih_cation_fci.wfn')
+
+
+# def test_dump_fchk_from_wfn_fci_lif(tmpdir):
+#     check_load_dump_consistency(tmpdir, 'lif_fci.wfn')
+
+
+def test_dump_fchk_from_wfn_h2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'h2_ccpvqz.wfn')
+
+
 def test_dump_fchk_from_wfn_o2(tmpdir):
     check_load_dump_consistency(tmpdir, 'o2_uhf_virtual.wfn')
     check_load_dump_consistency(tmpdir, 'o2_uhf.wfn')
@@ -631,7 +647,10 @@ def test_dump_fchk_from_wfx_water(tmpdir):
 def test_dump_fchk_from_wfx_lih_cation(tmpdir):
     check_load_dump_consistency(tmpdir, 'lih_cation_uhf.wfx')
     check_load_dump_consistency(tmpdir, 'lih_cation_rohf.wfx')
-    # check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfx')
+
+
+# def test_dump_fchk_from_wfx_lih_cisd_cation(tmpdir):
+#     check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfx')
 
 
 def test_dump_fchk_from_wfx_cah110(tmpdir):
