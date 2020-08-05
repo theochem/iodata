@@ -235,9 +235,6 @@ def convert_vector_basis(
     r"""
     Convert a vector from basis 1 of size M to another basis 2 of size N.
 
-    Basis vectors are defined to be linearly independent wrt to one another
-     and need not be orthogonal.
-
     Parameters
     ----------
     coeffs1:
@@ -262,14 +259,18 @@ def convert_vector_basis(
 
     Notes
     -----
+    - Basis vectors are defined to be linearly independent wrt to one another
+      and need not be orthogonal.
+
     - `basis2_overlap` is the matrix with (i, j)th entries
-    :math:`\braket{\psi_i, \psi_j}` where :math:`\psi_i` are in basis set 2.
+      :math:`\braket{\psi_i, \psi_j}` where :math:`\psi_i` are in basis set 2.
 
     - `basis21_overlap` is the matrix whose (i, j)th entries are
-    :math:`\braket{\psi_i, \phi_j}` where :math:`\phi_j` are in basis set 1 and
-    :math:`\psi_i` are in basis set 2.
+      :math:`\braket{\psi_i, \phi_j}` where :math:`\phi_j` are in basis set 1 and
+      :math:`\psi_i` are in basis set 2.
 
-    - If `basis2_overlap` is not full rank, then least-squared solution is solved instead.
+    - If `basis2_overlap` is not full rank, then least-squared solution is solved instead. This
+      is effectively solving :math:`||b - Ax||`.
 
     """
     if basis2_overlap.shape[0] != basis2_overlap.shape[1]:
