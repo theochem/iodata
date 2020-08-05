@@ -21,11 +21,11 @@
 
 import attr
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_allclose
 import pytest
 
 from ..basis import (angmom_sti, angmom_its, Shell, MolecularBasis,
-                     convert_convention_shell, convert_conventions,
+                     convert_convention_shell, convert_conventions, convert_primitive_kind,
                      iter_cart_alphabet, HORTON2_CONVENTIONS, PSI4_CONVENTIONS)
 from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 
@@ -281,6 +281,91 @@ def test_get_decontracted():
     assert_equal(obasis.shells[5].kinds, ['p'])
     assert_equal(obasis.shells[6].kinds, ['c'])
     assert_equal(obasis.shells[7].kinds, ['c'])
+
+
+def test_convert_kind_to_cartesian():
+    obasis = MolecularBasis(
+        [Shell(0, [0], ['c'], [0.01], np.array([[3.]])),
+         Shell(1, [0, 1], ['c', 'c'], [0.03, 0.04], np.array([[3., 4.], [1., 2.]])),
+         Shell(0, [2, 1], ['p', 'c'], [0.05], np.array([[5., 6.]]))],
+        {(0, 'c'): ['s'],
+         (1, 'c'): ['x', 'z', '-y'],
+         (2, 'p'): ['dc0', 'dc1', '-ds1', 'dc2', '-ds2']},
+        'L2'
+    )
+    obasis = obasis.convert_kind("c")
+    # Assert number of shells is the same.
+    assert_equal(len(obasis.shells), 3)
+    # Assert the already cartesian are still cartesian.
+    assert_equal(obasis.shells[0].kinds, ["c"])
+    assert_equal(obasis.shells[1].kinds, ["c", "c"])
+    assert_equal(obasis.shells[2].kinds, ["c", "c"])
+    # Assert the exponents should not change.
+    assert_equal(obasis.shells[0].exponents, [0.01])
+    assert_equal(obasis.shells[1].exponents, [0.03, 0.04])
+    assert_equal(obasis.shells[2].exponents, [0.05])
+    # Assert that the coefficients expect for the pure is the same.
+    assert_equal(obasis.shells[0].coeffs, np.array([[3.]]))
+    assert_equal(obasis.shells[1].coeffs, np.array([[3., 4.], [1., 2.]]))
+
+    # Assert that the coefficient of the pure-shell inside the third contraction changed to cart.
+    # First solve for the coefficients, this was done manually.
+    coeff_pure = np.array([[1.22008468], [5.], [5.], [-4.55341801], [5.], [3.33333333]])
+    assert_allclose(obasis.shells[2].coeffs, np.array([[np.mean(coeff_pure), 6.0]]))
+
+    # Convert Easier Example where nothing happens.
+    obasis = MolecularBasis(
+        [Shell(0, [1], ['p'], [0.05, 0.01], np.array([[5.], [10.]]))], None, 'L2'
+    )
+    obasis = obasis.convert_kind("c")
+    assert_equal(len(obasis.shells), 1)
+    assert_equal(obasis.shells[0].kinds, ["c"])
+    assert_equal(obasis.shells[0].exponents, [0.05, 0.01])
+    assert_equal(obasis.shells[0].coeffs, np.array([[5.], [10.]]))
+
+
+def test_convert_kind_to_pure():
+    obasis = MolecularBasis(
+        [Shell(0, [0], ['c'], [0.01], np.array([[3.]])),
+         Shell(1, [1, 2], ['c', 'c'], [0.03, 0.04], np.array([[3., 4.], [1., 2.]]))],
+        {(0, 'c'): ['s'],
+         (1, 'c'): ['x', 'z', '-y'],
+         (2, 'p'): ['dc0', 'dc1', '-ds1', 'dc2', '-ds2']},
+        'L2'
+    )
+    obasis = obasis.convert_kind("p")
+    assert_equal(len(obasis.shells), 2)
+    assert_equal(obasis.shells[0].coeffs, np.array([[3.]]))
+    new_coeff = np.mean(np.array([[0.], [4.], [4.], [0.], [4.]]))
+    new_coeff2 = np.mean(np.array([[0.], [2.], [2.], [0.], [2.]]))
+    desired = np.array([[3., new_coeff], [1., new_coeff2]])
+    assert_equal(obasis.shells[1].coeffs, desired)
+
+
+def test_convert_primitive_kind():
+    # Test converting P-type from kind="c" to kind="p".
+    coeff = np.array([1., 2., 3.])
+    coeff2 = convert_primitive_kind(1, "c", coeff, "p")
+    desired = np.array([3., 1., 2.])
+    assert_equal(coeff2, desired)
+
+    # Test converting D-type from kind="c" to kind="p".
+    coeff = np.array([1., 2., 3., 4., 5., 6.])
+    coeff = convert_primitive_kind(2, "c", coeff, "p")
+    desired = np.array([3.5, 3., 5., -2.59807621, 2.])
+    assert_allclose(coeff, desired)
+
+    # Test converting P-type from kind="p" to kind="c".
+    coeff = np.array([1., 2., 3.])
+    coeff2 = convert_primitive_kind(1, "p", coeff, "c")
+    desired = np.array([2., 3., 1.])
+    assert_equal(coeff2, desired)
+
+    # Test converting D-type from kind="p" to kind="c".
+    coeff = np.array([1., 2., 3., 4., 5.])
+    ccoeff = convert_primitive_kind(2, "p", coeff, "c")
+    desired = np.array([1.97606774,  5.,  2., -2.64273441,  3., 0.66666667])
+    assert_allclose(ccoeff, desired)
 
 
 def test_convert_convention_obasis():

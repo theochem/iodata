@@ -229,7 +229,7 @@ class MolecularBasis:
                               coeff.reshape(-1, 1))
                     )
         # pylint: disable=no-member
-        return self._replace(shells=shells)
+        return attr.evolve(self, shells=shells)
 
     def convert_kind(self, to: str):
         r"""
@@ -287,10 +287,10 @@ class MolecularBasis:
                     coeffs_new.append(coeffs)
 
             shells.append(
-                Shell(shell.icenter, angmom, kind_new, shell.exponents, np.array(coeffs_new).T)
+                Shell(shell.icenter, shell.angmoms, kind_new, shell.exponents, np.array(coeffs_new).T)
             )
         # pylint: disable=no-member
-        return self._replace(shells=shells)
+        return attr.evolve(self, shells=shells)
 
 
 def convert_primitive_kind(angmom: int, kind: str, coeffs: np.ndarray, to: str) -> np.ndarray:
