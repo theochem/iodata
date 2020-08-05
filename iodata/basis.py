@@ -24,6 +24,7 @@ from typing import List, Dict, Tuple, Union
 
 import attr
 import numpy as np
+from .overlap_cartpure import tfs
 
 from .attrutils import validate_shape
 
@@ -229,6 +230,125 @@ class MolecularBasis:
                     )
         # pylint: disable=no-member
         return self._replace(shells=shells)
+
+    def convert_kind(self, to: str):
+        r"""
+        Convert all contractions from Pure (or Cartesian) kind to Cartesian (or Pure).
+
+        Parameters
+        ----------
+        to
+            Specifying which one to convert to. It is either "c" for Cartesian or "p" for Pure.
+
+        Raises
+        ------
+        ValueError :
+            If "to" is not recognized to be either "c" or "p".
+
+        Notes
+        -----
+        - Some of these conversion will cause the contraction coefficients to be
+          different across different shells.  In such a scenario,
+          this function will average all coefficients so that the shell-type inside a contracted
+          shell will have the same coefficients.
+
+        See Also
+        --------
+        convert_primitive_kind : Converts individual groups of primitive shells.
+
+        """
+        if to != "c" and to != "p":
+            raise ValueError("The to string was not recognized: %s" % to)
+
+        shells = []
+        for shell in self.shells:
+            kind_new = []
+            coeffs_new = []
+
+            for angmom, kind, coeffs in zip(shell.angmoms, shell.kinds, shell.coeffs.T):
+                # Need to convert the kind of shell. S-type doesn't need to change.
+                if kind != to and angmom >= 2:
+                    if kind == "c":
+                        b = np.repeat(coeffs[np.newaxis], tfs[angmom].shape[1], axis=0)
+                        coeff = tfs[angmom].dot(b)
+                        # Take the mean, since the coefficients vary between primitives.
+                        coeff = np.mean(coeff, axis=0)
+                    elif kind == "p":
+                        b = np.repeat(coeffs[np.newaxis], tfs[angmom].shape[0], axis=0)
+                        # Solve it using least-squared projection.
+                        coeff = np.linalg.lstsq(tfs[angmom], b, rcond=None)[0]
+                        # Take the mean, since the coefficients vary between primitives.
+                        coeff = np.mean(coeff, axis=0)
+                    kind_new.append(to)
+                    coeffs_new.append(coeff)
+                # No need to convert.
+                else:
+                    kind_new.append(to)
+                    coeffs_new.append(coeffs)
+
+            shells.append(
+                Shell(shell.icenter, angmom, kind_new, shell.exponents, np.array(coeffs_new).T)
+            )
+        # pylint: disable=no-member
+        return self._replace(shells=shells)
+
+
+def convert_primitive_kind(angmom: int, kind: str, coeffs: np.ndarray, to: str) -> np.ndarray:
+    r"""
+    Converts coefficients in Cartesian to Pure or vice-versa of a Primitive shell.
+
+    Parameters
+    ----------
+    angmom
+        Integer representing the total angular momentum number.
+    kind
+        String representing "p" for Pure primitives and "c" for Cartesian primitives.
+    coeffs
+        Coefficients of the contraction of type `kind`. Shape is (N,) where
+        N is the number of primitives with angular momentum `angmom` and type `kind`.
+        For example, angmom=2 and kind="c" implies N=6,
+        The order should match the conventions.
+    to
+        Specifying which one to convert to. It is either "c" for Cartesian or "p" for Pure.
+
+    Returns
+    -------
+    new_coeffs
+        Coefficients in the new basis (either Cartesian or Pure).
+
+    Examples
+    --------
+    Suppose one has the following contraction with angular momentum 2 and kind is Cartesian with
+    integers (2, 0, 0) and (1, 1, 0):
+
+    .. math::
+        c_1 x^2 y^0 z^0 e^{-\alpha r^2} + c_2 x y z^0 e^{-\alpha r^2}
+
+    Then the coefficients of this in the right convention [xx, xy, xz, yy, yz, zz] is
+
+    >> coeff = [c_1, c_2, 0, 0, 0, 0]
+
+    The basis function conventions dictionary are documented in :ref:`basis_conventions and
+        in the MolecularBasis class documentation.
+
+    To convert this Cartesian contraction to Pure type, one would do
+
+    >> new_coeffs = convert_primitive_kind(1, "c", coeff, "p")
+
+    """
+    if to != "c" and to != "p":
+        raise ValueError("The to string was not recognized: %s" % to)
+    if kind != "c" and kind != "p":
+        raise ValueError("The kind string was not recognized: %s" % kind)
+    if to != kind:
+        if kind == "c":
+            coeff = tfs[angmom].dot(coeffs)
+        else:
+            # Solve it using least-squared projection.
+            coeff = np.linalg.lstsq(tfs[angmom], coeffs, rcond=None)[0]
+        return coeff
+    return coeffs
+
 
 def convert_convention_shell(conv1: List[str], conv2: List[str], reverse=False) \
         -> Tuple[np.ndarray, np.ndarray]:
