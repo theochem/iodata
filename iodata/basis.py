@@ -89,7 +89,7 @@ def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
 @attr.s(auto_attribs=True, slots=True,
         on_setattr=[attr.setters.validate, attr.setters.convert])
 class Shell:
-    """A shell in a molecular basis representing (generalized) contractions with the same exponents.
+    """Contracted shell representing (generalized) contractions with the same exponents.
 
     Attributes
     ----------
@@ -103,13 +103,53 @@ class Shell:
         and 'p' for pure. Pure functions are only allowed for angmom>1.
         The length equals the number of contractions: len(angmoms)=ncon.
     exponents
-        The array containing the exponents of the primitives, with shape (nprim,).
+        The array containing the exponents of the primitives, with shape (nprim,),
+        where nprim is the number of primitive contracted shells.
     coeffs
         The array containing the coefficients of the normalized primitives in each contraction;
         shape = (nprim, ncon).
         These coefficients assume that the primitives are L2 (orbitals) or L1
         (densities) normalized, but contractions are not necessarily normalized.
         (This depends on the code which generated the contractions.)
+
+    Notes
+    -----
+    Following definitions assumes all functions are centered at A specified by attribute `icenter`.
+
+    - Cartesian Primitive Gaussian function for a given numbers (i, j, k) and exponent
+      :math:`\alpha`:
+
+      .. math:: N() x_A^i y_A^j z_A^k e^{-\alpha_i r^2}
+
+    - Pure Primitive Gaussian functions for a given integers (l, m) and exponent :math:`\alpha`:
+
+      .. math:: N(\alpha, l) P(r, \theta, \phi) e^{-\alpha_i r^2}
+         \begin{align*}
+            C_{0m}(r, \theta, \phi) &:= r^l P^0_{l}(\cos(\theta)) & m = 0\\
+            C_{lm}(r, \theta, \phi) &:= \sqrt{2} (-1)^m \sqrt{\frac{(l - m)!}{(l + m)!}}
+            r^l P^m_l(\cos(\theta)) \cos(m \phi) & m \in \{1, \cdots, l\} \\
+            S_{lm}(r, \theta, \phi) &:= \sqrt{2} (-1)^m \sqrt{\frac{(l - m)!}{(l + m)!}}
+            r^l P^m_l(\cos(\theta)) \sin(m \phi) & m \in \{1, \cdots, l\}    \\
+        \end{align*}
+
+      where :math:`P_l^m` is the associated Legrende function and :math:`N(\alpha, l)` is the
+      normalization constant.
+
+    - Contraction of Primitive Gaussians is the linear combination of primitive Gaussian functions
+      of the same shell-type l, meant as a basis function.  It has the form
+
+	  .. math:: P(\cdots) \sum^M_m c_m  N e^{-\alpha_m r_A^2},
+
+      where N is the normalization constant and P is either the Cartesian polynomial for a fixed
+      (i, j, k) or the real regular solid harmonic for a fixed (l, m).  The degree is the number
+      of primitive used.
+
+    - Contracted Shell with exponents :math:`(\alpha_1, \cdots, \alpha_{M})` is the set of all
+      contractions whose primitives have the exponents
+      :math:`(\alpha_1, \cdots, \alpha_{M})` in that order.
+
+    - Primitive contracted shell with exponent :math:`\alpha` is the set of all contractions
+      in a contracted shell that have the exponent :math:`\alpha`.
 
     """
 
@@ -134,12 +174,15 @@ class Shell:
 
     @property
     def nprim(self) -> int:   # noqa: D401
-        """Number of primitives, also known as the contraction length."""
+        """Number of primitive contracted shells, also known as the contraction length."""
         return len(self.exponents)
 
     @property
     def ncon(self) -> int:   # noqa: D401
-        """Number of contractions. This is usually 1; e.g., it would be 2 for an SP shell."""
+        """Number of contractions with distinct angular momentum numbers.
+
+         This is usually 1; e.g., it would be 2 for an SP shell.
+         """
         return len(self.angmoms)
 
 
