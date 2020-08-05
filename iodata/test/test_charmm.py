@@ -32,7 +32,7 @@ except ImportError:
 
 
 def test_load_crambin():
-    # test CHARMm crd file of crambin
+    # test CHARMM crd file of crambin
     with path('iodata.test.data', 'crambin.crd') as fn_crd:
         mol = load_one(str(fn_crd))
     assert len(mol.title) == 125

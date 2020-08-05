@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""CHARMm coordinate (crd) file format.
+"""CHARMM coordinate (crd) file format.
 
-CHARMm coordinate files contain information about the location of each atom in Cartesian (3D) space.
-The format of the ASCII (CARD) CHARMm coordinate files is:
+CHARMM coordinate files contain information about the location of each atom in Cartesian (3D) space.
+The format of the ASCII (CARD) CHARMM coordinate files is:
     * Title line(s)
     * Number of atoms in file
     * Coordinate line (one for each atom in the file)
@@ -98,7 +98,7 @@ def load_one(lit: LineIterator) -> dict:
 
 
 def _helper_read_crd(lit: LineIterator) -> Tuple:
-    """Read CHARMm crd file."""
+    """Read CHARMM crd file."""
     # Read the line for number of atoms.
     natom = next(lit)
     if natom is None or not natom.strip().isdigit():
