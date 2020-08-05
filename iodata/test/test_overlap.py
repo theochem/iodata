@@ -135,8 +135,7 @@ def test_converting_from_cartesian_to_pure():
     overlap_cp = tfs[2]
     coeff = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
     coeff2 = convert_vector_basis(coeff, np.eye(5), overlap_cp)
-    desired = np.array([-0.5 - 0.5 * 4.0 + 6.0, 3.0, 5.0,
-                        0.86602540378 * 1.0 - 0.86602540378 * 4.0, 2.0])
+    desired = overlap_cp.dot(coeff)
     assert_allclose(coeff2, desired, rtol=1.e-5, atol=1.e-8)
 
 
@@ -151,13 +150,12 @@ def test_converting_from_pure_to_cartesian():
     overlap_cp = tfs[1]
     coeff = np.array([1., 2., 3.])
     coeff2 = convert_vector_basis(coeff, np.eye(3), overlap_cp.T)
-    desired = np.array([2., 3., 1.])
+    desired = np.linalg.lstsq(overlap_cp, coeff, rcond=None)[0]
     assert_allclose(coeff2, desired, rtol=1.e-5, atol=1.e-8)
 
     # Test converting D-type.
     overlap_cp = tfs[2]
-    coeff = np.array([1., 2., 3., 4., 5.])
-    coeff2 = convert_vector_basis(coeff, np.eye(6), overlap_cp.T)
-    desired = np.array([np.sqrt(3.0) * 4.0 / 2.0 - 0.5, 5.0, 2.0,
-                        -np.sqrt(3.0) * 4.0 / 2.0 - 0.5, 3.0, 1.0])
-    assert_allclose(coeff2, desired, rtol=1.e-5, atol=1.e-8)
+    pcoeff = np.array([1., 2., 3., 4., 5.])
+    ccoeff = convert_vector_basis(pcoeff, np.eye(6), np.linalg.pinv(overlap_cp))
+    desired =  np.linalg.lstsq(overlap_cp, pcoeff, rcond=None)[0]
+    assert_allclose(ccoeff, desired, rtol=1.e-5, atol=1.e-8)
