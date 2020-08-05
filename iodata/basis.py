@@ -189,7 +189,7 @@ class Shell:
 @attr.s(auto_attribs=True, slots=True,
         on_setattr=[attr.setters.validate, attr.setters.convert])
 class MolecularBasis:
-    """A complete molecular orbital or density basis set.
+    """A complete molecular orbital or density basis set as a collection of contracted shells.
 
     Attributes
     ----------
@@ -234,6 +234,30 @@ class MolecularBasis:
         The normalization convention of primitives, which can be 'L2' (orbitals) or 'L1'
         (densities) normalized.
 
+    Methods
+    -------
+    get_segmented
+        Return molecular basis object that is segmented.
+    get_decontracted
+        Return molecular basis object that is decontracted.
+    convert_kind
+        Return molecular basis object whose kinds are the same type.
+
+    Notes
+    -----
+    - Primitive Contracted Shell with exponent :math:`\alpha`:
+      Set of all contractions in a contracted shell that have the exponent :math:`\alpha`.
+      Since there is a single exponent, then the degree of these contractions is one.
+
+    - Segmented Molecular Basis:
+      Molecular basis where each contracted shell has contractions that all correspond to the
+      same total angular momentum number.  There could only be the same shell-type inside a
+      contracted shell.  There could only be one kind of shell-type inside a contracted shell.
+
+    - Decontracted Molecular Basis:
+      Segmented molecular basis where each contracted shell is a primitive contracted shell with
+      its single exponent.
+
     """
 
     shells: List[Shell]
@@ -246,7 +270,11 @@ class MolecularBasis:
         return sum(shell.nbasis for shell in self.shells)
 
     def get_segmented(self):
-        """Unroll generalized contractions."""
+        """Convert Generalized Molecular Basis to Segmented Molecular Basis.
+
+        Segmented Molecular basis is a Molecular basis where all contracted shell in it share
+        a specific total angular momentum number.
+        """
         shells = []
         for shell in self.shells:
             for angmom, kind, coeffs in zip(shell.angmoms, shell.kinds, shell.coeffs.T):
@@ -257,7 +285,7 @@ class MolecularBasis:
 
     def get_decontracted(self):
         r"""
-        Get Decontracted Molecular Basis from a Molecular Basis.
+        Convert to Decontracted Molecular Basis from a Molecular Basis.
 
         Decontracted Molecular basis is a Molecular basis where each contracted shell is a
         primitive contracted shell (ie contracted shell with only one exponent and one kind).
@@ -297,7 +325,7 @@ class MolecularBasis:
 
         See Also
         --------
-        convert_primitive_kind : Converts individual groups of primitive shells.
+        convert_primitive_kind : Converts primitive shells with no averaging.
 
         """
         if to != "c" and to != "p":
