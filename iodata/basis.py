@@ -38,11 +38,13 @@ ANGMOM_CHARS = 'spdfghiklmnoqrtuvwxyzabce'
 
 def _alsolist(f):
     """Wrap a function to accepts also list as first argument and then return list."""
+
     @wraps(f)
     def wrapper(firsts, *args, **kwargs):
         if isinstance(firsts, (Integral, str)):
             return f(firsts, *args, **kwargs)
         return [f(first, *args, **kwargs) for first in firsts]
+
     return wrapper
 
 
@@ -129,7 +131,7 @@ class Shell:
             C_{lm}(r, \theta, \phi) &:= \sqrt{2} (-1)^m \sqrt{\frac{(l - m)!}{(l + m)!}}
             r^l P^m_l(\cos(\theta)) \cos(m \phi) & m \in \{1, \cdots, l\} \\
             S_{lm}(r, \theta, \phi) &:= \sqrt{2} (-1)^m \sqrt{\frac{(l - m)!}{(l + m)!}}
-            r^l P^m_l(\cos(\theta)) \sin(m \phi) & m \in \{1, \cdots, l\}    \\
+            r^l P^m_l(\cos(\theta)) \sin(m \phi) & m \in \{1, \cdots, l\}\\
         \end{align*}
 
       where :math:`P_l^m` is the associated Legrende function and :math:`N(\alpha, l)` is the
@@ -138,7 +140,7 @@ class Shell:
     - Contraction of Primitive Gaussians is the linear combination of primitive Gaussian functions
       of the same shell-type l, meant as a basis function.  It has the form
 
-	  .. math:: P(\cdots) \sum^M_m c_m  N e^{-\alpha_m r_A^2},
+      .. math:: P(\cdots) \sum^M_m c_m N e^{-\alpha_m r_A^2},
 
       where N is the normalization constant and P is either the Cartesian polynomial for a fixed
       (i, j, k) or the real regular solid harmonic for a fixed (l, m).  The degree is the number
@@ -160,7 +162,7 @@ class Shell:
     coeffs: np.ndarray = attr.ib(validator=validate_shape(("exponents", 0), ("kinds", 0)))
 
     @property
-    def nbasis(self) -> int:   # noqa: D401
+    def nbasis(self) -> int:  # noqa: D401
         """Number of basis functions (e.g. 3 for a P shell and 4 for an SP shell)."""
         result = 0
         for angmom, kind in zip(self.angmoms, self.kinds):
@@ -173,16 +175,16 @@ class Shell:
         return result
 
     @property
-    def nprim(self) -> int:   # noqa: D401
+    def nprim(self) -> int:  # noqa: D401
         """Number of primitive contracted shells, also known as the contraction length."""
         return len(self.exponents)
 
     @property
-    def ncon(self) -> int:   # noqa: D401
+    def ncon(self) -> int:  # noqa: D401
         """Number of contractions with distinct angular momentum numbers.
 
-         This is usually 1; e.g., it would be 2 for an SP shell.
-         """
+        This is usually 1; e.g., it would be 2 for an SP shell.
+        """
         return len(self.angmoms)
 
 
@@ -265,7 +267,7 @@ class MolecularBasis:
     primitive_normalization: str
 
     @property
-    def nbasis(self) -> int:   # noqa: D401
+    def nbasis(self) -> int:  # noqa: D401
         """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
 
@@ -328,7 +330,7 @@ class MolecularBasis:
         convert_primitive_kind : Converts primitive shells with no averaging.
 
         """
-        if to != "c" and to != "p":
+        if to not in ("c", "p"):
             raise ValueError("The to string was not recognized: %s" % to)
 
         shells = []
@@ -358,7 +360,9 @@ class MolecularBasis:
                     coeffs_new.append(coeffs)
 
             shells.append(
-                Shell(shell.icenter, shell.angmoms, kind_new, shell.exponents, np.array(coeffs_new).T)
+                Shell(
+                    shell.icenter, shell.angmoms, kind_new, shell.exponents, np.array(coeffs_new).T
+                )
             )
         # pylint: disable=no-member
         return attr.evolve(self, shells=shells)
@@ -366,7 +370,7 @@ class MolecularBasis:
 
 def convert_primitive_kind(angmom: int, kind: str, coeffs: np.ndarray, to: str) -> np.ndarray:
     r"""
-    Converts coefficients in Cartesian to Pure or vice-versa of a Primitive shell.
+    Convert coefficients in Cartesian to Pure or vice-versa of a Primitive shell.
 
     Parameters
     ----------
@@ -407,9 +411,9 @@ def convert_primitive_kind(angmom: int, kind: str, coeffs: np.ndarray, to: str) 
     >> new_coeffs = convert_primitive_kind(1, "c", coeff, "p")
 
     """
-    if to != "c" and to != "p":
+    if to not in ("p", "c"):
         raise ValueError("The to string was not recognized: %s" % to)
-    if kind != "c" and kind != "p":
+    if kind not in ("p", "c"):
         raise ValueError("The kind string was not recognized: %s" % kind)
     if to != kind:
         if kind == "c":

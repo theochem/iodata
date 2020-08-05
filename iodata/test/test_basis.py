@@ -243,7 +243,7 @@ def test_get_decontracted():
     ncontshells = 8  # Number of contracted shells now is equal to the number of primitives.
     assert_equal(len(obasis.shells), ncontshells)
     # Assert each shell has length one exponents
-    for i in range(0, ncontshells):
+    for _ in range(0, ncontshells):
         assert_equal(len(obasis.shells[0].exponents), 1)
     # Assert they have the right exponents.
     assert_equal(obasis.shells[0].exponents, 0.01)
@@ -364,7 +364,7 @@ def test_convert_primitive_kind():
     # Test converting D-type from kind="p" to kind="c".
     coeff = np.array([1., 2., 3., 4., 5.])
     ccoeff = convert_primitive_kind(2, "p", coeff, "c")
-    desired = np.array([1.97606774,  5.,  2., -2.64273441,  3., 0.66666667])
+    desired = np.array([1.97606774, 5., 2., -2.64273441, 3., 0.66666667])
     assert_allclose(ccoeff, desired)
 
 
