@@ -18,13 +18,14 @@
 # --
 """Test iodata.formats.wfn module."""
 
+import os
 
 import numpy as np
 
 from numpy.testing import assert_equal, assert_allclose
 
-from .common import compute_mulliken_charges, check_orthonormal
-from ..api import load_one
+from .common import compute_mulliken_charges, check_orthonormal, compare_mols
+from ..api import load_one, dump_one
 from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
 from ..utils import LineIterator
@@ -48,7 +49,7 @@ def test_load_wfn_low_he_s():
     data = helper_load_wfn_low('he_s_orbital.wfn')
     # unpack data
     title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy, _ = data[5:]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[5:]
     assert title == 'He atom - decontracted 6-31G basis set'
     assert_equal(atnums.shape, (1,))
     assert_equal(atnums, [2])
@@ -72,13 +73,14 @@ def test_load_wfn_low_he_s():
                          0.39372947E+00, 0.14762025E+00])
     assert_allclose(coefficients, expected.reshape(4, 1))
     assert_allclose(energy, -2.855160426155, atol=1.e-5)
+    assert_allclose(virial, 1.99994256, atol=1.e-6)
 
 
 def test_load_wfn_low_h2o():
     data = helper_load_wfn_low('h2o_sto3g.wfn')
     # unpack data
     title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy, _ = data[5:]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[5:]
     assert title == 'H2O Optimization'
     assert_equal(atnums.shape, (3,))
     assert_equal(atcoords.shape, (3, 3))
@@ -122,6 +124,7 @@ def test_load_wfn_low_h2o():
     assert_allclose(coefficients[-1, 0], -0.46610858E-03)
     assert_allclose(coefficients[-1, -1], -0.33277355E-15)
     assert_allclose(energy, -74.965901217080, atol=1.e-6)
+    assert_allclose(virial, 2.00600239, atol=1.e-6)
 
 
 def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
@@ -240,8 +243,8 @@ def test_load_wfn_lih_cation_fci():
 
 
 def test_load_one_lih_cation_cisd():
-    with path('iodata.test.data', 'lih_cation_cisd.wfn') as file_wfx:
-        mol = load_one(str(file_wfx))
+    with path('iodata.test.data', 'lih_cation_cisd.wfn') as file_wfn:
+        mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
     assert mol.mo.norba == 11
@@ -256,8 +259,8 @@ def test_load_one_lih_cation_cisd():
 
 
 def test_load_one_lih_cation_uhf():
-    with path('iodata.test.data', 'lih_cation_uhf.wfn') as file_wfx:
-        mol = load_one(str(file_wfx))
+    with path('iodata.test.data', 'lih_cation_uhf.wfn') as file_wfn:
+        mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
     assert mol.mo.norba == 2
@@ -272,8 +275,8 @@ def test_load_one_lih_cation_uhf():
 
 
 def test_load_one_lih_cation_rohf():
-    with path('iodata.test.data', 'lih_cation_rohf.wfn') as file_wfx:
-        mol = load_one(str(file_wfx))
+    with path('iodata.test.data', 'lih_cation_rohf.wfn') as file_wfn:
+        mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'restricted'
     assert mol.mo.norba == 2
@@ -289,8 +292,8 @@ def test_load_one_lih_cation_rohf():
 
 
 def test_load_one_cah110_hf_sto3g_g09():
-    with path('iodata.test.data', 'cah110_hf_sto3g_g09.wfn') as file_wfx:
-        mol = load_one(str(file_wfx))
+    with path('iodata.test.data', 'cah110_hf_sto3g_g09.wfn') as file_wfn:
+        mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
     assert mol.mo.norba == 123
@@ -306,3 +309,90 @@ def test_load_one_cah110_hf_sto3g_g09():
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def check_load_dump_consistency(fn, tmpdir, fmt_from='wfn', fmt_to='wfn', atol=1.0e-6):
+    """Check if data is preserved after dumping and loading a WFN file.
+
+    Parameters
+    ----------
+    fn : str
+        The filename to load
+    tmpdir : str
+        The temporary directory to dump and load the file.
+    fmt_from : str
+        Format filename to load.
+    fmt_to : str
+        Format of filename to dump and then load again.
+
+    """
+    with path('iodata.test.data', fn) as file_name:
+        mol1 = load_one(str(file_name), fmt=fmt_from)
+    fn_tmp = os.path.join(tmpdir, 'foo.bar')
+    dump_one(mol1, fn_tmp, fmt=fmt_to)
+    mol2 = load_one(fn_tmp, fmt=fmt_to)
+    # compare Mulliken charges
+    charges1 = compute_mulliken_charges(mol1)
+    charges2 = compute_mulliken_charges(mol2)
+    assert_allclose(charges1, charges2, atol=atol)
+    if fmt_from == fmt_to:
+        compare_mols(mol1, mol2, atol=atol)
+
+
+def test_load_dump_consistency_lih_cation_cisd(tmpdir):
+    check_load_dump_consistency('lih_cation_cisd.wfn', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_uhf(tmpdir):
+    check_load_dump_consistency('lih_cation_uhf.wfn', tmpdir)
+
+
+def test_load_dump_consistency_lih_cation_rohf(tmpdir):
+    check_load_dump_consistency('lih_cation_rohf.wfn', tmpdir)
+
+
+def test_load_dump_consistency_h2o(tmpdir):
+    check_load_dump_consistency('h2o_sto3g.wfn', tmpdir)
+    check_load_dump_consistency('h2o_sto3g_decontracted.wfn', tmpdir)
+
+
+def test_load_dump_consistency_lif(tmpdir):
+    check_load_dump_consistency('lif_fci.wfn', tmpdir, atol=1.0e-6)
+
+
+def test_load_dump_consistency_cah110(tmpdir):
+    check_load_dump_consistency('cah110_hf_sto3g_g09.wfn', tmpdir)
+
+
+def test_load_dump_consistency_li(tmpdir):
+    check_load_dump_consistency('li_sp_orbital.wfn', tmpdir)
+    check_load_dump_consistency('li_sp_virtual.wfn', tmpdir)
+
+
+def test_load_dump_consistency_he(tmpdir):
+    check_load_dump_consistency('he_s_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_s_virtual.wfn', tmpdir)
+    check_load_dump_consistency('he_p_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_d_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_sp_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_spd_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_spdf_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_spdfgh_orbital.wfn', tmpdir)
+    check_load_dump_consistency('he_spdfgh_virtual.wfn', tmpdir)
+
+
+def test_load_dump_consistency_h2(tmpdir):
+    check_load_dump_consistency('h2_ccpvqz.wfn', tmpdir)
+
+
+def test_load_dump_consistency_o2(tmpdir):
+    check_load_dump_consistency('o2_uhf.wfn', tmpdir)
+    check_load_dump_consistency('o2_uhf_virtual.wfn', tmpdir)
+
+
+def test_load_dump_consistency_from_fchk_h2o(tmpdir):
+    check_load_dump_consistency('h2o_sto3g.fchk', tmpdir, fmt_from='fchk', fmt_to='wfn')
+
+
+def test_load_dump_consistency_from_molden_nh3(tmpdir):
+    check_load_dump_consistency('nh3_molden_cart.molden', tmpdir, fmt_from='molden', fmt_to='wfn')
