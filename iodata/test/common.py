@@ -88,7 +88,7 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
     assert mol1.title == mol2.title
     assert_equal(mol1.atnums, mol2.atnums)
     assert_equal(mol1.atcorenums, mol2.atcorenums)
-    assert_allclose(mol1.atcoords, mol2.atcoords)
+    assert_allclose(mol1.atcoords, mol2.atcoords, atol=1e-10)
     # orbital basis
     if mol1.obasis is not None:
         # compare dictionaries
@@ -99,11 +99,6 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
             assert shell1.kinds == shell2.kinds
             assert_allclose(shell1.exponents, shell2.exponents, atol=atol, rtol=rtol)
             assert_allclose(shell1.coeffs, shell2.coeffs, atol=atol, rtol=rtol)
-        assert len(mol1.obasis.conventions) == len(mol2.obasis.conventions)
-        for key, conv in mol1.obasis.conventions.items():
-            s1 = set(word.lstrip('-') for word in conv)
-            s2 = set(word.lstrip('-') for word in mol2.obasis.conventions[key])
-            assert s1 == s2, (s1, s2)
         assert mol1.obasis.primitive_normalization == mol2.obasis.primitive_normalization
         # compute and compare Mulliken charges
         charges1 = compute_mulliken_charges(mol1)
