@@ -258,6 +258,7 @@ def test_load_molden_nh3_psi4_1():
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
     assert_allclose(charges, molden_charges, atol=1.e-3)
 
+
 @pytest.mark.parametrize("case", ["zn", "mn", "cuh"])
 def test_load_molden_high_am_psi4(case):
     # The file tested here is created with PSI4 1.3.2.
@@ -267,7 +268,7 @@ def test_load_molden_high_am_psi4(case):
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
-    assert "unnormalized" in record[0].message.args[0]    
+    assert "unnormalized" in record[0].message.args[0]
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     if mol.mo.kind == "restricted":
