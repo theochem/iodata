@@ -33,7 +33,7 @@ test:
   requires:
     - python
     - pytest
-    - pytest-xdist <2.0.0
+    - pytest-xdist
   imports:
     - iodata
   commands:
