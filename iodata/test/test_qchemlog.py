@@ -220,3 +220,56 @@ def test_load_one_qchemlog():
     assert_allclose(mol.mo.energies[5:58], virtual)
     # beta virtual orbital energies
     assert_allclose(mol.mo.energies[63:], virtual)
+
+
+def test_load_data_qchemlog_h2o_dimer():
+    """Test load_qchemlog_low with h2o_dimer_eda_qchem5.3.out."""
+    data = helper_load_data_qchemlog_helper('h2o_dimer_eda_qchem5.3.out')
+    # check loaded data
+    assert data['charge'] == 0
+    assert data['natom'] == 6
+    assert data['spin_multi'] == 1
+    assert data['run_type'] == 'eda'
+    assert data['lot'] == 'wb97x-v'
+    assert data['obasis_name'] == 'def2-tzvpd'
+    assert data['unrestricted'] is None
+    assert data['symm'] == 'FALSE'
+    # assert data['g_rot'] == 1
+    assert data['alpha_elec'] == 10
+    assert data['beta_elec'] == 10
+    assert data['nuclear_repulsion_energy'] == 36.66284801
+    assert data['energy'] == -152.8772543727
+    assert data['norba'] == 116
+    assert data['dipole_tol'] == 2.5701
+    assert_equal(data['atnums'], np.array([8, 1, 1, 8, 1, 1]))
+    # assert_equal(data['atmasses'], [15.99491, 1.00783, 1.00783])
+    atcoords = np.array([[-1.5510070000, -0.1145200000, 0.0000000000],
+                         [-1.9342590000, 0.7625030000, 0.0000000000],
+                         [-0.5996770000, 0.0407120000, 0.0000000000],
+                         [1.3506250000,  0.1114690000, 0.0000000000],
+                         [1.6803980000,  -0.3737410000, -0.7585610000],
+                         [1.6803980000,  -0.3737410000, 0.7585610000]])
+    assert_equal(data['atcoords'], atcoords)
+    assert_equal(data['mo_a_occ'], np.array([-19.2455, -19.1897, -1.1734, -1.1173, -0.6729, -0.6242,
+                                             -0.5373, -0.4825, -0.4530, -0.4045]))
+
+    alpha_mo_unoccupied = np.array([0.0485, 0.0863, 0.0927, 0.1035, 0.1344, 0.1474, 0.1539, 0.1880,
+                                    0.1982, 0.2280, 0.2507, 0.2532, 0.2732, 0.2865, 0.2992, 0.3216,
+                                    0.3260, 0.3454, 0.3542, 0.3850, 0.3991, 0.4016, 0.4155, 0.4831,
+                                    0.5016, 0.5133, 0.5502, 0.5505, 0.5745, 0.5992, 0.6275, 0.6454,
+                                    0.6664, 0.6869, 0.7423, 0.7874, 0.8039, 0.8204, 0.8457, 0.9021,
+                                    0.9149, 0.9749, 1.0168, 1.0490, 1.1274, 1.2009, 1.6233, 1.6642,
+                                    1.6723, 1.6877, 1.7314, 1.7347, 1.8246, 1.8635, 1.8877, 1.9254,
+                                    2.0091, 2.1339, 2.2139, 2.2489, 2.2799, 2.3420, 2.3777, 2.5255,
+                                    2.6135, 2.6373, 2.6727, 2.7228, 2.8765, 2.8841, 2.9076, 2.9624,
+                                    3.0377, 3.0978, 3.2509, 3.3613, 3.8767, 3.9603, 4.0824, 4.1424,
+                                    5.1826, 5.2283, 5.3319, 5.3817, 5.4919, 5.5386, 5.5584, 5.5648,
+                                    5.6049, 5.6226, 6.1591, 6.2079, 6.3862, 6.4446, 6.5805, 6.5926,
+                                    6.6092, 6.6315, 6.6557, 6.6703, 7.0400, 7.1334, 7.1456, 7.2547,
+                                    43.7457, 43.9166])
+    assert_equal(data['mo_a_vir'], alpha_mo_unoccupied)
+    assert_equal(data['mulliken_charges'], np.array([-0.610250, 0.304021, 0.337060,
+                                                     -0.663525, 0.316347, 0.316347]))
+    assert_equal(data['dipole'], np.array([2.5689, 0.0770,  0.0000]))
+    assert_equal(data['quadrupole'],
+                 np.array([-12.0581, -6.2544, -12.8954, -0.0000, -0.0000, -12.2310]))
