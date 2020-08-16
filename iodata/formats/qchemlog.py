@@ -95,7 +95,8 @@ def load_one(lit: LineIterator) -> dict:
     # ----------------
     # add labels to extra dictionary if they are loaded
     extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
-                    'polarizability_tensor', 'imaginary_freq', 'vib_energy']
+                    'polarizability_tensor', 'imaginary_freq', 'vib_energy',
+                    'frag_energies', 'orth_frag_subs_decom', 'clss_frozen_decomp', 'eda_summary']
     extra = {label: data[label] for label in extra_labels if data.get(label) is not None}
     # if present, convert vibrational energy from kcal/mol to "atomic units + K"
     if 'vib_energy' in extra:
@@ -123,29 +124,45 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             # Read until the end of the file.
             break
 
+        # save Q-chem version
+        if line.startswith('You'):
+            version = line.strip().split()[-1]
         # get the atomic information
         if line.startswith('$molecule'):
-            result = _helper_atoms(lit)
-            data['charge'], data['spin_multi'], data['atnums'], data['atcoords'] = result
-            data['natom'] = len(data['atnums'])
+            if 'atnums' not in data:
+                result = _helper_atoms(lit)
+                data['charge'], data['spin_multi'], data['atnums'], data['atcoords'] = result
+                data['natom'] = len(data['atnums'])
         # job specifications
-        elif line.startswith('$rem'):
-            data.update(_helper_job(lit))
+        elif line.startswith('$rem') and 'run_type' not in data:
+            data.update(_helper_job(lit, version=version))
         # standard nuclear orientation
-        elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
+        # elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
+        # todo: report bug for fragment job only need first nuclear orientation
+        elif line.startswith('Standard Nuclear Orientation') and 'alpha_elec' not in data:
             # atnums, alpha_elec, beta_elec, nbasis, nuclear_replusion_energy, energy, atcoords
             _, data['alpha_elec'], data['beta_elec'], data['nbasis'], \
                 data['nuclear_repulsion_energy'], data['energy'], _ = _helper_electron(lit)
+        # todo: report bug about energy for qchemlog for more than one job
+        # energy
+        elif line.startswith('the SCF tolerance is set'):
+            data['energy'] = _helper_energy(lit)
         # orbital energies
-        elif line.startswith('Orbital Energies (a.u.)'):
-            result = _helper_orbital_energies(lit)
+        elif line.startswith('Orbital Energies (a.u.)') and data['unrestricted'] is None:
+            result = _helper_orbital_energies_restricted(lit)
+            data['mo_a_occ'], data['mo_a_vir'] = result
+            # compute number of alpha
+            data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
+        # orbital energies
+        elif line.startswith('Orbital Energies (a.u.)') and data['unrestricted'] is not None:
+            result = _helper_orbital_energies_unrestricted(lit)
             data['mo_a_occ'], data['mo_b_occ'], data['mo_a_vir'], data['mo_b_vir'] = result
             # compute number of alpha and beta molecular orbitals
             data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
             data['norbb'] = len(data['mo_b_occ']) + len(data['mo_b_vir'])
         # mulliken charges
         elif line.startswith('Ground-State Mulliken Net Atomic Charges'):
-            data['mulliken_charges'] = _helper_mulliken(lit)
+            data['mulliken_charges'] = _helper_mulliken(lit, version)
         #  cartesian multipole moments
         elif line.startswith('Cartesian Multipole Moments'):
             data['dipole'], data['quadrupole'], data['dipole_tol'] = _helper_dipole_moments(lit)
@@ -162,6 +179,10 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
         elif line.startswith('Rotational Symmetry Number'):
             data['g_rot'] = int(line.split()[-1])
             data['enthalpy_dict'], data['entropy_dict'] = _helper_thermo(lit)
+        # Energy Decomposition analysis (EDA)
+        elif line.startswith('Basic EDA Quantities'):
+            data['frag_energies'], data['orth_frag_subs_decom'],\
+                data['clss_frozen_decomp'], data['eda_summary'] = _helper_eda(lit)
 
     return data
 
@@ -174,16 +195,19 @@ def _helper_atoms(lit: LineIterator) -> Tuple:
     atom_symbols = []
     atcoords = []
     for line in lit:
-        if line.strip() == '$end':
+        if line.strip() == '--':
+            next(lit)
+        elif line.strip() == '$end':
             break
-        atom_symbols.append(line.strip().split()[0])
-        atcoords.append([float(i) for i in line.strip().split()[1:]])
+        else:
+            atom_symbols.append(line.strip().split()[0])
+            atcoords.append([float(i) for i in line.strip().split()[1:]])
     atnums = np.array([sym2num[i] for i in atom_symbols])
     atcoords = np.array(atcoords)
     return charge, spin_multi, atnums, atcoords
 
 
-def _helper_job(lit: LineIterator) -> Tuple:
+def _helper_job(lit: LineIterator, version) -> Tuple:
     """Load job specifications from Q-Chem log out file format."""
     data_rem = {}
     for line in lit:
@@ -195,12 +219,20 @@ def _helper_job(lit: LineIterator) -> Tuple:
             data_rem['run_type'] = line.split()[1].lower()
         elif line.lower().startswith('method'):
             data_rem['lot'] = line.split()[1].lower()
-        elif line.lower().startswith('unrestricted'):
+        elif line.lower().startswith('unrestricted') and version == '5.2.0':
             data_rem['unrestricted'] = int(line.split()[1])
-        elif line.lower().startswith('basis'):
+        elif line.lower().startswith('unrestricted') and version == '5.3.0':
+            # data_rem['unrestricted'] = line.split()[1]
+            # todo: report bug for unrestricted case?
+            data_rem['unrestricted'] = None
+            # pass
+        # todo: report bug for basis appering two times in version 5.3.0
+        elif line.split()[0].lower() == 'basis':
             data_rem['obasis_name'] = line.split()[1].lower()
-        elif line.lower().startswith('symmetry'):
+        elif line.lower().startswith('symmetry') and version == '5.2.0':
             data_rem['symm'] = int(line.split()[1])
+        elif line.lower().startswith('symmetry') and version == '5.3.0':
+            data_rem['symm'] = line.split()[1]
     return data_rem
 
 
@@ -213,7 +245,6 @@ def _helper_electron(lit: LineIterator) -> Tuple:
     for line in lit:
         if line.strip().startswith('-------------'):
             break
-        # print(line.strip())
         atom_symbols.append(line.strip().split()[1])
         atcoords.append([float(i) for i in line.strip().split()[2:]])
     atnums = np.array([sym2num[i] for i in atom_symbols])
@@ -221,20 +252,48 @@ def _helper_electron(lit: LineIterator) -> Tuple:
     # nuclear_replusion_energy = float(re.findall('\d+\.\d+', next(line).strip())[-2])
     nuclear_replusion_energy = float(next(lit).strip().split()[-2])
     # number of num alpha electron and beta elections
-    alpha_elec, beta_elec = [int(i) for i in re.findall(r'\d', next(lit).strip())]
+    # todo: report bug for alpha/beta electrons higher than 9
+    line = next(lit).strip().split()
+    alpha_elec = int(line[2])
+    beta_elec = int(line[5])
+    # alpha_elec, beta_elec = [int(i) for i in re.findall(r'\d', next(lit).strip())]
     # number of basis
     next(lit)
     nbasis = int(next(lit).strip().split()[-3])
     # total energy
+    energy = 0
     for line in lit:
         if line.strip().startswith('Total energy in the final basis set'):
+            energy = float(line.strip().split()[-1])
             break
-    energy = float(line.strip().split()[-1])
+        elif line.strip().endswith('Convergence criterion met'):
+            energy = float(line.strip().split()[1])
+            break
     return atnums, alpha_elec, beta_elec, nbasis, nuclear_replusion_energy, energy, atcoords
 
 
-def _helper_orbital_energies(lit: LineIterator) -> Tuple:
-    """Load occupied and virtual orbital energies."""
+# todo: report bug in energy. Don't know if it is something related to EDA or difference between version 5.2 and 5.3
+def _helper_energy(lit: LineIterator):
+    for line in lit:
+        if line.strip().endswith('Convergence criterion met'):
+            energy = float(line.strip().split()[1])
+            break
+    return energy
+
+
+# todo: report bug final virtual section mo when no beta orbitals are there. Split function in two for restricted/unrestricted case
+def _helper_orbital_energies_restricted(lit: LineIterator) -> Tuple:
+    """Load occupied and virtual orbital energies for restricted calculation."""
+    # alpha occupied MOs
+    mo_a_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
+    # alpha unoccupied MOs
+    # mo_a_unoccupied = _helper_section('-- Virtual --', '', lit, backward=False)
+    mo_a_unoccupied = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
+    return mo_a_occupied, mo_a_unoccupied
+
+
+def _helper_orbital_energies_unrestricted(lit: LineIterator) -> Tuple:
+    """Load occupied and virtual orbital energies for unrestricted calculation."""
     # alpha occupied MOs
     mo_a_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # alpha unoccupied MOs
@@ -263,7 +322,7 @@ def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = Fa
     return np.array(data, dtype=np.float)
 
 
-def _helper_mulliken(lit: LineIterator) -> np.ndarray:
+def _helper_mulliken(lit: LineIterator, version) -> np.ndarray:
     """Load mulliken net atomic charges."""
     while True:
         line = next(lit).strip()
@@ -273,7 +332,11 @@ def _helper_mulliken(lit: LineIterator) -> np.ndarray:
     for line in lit:
         if line.strip().startswith('--------'):
             break
-        mulliken_charges.append(line.strip().split()[-2])
+        elif version == '5.2.0':
+            mulliken_charges.append(line.strip().split()[-2])
+        # todo: report bug for mulliken charges. Seems to be related to the version
+        elif version == '5.3.0':
+            mulliken_charges.append(line.strip().split()[-1])
     return np.array(mulliken_charges, dtype=np.float)
 
 
@@ -366,3 +429,81 @@ def _helper_thermo(lit: LineIterator) -> Tuple:
         elif line_str.startswith('Total Entropy'):
             entropy_dict['entropy_total'] = float(line_str.split()[-2])
     return enthalpy_dict, entropy_dict
+
+
+def _helper_eda(lit: LineIterator) -> Tuple:
+    """Load Energy decomposition information"""
+    next(lit)
+    frag_energies = {}
+    orth_frag_subs_decom = {}
+    clss_frozen_decomp = {}
+    eda_summary = {}
+    for line in lit:
+        if line.startswith('Fragment Energies'):
+            for line_2 in lit:
+                if line_2.startswith('--------------------'):
+                    break
+                else:
+                    info = line_2.strip().split()
+                    frag_energies[info[0]] = float(info[1])
+        elif line.startswith('  Orthogonal Fragment Subspace Decomposition'):
+            next(lit)
+            for line_2 in lit:
+                if line_2.startswith('     --------------------'):
+                    break
+                else:
+                    info = line_2.strip().split()
+                    if info[0] == 'E_elec':
+                        orth_frag_subs_decom[info[0]] = float(info[4])
+                    elif info[0] == 'E_pauli':
+                        orth_frag_subs_decom[info[0]] = float(info[4])
+                    elif info[0] == 'E_disp':
+                        orth_frag_subs_decom[info[0]] = float(info[4])
+        elif line.startswith('     Terms summing to E_pauli'):
+            next(lit)
+            pauli = []
+            for line_2 in lit:
+                if line_2.startswith('  --------------------'):
+                    break
+                else:
+                    info = line_2.strip().split()
+                    pauli.append(float(info[3]))
+            orth_frag_subs_decom['E_pauli'] = np.array(pauli)
+        elif line.startswith('  Classical Frozen Decomposition'):
+            next(lit)
+            for line_2 in lit:
+                if line_2.startswith('  --------------------'):
+                    break
+                else:
+                    info = line_2.strip().split()
+                    if info[0] == 'E_cls_elec':
+                        clss_frozen_decomp[info[0]] = float(info[5])
+                    elif info[0] == 'E_cls_pauli':
+                        clss_frozen_decomp[info[0]] = float(info[5])
+                    elif info[0].split("[")[1] == 'E_mod_pauli':
+                        clss_frozen_decomp[info[0].split("[")[1]] = float(info[5])
+        elif line.startswith('Simplified EDA Summary'):
+            next(lit)
+            for line_2 in lit:
+                if line_2.startswith('--------------------'):
+                    break
+                else:
+                    info = line_2.strip().split()
+                    if info[0] == 'PREPARATION':
+                        eda_summary[info[0]] = float(info[1])
+                    elif info[0] == 'FROZEN':
+                        eda_summary[info[0]] = float(info[1])
+                    elif info[0].split("[")[-1] == 'PAULI':
+                        eda_summary[info[0].split("[")[-1]] = float(info[1].split("]")[0])
+                    if info[0] == 'DISPERSION':
+                        eda_summary[info[0]] = float(info[1])
+                    elif info[0] == 'POLARIZATION':
+                        eda_summary[info[0]] = float(info[1])
+                    elif info[0] == 'CHARGE':
+                        eda_summary[info[0] + ' ' + info[1]] = float(info[2])
+                    elif info[0] == 'TOTAL':
+                        eda_summary[info[0]] = float(info[1])
+        elif line.startswith(' --------------------------------------------------------------'):
+            break
+
+    return frag_energies, orth_frag_subs_decom, clss_frozen_decomp, eda_summary
