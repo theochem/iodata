@@ -68,6 +68,7 @@ setup(
         'console_scripts': ['iodata-convert = iodata.__main__:main']
     },
     classifiers=[
+        'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
         'Operating System :: POSIX :: Linux',
