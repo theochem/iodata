@@ -1,7 +1,7 @@
 abs: true  # Force absolute comparison for cardboardlint
 project:
   name: iodata
-  conda_requirements: [sympy, pytest-xdist<2.0.0]
+  conda_requirements: [sympy]
   packages:
     - conda_name: iodata
       tools:
