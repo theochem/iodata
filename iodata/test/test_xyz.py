@@ -84,6 +84,27 @@ def test_load_fcc_columns():
     assert_allclose(mol.atgradient[-1, -1], -0.928032)
 
 
+def test_load_fcc_extended():
+    with path('iodata.test.data', 'al_fcc.xyz') as fn_xyz:
+        mol = load_one(str(fn_xyz), atom_columns='EXT')
+    assert hasattr(mol, 'energy')
+    assert isinstance(mol.energy, float)
+    assert_allclose(mol.energy, -112.846680723)
+    assert hasattr(mol, 'cellvecs')
+    assert mol.cellvecs.dtype == float
+    assert_allclose(mol.cellvecs, np.eye(3) * 7.6 * angstrom)
+    assert 'pbc' in mol.extra
+    assert mol.extra['pbc'].dtype == bool
+    assert_equal(mol.extra['pbc'], np.array([True, False, True]))
+    assert 'species' in mol.extra
+    assert_equal(mol.extra['species'], np.array(['Al'] * 32))
+    assert mol.atgradient.shape == (mol.natom, 3)
+    assert_allclose(mol.atgradient[0, 0], -0.285831)
+    assert_allclose(mol.atgradient[2, 1], 0.268537)
+    assert_allclose(mol.atgradient[-1, -1], -0.928032)
+    assert_allclose(mol.atcoords[31, 1], 5.56174271338 * angstrom)
+
+
 def check_load_dump_consistency(tmpdir, fn, atom_columns=None):
     """Check if dumping and loading an XYZ file results in the same data."""
     if atom_columns is None:
@@ -138,6 +159,24 @@ def test_load_many():
     assert_allclose(mols[0].atcoords[2] / angstrom, [2.864329, 0.114369, 3.3635])
     assert_allclose(mols[2].atcoords[0] / angstrom, [-0.232964, -0.789588, -3.247615])
     assert_allclose(mols[-1].atcoords[1] / angstrom, [-2.123423, -3.355326, -3.353739])
+
+
+def test_load_many_extended():
+    with path('iodata.test.data', 'water_extended_trajectory.xyz') as fn_xyz:
+        mols = list(load_many(str(fn_xyz), atom_columns='EXT'))
+    assert len(mols) == 3
+    assert 'some_label' in mols[0].extra
+    assert_equal(mols[0].extra['some_label'],
+                 np.array([[True, True], [False, True], [False, False]]))
+    assert 'is_true' in mols[0].extra
+    assert mols[0].extra['is_true']
+    # assert hasattr(mols[0], 'charge')
+    # assert_allclose(mols[0].charge, 0)
+    assert 'pi' in mols[1].extra
+    assert_equal(mols[1].extra['pi'], 3.14)
+    assert_equal(mols[1].atnums, np.array([8, 1, 1, 1]))
+    assert_equal(mols[1].atcoords[-1, 2], -12 * angstrom)
+    assert_equal(mols[2].atnums, np.array([8, 1, 1]))
 
 
 def test_load_many_dataset_emptylines():
