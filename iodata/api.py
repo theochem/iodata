@@ -30,7 +30,7 @@ from .iodata import IOData
 from .utils import LineIterator
 
 
-__all__ = ['load_one', 'load_many', 'dump_one', 'dump_many']
+__all__ = ['load_one', 'load_many', 'dump_one', 'dump_many', 'write_input']
 
 
 def _find_format_modules():
@@ -76,6 +76,43 @@ def _select_format_module(filename: str, attrname: str, fmt: str = None) -> Modu
         return FORMAT_MODULES[fmt]
     raise ValueError('Could not find file format with feature {} for file {}'.format(
         attrname, filename))
+
+
+def _find_input_modules():
+    """Return all input modules found with importlib."""
+    result = {}
+    for module_info in iter_modules(import_module('iodata.inputs').__path__):
+        if not module_info.ispkg:
+            format_module = import_module('iodata.inputs.' + module_info.name)
+            result[module_info.name] = format_module
+    return result
+
+
+INPUT_MODULES = _find_input_modules()
+
+
+def _select_input_module(attrname: str, fmt: str) -> ModuleType:
+    """Find an input module with the requested attribute name.
+
+    Parameters
+    ----------
+    attrname
+        The required attribute of the input module.
+    fmt
+        The name of the input module to use.
+
+    Returns
+    -------
+    format_module
+        The module implementing the required input format.
+
+    """
+    if fmt in INPUT_MODULES:
+        if not hasattr(INPUT_MODULES[fmt], attrname):
+            raise ValueError(f'{fmt} input module does not have {attrname}!')
+        return INPUT_MODULES[fmt]
+    else:
+        raise ValueError(f"Could not find input format {fmt}!")
 
 
 def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
@@ -188,3 +225,25 @@ def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None, **kwarg
     format_module = _select_format_module(filename, 'dump_many', fmt)
     with open(filename, 'w') as f:
         format_module.dump_many(f, iodatas, **kwargs)
+
+
+def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, **kwargs):
+    """Write input file using an instance of IOData for the specified software format.
+
+    Parameters
+    ----------
+    iodatas
+        An IOData instance containing the information needed to write input.
+    filename : str
+        The input file name.
+    fmt : str
+        The name of the software for which input file is generated.
+    template : str, optional
+        The template input file.
+    **kwargs
+        Keyword arguments are passed on to the input-specific write_input function.
+    """
+
+    input_module = _select_input_module('write_input', fmt)
+    with open(filename, 'w') as f:
+        input_module.write_input(f, iodata, template=template, **kwargs)
