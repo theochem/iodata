@@ -231,7 +231,7 @@ def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, *
 
     Parameters
     ----------
-    iodatas
+    iodata
         An IOData instance containing the information needed to write input.
     filename : str
         The input file name.
