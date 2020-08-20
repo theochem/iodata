@@ -111,8 +111,7 @@ def _select_input_module(attrname: str, fmt: str) -> ModuleType:
         if not hasattr(INPUT_MODULES[fmt], attrname):
             raise ValueError(f'{fmt} input module does not have {attrname}!')
         return INPUT_MODULES[fmt]
-    else:
-        raise ValueError(f"Could not find input format {fmt}!")
+    raise ValueError(f"Could not find input format {fmt}!")
 
 
 def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:

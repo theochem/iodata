@@ -20,9 +20,10 @@
 
 
 import os
-import numpy as np
 
 from typing import List
+
+import numpy as np
 
 from ..iodata import IOData
 from ..utils import angstrom
