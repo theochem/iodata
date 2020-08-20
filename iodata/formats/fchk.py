@@ -468,7 +468,6 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
         np.reshape(val, nval)
         print("{0:40}   R   N={1:12}".format(name, nval), file=f)
         k = 0
-
         for i in range(nval):
             print("{0: 16.8E}".format(val[i]), file=f, end='')
             k += 1
