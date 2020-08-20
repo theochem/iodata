@@ -498,12 +498,15 @@ def dump_one(f: TextIO, data: IOData):
     _dump_integer_scalars("Number of electrons", int(data.nelec), f)
     if data.charge is not None:
         _dump_integer_scalars("Charge", int(data.charge), f)
-    not_frac_occs_a = all(np.equal(np.mod(data.mo.occsa, 1), 0))
-    not_frac_occs_b = all(np.equal(np.mod(data.mo.occsb, 1), 0))
-    frac_occs = not(not_frac_occs_a and not_frac_occs_b)
-    if frac_occs is True:
-        raise ValueError("FCHK Only supports integer occupation numbers!")
     if data.mo is not None:
+        # check occupied orbitals are followed by virtuals
+        if data.mo.kind == "generalized":
+            raise ValueError("Cannot dump FCHK because given MO kind is generalized!")
+        # check integer occupations b/c FCHK doesn't support fractional occupations
+        not_frac_occs_a = all(np.equal(np.mod(data.mo.occsa, 1), 0.0))
+        not_frac_occs_b = all(np.equal(np.mod(data.mo.occsb, 1), 0.0))
+        if not (not_frac_occs_a and not_frac_occs_b):
+            raise ValueError("Cannot dump FCHK because given MO has fractional occupations!")
         # assign number of alpha and beta electrons
         na = int(np.sum(data.mo.occsa))
         nb = int(np.sum(data.mo.occsb))
