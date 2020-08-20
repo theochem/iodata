@@ -478,9 +478,10 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
 
 @document_dump_one(
     "Gaussian Formatted Checkpoint",
-    ['atcoords', 'atnums', 'energy', 'mo', 'obasis'],
-    ['atcharges', 'atcorenums', 'atfrozen', 'atgradient', 'athessian', 'atmasses', 'lot',
-     'one_rdms', 'obasis_name', 'extra', 'moments'])
+    ['atnums', 'atcorenums'],
+    ['atcharges', 'atcoords', 'atfrozen', 'atgradient', 'athessian', 'atmasses',
+     'charge', 'energy', 'lot', 'mo', 'one_rdms', 'obasis_name',
+     'extra', 'moments'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     # write title
