@@ -610,12 +610,14 @@ def test_dump_fchk_from_wfn_cisd_lih_cation(tmpdir):
     check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfn')
 
 
-# def test_dump_fchk_from_wfn_fci_lih_cation(tmpdir):
-#     check_load_dump_consistency(tmpdir, 'lih_cation_fci.wfn')
+@pytest.mark.xfail
+def test_dump_fchk_from_wfn_fci_lih_cation(tmpdir):
+    check_load_dump_consistency(tmpdir, 'lih_cation_fci.wfn')
 
 
-# def test_dump_fchk_from_wfn_fci_lif(tmpdir):
-#     check_load_dump_consistency(tmpdir, 'lif_fci.wfn')
+@pytest.mark.xfail
+def test_dump_fchk_from_wfn_fci_lif(tmpdir):
+    check_load_dump_consistency(tmpdir, 'lif_fci.wfn')
 
 
 def test_dump_fchk_from_wfn_h2(tmpdir):
@@ -653,12 +655,14 @@ def test_dump_fchk_from_wfx_lih_cation(tmpdir):
     check_load_dump_consistency(tmpdir, 'lih_cation_rohf.wfx')
 
 
-# def test_dump_fchk_from_wfx_lih_cisd_cation(tmpdir):
-#     check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfx')
+@pytest.mark.xfail
+def test_dump_fchk_from_wfx_lih_cisd_cation(tmpdir):
+    check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfx')
 
 
-# def test_dump_fchk_from_wfx_cah110(tmpdir):
-#     check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfx')
+@pytest.mark.xfail
+def test_dump_fchk_from_wfx_cah110(tmpdir):
+    check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfx')
 
 
 def test_dump_fchk_from_molekel_h2(tmpdir):
