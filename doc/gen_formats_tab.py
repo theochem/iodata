@@ -96,9 +96,20 @@ def generate_table_rst():
     # construct header with cross-referencing columns
     header = ["Properties"] + [f':ref:`{col} <format_{col}>`' for col in cols]
     table.append(header)
+    # attributes of IOData that have property type are going to be marked as always present,
+    # because they are derived from other attributes. However, this is not true for 'fcidump'
+    # and 'gaussianlog' formats (because they do not load information which is used to derive
+    # these property attributes), so we manually exclude these at the moment.
+    temp_index = [cols.index(fmt) for fmt in ['fcidump', 'gaussianlog']]
     for prop in rows:
-        # construct each row contents
-        row = [prop] + ["--"] * len(cols)
+        # construct default row entries
+        row = ["--"] * len(cols)
+        # set property attributes as always present expect for 'fcidump' & 'gaussianlog'
+        if isinstance(getattr(iodata.IOData, prop), property):
+            row = [item if index in temp_index else u"\u2713" for index, item in enumerate(row)]
+        # add attribute name as the first item on the row
+        row.insert(0, prop)
+        # check whether attribute is guaranteed or ifpresent for a format
         for fmt in prop_guaranteed[prop]:
             row[cols.index(fmt) + 1] = u"\u2713"
         for fmt in prop_ifpresent[prop]:
