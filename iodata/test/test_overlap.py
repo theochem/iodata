@@ -105,8 +105,9 @@ def test_overlap_l1():
 #     print(overlap.shape, dt_old)
 #     # check overlap matrix
 #     # assert_array_almost_equal(overlap, compute_overlap(data.obasis, data.atcoords), decimal=6)
-#     # dn = {"centers": d["centers"], "shell_index": d["shell_map"], "shell_type": d["shell_types"],
-#     #       "shell_nprim": d["nprims"], "prim_alpha": d["alphas"], "prim_coeff": d["con_coeffs"]}
+#     # dn = {"centers": d["centers"], "shell_index": d["shell_map"],
+#     # "shell_type": d["shell_types"], "shell_nprim": d["nprims"], "prim_alpha": d["alphas"],
+#     # "prim_coeff": d["con_coeffs"]}
 #     # assert_array_almost_equal(overlap, compute_overlap_matrix(**dn), decimal=6)
 #     print('new')
 #     start = time.time()
