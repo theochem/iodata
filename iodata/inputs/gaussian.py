@@ -28,6 +28,9 @@ from ..periodic import num2sym
 from ..utils import angstrom
 
 
+__all__ = []
+
+
 default_template = """\
 #n ${lot}/${obasis_name} ${run_type}
 
