@@ -27,7 +27,7 @@ import numpy as np
 from ..iodata import IOData
 from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_load_one, document_load_many
-from ..docstrings import document_dump_one, document_dump_many
+from ..docstrings import document_dump_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, amu
 
@@ -643,14 +643,3 @@ def dump_one(f: TextIO, data: IOData):
         arr = data.extra["polarizability_tensor"]
         arr = arr[np.tril_indices(arr.shape[0])]
         _dump_real_arrays("Polarizability", arr, f)
-
-
-@document_dump_many(
-    "Gaussian Formatted Checkpoint",
-    ['atcoords', 'atnums', 'energy', 'mo', 'obasis'],
-    ['atcharges', 'atcorenums', 'atfrozen', 'atgradient', 'athessian', 'atmasses', 'lot',
-     'one_rdms', 'obasis_name', 'extra', 'moments'])
-def dump_many(f: TextIO, datas: Iterator[IOData]):
-    """Do not edit this docstring. It will be overwritten."""
-    for data in datas:
-        dump_one(f, data)

@@ -27,7 +27,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 import pytest
 
-from ..api import load_one, load_many, dump_one, dump_many
+from ..api import load_one, load_many, dump_one
 from ..overlap import compute_overlap
 from ..utils import check_dm
 
@@ -691,12 +691,3 @@ def test_dump_fchk_rdms_mp2_nitrogen(tmpdir):
 
 def test_dump_fchk_rdms_mp3_nitrogen(tmpdir):
     check_load_dump_consistency(tmpdir, "nitrogen-mp3.fchk")
-
-
-def test_dump_many_consistency(tmpdir):
-    trj = load_fchk_trj_helper("peroxide_opt.fchk")
-    # Write in temporary folder and then read it
-    for mol in trj:
-        mol.nelec = 18
-    fn_tmp = os.path.join(tmpdir, 'test')
-    dump_many(trj, fn_tmp, fmt='fchk')
