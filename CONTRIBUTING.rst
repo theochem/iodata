@@ -240,7 +240,8 @@ to avoid duplicate efforts.
 
      .. code-block::
 
-       Host github.ugent.be
+       Host github.com
+           Hostname github.com
            ForwardX11 no
            IdentityFile /home/your_user_name/.ssh/id_rsa_github
 
