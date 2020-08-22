@@ -28,6 +28,7 @@ from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
 __all__ = ['OVERLAP_CONVENTIONS', 'compute_overlap', 'gob_cart_normalization']
 
 
+# pylint: disable=too-many-nested-blocks,too-many-statements
 def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
     r"""Compute overlap matrix for the given molecular basis set.
 
@@ -73,6 +74,8 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
     # Loop over shell0
     begin0 = 0
     total = 0
+
+    # pylint: disable=too-many-nested-blocks
     for i0, shell0 in enumerate(obasis.shells):
         r0 = atcoords[shell0.icenter]
         end0 = begin0 + shell0.nbasis
@@ -146,8 +149,18 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
     return overlap
 
 
-class GaussianOverlap():
+class GaussianOverlap:
+    """Gaussian Overlap Class."""
+
     def __init__(self, n_max):
+        """Initialize class.
+
+        Parameters
+        ----------
+        n_max : int
+            Maximum angular momentum.
+
+        """
         self.binomials = [[binom(n, i) for i in range(n + 1)] for n in range(n_max + 1)]
         facts = [factorial2(m, 2) for m in range(2 * n_max)]
         facts.insert(0, 1)

@@ -27,9 +27,7 @@ Developers are recommended to use Roberto.
 
 import os
 
-import Cython.Build
-import numpy as np
-from setuptools import setup, Extension
+from setuptools import setup
 
 
 def get_version():

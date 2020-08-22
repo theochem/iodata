@@ -19,7 +19,7 @@
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose, assert_array_almost_equal
+from numpy.testing import assert_allclose
 from pytest import raises
 
 from ..api import load_one
