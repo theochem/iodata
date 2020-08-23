@@ -118,7 +118,7 @@ def generate_table_rst():
     return table
 
 
-def write_rst_table(f, table, nhead=1):
+def print_rst_table(table, nhead=1):
     """Write an RST table to file f.
 
     Parameters
@@ -152,25 +152,22 @@ def write_rst_table(f, table, nhead=1):
     markers = format_row(["=" * widths[icell] for icell in range(len(widths))], "=")
 
     # top markers
-    print(markers, file=f)
+    print(markers)
 
     # heading rows (if any)
     for irow in range(nhead):
-        print(format_row(table[irow], " "), file=f)
+        print(format_row(table[irow], " "))
     if nhead > 0:
-        print(markers, file=f)
+        print(markers)
 
     # table body
     for irow in range(nhead, len(table)):
-        print(format_row(table[irow], " "), file=f)
+        print(format_row(table[irow], " "))
 
     # bottom markers
-    print(markers, file=f)
+    print(markers)
 
 
 if __name__ == "__main__":
     content_table = generate_table_rst()
-    with open("formats_tab.inc", "w") as inc_file:
-        write_rst_table(
-            inc_file, content_table,
-        )
+    print_rst_table(content_table)
