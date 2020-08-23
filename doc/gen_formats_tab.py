@@ -56,10 +56,9 @@ def _generate_all_format_parser():
         if fmt_name not in fmt_names:
             fmt_names[fmt_name] = len(fmt_names) + 1
         # obtaining supported properties
-        fields = fmt_module.load_one.guaranteed
-        for i in fields:
+        for attribute in fmt_module.load_one.guaranteed:
             # add format to its supported property list
-            prop_guaranteed[i].append(fmt_name)
+            prop_guaranteed[attribute].append(fmt_name)
         for attribute in fmt_module.load_one.ifpresent:
             prop_ifpresent[attribute].append(fmt_name)
     return fmt_names, prop_guaranteed, prop_ifpresent
