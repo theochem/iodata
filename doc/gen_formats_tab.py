@@ -86,8 +86,7 @@ def generate_table_rst():
     cols = [item[1] for item in sorted(cols)[::-1]]
 
     # construct header with cross-referencing columns
-    header = ["Properties"] + [f':ref:`{col} <format_{col}>`' for col in cols]
-    table.append(header)
+    table = [["Properties"] + [f':ref:`{col} <format_{col}>`' for col in cols]]
     # attributes of IOData that have property type are going to be marked as always present,
     # because they are derived from other attributes. However, this is not true for 'fcidump'
     # and 'gaussianlog' formats (because they do not load information which is used to derive
