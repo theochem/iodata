@@ -85,8 +85,8 @@ def generate_table_rst():
     # order columns based on number of guaranteed and ifpresent entries for each format
     cols = []
     for fmt_names in fmt_names:
-        count = sum([1 for value in prop_guaranteed.values() if fmt_names in value])
-        count += sum([1 for value in prop_ifpresent.values() if fmt_names in value])
+        count = sum((fmt_names in value) for value in prop_guaranteed.values())
+        count += sum((fmt_names in value) for value in prop_ifpresent.values())
         cols.append((count, fmt_names))
     cols = [item[1] for item in sorted(cols)[::-1]]
 
