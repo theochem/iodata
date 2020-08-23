@@ -45,14 +45,14 @@ def _generate_all_format_parser():
     format_modules = inspect.getmembers(iodata.formats, inspect.ismodule)
 
     # store supported format name and index (position) in table
-    fmt_names = {}
+    fmt_names = []
     # store guaranteed and ifpresent attributes & corresponding formats
     prop_guaranteed = defaultdict(list)
     prop_ifpresent = defaultdict(list)
     for fmt_name, fmt_module in format_modules:
         # add new format name to fmt_names
         if fmt_name not in fmt_names:
-            fmt_names[fmt_name] = len(fmt_names) + 1
+            fmt_names.append(fmt_name)
         # obtaining supported properties
         for attribute in fmt_module.load_one.guaranteed:
             # add format to its supported property list
