@@ -73,7 +73,7 @@ def generate_table_rst():
         table with rows of each property and columns of each format
     """
     table = []
-    methods_names, prop_guaranteed, prop_ifpresent = _generate_all_format_parser()
+    fmt_names, prop_guaranteed, prop_ifpresent = _generate_all_format_parser()
 
     # order rows based on number of formats having that attribute
     rows = [(len(v + prop_ifpresent.get(k, [])), k) for k, v in prop_guaranteed.items()]
@@ -86,10 +86,10 @@ def generate_table_rst():
 
     # order columns based on number of guaranteed and ifpresent entries for each format
     cols = []
-    for fmt in methods_names:
-        count = sum([1 for value in prop_guaranteed.values() if fmt in value])
-        count += sum([1 for value in prop_ifpresent.values() if fmt in value])
-        cols.append((count, fmt))
+    for fmt_names in fmt_names:
+        count = sum([1 for value in prop_guaranteed.values() if fmt_names in value])
+        count += sum([1 for value in prop_ifpresent.values() if fmt_names in value])
+        cols.append((count, fmt_names))
     cols = [item[1] for item in sorted(cols)[::-1]]
 
     # construct header with cross-referencing columns
@@ -99,7 +99,7 @@ def generate_table_rst():
     # because they are derived from other attributes. However, this is not true for 'fcidump'
     # and 'gaussianlog' formats (because they do not load information which is used to derive
     # these property attributes), so we manually exclude these at the moment.
-    temp_index = [cols.index(fmt) for fmt in ['fcidump', 'gaussianlog']]
+    temp_index = [cols.index(fmt_names) for fmt_names in ['fcidump', 'gaussianlog']]
     for prop in rows:
         # construct default row entries
         row = ["--"] * len(cols)
@@ -109,10 +109,10 @@ def generate_table_rst():
         # add attribute name as the first item on the row
         row.insert(0, prop)
         # check whether attribute is guaranteed or ifpresent for a format
-        for fmt in prop_guaranteed[prop]:
-            row[cols.index(fmt) + 1] = u"\u2713"
-        for fmt in prop_ifpresent[prop]:
-            row[cols.index(fmt) + 1] = 'm'
+        for fmt_names in prop_guaranteed[prop]:
+            row[cols.index(fmt_names) + 1] = u"\u2713"
+        for fmt_names in prop_ifpresent[prop]:
+            row[cols.index(fmt_names) + 1] = 'm'
         table.append(row)
     return table
 
