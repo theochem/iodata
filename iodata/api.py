@@ -106,7 +106,7 @@ def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
     try:
         return IOData(**format_module.load_one(lit, **kwargs))
     except StopIteration:
-        raise lit.error("File ended before all data was read.")
+        lit.error("File ended before all data was read.")
 
 
 def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
