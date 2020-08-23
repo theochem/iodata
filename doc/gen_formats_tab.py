@@ -23,7 +23,6 @@
 
 from collections import defaultdict
 import inspect
-import importlib
 
 import iodata
 
@@ -85,8 +84,8 @@ def generate_table_rst():
         table with rows of each property and columns of each format
 
     """
-    table = []
-    fmt_names, has_load, guaranteed, ifpresent, has_dump, required, optional = _generate_all_format_parser()
+    fmt_names, has_load, guaranteed, ifpresent, has_dump, required, optional = \
+        _generate_all_format_parser()
 
     # Sort rows by number of times the attribute is used in decreasing order.
     rows = []
@@ -100,13 +99,13 @@ def generate_table_rst():
     # Order columns based on number of guaranteed and ifpresent entries for each format.
     # Also keep track of which format has a load_one and dump_one function.
     cols = []
-    for fmt_names in fmt_names:
-        count = sum((fmt_names in value) for value in guaranteed.values())
-        count += sum((fmt_names in value) for value in ifpresent.values())
-        cols.append((count, fmt_names))
+    for fmt_name in fmt_names:
+        count = sum((fmt_name in value) for value in guaranteed.values())
+        count += sum((fmt_name in value) for value in ifpresent.values())
+        cols.append((count, fmt_name))
     cols = [fmt_name[1] for fmt_name in sorted(cols, reverse=True)]
 
-    # construct header with cross-referencing columns
+    # Construct header with cross-referencing columns.
     header = ["Attribute"]
     for fmt_name in cols:
         col_name = f':ref:`{fmt_name} <format_{fmt_name}>`'

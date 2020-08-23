@@ -37,7 +37,7 @@ software packages.
 
 For the list of file formats that can be loaded or dumped by IOData, see
 :ref:`file_formats`. The two tables below summarize the file formats and
-features supported by IOData:
+features supported by IOData.
 
 ======= ==========
 Code    Definition
