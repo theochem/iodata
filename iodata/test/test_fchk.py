@@ -29,7 +29,7 @@ import pytest
 
 from ..api import load_one, load_many, dump_one
 from ..overlap import compute_overlap
-from ..utils import check_dm
+from ..utils import check_dm, FileFormatWarning
 
 from .common import check_orthonormal, compare_mols
 from .test_molekel import compare_mols_diff_formats
@@ -517,10 +517,14 @@ def test_load_nbasis_indep(tmpdir):
     assert mol2.mo.coeffs.shape == (38, 37)
 
 
-def check_load_dump_consistency(tmpdir, fn):
+def check_load_dump_consistency(tmpdir, fn, match=None):
     """Check if dumping and loading an FCHK file results in the same data."""
     with path('iodata.test.data', fn) as file_name:
-        mol1 = load_one(str(file_name))
+        if match is None:
+            mol1 = load_one(str(file_name))
+        else:
+            with pytest.warns(FileFormatWarning, match=match):
+                mol1 = load_one(str(file_name))
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt='fchk')
     mol2 = load_one(fn_tmp, fmt='fchk')
@@ -563,11 +567,11 @@ def test_dump_fchk_from_fchk_water_dimer_ghost(tmpdir):
 
 
 def test_dump_fchk_from_molden_f(tmpdir):
-    check_load_dump_consistency(tmpdir, 'F.molden')
+    check_load_dump_consistency(tmpdir, 'F.molden', "PSI4")
 
 
 def test_dump_fchk_from_molden_ne(tmpdir):
-    check_load_dump_consistency(tmpdir, 'neon_turbomole_def2-qzvp.molden')
+    check_load_dump_consistency(tmpdir, 'neon_turbomole_def2-qzvp.molden', "Turbomole")
 
 
 def test_dump_fchk_from_molden_he2(tmpdir):
@@ -575,13 +579,13 @@ def test_dump_fchk_from_molden_he2(tmpdir):
 
 
 def test_dump_fchk_from_molden_nh3(tmpdir):
-    check_load_dump_consistency(tmpdir, 'nh3_orca.molden')
-    check_load_dump_consistency(tmpdir, 'nh3_psi4.molden')
-    check_load_dump_consistency(tmpdir, 'nh3_psi4_1.0.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_orca.molden', "ORCA")
+    check_load_dump_consistency(tmpdir, 'nh3_psi4.molden', "PSI4")
+    check_load_dump_consistency(tmpdir, 'nh3_psi4_1.0.molden', "unnormalized")
     check_load_dump_consistency(tmpdir, 'nh3_molpro2012.molden')
     check_load_dump_consistency(tmpdir, 'nh3_molden_cart.molden')
     check_load_dump_consistency(tmpdir, 'nh3_molden_pure.molden')
-    check_load_dump_consistency(tmpdir, 'nh3_turbomole.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_turbomole.molden', "Turbomole")
 
 
 def test_dump_fchk_from_wfn_he(tmpdir):
@@ -674,15 +678,15 @@ def test_dump_fchk_from_wfx_cah110(tmpdir):
 
 
 def test_dump_fchk_from_molekel_h2(tmpdir):
-    check_load_dump_consistency(tmpdir, 'h2_sto3g.mkl')
+    check_load_dump_consistency(tmpdir, 'h2_sto3g.mkl', "ORCA")
 
 
 def test_dump_fchk_from_molekel_ethanol(tmpdir):
-    check_load_dump_consistency(tmpdir, 'ethanol.mkl')
+    check_load_dump_consistency(tmpdir, 'ethanol.mkl', "ORCA")
 
 
 def test_dump_fchk_from_molekel_li2(tmpdir):
-    check_load_dump_consistency(tmpdir, 'li2.mkl')
+    check_load_dump_consistency(tmpdir, 'li2.mkl', "ORCA")
 
 
 def test_dump_fchk_rdms_cc_nitrogen(tmpdir):
