@@ -88,13 +88,9 @@ def generate_table_rst():
         _generate_all_format_parser()
 
     # Sort rows by number of times the attribute is used in decreasing order.
-    rows = []
-    for attr_name in dir(iodata.IOData):
-        if not attr_name.startswith('_'):
-            count = len(ifpresent[attr_name]) + len(guaranteed[attr_name])
-            count += len(required[attr_name]) + len(required[attr_name])
-            rows.append((count, attr_name))
-    rows = [attr_name[1] for attr_name in sorted(rows, reverse=True)]
+    rows = sorted(
+        attr_name for attr_name in dir(iodata.IOData)
+        if not attr_name.startswith('_'))
 
     # Order columns based on number of guaranteed and ifpresent entries for each format.
     # Also keep track of which format has a load_one and dump_one function.
