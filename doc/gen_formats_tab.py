@@ -35,10 +35,12 @@ def _generate_all_format_parser():
 
     Returns
     -------
-    tuple(list, dict, dict)
+    tuple(list, set, dict, dict, set, dict, dict)
         list[fmt_name]
+        set{fmt_names_with_load_one}
         dict{attr_name: fmt_names_guaranteed}
         dict{attr_name: fmt_names_ifpresent}
+        set{fmt_names_with_dump_one}
         dict{attr_name: fmt_names_required}
         dict{attr_name: fmt_names_optional}
 
