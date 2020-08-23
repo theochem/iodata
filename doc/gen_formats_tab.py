@@ -36,9 +36,11 @@ def _generate_all_format_parser():
 
     Returns
     -------
-    tuple(dict, dict)
-        dict{format_name: index}
-        dict{proper_name: formats_name_supported}
+    tuple(list, dict, dict)
+        list[fmt_name]
+        dict{attr_name: fmt_names_guaranteed}
+        dict{attr_name: fmt_names_ifpresent}
+
     """
     # inspect iodata format module
     # obtain a list of tuple [(module_name: str, module_object: obj)]
@@ -69,6 +71,7 @@ def generate_table_rst():
     -------
     list[list[]]
         table with rows of each property and columns of each format
+
     """
     table = []
     fmt_names, prop_guaranteed, prop_ifpresent = _generate_all_format_parser()
@@ -110,16 +113,15 @@ def generate_table_rst():
 
 
 def print_rst_table(table, nhead=1):
-    """Write an RST table to file f.
+    """Print an RST table.
 
     Parameters
     ----------
-    f : file object
-        A writable file object
     table : list[list[]]
         A list of rows. Each row must be a list of cells containing strings
     nhead : int, optional
         The number of header rows
+
     """
 
     def format_cell(cell):
