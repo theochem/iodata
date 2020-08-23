@@ -25,7 +25,7 @@ from numpy.testing import assert_allclose
 import pytest
 
 from .common import compute_1rdm
-from ..api import load_one, IOData
+from ..api import load_one, load_many, IOData
 from ..overlap import compute_overlap
 try:
     from importlib_resources import path
@@ -103,6 +103,9 @@ def test_charge_nelec1():
     mol.charge = -1
     assert mol.nelec == 4
     assert mol.charge == -1
+    # The values should be stored as private attributes.
+    assert mol._nelec == 4
+    assert mol._charge == -1
 
 
 def test_charge_nelec2():
@@ -113,21 +116,27 @@ def test_charge_nelec2():
     assert mol.charge == 0
     mol.charge = 1
     assert mol.nelec == 9
+    # Only _nelec should be set.
+    assert mol._nelec == 9
+    assert mol._charge is None
 
 
 def test_charge_nelec3():
-    # When atnums is set, nelec and charge are coupled
+    # When atnums is set, nelec and charge are coupled.
     mol = IOData()
     mol.atnums = np.array([6, 1, 1, 1, 1])
     mol.nelec = 10
     assert mol.charge == 0
     mol.charge = 1
     assert mol.nelec == 9
+    # Only _nelec should be set.
+    assert mol._nelec == 9
+    assert mol._charge is None
 
 
 def test_undefined():
-    # One a blank IOData object, accessing undefined charge and nelec should raise
-    # an AttributeError.
+    # One a blank IOData object, accessing undefined charge and nelec should
+    # return None.
     mol = IOData()
     assert mol.charge is None
     assert mol.nelec is None
@@ -138,6 +147,40 @@ def test_undefined():
     mol = IOData()
     mol.charge = 1
     assert mol.nelec is None
+
+
+def test_derived1():
+    # When loading a file with molecular orbitals, nelec, charge and spinpol are
+    # derived from the mo object:
+    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
+        mol = load_one(str(fn_fchk))
+    assert mol.nelec == mol.mo.nelec
+    assert mol.charge == mol.atcorenums.sum() - mol.mo.nelec
+    assert mol.spinpol == mol.mo.spinpol
+    assert mol._nelec is None
+    assert mol._charge is None
+    assert mol._spinpol is None
+
+
+def test_derived2():
+    # When loading a file defining the total charge, it
+    with path('iodata.test.data', 'water_extended_trajectory.xyz') as fn_xyz:
+        mols = list(load_many(str(fn_xyz), atom_columns='EXT'))
+    # The following unit tests are confusing, so need a little explaining:
+    # Upon initialization, _charge is set when loaded from a file. See
+    # https://www.attrs.org/en/stable/init.html#private-attributes
+    # Our getters and setters may change this if needed to maintain consistency.
+    assert mols[0]._charge == 0.0  # set
+    assert mols[0].charge == 0.0  # works as expected, sets atcorenums and nelec
+    assert mols[0].nelec == mols[0].atcorenums.sum()
+    assert mols[0]._charge is None  # _charge is None and charge is derived.
+    assert mols[0].charge == 0.0  # derived
+    # idem for second, which has charge +1.
+    assert mols[1]._charge == 1.0
+    assert mols[1].charge == 1.0
+    assert mols[1].nelec == mols[1].atcorenums.sum() - 1
+    assert mols[1]._charge is None
+    assert mols[1].charge == 1.0
 
 
 def test_natom():

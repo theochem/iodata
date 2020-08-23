@@ -259,19 +259,22 @@ class IOData:
             # https://github.com/PyCQA/pylint/issues/1694
             # pylint: disable=no-member
             result = self.atnums.astype(float)
-            self._atcorenums = result
+            self.atcorenums = result
         return result
 
     @atcorenums.setter
     def atcorenums(self, atcorenums):
         self._atcorenums = atcorenums
+        if self._charge is not None:
+            self.nelec = self._atcorenums.sum() - self._charge
+            self._charge = None
 
     @property
     def charge(self) -> float:
         """Return the net charge of the system."""
-        if self.atcorenums is None:
-            return self._charge
-        return self.atcorenums.sum() - self.nelec
+        if self.atcorenums is not None and self.nelec is not None:
+            return self.atcorenums.sum() - self.nelec
+        return self._charge
 
     @charge.setter
     def charge(self, charge: float):
@@ -301,9 +304,9 @@ class IOData:
     @property
     def nelec(self) -> float:
         """Return the number of electrons."""
-        if self.mo is None:
-            return self._nelec
-        return self.mo.nelec
+        if self.mo is not None:
+            return self.mo.nelec
+        return self._nelec
 
     @nelec.setter
     def nelec(self, nelec: float):
@@ -320,9 +323,9 @@ class IOData:
         number in ]0, 2[ implies spin polarizaiton, which may not always be a
         valid assumption.
         """
-        if self.mo is None:
-            return self._spinpol
-        return self.mo.spinpol
+        if self.mo is not None:
+            return self.mo.spinpol
+        return self._spinpol
 
     @spinpol.setter
     def spinpol(self, spinpol: float):
