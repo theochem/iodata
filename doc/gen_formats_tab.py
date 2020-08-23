@@ -49,8 +49,8 @@ def _generate_all_format_parser():
     # store supported format name and index (position) in table
     fmt_names = []
     # store guaranteed and ifpresent attributes & corresponding formats
-    prop_guaranteed = defaultdict(list)
-    prop_ifpresent = defaultdict(list)
+    guaranteed = defaultdict(list)
+    ifpresent = defaultdict(list)
     for fmt_name, fmt_module in format_modules:
         # add new format name to fmt_names
         if fmt_name not in fmt_names:
@@ -58,10 +58,10 @@ def _generate_all_format_parser():
         # obtaining supported properties
         for attrname in fmt_module.load_one.guaranteed:
             # add format to its supported property list
-            prop_guaranteed[attrname].append(fmt_name)
+            guaranteed[attrname].append(fmt_name)
         for attrname in fmt_module.load_one.ifpresent:
-            prop_ifpresent[attrname].append(fmt_name)
-    return fmt_names, prop_guaranteed, prop_ifpresent
+            ifpresent[attrname].append(fmt_name)
+    return fmt_names, guaranteed, ifpresent
 
 
 def generate_table_rst():
@@ -74,17 +74,17 @@ def generate_table_rst():
 
     """
     table = []
-    fmt_names, prop_guaranteed, prop_ifpresent = _generate_all_format_parser()
+    fmt_names, guaranteed, ifpresent = _generate_all_format_parser()
 
     # Sort rows by number of times the attribute is used in decreasing order.
     rows = [name for name in dir(iodata.IOData) if not name.startswith('_')]
-    rows.sort(key=(lambda name: len(prop_ifpresent[name]) + len(prop_guaranteed[name])), reverse=True)
+    rows.sort(key=(lambda name: len(ifpresent[name]) + len(guaranteed[name])), reverse=True)
 
     # order columns based on number of guaranteed and ifpresent entries for each format
     cols = []
     for fmt_names in fmt_names:
-        count = sum((fmt_names in value) for value in prop_guaranteed.values())
-        count += sum((fmt_names in value) for value in prop_ifpresent.values())
+        count = sum((fmt_names in value) for value in guaranteed.values())
+        count += sum((fmt_names in value) for value in ifpresent.values())
         cols.append((count, fmt_names))
     cols = [item[1] for item in sorted(cols)[::-1]]
 
@@ -95,18 +95,18 @@ def generate_table_rst():
     # and 'gaussianlog' formats (because they do not load information which is used to derive
     # these property attributes), so we manually exclude these at the moment.
     temp_index = [cols.index(fmt_names) for fmt_names in ['fcidump', 'gaussianlog']]
-    for prop in rows:
+    for attr_name in rows:
         # construct default row entries
         row = ["."] * len(cols)
         # set property attributes as always present expect for 'fcidump' & 'gaussianlog'
-        if isinstance(getattr(iodata.IOData, prop), property):
+        if isinstance(getattr(iodata.IOData, attr_name), property):
             row = [item if index in temp_index else u"\u2713" for index, item in enumerate(row)]
         # add attribute name as the first item on the row
-        row.insert(0, prop)
+        row.insert(0, attr_name)
         # check whether attribute is guaranteed or ifpresent for a format
-        for fmt_names in prop_guaranteed[prop]:
+        for fmt_names in guaranteed[attr_name]:
             row[cols.index(fmt_names) + 1] = u"\u2713"
-        for fmt_names in prop_ifpresent[prop]:
+        for fmt_names in ifpresent[attr_name]:
             row[cols.index(fmt_names) + 1] = 'm'
         table.append(row)
     return table
