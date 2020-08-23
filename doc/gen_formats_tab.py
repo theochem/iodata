@@ -73,14 +73,9 @@ def generate_table_rst():
     table = []
     fmt_names, prop_guaranteed, prop_ifpresent = _generate_all_format_parser()
 
-    # order rows based on number of formats having that attribute
-    rows = [(len(v + prop_ifpresent.get(k, [])), k) for k, v in prop_guaranteed.items()]
-    # add properties that only exist in prop_ifpresent
-    rows.extend([(len(v), k) for k, v in prop_ifpresent.items() if k not in prop_guaranteed.keys()])
-    rows = [item[1] for item in sorted(rows)[::-1]]
-    # add properties that exist in IOData attribute list, but not load by any of current formats
-    extra = [item for item in dir(iodata.IOData) if not item.startswith('_') and item not in rows]
-    rows.extend(extra)
+    # Sort rows by number of times the attribute is used in decreasing order.
+    rows = [name for name in dir(iodata.IOData) if not name.startswith('_')]
+    rows.sort(key=(lambda name: len(prop_ifpresent[name]) + len(prop_guaranteed[name])), reverse=True)
 
     # order columns based on number of guaranteed and ifpresent entries for each format
     cols = []
