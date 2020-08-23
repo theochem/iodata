@@ -73,7 +73,6 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
 
     # Loop over shell0
     begin0 = 0
-    total = 0
 
     # pylint: disable=too-many-nested-blocks
     for i0, shell0 in enumerate(obasis.shells):
@@ -96,7 +95,6 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
             rij = r0 - r1
             rij_norm_sq = np.linalg.norm(rij) ** 2
             prefactor = np.exp(-a0 * a1 * rij_norm_sq / (a0 + a1))
-            total += 1
             if prefactor > 1.e-15:
                 # arrays of angular momentums [[2, 0, 0], [0, 2, 0], ..., [0, 1, 1]]
                 n0 = np.array(list(iter_cart_alphabet(shell0.angmoms[0])))
