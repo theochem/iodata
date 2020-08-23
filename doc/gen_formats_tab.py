@@ -169,7 +169,7 @@ def write_rst_table(f, table, nhead=1):
 
 
 content_table = generate_table_rst()
-with open("format_tab.inc", "w") as inc_file:
+with open("formats_tab.inc", "w") as inc_file:
     write_rst_table(
         inc_file, content_table,
     )

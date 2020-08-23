@@ -40,7 +40,7 @@ For the list of file formats that can be loaded or dumped by IOData, see
 by IOData XXX. Scroll to the write to see all the formats, here letter "m" stands for
 "maybe" for the information that will loaded/dumped, if present.
 
-.. include:: format_tab.inc
+.. include:: formats_tab.inc
 
 
 User Documentation
