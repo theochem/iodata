@@ -168,8 +168,9 @@ def write_rst_table(f, table, nhead=1):
     print(markers, file=f)
 
 
-content_table = generate_table_rst()
-with open("formats_tab.inc", "w") as inc_file:
-    write_rst_table(
-        inc_file, content_table,
-    )
+if __name__ == "__main__":
+    content_table = generate_table_rst()
+    with open("formats_tab.inc", "w") as inc_file:
+        write_rst_table(
+            inc_file, content_table,
+        )
