@@ -40,28 +40,40 @@ def _generate_all_format_parser():
         list[fmt_name]
         dict{attr_name: fmt_names_guaranteed}
         dict{attr_name: fmt_names_ifpresent}
+        dict{attr_name: fmt_names_required}
+        dict{attr_name: fmt_names_optional}
 
     """
-    # inspect iodata format module
-    # obtain a list of tuple [(module_name: str, module_object: obj)]
+    # Inspect iodata format module.
+    # Obtain a list of tuple [(module_name: str, module_object: obj)].
     format_modules = inspect.getmembers(iodata.formats, inspect.ismodule)
-
-    # store supported format name and index (position) in table
+    # Store supported format names in a list.
     fmt_names = []
-    # store guaranteed and ifpresent attributes & corresponding formats
+    # Store which formats support each attribute.
+    has_load = set()
     guaranteed = defaultdict(list)
     ifpresent = defaultdict(list)
+    has_dump = set()
+    required = defaultdict(list)
+    optional = defaultdict(list)
     for fmt_name, fmt_module in format_modules:
-        # add new format name to fmt_names
+        # Add new format name to fmt_names.
         if fmt_name not in fmt_names:
             fmt_names.append(fmt_name)
-        # obtaining supported properties
-        for attrname in fmt_module.load_one.guaranteed:
-            # add format to its supported property list
-            guaranteed[attrname].append(fmt_name)
-        for attrname in fmt_module.load_one.ifpresent:
-            ifpresent[attrname].append(fmt_name)
-    return fmt_names, guaranteed, ifpresent
+        # Obtain supported attributes.
+        if hasattr(fmt_module, "load_one"):
+            has_load.add(fmt_name)
+            for attr_name in fmt_module.load_one.guaranteed:
+                guaranteed[attr_name].append(fmt_name)
+            for attr_name in fmt_module.load_one.ifpresent:
+                ifpresent[attr_name].append(fmt_name)
+        if hasattr(fmt_module, "dump_one"):
+            has_dump.add(fmt_name)
+            for attr_name in fmt_module.dump_one.required:
+                required[attr_name].append(fmt_name)
+            for attr_name in fmt_module.dump_one.optional:
+                optional[attr_name].append(fmt_name)
+    return fmt_names, has_load, guaranteed, ifpresent, has_dump, required, optional
 
 
 def generate_table_rst():
@@ -74,37 +86,56 @@ def generate_table_rst():
 
     """
     table = []
-    fmt_names, guaranteed, ifpresent = _generate_all_format_parser()
+    fmt_names, has_load, guaranteed, ifpresent, has_dump, required, optional = _generate_all_format_parser()
 
     # Sort rows by number of times the attribute is used in decreasing order.
-    rows = [name for name in dir(iodata.IOData) if not name.startswith('_')]
-    rows.sort(key=(lambda name: len(ifpresent[name]) + len(guaranteed[name])), reverse=True)
+    rows = []
+    for attr_name in dir(iodata.IOData):
+        if not attr_name.startswith('_'):
+            count = len(ifpresent[attr_name]) + len(guaranteed[attr_name])
+            count += len(required[attr_name]) + len(required[attr_name])
+            rows.append((count, attr_name))
+    rows = [attr_name[1] for attr_name in sorted(rows, reverse=True)]
 
-    # order columns based on number of guaranteed and ifpresent entries for each format
+    # Order columns based on number of guaranteed and ifpresent entries for each format.
+    # Also keep track of which format has a load_one and dump_one function.
     cols = []
     for fmt_names in fmt_names:
         count = sum((fmt_names in value) for value in guaranteed.values())
         count += sum((fmt_names in value) for value in ifpresent.values())
         cols.append((count, fmt_names))
-    cols = [item[1] for item in sorted(cols)[::-1]]
+    cols = [fmt_name[1] for fmt_name in sorted(cols, reverse=True)]
 
     # construct header with cross-referencing columns
-    table = [["Properties"] + [f':ref:`{col} <format_{col}>`' for col in cols]]
+    header = ["Attribute"]
+    for fmt_name in cols:
+        col_name = f':ref:`{fmt_name} <format_{fmt_name}>`'
+        col_name += " {}{}".format(
+            "L" if fmt_name in has_load else "",
+            "D" if fmt_name in has_dump else ""
+        )
+        header.append(col_name)
+    table = [header]
     for attr_name in rows:
         # If an attribute is a property, we mark it as "d" for "derived from
         # other attributes if possible".
+        row = [attr_name]
         if isinstance(getattr(iodata.IOData, attr_name), property):
-            row =  ["d"] * len(cols)
-        else:
-            # construct default row entries
-            row = ["."] * len(cols)
-        # add attribute name as the first item on the row
-        row.insert(0, attr_name)
-        # check whether attribute is guaranteed or ifpresent for a format
-        for fmt_names in guaranteed[attr_name]:
-            row[cols.index(fmt_names) + 1] = u"\u2713"
-        for fmt_names in ifpresent[attr_name]:
-            row[cols.index(fmt_names) + 1] = 'm'
+            row[0] += " *(d)*"
+        # Loop over formats and set flags
+        for fmt_name in cols:
+            cell = ""
+            if fmt_name in guaranteed[attr_name]:
+                cell += "R"
+            if fmt_name in ifpresent[attr_name]:
+                cell += "r"
+            if fmt_name in required[attr_name]:
+                cell += "W"
+            if fmt_name in optional[attr_name]:
+                cell += "w"
+            if cell == "":
+                cell = "."
+            row.append(cell)
         table.append(row)
     return table
 
