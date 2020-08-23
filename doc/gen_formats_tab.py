@@ -49,9 +49,7 @@ def _generate_all_format_parser():
     # store guaranteed and ifpresent attributes & corresponding formats
     prop_guaranteed = defaultdict(list)
     prop_ifpresent = defaultdict(list)
-    for fmt_name, _ in format_modules:
-        # inspect(import) target module
-        fmt_module = importlib.import_module("iodata.formats." + fmt_name)
+    for fmt_name, fmt_module in format_modules:
         # add new format name to fmt_names
         if fmt_name not in fmt_names:
             fmt_names[fmt_name] = len(fmt_names) + 1
