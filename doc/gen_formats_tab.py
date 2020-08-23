@@ -54,11 +54,11 @@ def _generate_all_format_parser():
         if fmt_name not in fmt_names:
             fmt_names.append(fmt_name)
         # obtaining supported properties
-        for attribute in fmt_module.load_one.guaranteed:
+        for attrname in fmt_module.load_one.guaranteed:
             # add format to its supported property list
-            prop_guaranteed[attribute].append(fmt_name)
-        for attribute in fmt_module.load_one.ifpresent:
-            prop_ifpresent[attribute].append(fmt_name)
+            prop_guaranteed[attrname].append(fmt_name)
+        for attrname in fmt_module.load_one.ifpresent:
+            prop_ifpresent[attrname].append(fmt_name)
     return fmt_names, prop_guaranteed, prop_ifpresent
 
 
