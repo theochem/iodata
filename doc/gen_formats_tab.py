@@ -119,7 +119,7 @@ def generate_table_rst():
     for attr_name in rows:
         # If an attribute is a property, we mark it as "d" for "derived from
         # other attributes if possible".
-        row = [attr_name]
+        row = [f":py:attr:`{attr_name} <iodata.iodata.IOData.{attr_name}>`"]
         if isinstance(getattr(iodata.IOData, attr_name), property):
             row[0] += " *(d)*"
         # Loop over formats and set flags
