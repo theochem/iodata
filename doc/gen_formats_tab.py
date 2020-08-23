@@ -94,7 +94,7 @@ def generate_table_rst():
     temp_index = [cols.index(fmt_names) for fmt_names in ['fcidump', 'gaussianlog']]
     for prop in rows:
         # construct default row entries
-        row = ["--"] * len(cols)
+        row = ["."] * len(cols)
         # set property attributes as always present expect for 'fcidump' & 'gaussianlog'
         if isinstance(getattr(iodata.IOData, prop), property):
             row = [item if index in temp_index else u"\u2713" for index, item in enumerate(row)]
