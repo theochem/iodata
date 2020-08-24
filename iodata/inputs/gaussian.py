@@ -19,10 +19,10 @@
 """Gaussian Input Module."""
 
 
-import attr
-
 from typing import TextIO
 from string import Template
+
+import attr
 
 from ..iodata import IOData
 from ..periodic import num2sym

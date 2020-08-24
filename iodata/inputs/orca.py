@@ -20,7 +20,8 @@
 
 from typing import TextIO
 from string import Template
-from attr import asdict
+
+import attr
 
 from ..iodata import IOData
 from ..periodic import num2sym
@@ -40,7 +41,7 @@ ${geometry}
 def write_input(f: TextIO, data: IOData, template: str = None):
     """Do not edit this docstring. It will be overwritten."""
     # load IOData dict using attr.asdict because the IOData class uses __slots__
-    fields = asdict(data, recurse=False)
+    fields = attr.asdict(data, recurse=False)
 
     # store atomic coordinates in angstrom
     fields["atcoords"] = data.atcoords / angstrom
