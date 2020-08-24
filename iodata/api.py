@@ -91,13 +91,11 @@ def _find_input_modules():
 INPUT_MODULES = _find_input_modules()
 
 
-def _select_input_module(attrname: str, fmt: str) -> ModuleType:
+def _select_input_module(fmt: str) -> ModuleType:
     """Find an input module with the requested attribute name.
 
     Parameters
     ----------
-    attrname
-        The required attribute of the input module.
     fmt
         The name of the input module to use.
 
@@ -108,8 +106,8 @@ def _select_input_module(attrname: str, fmt: str) -> ModuleType:
 
     """
     if fmt in INPUT_MODULES:
-        if not hasattr(INPUT_MODULES[fmt], attrname):
-            raise ValueError(f'{fmt} input module does not have {attrname}!')
+        if not hasattr(INPUT_MODULES[fmt], 'write_input'):
+            raise ValueError(f'{fmt} input module does not have write_input!')
         return INPUT_MODULES[fmt]
     raise ValueError(f"Could not find input format {fmt}!")
 
@@ -243,7 +241,7 @@ def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, *
         Keyword arguments are passed on to the input-specific write_input function.
 
     """
-    input_module = _select_input_module('write_input', fmt)
+    input_module = _select_input_module(fmt)
     # load template as a string
     if template is not None:
         with open(template, 'r') as t:
