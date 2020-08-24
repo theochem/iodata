@@ -107,7 +107,7 @@ def generate_table_rst():
     header = ["Attribute"]
     for fmt_name in cols:
         col_name = f':ref:`{fmt_name} <format_{fmt_name}>`'
-        col_name += " {}{}".format(
+        col_name += ": {}{}".format(
             "L" if fmt_name in has_load else "",
             "D" if fmt_name in has_dump else ""
         )
