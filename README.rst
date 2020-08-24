@@ -51,8 +51,6 @@ The following dependencies will be necessary for IOData to build properly,
 * SciPy >= 0.11.0: http://www.scipy.org/
 * NumPy >= 1.9.1: http://www.numpy.org/
 * pytest >= 4.2.0: https://docs.pytest.org/
-* Cython
-* gcc/clang
 
 
 Installation
