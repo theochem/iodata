@@ -124,8 +124,6 @@ def test_input_orca_from_molden(tmpdir):
     # load orca molden
     with path('iodata.test.data', 'nh3_orca.molden') as fn:
         mol = load_one(fn)
-    # temporary fix for unhashable type: 'list' TypeError in iodata.basis.MolecularBasis
-    mol.obasis = None
     # write input in a temporary file
     fname = os.path.join(tmpdir, 'input_from_molden.in')
     write_input(mol, fname, fmt='orca')
