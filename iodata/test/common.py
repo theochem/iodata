@@ -18,17 +18,26 @@
 # --
 """Utilities for unit tests."""
 
-from os import path
+import os
 from contextlib import contextmanager
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
+import pytest
 
+from ..api import load_one
 from ..overlap import compute_overlap
 from ..basis import convert_conventions
+from ..utils import FileFormatWarning
+
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
+
 
 __all__ = ['compute_mulliken_charges', 'compute_1rdm',
-           'compare_mols', 'check_orthonormal']
+           'compare_mols', 'check_orthonormal', 'load_one_warning']
 
 
 def compute_1rdm(iodata):
@@ -72,7 +81,7 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
 
     """
     fn_truncated = '%s/truncated_%i_%s' % (
-        tmpdir, nline, path.basename(fn_orig))
+        tmpdir, nline, os.path.basename(fn_orig))
     with open(fn_orig) as f_orig, open(fn_truncated, 'w') as f_truncated:
         for counter, line in enumerate(f_orig):
             if counter >= nline:
@@ -158,3 +167,32 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
     message = 'Molecular orbitals are not orthonormal!'
     assert_allclose(mo_overlap, np.eye(mo_count),
                     rtol=0., atol=atol, err_msg=message)
+
+
+def load_one_warning(filename: str, fmt: str = None, match: str = "", **kwargs):
+    """Call load_one, catching expected FileFormatWarning.
+
+    Parameters
+    ----------
+    filename
+        The file in the unit test data directory to load.
+    fmt
+        The name of the file format module to use. When not given, it is guessed
+        from the filename.
+    match
+        When given, loading the file is expected to raise a warning whose
+        message string contains match.
+    **kwargs
+        Keyword arguments are passed on to the format-specific load_one function.
+
+    Returns
+    -------
+    out
+        The instance of IOData with data loaded from the input files.
+
+    """
+    with path('iodata.test.data', filename) as fn:
+        if match == "":
+            return load_one(str(fn), fmt, **kwargs)
+        with pytest.warns(FileFormatWarning, match=match):
+            return load_one(str(fn), fmt, **kwargs)

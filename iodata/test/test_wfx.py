@@ -29,7 +29,8 @@ from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
 from ..utils import LineIterator
 
-from .common import check_orthonormal, truncated_file, compare_mols, compute_mulliken_charges
+from .common import (check_orthonormal, truncated_file, compare_mols,
+                     compute_mulliken_charges, load_one_warning)
 
 try:
     from importlib_resources import path
@@ -86,23 +87,26 @@ def test_load_dump_consistency_lih_cation_rohf(tmpdir):
     check_load_dump_consistency('lih_cation_rohf.wfx', tmpdir)
 
 
-def compare_mulliken_charges(fname, tmpdir, rtol=1.0e-7, atol=0.0):
+def compare_mulliken_charges(
+        fname: str, tmpdir: str, rtol: float = 1.0e-7, atol: float = 0.0,
+        match: str = ""):
     """Check if charges are computed correctly after dumping and loading WFX file format.
 
     Parameters
     ----------
-    fname : str
+    fname
         The filename to be load.
-    tmpdir : str
+    tmpdir
         The temporary directory to dump and load the file.
-    rtole : float, optional
-        Relative tolerance when comparing charges.
-    atol : float, optional
-        Absolute tolerance when comparing charges.
-
+    rtole
+        Relative tolerance when comparing charges. (optional)
+    atol
+        Absolute tolerance when comparing charges. (optional)
+    match
+        When given, loading the file is expected to raise a warning whose
+        message string contains match.
     """
-    with path('iodata.test.data', fname) as file_name:
-        mol1 = load_one(str(file_name))
+    mol1 = load_one_warning(fname, match=match)
     # dump WFX and check that file exists
     fn_tmp = os.path.join(tmpdir, f"{fname}.wfx")
     dump_one(mol1, fn_tmp)
@@ -166,7 +170,7 @@ def test_dump_one_from_wfn_lif(tmpdir):
 
 
 def test_dump_one_from_molden_h2o(tmpdir):
-    compare_mulliken_charges('h2o.molden.input', tmpdir)
+    compare_mulliken_charges('h2o.molden.input', tmpdir, match="ORCA")
 
 
 def test_dump_one_from_molden_he2(tmpdir):
@@ -174,21 +178,22 @@ def test_dump_one_from_molden_he2(tmpdir):
 
 
 def test_dump_one_from_molden_neon(tmpdir):
-    compare_mulliken_charges('neon_turbomole_def2-qzvp.molden', tmpdir, atol=1.0e-10)
+    compare_mulliken_charges(
+        'neon_turbomole_def2-qzvp.molden', tmpdir, atol=1.0e-10, match="Turbomole")
 
 
 def test_dump_one_from_molden_nh3(tmpdir):
     compare_mulliken_charges('nh3_molden_cart.molden', tmpdir)
     compare_mulliken_charges('nh3_molpro2012.molden', tmpdir)
-    compare_mulliken_charges('nh3_turbomole.molden', tmpdir)
+    compare_mulliken_charges('nh3_turbomole.molden', tmpdir, match="Turbomole")
 
 
 def test_dump_one_from_mkl_methanol(tmpdir):
-    compare_mulliken_charges('ethanol.mkl', tmpdir)
+    compare_mulliken_charges('ethanol.mkl', tmpdir, match="ORCA")
 
 
 def test_dump_one_from_mkl_h2(tmpdir):
-    compare_mulliken_charges('h2_sto3g.mkl', tmpdir)
+    compare_mulliken_charges('h2_sto3g.mkl', tmpdir, match="ORCA")
 
 
 # add this test when pure to Cartesian basis set conversion is supported
