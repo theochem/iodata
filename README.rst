@@ -28,18 +28,13 @@ IOData
 |Codecov|
 |Version|
 |CondaVersion|
+|License|
 
 
 About
 -----
 IOData is a HORTON 3 module for input/output of quantum chemistry file formats. Documentation is
 here: https://iodata.readthedocs.io/en/latest/index.html
-
-
-License
--------
-
-IOData is distributed under GPL License version 3 (GPLv3).
 
 
 Dependencies
@@ -72,6 +67,7 @@ See https://iodata.readthedocs.io/en/latest/install.html for full details.
 .. |Travis| image:: https://travis-ci.org/theochem/iodata.svg?branch=master
     :target: https://travis-ci.org/theochem/iodata
 .. |Version| image:: https://img.shields.io/pypi/pyversions/iodata.svg
+.. |License| image:: https://img.shields.io/github/license/theochem/iodata
 .. |Pypi| image:: https://img.shields.io/pypi/v/iodata.svg
     :target: https://pypi.python.org/pypi/iodata/0.1.3
 .. |Codecov| image:: https://img.shields.io/codecov/c/github/theochem/iodata/master.svg
