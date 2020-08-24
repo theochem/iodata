@@ -57,10 +57,6 @@ setup(
     url='https://github.com/theochem/iodata',
     package_dir={'iodata': 'iodata'},
     packages=['iodata', 'iodata.formats', 'iodata.test', 'iodata.test.data'],
-    # cmdclass={'build_ext': Cython.Build.build_ext},
-    # ext_modules=[Extension("iodata.overlap_accel",
-    #                        sources=['iodata/overlap_accel.pyx'],
-    #                        include_dirs=[np.get_include()])],
     include_package_data=True,
     entry_points={
         'console_scripts': ['iodata-convert = iodata.__main__:main']
