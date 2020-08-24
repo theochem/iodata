@@ -495,7 +495,7 @@ def _fix_obasis_normalize_contractions(obasis: MolecularBasis) -> MolecularBasis
             obasis.primitive_normalization
         )
         # 2) Get the first diagonal element of the overlap matrix
-        olpdiag = compute_overlap(shell_obasis, np.zeros((3, 1), float))[0, 0]
+        olpdiag = compute_overlap(shell_obasis, np.zeros((1, 3), float))[0, 0]
         # 3) Normalize the contraction
         fixed_shell = copy.deepcopy(shell)
         fixed_shell.coeffs[:] /= np.sqrt(olpdiag)

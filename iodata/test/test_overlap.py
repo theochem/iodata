@@ -19,13 +19,12 @@
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose
+from numpy.testing import assert_allclose
 from pytest import raises
 
 from ..api import load_one
 from ..basis import MolecularBasis, Shell
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
-from ..overlap_accel import fac2, _binom
 
 try:
     from importlib_resources import path
@@ -39,7 +38,7 @@ def test_normalization_basics_segmented():
         if angmom >= 2:
             shells.append(Shell(0, [angmom], ['p'], np.array([0.23]), np.array([[1.0]])))
         obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, 'L2')
-        atcoords = np.zeros((3, 1))
+        atcoords = np.zeros((1, 3))
         overlap = compute_overlap(obasis, atcoords)
         assert_allclose(np.diag(overlap), np.ones(obasis.nbasis))
 
@@ -48,31 +47,9 @@ def test_normalization_basics_generalized():
     for angmom in range(2, 7):
         shells = [Shell(0, [angmom] * 2, ['c', 'p'], np.array([0.23]), np.array([[1.0, 1.0]]))]
         obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, 'L2')
-        atcoords = np.zeros((3, 1))
+        atcoords = np.zeros((1, 3))
         overlap = compute_overlap(obasis, atcoords)
         assert_allclose(np.diag(overlap), np.ones(obasis.nbasis))
-
-
-def test_fac2():
-    assert_equal(fac2(-20), 1)
-    assert_equal(fac2(0), 1)
-    assert_equal(fac2(1), 1)
-    assert_equal(fac2(2), 2)
-    assert_equal(fac2(3), 3)
-    assert_equal(fac2(4), 8)
-    assert_equal(fac2(5), 15)
-
-
-def test_binom():
-    assert_equal(_binom(1, 1), 1)
-    assert_equal(_binom(5, 3), 10)
-    assert_equal(_binom(3, 2), 3)
-    assert_equal(_binom(10, 4), 210)
-    assert_equal(_binom(18, 14), 3060)
-    assert_equal(_binom(5, 1), 5)
-    assert_equal(_binom(5, 0), 1)
-    assert_equal(_binom(0, 0), 1)
-    assert_equal(_binom(5, 5), 1)
 
 
 def test_load_fchk_hf_sto3g_num():
@@ -104,6 +81,6 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
 
 def test_overlap_l1():
     dbasis = MolecularBasis([], {}, 'L1')
-    atcoords = np.zeros((3, 1))
+    atcoords = np.zeros((1, 3))
     with raises(ValueError):
         _ = compute_overlap(dbasis, atcoords)
