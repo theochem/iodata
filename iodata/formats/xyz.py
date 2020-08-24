@@ -62,7 +62,7 @@ from ..docstrings import (document_load_one, document_load_many, document_dump_o
                           document_dump_many)
 from ..iodata import IOData
 from ..periodic import sym2num, num2sym
-from ..utils import angstrom, LineIterator
+from ..utils import angstrom, amu, LineIterator
 
 
 __all__ = []
@@ -94,14 +94,15 @@ string).
 BOOL_MAP = {"T": True, "F": False, "True": True, "False": False}
 
 
-def convert_title_value(value: str):
+def _convert_title_value(value: str):
     """Search for the correct dtype and convert the string."""
     list_of_splits = value.split()
     # If it is just one item, first try int, then float and finally return a bool or str
     if len(list_of_splits) == 1:
-        try:
+        value = value.strip()
+        if value.isdigit():
             converted_value = int(value)
-        except ValueError:
+        else:
             try:
                 converted_value = float(value)
             except ValueError:
@@ -125,7 +126,7 @@ def convert_title_value(value: str):
     return converted_value
 
 
-def parse_properties(properties: str):
+def _parse_properties(properties: str):
     """Parse the properties into atom_columns."""
     atom_columns = []
     # Maps the dtype to the atom_columns dtype, load_word and dump_word
@@ -134,11 +135,14 @@ def parse_properties(properties: str):
                  "I": (int, int, "{:10d}".format),
                  "L": (bool, lambda word: BOOL_MAP[word], lambda boolean: "T" if boolean else "F")}
     # Some predefined iodata attributes which can be mapped
-    # Only pos is assumed to be in angstrom, no unit convertion takes place for the other attributes
+    # pos is assumed to be in angstrom, masses in amu (ase convention)
+    # No unit convertion takes place for the other attributes
     atom_column_map = {'pos': ('atcoords', None, (3,), float,
                                (lambda word: float(word) * angstrom),
                                (lambda value: "{:15.10f}".format(value / angstrom))),
-                       'mass': ('atmasses', None, (), float, float, "{:10.5f}".format),
+                       'masses': ('atmasses', None, (), float,
+                                  (lambda word: float(word) * amu),
+                                  (lambda value: "{:15.10f}".format(value / amu))),
                        'force': ('atgradient', None, (3,), float,
                                  (lambda word: -float(word)),
                                  (lambda value: "{:15.10f}".format(-value)))}
@@ -170,7 +174,7 @@ def parse_properties(properties: str):
     return atom_columns
 
 
-def parse_title(title: str):
+def _parse_title(title: str):
     """Parse the title in an extended xyz file."""
     key_value_pairs = shlex.split(title)
     # A dict of predefined iodata atrributes with their names and dtype convertion functions
@@ -183,13 +187,13 @@ def parse_title(title: str):
     data = {}
     for key_value_pair in key_value_pairs:
         if '=' in key_value_pair:
-            key, value = key_value_pair.split('=')
+            key, value = key_value_pair.split('=', 1)
             if key == 'Properties':
-                atom_columns = parse_properties(value)
+                atom_columns = _parse_properties(value)
             elif key in iodata_attrs.keys():
                 data[iodata_attrs[key][0]] = iodata_attrs[key][1](value)
             else:
-                data.setdefault('extra', {})[key] = convert_title_value(value)
+                data.setdefault('extra', {})[key] = _convert_title_value(value)
         else:
             # If no value is given, set it True
             data.setdefault('extra', {})[key_value_pair] = True
@@ -208,7 +212,7 @@ def load_one(lit: LineIterator, atom_columns=None) -> dict:
         atom_columns = DEFAULT_ATOM_COLUMNS
     elif atom_columns == 'EXT':
         # The extended xyz format defines the atom_columns in the title
-        atom_columns, data = parse_title(title)
+        atom_columns, data = _parse_title(title)
     data["title"] = title
     # Initialize the arrays to be loaded from the XYZ file.
     for attrname, keyname, shapesuffix, dtype, _loadword, _dumpword in atom_columns:

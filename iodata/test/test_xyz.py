@@ -170,13 +170,16 @@ def test_load_many_extended():
                  np.array([[True, True], [False, True], [False, False]]))
     assert 'is_true' in mols[0].extra
     assert mols[0].extra['is_true']
-    # assert hasattr(mols[0], 'charge')
-    # assert_allclose(mols[0].charge, 0)
+    assert hasattr(mols[0], 'charge')
+    assert_allclose(mols[0].charge, 0)
     assert 'pi' in mols[1].extra
     assert_equal(mols[1].extra['pi'], 3.14)
     assert_equal(mols[1].atnums, np.array([8, 1, 1, 1]))
     assert_equal(mols[1].atcoords[-1, 2], -12 * angstrom)
     assert_equal(mols[2].atnums, np.array([8, 1, 1]))
+    assert hasattr(mols[2], 'atmasses')
+    assert mols[2].atmasses.dtype == float
+    assert_allclose(mols[2].atmasses, np.array([29164.39290107, 1837.47159474, 1837.47159474]))
 
 
 def test_load_many_dataset_emptylines():
