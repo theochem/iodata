@@ -111,7 +111,6 @@ The dictionary ``one_ints`` must contain a field ``core_mo``. Similarly, ``two_i
 contain ``two_mo``.
 """
 
-
 @document_dump_one("Molpro 2012 FCIDUMP", ['one_ints', 'two_ints'],
                    ['core_energy', 'nelec', 'spinpol'], {}, LOAD_ONE_NOTES)
 def dump_one(f: TextIO, data: IOData):
