@@ -24,8 +24,7 @@ from pytest import raises
 
 from ..api import load_one
 from ..basis import MolecularBasis, Shell
-from ..overlap import OVERLAP_CONVENTIONS
-from ..overlap import compute_overlap
+from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
 
 try:
     from importlib_resources import path
