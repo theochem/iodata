@@ -671,10 +671,7 @@ def test_dump_fchk_from_wfx_lih_cisd_cation(tmpdir):
 
 
 def test_dump_fchk_from_wfx_cah110(tmpdir):
-    # Fractional occupations are not supported in FCHK and we have no
-    # alternative for solution for this yet.
-    with pytest.raises(ValueError):
-        check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfx')
+    check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfx')
 
 
 def test_dump_fchk_from_molekel_h2(tmpdir):
