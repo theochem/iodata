@@ -29,7 +29,7 @@ from .common import compute_mulliken_charges, compare_mols, check_orthonormal
 from ..api import load_one, dump_one
 from ..basis import convert_conventions
 from ..formats.molden import _load_low
-from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
+from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 from ..utils import LineIterator, angstrom, FileFormatWarning
 
 
