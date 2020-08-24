@@ -20,9 +20,6 @@
 
 
 import os
-
-from typing import List
-
 import numpy as np
 
 from ..iodata import IOData
@@ -70,7 +67,6 @@ def test_input_gaussian_from_xyz(tmpdir):
 
 
 def test_input_gaussian_from_iodata(tmpdir):
-
     # make an instance of IOData for HCl anion
     data = {"atcoords": np.array([[0.0, 0.0, 0.0], [angstrom, 0.0, 0.0]]),
             "atnums": np.array([1, 17]), "nelec": 19, "run_type": 'opt', "spinpol": 1}
@@ -112,7 +108,6 @@ def test_input_orca_from_xyz(tmpdir):
 
 
 def test_input_orca_from_iodata(tmpdir):
-
     # make an instance of IOData for HCl anion
     data = {"atcoords": np.array([[0.0, 0.0, 0.0], [angstrom, 0.0, 0.0]]),
             "atnums": np.array([1, 17]), "nelec": 19, "run_type": 'opt', "spinpol": 1}
