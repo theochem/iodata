@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 # pylint: disable=unsubscriptable-object
-"""Test iodata.formats.gamess module"""
+"""Test iodata.formats.gamess module."""
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose

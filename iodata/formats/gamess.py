@@ -9,7 +9,7 @@ PATTERNS = ['*.gamessout']
 
 
 def _read_data(gms) -> tuple:
-    """Extracts ``title``, ``symmetry`` and ``symbols`` from the punch file."""
+    """Extract ``title``, ``symmetry`` and ``symbols`` from the punch file."""
     title = next(gms).strip()
     symmetry = next(gms).split()[0]
     if symmetry != "C1":
@@ -24,7 +24,7 @@ def _read_data(gms) -> tuple:
 
 
 def _read_coordinates(gms, res) -> tuple:
-    """Extracts ``numbers`` and ``coordinates`` from the punch file."""
+    """Extract ``numbers`` and ``coordinates`` from the punch file."""
     for i in range(2):
         next(gms)
     N = len(res["symbols"])
@@ -47,7 +47,7 @@ def _read_coordinates(gms, res) -> tuple:
 
 
 def _read_energy(gms, res) -> tuple:
-    """Extracts ``energy`` and ``gradient`` from the punch file."""
+    """Extract ``energy`` and ``gradient`` from the punch file."""
     energy = float(next(gms).split()[1])
     N = len(res["symbols"])
     # if the data are already read before, just overwrite them
@@ -63,7 +63,7 @@ def _read_energy(gms, res) -> tuple:
 
 
 def _read_hessian(gms, res) -> np.ndarray:
-    """Extracts ``hessian`` from the punch file."""
+    """Extract ``hessian`` from the punch file."""
     assert ("hessian" not in res)
     line = next(gms)
     N = len(res["symbols"])
@@ -82,7 +82,7 @@ def _read_hessian(gms, res) -> np.ndarray:
 
 
 def _read_masses(gms, res):
-    """Extracts ``masses`` from the punch file."""
+    """Extract ``masses`` from the punch file."""
     N = len(res["symbols"])
     masses = np.zeros(N, float)
     counter = 0
