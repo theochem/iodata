@@ -104,7 +104,7 @@ def test_load_mwfn_ch3_rohf_g03():
     # test first molecular orbital information
     coeff = np.array([9.92532359E-01, 3.42148679E-02, 3.30477771E-06, - 1.97321450E-03,
                       0.00000000E+00, -6.94439001E-03, - 6.94439001E-03, - 6.94539905E-03])
-    assert_equal(mol.mo.coeffs[:,0], coeff)
+    assert_equal(mol.mo.coeffs[:, 0], coeff)
     mo_energies = np.array([-1.09902284E+01, -8.36918686E-01, -5.24254982E-01, -5.23802785E-01,
                             -1.26686819E-02, 6.64707810E-01, 7.68278159E-01, 7.69362712E-01])
     assert_allclose(mol.mo.energies, mo_energies)
@@ -134,7 +134,7 @@ def test_load_mwfn_ch3_hf_g03():
     # test first molecular orbital information
     coeff = np.array([9.91912304E-01, 3.68365244E-02, 9.23239012E-04, 9.05953703E-04,
                       9.05953703E-04, -7.36810756E-03, - 7.36810756E-03, - 7.36919429E-03])
-    assert_equal(mol.mo.coeffs[:,0], coeff)
+    assert_equal(mol.mo.coeffs[:, 0], coeff)
     mo_energies = np.array([-1.10094534E+01, -9.07622407E-01, -5.37709620E-01, -5.37273275E-01,
                             -3.63936540E-01, 6.48361367E-01, 7.58140704E-01, 7.59223157E-01,
                             -1.09780991E+01, -8.01569083E-01, -5.19454722E-01, -5.18988806E-01,
@@ -188,7 +188,7 @@ def test_load_mwfn_he_spdfgh_g03():
         0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
         0.00000000E+00])
 
-    assert_equal(mol.mo.coeffs[:,0], coeff)
+    assert_equal(mol.mo.coeffs[:, 0], coeff)
     mo_energies = np.array([-3.83109139E-01, 6.72890652E-02, 6.72890652E-02, 6.72890652E-02,
                             3.33282755E-01, 5.51389775E-01, 5.51389775E-01, 5.51389775E-01,
                             5.51389775E-01, 5.51389775E-01, 8.85311032E-01, 8.85311032E-01,

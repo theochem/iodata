@@ -17,7 +17,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
 
-from typing import Tuple, List
+from typing import Tuple
 
 import numpy as np
 import scipy.constants as spc
@@ -27,7 +27,7 @@ from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator
 
-__all__ = []
+__all__ = ['load_mwfn_low']
 
 PATTERNS = ['*.mwfn']
 
@@ -69,8 +69,8 @@ CONVENTIONS = {
 }
 
 
-def _load_helper_opener(lit: LineIterator, keys: np.array) -> Tuple[float, int, float, float,
-                                                                    float, float, float, int]:
+def _load_helper_opener(lit: LineIterator, keys: list) -> Tuple[int, float, float,
+                                                                float, float, float, int]:
     """Read initial variables."""
     max_count = len(keys)
     count = 0
@@ -81,8 +81,8 @@ def _load_helper_opener(lit: LineIterator, keys: np.array) -> Tuple[float, int, 
             if name in line:
                 d[name] = line.split('=')[1].strip()
                 count += 1
-    return int(d['Wfntype']), float(d['Charge']), float(d['Naelec']), float(d['Nbelec']), \
-           float(d['E_tot']), float(d['VT_ratio']), int(d['Ncenter'])
+    return int(d['Wfntype']), float(d['Charge']), float(d['Naelec']), float(d['Nbelec']),\
+        float(d['E_tot']), float(d['VT_ratio']), int(d['Ncenter'])
 
 
 def _load_helper_basis(lit: LineIterator) -> Tuple[int, int, int, int, int]:
@@ -92,7 +92,7 @@ def _load_helper_basis(lit: LineIterator) -> Tuple[int, int, int, int, int]:
     max_count = len(basis_keywords)
     count = 0
     d = {}
-    line = next(lit)
+    next(lit)
     while count < max_count:
         line = next(lit)
         for name in basis_keywords:
@@ -103,7 +103,8 @@ def _load_helper_basis(lit: LineIterator) -> Tuple[int, int, int, int, int]:
     return d['Nbasis'], d['Nindbasis'], d['Nprims'], d['Nshell'], d['Nprimshell']
 
 
-def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray,
+                                                                   np.ndarray]:
     """Read the coordinates of the atoms."""
     atnums = np.empty(num_atoms, int)
     atcorenums = np.empty(num_atoms, float)
@@ -123,7 +124,7 @@ def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, n
     return atnums, atcorenums, atcoords / spc.value(u'atomic unit of length') / 1E10
 
 
-def _load_helper_shells(lit: LineIterator, nshell: int, starts: str)\
+def _load_helper_shells(lit: LineIterator, nshell: int, starts: list) \
         -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Read one section of MO information."""
     line = next(lit)
@@ -142,7 +143,7 @@ def _load_helper_shells(lit: LineIterator, nshell: int, starts: str)\
 
 def _load_helper_prims(lit: LineIterator, nprimshell: int) -> np.ndarray:
     """Read SHELL CENTER, SHELL TYPE, and SHELL CONTRACTION DEGREES sections."""
-    line = next(lit)
+    next(lit)
     # concatenate list of arrays into a single array of length nshell
     array = _load_helper_section(lit, nprimshell, '', 0, float)
     assert len(array) == nprimshell
@@ -175,7 +176,7 @@ def _load_helper_mo(lit: LineIterator, nbasis: int) -> Tuple[int, float, float,
     energy = float(next(lit).split()[1])
     occ = float(next(lit).split()[1])
     sym = str(next(lit).split()[1])
-    next_line = next(lit)
+    next(lit)
     coeffs = _load_helper_section(lit, nbasis, '', 0, float)
     return number, occ, energy, coeffs, mo_type, sym
 
@@ -187,23 +188,21 @@ def load_mwfn_low(lit: LineIterator) -> dict:
     ----------
     lit
         The line iterator to read the data from.
-
-    Note:
-    ---------
-    mwfn is a fortran program which loads *.mwfn by locating the line with the keyword,
-     `backspace`, then reading. Despite this flexibility, it is stated by the authors that
-     the order of section, and indeed, entries in general, must be fixed. With this in mind
-     the input utilized some hardcoding since order should be fixed.
-
-     mwfn ignores lines beginning with `#`.
-
     """
+    # Note:
+    # ---------
+    # mwfn is a fortran program which loads *.mwfn by locating the line with the keyword,
+    #  then uses `backspace`, then begins reading. Despite this flexibility, it is stated by
+    #  the authors that the order of section, and indeed, entries in general, must be fixed.
+    #  With this in mind the input utilized some hardcoding since order should be fixed.
+    #
+    #  mwfn ignores lines beginning with `#`.
     # read sections of mwfn file
     # This assumes title is on first line which seems to be the standard
     title = next(lit).strip()
     opener_keywords = ["Wfntype", "Charge", "Naelec", "Nbelec", "E_tot", "VT_ratio", "Ncenter"]
-    wfntype, charge, nelec_a, nelec_b, energy, vt_ratio, num_atoms = _load_helper_opener(lit,
-                                                                              opener_keywords)
+    wfntype, charge, nelec_a, nelec_b, \
+        energy, vt_ratio, num_atoms = _load_helper_opener(lit, opener_keywords)
     # coordinates are in Angstrom in MWFN
     atnums, atcorenums, atcoords = _load_helper_atoms(lit, num_atoms)
     nbasis, nindbasis, nprim, nshell, nprimshell = _load_helper_basis(lit)
@@ -237,7 +236,7 @@ def load_mwfn_low(lit: LineIterator) -> dict:
 
     for mo in range(num_mo):
         mo_numbers[mo], mo_occs[mo], mo_energies[mo], mo_coeffs[:, mo], \
-        mo_type[mo], mo_sym[mo] = _load_helper_mo(lit, num_coeffs)
+            mo_type[mo], mo_sym[mo] = _load_helper_mo(lit, num_coeffs)
 
     # TODO add density matrix and overlap
 
@@ -246,8 +245,8 @@ def load_mwfn_low(lit: LineIterator) -> dict:
             'atnums': atnums, 'atcoords': atcoords, 'atcorenums': atcorenums,
             'nbasis': nbasis, 'nindbasis': nindbasis, 'nprims': nprim, 'nshells': nshell,
             'nprimshells': nprimshell, 'full_virial_ratio': vt_ratio,
-            'shell_centers': shell_centers, 'shell_types': shell_types, 'prim_per_shell': prim_per_shell,
-            'exponents': exponent, 'coeffs': coeffs,
+            'shell_centers': shell_centers, 'shell_types': shell_types,
+            'prim_per_shell': prim_per_shell, 'exponents': exponent, 'coeffs': coeffs,
             'mo_numbers': mo_numbers, 'mo_occs': mo_occs, 'mo_energies': mo_energies,
             'mo_coeffs': mo_coeffs, 'mo_type': mo_type, 'mo_sym': mo_sym}
 
@@ -255,7 +254,7 @@ def load_mwfn_low(lit: LineIterator) -> dict:
 def build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
                  exponents: np.ndarray, prim_per_shell: np.ndarray,
                  coeffs: np.ndarray,
-                ) -> Tuple[MolecularBasis]:
+                 ) -> Tuple[MolecularBasis]:
     """Based on the fchk modules basis building.
 
     Parameters
@@ -296,7 +295,7 @@ def build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
     del exponents
     del coeffs
 
-    obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
+    obasis = MolecularBasis(tuple(shells), CONVENTIONS, 'L2')
     return obasis
 
 
@@ -306,13 +305,16 @@ def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     inp = load_mwfn_low(lit)
 
-    # MWFN contains more information than most formats, so the following dict stores some "extra" stuff.
-    mwfn_dict = {'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'], 'mo_numbers': inp['mo_numbers'],
-                 'wfntype': inp['wfntype'], 'nelec_a': inp['nelec_a'], 'nelec_b': inp['nelec_b'],
-                 'nbasis': inp['nbasis'], 'nindbasis': inp['nindbasis'], 'nprims': inp['nprims'],
-                 'nshells': inp['nshells'], 'nprimshells': inp['nprimshells'],
-                 'shell_types': inp['shell_types'], 'shell_centers': inp['shell_centers'],
-                 'prim_per_shell': inp['prim_per_shell'], 'full_virial_ratio': inp['full_virial_ratio']}
+    # MWFN contains more information than most formats,
+    # so the following dict stores some "extra" stuff.
+    mwfn_dict = {'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'],
+                 'mo_numbers': inp['mo_numbers'], 'wfntype': inp['wfntype'],
+                 'nelec_a': inp['nelec_a'], 'nelec_b': inp['nelec_b'],
+                 'nbasis': inp['nbasis'], 'nindbasis': inp['nindbasis'],
+                 'nprims': inp['nprims'], 'nshells': inp['nshells'],
+                 'nprimshells': inp['nprimshells'], 'shell_types': inp['shell_types'],
+                 'shell_centers': inp['shell_centers'], 'prim_per_shell': inp['prim_per_shell'],
+                 'full_virial_ratio': inp['full_virial_ratio']}
 
     # Unlike WFN, MWFN does include orbital expansion coefficients.
     obasis = build_obasis(inp['shell_centers'],
