@@ -111,7 +111,7 @@ def test_charge_nelec1():
 
 # pylint: disable=protected-access
 def test_charge_nelec2():
-    # When atcorenums is set, nelec and charge are coupled
+    # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atcorenums = np.array([6.0, 1.0, 1.0, 1.0, 1.0])
     mol.nelec = 10
@@ -125,7 +125,7 @@ def test_charge_nelec2():
 
 # pylint: disable=protected-access
 def test_charge_nelec3():
-    # When atnums is set, nelec and charge are coupled.
+    # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atnums = np.array([6, 1, 1, 1, 1])
     mol.nelec = 10
@@ -135,6 +135,7 @@ def test_charge_nelec3():
     # Changing charge should change nelec.
     mol.charge = 1
     assert mol.nelec == 9
+    assert mol.charge == 1
     # Only _nelec should be set.
     assert mol._nelec == 9
     assert mol._charge is None
@@ -142,14 +143,61 @@ def test_charge_nelec3():
 
 # pylint: disable=protected-access
 def test_charge_nelec4():
-    # When atnums is set, nelec and charge are coupled.
+    # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atnums = np.array([6, 1, 1, 1, 1])
     mol.charge = 1
-    # _atcorenums and _nelec should be set, not _charge
+    # _atcorenums, _nelec and charge should be set, not _charge
     assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
     assert mol._nelec == 9
     assert mol._charge is None
+    assert mol.charge == 1
+
+
+# pylint: disable=protected-access
+def test_charge_nelec5():
+    # When atcorenums is set, nelec and charge become coupled.
+    mol = IOData()
+    mol.charge = 1
+    mol.atnums = np.array([6, 1, 1, 1, 1])
+    # Access atcorenums to trigger the setter
+    assert mol.atcorenums.sum() == 10
+    # _atcorenums, _nelec and charge should be set, not _charge
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
+    assert mol._nelec == 9
+    assert mol._charge is None
+    assert mol.charge == 1
+
+
+# pylint: disable=protected-access
+def test_charge_nelec6():
+    # When atcorenums is set, nelec and charge become coupled.
+    mol = IOData()
+    mol.nelec = 8
+    mol.atnums = np.array([6, 1, 1, 1, 1])
+    # Access atcorenums to trigger the setter
+    assert mol.atcorenums.sum() == 10
+    # _atcorenums, _nelec and charge should be set, not _charge
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
+    assert mol._nelec == 8
+    assert mol._charge is None
+    assert mol.charge == 2
+
+
+# pylint: disable=protected-access
+def test_charge_nelec7():
+    # When atcorenums is set, nelec and charge become coupled.
+    mol = IOData()
+    mol.nelec = 8
+    mol.charge = 1  # This will be discarded by setting _atcorenums.
+    mol.atnums = np.array([6, 1, 1, 1, 1])
+    # Access atcorenums to trigger the setter
+    assert mol.atcorenums.sum() == 10
+    # _atcorenums, _nelec and charge should be set, not _charge
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
+    assert mol._nelec == 8
+    assert mol._charge is None
+    assert mol.charge == 2
 
 
 def test_undefined():

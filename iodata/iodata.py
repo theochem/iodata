@@ -311,6 +311,8 @@ class IOData:
     @property
     def nelec(self) -> float:
         """Return the number of electrons."""
+        # When the molecular orbitals are present, they determine the number
+        # of electrons. Only when mo is absent, we use a stored value.
         if self.mo is not None:
             return self.mo.nelec
         return self._nelec
@@ -336,6 +338,8 @@ class IOData:
 
     @spinpol.setter
     def spinpol(self, spinpol: float):
+        # When the molecular orbitals are present, they determine the spin
+        # polarization. Only when mo is absent, we use a stored value.
         if self.mo is None:
             self._spinpol = spinpol
         else:
