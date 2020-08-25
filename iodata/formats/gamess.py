@@ -7,6 +7,7 @@ import numpy as np
 
 PATTERNS = ['*.gamessout']
 
+
 def _read_data(gms) -> tuple:
     """Extracts ``title``, ``symmetry`` and ``symbols`` from the punch file."""
     title = next(gms).strip()
@@ -39,9 +40,9 @@ def _read_coordinates(gms, res) -> tuple:
     for i in range(N):
         words = next(gms).split()
         numbers[i] = int(float(words[1]))
-        coordinates[i, 0] = float(words[2])*angstrom
-        coordinates[i, 1] = float(words[3])*angstrom
-        coordinates[i, 2] = float(words[4])*angstrom
+        coordinates[i, 0] = float(words[2]) * angstrom
+        coordinates[i, 1] = float(words[3]) * angstrom
+        coordinates[i, 2] = float(words[4]) * angstrom
     return numbers, coordinates
 
 
@@ -106,7 +107,8 @@ def load_one(lit: LineIterator) -> dict:
             res["atnums"], res["atcoords"] = _read_coordinates(lit, res)
         elif line == " $GRAD\n":
             res["energy"], res["atgradient"] = _read_energy(lit, res)
-        elif line == "CAUTION, APPROXIMATE HESSIAN!\n":  # Prevents the approximate Hessian from being parsed
+        elif line == "CAUTION, APPROXIMATE HESSIAN!\n":
+            # prevent the approximate Hessian from being parsed
             while line != " $END\n":
                 line = next(lit)
         elif line == " $HESS\n":
