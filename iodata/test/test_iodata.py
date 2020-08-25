@@ -21,11 +21,11 @@
 
 
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 import pytest
 
 from .common import compute_1rdm
-from ..api import load_one, load_many, IOData
+from ..api import load_one, IOData
 from ..overlap import compute_overlap
 try:
     from importlib_resources import path
@@ -96,6 +96,7 @@ def test_dm_ch3_rohf_g03():
     assert_allclose(np.einsum('ab,ba', olp, dm), 9, atol=1.e-6)
 
 
+# pylint: disable=protected-access
 def test_charge_nelec1():
     # One a blank IOData object, charge and nelec can be set independently.
     mol = IOData()
@@ -108,6 +109,7 @@ def test_charge_nelec1():
     assert mol._charge == -1
 
 
+# pylint: disable=protected-access
 def test_charge_nelec2():
     # When atcorenums is set, nelec and charge are coupled
     mol = IOData()
@@ -121,15 +123,31 @@ def test_charge_nelec2():
     assert mol._charge is None
 
 
+# pylint: disable=protected-access
 def test_charge_nelec3():
     # When atnums is set, nelec and charge are coupled.
     mol = IOData()
     mol.atnums = np.array([6, 1, 1, 1, 1])
     mol.nelec = 10
     assert mol.charge == 0
+    # Accessing charge should assign _atcorenums.
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
+    # Changing charge should change nelec.
     mol.charge = 1
     assert mol.nelec == 9
     # Only _nelec should be set.
+    assert mol._nelec == 9
+    assert mol._charge is None
+
+
+# pylint: disable=protected-access
+def test_charge_nelec4():
+    # When atnums is set, nelec and charge are coupled.
+    mol = IOData()
+    mol.atnums = np.array([6, 1, 1, 1, 1])
+    mol.charge = 1
+    # _atcorenums and _nelec should be set, not _charge
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
     assert mol._nelec == 9
     assert mol._charge is None
 
@@ -149,6 +167,7 @@ def test_undefined():
     assert mol.nelec is None
 
 
+# pylint: disable=protected-access
 def test_derived1():
     # When loading a file with molecular orbitals, nelec, charge and spinpol are
     # derived from the mo object:
@@ -162,25 +181,20 @@ def test_derived1():
     assert mol._spinpol is None
 
 
+# pylint: disable=protected-access
 def test_derived2():
-    # When loading a file defining the total charge, it
-    with path('iodata.test.data', 'water_extended_trajectory.xyz') as fn_xyz:
-        mols = list(load_many(str(fn_xyz), atom_columns='EXT'))
+    mol = IOData(atnums=[1, 1, 8], charge=1)
     # The following unit tests are confusing, so need a little explaining:
     # Upon initialization, _charge is set when loaded from a file. See
     # https://www.attrs.org/en/stable/init.html#private-attributes
     # Our getters and setters may change this if needed to maintain consistency.
-    assert mols[0]._charge == 0.0  # set
-    assert mols[0].charge == 0.0  # works as expected, sets atcorenums and nelec
-    assert mols[0].nelec == mols[0].atcorenums.sum()
-    assert mols[0]._charge is None  # _charge is None and charge is derived.
-    assert mols[0].charge == 0.0  # derived
-    # idem for second, which has charge +1.
-    assert mols[1]._charge == 1.0
-    assert mols[1].charge == 1.0
-    assert mols[1].nelec == mols[1].atcorenums.sum() - 1
-    assert mols[1]._charge is None
-    assert mols[1].charge == 1.0
+    assert mol._nelec is None
+    assert mol._charge == 1.0
+    assert mol.charge == 1.0
+    assert mol.nelec == mol.atcorenums.sum() - 1
+    assert mol._nelec == mol.atcorenums.sum() - 1
+    assert mol._charge is None
+    assert mol.charge == 1.0
 
 
 def test_natom():

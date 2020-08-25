@@ -114,7 +114,8 @@ class IOData:
         e.g. for a wire. Two vectors describe a 2D cell, e.g. for a membrane.
         Three vectors describe a 3D cell, e.g. a crystalline solid.
     charge
-        The net charge of the system.
+        The net charge of the system. When possible, this is derived from
+        atcorenums and nelec.
     core_energy
         The Hartree-Fock energy due to the core orbitals
     cube
@@ -266,18 +267,24 @@ class IOData:
     def atcorenums(self, atcorenums):
         self._atcorenums = atcorenums
         if self._charge is not None:
-            self.nelec = self._atcorenums.sum() - self._charge
+            # _charge is treated as the dependent one, while atcorenums and
+            # nelec are treated as independent.
+            if self.nelec is None:
+                # Switch to storing _nelec.
+                self._nelec = atcorenums.sum() - self._charge
             self._charge = None
 
     @property
     def charge(self) -> float:
         """Return the net charge of the system."""
-        if self.atcorenums is not None and self.nelec is not None:
-            return self.atcorenums.sum() - self.nelec
-        return self._charge
+        # The internal _charge is used only if it cannot be derived.
+        if self.atcorenums is None or self.nelec is None:
+            return self._charge
+        return self.atcorenums.sum() - self.nelec
 
     @charge.setter
     def charge(self, charge: float):
+        # The internal _charge is used only if atcorenums is None.
         if self.atcorenums is None:
             self._charge = charge
         else:
@@ -289,8 +296,8 @@ class IOData:
         natom = None
         if self.atcoords is not None:
             natom = len(self.atcoords)
-        elif self.atcorenums is not None:
-            natom = len(self.atcorenums)
+        elif self._atcorenums is not None:
+            natom = len(self._atcorenums)
         elif self.atgradient is not None:
             natom = len(self.atgradient)
         elif self.atfrozen is not None:
