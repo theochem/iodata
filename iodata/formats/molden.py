@@ -67,7 +67,7 @@ CONVENTIONS = {
     (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
     (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
                'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
-    # The following is not officially supported by the Molden format but PSI4
+    # H fubnctions are not officially supported by the Molden format but PSI4
     # and ORCA write out such files anyway.
     (5, 'p'): HORTON2_CONVENTIONS[(5, 'p')],
 }
@@ -134,8 +134,9 @@ def _load_low(lit: LineIterator) -> dict:
             pure_angmoms.add(2)
         elif line.lower().startswith('[9g]'):
             pure_angmoms.add(4)
-            # The following is not part of the Molden standard but is compatible
-            # with files writen by PSI4 and ORCA.
+            # H functions are not part of the Molden standard but the
+            # following line is compatible with files containing H functions
+            # writen by PSI4 and ORCA.
             pure_angmoms.add(5)
         # title
         elif line == '[title]':
@@ -373,8 +374,6 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
             error_max = max(error_max, abs(norm - 1))
 
     # final judgement
-    # print(error_max, threshold)
-    # print()
     return error_max <= threshold
 
 
@@ -394,7 +393,7 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
         (4, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4'],
         (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
                    'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
-        # G functions are not officialy supported by Molden, bit this is how
+        # H functions are not officialy supported by Molden, but this is how
         # ORCA writes Molden files anyway:
         (5, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4', 'c5', 's5'],
     }
@@ -580,7 +579,6 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         return
 
     # --- ORCA
-    # print("ORCA")
     orca_obasis = _fix_obasis_orca(obasis)
     if _is_normalized_properly(orca_obasis, atcoords, coeffsa, coeffsb):
         lit.warn('Corrected for typical ORCA errors in Molden/MKL file.')
