@@ -67,6 +67,9 @@ CONVENTIONS = {
     (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
     (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
                'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
+    # H fubnctions are not officially supported by the Molden format but PSI4
+    # and ORCA write out such files anyway.
+    (5, 'p'): HORTON2_CONVENTIONS[(5, 'p')],
 }
 
 
@@ -131,6 +134,10 @@ def _load_low(lit: LineIterator) -> dict:
             pure_angmoms.add(2)
         elif line.lower().startswith('[9g]'):
             pure_angmoms.add(4)
+            # H functions are not part of the Molden standard but the
+            # following line is compatible with files containing H functions
+            # writen by PSI4 and ORCA.
+            pure_angmoms.add(5)
         # title
         elif line == '[title]':
             title = next(lit).strip()
@@ -386,6 +393,9 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
         (4, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4'],
         (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
                    'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
+        # H functions are not officialy supported by Molden, but this is how
+        # ORCA writes Molden files anyway:
+        (5, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4', 'c5', 's5'],
     }
     fixed_shells = []
     for shell in obasis.shells:
@@ -407,6 +417,8 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
                 correction = gob_cart_normalization(exponent, np.array([1, 1, 1]))
             elif angmom == 4 and kind == 'p':
                 correction = gob_cart_normalization(exponent, np.array([2, 1, 1]))
+            elif angmom == 5 and kind == 'p':
+                correction = gob_cart_normalization(exponent, np.array([5, 0, 0]))
             if correction != 1.0:
                 fixed_shell.coeffs[iprim, 0] /= correction
             iprim += 1
@@ -665,6 +677,7 @@ def dump_one(f: TextIO, data: IOData):
     angmom_kinds.setdefault(2, 'c')
     angmom_kinds.setdefault(3, 'c')
     angmom_kinds.setdefault(4, 'c')
+    angmom_kinds.setdefault(5, 'c')
 
     # Write out the Cartesian/Pure conventions. What a messy format...
     if angmom_kinds[2] == 'p':
@@ -687,7 +700,8 @@ def dump_one(f: TextIO, data: IOData):
                 f.write("\n")
             last_icenter = shell.icenter
             f.write('%3i 0\n' % (shell.icenter + 1))
-        # Decontract the basis
+        # Write out as a segmented basis. Molden format does not support
+        # generalized contractions.
         for iangmom, angmom in enumerate(shell.angmoms):
             f.write(' {:1s}  {:3d} 1.00\n'.format(angmom_its(angmom), shell.nprim))
             for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
