@@ -50,7 +50,7 @@ def get_readme():
 VERSION, DEV_CLASSIFIER = get_version_info()
 
 setup(
-    name='iodata',
+    name='qc-iodata',
     version=VERSION,
     description='Python Input and Output Library for Quantum Chemistry.',
     long_description=get_readme(),
