@@ -35,13 +35,6 @@ except ImportError:
     from importlib.resources import path
 
 
-def helper_load_mwfn_low(fn_mwfn):
-    """Load a testing Gaussian log file with iodata.formats.mwfn.load_mwfn_low."""
-    with path('iodata.test.data', fn_mwfn) as fn:
-        lit = LineIterator(str(fn))
-        return load_mwfn_low(lit)
-
-
 def load_fchk_helper(fn_fchk):
     """Load a testing fchk file with iodata.iodata.load_one."""
     with path('iodata.test.data', fn_fchk) as fn:
