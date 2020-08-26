@@ -144,7 +144,7 @@ def _load_helper_shells(lit: LineIterator, nshell: int, starts: list) \
 
 def _load_helper_prims(lit: LineIterator, nprimshell: int) -> np.ndarray:
     """Read SHELL CENTER, SHELL TYPE, and SHELL CONTRACTION DEGREES sections."""
-    next(lit)
+    next(lit)  # skip line
     # concatenate list of arrays into a single array of length nshell
     array = _load_helper_section(lit, nprimshell, '', 0, float)
     assert len(array) == nprimshell
@@ -160,9 +160,8 @@ def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
         assert line.startswith(start)
         words = line.split()
         section.extend(words[skip:])
-    # pylint: disable=unnecessary-comprehension
     assert len(section) == nprim
-    return np.array([word for word in section]).astype(dtype)
+    return np.array(section).astype(dtype)
 
 
 def _load_helper_mo(lit: LineIterator, nbasis: int) -> Tuple[int, float, float,
@@ -178,7 +177,7 @@ def _load_helper_mo(lit: LineIterator, nbasis: int) -> Tuple[int, float, float,
     energy = float(next(lit).split()[1])
     occ = float(next(lit).split()[1])
     sym = str(next(lit).split()[1])
-    next(lit)
+    next(lit)  # skip line
     coeffs = _load_helper_section(lit, nbasis, '', 0, float)
     return number, occ, energy, coeffs, mo_type, sym
 
@@ -245,8 +244,8 @@ def load_mwfn_low(lit: LineIterator) -> dict:
     return {'title': title, 'energy': energy, 'wfntype': wfntype,
             'nelec_a': nelec_a, 'nelec_b': nelec_b, 'charge': charge,
             'atnums': atnums, 'atcoords': atcoords, 'atcorenums': atcorenums,
-            'nbasis': nbasis, 'nindbasis': nindbasis, 'nprims': nprim, 'nshells': nshell,
-            'nprimshells': nprimshell, 'full_virial_ratio': vt_ratio,
+            'nbasis': nbasis, 'nindbasis': nindbasis, 'nprims': nprim,
+            'nshells': nshell, 'nprimshells': nprimshell, 'full_virial_ratio': vt_ratio,
             'shell_centers': shell_centers, 'shell_types': shell_types,
             'prim_per_shell': prim_per_shell, 'exponents': exponent, 'coeffs': coeffs,
             'mo_numbers': mo_numbers, 'mo_occs': mo_occs, 'mo_energies': mo_energies,
@@ -307,16 +306,15 @@ def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     inp = load_mwfn_low(lit)
 
-    # MWFN contains more information than most formats,
-    # so the following dict stores some "extra" stuff.
-    mwfn_dict = {'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'],
-                 'mo_numbers': inp['mo_numbers'], 'wfntype': inp['wfntype'],
-                 'nelec_a': inp['nelec_a'], 'nelec_b': inp['nelec_b'],
-                 'nbasis': inp['nbasis'], 'nindbasis': inp['nindbasis'],
-                 'nprims': inp['nprims'], 'nshells': inp['nshells'],
-                 'nprimshells': inp['nprimshells'], 'shell_types': inp['shell_types'],
-                 'shell_centers': inp['shell_centers'], 'prim_per_shell': inp['prim_per_shell'],
-                 'full_virial_ratio': inp['full_virial_ratio']}
+    # MWFN contains more information than most formats, so the following dict
+    # stores some "extra" stuff.
+    mwfn_dict = {
+        'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'], 'mo_numbers': inp['mo_numbers'],
+        'wfntype': inp['wfntype'], 'nelec_a': inp['nelec_a'], 'nelec_b': inp['nelec_b'],
+        'nbasis': inp['nbasis'], 'nindbasis': inp['nindbasis'], 'nprims': inp['nprims'],
+        'nshells': inp['nshells'], 'nprimshells': inp['nprimshells'],
+        'shell_types': inp['shell_types'], 'shell_centers': inp['shell_centers'],
+        'prim_per_shell': inp['prim_per_shell'], 'full_virial_ratio': inp['full_virial_ratio']}
 
     # Unlike WFN, MWFN does include orbital expansion coefficients.
     obasis = build_obasis(inp['shell_centers'],

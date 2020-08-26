@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=too-many-statements
 """Test iodata.formats.mwfn module."""
 
 
@@ -61,6 +60,7 @@ def load_mwfn_helper(fn_mwfn):
         return load_one(fn)
 
 
+# pylint: disable=too-many-statements
 def test_load_mwfn_ch3_rohf_g03():
     mol = load_mwfn_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
