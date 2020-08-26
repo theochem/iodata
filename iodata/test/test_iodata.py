@@ -200,6 +200,69 @@ def test_charge_nelec7():
     assert mol.charge == 2
 
 
+def test_charge_nelec8():
+    mol = IOData()
+    mol.charge = 0.0
+    mol.atcorenums = None
+    assert mol.charge == 0.0
+    assert mol.atcorenums is None
+    assert mol.nelec is None
+
+
+# pylint: disable=protected-access
+def test_charge_nelec9():
+    mol = IOData()
+    mol.charge = 1.0
+    mol.atcorenums = np.array([8.0, 1.0, 1.0])
+    assert mol.charge == 1.0
+    assert mol._charge is None  # charge is derived
+    assert_equal(mol._atcorenums, np.array([8.0, 1.0, 1.0]))
+    assert mol.nelec == 9.0
+    mol.charge = None
+    assert mol.nelec is None
+
+
+# pylint: disable=protected-access
+def test_charge_nelec10():
+    mol = IOData()
+    mol.charge = 1.0
+    mol.atnums = np.array([8, 1, 1])
+    assert mol.charge == 1.0  # This triggers atcorenums to be initialized.
+    assert mol._charge is None
+    assert_equal(mol._atcorenums, np.array([8.0, 1.0, 1.0]))
+    assert mol.nelec == 9.0
+    mol.charge = None
+    assert mol.nelec is None
+
+
+def test_charge_nelec11():
+    mol = IOData()
+    mol.atnums = np.array([8, 1, 1])
+    mol.charge = 1.0
+    assert mol.nelec == 9.0
+    mol.charge = None
+    assert mol.nelec is None
+
+
+def test_charge_nelec12():
+    mol = IOData()
+    mol.atnums = np.array([8, 1, 1])
+    mol.nelec = 11.0
+    assert mol.charge == -1.0
+    mol.nelec = None
+    assert mol.charge is None
+
+
+def test_charge_nelec13():
+    mol = IOData()
+    mol.atcorenums = np.array([8, 1, 1])
+    mol.charge = 1.0
+    mol.atcorenums = None
+    assert mol.charge == 1.0
+    assert mol.nelec == 9.0
+    assert mol.atcorenums is None
+
+
 def test_undefined():
     # One a blank IOData object, accessing undefined charge and nelec should
     # return None.
@@ -215,6 +278,17 @@ def test_undefined():
     assert mol.nelec is None
 
 
+def test_spinpol1():
+    mol = IOData(spinpol=3)
+    assert mol.spinpol == 3
+
+
+def test_spinpol1():
+    mol = IOData()
+    mol.spinpol = 3
+    assert mol.spinpol == 3
+
+
 # pylint: disable=protected-access
 def test_derived1():
     # When loading a file with molecular orbitals, nelec, charge and spinpol are
@@ -227,6 +301,12 @@ def test_derived1():
     assert mol._nelec is None
     assert mol._charge is None
     assert mol._spinpol is None
+    with pytest.raises(TypeError):
+        mol.charge = 2
+    with pytest.raises(TypeError):
+        mol.nelec = 3
+    with pytest.raises(TypeError):
+        mol.spinpol = 1
 
 
 # pylint: disable=protected-access

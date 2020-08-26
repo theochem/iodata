@@ -253,26 +253,29 @@ class IOData:
     @property
     def atcorenums(self) -> np.ndarray:
         """Return effective core charges."""
-        result = self._atcorenums
-        if result is None and self.atnums is not None:
+        if self._atcorenums is None and self.atnums is not None:
             # Known bug in pylint. See
             # https://stackoverflow.com/questions/47972143/using-attr-with-pylint
             # https://github.com/PyCQA/pylint/issues/1694
             # pylint: disable=no-member
-            result = self.atnums.astype(float)
-            self.atcorenums = result
-        return result
+            self.atcorenums = self.atnums.astype(float)
+        return self._atcorenums
 
     @atcorenums.setter
     def atcorenums(self, atcorenums):
-        self._atcorenums = atcorenums
-        if self._charge is not None:
+        if atcorenums is None:
+            if self.nelec is not None:
+                # Set _charge because charge can no longer be derived from
+                # atcorenums and nelec.
+                self._charge = self._atcorenums.sum() - self.nelec
+        elif self._charge is not None:
             # _charge is treated as the dependent one, while atcorenums and
             # nelec are treated as independent.
-            if self.nelec is None:
+            if self._nelec is None:
                 # Switch to storing _nelec.
                 self._nelec = atcorenums.sum() - self._charge
             self._charge = None
+        self._atcorenums = atcorenums
 
     @property
     def charge(self) -> float:
@@ -287,6 +290,8 @@ class IOData:
         # The internal _charge is used only if atcorenums is None.
         if self.atcorenums is None:
             self._charge = charge
+        elif charge is None:
+            self.nelec = None
         else:
             self.nelec = self.atcorenums.sum() - charge
 
