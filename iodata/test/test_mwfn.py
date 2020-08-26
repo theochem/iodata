@@ -16,17 +16,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
+# pylint: disable=too-many-statements
 """Test iodata.formats.mwfn module."""
 
 
 import numpy as np
-
 from numpy.testing import assert_equal, assert_allclose
+
+import pytest
 
 from ..api import load_one
 from ..formats.mwfn import load_mwfn_low
 from ..overlap import compute_overlap
-import pytest
 from ..utils import LineIterator
 
 try:

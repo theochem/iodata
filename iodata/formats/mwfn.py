@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
+"""Multiwfn MWFN file format."""
 
 from typing import Tuple
 
@@ -159,6 +160,7 @@ def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
         assert line.startswith(start)
         words = line.split()
         section.extend(words[skip:])
+    # pylint: disable=unnecessary-comprehension
     assert len(section) == nprim
     return np.array([word for word in section]).astype(dtype)
 
