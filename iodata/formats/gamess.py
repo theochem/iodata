@@ -19,10 +19,13 @@
 """GAMESS punch file format."""
 
 
-from __future__ import division
-
-from ..utils import angstrom, LineIterator
 import numpy as np
+
+from ..docstrings import document_load_one
+from ..utils import angstrom, LineIterator
+
+
+__all__ = []
 
 
 PATTERNS = ['*.gamessout']
@@ -84,7 +87,7 @@ def _read_energy(gms, res) -> tuple:
 
 def _read_hessian(gms, res) -> np.ndarray:
     """Extract ``hessian`` from the punch file."""
-    assert ("hessian" not in res)
+    assert "hessian" not in res
     line = next(gms)
     N = len(res["symbols"])
     hessian = np.zeros((3 * N, 3 * N), float)
@@ -114,7 +117,9 @@ def _read_masses(gms, res):
     return masses
 
 
+@document_load_one("PUNCH", ['title', 'energy', 'grot', 'atgradient', 'athessian', 'atmasses'])
 def load_one(lit: LineIterator) -> dict:
+    """Do not edit this docstring. It will be overwritten."""
     res = dict()
     while True:
         try:
