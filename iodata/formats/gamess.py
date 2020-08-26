@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
+"""GAMESS punch file format."""
 
 
 from __future__ import division
 
-# from ..builtins import range
 from ..utils import angstrom, LineIterator
 import numpy as np
 

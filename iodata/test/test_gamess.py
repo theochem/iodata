@@ -16,13 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=unsubscriptable-object
 """Test iodata.formats.gamess module."""
 
-import numpy as np
+
 from numpy.testing import assert_equal, assert_allclose
+
 from ..api import load_one
-from ..utils import angstrom, LineIterator
+from ..utils import angstrom
+
 try:
     from importlib_resources import path
 except ImportError:
