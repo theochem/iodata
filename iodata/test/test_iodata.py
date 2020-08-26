@@ -283,7 +283,7 @@ def test_spinpol1():
     assert mol.spinpol == 3
 
 
-def test_spinpol1():
+def test_spinpol2():
     mol = IOData()
     mol.spinpol = 3
     assert mol.spinpol == 3
