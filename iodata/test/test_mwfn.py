@@ -1,5 +1,5 @@
 # IODATA is an input and output module for quantum chemistry.
-# Copyright (C) 2011-2020 The IODATA Development Team
+# Copyright (C) 2011-2019 The IODATA Development Team
 #
 # This file is part of IODATA.
 #
@@ -81,20 +81,20 @@ def test_load_mwfn_ch3_rohf_g03():
     assert_allclose(mol.extra['shell_types'], np.array([0, 0, 1, 0, 0, 0]))
     assert_allclose(mol.extra['shell_centers'], np.array([1, 1, 1, 2, 3, 4]) - 1)
     assert_allclose(mol.extra['prim_per_shell'], np.array([3, 3, 3, 3, 3, 3]))
-    exponents1 = np.array([7.16168373E+01,  1.30450963E+01,  3.53051216E+00])
-    exponents2 = np.array([2.94124936E+00,  6.83483096E-01,  2.22289916E-01])
-    exponents3 = np.array([2.94124936E+00,  6.83483096E-01,  2.22289916E-01])
-    exponents4 = np.array([3.42525091E+00,  6.23913730E-01,  1.68855404E-01])
+    exponents1 = np.array([7.16168373E+01, 1.30450963E+01, 3.53051216E+00])
+    exponents2 = np.array([2.94124936E+00, 6.83483096E-01, 2.22289916E-01])
+    exponents3 = np.array([2.94124936E+00, 6.83483096E-01, 2.22289916E-01])
+    exponents4 = np.array([3.42525091E+00, 6.23913730E-01, 1.68855404E-01])
     assert_allclose(mol.obasis.shells[0].exponents, exponents1)
     assert_allclose(mol.obasis.shells[1].exponents, exponents2)
     assert_allclose(mol.obasis.shells[2].exponents, exponents3)
     assert_allclose(mol.obasis.shells[3].exponents, exponents4)
     assert_allclose(mol.obasis.shells[4].exponents, exponents4)
     assert_allclose(mol.obasis.shells[5].exponents, exponents4)
-    coeffs1 = np.array([[1.54328967E-01],  [5.35328142E-01],  [4.44634542E-01]])
-    coeffs2 = np.array([[-9.99672292E-02],  [3.99512826E-01],  [7.00115469E-01]])
-    coeffs3 = np.array([[1.55916275E-01],  [6.07683719E-01],  [3.91957393E-01]])
-    coeffs4 = np.array([[1.54328967E-01],  [5.35328142E-01],  [4.44634542E-01]])
+    coeffs1 = np.array([[1.54328967E-01], [5.35328142E-01], [4.44634542E-01]])
+    coeffs2 = np.array([[-9.99672292E-02], [3.99512826E-01], [7.00115469E-01]])
+    coeffs3 = np.array([[1.55916275E-01], [6.07683719E-01], [3.91957393E-01]])
+    coeffs4 = np.array([[1.54328967E-01], [5.35328142E-01], [4.44634542E-01]])
     assert_allclose(mol.obasis.shells[0].coeffs, coeffs1)
     assert_allclose(mol.obasis.shells[1].coeffs, coeffs2)
     assert_allclose(mol.obasis.shells[2].coeffs, coeffs3)
@@ -175,17 +175,17 @@ def test_load_mwfn_he_spdfgh_g03():
     assert_equal(mol.extra['wfntype'], 0)
     # test first molecular orbital information
     coeff = np.array([
-        8.17125208E-01,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  1.58772965E-02,
-        1.58772965E-02,  1.58772965E-02,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
-        0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
-        0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
-        7.73667846E-02,  0.00000000E+00,  4.53013505E-02,  0.00000000E+00,  7.73667846E-02,
-        0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  4.53013505E-02,
-        0.00000000E+00,  4.53013505E-02,  0.00000000E+00,  0.00000000E+00,  7.73667846E-02,
-        0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
-        0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
-        0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
-        0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,  0.00000000E+00,
+        8.17125208E-01, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 1.58772965E-02,
+        1.58772965E-02, 1.58772965E-02, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00,
+        0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00,
+        0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00,
+        7.73667846E-02, 0.00000000E+00, 4.53013505E-02, 0.00000000E+00, 7.73667846E-02,
+        0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 4.53013505E-02,
+        0.00000000E+00, 4.53013505E-02, 0.00000000E+00, 0.00000000E+00, 7.73667846E-02,
+        0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00,
+        0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00,
+        0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00,
+        0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00, 0.00000000E+00,
         0.00000000E+00])
 
     assert_equal(mol.mo.coeffs[:, 0], coeff)

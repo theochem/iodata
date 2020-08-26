@@ -1,5 +1,5 @@
 # IODATA is an input and output module for quantum chemistry.
-# Copyright (C) 2011-2020 The IODATA Development Team
+# Copyright (C) 2011-2019 The IODATA Development Team
 #
 # This file is part of IODATA.
 #
@@ -335,7 +335,7 @@ def load_one(lit: LineIterator) -> dict:
     elif wfntype in [1, 4]:
         restrictions = "unrestricted"
     else:
-        raise IOError('No wfntype found, cannot determine if restricted or unrestricted wave function.')
+        raise IOError('Cannot determine if restricted or unrestricted wfntype wave function.')
     # MFWN provides number of alpha and beta electrons, this is a double check
     # mo_type (integer, scalar): Orbital type
     #     0: Alpha + Beta (i.e. spatial orbital)
