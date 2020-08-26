@@ -51,8 +51,6 @@ W       attribute is always written
 w       attribute is is written if present
 ======= ==========
 
-Scroll to the right to see all the formats.
-
 .. include:: formats_tab.inc
 
 
