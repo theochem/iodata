@@ -26,9 +26,9 @@ import scipy.constants as spc
 from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
-from ..utils import LineIterator
+from ..utils import LineIterator, angstrom
 
-__all__ = ['load_mwfn_low']
+__all__ = []
 
 PATTERNS = ['*.mwfn']
 
@@ -49,11 +49,6 @@ PATTERNS = ['*.mwfn']
 # G shell: G 0, G+1, G-1, G+2, G-2, G+3, G-3, G+4, G-4
 
 CONVENTIONS = {
-    (9, 'p'): HORTON2_CONVENTIONS[(9, 'p')],
-    (8, 'p'): HORTON2_CONVENTIONS[(8, 'p')],
-    (7, 'p'): HORTON2_CONVENTIONS[(7, 'p')],
-    (6, 'p'): HORTON2_CONVENTIONS[(6, 'p')],
-    (5, 'p'): HORTON2_CONVENTIONS[(5, 'p')],
     (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
     (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
     (2, 'p'): HORTON2_CONVENTIONS[(2, 'p')],
@@ -61,12 +56,11 @@ CONVENTIONS = {
     (1, 'c'): ['x', 'y', 'z'],
     (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
     (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-    (4, 'c'): HORTON2_CONVENTIONS[(4, 'c')][::-1],
-    (5, 'c'): HORTON2_CONVENTIONS[(5, 'c')][::-1],
-    (6, 'c'): HORTON2_CONVENTIONS[(6, 'c')][::-1],
-    (7, 'c'): HORTON2_CONVENTIONS[(7, 'c')][::-1],
-    (8, 'c'): HORTON2_CONVENTIONS[(8, 'c')][::-1],
-    (9, 'c'): HORTON2_CONVENTIONS[(9, 'c')][::-1],
+    (4, 'c'): ['zzzz', 'yzzz', 'yyzz', 'yyyz', 'yyyy', 'xzzz', 'xyzz', 'xyyz', 'xyyy',
+               'xxzz', 'xxyz', 'xxyy', 'xxxz', 'xxxy', 'xxxx'],
+    (5, 'c'): ['zzzzz', 'yzzzz', 'yyzzz', 'yyyzz', 'yyyyz', 'yyyyy', 'xzzzz', 'xyzzz',
+               'xyyzz', 'xyyyz', 'xyyyy', 'xxzzz', 'xxyzz', 'xxyyz', 'xxyyy', 'xxxzz',
+               'xxxyz', 'xxxyy', 'xxxxz', 'xxxxy', 'xxxxx'],
 }
 
 
@@ -107,7 +101,7 @@ def _load_helper_basis(lit: LineIterator) -> Tuple[int, int, int, int, int]:
 def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray,
                                                                    np.ndarray]:
     """Read the coordinates of the atoms."""
-    atnums = np.empty(num_atoms, int)
+    atomic_numbers = np.empty(num_atoms, int)
     atcorenums = np.empty(num_atoms, float)
     atcoords = np.empty((num_atoms, 3), float)
     line = next(lit)
@@ -116,13 +110,14 @@ def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, n
 
     for atom in range(num_atoms):
         line = next(lit)
-        atnums[atom] = int(line.split()[2].strip())
-        atcorenums[atom] = float(line.split()[3].strip())
+        words = line.split()
+        atomic_numbers[atom] = int(words[2].strip())
+        atcorenums[atom] = float(words[3].strip())
         # extract atomic coordinates
         coords = line.split()
-        atcoords[atom, :] = [coords[4], coords[5], coords[6]]
+        atcoords[atom, :] = coords[4:7]
         # return but convert angstroms to amu
-    return atnums, atcorenums, atcoords / spc.value(u'atomic unit of length') / 1E10
+    return atomic_numbers, atcorenums, atcoords * angstrom
 
 
 def _load_helper_shells(lit: LineIterator, nshell: int, starts: list) \
@@ -182,7 +177,7 @@ def _load_helper_mo(lit: LineIterator, nbasis: int) -> Tuple[int, float, float,
     return number, occ, energy, coeffs, mo_type, sym
 
 
-def load_mwfn_low(lit: LineIterator) -> dict:
+def _load_mwfn_low(lit: LineIterator) -> dict:
     """Load data from a MWFN file into arrays.
 
     Parameters
@@ -252,11 +247,11 @@ def load_mwfn_low(lit: LineIterator) -> dict:
             'mo_coeffs': mo_coeffs, 'mo_type': mo_type, 'mo_sym': mo_sym}
 
 
-def build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
+def _build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
                  exponents: np.ndarray, prim_per_shell: np.ndarray,
                  coeffs: np.ndarray,
                  ) -> Tuple[MolecularBasis]:
-    """Based on the fchk modules basis building.
+    """Construct a basis set using the arrays read from a MWFN file.
 
     Parameters
     -------------
@@ -268,7 +263,7 @@ def build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
     shell_types: np.ndarray (integer)
         Angular momentum of the shell. Indices start at 0 for 's' orbital, 1 for 'p' etc.
         For 6-31G for a heavy atom this would be [0, 0, 1, 0, 1] corresponding
-         to [1s, 2s, 2p, 2s, 2p]
+        to [1s, 2s, 2p, 2s, 2p]
     exponents: np.ndarray (float)
         Gaussian function decay exponents for the primitives in the basis set.
     prim_per_shell: np.ndarray (integer)
@@ -304,11 +299,11 @@ def build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
                             'mo', 'obasis', 'extra', 'title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    inp = load_mwfn_low(lit)
+    inp = _load_mwfn_low(lit)
 
     # MWFN contains more information than most formats, so the following dict
     # stores some "extra" stuff.
-    mwfn_dict = {
+    extra = {
         'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'], 'mo_numbers': inp['mo_numbers'],
         'wfntype': inp['wfntype'], 'nelec_a': inp['nelec_a'], 'nelec_b': inp['nelec_b'],
         'nbasis': inp['nbasis'], 'nindbasis': inp['nindbasis'], 'nprims': inp['nprims'],
@@ -317,7 +312,7 @@ def load_one(lit: LineIterator) -> dict:
         'prim_per_shell': inp['prim_per_shell'], 'full_virial_ratio': inp['full_virial_ratio']}
 
     # Unlike WFN, MWFN does include orbital expansion coefficients.
-    obasis = build_obasis(inp['shell_centers'],
+    obasis = _build_obasis(inp['shell_centers'],
                           inp['shell_types'],
                           inp['exponents'],
                           inp['prim_per_shell'],
@@ -358,10 +353,8 @@ def load_one(lit: LineIterator) -> dict:
         'atcoords': inp['atcoords'],
         'atnums': inp['atnums'],
         'atcorenums': inp['atcorenums'],
-        'charge': inp['charge'],
         'obasis': obasis,
         'mo': mo,
-        'nelec': inp['nelec_a'] + inp['nelec_b'],
         'energy': inp['energy'],
-        'extra': mwfn_dict,
+        'extra': extra,
     }

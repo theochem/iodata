@@ -21,11 +21,8 @@
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
-
-import pytest
-
 from ..api import load_one
-from ..formats.mwfn import load_mwfn_low
+from ..formats.mwfn import _load_mwfn_low
 from ..overlap import compute_overlap
 from ..utils import LineIterator
 
@@ -35,27 +32,22 @@ except ImportError:
     from importlib.resources import path
 
 
-def load_fchk_helper(fn_fchk):
-    """Load a testing fchk file with iodata.iodata.load_one."""
-    with path('iodata.test.data', fn_fchk) as fn:
-        return load_one(fn)
-
-
-def test_load_mwfn_nonexistent():
-    with pytest.raises(IOError):
-        with path('iodata.test.data', 'fubar_crap.fchk') as fn:
-            load_one(str(fn))
-
-
-def load_mwfn_helper(fn_mwfn):
-    """Load a testing mwfn file with iodata.iodata.load_one."""
+def helper_load_mwfn_low(fn_mwfn):
+    """Load a testing Gaussian log file with iodata.formats.mwfn.load_mwfn_low."""
     with path('iodata.test.data', fn_mwfn) as fn:
+        lit = LineIterator(str(fn))
+        return _load_mwfn_low(lit)
+
+
+def load_format_helper(fn_format):
+    """Load a testing formatted file with iodata.iodata.load_one."""
+    with path('iodata.test.data', fn_format) as fn:
         return load_one(fn)
 
 
 # pylint: disable=too-many-statements
 def test_load_mwfn_ch3_rohf_g03():
-    mol = load_mwfn_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
+    mol = load_format_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
     assert_equal(mol.mo.occs.sum(), 9.0)
     assert_equal(mol.mo.occs.min(), 0.0)
@@ -107,22 +99,20 @@ def test_load_mwfn_ch3_rohf_g03():
     assert_equal(mol.extra['mo_sym'][0], '?')
     # test that for the same molecule fchk and mwfn generate the same objects.
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    mol2 = load_fchk_helper('ch3_rohf_sto3g_g03.fchk')
+    mol2 = load_format_helper('ch3_rohf_sto3g_g03.fchk')
     olp_fchk = compute_overlap(mol2.obasis, mol2.atcoords)
-    # assert_allclose fails due to abs/rel tolerance settings
-    assert np.allclose(mol.atcoords, mol2.atcoords)
+    assert_allclose(mol.atcoords, mol2.atcoords, atol=1E-7, rtol=1E-7)
     assert_allclose(mol2.obasis.shells[0].coeffs, coeffs1)
     # fails due to special SP basis storage (leaving commented lines in for future reference)
     # assert_allclose(mol2.obasis.shells[1].coeffs, coeffs2)
     # assert_allclose(mol2.obasis.shells[2].coeffs, coeffs3)
     assert_allclose(mol2.obasis.shells[3].coeffs, coeffs4)
     assert_allclose(mol2.obasis.shells[4].coeffs, coeffs4)
-    # assert_allclose fails due to abs/rel tolerance settings
-    assert np.allclose(olp, olp_fchk)
+    assert_allclose(olp, olp_fchk, atol=1E-7, rtol=1E-7)
 
 
 def test_load_mwfn_ch3_hf_g03():
-    mol = load_mwfn_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
+    mol = load_format_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
     assert_equal(mol.extra['wfntype'], 1)
     # test first molecular orbital information
@@ -139,24 +129,22 @@ def test_load_mwfn_ch3_hf_g03():
     assert_equal(mol.extra['mo_sym'][0], '?')
     # test that for the same molecule fchk and mwfn generate the same objects.
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    mol2 = load_fchk_helper('ch3_hf_sto3g.fchk')
+    mol2 = load_format_helper('ch3_hf_sto3g.fchk')
     olp_fchk = compute_overlap(mol2.obasis, mol2.atcoords)
-    # assert_allclose fails due to abs/rel tolerance settings
-    assert np.allclose(mol.atcoords, mol2.atcoords)
-    # assert_allclose fails due to abs/rel tolerance settings
-    assert np.allclose(olp, olp_fchk)
+    assert_allclose(mol.atcoords, mol2.atcoords, atol=1E-7, rtol=1E-7)
+    assert_allclose(olp, olp_fchk, atol=1E-7, rtol=1E-7)
 
 
 def test_nelec_charge():
-    mol1 = load_mwfn_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
+    mol1 = load_format_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
     assert mol1.nelec == 9
     assert mol1.charge == 0
-    mol2 = load_fchk_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
+    mol2 = load_format_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
     assert mol2.nelec == 2
     assert mol2.charge == 0
     assert mol2.extra['nelec_a'] == 1
     assert mol2.extra['nelec_b'] == 1
-    mol3 = load_fchk_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
+    mol3 = load_format_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
     assert mol3.nelec == 9
     assert mol3.charge == 0
     assert mol3.extra['nelec_a'] == 5
@@ -164,7 +152,7 @@ def test_nelec_charge():
 
 
 def test_load_mwfn_he_spdfgh_g03():
-    mol = load_mwfn_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
+    mol = load_format_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
     assert_equal(mol.extra['wfntype'], 0)
     # test first molecular orbital information
@@ -202,9 +190,7 @@ def test_load_mwfn_he_spdfgh_g03():
     assert_equal(mol.extra['mo_sym'][55], '?')
     # test that for the same molecule fchk and mwfn generate the same objects.
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    mol2 = load_fchk_helper('he_spdfgh_virtual.fchk')
+    mol2 = load_format_helper('he_spdfgh_virtual.fchk')
     olp_fchk = compute_overlap(mol2.obasis, mol2.atcoords)
-    # assert_allclose fails due to abs/rel tolerance settings
-    assert np.allclose(mol.atcoords, mol2.atcoords)
-    # assert_allclose fails due to abs/rel tolerance settings
-    assert np.allclose(olp, olp_fchk)
+    assert_allclose(mol.atcoords, mol2.atcoords, atol=1E-7, rtol=1E-7)
+    assert_allclose(olp, olp_fchk, atol=1E-7, rtol=1E-7)
