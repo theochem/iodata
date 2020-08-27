@@ -263,6 +263,7 @@ def test_charge_nelec13():
     assert mol.atcorenums is None
 
 
+# pylint: disable=protected-access
 def test_charge_nelec14():
     mol = IOData()
     mol.nelec = 8
@@ -335,17 +336,10 @@ def test_derived1():
 # pylint: disable=protected-access
 def test_derived2():
     mol = IOData(atnums=[1, 1, 8], charge=1)
-    # The following unit tests are confusing, so need a little explaining:
-    # Upon initialization, _charge is set when loaded from a file. See
-    # https://www.attrs.org/en/stable/init.html#private-attributes
-    # Our getters and setters may change this if needed to maintain consistency.
-    assert mol._nelec is None
-    assert mol._charge == 1.0
+    assert mol._charge is None
+    assert mol._nelec == mol.atcorenums.sum() - 1
     assert mol.charge == 1.0
     assert mol.nelec == mol.atcorenums.sum() - 1
-    assert mol._nelec == mol.atcorenums.sum() - 1
-    assert mol._charge is None
-    assert mol.charge == 1.0
 
 
 def test_natom():

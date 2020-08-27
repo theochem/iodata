@@ -248,6 +248,15 @@ class IOData:
     two_ints: dict = {}
     two_rdms: dict = {}
 
+    def __attrs_post_init__(self):
+        if self._charge is not None:
+            # Trigger charge setter to acchieve consistency in properties
+            # nelec, charge and atcorenums. This is needed because the
+            # attr constructor bypasses the setters. See
+            # https://www.attrs.org/en/stable/init.html#private-attributes
+            self.charge = self._charge
+
+
     # Public interfaces to private attributes
 
     @property
