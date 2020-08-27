@@ -79,9 +79,7 @@ def _read_energy(gms, res) -> tuple:
         gradient = np.zeros((N, 3), float)
     for i in range(N):
         words = next(gms).split()
-        gradient[i, 0] = float(words[2])
-        gradient[i, 1] = float(words[3])
-        gradient[i, 2] = float(words[4])
+        gradient[i] = words[2:5]
     return energy, gradient
 
 
