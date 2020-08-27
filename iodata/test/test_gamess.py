@@ -36,7 +36,6 @@ def test_load_one_gamess_punch():
     N = len(["CL", "H", "H", "H", "H", "F", "F", "F", "F", "H", "F"])
     assert data.title == "Simple example sample optimization with Hessian output for Toon"
     assert data.g_rot == "C1"
-    # # assert data["symbols"] == ["CL", "H", "H", "H", "H", "F", "F", "F", "F", "H", "F"]
     assert_equal(data.atnums.shape, (N,))
     assert_equal(data.atnums[0], 17)
     assert_equal(data.atnums[1], 1)
