@@ -20,12 +20,12 @@
 
 CHARMM coordinate files contain information about the location of each atom in Cartesian space.
 The format of the ASCII (CARD) CHARMM coordinate files is: Title line(s), number of atoms in file
-and the coordinate line (one for each atom in the file).
+and the coordinate lines (one for each atom in the file).
 
-The coordinate lines contain specific information about each atom in the model:
-Atom number (sequential), residue number (specified relative to first residue in the PSF),
-residue name, atom type, x-coordinate, y-coordinate, z-coordinate, segment identifier,
-residue identifier and a weighting array value.
+The coordinate lines contain specific information about each atom.
+These have the following structure: Atom number (sequential), residue number
+(specified relative to first residue in the PSF), residue name, atom type, x-coordinate,
+y-coordinate, z-coordinate, segment identifier, residue identifier and a weighting array value.
 
 """
 
