@@ -169,8 +169,9 @@ class IOData:
         matrices. Names can be ``scf``, ``post_scf``, ``scf_spin``,
         ``post_scf_spin``. These matrices are always expressed in the AO basis.
     run_type
-        The type of calculation that lead to the results stored in IOData, e.g.
-        'energy', 'energy_force', 'opt', 'freq', ...
+        The type of calculation that lead to the results stored in IOData, which
+        must be one of the following: 'energy', 'energy_force', 'opt', 'scan',
+        'freq' or None.
     spinpol
         The spin polarization. By default, its value is derived from the
         molecular orbitals (mo attribute), as abs(nalpha - nbeta). In this case,
