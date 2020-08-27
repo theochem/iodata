@@ -31,7 +31,7 @@ __all__ = []
 PATTERNS = ['*.gamessout']
 
 
-def _read_data(gms) -> tuple:
+def _read_data(gms: LineIterator) -> tuple:
     """Extract ``title``, ``symmetry`` and ``symbols`` from the punch file."""
     title = next(gms).strip()
     symmetry = next(gms).split()[0]
