@@ -63,9 +63,7 @@ def _read_coordinates(gms, res) -> tuple:
     for i in range(N):
         words = next(gms).split()
         numbers[i] = int(float(words[1]))
-        coordinates[i, 0] = float(words[2]) * angstrom
-        coordinates[i, 1] = float(words[3]) * angstrom
-        coordinates[i, 2] = float(words[4]) * angstrom
+        coordinates = words[2:5] * angstrom
     return numbers, coordinates
 
 
