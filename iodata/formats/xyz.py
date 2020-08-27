@@ -53,7 +53,6 @@ information loaded from a file can also be written back out when dumping it.
 
 """
 
-import shlex
 from typing import TextIO, Iterator
 
 import numpy as np
@@ -62,7 +61,7 @@ from ..docstrings import (document_load_one, document_load_many, document_dump_o
                           document_dump_many)
 from ..iodata import IOData
 from ..periodic import sym2num, num2sym
-from ..utils import angstrom, amu, LineIterator
+from ..utils import angstrom, LineIterator
 
 
 __all__ = []
@@ -91,115 +90,6 @@ string).
 """
 
 
-BOOL_MAP = {"T": True, "F": False, "True": True, "False": False}
-
-
-def _convert_title_value(value: str):
-    """Search for the correct dtype and convert the string."""
-    list_of_splits = value.split()
-    # If it is just one item, first try int, then float and finally return a bool or str
-    if len(list_of_splits) == 1:
-        value = value.strip()
-        if value.isdigit():
-            converted_value = int(value)
-        else:
-            try:
-                converted_value = float(value)
-            except ValueError:
-                if value in BOOL_MAP.keys():
-                    converted_value = BOOL_MAP[value]
-                else:
-                    converted_value = value
-    else:
-        # Do the same but return it as a numpy array
-        try:
-            converted_value = np.array(list_of_splits, dtype=np.int)
-        except ValueError:
-            try:
-                converted_value = np.array(list_of_splits, dtype=np.float)
-            except ValueError:
-                try:
-                    converted_value = np.array([BOOL_MAP[bool_key] for bool_key in list_of_splits],
-                                               dtype=np.bool)
-                except KeyError:
-                    converted_value = np.array(list_of_splits, dtype=np.str)
-    return converted_value
-
-
-def _parse_properties(properties: str):
-    """Parse the properties into atom_columns."""
-    atom_columns = []
-    # Maps the dtype to the atom_columns dtype, load_word and dump_word
-    dtype_map = {"S": (np.dtype('U25'), str, "{:10s}".format),
-                 "R": (float, float, "{:15.10f}".format),
-                 "I": (int, int, "{:10d}".format),
-                 "L": (bool, lambda word: BOOL_MAP[word], lambda boolean: "T" if boolean else "F")}
-    # Some predefined iodata attributes which can be mapped
-    # pos is assumed to be in angstrom, masses in amu (ase convention)
-    # No unit convertion takes place for the other attributes
-    atom_column_map = {'pos': ('atcoords', None, (3,), float,
-                               (lambda word: float(word) * angstrom),
-                               (lambda value: "{:15.10f}".format(value / angstrom))),
-                       'masses': ('atmasses', None, (), float,
-                                  (lambda word: float(word) * amu),
-                                  (lambda value: "{:15.10f}".format(value / amu))),
-                       'force': ('atgradient', None, (3,), float,
-                                 (lambda word: -float(word)),
-                                 (lambda value: "{:15.10f}".format(-value)))}
-    atnum_column = ("atnums", None, (), int,
-                    (lambda word: int(word) if word.isdigit() else sym2num[word.title()]),
-                    (lambda atnum: "{:2s}".format(num2sym[atnum])))
-    splitted_properties = properties.split(':')
-    assert len(splitted_properties) % 3 == 0
-    # Each property has 3 values: its name, dtype and shape
-    names = splitted_properties[::3]
-    dtypes = splitted_properties[1::3]
-    shapes = splitted_properties[2::3]
-    if 'Z' in names:
-        # Try to map 'Z' to the 'atnums' attribute
-        atom_column_map['Z'] = atnum_column
-    elif 'species' in names:
-        # If 'Z' is not present, use 'species'
-        atom_column_map['species'] = atnum_column
-    for name, dtype, shape in zip(names, dtypes, shapes):
-        if name in atom_column_map.keys():
-            atom_columns.append(atom_column_map[name])
-        else:
-            # Use the 'extra' attribute to store values which are not predefined in iodata
-            if shape == '1':
-                shape_suffix = ()
-            else:
-                shape_suffix = (int(shape),)
-            atom_columns.append(('extra', name, shape_suffix, *dtype_map[dtype]))
-    return atom_columns
-
-
-def _parse_title(title: str):
-    """Parse the title in an extended xyz file."""
-    key_value_pairs = shlex.split(title)
-    # A dict of predefined iodata atrributes with their names and dtype convertion functions
-
-    def load_cellvecs(word):
-        return np.array(word.split(), dtype=np.float).reshape([3, 3]) * angstrom
-    iodata_attrs = {'energy': ('energy', float),
-                    'Lattice': ('cellvecs', load_cellvecs),
-                    'charge': ('charge', float)}
-    data = {}
-    for key_value_pair in key_value_pairs:
-        if '=' in key_value_pair:
-            key, value = key_value_pair.split('=', 1)
-            if key == 'Properties':
-                atom_columns = _parse_properties(value)
-            elif key in iodata_attrs.keys():
-                data[iodata_attrs[key][0]] = iodata_attrs[key][1](value)
-            else:
-                data.setdefault('extra', {})[key] = _convert_title_value(value)
-        else:
-            # If no value is given, set it True
-            data.setdefault('extra', {})[key_value_pair] = True
-    return atom_columns, data
-
-
 @document_load_one("XYZ", ['atcoords', 'atnums', 'title'],
                    [], {"atom_columns": ATOM_COLUMNS_DOC})
 def load_one(lit: LineIterator, atom_columns=None) -> dict:
@@ -207,13 +97,9 @@ def load_one(lit: LineIterator, atom_columns=None) -> dict:
     # Load the header.
     natom = int(next(lit))
     title = next(lit).strip()
-    data = {}
     if atom_columns is None:
         atom_columns = DEFAULT_ATOM_COLUMNS
-    elif atom_columns == 'EXT':
-        # The extended xyz format defines the atom_columns in the title
-        atom_columns, data = _parse_title(title)
-    data["title"] = title
+    data = {'title': title}
     # Initialize the arrays to be loaded from the XYZ file.
     for attrname, keyname, shapesuffix, dtype, _loadword, _dumpword in atom_columns:
         array = np.zeros((natom,) + shapesuffix, dtype=dtype)
