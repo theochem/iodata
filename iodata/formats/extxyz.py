@@ -18,6 +18,9 @@
 # --
 """Extended XYZ file format.
 
+The extended XYZ file format is defined in the
+`ASE documentation <https://wiki.fysik.dtu.dk/ase/ase/io/formatoptions.html#xyz>`_.
+
 Usually, the different frames in a trajectory describe different geometries of the same
 molecule, with atoms in the same order. The ``load_many`` function below can also
 handle an XYZ with different molecules, e.g. a molecular database.
