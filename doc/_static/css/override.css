@@ -1,0 +1,43 @@
+/** css/override.css **/
+
+
+/* This line is theme specific - it includes the base theme CSS */
+@import 'theme.css';       /* for the Read the Docs theme */
+
+table.docutils {
+    border-collapse: separate !important;
+}
+
+th.head {
+    position: sticky;
+    top: 0px;
+    z-index: 2;
+    background-color: white;
+    border-bottom-color: black !important;
+}
+
+th.head:nth-child(1) {
+    position: sticky;
+    top: 0px;
+    left: 0px;
+    z-index: 3;
+    background-color: white;
+    border-right-color: black !important;
+}
+
+td:nth-child(1) {
+    position: sticky;
+    left: 0px;
+    z-index: 1;
+    border-right-color: black !important;
+    border-right-width: 1px;
+    border-right-style: solid;
+}
+
+table.docutils tbody tr.row-odd td {
+    background-color: rgb(252, 252, 252);
+}
+
+div.wy-table-responsive {
+    max-height: 90vh;
+}

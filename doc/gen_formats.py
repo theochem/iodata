@@ -61,8 +61,10 @@ def main():
                 break
         if skip:
             continue
-
         lines = module.__doc__.split('\n')
+        # add labels for cross-referencing format (e.g. in formats table)
+        print(f".. _format_{modname}:")
+        print()
         _print_section('{} (``{}``)'.format(lines[0][:-1], modname), "=")
         print()
         for line in lines[2:]:
