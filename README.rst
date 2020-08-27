@@ -57,9 +57,22 @@ To install IOData using conda package management system, install
 
 .. code-block:: bash
 
-    $ conda create -n iodata_env
-    $ source activate iodata_env
-    (iodata_env) $ conda install -c theochem iodata
+    # Activate your main conda environment if needed.
+
+    # Create a horton3 conda environment. (optional, recommended)
+    conda create -n horton3
+    source activate horton3
+
+    # Install the stable release.
+    conda install -c theochem iodata
+
+To install IOData with pip, you may want to create a `virtual environment`_,
+and then:
+
+.. code-block:: bash
+
+    # Install the stable release.
+    pip install qc-iodata
 
 See https://iodata.readthedocs.io/en/latest/install.html for full details.
 
@@ -75,3 +88,4 @@ See https://iodata.readthedocs.io/en/latest/install.html for full details.
     :target: https://anaconda.org/theochem/iodata
 .. |CondaVersion| image:: https://img.shields.io/conda/pn/theochem/iodata.svg
     :target: https://anaconda.org/theochem/iodata
+.. _virtual environment: https://docs.python.org/3/tutorial/venv.html
