@@ -46,7 +46,7 @@ def _read_data(gms: LineIterator) -> tuple:
     return title, symmetry, symbols
 
 
-def _read_coordinates(gms, res) -> tuple:
+def _read_coordinates(gms: LineIterator, res: dict) -> tuple:
     """Extract ``numbers`` and ``coordinates`` from the punch file."""
     for i in range(2):
         next(gms)
@@ -67,7 +67,7 @@ def _read_coordinates(gms, res) -> tuple:
     return numbers, coordinates
 
 
-def _read_energy(gms, res) -> tuple:
+def _read_energy(gms: LineIterator, res: dict) -> tuple:
     """Extract ``energy`` and ``gradient`` from the punch file."""
     energy = float(next(gms).split()[1])
     N = len(res["symbols"])
@@ -81,7 +81,7 @@ def _read_energy(gms, res) -> tuple:
     return energy, gradient
 
 
-def _read_hessian(gms, res) -> np.ndarray:
+def _read_hessian(gms: LineIterator, res: dict) -> np.ndarray:
     """Extract ``hessian`` from the punch file."""
     assert "hessian" not in res
     line = next(gms)
@@ -100,7 +100,7 @@ def _read_hessian(gms, res) -> np.ndarray:
     return hessian
 
 
-def _read_masses(gms, res):
+def _read_masses(gms: LineIterator, res: dict) -> np.ndarray:
     """Extract ``masses`` from the punch file."""
     N = len(res["symbols"])
     masses = np.zeros(N, float)
