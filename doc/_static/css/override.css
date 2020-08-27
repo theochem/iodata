@@ -39,5 +39,5 @@ table.docutils tbody tr.row-odd td {
 }
 
 div.wy-table-responsive {
-    max-height: 600px;
+    max-height: 90vh;
 }
