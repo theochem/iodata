@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""gro file format.
+"""GROMACS gro file format.
 
 Files with the gro file extension contain a molecular structure in Gromos87 format.
-gro files can be used as trajectory by simply concatenating files.
+GROMACS gro files can be used as trajectory by simply concatenating files.
 
 http://manual.gromacs.org/current/reference-manual/file-formats.html#gro
 
