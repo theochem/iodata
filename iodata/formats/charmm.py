@@ -16,25 +16,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""CHARMM coordinate (crd) file format.
+"""CHARMM crd file format.
 
-CHARMM coordinate files contain information about the location of each atom in Cartesian (3D) space.
-The format of the ASCII (CARD) CHARMM coordinate files is:
-    * Title line(s)
-    * Number of atoms in file
-    * Coordinate line (one for each atom in the file)
+CHARMM coordinate files contain information about the location of each atom in Cartesian space.
+The format of the ASCII (CARD) CHARMM coordinate files is: Title line(s), number of atoms in file
+and the coordinate line (one for each atom in the file).
 
 The coordinate lines contain specific information about each atom in the model:
-    * Atom number (sequential)
-    * Residue number (specified relative to first residue in the PSF)
-    * Residue name
-    * Atom type
-    * X-coordinate
-    * Y-coordinate
-    * Z-coordinate
-    * Segment identifier
-    * Residue identifier
-    * Weighting array value
+Atom number (sequential), residue number (specified relative to first residue in the PSF),
+residue name, atom type, x-coordinate, y-coordinate, z-coordinate, segment identifier,
+residue identifier and a weighting array value.
 
 """
 
@@ -53,7 +44,7 @@ __all__ = []
 PATTERNS = ['*.crd']
 
 
-@document_load_one('crd', ['atcoords', 'atffparams', 'atmasses', 'extra'], ['title'])
+@document_load_one('CRD', ['atcoords', 'atffparams', 'atmasses', 'extra'], ['title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Read title section
