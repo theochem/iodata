@@ -169,7 +169,7 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
                     rtol=0., atol=atol, err_msg=message)
 
 
-def load_one_warning(filename: str, fmt: str = None, match: str = "", **kwargs):
+def load_one_warning(filename: str, fmt: str = None, match: str = None, **kwargs):
     """Call load_one, catching expected FileFormatWarning.
 
     Parameters
@@ -192,7 +192,7 @@ def load_one_warning(filename: str, fmt: str = None, match: str = "", **kwargs):
 
     """
     with path('iodata.test.data', filename) as fn:
-        if match == "":
+        if match == None:
             return load_one(str(fn), fmt, **kwargs)
         with pytest.warns(FileFormatWarning, match=match):
             return load_one(str(fn), fmt, **kwargs)

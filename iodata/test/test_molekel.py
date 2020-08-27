@@ -51,7 +51,7 @@ def compare_mols_diff_formats(mol1, mol2):
     assert_allclose(charges1, charges2, rtol=0.0, atol=1.0e-6)
 
 
-def check_load_dump_consistency(fn: str, tmpdir: str, match: str = ""):
+def check_load_dump_consistency(fn: str, tmpdir: str, match: str = None):
     """Check if data is preserved after dumping and loading a Molekel file.
 
     Parameters

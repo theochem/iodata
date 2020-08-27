@@ -517,8 +517,20 @@ def test_load_nbasis_indep(tmpdir):
     assert mol2.mo.coeffs.shape == (38, 37)
 
 
-def check_load_dump_consistency(tmpdir, fn, match=""):
-    """Check if dumping and loading an FCHK file results in the same data."""
+def check_load_dump_consistency(tmpdir: str, fn: str, match: str = None):
+    """Check if dumping and loading an FCHK file results in the same data.
+
+    Parameters
+    ----------
+    tmpdir
+        The temporary directory to dump and load the file.
+    fn
+        The filename to load.
+    match
+        When given, loading the file is expected to raise a warning whose
+        message string contains match.
+
+    """
     mol1 = load_one_warning(fn, match=match)
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt='fchk')
