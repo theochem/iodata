@@ -113,7 +113,8 @@ def _read_masses(gms: LineIterator, res: dict) -> np.ndarray:
     return masses
 
 
-@document_load_one("PUNCH", ['title', 'energy', 'grot', 'atgradient', 'athessian', 'atmasses', 'atnums', 'atcoords'])
+@document_load_one("PUNCH", ['title', 'energy', 'grot', 'atgradient', 'athessian', 'atmasses',
+                             'atnums', 'atcoords'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     res = dict()
