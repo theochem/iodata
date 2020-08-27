@@ -21,7 +21,6 @@
 from typing import Tuple
 
 import numpy as np
-import scipy.constants as spc
 
 from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell
 from ..docstrings import document_load_one
@@ -248,9 +247,9 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
 
 
 def _build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
-                 exponents: np.ndarray, prim_per_shell: np.ndarray,
-                 coeffs: np.ndarray,
-                 ) -> Tuple[MolecularBasis]:
+                  exponents: np.ndarray, prim_per_shell: np.ndarray,
+                  coeffs: np.ndarray,
+                  ) -> Tuple[MolecularBasis]:
     """Construct a basis set using the arrays read from a MWFN file.
 
     Parameters
@@ -313,11 +312,11 @@ def load_one(lit: LineIterator) -> dict:
 
     # Unlike WFN, MWFN does include orbital expansion coefficients.
     obasis = _build_obasis(inp['shell_centers'],
-                          inp['shell_types'],
-                          inp['exponents'],
-                          inp['prim_per_shell'],
-                          inp['coeffs'],
-                          )
+                           inp['shell_types'],
+                           inp['exponents'],
+                           inp['prim_per_shell'],
+                           inp['coeffs'],
+                           )
     # wfntype(integer, scalar): Wavefunction type. Possible values:
     #     0: Restricted closed - shell single - determinant wavefunction(e.g.RHF, RKS)
     #     1: Unrestricted open - shell single - determinant wavefunction(e.g.UHF, UKS)
