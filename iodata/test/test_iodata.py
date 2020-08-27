@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=unsubscriptable-object,no-member
 """Test iodata.iodata module."""
 
 
@@ -96,8 +95,8 @@ def test_dm_ch3_rohf_g03():
     assert_allclose(np.einsum('ab,ba', olp, dm), 9, atol=1.e-6)
 
 
-# pylint: disable=protected-access
 def test_charge_nelec1():
+    # pylint: disable=protected-access
     # One a blank IOData object, charge and nelec can be set independently.
     mol = IOData()
     mol.nelec = 4
@@ -109,8 +108,8 @@ def test_charge_nelec1():
     assert mol._charge == -1
 
 
-# pylint: disable=protected-access
 def test_charge_nelec2():
+    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atcorenums = np.array([6.0, 1.0, 1.0, 1.0, 1.0])
@@ -123,8 +122,8 @@ def test_charge_nelec2():
     assert mol._charge is None
 
 
-# pylint: disable=protected-access
 def test_charge_nelec3():
+    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atnums = np.array([6, 1, 1, 1, 1])
@@ -141,8 +140,8 @@ def test_charge_nelec3():
     assert mol._charge is None
 
 
-# pylint: disable=protected-access
 def test_charge_nelec4():
+    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atnums = np.array([6, 1, 1, 1, 1])
@@ -154,8 +153,8 @@ def test_charge_nelec4():
     assert mol.charge == 1
 
 
-# pylint: disable=protected-access
 def test_charge_nelec5():
+    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.charge = 1
@@ -169,8 +168,8 @@ def test_charge_nelec5():
     assert mol.charge == 1
 
 
-# pylint: disable=protected-access
 def test_charge_nelec6():
+    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.nelec = 8
@@ -184,8 +183,8 @@ def test_charge_nelec6():
     assert mol.charge == 2
 
 
-# pylint: disable=protected-access
 def test_charge_nelec7():
+    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.nelec = 8
@@ -209,8 +208,8 @@ def test_charge_nelec8():
     assert mol.nelec is None
 
 
-# pylint: disable=protected-access
 def test_charge_nelec9():
+    # pylint: disable=protected-access
     mol = IOData()
     mol.charge = 1.0
     mol.atcorenums = np.array([8.0, 1.0, 1.0])
@@ -222,8 +221,8 @@ def test_charge_nelec9():
     assert mol.nelec is None
 
 
-# pylint: disable=protected-access
 def test_charge_nelec10():
+    # pylint: disable=protected-access
     mol = IOData()
     mol.charge = 1.0
     mol.atnums = np.array([8, 1, 1])
@@ -263,8 +262,8 @@ def test_charge_nelec13():
     assert mol.atcorenums is None
 
 
-# pylint: disable=protected-access
 def test_charge_nelec14():
+    # pylint: disable=protected-access
     mol = IOData()
     mol.nelec = 8
     mol.atcorenums = None
@@ -313,8 +312,8 @@ def test_spinpol2():
     assert mol.spinpol == 3
 
 
-# pylint: disable=protected-access
 def test_derived1():
+    # pylint: disable=protected-access
     # When loading a file with molecular orbitals, nelec, charge and spinpol are
     # derived from the mo object:
     with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
@@ -333,8 +332,8 @@ def test_derived1():
         mol.spinpol = 1
 
 
-# pylint: disable=protected-access
 def test_derived2():
+    # pylint: disable=protected-access
     mol = IOData(atnums=[1, 1, 8], charge=1)
     assert mol._charge is None
     assert mol._nelec == mol.atcorenums.sum() - 1
