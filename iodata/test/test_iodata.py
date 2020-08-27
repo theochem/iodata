@@ -263,6 +263,29 @@ def test_charge_nelec13():
     assert mol.atcorenums is None
 
 
+def test_charge_nelec14():
+    mol = IOData()
+    mol.nelec = 8
+    mol.atcorenums = None
+    mol.atcorenums = np.array([8, 1, 1])
+    assert mol.atcorenums.dtype == float
+    assert mol.charge == 2.0
+    assert mol._charge is None
+    mol.atcorenums = None
+    assert mol.nelec == 8
+    assert mol.charge == 2.0
+
+
+def test_charge_nelec15():
+    mol = IOData()
+    mol.nelec = 8
+    mol.atcorenums = np.array([8, 1, 1])
+    assert mol.charge == 2.0
+    mol.nelec = None
+    assert mol.nelec is None
+    assert mol.charge is None
+
+
 def test_undefined():
     # One a blank IOData object, accessing undefined charge and nelec should
     # return None.

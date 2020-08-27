@@ -264,18 +264,20 @@ class IOData:
     @atcorenums.setter
     def atcorenums(self, atcorenums):
         if atcorenums is None:
-            if self.nelec is not None:
+            if self.nelec is not None and self._atcorenums is not None:
                 # Set _charge because charge can no longer be derived from
                 # atcorenums and nelec.
                 self._charge = self._atcorenums.sum() - self.nelec
-        elif self._charge is not None:
-            # _charge is treated as the dependent one, while atcorenums and
-            # nelec are treated as independent.
-            if self._nelec is None:
-                # Switch to storing _nelec.
-                self._nelec = atcorenums.sum() - self._charge
-            self._charge = None
-        self._atcorenums = atcorenums
+            self._atcorenums = None
+        else:
+            if self._charge is not None:
+                # _charge is treated as the dependent one, while atcorenums and
+                # nelec are treated as independent.
+                if self._nelec is None:
+                    # Switch to storing _nelec.
+                    self._nelec = atcorenums.sum() - self._charge
+                self._charge = None
+            self._atcorenums = np.asarray(atcorenums, dtype=float)
 
     @property
     def charge(self) -> float:
