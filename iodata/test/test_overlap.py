@@ -18,6 +18,7 @@
 # --
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
+import attr
 import numpy as np
 from numpy.testing import assert_allclose
 from pytest import raises
@@ -75,7 +76,7 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
         ref = np.load(str(fn_npy))
     with path('iodata.test.data', 'o2_cc_pvtz_cart.fchk') as fn_fchk:
         data = load_one(fn_fchk)
-    obasis = data.obasis.evolve(conventions=OVERLAP_CONVENTIONS)
+    obasis = attr.evolve(data.obasis, conventions=OVERLAP_CONVENTIONS)
     assert_allclose(ref, compute_overlap(obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
 
 

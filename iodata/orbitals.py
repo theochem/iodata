@@ -176,7 +176,3 @@ class MolecularOrbitals:
         if self.kind == 'unrestricted':
             return self.energies[self.norba:]
         raise NotImplementedError
-
-    def evolve(self, **changes):
-        """Create a copy with update attributes given in ``changes``."""
-        return attr.evolve(self, **changes)

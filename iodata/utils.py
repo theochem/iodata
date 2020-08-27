@@ -145,10 +145,6 @@ class Cube:
         """Shape of the rectangular grid."""  # noqa: D401
         return self.data.shape
 
-    def evolve(self, **changes):
-        """Create a copy with update attributes given in ``changes``."""
-        return attr.evolve(self, **changes)
-
 
 def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int, l: int,
                            value: float):

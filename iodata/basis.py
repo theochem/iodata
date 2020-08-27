@@ -140,10 +140,6 @@ class Shell:
         """Number of contractions. This is usually 1; e.g., it would be 2 for an SP shell."""
         return len(self.angmoms)
 
-    def evolve(self, **changes):
-        """Create a copy with update attributes given in ``changes``."""
-        return attr.evolve(self, **changes)
-
 
 @attr.s(auto_attribs=True, slots=True)
 class MolecularBasis:
@@ -203,10 +199,6 @@ class MolecularBasis:
         """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
 
-    def evolve(self, **changes):
-        """Create a copy with update attributes given in ``changes``."""
-        return attr.evolve(self, **changes)
-
     def get_segmented(self):
         """Unroll generalized contractions."""
         shells = []
@@ -215,7 +207,7 @@ class MolecularBasis:
                 shells.append(Shell(shell.icenter, [angmom], [kind],
                                     shell.exponents, coeffs.reshape(-1, 1)))
         # pylint: disable=no-member
-        return self.evolve(shells=shells)
+        return attr.evolve(self, shells=shells)
 
 
 def convert_convention_shell(conv1: List[str], conv2: List[str], reverse=False) \
