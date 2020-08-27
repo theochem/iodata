@@ -249,13 +249,18 @@ class IOData:
     two_rdms: dict = {}
 
     def __attrs_post_init__(self):
+        # Trigger setter to acchieve consistency in properties
+        # atcorenums, nelec, charge, spinmult. This is needed because the
+        # attr constructor bypasses the setters. See
+        # https://www.attrs.org/en/stable/init.html#private-attributes
+        if self._atcorenums is not None:
+            self.atcorenums = self._atcorenums
         if self._charge is not None:
-            # Trigger charge setter to acchieve consistency in properties
-            # nelec, charge and atcorenums. This is needed because the
-            # attr constructor bypasses the setters. See
-            # https://www.attrs.org/en/stable/init.html#private-attributes
             self.charge = self._charge
-
+        if self._nelec is not None:
+            self.nelec = self._nelec
+        if self._spinpol is not None:
+            self.spinpol = self._spinpol
 
     # Public interfaces to private attributes
 
