@@ -158,15 +158,6 @@ def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
     return data
 
 
-def _load_helper_prims(lit: LineIterator, nprimshell: int) -> np.ndarray:
-    """Read SHELL CENTER, SHELL TYPE, and SHELL CONTRACTION DEGREES sections."""
-    next(lit)  # skip line
-    # concatenate list of arrays into a single array of length nshell
-    array = _load_helper_section(lit, nprimshell, '', 0, float)
-    assert len(array) == nprimshell
-    return array
-
-
 def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
                          dtype: np.dtype) -> np.ndarray:
     """Read SHELL CENTER, SHELL TYPE, and SHELL CONTRACTION DEGREES sections."""
@@ -246,8 +237,12 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     data["shell_centers"] -= 1
 
     # load primitive exponents & coefficients
-    data["exponents"] = _load_helper_prims(lit, data["Nprimshell"])
-    data["coeffs"] = _load_helper_prims(lit, data["Nprimshell"])
+    if not next(lit).startswith("$Primitive exponents"):
+        lit.error("Expected '$Primitive exponents' section!")
+    data["exponents"] = _load_helper_section(lit, data["Nprimshell"], '', 0, float)
+    if not next(lit).startswith("$Contraction coefficients"):
+        lit.error("Expected '$Contraction coefficients' section!")
+    data["coeffs"] = _load_helper_section(lit, data["Nprimshell"], '', 0, float)
 
     # get number of basis & molecular orbitals (MO)
     # Note: MWFN includes virtual orbitals, so num_mo equals number independent basis functions
