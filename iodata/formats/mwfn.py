@@ -63,21 +63,20 @@ CONVENTIONS = {
 }
 
 
-def _load_helper_opener(lit: LineIterator) -> Tuple[int, float, float,
-                                                                float, float, float, int]:
+def _load_helper_opener(lit: LineIterator) -> dict:
     """Read initial variables."""
-    keys = ["Wfntype", "Charge", "Naelec", "Nbelec", "E_tot", "VT_ratio", "Ncenter"]
+    keys = {"Wfntype": int, "Charge": float, "Naelec": float, "Nbelec": float, "E_tot": float,
+            "VT_ratio": float, "Ncenter": int}
     max_count = len(keys)
     count = 0
-    d = {}
+    data = {}
     while count < max_count:
         line = next(lit)
-        for name in keys:
+        for name, ftype in keys.items():
             if name in line:
-                d[name] = line.split('=')[1].strip()
+                data[name] = ftype(line.split('=')[1].strip())
                 count += 1
-    return int(d['Wfntype']), float(d['Charge']), float(d['Naelec']), float(d['Nbelec']),\
-        float(d['E_tot']), float(d['VT_ratio']), int(d['Ncenter'])
+    return data
 
 
 def _load_helper_basis(lit: LineIterator) -> Tuple[int, int, int, int, int]:
@@ -195,18 +194,22 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     #  mwfn ignores lines beginning with `#`.
     # read sections of mwfn file
     # This assumes title is on first line which seems to be the standard
-    title = next(lit).strip()
-    wfntype, charge, nelec_a, nelec_b, \
-        energy, vt_ratio, num_atoms = _load_helper_opener(lit)
+
+    # read title
+    data = {"title": next(lit).strip()}
+
+    # load Wfntype, Charge, Naelec, Nbelec, E_tot, VT_ratio, & Ncenter
+    data.update(_load_helper_opener(lit))
+
     # coordinates are in Angstrom in MWFN
-    atnums, atcorenums, atcoords = _load_helper_atoms(lit, num_atoms)
+    atnums, atcorenums, atcoords = _load_helper_atoms(lit, data["Ncenter"])
     nbasis, nindbasis, nprim, nshell, nprimshell = _load_helper_basis(lit)
     keywords = ["Shell types", "Shell centers", "Shell contraction"]
     shell_types, shell_centers, prim_per_shell = _load_helper_shells(lit, nshell, keywords)
     # HORTON indices start at 0 because Pythons do.
     shell_centers -= 1
-    assert wfntype < 5
-    assert num_atoms > 0
+    assert data["Wfntype"] < 5
+    assert data["Ncenter"] > 0
     assert min(atnums) >= 0
     assert len(shell_types) == nshell
     assert len(shell_centers) == nshell
@@ -215,10 +218,10 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     coeffs = _load_helper_prims(lit, nprimshell)
     # number of MO's should equal number of independent basis functions. MWFN inc. virtual orbitals.
     num_coeffs = nindbasis
-    if wfntype in [0, 2, 3]:
+    if data["Wfntype"] in [0, 2, 3]:
         # restricted wave function
         num_mo = nindbasis
-    elif wfntype in [1, 4]:
+    elif data["Wfntype"] in [1, 4]:
         # unrestricted wavefunction
         num_mo = 2 * nindbasis
 
@@ -235,11 +238,11 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
 
     # TODO add density matrix and overlap
 
-    return {'title': title, 'energy': energy, 'wfntype': wfntype,
-            'nelec_a': nelec_a, 'nelec_b': nelec_b, 'charge': charge,
+    return {'title': data["title"], 'energy': data["E_tot"], 'wfntype': data["Wfntype"],
+            'nelec_a': data["Naelec"], 'nelec_b': data["Nbelec"], 'charge': data["Charge"],
             'atnums': atnums, 'atcoords': atcoords, 'atcorenums': atcorenums,
             'nbasis': nbasis, 'nindbasis': nindbasis, 'nprims': nprim,
-            'nshells': nshell, 'nprimshells': nprimshell, 'full_virial_ratio': vt_ratio,
+            'nshells': nshell, 'nprimshells': nprimshell, 'full_virial_ratio': data["VT_ratio"],
             'shell_centers': shell_centers, 'shell_types': shell_types,
             'prim_per_shell': prim_per_shell, 'exponents': exponent, 'coeffs': coeffs,
             'mo_numbers': mo_numbers, 'mo_occs': mo_occs, 'mo_energies': mo_energies,
