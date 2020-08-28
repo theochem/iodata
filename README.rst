@@ -51,13 +51,11 @@ The following dependencies will be necessary for IOData to build properly,
 Installation
 ------------
 
-To install IOData using conda package management system, install
+To install IOData using the conda package management system, install
 `miniconda <https://conda.io/miniconda.html>`__ or
 `anaconda <https://www.anaconda.com/download>`__ first, and then:
 
 .. code-block:: bash
-
-    # Activate your main conda environment if needed.
 
     # Create a horton3 conda environment. (optional, recommended)
     conda create -n horton3

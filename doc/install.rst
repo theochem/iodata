@@ -27,7 +27,7 @@ Installation
 Python 3 (>=3.6) must be installed. Other dependencies will be pulled in with
 the instructions below.
 
-To install IOData using conda package management system, install
+To install IOData using the conda package management system, install
 `miniconda <https://conda.io/miniconda.html>`__ or
 `anaconda <https://www.anaconda.com/download>`__ first, and then:
 
@@ -54,7 +54,7 @@ To install IOData using conda package management system, install
 
 There are two common methods to install IOData with pip:
 
-1. By creating and installing in a `virtual environment`_:
+1. You can work in a `virtual environment`_:
 
    .. code-block:: bash
 
@@ -72,8 +72,8 @@ There are two common methods to install IOData with pip:
        # (Only do this if you understand the implications.)
        pip3 install --pre qc-iodata
 
-2. By installing into the user ``${HOME}`` directory, without creating a
-   virtual environment.
+2. You can install into your ``${HOME}`` directory, without creating a virtual
+   environment.
 
    .. code-block:: bash
 
@@ -89,41 +89,43 @@ There are two common methods to install IOData with pip:
    it is harder to make a clean start in comparison to the other options.
 
 In case the ``pip3`` executable is not found, it may be installed in a directory
-which is not included in your ${PATH} variable. This seems to be a common issue
-on macOS. A simple workaround is to replace ``pip3`` by ``python3 -m pip``.
+which is not included in your ``${PATH}`` variable. This seems to be a common
+issue on macOS. A simple workaround is to replace ``pip3`` by
+``python3 -m pip``.
 
 On up-to-date python installs, you may also use ``pip`` instead of ``pip3`` or
 ``python`` instead of ``python3``. The ``3`` is only used to avoid potential
-confusion with Python 2.
+confusion with Python 2. Note that the ``3`` is only present in names of
+executables, not names of Python modules.
 
 
 Testing
 -------
 
 The tests are automatically run when we build packages with conda, but you may
-try them again on your own machine after installation:
+try them again on your own machine after installation.
 
-For Conda users:
+Wtih Conda:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-      # Install pytest in your conda env.
-      conda install pytest pytest-xdist
-      # Then run the tests.
-      pytest --pyargs iodata
+    # Install pytest in your conda env.
+    conda install pytest pytest-xdist
+    # Then run the tests.
+    pytest --pyargs iodata -n auto
 
 
-For pip users:
+With Pip:
 
-  .. code-block:: bash
+.. code-block:: bash
 
-      # Install pytest in your conda env ...
-      pip install pytest pytest-xdist
-      deactivate && source ~/horton3/activate
-      # .. or in your home directory
-      pip install pytest pytest-xdist --user
-      # Then run the tests.
-      pytest --pyargs iodata
+    # Install pytest in your conda env ...
+    pip install pytest pytest-xdist
+    deactivate && source ~/horton3/activate
+    # .. or in your home directory
+    pip install pytest pytest-xdist --user
+    # Then run the tests.
+    pytest --pyargs iodata -n auto
 
 
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html
