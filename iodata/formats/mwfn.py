@@ -157,22 +157,33 @@ def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
     return np.array(section).astype(dtype)
 
 
-def _load_helper_mo(lit: LineIterator, nbasis: int) -> Tuple[int, float, float,
-                                                             np.ndarray, int, str]:
+def _load_helper_mo(lit: LineIterator, n_basis: int, n_mo: int) -> dict:
     """Read one section of MO information."""
-    line = next(lit)
-    while 'Index' not in line:
-        line = next(lit)
 
-    assert line.startswith('Index')
-    number = int(line.split()[1])
-    mo_type = int(next(lit).split()[1])
-    energy = float(next(lit).split()[1])
-    occ = float(next(lit).split()[1])
-    sym = str(next(lit).split()[1])
-    next(lit)  # skip line
-    coeffs = _load_helper_section(lit, nbasis, '', 0, float)
-    return number, occ, energy, coeffs, mo_type, sym
+    data = {
+        "mo_numbers": np.empty(n_mo, int),
+        "mo_type": np.empty(n_mo, int),
+        "mo_energies": np.empty(n_mo, float),
+        "mo_occs": np.empty(n_mo, float),
+        "mo_sym": np.empty(n_mo, str),
+        "mo_coeffs": np.empty([n_basis, n_mo], float),
+    }
+
+    for index in range(n_mo):
+        line = next(lit)
+        while 'Index' not in line:
+            line = next(lit)
+        assert line.startswith('Index')
+        data["mo_numbers"][index] = int(line.split()[1])
+        data["mo_type"][index] = int(next(lit).split()[1])
+        data["mo_energies"][index] = float(next(lit).split()[1])
+        data["mo_occs"][index] = float(next(lit).split()[1])
+        data["mo_sym"][index] = str(next(lit).split()[1])
+        # skip "$Coeff line
+        next(lit)
+        data["mo_coeffs"][:, index] = _load_helper_section(lit, n_basis, '', 0, float)
+
+    return data
 
 
 def _load_mwfn_low(lit: LineIterator) -> dict:
@@ -222,27 +233,19 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     data["exponents"] = _load_helper_prims(lit, data["Nprimshell"])
     data["coeffs"] = _load_helper_prims(lit, data["Nprimshell"])
 
-    # number of MO's should equal number of independent basis functions. MWFN inc. virtual orbitals.
-    num_coeffs = data["Nindbasis"]
+    # get number of basis & molecular orbitals (MO)
+    # Note: MWFN includes virtual orbitals, so num_mo equals number independent basis functions
+    num_basis = data["Nindbasis"]
     if data["Wfntype"] in [0, 2, 3]:
-        # restricted wave function
+        # restricted wavefunction
         num_mo = data["Nindbasis"]
     elif data["Wfntype"] in [1, 4]:
         # unrestricted wavefunction
         num_mo = 2 * data["Nindbasis"]
 
-    mo_numbers = np.empty(num_mo, int)
-    mo_type = np.empty(num_mo, int)
-    mo_occs = np.empty(num_mo, float)
-    mo_sym = np.empty(num_mo, str)
-    mo_energies = np.empty(num_mo, float)
-    mo_coeffs = np.empty([num_coeffs, num_mo], float)
+    data.update(_load_helper_mo(lit, num_basis, num_mo))
 
-    for mo in range(num_mo):
-        mo_numbers[mo], mo_occs[mo], mo_energies[mo], mo_coeffs[:, mo], \
-            mo_type[mo], mo_sym[mo] = _load_helper_mo(lit, num_coeffs)
-
-    # TODO add density matrix and overlap
+    # TODO: add density matrix and overlap
 
     return {'title': data["title"], 'energy': data["E_tot"], 'wfntype': data["Wfntype"],
             'nelec_a': data["Naelec"], 'nelec_b': data["Nbelec"], 'charge': data["Charge"],
@@ -252,8 +255,8 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
             'shell_centers': data["shell_centers"], 'shell_types': data["shell_types"],
             'prim_per_shell': data["shell_contraction_degrees"], 'exponents': data["exponents"],
             'coeffs': data["coeffs"],
-            'mo_numbers': mo_numbers, 'mo_occs': mo_occs, 'mo_energies': mo_energies,
-            'mo_coeffs': mo_coeffs, 'mo_type': mo_type, 'mo_sym': mo_sym}
+            'mo_numbers': data["mo_numbers"], 'mo_occs': data["mo_occs"], 'mo_energies': data["mo_energies"],
+            'mo_coeffs': data["mo_coeffs"], 'mo_type': data["mo_type"], 'mo_sym': data["mo_sym"]}
 
 
 def _build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
