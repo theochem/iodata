@@ -79,22 +79,21 @@ def _load_helper_opener(lit: LineIterator) -> dict:
     return data
 
 
-def _load_helper_basis(lit: LineIterator) -> Tuple[int, int, int, int, int]:
+def _load_helper_basis(lit: LineIterator) -> dict:
     """Read initial variables."""
     # Nprims must be last or else it gets read in with Nprimshell
-    basis_keywords = ["Nbasis", "Nindbasis", "Nshell", "Nprimshell", "Nprims", ]
-    max_count = len(basis_keywords)
+    keys = ["Nbasis", "Nindbasis", "Nshell", "Nprimshell", "Nprims"]
     count = 0
-    d = {}
+    data = {}
     next(lit)
-    while count < max_count:
+    while count < len(keys):
         line = next(lit)
-        for name in basis_keywords:
+        for name in keys:
             if name in line:
-                d[name] = int(line.split('=')[1].strip())
+                data[name] = int(line.split('=')[1].strip())
                 count += 1
                 break
-    return d['Nbasis'], d['Nindbasis'], d['Nprims'], d['Nshell'], d['Nprimshell']
+    return data
 
 
 def _load_helper_atoms(lit: LineIterator, natom: int) -> dict:
@@ -118,21 +117,22 @@ def _load_helper_atoms(lit: LineIterator, natom: int) -> dict:
     return data
 
 
-def _load_helper_shells(lit: LineIterator, nshell: int, starts: list) \
-        -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
     """Read one section of MO information."""
+    keys = ["Shell types", "Shell centers", "Shell contraction"]
+    data = {}
     line = next(lit)
-    while starts[0] not in line and line is not None:
+    while keys[0] not in line and line is not None:
         line = next(lit)
-    assert line.startswith('$' + starts[0])
-    shell_types = _load_helper_section(lit, nshell, ' ', 0, int)
+    assert line.startswith('$' + keys[0])
+    data["shell_types"] = _load_helper_section(lit, nshell, ' ', 0, int)
     line = next(lit)
-    assert line.startswith('$' + starts[1])
-    centers = _load_helper_section(lit, nshell, ' ', 0, int)
+    assert line.startswith('$' + keys[1])
+    data["shell_centers"] = _load_helper_section(lit, nshell, ' ', 0, int)
     line = next(lit)
-    assert line.startswith('$' + starts[2])
-    degrees = _load_helper_section(lit, nshell, ' ', 0, int)
-    return shell_types, centers, degrees
+    assert line.startswith('$' + keys[2])
+    data["shell_contraction_degrees"] = _load_helper_section(lit, nshell, ' ', 0, int)
+    return data
 
 
 def _load_helper_prims(lit: LineIterator, nprimshell: int) -> np.ndarray:
@@ -203,27 +203,30 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # load atnums, atcorenums, & atcoords (in atomic units)
     data.update(_load_helper_atoms(lit, data["Ncenter"]))
 
-    nbasis, nindbasis, nprim, nshell, nprimshell = _load_helper_basis(lit)
-    keywords = ["Shell types", "Shell centers", "Shell contraction"]
-    shell_types, shell_centers, prim_per_shell = _load_helper_shells(lit, nshell, keywords)
-    # HORTON indices start at 0 because Pythons do.
-    shell_centers -= 1
+    # load Nbasis, Nindbasis, Nprims, Nshell, & Nprimshell
+    data.update(_load_helper_basis(lit))
+
+    # load shell_types, shell_centers, & shell_contraction_degrees
+    data.update(_load_helper_shells(lit, data["Nshell"]))
+    # IOData indices start at 0, so the centers are shifted
+    data["shell_centers"] -= 1
+
     assert data["Wfntype"] < 5
     assert data["Ncenter"] > 0
     assert min(data["atnums"]) >= 0
-    assert len(shell_types) == nshell
-    assert len(shell_centers) == nshell
-    assert len(prim_per_shell) == nshell
-    exponent = _load_helper_prims(lit, nprimshell)
-    coeffs = _load_helper_prims(lit, nprimshell)
+    assert len(data["shell_types"]) == data["Nshell"]
+    assert len(data["shell_centers"]) == data["Nshell"]
+    assert len(data["shell_contraction_degrees"]) == data["Nshell"]
+    exponent = _load_helper_prims(lit, data["Nprimshell"])
+    coeffs = _load_helper_prims(lit, data["Nprimshell"])
     # number of MO's should equal number of independent basis functions. MWFN inc. virtual orbitals.
-    num_coeffs = nindbasis
+    num_coeffs = data["Nindbasis"]
     if data["Wfntype"] in [0, 2, 3]:
         # restricted wave function
-        num_mo = nindbasis
+        num_mo = data["Nindbasis"]
     elif data["Wfntype"] in [1, 4]:
         # unrestricted wavefunction
-        num_mo = 2 * nindbasis
+        num_mo = 2 * data["Nindbasis"]
 
     mo_numbers = np.empty(num_mo, int)
     mo_type = np.empty(num_mo, int)
@@ -241,10 +244,10 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     return {'title': data["title"], 'energy': data["E_tot"], 'wfntype': data["Wfntype"],
             'nelec_a': data["Naelec"], 'nelec_b': data["Nbelec"], 'charge': data["Charge"],
             'atnums': data["atnums"], 'atcoords': data["atcoords"], 'atcorenums': data["atcorenums"],
-            'nbasis': nbasis, 'nindbasis': nindbasis, 'nprims': nprim,
-            'nshells': nshell, 'nprimshells': nprimshell, 'full_virial_ratio': data["VT_ratio"],
-            'shell_centers': shell_centers, 'shell_types': shell_types,
-            'prim_per_shell': prim_per_shell, 'exponents': exponent, 'coeffs': coeffs,
+            'nbasis': data["Nbasis"], 'nindbasis': data["Nindbasis"], 'nprims': data["Nprims"],
+            'nshells': data["Nshell"], 'nprimshells': data["Nprimshell"], 'full_virial_ratio': data["VT_ratio"],
+            'shell_centers': data["shell_centers"], 'shell_types': data["shell_types"],
+            'prim_per_shell': data["shell_contraction_degrees"], 'exponents': exponent, 'coeffs': coeffs,
             'mo_numbers': mo_numbers, 'mo_occs': mo_occs, 'mo_energies': mo_energies,
             'mo_coeffs': mo_coeffs, 'mo_type': mo_type, 'mo_sym': mo_sym}
 
