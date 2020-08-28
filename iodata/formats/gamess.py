@@ -31,66 +31,66 @@ __all__ = []
 PATTERNS = ['*.gamessout']
 
 
-def _read_data(gms: LineIterator) -> tuple:
+def _read_data(lit: LineIterator) -> tuple:
     """Extract ``title``, ``symmetry`` and ``symbols`` from the punch file."""
-    title = next(gms).strip()
-    symmetry = next(gms).split()[0]
+    title = next(lit).strip()
+    symmetry = next(lit).split()[0]
     if symmetry != "C1":
         raise NotImplementedError("Only C1 symmetry is supported.")
     symbols = []
     line = True
     while line != " $END      \n":
-        line = next(gms)
+        line = next(lit)
         if line[0] != " ":
             symbols.append(line.split()[0])
     return title, symmetry, symbols
 
 
-def _read_coordinates(gms: LineIterator, res: dict) -> tuple:
+def _read_coordinates(lit: LineIterator, result: dict) -> tuple:
     """Extract ``numbers`` and ``coordinates`` from the punch file."""
     for i in range(2):
-        next(gms)
-    N = len(res["symbols"])
+        next(lit)
+    natom = len(result["symbols"])
     # if the data are already read before, just overwrite them
-    numbers = res.get("atnums")
+    numbers = result.get("atnums")
     if numbers is None:
-        numbers = np.zeros(N, int)
-        res["atnums"] = numbers
+        numbers = np.zeros(natom, int)
+        result["atnums"] = np.zeros(natom, int)
 
-    coordinates = res.get("atcoords")
+    coordinates = result.get("atcoords")
     if coordinates is None:
-        coordinates = np.zeros((N, 3), float)
-    for i in range(N):
-        words = next(gms).split()
+        coordinates = np.zeros((natom, 3), float)
+    for i in range(natom):
+        words = next(lit).split()
         numbers[i] = int(float(words[1]))
         coordinates[i] = np.array([float(elem) for elem in words[2:5]]) * angstrom
     return numbers, coordinates
 
 
-def _read_energy(gms: LineIterator, res: dict) -> tuple:
+def _read_energy(lit: LineIterator, result: dict) -> tuple:
     """Extract ``energy`` and ``gradient`` from the punch file."""
-    energy = float(next(gms).split()[1])
-    N = len(res["symbols"])
+    energy = float(next(lit).split()[1])
+    natom = len(result["symbols"])
     # if the data are already read before, just overwrite them
-    gradient = res.get("gradient")
+    gradient = result.get("gradient")
     if gradient is None:
-        gradient = np.zeros((N, 3), float)
-    for i in range(N):
-        words = next(gms).split()
+        gradient = np.zeros((natom, 3), float)
+    for i in range(natom):
+        words = next(lit).split()
         gradient[i] = words[2:5]
     return energy, gradient
 
 
-def _read_hessian(gms: LineIterator, res: dict) -> np.ndarray:
+def _read_hessian(lit: LineIterator, result: dict) -> np.ndarray:
     """Extract ``hessian`` from the punch file."""
-    assert "hessian" not in res
-    line = next(gms)
-    N = len(res["symbols"])
-    hessian = np.zeros((3 * N, 3 * N), float)
+    assert "hessian" not in result
+    next(lit)
+    natom = len(result["symbols"])
+    hessian = np.zeros((3 * natom, 3 * natom), float)
     tmp = hessian.ravel()
     counter = 0
     while True:
-        line = next(gms)
+        line = next(lit)
         if line == " $END\n":
             break
         line = line[5:-1]
@@ -100,13 +100,13 @@ def _read_hessian(gms: LineIterator, res: dict) -> np.ndarray:
     return hessian
 
 
-def _read_masses(gms: LineIterator, res: dict) -> np.ndarray:
+def _read_masses(lit: LineIterator, result: dict) -> np.ndarray:
     """Extract ``masses`` from the punch file."""
-    N = len(res["symbols"])
-    masses = np.zeros(N, float)
+    natom = len(result["symbols"])
+    masses = np.zeros(natom, float)
     counter = 0
-    while counter < N:
-        words = next(gms).split()
+    while counter < natom:
+        words = next(lit).split()
         for word in words:
             masses[counter] = float(word)
             counter += 1
@@ -117,25 +117,25 @@ def _read_masses(gms: LineIterator, res: dict) -> np.ndarray:
                              'atnums', 'atcoords'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    res = dict()
+    result = dict()
     while True:
         try:
             line = next(lit)
         except StopIteration:
             break
         if line == "$DATA\n":
-            res["title"], res["g_rot"], res["symbols"] = _read_data(lit)
+            result["title"], result["g_rot"], result["symbols"] = _read_data(lit)
         elif line == " COORDINATES OF SYMMETRY UNIQUE ATOMS (ANGS)\n":
-            res["atnums"], res["atcoords"] = _read_coordinates(lit, res)
+            result["atnums"], result["atcoords"] = _read_coordinates(lit, result)
         elif line == " $GRAD\n":
-            res["energy"], res["atgradient"] = _read_energy(lit, res)
+            result["energy"], result["atgradient"] = _read_energy(lit, result)
         elif line == "CAUTION, APPROXIMATE HESSIAN!\n":
             # prevent the approximate Hessian from being parsed
             while line != " $END\n":
                 line = next(lit)
         elif line == " $HESS\n":
-            res["athessian"] = _read_hessian(lit, res)
+            result["athessian"] = _read_hessian(lit, result)
         elif line == "ATOMIC MASSES\n":
-            res["atmasses"] = _read_masses(lit, res)
-    res.pop("symbols")
-    return res
+            result["atmasses"] = _read_masses(lit, result)
+    result.pop("symbols")
+    return result
