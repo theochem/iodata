@@ -63,9 +63,10 @@ CONVENTIONS = {
 }
 
 
-def _load_helper_opener(lit: LineIterator, keys: list) -> Tuple[int, float, float,
+def _load_helper_opener(lit: LineIterator) -> Tuple[int, float, float,
                                                                 float, float, float, int]:
     """Read initial variables."""
+    keys = ["Wfntype", "Charge", "Naelec", "Nbelec", "E_tot", "VT_ratio", "Ncenter"]
     max_count = len(keys)
     count = 0
     d = {}
@@ -195,9 +196,8 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # read sections of mwfn file
     # This assumes title is on first line which seems to be the standard
     title = next(lit).strip()
-    opener_keywords = ["Wfntype", "Charge", "Naelec", "Nbelec", "E_tot", "VT_ratio", "Ncenter"]
     wfntype, charge, nelec_a, nelec_b, \
-        energy, vt_ratio, num_atoms = _load_helper_opener(lit, opener_keywords)
+        energy, vt_ratio, num_atoms = _load_helper_opener(lit)
     # coordinates are in Angstrom in MWFN
     atnums, atcorenums, atcoords = _load_helper_atoms(lit, num_atoms)
     nbasis, nindbasis, nprim, nshell, nprimshell = _load_helper_basis(lit)
