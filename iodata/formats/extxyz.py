@@ -27,6 +27,7 @@ handle an XYZ with different molecules, e.g. a molecular database.
 
 """
 
+from distutils.util import strtobool
 import shlex
 from typing import Iterator
 
@@ -45,9 +46,6 @@ __all__ = []
 PATTERNS = ['*.extxyz']
 
 
-BOOL_MAP = {"T": True, "F": False, "True": True, "False": False}
-
-
 def _convert_title_value(value: str):
     """Search for the correct dtype and convert the string."""
     list_of_splits = value.split()
@@ -60,9 +58,9 @@ def _convert_title_value(value: str):
             try:
                 converted_value = float(value)
             except ValueError:
-                if value in BOOL_MAP.keys():
-                    converted_value = BOOL_MAP[value]
-                else:
+                try:
+                    converted_value = strtobool(value)
+                except ValueError:
                     converted_value = value
     else:
         # Do the same but return it as a numpy array
@@ -73,7 +71,7 @@ def _convert_title_value(value: str):
                 converted_value = np.array(list_of_splits, dtype=np.float)
             except ValueError:
                 try:
-                    converted_value = np.array([BOOL_MAP[bool_key] for bool_key in list_of_splits],
+                    converted_value = np.array([strtobool(split) for split in list_of_splits],
                                                dtype=np.bool)
                 except KeyError:
                     converted_value = np.array(list_of_splits, dtype=np.str)
@@ -87,7 +85,7 @@ def _parse_properties(properties: str):
     dtype_map = {"S": (np.dtype('U25'), str, "{:10s}".format),
                  "R": (float, float, "{:15.10f}".format),
                  "I": (int, int, "{:10d}".format),
-                 "L": (bool, lambda word: BOOL_MAP[word], lambda boolean: "T" if boolean else "F")}
+                 "L": (bool, strtobool, lambda boolean: "T" if boolean else "F")}
     # Some predefined iodata attributes which can be mapped
     # pos is assumed to be in angstrom, masses in amu (ase convention)
     # No unit convertion takes place for the other attributes
