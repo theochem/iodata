@@ -97,26 +97,25 @@ def _load_helper_basis(lit: LineIterator) -> Tuple[int, int, int, int, int]:
     return d['Nbasis'], d['Nindbasis'], d['Nprims'], d['Nshell'], d['Nprimshell']
 
 
-def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray,
-                                                                   np.ndarray]:
+def _load_helper_atoms(lit: LineIterator, natom: int) -> dict:
     """Read the coordinates of the atoms."""
-    atomic_numbers = np.empty(num_atoms, int)
-    atcorenums = np.empty(num_atoms, float)
-    atcoords = np.empty((num_atoms, 3), float)
+    data = {"atnums": np.empty(natom, int), "atcorenums": np.empty(natom, float),
+            "atcoords": np.empty((natom, 3), float)}
+
+    # skip lines until "$Centers" section is reached
     line = next(lit)
     while '$Centers' not in line and line is not None:
         line = next(lit)
 
-    for atom in range(num_atoms):
-        line = next(lit)
-        words = line.split()
-        atomic_numbers[atom] = int(words[2].strip())
-        atcorenums[atom] = float(words[3].strip())
-        # extract atomic coordinates
-        coords = line.split()
-        atcoords[atom, :] = coords[4:7]
-        # return but convert angstroms to amu
-    return atomic_numbers, atcorenums, atcoords * angstrom
+    for atom in range(natom):
+        words = next(lit).split()
+        data["atnums"][atom] = int(words[2].strip())
+        data["atcorenums"][atom] = float(words[3].strip())
+        data["atcoords"][atom, :] = words[4:7]
+    # coordinates are in angstrom in MWFN, so they are converted to atomic units
+    data["atcoords"] *= angstrom
+
+    return data
 
 
 def _load_helper_shells(lit: LineIterator, nshell: int, starts: list) \
@@ -201,8 +200,9 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # load Wfntype, Charge, Naelec, Nbelec, E_tot, VT_ratio, & Ncenter
     data.update(_load_helper_opener(lit))
 
-    # coordinates are in Angstrom in MWFN
-    atnums, atcorenums, atcoords = _load_helper_atoms(lit, data["Ncenter"])
+    # load atnums, atcorenums, & atcoords (in atomic units)
+    data.update(_load_helper_atoms(lit, data["Ncenter"]))
+
     nbasis, nindbasis, nprim, nshell, nprimshell = _load_helper_basis(lit)
     keywords = ["Shell types", "Shell centers", "Shell contraction"]
     shell_types, shell_centers, prim_per_shell = _load_helper_shells(lit, nshell, keywords)
@@ -210,7 +210,7 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     shell_centers -= 1
     assert data["Wfntype"] < 5
     assert data["Ncenter"] > 0
-    assert min(atnums) >= 0
+    assert min(data["atnums"]) >= 0
     assert len(shell_types) == nshell
     assert len(shell_centers) == nshell
     assert len(prim_per_shell) == nshell
@@ -240,7 +240,7 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
 
     return {'title': data["title"], 'energy': data["E_tot"], 'wfntype': data["Wfntype"],
             'nelec_a': data["Naelec"], 'nelec_b': data["Nbelec"], 'charge': data["Charge"],
-            'atnums': atnums, 'atcoords': atcoords, 'atcorenums': atcorenums,
+            'atnums': data["atnums"], 'atcoords': data["atcoords"], 'atcorenums': data["atcorenums"],
             'nbasis': nbasis, 'nindbasis': nindbasis, 'nprims': nprim,
             'nshells': nshell, 'nprimshells': nprimshell, 'full_virial_ratio': data["VT_ratio"],
             'shell_centers': shell_centers, 'shell_types': shell_types,
