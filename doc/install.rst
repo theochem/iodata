@@ -33,7 +33,9 @@ To install IOData using conda package management system, install
 
 .. code-block:: bash
 
-    # Activate your main conda environment if needed.
+    # Activate your main conda environment if it is not loaded in your .bashrc.
+    # E.g. run the following if you have miniconda installed in e.g. ~/miniconda3
+    source ~/miniconda3/bin/activate
 
     # Create a horton3 conda environment. (optional, recommended)
     conda create -n horton3
@@ -43,21 +45,56 @@ To install IOData using conda package management system, install
     conda install -c theochem iodata
 
     # For developers:
+    # (Only do this if you understand the implications.)
     # Install the testing release. (beta)
     conda install -c theochem/label/test iodata
     # Install the development release. (alpha)
     conda install -c theochem/label/dev iodata
 
-To install IOData with pip, you may want to create a `virtual environment`_,
-and then:
 
-.. code-block:: bash
+There are two common methods to install IOData with pip:
 
-    # Install the stable release.
-    pip install qc-iodata
+1. By creating and installing in a `virtual environment`_:
 
-    # For developers, install a pre-release (alpha or beta)
-    pip install --pre qc-iodata
+   .. code-block:: bash
+
+       # Create a virtual environment in ~/horton3
+       # Feel free to change the path.
+       python3 -m venv ~/horton3
+
+       # Activate the virtual environemnt.
+       source ~/horton3/bin/activate
+
+       # Install the stable release in the venv horton3.
+       pip3 install qc-iodata
+
+       # For developers, install a pre-release (alpha or beta).
+       # (Only do this if you understand the implications.)
+       pip3 install --pre qc-iodata
+
+2. By installing into the user ``${HOME}`` directory, without creating a
+   virtual environment.
+
+   .. code-block:: bash
+
+       # Install the sable release in your home directory.
+       pip3 install qc-iodata --user
+
+       # For developers, install a pre-release (alpha or beta).
+       # (Only do this if you understand the implications.)
+       pip3 install --pre qc-iodata --user
+
+   This is by far the simplest method, ideal to get started, but you have only
+   one home directory. If the installation breaks due to some experimentation,
+   it is harder to make a clean start in comparison to the other options.
+
+In case the ``pip3`` executable is not found, it may be installed in a directory
+which is not included in your ${PATH} variable. This seems to be a common issue
+on macOS. A simple workaround is to replace ``pip3`` by ``python3 -m pip``.
+
+On up-to-date python installs, you may also use ``pip`` instead of ``pip3`` or
+``python`` instead of ``python3``. The ``3`` is only used to avoid potential
+confusion with Python 2.
 
 
 Testing
