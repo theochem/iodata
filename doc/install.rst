@@ -100,17 +100,30 @@ confusion with Python 2.
 Testing
 -------
 
-The tests are automatically run when building with conda, but you may try
-them again on your own machine after installation:
+The tests are automatically run when we build packages with conda, but you may
+try them again on your own machine after installation:
 
-.. code-block:: bash
+For Conda users:
 
-    # Install pytest in conda ...
-    conda install pytest
-    # ... or with pip.
-    pip install pytest
-    # Then run the tests.
-    pytest --pyargs iodata
+  .. code-block:: bash
+
+      # Install pytest in your conda env.
+      conda install pytest pytest-xdist
+      # Then run the tests.
+      pytest --pyargs iodata
+
+
+For pip users:
+
+  .. code-block:: bash
+
+      # Install pytest in your conda env ...
+      pip install pytest pytest-xdist
+      deactivate && source ~/horton3/activate
+      # .. or in your home directory
+      pip install pytest pytest-xdist --user
+      # Then run the tests.
+      pytest --pyargs iodata
 
 
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html
