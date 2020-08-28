@@ -166,10 +166,9 @@ def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
     section = []
     while len(section) < nprim:
         line = next(lit)
-        assert line.startswith(start)
-        words = line.split()
-        section.extend(words[skip:])
-    assert len(section) == nprim
+        if not line.startswith(start):
+            lit.error(f"Expected line to start with {start}! Got line={line}")
+        section.extend(line.split()[skip:])
     return np.array(section).astype(dtype)
 
 
