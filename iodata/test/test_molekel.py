@@ -22,18 +22,13 @@
 import os
 
 from numpy.testing import assert_equal, assert_allclose
-import pytest
 
-from .common import check_orthonormal, compare_mols, compute_mulliken_charges
+from .common import (check_orthonormal, compare_mols, compute_mulliken_charges,
+                     load_one_warning)
 from ..basis import convert_conventions
 from ..api import load_one, dump_one
 from ..overlap import compute_overlap
-from ..utils import angstrom, FileFormatWarning
-
-try:
-    from importlib_resources import path
-except ImportError:
-    from importlib.resources import path
+from ..utils import angstrom
 
 
 def compare_mols_diff_formats(mol1, mol2):
@@ -56,19 +51,21 @@ def compare_mols_diff_formats(mol1, mol2):
     assert_allclose(charges1, charges2, rtol=0.0, atol=1.0e-6)
 
 
-def check_load_dump_consistency(fn, tmpdir):
+def check_load_dump_consistency(fn: str, tmpdir: str, match: str = None):
     """Check if data is preserved after dumping and loading a Molekel file.
 
     Parameters
     ----------
-    fn : str
+    fn
         The Molekel filename to load
-    tmpdir : str
+    tmpdir
         The temporary directory to dump and load the file.
+    match
+        When given, loading the file is expected to raise a warning whose
+        message string contains match.
 
     """
-    with path('iodata.test.data', fn) as file_name:
-        mol1 = load_one(str(file_name))
+    mol1 = load_one_warning(fn, match=match)
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt='molekel')
     mol2 = load_one(fn_tmp, fmt='molekel')
@@ -82,28 +79,19 @@ def check_load_dump_consistency(fn, tmpdir):
 
 
 def test_load_dump_consistency_h2(tmpdir):
-    with pytest.warns(FileFormatWarning) as record:
-        check_load_dump_consistency('h2_sto3g.mkl', tmpdir)
-    assert len(record) == 1
-    assert "ORCA" in record[0].message.args[0]
+    check_load_dump_consistency('h2_sto3g.mkl', tmpdir, match="ORCA")
 
 
 def test_load_dump_consistency_ethanol(tmpdir):
-    with pytest.warns(FileFormatWarning) as record:
-        check_load_dump_consistency('ethanol.mkl', tmpdir)
-    assert len(record) == 1
-    assert "ORCA" in record[0].message.args[0]
+    check_load_dump_consistency('ethanol.mkl', tmpdir, match="ORCA")
 
 
 def test_load_dump_consistency_li2(tmpdir):
-    with pytest.warns(FileFormatWarning) as record:
-        check_load_dump_consistency('li2.mkl', tmpdir)
-    assert len(record) == 1
-    assert "ORCA" in record[0].message.args[0]
+    check_load_dump_consistency('li2.mkl', tmpdir, match="ORCA")
 
 
 def test_load_molden_dump_molekel_li2(tmpdir):
-    check_load_dump_consistency('li2.molden.input', tmpdir)
+    check_load_dump_consistency('li2.molden.input', tmpdir, match="ORCA")
 
 
 def test_load_fchk_dump_molekel_li2(tmpdir):
@@ -111,11 +99,7 @@ def test_load_fchk_dump_molekel_li2(tmpdir):
 
 
 def test_load_mkl_ethanol():
-    with path('iodata.test.data', 'ethanol.mkl') as fn_mkl:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_mkl))
-    assert len(record) == 1
-    assert "ORCA" in record[0].message.args[0]
+    mol = load_one_warning("ethanol.mkl", match="ORCA")
 
     # Direct checks with mkl file
     assert_equal(mol.atnums.shape, (9,))
@@ -152,11 +136,7 @@ def test_load_mkl_ethanol():
 
 
 def test_load_mkl_li2():
-    with path('iodata.test.data', 'li2.mkl') as fn_mkl:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_mkl))
-    assert len(record) == 1
-    assert "ORCA" in record[0].message.args[0]
+    mol = load_one_warning("li2.mkl", match="ORCA")
     assert_equal(mol.atcharges['mulliken'].shape, (2,))
     assert_allclose(mol.atcharges['mulliken'], [0.5, 0.5])
     # check mo normalization
@@ -166,11 +146,7 @@ def test_load_mkl_li2():
 
 
 def test_load_mkl_h2():
-    with path('iodata.test.data', 'h2_sto3g.mkl') as fn_mkl:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_mkl))
-    assert len(record) == 1
-    assert "ORCA" in record[0].message.args[0]
+    mol = load_one_warning("h2_sto3g.mkl", match="ORCA")
     assert_equal(mol.atcharges['mulliken'].shape, (2,))
     assert_allclose(mol.atcharges['mulliken'], [0, 0])
     # check mo normalization
