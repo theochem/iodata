@@ -247,16 +247,7 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
 
     # TODO: add density matrix and overlap
 
-    return {'title': data["title"], 'energy': data["E_tot"], 'wfntype': data["Wfntype"],
-            'nelec_a': data["Naelec"], 'nelec_b': data["Nbelec"], 'charge': data["Charge"],
-            'atnums': data["atnums"], 'atcoords': data["atcoords"], 'atcorenums': data["atcorenums"],
-            'nbasis': data["Nbasis"], 'nindbasis': data["Nindbasis"], 'nprims': data["Nprims"],
-            'nshells': data["Nshell"], 'nprimshells': data["Nprimshell"], 'full_virial_ratio': data["VT_ratio"],
-            'shell_centers': data["shell_centers"], 'shell_types': data["shell_types"],
-            'prim_per_shell': data["shell_contraction_degrees"], 'exponents': data["exponents"],
-            'coeffs': data["coeffs"],
-            'mo_numbers': data["mo_numbers"], 'mo_occs': data["mo_occs"], 'mo_energies': data["mo_energies"],
-            'mo_coeffs': data["mo_coeffs"], 'mo_type': data["mo_type"], 'mo_sym': data["mo_sym"]}
+    return data
 
 
 def _build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
@@ -317,17 +308,18 @@ def load_one(lit: LineIterator) -> dict:
     # stores some "extra" stuff.
     extra = {
         'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'], 'mo_numbers': inp['mo_numbers'],
-        'wfntype': inp['wfntype'], 'nelec_a': inp['nelec_a'], 'nelec_b': inp['nelec_b'],
-        'nbasis': inp['nbasis'], 'nindbasis': inp['nindbasis'], 'nprims': inp['nprims'],
-        'nshells': inp['nshells'], 'nprimshells': inp['nprimshells'],
+        'wfntype': inp['Wfntype'], 'nelec_a': inp['Naelec'], 'nelec_b': inp['Nbelec'],
+        'nbasis': inp['Nbasis'], 'nindbasis': inp['Nindbasis'], 'nprims': inp['Nprims'],
+        'nshells': inp['Nshell'], 'nprimshells': inp['Nprimshell'],
         'shell_types': inp['shell_types'], 'shell_centers': inp['shell_centers'],
-        'prim_per_shell': inp['prim_per_shell'], 'full_virial_ratio': inp['full_virial_ratio']}
+        'shell_contraction_degrees': inp['shell_contraction_degrees'],
+        'full_virial_ratio': inp['VT_ratio']}
 
     # Unlike WFN, MWFN does include orbital expansion coefficients.
     obasis = _build_obasis(inp['shell_centers'],
                            inp['shell_types'],
                            inp['exponents'],
-                           inp['prim_per_shell'],
+                           inp['shell_contraction_degrees'],
                            inp['coeffs'],
                            )
     # wfntype(integer, scalar): Wavefunction type. Possible values:
@@ -336,7 +328,7 @@ def load_one(lit: LineIterator) -> dict:
     #     2: Restricted open - shell single - determinant wavefunction(e.g.ROHF, ROKS)
     #     3: Restricted multiconfiguration wavefunction(e.g.RMP2, RCCSD)
     #     4: Unrestricted multiconfiguration wavefunction(e.g.UMP2, UCCSD)
-    wfntype = inp['wfntype']
+    wfntype = inp['Wfntype']
     if wfntype in [0, 2, 3]:
         restrictions = "restricted"
     elif wfntype in [1, 4]:
@@ -352,8 +344,8 @@ def load_one(lit: LineIterator) -> dict:
 
     # Build the molecular orbitals
     mo = MolecularOrbitals(restrictions,
-                           inp['nelec_a'],
-                           inp['nelec_b'],
+                           inp['Naelec'],
+                           inp['Nbelec'],
                            inp['mo_occs'],
                            inp['mo_coeffs'],
                            inp['mo_energies'],
@@ -367,6 +359,6 @@ def load_one(lit: LineIterator) -> dict:
         'atcorenums': inp['atcorenums'],
         'obasis': obasis,
         'mo': mo,
-        'energy': inp['energy'],
+        'energy': inp['E_tot'],
         'extra': extra,
     }
