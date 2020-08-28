@@ -141,20 +141,22 @@ def _load_helper_atoms(lit: LineIterator, natom: int) -> dict:
 
 
 def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
-    """Read one section of MO information."""
-    keys = ["Shell types", "Shell centers", "Shell contraction"]
-    data = {}
+    """Read shell types, centers, and contraction degrees."""
+    sections = ["$Shell types", "$Shell centers", "$Shell contraction"]
+    var_name = ["shell_types", "shell_centers", "shell_ncons"]
+
+    # read lines until '$Shell types' is reached
     line = next(lit)
-    while keys[0] not in line and line is not None:
+    while sections[0] not in line and line is not None:
         line = next(lit)
-    assert line.startswith('$' + keys[0])
-    data["shell_types"] = _load_helper_section(lit, nshell, ' ', 0, int)
-    line = next(lit)
-    assert line.startswith('$' + keys[1])
-    data["shell_centers"] = _load_helper_section(lit, nshell, ' ', 0, int)
-    line = next(lit)
-    assert line.startswith('$' + keys[2])
-    data["shell_ncons"] = _load_helper_section(lit, nshell, ' ', 0, int)
+
+    data = {}
+    for section, name in zip(sections, var_name):
+        if not line.startswith(section):
+            lit.error(f"Expected line to start with {section}, but got line={line}.")
+        data[name] = _load_helper_section(lit, nshell, ' ', 0, int)
+        line = next(lit)
+    lit.back(line)
     return data
 
 
