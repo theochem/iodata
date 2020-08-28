@@ -154,7 +154,7 @@ def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
     data["shell_centers"] = _load_helper_section(lit, nshell, ' ', 0, int)
     line = next(lit)
     assert line.startswith('$' + keys[2])
-    data["shell_contraction_degrees"] = _load_helper_section(lit, nshell, ' ', 0, int)
+    data["shell_ncons"] = _load_helper_section(lit, nshell, ' ', 0, int)
     return data
 
 
@@ -258,54 +258,6 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     return data
 
 
-def _build_obasis(shell_map: np.ndarray, shell_types: np.ndarray,
-                  exponents: np.ndarray, prim_per_shell: np.ndarray,
-                  coeffs: np.ndarray,
-                  ) -> Tuple[MolecularBasis]:
-    """Construct a basis set using the arrays read from a MWFN file.
-
-    Parameters
-    -------------
-    shell_map:  np.ndarray (integer)
-        Index of what atom the shell is centered on. The mwfn file refers to this section
-        as `Shell centers`. Mwfn indices start at 1, this has been modified and starts
-        at 0 here. For water (O, H, H) with 6-31G, this would be an array like
-        [0, 0, 0, 0, 0, 1, 1, 2, 2]. , `O` in 6-31G has 5 shells and`H` has two shells.
-    shell_types: np.ndarray (integer)
-        Angular momentum of the shell. Indices start at 0 for 's' orbital, 1 for 'p' etc.
-        For 6-31G for a heavy atom this would be [0, 0, 1, 0, 1] corresponding
-        to [1s, 2s, 2p, 2s, 2p]
-    exponents: np.ndarray (float)
-        Gaussian function decay exponents for the primitives in the basis set.
-    prim_per_shell: np.ndarray (integer)
-        Array denoting the number of primitives per shell. If basis set is 6-31G this will be
-        [6, 3, 3, 1, 1] if the atom is a heavy atom. This corresponds to
-        [1s, 2s, 2p, 2s, 2p]. If additional atoms are present, the array is extended.
-    coeffs: np.ndarray (float)
-        Array of same length as `exponents` containing orbital expansion coefficients.
-    """
-    shells = []
-    counter = 0
-    # First loop over all shells
-    for i, n in enumerate(prim_per_shell):
-        shells.append(Shell(
-            shell_map[i],
-            [abs(shell_types[i])],
-            ['p' if shell_types[i] < 0 else 'c'],
-            exponents[counter:counter + n],
-            coeffs[counter:counter + n][:, np.newaxis]
-        ))
-        counter += n
-    del shell_map
-    del shell_types
-    del prim_per_shell
-    del exponents
-    del coeffs
-
-    obasis = MolecularBasis(tuple(shells), CONVENTIONS, 'L2')
-    return obasis
-
-
 @document_load_one("MWFN", ['atcoords', 'atnums', 'atcorenums', 'energy',
                             'mo', 'obasis', 'extra', 'title'])
 def load_one(lit: LineIterator) -> dict:
@@ -320,16 +272,24 @@ def load_one(lit: LineIterator) -> dict:
         'nbasis': inp['Nbasis'], 'nindbasis': inp['Nindbasis'], 'nprims': inp['Nprims'],
         'nshells': inp['Nshell'], 'nprimshells': inp['Nprimshell'],
         'shell_types': inp['shell_types'], 'shell_centers': inp['shell_centers'],
-        'shell_contraction_degrees': inp['shell_contraction_degrees'],
+        'shell_ncons': inp['shell_ncons'],
         'full_virial_ratio': inp['VT_ratio']}
 
+    # Build MolecularBasis instance
     # Unlike WFN, MWFN does include orbital expansion coefficients.
-    obasis = _build_obasis(inp['shell_centers'],
-                           inp['shell_types'],
-                           inp['exponents'],
-                           inp['shell_contraction_degrees'],
-                           inp['coeffs'],
-                           )
+    shells = []
+    counter = 0
+    for center, stype, ncon in zip(inp['shell_centers'], inp['shell_types'], inp['shell_ncons']):
+        shells.append(Shell(
+            center,
+            [abs(stype)],
+            ['p' if stype < 0 else 'c'],
+            inp['exponents'][counter:counter + ncon],
+            inp['coeffs'][counter:counter + ncon][:, np.newaxis]
+        ))
+        counter += ncon
+    obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
+
     # MFWN provides number of alpha and beta electrons, this is a double check
     # mo_type (integer, scalar): Orbital type
     #     0: Alpha + Beta (i.e. spatial orbital)

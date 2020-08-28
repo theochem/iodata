@@ -66,7 +66,7 @@ def test_load_mwfn_ch3_rohf_g03():
     assert_equal(mol.energy, -3.90732095E+01)
     assert_allclose(mol.extra['shell_types'], np.array([0, 0, 1, 0, 0, 0]))
     assert_allclose(mol.extra['shell_centers'], np.array([1, 1, 1, 2, 3, 4]) - 1)
-    assert_allclose(mol.extra['shell_contraction_degrees'], np.array([3, 3, 3, 3, 3, 3]))
+    assert_allclose(mol.extra['shell_ncons'], np.array([3, 3, 3, 3, 3, 3]))
     exponents1 = np.array([7.16168373E+01, 1.30450963E+01, 3.53051216E+00])
     exponents2 = np.array([2.94124936E+00, 6.83483096E-01, 2.22289916E-01])
     exponents3 = np.array([2.94124936E+00, 6.83483096E-01, 2.22289916E-01])
