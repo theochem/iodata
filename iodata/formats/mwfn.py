@@ -217,8 +217,11 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     assert len(data["shell_types"]) == data["Nshell"]
     assert len(data["shell_centers"]) == data["Nshell"]
     assert len(data["shell_contraction_degrees"]) == data["Nshell"]
-    exponent = _load_helper_prims(lit, data["Nprimshell"])
-    coeffs = _load_helper_prims(lit, data["Nprimshell"])
+
+    # load primitive exponents & coefficients
+    data["exponents"] = _load_helper_prims(lit, data["Nprimshell"])
+    data["coeffs"] = _load_helper_prims(lit, data["Nprimshell"])
+
     # number of MO's should equal number of independent basis functions. MWFN inc. virtual orbitals.
     num_coeffs = data["Nindbasis"]
     if data["Wfntype"] in [0, 2, 3]:
@@ -247,7 +250,8 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
             'nbasis': data["Nbasis"], 'nindbasis': data["Nindbasis"], 'nprims': data["Nprims"],
             'nshells': data["Nshell"], 'nprimshells': data["Nprimshell"], 'full_virial_ratio': data["VT_ratio"],
             'shell_centers': data["shell_centers"], 'shell_types': data["shell_types"],
-            'prim_per_shell': data["shell_contraction_degrees"], 'exponents': exponent, 'coeffs': coeffs,
+            'prim_per_shell': data["shell_contraction_degrees"], 'exponents': data["exponents"],
+            'coeffs': data["coeffs"],
             'mo_numbers': mo_numbers, 'mo_occs': mo_occs, 'mo_energies': mo_energies,
             'mo_coeffs': mo_coeffs, 'mo_type': mo_type, 'mo_sym': mo_sym}
 
