@@ -76,6 +76,22 @@ def _load_helper_opener(lit: LineIterator) -> dict:
             if name in line:
                 data[name] = ftype(line.split('=')[1].strip())
                 count += 1
+
+    # Possible values of Wfntype (wavefunction type):
+    #     0: Restricted closed - shell single - determinant wavefunction(e.g.RHF, RKS)
+    #     1: Unrestricted open - shell single - determinant wavefunction(e.g.UHF, UKS)
+    #     2: Restricted open - shell single - determinant wavefunction(e.g.ROHF, ROKS)
+    #     3: Restricted multiconfiguration wavefunction(e.g.RMP2, RCCSD)
+    #     4: Unrestricted multiconfiguration wavefunction(e.g.UMP2, UCCSD)
+    if data["Wfntype"] in [0, 2, 3]:
+        # restricted wavefunction
+        data["mo_kind"] = "restricted"
+    elif data["Wfntype"] in [1, 4]:
+        # unrestricted wavefunction
+        data["mo_kind"] = "unrestricted"
+    else:
+        lit.error(f"Wavefunction type cannot be determined. Read Wfntype= {data['Wfntype']}")
+
     return data
 
 
@@ -222,7 +238,6 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # IOData indices start at 0, so the centers are shifted
     data["shell_centers"] -= 1
 
-    assert data["Wfntype"] < 5
     assert data["Ncenter"] > 0
     assert min(data["atnums"]) >= 0
     assert len(data["shell_types"]) == data["Nshell"]
@@ -236,13 +251,10 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # get number of basis & molecular orbitals (MO)
     # Note: MWFN includes virtual orbitals, so num_mo equals number independent basis functions
     num_basis = data["Nindbasis"]
-    if data["Wfntype"] in [0, 2, 3]:
-        # restricted wavefunction
-        num_mo = data["Nindbasis"]
-    elif data["Wfntype"] in [1, 4]:
-        # unrestricted wavefunction
-        num_mo = 2 * data["Nindbasis"]
-
+    num_mo = data["Nindbasis"]
+    if data["mo_kind"] is "unrestricted":
+        num_mo *= 2
+    # load MO information
     data.update(_load_helper_mo(lit, num_basis, num_mo))
 
     # TODO: add density matrix and overlap
@@ -322,19 +334,6 @@ def load_one(lit: LineIterator) -> dict:
                            inp['shell_contraction_degrees'],
                            inp['coeffs'],
                            )
-    # wfntype(integer, scalar): Wavefunction type. Possible values:
-    #     0: Restricted closed - shell single - determinant wavefunction(e.g.RHF, RKS)
-    #     1: Unrestricted open - shell single - determinant wavefunction(e.g.UHF, UKS)
-    #     2: Restricted open - shell single - determinant wavefunction(e.g.ROHF, ROKS)
-    #     3: Restricted multiconfiguration wavefunction(e.g.RMP2, RCCSD)
-    #     4: Unrestricted multiconfiguration wavefunction(e.g.UMP2, UCCSD)
-    wfntype = inp['Wfntype']
-    if wfntype in [0, 2, 3]:
-        restrictions = "restricted"
-    elif wfntype in [1, 4]:
-        restrictions = "unrestricted"
-    else:
-        raise IOError('Cannot determine if restricted or unrestricted wfntype wave function.')
     # MFWN provides number of alpha and beta electrons, this is a double check
     # mo_type (integer, scalar): Orbital type
     #     0: Alpha + Beta (i.e. spatial orbital)
@@ -343,7 +342,7 @@ def load_one(lit: LineIterator) -> dict:
     # TODO calculate number of alpha and beta electrons manually.
 
     # Build the molecular orbitals
-    mo = MolecularOrbitals(restrictions,
+    mo = MolecularOrbitals(inp["mo_kind"],
                            inp['Naelec'],
                            inp['Nbelec'],
                            inp['mo_occs'],
