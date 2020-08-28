@@ -192,7 +192,7 @@ def load_one_warning(filename: str, fmt: str = None, match: str = None, **kwargs
 
     """
     with path('iodata.test.data', filename) as fn:
-        if match == None:
+        if match is None:
             return load_one(str(fn), fmt, **kwargs)
         with pytest.warns(FileFormatWarning, match=match):
             return load_one(str(fn), fmt, **kwargs)
