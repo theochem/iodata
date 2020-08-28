@@ -77,6 +77,9 @@ def _load_helper_opener(lit: LineIterator) -> dict:
                 data[name] = ftype(line.split('=')[1].strip())
                 count += 1
 
+    # check values parsed
+    if data["Ncenter"] <= 0:
+        lit.error(f"Ncenter should be a positive integer! Read Ncenter= {data['Ncenter']}")
     # Possible values of Wfntype (wavefunction type):
     #     0: Restricted closed - shell single - determinant wavefunction(e.g.RHF, RKS)
     #     1: Unrestricted open - shell single - determinant wavefunction(e.g.UHF, UKS)
@@ -129,6 +132,10 @@ def _load_helper_atoms(lit: LineIterator, natom: int) -> dict:
         data["atcoords"][atom, :] = words[4:7]
     # coordinates are in angstrom in MWFN, so they are converted to atomic units
     data["atcoords"] *= angstrom
+
+    # check atomic numbers
+    if min(data["atnums"]) <= 0:
+        lit.error(f"Atomic numbers should be positive integers! Read atnums= {data['atnums']}")
 
     return data
 
@@ -237,12 +244,6 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     data.update(_load_helper_shells(lit, data["Nshell"]))
     # IOData indices start at 0, so the centers are shifted
     data["shell_centers"] -= 1
-
-    assert data["Ncenter"] > 0
-    assert min(data["atnums"]) >= 0
-    assert len(data["shell_types"]) == data["Nshell"]
-    assert len(data["shell_centers"]) == data["Nshell"]
-    assert len(data["shell_contraction_degrees"]) == data["Nshell"]
 
     # load primitive exponents & coefficients
     data["exponents"] = _load_helper_prims(lit, data["Nprimshell"])
