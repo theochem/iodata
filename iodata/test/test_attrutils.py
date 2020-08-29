@@ -27,7 +27,7 @@ import pytest
 from ..attrutils import convert_array_to, validate_shape
 
 
-@attr.s(slots=True)
+@attr.s(auto_attribs=True, slots=True, on_setattr=attr.setters.convert)
 class FooBar:
     """Just a silly class for testing convert_array_to."""
 
@@ -46,9 +46,6 @@ def test_convert_array_to_init():
     assert_allclose(fb.spam, spam2)
 
 
-# converter is not called when assigning!
-# See https://github.com/python-attrs/attrs/issues/645
-@pytest.mark.skip
 def test_convert_array_to_assign():
     fb = FooBar(spam=None)
     assert fb.spam is None
@@ -63,22 +60,21 @@ def test_convert_array_to_assign():
     assert fb.spam is None
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(auto_attribs=True, slots=True, on_setattr=attr.setters.validate)
 class Spam:
     """Just a silly class for testing validate_shape."""
 
-    egg0: np.ndarray = attr.ib(validator=validate_shape(1, None, "negg"))
-    egg1: np.ndarray = attr.ib(validator=validate_shape("negg", ("egg2", 1)))
+    egg0: np.ndarray = attr.ib(validator=validate_shape(1, None, None))
+    egg1: np.ndarray = attr.ib(validator=validate_shape(("egg0", 2), ("egg2", 1)))
     egg2: np.ndarray = attr.ib(validator=validate_shape(2, ("egg1", 1)))
     egg3: np.ndarray = attr.ib(validator=validate_shape(("leg", 0)))
-    negg: int = attr.ib(converter=int)
     leg: str = attr.ib(validator=validate_shape(("egg3", 0)))
 
 
 def test_validate_shape_init():
     # Construct a Spam instance with valid arguments. This should just work
     spam = Spam(
-        np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), 4, "abcde"
+        np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde"
     )
     # Double check
     attr.validate(spam)
@@ -89,7 +85,6 @@ def test_validate_shape_init():
             np.zeros((4, 3)),
             np.zeros((2, 3)),
             np.zeros(5),
-            4,
             "abcde",
         )
     with pytest.raises(TypeError):
@@ -98,7 +93,6 @@ def test_validate_shape_init():
             np.zeros((4, 3)),
             np.zeros((2, 3)),
             np.zeros(5),
-            4,
             "abcde",
         )
     with pytest.raises(TypeError):
@@ -107,7 +101,6 @@ def test_validate_shape_init():
             np.zeros((1, 3)),
             np.zeros((2, 3)),
             np.zeros(5),
-            4,
             "abcde",
         )
     with pytest.raises(TypeError):
@@ -116,7 +109,6 @@ def test_validate_shape_init():
             np.zeros((4, 9)),
             np.zeros((2, 3)),
             np.zeros(5),
-            4,
             "abcde",
         )
     with pytest.raises(TypeError):
@@ -125,7 +117,6 @@ def test_validate_shape_init():
             np.zeros((4, 3)),
             np.zeros((2, 3)),
             np.zeros(5),
-            15,
             "abcde",
         )
     with pytest.raises(TypeError):
@@ -139,13 +130,10 @@ def test_validate_shape_init():
         )
 
 
-# validator is not called when assigning.
-# See https://github.com/python-attrs/attrs/issues/645
-@pytest.mark.skip
 def test_validate_shape_assign():
     # Construct a Spam instance with valid arguments. This should just work
     spam = Spam(
-        np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), 4, "abcde"
+        np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde"
     )
     # Double check
     attr.validate(spam)
@@ -158,8 +146,6 @@ def test_validate_shape_assign():
         spam.egg1 = np.zeros((1, 3))
     with pytest.raises(TypeError):
         spam.egg1 = np.zeros((4, 9))
-    with pytest.raises(TypeError):
-        spam.negg = 15
     with pytest.raises(TypeError):
         spam.leg = "abcd"
 

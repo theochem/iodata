@@ -332,8 +332,11 @@ Notes on attrs
 IOData uses the `attrs`_ library, not to be confused with the `attr`_ library,
 for classes representing data loaded from files: ``IOData``, ``MolecularBasis``,
 ``Shell``, ``MolecularOrbitals`` and ``Cube``. This enables basic attribute
-validation, which eliminates potentially silly bugs. The following two tricks
-might be convenient with working with these classes:
+validation, which eliminates potentially silly bugs.
+(See ``iodata/attrutils.py`` and the usage of ``validate_shape`` in all those
+classes.)
+
+The following two tricks might be convenient with working with these classes:
 
 - The data can be turned into plain Python data types with the ``attr.asdict``
   function. Make sure you add the ``retain_collection_types=True`` option, to
@@ -347,15 +350,46 @@ might be convenient with working with these classes:
       iodata = load_one("example.xyz")
       fields = attr.asdict(iodata, retain_collection_types=True)
 
-- A shallow copy with a few modified attributes can be created with the evolve
-  method, which is a wrapper for ``attr.evolve``:
+  A similar ``astuple`` function works as you would expect.
+
+- A `shallow copy`_ with a few modified attributes can be created with the
+  evolve method, which is a wrapper for ``attr.evolve``:
 
   .. code-block:: python
 
       from iodata import load_one
       import attr
       iodata1 = load_one("example.xyz")
-      iodata2 = iodata1.evolve(title="another title")
+      iodata2 = attr.evolve(iodata1, title="another title")
+
+  The usage of evolve becomes mandatory when you want to change two or more
+  attributes whose shape need to be consistent. For example, the following
+  would fail:
+
+  .. code-block:: python
+
+      from iodata import IOData
+      iodata = IOData(atnums=[7, 7], atcoords=[[0, 0, 0], [2, 0, 0]])
+      # The next line will fail because the size of atnums and atcoords
+      # becomes inconsistent.
+      iodata.atnums = [8, 8, 8]
+      iodata.atcoords = [[0, 0, 0], [2, 0, 1], [4, 0, 0]]
+
+  The following code, which has the same intent, does work:
+
+  .. code-block:: python
+
+      from iodata import IOData
+      import attr
+      iodata1 = IOData(atnums=[7, 7], atcoords=[[0, 0, 0], [2, 0, 0]])
+      iodata2 = attr.evolve(
+          iodata1,
+          atnums=[8, 8, 8],
+          atcoords=[[0, 0, 0], [2, 0, 1], [4, 0, 0]],
+      )
+
+   For brevity, lists (of lists) were used in these examples. These are always
+   converted to arrays by the constructor or when assigning them to attributes.
 
 
 .. _Bash: https://en.wikipedia.org/wiki/Bash_(Unix_shell)
@@ -364,3 +398,4 @@ might be convenient with working with these classes:
 .. _PEP 0563: https://www.python.org/dev/peps/pep-0563/
 .. _attrs: https://www.attrs.org/en/stable/
 .. _attr: https://github.com/denis-ryzhkov/attr
+.. _shallow copy: https://docs.python.org/3/library/copy.html?highlight=shallow

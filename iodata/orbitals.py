@@ -28,7 +28,8 @@ from .attrutils import validate_shape
 __all__ = ['MolecularOrbitals']
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
 class MolecularOrbitals:
     """Class of Orthonormal Molecular Orbitals.
 

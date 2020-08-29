@@ -85,7 +85,8 @@ def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
     return ANGMOM_CHARS[angmom]
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
 class Shell:
     """A shell in a molecular basis representing (generalized) contractions with the same exponents.
 
@@ -141,7 +142,8 @@ class Shell:
         return len(self.angmoms)
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
 class MolecularBasis:
     """A complete molecular orbital or density basis set.
 

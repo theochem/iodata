@@ -32,7 +32,8 @@ __all__ = ['IOData']
 
 
 # pylint: disable=too-many-instance-attributes
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
 class IOData:
     """A container class for data loaded from (or to be written to) a file.
 

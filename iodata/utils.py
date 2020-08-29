@@ -119,7 +119,8 @@ class LineIterator:
         self.lineno -= 1
 
 
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
 class Cube:
     """The volumetric data from a cube (or similar) file.
 
