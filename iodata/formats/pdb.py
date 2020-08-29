@@ -52,6 +52,7 @@ def load_one(lit: LineIterator) -> dict:
     attypes = []
     restypes = []
     molecule_found = False
+    end_reached = False
     title = "PDB file from IOData"
     while True:
         try:
@@ -84,25 +85,29 @@ def load_one(lit: LineIterator) -> dict:
             restypes.append(line[17:20].strip())
             molecule_found = True
         if line.startswith("END") and molecule_found:
-            atnums = np.array(nums)
-            atcoords = np.array(coords) * angstrom
-            attypes = np.array(attypes)
-            restypes = np.array(restypes)
-            resnums = np.array(resnums)
-            atffparams = {"attypes": attypes, "restypes": restypes, "resnums": resnums}
-            occupancy = np.array(occupancy)
-            bfactor = np.array(bfactor)
-            extra = {"occupancy": occupancy, "bfactor": bfactor}
-            result = {
-                'atcoords': atcoords,
-                'atnums': atnums,
-                'atffparams': atffparams,
-                'title': title,
-                'extra': extra
-            }
+            end_reached = True
             break
     if molecule_found is False:
-        raise lit.error("Molecule could not be read")
+        lit.error("Molecule could not be read!")
+    if not end_reached:
+        lit.warn("The END is not reached, but the parsed data is returned!")
+
+    atnums = np.array(nums)
+    atcoords = np.array(coords) * angstrom
+    attypes = np.array(attypes)
+    restypes = np.array(restypes)
+    resnums = np.array(resnums)
+    atffparams = {"attypes": attypes, "restypes": restypes, "resnums": resnums}
+    occupancy = np.array(occupancy)
+    bfactor = np.array(bfactor)
+    extra = {"occupancy": occupancy, "bfactor": bfactor}
+    result = {
+        'atcoords': atcoords,
+        'atnums': atnums,
+        'atffparams': atffparams,
+        'title': title,
+        'extra': extra
+    }
     return result
 
 
