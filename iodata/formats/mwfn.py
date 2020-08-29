@@ -18,7 +18,6 @@
 # --
 """Multiwfn MWFN file format."""
 
-from typing import Tuple
 
 import numpy as np
 
@@ -27,9 +26,12 @@ from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, angstrom
 
+
 __all__ = []
 
+
 PATTERNS = ['*.mwfn']
+
 
 # From the MWFN chemrxiv paper
 # https://chemrxiv.org/articles/Mwfn_A_Strict_Concise_and_Extensible_Format
@@ -64,7 +66,7 @@ CONVENTIONS = {
 
 
 def _load_helper_opener(lit: LineIterator) -> dict:
-    """Read initial variables."""
+    """Read initial variables at the beginning of a MWFN file."""
     keys = {"Wfntype": int, "Charge": float, "Naelec": float, "Nbelec": float, "E_tot": float,
             "VT_ratio": float, "Ncenter": int}
     max_count = len(keys)
@@ -99,7 +101,7 @@ def _load_helper_opener(lit: LineIterator) -> dict:
 
 
 def _load_helper_basis(lit: LineIterator) -> dict:
-    """Read initial variables."""
+    """Read basis set information typically labelled '# Basis function information'."""
     # Nprims must be last or else it gets read in with Nprimshell
     keys = ["Nbasis", "Nindbasis", "Nshell", "Nprimshell", "Nprims"]
     count = 0
@@ -116,9 +118,12 @@ def _load_helper_basis(lit: LineIterator) -> dict:
 
 
 def _load_helper_atoms(lit: LineIterator, natom: int) -> dict:
-    """Read the coordinates of the atoms."""
-    data = {"atnums": np.empty(natom, int), "atcorenums": np.empty(natom, float),
-            "atcoords": np.empty((natom, 3), float)}
+    """Read atoms section typically labelled '# Atom information'."""
+    data = {
+        "atnums": np.empty(natom, int),
+        "atcorenums": np.empty(natom, float),
+        "atcoords": np.empty((natom, 3), float),
+    }
 
     # skip lines until "$Centers" section is reached
     line = next(lit)
@@ -162,7 +167,7 @@ def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
 
 def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
                          dtype: np.dtype) -> np.ndarray:
-    """Read SHELL CENTER, SHELL TYPE, and SHELL CONTRACTION DEGREES sections."""
+    """Read single or multiple line(s) section."""
     section = []
     while len(section) < nprim:
         line = next(lit)
@@ -173,8 +178,7 @@ def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
 
 
 def _load_helper_mo(lit: LineIterator, n_basis: int, n_mo: int) -> dict:
-    """Read one section of MO information."""
-
+    """Read molecular orbitals section typically labelled '# Orbital information'."""
     data = {
         "mo_numbers": np.empty(n_mo, int),
         "mo_type": np.empty(n_mo, int),
@@ -210,17 +214,14 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
         The line iterator to read the data from.
     """
     # Note:
-    # ---------
-    # mwfn is a fortran program which loads *.mwfn by locating the line with the keyword,
-    #  then uses `backspace`, then begins reading. Despite this flexibility, it is stated by
-    #  the authors that the order of section, and indeed, entries in general, must be fixed.
-    #  With this in mind the input utilized some hardcoding since order should be fixed.
-    #
-    #  mwfn ignores lines beginning with `#`.
-    # read sections of mwfn file
-    # This assumes title is on first line which seems to be the standard
+    # -----
+    # 1) mwfn is a fortran program which loads *.mwfn by locating the line with the keyword,
+    #    then uses `backspace`, then begins reading. Despite this flexibility, it is stated by
+    #    the authors that the order of section, and indeed, entries in general, must be fixed.
+    #    With this in mind the input utilized some hard-coding since order should be fixed.
+    # 2) mwfn ignores lines beginning with `#`.
 
-    # read title
+    # read title (assuming title is the 1st line, which seems to be the standard)
     data = {"title": next(lit).strip()}
 
     # load Wfntype, Charge, Naelec, Nbelec, E_tot, VT_ratio, & Ncenter
@@ -254,7 +255,7 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # load MO information
     data.update(_load_helper_mo(lit, num_basis, num_mo))
 
-    # TODO: add density matrix and overlap
+    # TODO: load data in '# Various matrices' section
 
     return data
 
