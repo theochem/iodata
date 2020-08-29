@@ -250,7 +250,7 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # Note: MWFN includes virtual orbitals, so num_mo equals number independent basis functions
     num_basis = data["Nindbasis"]
     num_mo = data["Nindbasis"]
-    if data["mo_kind"] is "unrestricted":
+    if data["mo_kind"] == "unrestricted":
         num_mo *= 2
     # load MO information
     data.update(_load_helper_mo(lit, num_basis, num_mo))
