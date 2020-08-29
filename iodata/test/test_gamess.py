@@ -31,7 +31,7 @@ except ImportError:
 
 
 def test_load_one_gamess_punch():
-    with path('iodata.test.data', 'PCGamess_PUNCH.gamessout') as f:
+    with path('iodata.test.data', 'PCGamess_PUNCH.dat') as f:
         data = load_one(str(f))
     N = len(["CL", "H", "H", "H", "H", "F", "F", "F", "F", "H", "F"])
     assert data.title == "Simple example sample optimization with Hessian output for Toon"

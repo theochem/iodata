@@ -28,7 +28,7 @@ from ..utils import angstrom, LineIterator
 __all__ = []
 
 
-PATTERNS = ['*.gamessout']
+PATTERNS = ['*.dat']
 
 
 def _read_data(lit: LineIterator) -> tuple:
