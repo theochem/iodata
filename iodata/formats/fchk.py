@@ -308,9 +308,8 @@ def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
         are either scalar or array data. Arrays are always one-dimensional.
 
     """
-    result = {}
     # Read the two-line header
-    result['title'] = next(lit).strip()
+    result = {'title': next(lit).strip()}
     words = next(lit).split()
     if len(words) == 3:
         result['command'], result['lot'], result['obasis_name'] = words
