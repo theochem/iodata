@@ -63,9 +63,9 @@ CONVENTIONS = {
 # pylint: disable=too-many-branches,too-many-statements
 @document_load_one(
     "Gaussian Formatted Checkpoint",
-    ['atcharges', 'atcoords', 'atnums', 'atcorenums', 'energy', 'lot', 'mo', 'obasis',
+    ['atcharges', 'atcoords', 'atnums', 'atcorenums', 'lot', 'mo', 'obasis',
      'obasis_name', 'run_type', 'title'],
-    ['atfrozen', 'atgradient', 'athessian', 'atmasses', 'one_rdms', 'extra', 'moments'])
+    ['energy', 'atfrozen', 'atgradient', 'athessian', 'atmasses', 'one_rdms', 'extra', 'moments'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     fchk = _load_fchk_low(lit, [
@@ -92,7 +92,8 @@ def load_one(lit: LineIterator) -> dict:
     # A) Load a bunch of simple things
     result = {
         'title': fchk['title'],
-        'energy': fchk['Total Energy'],
+        # if "Total Energy" is not present in FCHk, None is returned.
+        'energy': fchk.get('Total Energy', None),
         'lot': fchk['lot'].lower(),
         'obasis_name': fchk['obasis_name'].lower(),
         'atcoords': fchk["Current cartesian coordinates"].reshape(-1, 3),
