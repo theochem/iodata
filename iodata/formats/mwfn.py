@@ -265,16 +265,10 @@ def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     inp = _load_mwfn_low(lit)
 
-    # MWFN contains more information than most formats, so the following dict
-    # stores some "extra" stuff.
-    extra = {
-        'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'], 'mo_numbers': inp['mo_numbers'],
-        'wfntype': inp['Wfntype'], 'nelec_a': inp['Naelec'], 'nelec_b': inp['Nbelec'],
-        'nbasis': inp['Nbasis'], 'nindbasis': inp['Nindbasis'], 'nprims': inp['Nprims'],
-        'nshells': inp['Nshell'], 'nprimshells': inp['Nprimshell'],
-        'shell_types': inp['shell_types'], 'shell_centers': inp['shell_centers'],
-        'shell_ncons': inp['shell_ncons'],
-        'full_virial_ratio': inp['VT_ratio']}
+    # store certain information loaded from MWFN in extra dictionary
+    extra = {'wfntype': inp['Wfntype'], 'nbasis': inp['Nbasis'], 'nindbasis': inp['Nindbasis'],
+             'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'],
+             'full_virial_ratio': inp['VT_ratio']}
 
     # Build MolecularBasis instance
     # Unlike WFN, MWFN does include orbital expansion coefficients.
@@ -298,10 +292,10 @@ def load_one(lit: LineIterator) -> dict:
     #     2: Beta
     # TODO calculate number of alpha and beta electrons manually.
 
-    # Build the molecular orbitals
+    # Build MolecularOrbitals instance
     mo = MolecularOrbitals(inp["mo_kind"],
-                           inp['Naelec'],
-                           inp['Nbelec'],
+                           int(inp["Naelec"]),
+                           int(inp["Nbelec"]),
                            inp['mo_occs'],
                            inp['mo_coeffs'],
                            inp['mo_energies'],

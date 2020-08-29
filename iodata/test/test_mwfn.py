@@ -55,18 +55,18 @@ def test_load_mwfn_ch3_rohf_g03():
     assert_equal(mol.extra['full_virial_ratio'], 2.00174844)
     assert_equal(mol.extra['nindbasis'], 8)
     assert_equal(mol.extra['nbasis'], 8)
-    assert_equal(mol.extra['nprims'], 24)
-    assert_equal(mol.extra['nshells'], 6)
-    assert_equal(mol.extra['nprimshells'], 18)
+    assert_equal(np.sum([shell.nprim * shell.nbasis for shell in mol.obasis.shells]), 24)
+    assert_equal(len(mol.obasis.shells), 6)
+    assert_equal(np.sum([shell.nprim for shell in mol.obasis.shells]), 18)
     assert_equal(mol.charge, 0.0)
     assert_equal(mol.nelec, 9)
     assert_equal(mol.natom, 4)
-    assert_equal(mol.extra['nelec_a'], 5.0)
-    assert_equal(mol.extra['nelec_b'], 4.0)
+    assert_equal(np.sum(mol.mo.occsa), 5.0)
+    assert_equal(np.sum(mol.mo.occsb), 4.0)
     assert_equal(mol.energy, -3.90732095E+01)
-    assert_allclose(mol.extra['shell_types'], np.array([0, 0, 1, 0, 0, 0]))
-    assert_allclose(mol.extra['shell_centers'], np.array([1, 1, 1, 2, 3, 4]) - 1)
-    assert_allclose(mol.extra['shell_ncons'], np.array([3, 3, 3, 3, 3, 3]))
+    assert_allclose([shell.angmoms[0] for shell in mol.obasis.shells], [0, 0, 1, 0, 0, 0])
+    assert_allclose([shell.icenter for shell in mol.obasis.shells], [0, 0, 0, 1, 2, 3])
+    assert_allclose([shell.nprim for shell in mol.obasis.shells], [3, 3, 3, 3, 3, 3])
     exponents1 = np.array([7.16168373E+01, 1.30450963E+01, 3.53051216E+00])
     exponents2 = np.array([2.94124936E+00, 6.83483096E-01, 2.22289916E-01])
     exponents3 = np.array([2.94124936E+00, 6.83483096E-01, 2.22289916E-01])
@@ -142,13 +142,13 @@ def test_nelec_charge():
     mol2 = load_format_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
     assert mol2.nelec == 2
     assert mol2.charge == 0
-    assert mol2.extra['nelec_a'] == 1
-    assert mol2.extra['nelec_b'] == 1
+    assert np.sum(mol2.mo.occsa) == 1
+    assert np.sum(mol2.mo.occsb) == 1
     mol3 = load_format_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
     assert mol3.nelec == 9
     assert mol3.charge == 0
-    assert mol3.extra['nelec_a'] == 5
-    assert mol3.extra['nelec_b'] == 4
+    assert np.sum(mol3.mo.occsa) == 5
+    assert np.sum(mol3.mo.occsb) == 4
 
 
 def test_load_mwfn_he_spdfgh_g03():
