@@ -583,8 +583,6 @@ def dump_one(f: TextIO, data: IOData):
     if data.energy is not None:
         _dump_real_scalars("SCF Energy", data.energy, f)
         _dump_real_scalars("Total Energy", data.energy, f)
-    else:
-        _dump_real_scalars("Total Energy", 0., f)
 
     # write MO energies & coefficients
     if data.mo is not None:
