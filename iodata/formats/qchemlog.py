@@ -58,7 +58,7 @@ def load_one(lit: LineIterator) -> dict:
     # build molecular orbitals
     # ------------------------
     # restricted case
-    if not data['unrestricted']:
+    if data['unrestricted'] is False:
         mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir']), axis=0)
         mo_coeffs = np.full((data['nbasis'], data['norba']), np.nan)
         mo_occs = np.zeros(mo_coeffs.shape[1])
@@ -219,27 +219,21 @@ def _helper_job(lit: LineIterator, version) -> Tuple:
             data_rem['run_type'] = line.split()[1].lower()
         elif line.lower().startswith('method'):
             data_rem['lot'] = line.split()[1].lower()
-        elif line.lower().startswith('unrestricted') and version == '5.2.0':
-            data_rem['unrestricted'] = int(line.split()[1])
-        elif line.lower().startswith('unrestricted') and version == '5.3.0':
-            # data_rem['unrestricted'] = line.split()[1]
-            # todo: report bug for unrestricted case?
-            data_rem['unrestricted'] = None
-            # pass
-        # todo: report bug for basis appering two times in version 5.3.0
+        elif line.lower().startswith('unrestricted'):
+            data_rem['unrestricted'] = bool(line.split()[1])
+            data_rem['unrestricted'] = bool(strtobool(line.split()[1]))
         elif line.split()[0].lower() == 'basis':
             data_rem['obasis_name'] = line.split()[1].lower()
-        elif line.lower().startswith('symmetry') and version == '5.2.0':
-            data_rem['symm'] = int(line.split()[1])
-        elif line.lower().startswith('symmetry') and version == '5.3.0':
-            data_rem['symm'] = line.split()[1]
+        elif line.lower().startswith('symmetry'):
+            data_rem['symm'] = bool(strtobool(line.split()[1]))
     return data_rem
 
 
-def _helper_electron(lit: LineIterator) -> Tuple:
+def _helper_electron(lit: LineIterator):
     """Load electron information from Q-Chem log out file format."""
     next(lit)
     next(lit)
+    # atomic numbers and atomic coordinates (converted to A.U)
     atom_symbols = []
     atcoords = []
     for line in lit:
@@ -281,13 +275,11 @@ def _helper_energy(lit: LineIterator):
     return energy
 
 
-# todo: report bug final virtual section mo when no beta orbitals are there. Split function in two for restricted/unrestricted case
 def _helper_orbital_energies_restricted(lit: LineIterator) -> Tuple:
     """Load occupied and virtual orbital energies for restricted calculation."""
     # alpha occupied MOs
     mo_a_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # alpha unoccupied MOs
-    # mo_a_unoccupied = _helper_section('-- Virtual --', '', lit, backward=False)
     mo_a_unoccupied = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
     return mo_a_occupied, mo_a_unoccupied
 
