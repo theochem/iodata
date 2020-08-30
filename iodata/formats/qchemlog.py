@@ -96,7 +96,8 @@ def load_one(lit: LineIterator) -> dict:
     # add labels to extra dictionary if they are loaded
     extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
                     'polarizability_tensor', 'imaginary_freq', 'vib_energy',
-                    'frag_energies', 'orth_frag_subs_decom', 'clss_frozen_decomp', 'eda_summary']
+                    'eda2', 'frags']
+
     extra = {label: data[label] for label in extra_labels if data.get(label) is not None}
     # if present, convert vibrational energy from kcal/mol to "atomic units + K"
     if 'vib_energy' in extra:
@@ -109,6 +110,10 @@ def load_one(lit: LineIterator) -> dict:
     # if present, convert entropy terms from cal/mol.K to "atomic units + Kalvin"
     if 'entropy_dict' in data:
         extra['entropy_dict'] = {k: v * calmol for k, v in data['entropy_dict'].items()}
+
+    # if present, convert eda terms from kj/mol to atomic units
+    if 'eda2' in data:
+        extra['eda2'] = {k: v * kjmol for k, v in data['eda2'].items()}
 
     result['extra'] = extra
     return result
@@ -394,22 +399,12 @@ def _helper_thermo(lit: LineIterator) -> Tuple:
     return enthalpy_dict, entropy_dict
 
 
-def _helper_eda(lit: LineIterator) -> Tuple:
+def _helper_eda(lit: LineIterator) -> dict:
     """Load Energy decomposition information"""
     next(lit)
-    frag_energies = {}
-    orth_frag_subs_decom = {}
-    clss_frozen_decomp = {}
-    eda_summary = {}
+    eda2_dic = {}
     for line in lit:
-        if line.startswith('Fragment Energies'):
-            for line_2 in lit:
-                if line_2.startswith('--------------------'):
-                    break
-                else:
-                    info = line_2.strip().split()
-                    frag_energies[info[0]] = float(info[1])
-        elif line.startswith('  Orthogonal Fragment Subspace Decomposition'):
+        if line.startswith('  Orthogonal Fragment Subspace Decomposition'):
             next(lit)
             for line_2 in lit:
                 if line_2.startswith('     --------------------'):
@@ -417,11 +412,11 @@ def _helper_eda(lit: LineIterator) -> Tuple:
                 else:
                     info = line_2.strip().split()
                     if info[0] == 'E_elec':
-                        orth_frag_subs_decom[info[0]] = float(info[4])
+                        eda2_dic[info[0].lower()] = float(info[4])
                     elif info[0] == 'E_pauli':
-                        orth_frag_subs_decom[info[0]] = float(info[4])
+                        eda2_dic[info[0].lower()] = float(info[4])
                     elif info[0] == 'E_disp':
-                        orth_frag_subs_decom[info[0]] = float(info[4])
+                        eda2_dic[info[0].lower()] = float(info[4])
         elif line.startswith('     Terms summing to E_pauli'):
             next(lit)
             pauli = []
@@ -431,7 +426,7 @@ def _helper_eda(lit: LineIterator) -> Tuple:
                 else:
                     info = line_2.strip().split()
                     pauli.append(float(info[3]))
-            orth_frag_subs_decom['E_pauli'] = np.array(pauli)
+            eda2_dic['e_pauli'] = np.array(pauli)
         elif line.startswith('  Classical Frozen Decomposition'):
             next(lit)
             for line_2 in lit:
@@ -440,11 +435,11 @@ def _helper_eda(lit: LineIterator) -> Tuple:
                 else:
                     info = line_2.strip().split()
                     if info[0] == 'E_cls_elec':
-                        clss_frozen_decomp[info[0]] = float(info[5])
+                        eda2_dic[info[0].lower()] = float(info[5])
                     elif info[0] == 'E_cls_pauli':
-                        clss_frozen_decomp[info[0]] = float(info[5])
+                        eda2_dic[info[0].lower()] = float(info[5])
                     elif info[0].split("[")[1] == 'E_mod_pauli':
-                        clss_frozen_decomp[info[0].split("[")[1]] = float(info[5])
+                        eda2_dic[info[0].split("[")[1].lower()] = float(info[5])
         elif line.startswith('Simplified EDA Summary'):
             next(lit)
             for line_2 in lit:
@@ -453,20 +448,20 @@ def _helper_eda(lit: LineIterator) -> Tuple:
                 else:
                     info = line_2.strip().split()
                     if info[0] == 'PREPARATION':
-                        eda_summary[info[0]] = float(info[1])
+                        eda2_dic[info[0].lower()] = float(info[1])
                     elif info[0] == 'FROZEN':
-                        eda_summary[info[0]] = float(info[1])
+                        eda2_dic[info[0].lower()] = float(info[1])
                     elif info[0].split("[")[-1] == 'PAULI':
-                        eda_summary[info[0].split("[")[-1]] = float(info[1].split("]")[0])
+                        eda2_dic[info[0].split("[")[-1].lower()] = float(info[1].split("]")[0])
                     if info[0] == 'DISPERSION':
-                        eda_summary[info[0]] = float(info[1])
+                        eda2_dic[info[0].lower()] = float(info[1])
                     elif info[0] == 'POLARIZATION':
-                        eda_summary[info[0]] = float(info[1])
+                        eda2_dic[info[0].lower()] = float(info[1])
                     elif info[0] == 'CHARGE':
-                        eda_summary[info[0] + ' ' + info[1]] = float(info[2])
+                        eda2_dic[info[0].lower() + ' ' + info[1].lower()] = float(info[2])
                     elif info[0] == 'TOTAL':
-                        eda_summary[info[0]] = float(info[1])
+                        eda2_dic[info[0].lower()] = float(info[1])
         elif line.startswith(' --------------------------------------------------------------'):
             break
 
-    return frag_energies, orth_frag_subs_decom, clss_frozen_decomp, eda_summary
+    return eda2_dic
