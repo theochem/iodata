@@ -23,7 +23,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one
 from ..formats.qchemlog import load_qchemlog_low
-from ..utils import LineIterator
+from ..utils import LineIterator, angstrom
 
 try:
     from importlib_resources import path
@@ -72,7 +72,7 @@ def test_load_data_qchemlog_h2o():
     assert_equal(data['atmasses'], [15.99491, 1.00783, 1.00783])
     atcoords = np.array([[0.00575, 0.00426, -0.00301],
                          [0.27588, 0.88612, 0.25191],
-                         [0.60257, -0.23578, -0.7114]])
+                         [0.60257, -0.23578, -0.7114]]) * angstrom
     assert_equal(data['atcoords'], atcoords)
     assert_equal(data['mo_a_occ'], np.array([-20.5546, -1.3458, -0.7102, -0.5776, -0.5045]))
     assert_equal(data['mo_b_occ'], np.array([-20.5546, -1.3458, -0.7102, -0.5776, -0.5045]))
@@ -192,7 +192,7 @@ def test_load_one_qchemlog():
     assert_equal(mol.extra['polarizability_tensor'], polarizability_tensor)
     atcoords = np.array([[0.00575, 0.00426, -0.00301],
                          [0.27588, 0.88612, 0.25191],
-                         [0.60257, -0.23578, -0.7114]])
+                         [0.60257, -0.23578, -0.7114]]) * angstrom
     assert_equal(mol.atcoords, atcoords)
     assert_equal(mol.atmasses, np.array([15.99491, 1.00783, 1.00783]))
     assert_equal(mol.atnums, np.array([8, 1, 1]))
@@ -232,8 +232,8 @@ def test_load_data_qchemlog_h2o_dimer():
     assert data['run_type'] == 'eda'
     assert data['lot'] == 'wb97x-v'
     assert data['obasis_name'] == 'def2-tzvpd'
-    assert data['unrestricted'] is None
-    assert data['symm'] == 'FALSE'
+    assert data['unrestricted'] is False
+    assert data['symm'] is False
     # assert data['g_rot'] == 1
     assert data['alpha_elec'] == 10
     assert data['beta_elec'] == 10
@@ -248,7 +248,7 @@ def test_load_data_qchemlog_h2o_dimer():
                          [-0.5996770000, 0.0407120000, 0.0000000000],
                          [1.3506250000,  0.1114690000, 0.0000000000],
                          [1.6803980000,  -0.3737410000, -0.7585610000],
-                         [1.6803980000,  -0.3737410000, 0.7585610000]])
+                         [1.6803980000,  -0.3737410000, 0.7585610000]]) * angstrom
     assert_equal(data['atcoords'], atcoords)
     assert_equal(data['mo_a_occ'], np.array([-19.2455, -19.1897, -1.1734, -1.1173, -0.6729, -0.6242,
                                              -0.5373, -0.4825, -0.4530, -0.4045]))
@@ -273,3 +273,18 @@ def test_load_data_qchemlog_h2o_dimer():
     assert_equal(data['dipole'], np.array([2.5689, 0.0770,  0.0000]))
     assert_equal(data['quadrupole'],
                  np.array([-12.0581, -6.2544, -12.8954, -0.0000, -0.0000, -12.2310]))
+    # check eda2 info
+    eda = data['eda2']
+    assert_equal(eda['e_elec'], -65.9887)
+    assert_equal(eda['e_pauli'], np.array([78.5700, -14.2495]))
+    assert_equal(eda['e_disp'], -7.7384)
+    assert_equal(eda['e_cls_elec'], -35.1257)
+    assert_equal(eda['e_cls_pauli'], 25.7192)
+    assert_equal(eda['e_mod_pauli'], 33.4576)
+    assert_equal(eda['preparation'], 0.0000)
+    assert_equal(eda['frozen'], -1.6681)
+    assert_equal(eda['pauli'], 64.3205)
+    assert_equal(eda['dispersion'], -7.7384)
+    assert_equal(eda['polarization'], -4.6371)
+    assert_equal(eda['charge transfer'], -7.0689)
+    assert_equal(eda['total'], -21.1126)
