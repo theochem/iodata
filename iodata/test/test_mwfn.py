@@ -33,7 +33,7 @@ except ImportError:
 
 
 def helper_load_mwfn_low(fn_mwfn):
-    """Load a testing Gaussian log file with iodata.formats.mwfn.load_mwfn_low."""
+    """Load a testing Multiwfn file with iodata.formats.mwfn.load_mwfn_low."""
     with path('iodata.test.data', fn_mwfn) as fn:
         lit = LineIterator(str(fn))
         return _load_mwfn_low(lit)
@@ -103,9 +103,9 @@ def test_load_mwfn_ch3_rohf_g03():
     olp_fchk = compute_overlap(mol2.obasis, mol2.atcoords)
     assert_allclose(mol.atcoords, mol2.atcoords, atol=1E-7, rtol=1E-7)
     assert_allclose(mol2.obasis.shells[0].coeffs, coeffs1)
-    # fails due to special SP basis storage (leaving commented lines in for future reference)
-    # assert_allclose(mol2.obasis.shells[1].coeffs, coeffs2)
-    # assert_allclose(mol2.obasis.shells[2].coeffs, coeffs3)
+    # Mind the gap, I mean... the SP contraction
+    assert_allclose(mol2.obasis.shells[1].coeffs[:, 0], np.squeeze(coeffs2.T))
+    assert_allclose(mol2.obasis.shells[1].coeffs[:, 1], np.squeeze(coeffs3.T))
     assert_allclose(mol2.obasis.shells[3].coeffs, coeffs4)
     assert_allclose(mol2.obasis.shells[4].coeffs, coeffs4)
     assert_allclose(olp, olp_fchk, atol=1E-7, rtol=1E-7)
