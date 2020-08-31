@@ -132,8 +132,8 @@ def _load_helper_atoms(lit: LineIterator, natom: int) -> dict:
 
     for atom in range(natom):
         words = next(lit).split()
-        data["atnums"][atom] = int(words[2].strip())
-        data["atcorenums"][atom] = float(words[3].strip())
+        data["atnums"][atom] = words[2]
+        data["atcorenums"][atom] = words[3]
         data["atcoords"][atom, :] = words[4:7]
     # coordinates are in angstrom in MWFN, so they are converted to atomic units
     data["atcoords"] *= angstrom
@@ -174,7 +174,7 @@ def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
         if not line.startswith(start):
             lit.error(f"Expected line to start with {start}! Got line={line}")
         section.extend(line.split()[skip:])
-    return np.array(section).astype(dtype)
+    return np.array(section, dtype)
 
 
 def _load_helper_mo(lit: LineIterator, n_basis: int, n_mo: int) -> dict:
@@ -193,11 +193,11 @@ def _load_helper_mo(lit: LineIterator, n_basis: int, n_mo: int) -> dict:
         while 'Index' not in line:
             line = next(lit)
         assert line.startswith('Index')
-        data["mo_numbers"][index] = int(line.split()[1])
-        data["mo_type"][index] = int(next(lit).split()[1])
-        data["mo_energies"][index] = float(next(lit).split()[1])
-        data["mo_occs"][index] = float(next(lit).split()[1])
-        data["mo_sym"][index] = str(next(lit).split()[1])
+        data["mo_numbers"][index] = line.split()[1]
+        data["mo_type"][index] = next(lit).split()[1]
+        data["mo_energies"][index] = next(lit).split()[1]
+        data["mo_occs"][index] = next(lit).split()[1]
+        data["mo_sym"][index] = next(lit).split()[1]
         # skip "$Coeff line
         next(lit)
         data["mo_coeffs"][:, index] = _load_helper_section(lit, n_basis, '', 0, float)
