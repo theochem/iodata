@@ -129,12 +129,8 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             # Read until the end of the file.
             break
 
-        # get the atomic information
-        if line.startswith('$molecule'):
-            # net charge and spin multiplicity
-            data['charge'], data['spin_multi'] = [int(i) for i in next(lit).strip().split()]
         # job specifications
-        elif line.startswith('$rem') and 'run_type' not in data:
+        if line.startswith('$rem') and 'run_type' not in data:
             data.update(_helper_job(lit))
         # standard nuclear orientation
         elif line.startswith('Standard Nuclear Orientation (Angstroms)') and 'atcoords' not in data:
@@ -411,11 +407,7 @@ def _helper_eda(lit: LineIterator) -> dict:
                     break
                 else:
                     info = line_2.strip().split()
-                    if info[0] == 'E_elec':
-                        eda2_dic[info[0].lower()] = float(info[4])
-                    elif info[0] == 'E_pauli':
-                        eda2_dic[info[0].lower()] = float(info[4])
-                    elif info[0] == 'E_disp':
+                    if info[0] in ['E_elec', 'E_pauli', 'E_disp']:
                         eda2_dic[info[0].lower()] = float(info[4])
         elif line.startswith('     Terms summing to E_pauli'):
             next(lit)
@@ -434,12 +426,11 @@ def _helper_eda(lit: LineIterator) -> dict:
                     break
                 else:
                     info = line_2.strip().split()
-                    if info[0] == 'E_cls_elec':
-                        eda2_dic[info[0].lower()] = float(info[5])
-                    elif info[0] == 'E_cls_pauli':
+                    if info[0] in ['E_cls_elec', 'E_cls_pauli']:
                         eda2_dic[info[0].lower()] = float(info[5])
                     elif info[0].split("[")[1] == 'E_mod_pauli':
                         eda2_dic[info[0].split("[")[1].lower()] = float(info[5])
+
         elif line.startswith('Simplified EDA Summary'):
             next(lit)
             for line_2 in lit:
@@ -447,20 +438,12 @@ def _helper_eda(lit: LineIterator) -> dict:
                     break
                 else:
                     info = line_2.strip().split()
-                    if info[0] == 'PREPARATION':
-                        eda2_dic[info[0].lower()] = float(info[1])
-                    elif info[0] == 'FROZEN':
+                    if info[0] in ['PREPARATION', 'FROZEN', 'DISPERSION', 'POLARIZATION', 'TOTAL']:
                         eda2_dic[info[0].lower()] = float(info[1])
                     elif info[0].split("[")[-1] == 'PAULI':
                         eda2_dic[info[0].split("[")[-1].lower()] = float(info[1].split("]")[0])
-                    if info[0] == 'DISPERSION':
-                        eda2_dic[info[0].lower()] = float(info[1])
-                    elif info[0] == 'POLARIZATION':
-                        eda2_dic[info[0].lower()] = float(info[1])
                     elif info[0] == 'CHARGE':
                         eda2_dic[info[0].lower() + ' ' + info[1].lower()] = float(info[2])
-                    elif info[0] == 'TOTAL':
-                        eda2_dic[info[0].lower()] = float(info[1])
         elif line.startswith(' --------------------------------------------------------------'):
             break
 

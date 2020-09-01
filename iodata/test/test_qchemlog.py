@@ -42,9 +42,7 @@ def test_load_data_qchemlog_h2o():
     """Test load_qchemlog_low with water_hf_ccpvtz_freq_qchem.out."""
     data = helper_load_data_qchemlog_helper('water_hf_ccpvtz_freq_qchem.out')
     # check loaded data
-    assert data['charge'] == 0
     assert data['natom'] == 3
-    assert data['spin_multi'] == 1
     assert data['run_type'] == 'freq'
     assert data['lot'] == 'hf'
     assert data['obasis_name'] == 'cc-pvtz'
@@ -134,7 +132,6 @@ def test_load_data_qchemlog_h2o():
 def test_load_one_qchemlog():
     with path('iodata.test.data', 'water_hf_ccpvtz_freq_qchem.out') as fn_qchemlog:
         mol = load_one(str(fn_qchemlog), fmt='qchemlog')
-    assert mol.charge == 0
     assert mol.energy == -76.0571936393
     assert mol.g_rot == 1
     assert mol.nelec == 10
@@ -173,7 +170,6 @@ def test_load_one_qchemlog():
                          1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01,
                          3.144706e-01]])
     assert_equal(mol.athessian, hessian)
-    assert mol.extra['spin_multi'] == 1
     assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
     assert mol.extra['imaginary_freq'] == 0
     # unit conversion for entropy terms, used atomic units + Kalvin
@@ -226,9 +222,7 @@ def test_load_data_qchemlog_h2o_dimer():
     """Test load_qchemlog_low with h2o_dimer_eda_qchem5.3.out."""
     data = helper_load_data_qchemlog_helper('h2o_dimer_eda_qchem5.3.out')
     # check loaded data
-    assert data['charge'] == 0
     assert data['natom'] == 6
-    assert data['spin_multi'] == 1
     assert data['run_type'] == 'eda'
     assert data['lot'] == 'wb97x-v'
     assert data['obasis_name'] == 'def2-tzvpd'
