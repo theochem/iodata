@@ -37,7 +37,7 @@ __all__ = []
 PATTERNS = ['*.qchemlog']
 
 
-@document_load_one("qchemlog", ['atcoords', 'atmasses', 'atnums', 'charge', 'energy', 'g_rot',
+@document_load_one("qchemlog", ['atcoords', 'atmasses', 'atnums', 'energy', 'g_rot',
                                 'mo', 'lot', 'nelec', 'obasis_name', 'run_type', 'extra'],
                    ['athessian'])
 def load_one(lit: LineIterator) -> dict:
@@ -45,7 +45,7 @@ def load_one(lit: LineIterator) -> dict:
     data = load_qchemlog_low(lit)
 
     # add these labels if they are loaded
-    result_labels = ['atcoords', 'atmasses', 'atnums', 'charge', 'charge', 'energy', 'g_rot',
+    result_labels = ['atcoords', 'atmasses', 'atnums', 'energy', 'g_rot',
                      'run_type', 'athessian', 'lot', 'obasis_name']
     result = {label: data[label] for label in result_labels if data.get(label) is not None}
     # add number of electrons
