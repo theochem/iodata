@@ -22,21 +22,12 @@
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 from ..api import load_one
-from ..formats.mwfn import _load_mwfn_low
 from ..overlap import compute_overlap
-from ..utils import LineIterator
 
 try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
-
-
-def helper_load_mwfn_low(fn_mwfn):
-    """Load a testing Multiwfn file with iodata.formats.mwfn.load_mwfn_low."""
-    with path('iodata.test.data', fn_mwfn) as fn:
-        lit = LineIterator(str(fn))
-        return _load_mwfn_low(lit)
 
 
 def load_format_helper(fn_format):
