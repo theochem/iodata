@@ -35,8 +35,10 @@ def _read_data(lit: LineIterator) -> tuple:
     """Extract ``title``, ``symmetry`` and ``symbols`` from the punch file."""
     title = next(lit).strip()
     symmetry = next(lit).split()[0]
+    # The dat file only contains symmetry-unique atoms, so we would be incapable of
+    # supporting non-C1 symmetry without significant additional coding.
     if symmetry != "C1":
-        raise NotImplementedError("Only C1 symmetry is supported.")
+        raise NotImplementedError(f"Only C1 symmetry is supported. Got {symmetry}")
     symbols = []
     line = True
     while line != " $END      \n":
