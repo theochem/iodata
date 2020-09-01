@@ -85,7 +85,9 @@ def _read_energy(lit: LineIterator, result: dict) -> tuple:
 
 def _read_hessian(lit: LineIterator, result: dict) -> np.ndarray:
     """Extract ``hessian`` from the punch file."""
-    assert "hessian" not in result
+    # check that $HESS is not already parsed
+    if "athessian" in result:
+        lit.error("Cannot parse $HESS twice! Make sure approximate hessian is not being parsed!")
     next(lit)
     natom = len(result["symbols"])
     hessian = np.zeros((3 * natom, 3 * natom), float)
