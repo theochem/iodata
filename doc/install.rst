@@ -24,8 +24,18 @@
 Installation
 ============
 
-Python 3 (>=3.6) must be installed. Other dependencies will be pulled in with
-the instructions below.
+Python 3 (>=3.6) must be installed. The following dependencies will be installed
+automatically with the instructions below:
+
+- numpy >= 1.0: https://numpy.org/
+- scipy: https://scipy.org/
+- attrs >= 19.1.0: https://www.attrs.org/en/stable/index.html
+- importlib_resources [only for Python 3.6]: https://gitlab.com/python-devs/importlib_resources
+
+IOData is available as a package on:
+
+- Conda, see https://anaconda.org/theochem/iodata, and
+- PyPI, see https://pypi.org/project/qc-iodata.
 
 To install IOData using the conda package management system, install
 `miniconda <https://conda.io/miniconda.html>`__ or
