@@ -33,33 +33,34 @@ IOData
 
 About
 -----
-IOData is a HORTON 3 module for input/output of quantum chemistry file formats. Documentation is
-here: https://iodata.readthedocs.io/en/latest/index.html
 
-
-Dependencies
-------------
-
-The following dependencies will be necessary for IOData to build properly,
-
-* Python >= 3.6: http://www.python.org/
-* SciPy >= 0.11.0: http://www.scipy.org/
-* NumPy >= 1.9.1: http://www.numpy.org/
-* pytest >= 4.2.0: https://docs.pytest.org/
+IOData is a HORTON 3 module for input/output of quantum chemistry file formats.
+Documentation is here: https://iodata.readthedocs.io/en/latest/index.html
 
 
 Installation
 ------------
 
-To install IOData using conda package management system, install
+To install IOData using the conda package management system, install
 `miniconda <https://conda.io/miniconda.html>`__ or
 `anaconda <https://www.anaconda.com/download>`__ first, and then:
 
 .. code-block:: bash
 
-    $ conda create -n iodata_env
-    $ source activate iodata_env
-    (iodata_env) $ conda install -c theochem iodata
+    # Create a horton3 conda environment. (optional, recommended)
+    conda create -n horton3
+    source activate horton3
+
+    # Install the stable release.
+    conda install -c theochem iodata
+
+To install IOData with pip, you may want to create a `virtual environment`_,
+and then:
+
+.. code-block:: bash
+
+    # Install the stable release.
+    pip install qc-iodata
 
 See https://iodata.readthedocs.io/en/latest/install.html for full details.
 
@@ -75,3 +76,4 @@ See https://iodata.readthedocs.io/en/latest/install.html for full details.
     :target: https://anaconda.org/theochem/iodata
 .. |CondaVersion| image:: https://img.shields.io/conda/pn/theochem/iodata.svg
     :target: https://anaconda.org/theochem/iodata
+.. _virtual environment: https://docs.python.org/3/tutorial/venv.html
