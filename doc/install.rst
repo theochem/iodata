@@ -92,7 +92,7 @@ There are two common methods to install IOData with pip:
 
    .. code-block:: bash
 
-       # Install the sable release in your home directory.
+       # Install the stable release in your home directory.
        pip3 install qc-iodata --user
        # alternative: python3 -m pip install qc-iodata --user
 
