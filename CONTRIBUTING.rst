@@ -30,6 +30,8 @@ General recommendations
   point numbers), the simple ``assert a == b`` works equally well and is more
   readable.
 
+- IOData always uses atomic units internally. See :ref:`units` for details.
+
 
 Adding new file formats
 -----------------------
