@@ -338,7 +338,7 @@ validation, which eliminates potentially silly bugs.
 (See ``iodata/attrutils.py`` and the usage of ``validate_shape`` in all those
 classes.)
 
-The following ``attrs`` functions could be convenient with working with these
+The following ``attrs`` functions could be convenient when working with these
 classes:
 
 - The data can be turned into plain Python data types with the ``attr.asdict``
