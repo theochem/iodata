@@ -131,7 +131,7 @@ def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
 
     Returns
     -------
-    out
+    out: IOData
         The instance of IOData with data loaded from the input files.
 
     """
@@ -140,7 +140,7 @@ def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
     try:
         return IOData(**format_module.load_one(lit, **kwargs))
     except StopIteration:
-        raise lit.error("File ended before all data was read.")
+        lit.error("File ended before all data was read.")
 
 
 def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
@@ -162,7 +162,7 @@ def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
 
     Yields
     ------
-    out
+    out: IOData
         An instance of IOData with data for one frame loaded for the file.
 
     """
@@ -211,7 +211,7 @@ def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None, **kwarg
     ----------
     iodatas
         An iterator over IOData instances.
-    filename : str
+    filename
         The file to write the data to.
     fmt
         The name of the file format module to use.
@@ -231,11 +231,11 @@ def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, *
     ----------
     iodata
         An IOData instance containing the information needed to write input.
-    filename : str
+    filename
         The input file name.
-    fmt : str
+    fmt
         The name of the software for which input file is generated.
-    template : str, optional
+    template
         The template input file.
     **kwargs
         Keyword arguments are passed on to the input-specific write_input function.
