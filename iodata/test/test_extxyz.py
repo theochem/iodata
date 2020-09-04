@@ -50,6 +50,17 @@ def test_load_fcc_extended():
     assert_allclose(mol.atcoords[31, 1], 5.56174271338 * angstrom)
 
 
+def test_load_mgo():
+    with path('iodata.test.data', 'mgo.xyz') as fn_xyz:
+        mol = load_one(str(fn_xyz), fmt='extxyz')
+    assert_equal(mol.atnums, [12] * 4 + [8] * 4)
+    assert_equal(mol.atcoords[3], np.array([1, 1, 0]) * 2.10607000 * angstrom)
+    assert_equal(mol.extra["spacegroup"], ["F", "m", "-3", "m"])
+    assert mol.extra["unit_cell"] == "conventional"
+    assert_equal(mol.extra["pbc"], [True, True, True])
+    assert_equal(mol.cellvecs, np.identity(3) * 4.21214 * angstrom)
+
+
 def test_load_many_extended():
     with path('iodata.test.data', 'water_extended_trajectory.xyz') as fn_xyz:
         mols = list(load_many(str(fn_xyz), fmt='extxyz'))
