@@ -29,7 +29,7 @@ IOData has the following dependencies:
 
 - numpy >= 1.0: https://numpy.org/
 - scipy: https://scipy.org/
-- attrs >= 19.1.0: https://www.attrs.org/en/stable/index.html
+- attrs >= 20.1.0: https://www.attrs.org/en/stable/index.html
 - importlib_resources [only for Python 3.6]: https://gitlab.com/python-devs/importlib_resources
 
 You only need to install these dependencies manually when installing IOData from

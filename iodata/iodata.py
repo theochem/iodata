@@ -22,6 +22,7 @@
 import attr
 import numpy as np
 
+from .attrutils import convert_array_to, validate_shape
 from .basis import MolecularBasis
 from .orbitals import MolecularOrbitals
 from .utils import Cube
@@ -30,36 +31,9 @@ from .utils import Cube
 __all__ = ['IOData']
 
 
-def convert_array_to(dtype):
-    """Return a function to convert arrays to the given type."""
-    def converter(array):
-        if array is None:
-            return None
-        return np.array(array, copy=False, dtype=dtype)
-    return converter
-
-
-def validate_shape(*shape):
-    """Return a function to validate the shape of an array."""
-    def validator(obj, attrname, value):
-        if value is None:
-            return
-        myshape = tuple([obj.natom if size == 'natom' else size for size in shape])
-        if len(myshape) != len(value.shape):
-            raise TypeError('Expect ndim {} for attribute {}, got {}'.format(
-                len(myshape), attrname, len(value.shape)))
-        for axis, size in enumerate(myshape):
-            if size is None:
-                continue
-            if size != value.shape[axis]:
-                raise TypeError(
-                    'Expect size {} for axis {} of attribute {}, got {}'.format(
-                        size, axis, attrname, value.shape[axis]))
-    return validator
-
-
 # pylint: disable=too-many-instance-attributes
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
 class IOData:
     """A container class for data loaded from (or to be written to) a file.
 
@@ -199,40 +173,40 @@ class IOData:
     atcharges: dict = {}
     atcoords: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape('natom', 3))
+        validator=attr.validators.optional(validate_shape('natom', 3)))
     _atcorenums: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape('natom'))
+        validator=attr.validators.optional(validate_shape('natom')))
     atffparams: dict = {}
     atfrozen: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(bool),
-        validator=validate_shape('natom'))
+        validator=attr.validators.optional(validate_shape('natom')))
     atgradient: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape('natom', 3))
+        validator=attr.validators.optional(validate_shape('natom', 3)))
     athessian: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape(None, None))
+        validator=attr.validators.optional(validate_shape(None, None)))
     atmasses: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape('natom'))
+        validator=attr.validators.optional(validate_shape('natom')))
     atnums: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(int),
-        validator=validate_shape('natom'))
+        validator=attr.validators.optional(validate_shape('natom')))
     basisdef: str = None
     bonds: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(int),
-        validator=validate_shape(None, 3))
+        validator=attr.validators.optional(validate_shape(None, 3)))
     cellvecs: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape(None, 3))
+        validator=attr.validators.optional(validate_shape(None, 3)))
     _charge: float = None
     core_energy: float = None
     cube: Cube = None
     energy: float = None
     extcharges: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape(None, 4))
+        validator=attr.validators.optional(validate_shape(None, 4)))
     extra: dict = {}
     g_rot: float = None
     lot: str = None

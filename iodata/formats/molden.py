@@ -29,6 +29,7 @@ errors are corrected when loading them with IOData.
 from typing import Tuple, Union, TextIO
 import copy
 
+import attr
 import numpy as np
 
 from ..basis import (angmom_its, angmom_sti, MolecularBasis, Shell,
@@ -502,7 +503,7 @@ def _fix_obasis_normalize_contractions(obasis: MolecularBasis) -> MolecularBasis
     fixed_shells = []
     for shell in obasis.shells:
         shell_obasis = MolecularBasis(
-            [shell._replace(icenter=0)],
+            [attr.evolve(shell, icenter=0)],
             obasis.conventions,
             obasis.primitive_normalization
         )
