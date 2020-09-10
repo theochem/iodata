@@ -176,7 +176,7 @@ class Shell:
 
     @property
     def nprim(self) -> int:  # noqa: D401
-        """Number of primitive contracted shells, also known as the contraction length."""
+        """Number of primitive, also known as the contraction length."""
         return len(self.exponents)
 
     @property
