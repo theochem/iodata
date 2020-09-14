@@ -116,42 +116,7 @@ class Shell:
 
     Notes
     -----
-    Following definitions assumes all functions are centered at A specified by attribute `icenter`.
-
-    - Cartesian Primitive Gaussian function for a given numbers (i, j, k) and exponent
-      :math:`\alpha`:
-
-      .. math:: N() x_A^i y_A^j z_A^k e^{-\alpha_i r^2}
-
-    - Pure Primitive Gaussian functions for a given integers (l, m) and exponent :math:`\alpha`:
-
-      .. math:: N(\alpha, l) P(r, \theta, \phi) e^{-\alpha_i r^2}
-         \begin{align*}
-            C_{0m}(r, \theta, \phi) &:= r^l P^0_{l}(\cos(\theta)) & m = 0\\
-            C_{lm}(r, \theta, \phi) &:= \sqrt{2} (-1)^m \sqrt{\frac{(l - m)!}{(l + m)!}}
-            r^l P^m_l(\cos(\theta)) \cos(m \phi) & m \in \{1, \cdots, l\} \\
-            S_{lm}(r, \theta, \phi) &:= \sqrt{2} (-1)^m \sqrt{\frac{(l - m)!}{(l + m)!}}
-            r^l P^m_l(\cos(\theta)) \sin(m \phi) & m \in \{1, \cdots, l\}\\
-        \end{align*}
-
-      where :math:`P_l^m` is the associated Legrende function and :math:`N(\alpha, l)` is the
-      normalization constant.
-
-    - Contraction of Primitive Gaussians is the linear combination of primitive Gaussian functions
-      of the same shell-type l, meant as a basis function.  It has the form
-
-      .. math:: P(\cdots) \sum^M_m c_m N e^{-\alpha_m r_A^2},
-
-      where N is the normalization constant and P is either the Cartesian polynomial for a fixed
-      (i, j, k) or the real regular solid harmonic for a fixed (l, m).  The degree is the number
-      of primitive used.
-
-    - Contracted Shell with exponents :math:`(\alpha_1, \cdots, \alpha_{M})` is the set of all
-      contractions whose primitives have the exponents
-      :math:`(\alpha_1, \cdots, \alpha_{M})` in that order.
-
-    - Primitive contracted shell with exponent :math:`\alpha` is the set of all contractions
-      in a contracted shell that have the exponent :math:`\alpha`.
+    Basis set conventions and terminology are documented in :ref:`basis_conventions`.
 
     """
 
@@ -247,18 +212,7 @@ class MolecularBasis:
 
     Notes
     -----
-    - Primitive Contracted Shell with exponent :math:`\alpha`:
-      Set of all contractions in a contracted shell that have the exponent :math:`\alpha`.
-      Since there is a single exponent, then the degree of these contractions is one.
-
-    - Segmented Molecular Basis:
-      Molecular basis where each contracted shell has contractions that all correspond to the
-      same total angular momentum number.  There could only be the same shell-type inside a
-      contracted shell.  There could only be one kind of shell-type inside a contracted shell.
-
-    - Decontracted Molecular Basis:
-      Segmented molecular basis where each contracted shell is a primitive contracted shell with
-      its single exponent.
+    Basis set conventions and terminology are documented in :ref:`basis_conventions`.
 
     """
 
@@ -272,11 +226,7 @@ class MolecularBasis:
         return sum(shell.nbasis for shell in self.shells)
 
     def get_segmented(self):
-        """Convert Generalized Molecular Basis to Segmented Molecular Basis.
-
-        Segmented Molecular basis is a Molecular basis where all contracted shell in it share
-        a specific total angular momentum number.
-        """
+        """Convert Generalized Molecular Basis to Segmented Molecular Basis."""
         shells = []
         for shell in self.shells:
             for angmom, kind, coeffs in zip(shell.angmoms, shell.kinds, shell.coeffs.T):
@@ -286,13 +236,7 @@ class MolecularBasis:
         return attr.evolve(self, shells=shells)
 
     def get_decontracted(self):
-        r"""
-        Convert to Decontracted Molecular Basis from a Molecular Basis.
-
-        Decontracted Molecular basis is a Molecular basis where each contracted shell is a
-        primitive contracted shell (ie contracted shell with only one exponent and one kind).
-
-        """
+        r"""Convert to Decontracted Molecular Basis from a Molecular Basis."""
         shells = []
         for shell in self.shells:
             for i, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
@@ -327,7 +271,7 @@ class MolecularBasis:
 
         See Also
         --------
-        convert_primitive_kind : Converts primitive shells with no averaging.
+        convert_primitive_kind : Converts primitive shells without averaging.
 
         """
         if to not in ("c", "p"):
