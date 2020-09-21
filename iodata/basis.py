@@ -367,3 +367,26 @@ def get_default_conventions():
 
 
 HORTON2_CONVENTIONS, PSI4_CONVENTIONS = get_default_conventions()
+
+# fmt:off
+CCA_CONVENTIONS = {
+    (0, "c"): ["1"],
+    (1, "c"): ["x", "y", "z"],
+    (2, "c"): ["xx", "xy", "xz", "yy", "yz", "zz"],
+    (2, "p"): ["s2", "s1", "c0", "c1", "c2"],
+    (3, "c"): ["xxx", "xxy", "xxz", "xyy", "xyz", "xzz", "yyy", "yyz", "yzz", "zzz"],
+    (3, "p"): ["s3", "s2", "s1", "c0", "c1", "c2", "c3"],
+    (4, "c"): ["xxxx", "xxxy", "xxxz", "xxyy", "xxyz", "xxzz", "xyyy", "xyyz",
+               "xyzz", "xzzz", "yyyy", "yyyz", "yyzz", "yzzz", "zzzz"],
+    (4, "p"): ["s4", "s3", "s2", "s1", "c0", "c1", "c2", "c3", "c4"],
+    (5, "c"): ["xxxxx", "xxxxy", "xxxxz", "xxxyy", "xxxyz", "xxxzz", "xxyyy", "xxyyz",
+               "xxyzz", "xxzzz", "xyyyy", "xyyyz", "xyyzz", "xyzzz", "xzzzz", "yyyyy",
+               "yyyyz", "yyyzz", "yyzzz", "yzzzz", "zzzzz"],
+    (5, "p"): ["s5", "s4", "s3", "s2", "s1", "c0", "c1", "c2", "c3", "c4", "c5"],
+    (6, "c"): ["xxxxxx", "xxxxxy", "xxxxxz", "xxxxyy", "xxxxyz", "xxxxzz", "xxxyyy", "xxxyyz",
+               "xxxyzz", "xxxzzz", "xxyyyy", "xxyyyz", "xxyyzz", "xxyzzz", "xxzzzz", "xyyyyy",
+               "xyyyyz", "xyyyzz", "xyyzzz", "xyzzzz", "xzzzzz", "yyyyyy", "yyyyyz", "yyyyzz",
+               "yyyzzz", "yyzzzz", "yzzzzz", "zzzzzz"],
+    (6, "p"): ["s6", "s5", "s4", "s3", "s2", "s1", "c0", "c1", "c2", "c3", "c4", "c5", "c6"],
+}
+# fmt: on
