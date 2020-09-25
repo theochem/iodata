@@ -1,0 +1,74 @@
+{
+  "schema_name": "qcschema_molecule",
+  "schema_version": 2,
+  "symbols": ["Cu", "S", "C", "N"],
+  "geometry": [
+    1.469987,   -0.328195,    0.052136,
+    3.593873,   -0.020962,    0.010402,
+    3.968446,   -1.653292,    0.232148,
+    4.253724,   -2.762010,    0.382764
+  ],
+  "molecular_charge": 0.0,
+  "molecular_multiplicity": 1,
+  "provenance": {
+    "creator": "HORTON3",
+    "version": "Manual Validation"
+  },
+  "name": "Copper(I) thiocyanate",
+  "id": "0",
+  "identifiers": {"cSMILES": "C(#N)[S-].[Cu+]"},
+  "comment": "From CuSCN_WB97XD_DefQZVP.log",
+  "masses": [
+    62.92960,
+    31.97207,
+    12.00000,
+    14.00307
+  ],
+  "real": [
+    true,
+    true,
+    true,
+    true
+  ],
+  "atom_labels": [
+    "CuI",
+    "",
+    "",
+    ""
+  ],
+  "atomic_numbers": [29, 16, 6, 7],
+  "mass_numbers": [63, 32, 12, 14],
+  "connectivity": [
+    [0, 1, 1.0],
+    [1, 2, 1.0],
+    [2, 3, 3.0]
+  ],
+  "fragments": [
+    [0],
+    [1, 2, 3]
+  ],
+  "fragment_charges": [
+    1.0,
+    -1.0
+  ],
+  "fragment_multiplicities": [
+    1,
+    1
+  ],
+  "fix_com": false,
+  "fix_orientation": false,
+  "fix_symmetry": "c1",
+  "validated": false,
+  "extras": {
+    "lewis_acid_group": "coinage_metals",
+    "lewis_base_group": "cyanates"
+  },
+  "related_projects": {
+    "HSAB": {
+      "id": "HSAB_2019_LALB"
+    },
+    "4PB3": {
+      "id": "4PB3_2020_Group1"
+    }
+  }
+}
