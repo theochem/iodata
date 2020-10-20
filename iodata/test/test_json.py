@@ -18,10 +18,13 @@
 # --
 """Test iodata.formats.json module."""
 
+import json
+import os
+
 import numpy as np
 import pytest
 
-from ..api import load_one
+from ..api import dump_one, load_one
 from ..utils import FileFormatWarning
 
 
@@ -132,3 +135,67 @@ def test_passthrough_qcschema_molecule(filename, unparsed_dict):
         mol = load_one(str(qcschema_molecule))
 
     assert mol.extra["unparsed"] == unparsed_dict
+
+
+inout_mol_files = [
+    "LiCl_molecule.json",
+    "Hydroxyl_radical_molecule.json",
+    "CuSCN_molecule.json",
+    "CuSCN_molecule_extra.json",
+    "CuSCN_molecule_nested_extra.json"
+]
+
+
+@pytest.mark.parametrize("filename", inout_mol_files)
+def test_inout_qcschema_molecule(tmpdir, filename):
+    """Test that loading and dumping qcschema_molecule files retains all data."""
+    with path("iodata.test.data", filename) as qcschema_molecule:
+        mol = load_one(str(qcschema_molecule))
+        mol1 = json.loads(qcschema_molecule.read_bytes())
+
+    fn_tmp = os.path.join(tmpdir, 'test_qcschema_mol.json')
+    dump_one(mol, fn_tmp)
+
+    with open(fn_tmp, "r") as mol2_in:
+        mol2 = json.load(mol2_in)
+
+    # print(mol1)
+    # print(mol2)
+    assert mol1 == mol2
+
+
+inout_molssi_mol_files = [
+    "water_cluster.json",
+    "water_full.json",
+
+]
+
+
+@pytest.mark.parametrize("filename", inout_molssi_mol_files)
+def test_inout_molssi_qcschema_molecule(tmpdir, filename):
+    """Test that loading and dumping qcschema_molecule files retains all relevant data."""
+    with path("iodata.test.data", filename) as qcschema_molecule:
+        mol = load_one(str(qcschema_molecule))
+        mol1_preproc = json.loads(qcschema_molecule.read_bytes())
+
+    fn_tmp = os.path.join(tmpdir, 'test_qcschema_mol.json')
+    dump_one(mol, fn_tmp)
+
+    with open(fn_tmp, "r") as mol2_in:
+        mol2 = json.load(mol2_in)
+
+    # Extra processing for testing:
+    # Remove all null entries and empty dicts in json
+    # QCEngine seems to add null entries and empty dicts even for optional and empty keys
+    fix_keys = {k: v for k, v in mol1_preproc.items() if v is not None}
+    fix_subkeys = dict()
+    for key in fix_keys:
+        if isinstance(fix_keys[key], dict):
+            fix_subkeys[key] = {k: v for k, v in fix_keys[key].items() if v is not None}
+    mol1 = {**fix_keys, **fix_subkeys}
+    # Remove empty dicts
+    keys = list(mol1.keys())
+    for key in keys:
+        if isinstance(mol1[key], dict) and not bool(mol1[key]):
+            del mol1[key]
+    assert mol1 == mol2
