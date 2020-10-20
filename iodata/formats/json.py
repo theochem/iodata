@@ -20,13 +20,14 @@
 
 
 import json
-from typing import List, Union
+from typing import List, Union, TextIO
 from warnings import warn
 
 import numpy as np
 
-from ..docstrings import document_load_one
-from ..periodic import sym2num
+from ..docstrings import document_dump_one, document_load_one
+from ..iodata import IOData
+from ..periodic import num2sym, sym2num
 from ..utils import FileFormatError, FileFormatWarning, LineIterator
 
 try:
@@ -479,3 +480,129 @@ def _parse_provenance(
             {"creator": "IOData", "version": __version__, "routine": "iodata.formats.json"}
         )
     return base_provenance
+
+
+@document_dump_one("QCSchema", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcorenums', 'title'])
+def dump_one(f: TextIO, data: IOData):
+    """Do not edit this docstring. It will be overwritten."""
+    if "schema_name" not in data.extra:
+        raise FileFormatError("Cannot write qcschema file without 'schema_name' defined.")
+    schema_name = data.extra["schema_name"]
+
+    if schema_name == "qcschema_molecule":
+        return_dict = _dump_qcschema_molecule(data)
+    elif schema_name == "qcschema_basis":
+        raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
+        # return_dict = _dump_qcschema_basis(data)
+    elif schema_name == "qcschema_input":
+        raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
+        # return_dict = _dump_qcschema_input(data)
+    elif schema_name == "qcschema_input":
+        raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
+        # return_dict = _dump_qcschema_output(data)
+    else:
+        raise FileFormatError("'schema_name' must be one of 'qcschema_molecule', 'qcschema_basis'"
+                              "'qcschema_input' or 'qcschema_output'.")
+    json.dump(return_dict, f, indent=4)
+
+
+def _dump_qcschema_molecule(data: IOData) -> dict:
+    """Dump relevant attributes from IOData to qcschema_molecule.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to dump to file.
+
+    Returns
+    -------
+    molecule_dict
+        The dict that will produce the QCSchema JSON file.
+
+    """
+    molecule_dict = {"schema_name": "qcschema_molecule", "schema_version": 2}
+
+    # Gather required field data
+    if data.atnums is None or data.atcoords is None:
+        raise FileFormatError("qcschema_molecule requires `atnums` and `atcoords` fields.")
+    molecule_dict["symbols"] = [num2sym[num] for num in data.atnums]
+    molecule_dict["geometry"] = list(data.atcoords.flatten())
+
+    # Should be required field data
+    if not data.charge or not data.spinpol:
+        warn(
+            "`charge` and `spinpol` should be given to write qcschema_molecule file:"
+            "QCSchema defaults to charge = 0 and multiplicity = 1 if no values given.",
+            FileFormatWarning,
+            2,
+        )
+    if data.charge is not None:
+        molecule_dict["molecular_charge"] = data.charge
+    if data.spinpol is not None:
+        molecule_dict["molecular_multiplicity"] = data.spinpol + 1
+
+    # Check for other QCSchema keys from IOData keys
+    if data.title:
+        molecule_dict["name"] = data.title
+    if data.atcorenums is not None and 0 in data.atcorenums:
+        molecule_dict["real"] = list(data.atcorenums == 0)
+    # "masses" could be overwritten below (for QCSchema passthrough)
+    if data.atmasses is not None:
+        molecule_dict["masses"] = data.atmasses
+    if data.bonds is not None:
+        molecule_dict["connectivity"] = [[int(i) for i in bond] for bond in data.bonds]
+    if data.g_rot:
+        molecule_dict["fix_symmetry"] = data.g_rot
+
+    # Check for other QCSchema keys from IOData extra dict
+    if "qcel_validated" in data.extra:
+        molecule_dict["validated"] = data.extra["qcel_validated"]
+    if "identifiers" in data.extra:
+        molecule_dict["identifiers"] = data.extra["identifiers"]
+    if "comment" in data.extra:
+        molecule_dict["comment"] = data.extra["comment"]
+    if "atom_labels" in data.extra:
+        molecule_dict["atom_labels"] = data.extra["atom_labels"]
+    if "atomic_numbers" in data.extra:
+        molecule_dict["atomic_numbers"] = data.extra["atomic_numbers"]
+    if "real" in data.extra:
+        molecule_dict["real"] = data.extra["real"]
+    if "masses" in data.extra:
+        molecule_dict["masses"] = [float(m) for m in data.extra["masses"]]
+    if "mass_numbers" in data.extra:
+        molecule_dict["mass_numbers"] = [int(m) for m in data.extra["mass_numbers"]]
+    if "fragments" in data.extra:
+        if "indices" in data.extra["fragments"]:
+            molecule_dict["fragments"] = data.extra["fragments"]["indices"]
+        if "indices" in data.extra["fragments"]:
+            molecule_dict["fragment_charges"] = list(data.extra["fragments"]["charges"])
+        if "indices" in data.extra["fragments"]:
+            molecule_dict["fragment_multiplicities"] = list(data.extra["fragments"]["multiplicities"])
+    if "fix_com" in data.extra:
+        molecule_dict["fix_com"] = data.extra["fix_com"]
+    if "fix_orientation" in data.extra:
+        molecule_dict["fix_orientation"] = data.extra["fix_orientation"]
+    if "provenance" in data.extra:
+        molecule_dict["provenance"] = data.extra["provenance"]
+    else:
+        molecule_dict["provenance"] = {"creator": "IOData", "version": __version__, "routine": "iodata.formats.json"}
+    if "id" in data.extra:
+        molecule_dict["id"] = data.extra["id"]
+    if "extras" in data.extra:
+        molecule_dict["extras"] = data.extra["extras"]
+    if "unparsed" in data.extra:
+        for k in data.extra["unparsed"]:
+            molecule_dict[k] = data.extra["unparsed"][k]
+    print(molecule_dict)
+    # for k,v in molecule_dict.items():
+    #     if isinstance(v, list):
+    #         types = "{}[{}]".format(type(v), type(v[0]))
+    #     else:
+    #         types = type(v)
+    #     print("{}: {}  | {}".format(k, v, types))
+    # print(type(molecule_dict["connectivity"][0][0]))
+    return molecule_dict
+
+
+
+
