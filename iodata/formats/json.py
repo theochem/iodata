@@ -32,7 +32,7 @@ program. IOData currently supports the Molecule subschema for both ``load_one`` 
 
 
 import json
-from typing import List, Union, TextIO
+from typing import List, TextIO, Union
 from warnings import warn
 
 import numpy as np
@@ -256,7 +256,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     topology_dict["atnums"] = atnums
     # Geometry is in a flattened list, convert to N x 3
     topology_dict["atcoords"] = np.array(
-        [mol["geometry"][3 * i : (3 * i) + 3] for i in range(0, len(mol["geometry"]) // 3)]
+        [mol["geometry"][3 * i : (3 * i) + 3] for i in range(0, len(mol["geometry"]) // 3)]  # noqa
     )
     # Check for missing charge, warn that this is a required field
     if "molecular_charge" not in mol:
@@ -494,7 +494,7 @@ def _parse_provenance(
     return base_provenance
 
 
-@document_dump_one("QCSchema", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcorenums', 'title'])
+@document_dump_one("QCSchema", ["atcoords", "atnums", "mo", "obasis"], ["atcorenums", "title"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     if "schema_name" not in data.extra:
@@ -513,8 +513,10 @@ def dump_one(f: TextIO, data: IOData):
         raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
         # return_dict = _dump_qcschema_output(data)
     else:
-        raise FileFormatError("'schema_name' must be one of 'qcschema_molecule', 'qcschema_basis'"
-                              "'qcschema_input' or 'qcschema_output'.")
+        raise FileFormatError(
+            "'schema_name' must be one of 'qcschema_molecule', 'qcschema_basis'"
+            "'qcschema_input' or 'qcschema_output'."
+        )
     json.dump(return_dict, f, indent=4)
 
 
@@ -589,7 +591,9 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
         if "indices" in data.extra["fragments"]:
             molecule_dict["fragment_charges"] = list(data.extra["fragments"]["charges"])
         if "indices" in data.extra["fragments"]:
-            molecule_dict["fragment_multiplicities"] = list(data.extra["fragments"]["multiplicities"])
+            molecule_dict["fragment_multiplicities"] = list(
+                data.extra["fragments"]["multiplicities"]
+            )
     if "fix_com" in data.extra:
         molecule_dict["fix_com"] = data.extra["fix_com"]
     if "fix_orientation" in data.extra:
@@ -597,7 +601,11 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     if "provenance" in data.extra:
         molecule_dict["provenance"] = data.extra["provenance"]
     else:
-        molecule_dict["provenance"] = {"creator": "IOData", "version": __version__, "routine": "iodata.formats.json"}
+        molecule_dict["provenance"] = {
+            "creator": "IOData",
+            "version": __version__,
+            "routine": "iodata.formats.json",
+        }
     if "id" in data.extra:
         molecule_dict["id"] = data.extra["id"]
     if "extras" in data.extra:
@@ -614,7 +622,3 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     #     print("{}: {}  | {}".format(k, v, types))
     # print(type(molecule_dict["connectivity"][0][0]))
     return molecule_dict
-
-
-
-
