@@ -16,7 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""JSON file format."""
+"""QCSchema JSON file format.
+
+QCSchema defines four different subschema:
+* Molecule - specifying a molecular system
+* Input - specifying QC program input for a specific Molecule
+* Output - specifying QC program output for a specific Molecule
+* Basis - specifying a basis set for a specific Molecule
+
+The QCSchema subschema are in various levels of maturity, and are subject to change at any time
+without warning, as they are also used as the internal data representation for the QCElemental
+program. IOData currently supports the Molecule subschema for both ``load_one`` and ``dump_one``.
+
+"""
 
 
 import json
