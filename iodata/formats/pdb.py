@@ -44,13 +44,31 @@ PATTERNS = ['*.pdb']
 @document_load_one("PDB", ['atcoords', 'atnums', 'atffparams', 'extra'], ['title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    nums = []
-    resnums = []
-    coords = []
-    bfactor = []
-    occupancy = []
+    # Overview of ATOM records
+    #     COLUMNS        DATA  TYPE    FIELD        DEFINITION
+    # -------------------------------------------------------------------------------------
+    #  1 -  6        Record name   "ATOM  "
+    #  7 - 11        Integer       serial       Atom  serial number.
+    # 13 - 16        Atom          name         Atom name.
+    # 17             Character     altLoc       Alternate location indicator.
+    # 18 - 20        Residue name  resName      Residue name.
+    # 22             Character     chainID      Chain identifier.
+    # 23 - 26        Integer       resSeq       Residue sequence number.
+    # 27             AChar         iCode        Code for insertion of residues.
+    # 31 - 38        Real(8.3)     x            Orthogonal coordinates for X in Angstroms.
+    # 39 - 46        Real(8.3)     y            Orthogonal coordinates for Y in Angstroms.
+    # 47 - 54        Real(8.3)     z            Orthogonal coordinates for Z in Angstroms.
+    # 55 - 60        Real(6.2)     occupancy    Occupancy.
+    # 61 - 66        Real(6.2)     tempFactor   Temperature  factor.
+    # 77 - 78        LString(2)    element      Element symbol, right-justified.
+    # 79 - 80        LString(2)    charge       Charge  on the atom.
+    atnums = []
     attypes = []
     restypes = []
+    resnums = []
+    coords = []
+    occupancy = []
+    bfactor = []
     molecule_found = False
     end_reached = False
     title = "PDB file from IOData"
@@ -63,23 +81,23 @@ def load_one(lit: LineIterator) -> dict:
         if line.startswith("TITLE") or line.startswith("COMPND"):
             title = line[10:].rstrip()
         if line.startswith("ATOM") or line.startswith("HETATM"):
-            # Try reading element from position 77:78 referenced in pdb format
-            # (76:78 due to python string slicing)
+            # get element symbol from position 77:78 in pdb format
             words = line[76:78].split()
             if not words:
-                # If not guess it from the atom type
+                # If not present, guess it from position 13:16 (atom name)
                 words = line[12:16].split()
-            # get atomic number and residue number
+            # assign atomic number
             symbol = words[0].title()
-            nums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
-            resnums.append(int(line[23:26]))
-            # add x, y, and z
-            coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
-            # get other properties
-            occupancy.append(float(line[54:60]))
-            bfactor.append(float(line[60:66]))
+            atnums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
+            # atom name, residue name, chain id, & residue sequence number
             attypes.append(line[12:16].strip())
             restypes.append(line[17:20].strip())
+            resnums.append(int(line[22:26]))
+            # add x, y, and z
+            coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
+            # get occupancy & temperature factor
+            occupancy.append(float(line[54:60]))
+            bfactor.append(float(line[60:66]))
             molecule_found = True
         if line.startswith("END") and molecule_found:
             end_reached = True
@@ -94,7 +112,7 @@ def load_one(lit: LineIterator) -> dict:
     extra = {"occupancy": np.array(occupancy), "bfactor": np.array(bfactor)}
     result = {
         'atcoords': np.array(coords) * angstrom,
-        'atnums': np.array(nums),
+        'atnums': np.array(atnums),
         'atffparams': atffparams,
         'title': title,
         'extra': extra
