@@ -65,6 +65,7 @@ def load_one(lit: LineIterator) -> dict:
     atnums = []
     attypes = []
     restypes = []
+    chainid = []
     resnums = []
     coords = []
     occupancy = []
@@ -92,6 +93,7 @@ def load_one(lit: LineIterator) -> dict:
             # atom name, residue name, chain id, & residue sequence number
             attypes.append(line[12:16].strip())
             restypes.append(line[17:20].strip())
+            chainid.append(line[21])
             resnums.append(int(line[22:26]))
             # add x, y, and z
             coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
@@ -110,6 +112,9 @@ def load_one(lit: LineIterator) -> dict:
     atffparams = {"attypes": np.array(attypes), "restypes": np.array(restypes),
                   "resnums": np.array(resnums)}
     extra = {"occupancy": np.array(occupancy), "bfactor": np.array(bfactor)}
+    # add chain id, if it wasn't all empty
+    if not np.all(chainid == [' '] * len(chainid)):
+        extra["chainid"] = np.array(chainid)
     result = {
         'atcoords': np.array(coords) * angstrom,
         'atnums': np.array(atnums),
@@ -141,6 +146,7 @@ def dump_one(f: TextIO, data: IOData):
     resnums = data.atffparams.get('resnums', None)
     occupancy = data.extra.get('occupancy', None)
     bfactor = data.extra.get('bfactor', None)
+    chainid = data.extra.get('chainid', None)
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         resnum = -1 if resnums is None else resnums[i]
@@ -149,7 +155,8 @@ def dump_one(f: TextIO, data: IOData):
         b = 0.00 if bfactor is None else bfactor[i]
         attype = str(n + str(i + 1)) if attypes is None else attypes[i]
         restype = "XXX" if restypes is None else restypes[i]
-        out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} A{resnum:>4d}    '
+        chain = " " if chainid is None else chainid[i]
+        out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} {chain:1s}{resnum:>4d}    '
         out2 = f'{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}'
         print("ATOM  " + out1 + out2, file=f)
     print("END", file=f)
