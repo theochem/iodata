@@ -64,7 +64,7 @@ install:
     fi
   # Get a basic python 3 with pip to run roberto
   - python3 --version
-  - wget --no-clobber -O ${HOME}/cache/get-pip.py https://bootstrap.pypa.io/get-pip.py || true
+  - wget --no-clobber -O ${HOME}/cache/get-pip.py https://bootstrap.pypa.io/3.5/get-pip.py || true
   - python3 ${HOME}/cache/get-pip.py --user
   - python3 -m pip install 'roberto<2.0.0' --user
 
