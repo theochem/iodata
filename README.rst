@@ -37,6 +37,16 @@ About
 IOData is a HORTON 3 module for input/output of quantum chemistry file formats.
 Documentation is here: https://iodata.readthedocs.io/en/latest/index.html
 
+Citation
+--------
+
+Please use the following citation in any publication using IOData library:
+
+    **"IOData: A python library for reading, writing, and converting computational chemistry file
+    formats and generating input files."**, T. Verstraelen, W. Adams, L. Pujal, A. Tehrani, B. D.
+    Kelly, L. Macaya, F. Meng, M. Richer, R. Hernandez‐Esparza, X. D. Yang, M. Chan, T. D. Kim, M.
+    Cools‐Ceuppens, V. Chuiko, E. Vohringer‐Martinez,P. W. Ayers, F. Heidar‐Zadeh,
+    `J Comput Chem. 2021; 42: 458– 464 <https://doi.org/10.1002/jcc.26468>`__.
 
 Installation
 ------------
