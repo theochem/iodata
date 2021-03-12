@@ -3,8 +3,7 @@ dependencies:
   - python=3.7
   - numpy
   - scipy
-  - gcc_linux-64
-  - cython
+  - attrs >=20.1.0
   - pip:
       - sphinx-autodoc-typehints
       - sphinxcontrib-napoleon

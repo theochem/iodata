@@ -3,7 +3,7 @@ linters:
       packages: ['iodata']
   - namespace:
       filefilter: ['- */__init__.py', '- */test_*.py', '- *setup.py', '- tools/*',
-                   '- doc/conf.py', '+ *.py', '+ *.pyx']
+                   '- doc/*.py', '+ *.py', '+ *.pyx']
   - pylint:
   - pycodestyle:
       config: .pycodestylerc
