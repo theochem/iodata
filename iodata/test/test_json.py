@@ -34,8 +34,8 @@ except ImportError:
     from importlib.resources import path
 
 # Tests for qcschema_molecule
-# geoms: dict of str: np.ndarray(N, 3)
-geoms = {
+# GEOMS: dict of str: np.ndarray(N, 3)
+GEOMS = {
     "LiCl": np.array([[0.000000, 0.000000, -1.631761], [0.000000, 0.000000, 0.287958]]),
     "OHr": np.array([[0.0, 0.0, -0.12947694], [0.0, -1.49418734, 1.02744651]]),
     "CuSCN": np.array(
@@ -48,18 +48,18 @@ geoms = {
     ),
 }
 # These molecule examples were manually generated for testing
-# mol_files: (filename, atnums, charge, spinpol, geometry)
-mol_files = [
-    ("LiCl_molecule.json", [3, 17], 0, 0, geoms["LiCl"]),
+# MOL_FILES: (filename, atnums, charge, spinpol, geometry)
+MOL_FILES = [
+    ("LiCl_molecule.json", [3, 17], 0, 0, GEOMS["LiCl"]),
     # Manual validation of molpro_uks_hydroxyl_radical_gradient_output.json
-    ("Hydroxyl_radical_molecule.json", [8, 1], 0, 1, geoms["OHr"]),
+    ("Hydroxyl_radical_molecule.json", [8, 1], 0, 1, GEOMS["OHr"]),
     # Warnings:
     #   has both masses and mass numbers
-    ("CuSCN_molecule.json", [29, 16, 6, 7], 0, 0, geoms["CuSCN"]),
+    ("CuSCN_molecule.json", [29, 16, 6, 7], 0, 0, GEOMS["CuSCN"]),
 ]
 
 
-@pytest.mark.parametrize("filename, atnums, charge, spinpol, geometry", mol_files)
+@pytest.mark.parametrize("filename, atnums, charge, spinpol, geometry", MOL_FILES)
 @pytest.mark.filterwarnings("ignore")
 def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry):
     """Test qcschema_molecule parsing using manually generated files."""
@@ -74,8 +74,8 @@ def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry):
 
 # Not a single valid example of qcschema_molecule is easily found for anything but water
 # These molecule examples are sourced from the QCEngineRecords repo or from the QCSchema site
-# molssi_mol_files: (filename, atnums, charge, spinpol, warnings)
-molssi_mol_files = [
+# MOLSSI_MOL_FILES: (filename, atnums, charge, spinpol, warnings)
+MOLSSI_MOL_FILES = [
     # Extracted from qchem_logonly_rimp2_watercluster_gradient_output.json
     # Warnings:
     #   has both masses and mass numbers
@@ -99,7 +99,7 @@ molssi_mol_files = [
 ]
 
 
-@pytest.mark.parametrize("filename, atnums, charge, spinpol, warnings", molssi_mol_files)
+@pytest.mark.parametrize("filename, atnums, charge, spinpol, warnings", MOLSSI_MOL_FILES)
 def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, warnings):
     """Test qcschema_molecule parsing using MolSSI-sourced files."""
     with path("iodata.test.data", filename) as qcschema_molecule:
@@ -113,21 +113,21 @@ def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, warnings):
 
 
 # Unparsed dicts for test files
-unparsed = {
+UNPARSED = {
     "extra": {"another_field": True},
     "nested_extra": {
         "related_projects": {"HSAB": {"id": "HSAB_2019_LALB"}, "4PB3": {"id": "4PB3_2020_Group1"}}
     },
 }
 # Test passthrough for molecule files using modified versions of CuSCN_molecule.json
-# passthrough_mol_files: {filename, unparsed_dict}
-passthrough_mol_files = [
-    ("CuSCN_molecule_extra.json", unparsed["extra"]),
-    ("CuSCN_molecule_nested_extra.json", unparsed["nested_extra"]),
+# PASSTHROUGH_MOL_FILES: {filename, unparsed_dict}
+PASSTHROUGH_MOL_FILES = [
+    ("CuSCN_molecule_extra.json", UNPARSED["extra"]),
+    ("CuSCN_molecule_nested_extra.json", UNPARSED["nested_extra"]),
 ]
 
 
-@pytest.mark.parametrize("filename, unparsed_dict", passthrough_mol_files)
+@pytest.mark.parametrize("filename, unparsed_dict", PASSTHROUGH_MOL_FILES)
 @pytest.mark.filterwarnings("ignore")
 def test_passthrough_qcschema_molecule(filename, unparsed_dict):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
@@ -137,7 +137,7 @@ def test_passthrough_qcschema_molecule(filename, unparsed_dict):
     assert mol.extra["unparsed"] == unparsed_dict
 
 
-inout_mol_files = [
+INOUT_MOL_FILES = [
     "LiCl_molecule.json",
     "Hydroxyl_radical_molecule.json",
     "CuSCN_molecule.json",
@@ -146,7 +146,7 @@ inout_mol_files = [
 ]
 
 
-@pytest.mark.parametrize("filename", inout_mol_files)
+@pytest.mark.parametrize("filename", INOUT_MOL_FILES)
 def test_inout_qcschema_molecule(tmpdir, filename):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with path("iodata.test.data", filename) as qcschema_molecule:
@@ -164,14 +164,13 @@ def test_inout_qcschema_molecule(tmpdir, filename):
     assert mol1 == mol2
 
 
-inout_molssi_mol_files = [
+INOUT_MOLSSI_MOL_FILES = [
     "water_cluster.json",
     "water_full.json",
-
 ]
 
 
-@pytest.mark.parametrize("filename", inout_molssi_mol_files)
+@pytest.mark.parametrize("filename", INOUT_MOLSSI_MOL_FILES)
 def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     """Test that loading and dumping qcschema_molecule files retains all relevant data."""
     with path("iodata.test.data", filename) as qcschema_molecule:
