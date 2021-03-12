@@ -83,8 +83,9 @@ def _find_input_modules():
     result = {}
     for module_info in iter_modules(import_module('iodata.inputs').__path__):
         if not module_info.ispkg:
-            format_module = import_module('iodata.inputs.' + module_info.name)
-            result[module_info.name] = format_module
+            input_module = import_module('iodata.inputs.' + module_info.name)
+            if hasattr(input_module, "write_input"):
+                result[module_info.name] = input_module
     return result
 
 
@@ -92,7 +93,7 @@ INPUT_MODULES = _find_input_modules()
 
 
 def _select_input_module(fmt: str) -> ModuleType:
-    """Find an input module with the requested attribute name.
+    """Find an input module.
 
     Parameters
     ----------
@@ -131,16 +132,17 @@ def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
 
     Returns
     -------
-    out: IOData
+    out
         The instance of IOData with data loaded from the input files.
 
     """
     format_module = _select_format_module(filename, 'load_one', fmt)
     lit = LineIterator(filename)
     try:
-        return IOData(**format_module.load_one(lit, **kwargs))
+        iodata = IOData(**format_module.load_one(lit, **kwargs))
     except StopIteration:
         lit.error("File ended before all data was read.")
+    return iodata
 
 
 def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
@@ -162,7 +164,7 @@ def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
 
     Yields
     ------
-    out: IOData
+    out
         An instance of IOData with data for one frame loaded for the file.
 
     """
