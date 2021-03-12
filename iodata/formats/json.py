@@ -51,8 +51,10 @@ __all__ = []
 PATTERNS = ["*.json"]
 
 
-# FIXME: check this
-@document_load_one("QCSchema", ["atcoords", "atnums", "atcorenums", "mo", "obasis"], ["title"])
+@document_load_one(
+    "QCSchema",
+    ["atnums", "atcoords", "charge", "nelec", "spinpol"],
+    ["atmasses", "bonds", "g_rot", "title", "extra"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Use python standard lib json module to read the file to a dict
@@ -169,10 +171,10 @@ def _load_qcschema_molecule(result: dict, lit: LineIterator) -> dict:
     Returns
     -------
     molecule_dict
-        Output dictionary containing ``atcoords``, ``atnums`` & ``spinpol`` keys and
-        corresponding values.
-        It may contain ``atcorenums``, ``atmasses``, ``bonds``, ``charge`` & ``extra`` keys
-        and corresponding values as well.
+        Output dictionary containing ``atcoords``, ``atnums``, ``charge``,
+        ``nelec`` & ``spinpol`` keys and corresponding values.
+        It may contain ``atmasses``, ``bonds``, ``g_rot``, ``title`` & ``extra``
+        keys and corresponding values as well.
 
     """
     # All Topology properties are found in the "molecule" key
@@ -203,9 +205,10 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     Returns
     -------
     topology_dict
-        Output dictionary containing ``atcoords`` & ``atnums`` keys and corresponding values.
-        It may contain ``atcorenums``, ``atmasses``, ``bonds``, ``charge`` & ``extra`` keys
-        and corresponding values as well.
+        Output dictionary containing ``atcoords``, ``atnums``, ``charge``,
+        ``nelec`` & ``spinpol`` keys and corresponding values.
+        It may contain ``atmasses``, ``bonds``, ``g_rot``, ``title`` & ``extra``
+        keys and corresponding values as well.
 
     """
     # Make sure required topology properties are present
@@ -491,7 +494,10 @@ def _parse_provenance(
     return base_provenance
 
 
-@document_dump_one("QCSchema", ["atcoords", "atnums", "mo", "obasis"], ["atcorenums", "title"])
+@document_dump_one(
+    "QCSchema",
+    ["atnums", "atcoords", "charge", "spinpol"],
+    ["title", "atcorenums", "atmasses", "bonds", "g_rot", "extra"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     if "schema_name" not in data.extra:
