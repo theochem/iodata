@@ -53,7 +53,7 @@ PATTERNS = ["*.json"]
 
 @document_load_one(
     "QCSchema",
-    ["atnums", "atcoords", "charge", "nelec", "spinpol"],
+    ["atnums", "atcorenums", "atcoords", "charge", "nelec", "spinpol"],
     ["atmasses", "bonds", "g_rot", "title", "extra"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
@@ -251,11 +251,12 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
         )
     extra_dict["schema_version"] = version
 
-    atnums = np.array([sym2num[symbol.title()] for symbol in mol["symbols"]])
-    atcorenums = atnums.copy()
-    topology_dict["atnums"] = atnums
     # Geometry is in a flattened list, convert to N x 3
     topology_dict["atcoords"] = np.array(mol["geometry"]).reshape(-1, 3)
+    atnums = np.array([sym2num[symbol.title()] for symbol in mol["symbols"]])
+    topology_dict["atnums"] = atnums
+    atcorenums = atnums.astype(float)
+    topology_dict["atcorenums"] = atcorenums
     # Check for missing charge, warn that this is a required field
     if "molecular_charge" not in mol:
         warn(
@@ -294,9 +295,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     # Check for optional keys
     # Load ghost atoms as atoms with zero effective core charge
     if "real" in mol:
-        ghosts = mol["real"]
-        extra_dict["real"] = ghosts
-        atcorenums[ghosts is False] = 0
+        atcorenums[~np.array(mol["real"])] = 0.0
     # Load atom masses to array, canonical weights assumed if masses not given
     if "masses" in mol and "mass_numbers" in mol:
         warn(
@@ -320,11 +319,11 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     # List fragment indices in nested list (likely is a jagged array)
     if "fragments" in mol:
         fragments = mol["fragments"]
-        extra_dict["fragments"] = {"indices": fragments}
+        extra_dict["fragments"] = {"indices": [np.array(fragment) for fragment in fragments]}
         if "fragment_charges" in mol:
-            extra_dict["fragments"]["charges"] = mol["fragment_charges"]
+            extra_dict["fragments"]["charges"] = np.array(mol["fragment_charges"])
         if "fragment_multiplicities" in mol:
-            extra_dict["fragments"]["multiplicities"] = mol["fragment_multiplicities"]
+            extra_dict["fragments"]["multiplicities"] = np.array(mol["fragment_multiplicities"])
     if "fix_symmetry" in mol:
         topology_dict["g_rot"] = mol["fix_symmetry"]
     if "fix_orientation" in mol:
@@ -345,7 +344,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     if "atom_labels" in mol:
         extra_dict["atom_labels"] = mol["atom_labels"]
     if "atomic_numbers" in mol:
-        extra_dict["atomic_numbers"] = mol["atomic_numbers"]
+        extra_dict["atomic_numbers"] = np.array(mol["atomic_numbers"])
     if "id" in mol:
         extra_dict["id"] = mol["id"]
     if "extras" in mol:
@@ -561,11 +560,10 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     # Check for other QCSchema keys from IOData keys
     if data.title:
         molecule_dict["name"] = data.title
-    if data.atcorenums is not None and 0 in data.atcorenums:
-        molecule_dict["real"] = list(data.atcorenums == 0)
+    molecule_dict["real"] = [bool(atcorenum != 0) for atcorenum in data.atcorenums]
     # "masses" could be overwritten below (for QCSchema passthrough)
     if data.atmasses is not None:
-        molecule_dict["masses"] = data.atmasses
+        molecule_dict["masses"] = data.atmasses.tolist()
     if data.bonds is not None:
         molecule_dict["connectivity"] = [[int(i) for i in bond] for bond in data.bonds]
     if data.g_rot:
@@ -581,22 +579,18 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     if "atom_labels" in data.extra:
         molecule_dict["atom_labels"] = data.extra["atom_labels"]
     if "atomic_numbers" in data.extra:
-        molecule_dict["atomic_numbers"] = data.extra["atomic_numbers"]
-    if "real" in data.extra:
-        molecule_dict["real"] = data.extra["real"]
+        molecule_dict["atomic_numbers"] = data.extra["atomic_numbers"].tolist()
     if "masses" in data.extra:
-        molecule_dict["masses"] = [float(m) for m in data.extra["masses"]]
+        molecule_dict["masses"] = data.extra["masses"].tolist()
     if "mass_numbers" in data.extra:
-        molecule_dict["mass_numbers"] = [int(m) for m in data.extra["mass_numbers"]]
+        molecule_dict["mass_numbers"] = data.extra["mass_numbers"].tolist()
     if "fragments" in data.extra:
         if "indices" in data.extra["fragments"]:
-            molecule_dict["fragments"] = data.extra["fragments"]["indices"]
+            molecule_dict["fragments"] = [fragment.tolist() for fragment in data.extra["fragments"]["indices"]]
         if "indices" in data.extra["fragments"]:
-            molecule_dict["fragment_charges"] = list(data.extra["fragments"]["charges"])
+            molecule_dict["fragment_charges"] = data.extra["fragments"]["charges"].tolist()
         if "indices" in data.extra["fragments"]:
-            molecule_dict["fragment_multiplicities"] = list(
-                data.extra["fragments"]["multiplicities"]
-            )
+            molecule_dict["fragment_multiplicities"] = data.extra["fragments"]["multiplicities"].tolist()
     if "fix_com" in data.extra:
         molecule_dict["fix_com"] = data.extra["fix_com"]
     if "fix_orientation" in data.extra:

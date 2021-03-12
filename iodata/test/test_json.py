@@ -217,3 +217,15 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
         if isinstance(mol1[key], dict) and not bool(mol1[key]):
             del mol1[key]
     assert mol1 == mol2
+
+
+def test_ghost(tmpdir):
+    with path("iodata.test.data", "water_cluster_ghost.json") as qcschema_molecule:
+        mol = load_one(str(qcschema_molecule))
+    np.testing.assert_allclose(mol.atcorenums, [8, 1, 1, 0, 0, 0, 0, 0, 0])
+    fn_tmp = os.path.join(tmpdir, 'test_ghost.json')
+    dump_one(mol, fn_tmp)
+    with open(fn_tmp, "r") as mol2_in:
+        mol2 = json.load(mol2_in)
+    print(mol2)
+    assert mol2["real"] == [True] * 3 + [False] * 6
