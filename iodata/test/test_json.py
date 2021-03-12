@@ -50,21 +50,25 @@ GEOMS = {
 # These molecule examples were manually generated for testing
 # MOL_FILES: (filename, atnums, charge, spinpol, geometry)
 MOL_FILES = [
-    ("LiCl_molecule.json", [3, 17], 0, 0, GEOMS["LiCl"]),
+    ("LiCl_molecule.json", [3, 17], 0, 0, GEOMS["LiCl"], 0),
     # Manual validation of molpro_uks_hydroxyl_radical_gradient_output.json
-    ("Hydroxyl_radical_molecule.json", [8, 1], 0, 1, GEOMS["OHr"]),
+    ("Hydroxyl_radical_molecule.json", [8, 1], 0, 1, GEOMS["OHr"], 0),
     # Warnings:
     #   has both masses and mass numbers
-    ("CuSCN_molecule.json", [29, 16, 6, 7], 0, 0, GEOMS["CuSCN"]),
+    ("CuSCN_molecule.json", [29, 16, 6, 7], 0, 0, GEOMS["CuSCN"], 1),
 ]
 
 
-@pytest.mark.parametrize("filename, atnums, charge, spinpol, geometry", MOL_FILES)
-@pytest.mark.filterwarnings("ignore")
-def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry):
+@pytest.mark.parametrize("filename, atnums, charge, spinpol, geometry, nwarn", MOL_FILES)
+def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry, nwarn):
     """Test qcschema_molecule parsing using manually generated files."""
     with path("iodata.test.data", filename) as qcschema_molecule:
-        mol = load_one(str(qcschema_molecule))
+        if nwarn == 0:
+            mol = load_one(str(qcschema_molecule))
+        else:
+            with pytest.warns(FileFormatWarning) as record:
+                mol = load_one(str(qcschema_molecule))
+            assert len(record) == nwarn
 
     np.testing.assert_equal(mol.atnums, atnums)
     assert mol.charge == charge
@@ -99,8 +103,8 @@ MOLSSI_MOL_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, atnums, charge, spinpol, warnings", MOLSSI_MOL_FILES)
-def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, warnings):
+@pytest.mark.parametrize("filename, atnums, charge, spinpol, nwarn", MOLSSI_MOL_FILES)
+def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, nwarn):
     """Test qcschema_molecule parsing using MolSSI-sourced files."""
     with path("iodata.test.data", filename) as qcschema_molecule:
         with pytest.warns(FileFormatWarning) as record:
@@ -109,7 +113,7 @@ def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, warnings):
     np.testing.assert_equal(mol.atnums, atnums)
     assert mol.charge == charge
     assert mol.spinpol == spinpol
-    assert len(record) == warnings
+    assert len(record) == nwarn
 
 
 # Unparsed dicts for test files
@@ -128,33 +132,44 @@ PASSTHROUGH_MOL_FILES = [
 
 
 @pytest.mark.parametrize("filename, unparsed_dict", PASSTHROUGH_MOL_FILES)
-@pytest.mark.filterwarnings("ignore")
 def test_passthrough_qcschema_molecule(filename, unparsed_dict):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
     with path("iodata.test.data", filename) as qcschema_molecule:
-        mol = load_one(str(qcschema_molecule))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(qcschema_molecule))
 
     assert mol.extra["unparsed"] == unparsed_dict
+    assert len(record) == 1
 
 
 INOUT_MOL_FILES = [
-    "LiCl_molecule.json",
-    "Hydroxyl_radical_molecule.json",
-    "CuSCN_molecule.json",
-    "CuSCN_molecule_extra.json",
-    "CuSCN_molecule_nested_extra.json"
+    ("LiCl_molecule.json", 0, 1),
+    ("Hydroxyl_radical_molecule.json", 0, 1),
+    ("CuSCN_molecule.json", 1, 1),
+    ("CuSCN_molecule_extra.json", 1, 1),
+    ("CuSCN_molecule_nested_extra.json", 1, 1),
 ]
 
 
-@pytest.mark.parametrize("filename", INOUT_MOL_FILES)
-def test_inout_qcschema_molecule(tmpdir, filename):
+@pytest.mark.parametrize("filename, nwarn_load, nwarn_dump", INOUT_MOL_FILES)
+def test_inout_qcschema_molecule(tmpdir, filename, nwarn_load, nwarn_dump):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with path("iodata.test.data", filename) as qcschema_molecule:
-        mol = load_one(str(qcschema_molecule))
+        if nwarn_load == 0:
+            mol = load_one(str(qcschema_molecule))
+        else:
+            with pytest.warns(FileFormatWarning) as record:
+                mol = load_one(str(qcschema_molecule))
+            assert len(record) == nwarn_load
         mol1 = json.loads(qcschema_molecule.read_bytes())
 
     fn_tmp = os.path.join(tmpdir, 'test_qcschema_mol.json')
-    dump_one(mol, fn_tmp)
+    if nwarn_dump == 0:
+        dump_one(mol, fn_tmp)
+    else:
+        with pytest.warns(FileFormatWarning) as record:
+            dump_one(mol, fn_tmp)
+        assert len(record) == nwarn_dump
 
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
@@ -174,11 +189,15 @@ INOUT_MOLSSI_MOL_FILES = [
 def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     """Test that loading and dumping qcschema_molecule files retains all relevant data."""
     with path("iodata.test.data", filename) as qcschema_molecule:
-        mol = load_one(str(qcschema_molecule))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(qcschema_molecule))
         mol1_preproc = json.loads(qcschema_molecule.read_bytes())
+    assert len(record) == 1
 
     fn_tmp = os.path.join(tmpdir, 'test_qcschema_mol.json')
-    dump_one(mol, fn_tmp)
+    with pytest.warns(FileFormatWarning) as record:
+        dump_one(mol, fn_tmp)
+    assert len(record) == 1
 
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
