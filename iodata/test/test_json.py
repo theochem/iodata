@@ -143,33 +143,28 @@ def test_passthrough_qcschema_molecule(filename, unparsed_dict):
 
 
 INOUT_MOL_FILES = [
-    ("LiCl_molecule.json", 0, 1),
-    ("Hydroxyl_radical_molecule.json", 0, 1),
-    ("CuSCN_molecule.json", 1, 1),
-    ("CuSCN_molecule_extra.json", 1, 1),
-    ("CuSCN_molecule_nested_extra.json", 1, 1),
+    ("LiCl_molecule.json", 0),
+    ("Hydroxyl_radical_molecule.json", 0),
+    ("CuSCN_molecule.json", 1),
+    ("CuSCN_molecule_extra.json", 1),
+    ("CuSCN_molecule_nested_extra.json", 1),
 ]
 
 
-@pytest.mark.parametrize("filename, nwarn_load, nwarn_dump", INOUT_MOL_FILES)
-def test_inout_qcschema_molecule(tmpdir, filename, nwarn_load, nwarn_dump):
+@pytest.mark.parametrize("filename, nwarn", INOUT_MOL_FILES)
+def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with path("iodata.test.data", filename) as qcschema_molecule:
-        if nwarn_load == 0:
+        if nwarn == 0:
             mol = load_one(str(qcschema_molecule))
         else:
             with pytest.warns(FileFormatWarning) as record:
                 mol = load_one(str(qcschema_molecule))
-            assert len(record) == nwarn_load
+            assert len(record) == nwarn
         mol1 = json.loads(qcschema_molecule.read_bytes())
 
     fn_tmp = os.path.join(tmpdir, 'test_qcschema_mol.json')
-    if nwarn_dump == 0:
-        dump_one(mol, fn_tmp)
-    else:
-        with pytest.warns(FileFormatWarning) as record:
-            dump_one(mol, fn_tmp)
-        assert len(record) == nwarn_dump
+    dump_one(mol, fn_tmp)
 
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
@@ -195,9 +190,7 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     assert len(record) == 1
 
     fn_tmp = os.path.join(tmpdir, 'test_qcschema_mol.json')
-    with pytest.warns(FileFormatWarning) as record:
-        dump_one(mol, fn_tmp)
-    assert len(record) == 1
+    dump_one(mol, fn_tmp)
 
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)

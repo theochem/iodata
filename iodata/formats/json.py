@@ -383,7 +383,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     parsed_keys = molecule_keys.intersection(mol.keys())
     for key in parsed_keys:
         del mol[key]
-    if mol:
+    if len(mol) > 0:
         topology_dict["extra"]["unparsed"] = mol
 
     return topology_dict
@@ -545,7 +545,7 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     molecule_dict["geometry"] = list(data.atcoords.flatten())
 
     # Should be required field data
-    if not data.charge or not data.spinpol:
+    if data.charge is None or data.spinpol is None:
         warn(
             "`charge` and `spinpol` should be given to write qcschema_molecule file:"
             "QCSchema defaults to charge = 0 and multiplicity = 1 if no values given.",
