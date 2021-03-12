@@ -220,5 +220,4 @@ def test_ghost(tmpdir):
     dump_one(mol, fn_tmp)
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
-    print(mol2)
     assert mol2["real"] == [True] * 3 + [False] * 6

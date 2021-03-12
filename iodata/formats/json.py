@@ -82,7 +82,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
     Returns
     -------
     out
-        Output dictionary containing ...
+        Dictionary with IOData attributes.
 
     """
     # Remove all null entries and empty dicts in json
@@ -460,7 +460,7 @@ def _parse_provenance(
     Parameters
     ----------
     provenance
-
+        QCSchema JSON provenance dictionary.
     lit
         The line iterator holding the file data.
     source
@@ -586,11 +586,14 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
         molecule_dict["mass_numbers"] = data.extra["mass_numbers"].tolist()
     if "fragments" in data.extra:
         if "indices" in data.extra["fragments"]:
-            molecule_dict["fragments"] = [fragment.tolist() for fragment in data.extra["fragments"]["indices"]]
+            molecule_dict["fragments"] = [
+                fragment.tolist() for fragment in data.extra["fragments"]["indices"]
+            ]
         if "indices" in data.extra["fragments"]:
             molecule_dict["fragment_charges"] = data.extra["fragments"]["charges"].tolist()
         if "indices" in data.extra["fragments"]:
-            molecule_dict["fragment_multiplicities"] = data.extra["fragments"]["multiplicities"].tolist()
+            molecule_dict["fragment_multiplicities"] = \
+                data.extra["fragments"]["multiplicities"].tolist()
     if "fix_com" in data.extra:
         molecule_dict["fix_com"] = data.extra["fix_com"]
     if "fix_orientation" in data.extra:
@@ -610,7 +613,7 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     if "unparsed" in data.extra:
         for k in data.extra["unparsed"]:
             molecule_dict[k] = data.extra["unparsed"][k]
-    print(molecule_dict)
+    # print(molecule_dict)
     # for k,v in molecule_dict.items():
     #     if isinstance(v, list):
     #         types = "{}[{}]".format(type(v), type(v[0]))
