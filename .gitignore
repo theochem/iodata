@@ -20,6 +20,7 @@ iodata/overlap_accel.c
 doc/_build
 doc/pyapi
 doc/formats.rst
+doc/inputs.rst
 doc/formats_tab.inc
 
 # Distribution / packaging

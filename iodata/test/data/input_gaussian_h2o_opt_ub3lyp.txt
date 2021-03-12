@@ -1,0 +1,22 @@
+%chk=gaussian.chk
+%mem=3500MB
+%nprocs=4
+#p ub3lyp/6-31g* opt scf(tight,xqc,fermi) integral(grid=ultrafine) nosymmetry
+
+Water ub3lyp/6-31g* opt-force
+
+0 1
+H     0.783837  -0.492236  -0.000000
+O    -0.000000   0.062020  -0.000000
+H    -0.783837  -0.492236  -0.000000
+
+--Link1--
+%chk=gaussian.chk
+%mem=3500MB
+%nprocs=4
+#p ub3lyp/6-31g* force guess=read geom=allcheck integral(grid=ultrafine) output=wfn
+
+gaussian.wfn
+
+
+
