@@ -252,9 +252,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     atcorenums = atnums.copy()
     topology_dict["atnums"] = atnums
     # Geometry is in a flattened list, convert to N x 3
-    topology_dict["atcoords"] = np.array(
-        [mol["geometry"][3 * i: (3 * i) + 3] for i in range(0, len(mol["geometry"]) // 3)]
-    )
+    topology_dict["atcoords"] = np.array(mol["geometry"]).reshape(-1, 3)
     # Check for missing charge, warn that this is a required field
     if "molecular_charge" not in mol:
         warn(
