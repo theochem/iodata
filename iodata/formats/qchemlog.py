@@ -37,19 +37,17 @@ __all__ = []
 PATTERNS = ['*.qchemlog']
 
 
-@document_load_one("qchemlog", ['atcoords', 'atmasses', 'atnums', 'charge', 'energy', 'g_rot',
-                                'mo', 'lot', 'nelec', 'obasis_name', 'run_type', 'extra'],
+@document_load_one("qchemlog", ['atcoords', 'atmasses', 'atnums', 'energy', 'g_rot',
+                                'mo', 'lot', 'obasis_name', 'run_type', 'extra'],
                    ['athessian'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     data = load_qchemlog_low(lit)
 
     # add these labels if they are loaded
-    result_labels = ['atcoords', 'atmasses', 'atnums', 'charge', 'charge', 'energy', 'g_rot',
+    result_labels = ['atcoords', 'atmasses', 'atnums', 'energy', 'g_rot',
                      'run_type', 'athessian', 'lot', 'obasis_name']
     result = {label: data[label] for label in result_labels if data.get(label) is not None}
-    # add number of electrons
-    result['nelec'] = data['alpha_elec'] + data['beta_elec']
 
     # mulliken charges
     if data.get("mulliken_charges") is not None:
@@ -125,8 +123,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
 
         # get the atomic information
         if line.startswith('$molecule'):
-            result = _helper_atoms(lit)
-            data['charge'], data['spin_multi'], data['atnums'], data['atcoords'] = result
+            data['atnums'], data['atcoords'] = _helper_atoms(lit)
             data['natom'] = len(data['atnums'])
         # job specifications
         elif line.startswith('$rem'):
@@ -168,8 +165,8 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
 
 def _helper_atoms(lit: LineIterator) -> Tuple:
     """Load list of coordinates from an Q-Chem log output file format."""
-    # net charge and spin multiplicity
-    charge, spin_multi = [int(i) for i in next(lit).strip().split()]
+    # Skip line with net charge and spin multiplicity
+    next(lit)
     # atomic numbers and atomic coordinates (in Angstrom)
     atom_symbols = []
     atcoords = []
@@ -180,7 +177,7 @@ def _helper_atoms(lit: LineIterator) -> Tuple:
         atcoords.append([float(i) for i in line.strip().split()[1:]])
     atnums = np.array([sym2num[i] for i in atom_symbols])
     atcoords = np.array(atcoords)
-    return charge, spin_multi, atnums, atcoords
+    return atnums, atcoords
 
 
 def _helper_job(lit: LineIterator) -> Tuple:

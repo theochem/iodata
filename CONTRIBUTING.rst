@@ -1,5 +1,7 @@
 We'd love you to contribute. Here are some practical hints to help out.
 
+This document assumes you are familiar with `Bash`_ and `Python`_.
+
 
 General recommendations
 -----------------------
@@ -27,6 +29,8 @@ General recommendations
   comparing floating point scalars. In all other cases (not involving floating
   point numbers), the simple ``assert a == b`` works equally well and is more
   readable.
+
+- IOData always uses atomic units internally. See :ref:`units` for details.
 
 
 Adding new file formats
@@ -203,23 +207,58 @@ formats, this could become more complicated.
 Github work flow
 ----------------
 
-1. Before diving into technicalities: if you intend to make major changes,
-   beyond fixing bugs and small functionality improvements, please open a Github
-   issue first, so we can discuss before coding. Please explain what you intend
-   to accomplish and why. That often saves a lot of time and trouble in the long
-   run.
+Before diving into technicalities: if you intend to make major changes, beyond
+fixing bugs and small functionality improvements, please open a Github issue
+first, so we can discuss before coding. Please explain what you intend to
+accomplish and why. That often saves a lot of time and trouble in the long run.
 
-   Use the issue to plan your changes. Try to solve only one problem at a time,
-   instead of fixing several issues and adding different features in a single
-   shot. Small changes are easier to handle, also for the reviewer in the last
-   step below.
+Use the issue to plan your changes. Try to solve only one problem at a time,
+instead of fixing several issues and adding different features in a single shot.
+Small changes are easier to handle, also for the reviewer in the last step
+below.
 
-   Mention in the corresponding issue when you are working on it. "Claim" the
-   issue to avoid duplicate efforts.
+Mention in the corresponding issue when you are working on it. "Claim" the issue
+to avoid duplicate efforts.
+
+1. Check your GitHub settings and your local git configuration:
+
+   - If you don't have an SSH key pair yet, create one with the following
+     terminal command:
+
+     .. code-block:: bash
+
+        ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+
+     A suitable name for this key would be ``id_rsa_github``.
+     An empty pass phrase is convenient and should be fine.
+     This will generate a private and a public key in ``${HOME}/.ssh``.
+
+   - Upload your *public* SSH key to `<https://github.com/settings/keys>`_.
+     This is a single long line in ``id_rsa_github.pub``, which you can
+     copy-paste into the browser.
+
+   - Configure SSH to use this key pair for authentication when pushing
+     branches to Github. Add the following to your ``.ssh/config`` file:
+
+     .. code-block::
+
+       Host github.com
+           Hostname github.com
+           ForwardX11 no
+           IdentityFile /home/your_user_name/.ssh/id_rsa_github
+
+     (Make sure you have the correct path to the private key file.)
+
+   - Configure git to use the name and e-mail address tied to your Github account:
+
+     .. code-block:: bash
+
+       git config --global user.name "Your Name"
+       git config --global user.email "youremail@yourdomain.com"
 
 2. Install Roberto, which is the driver for our CI setup. It can also replicate
    the continuous integration on your local machine, which makes it easier to
-   prepare a passable pull request. See https://theochem.github.io/roberto/
+   prepare a passable pull request. See `<https://theochem.github.io/roberto/>`_.
 
 3. Make a fork of the project, using the Github "fork" feature.
 
@@ -288,5 +327,78 @@ Github work flow
     results in minor corrections at worst. We'll do our best to avoid larger
     problems in step 1.
 
+
+Notes on attrs
+--------------
+
+IOData uses the `attrs`_ library, not to be confused with the `attr`_ library,
+for classes representing data loaded from files: ``IOData``, ``MolecularBasis``,
+``Shell``, ``MolecularOrbitals`` and ``Cube``. This enables basic attribute
+validation, which eliminates potentially silly bugs.
+(See ``iodata/attrutils.py`` and the usage of ``validate_shape`` in all those
+classes.)
+
+The following ``attrs`` functions could be convenient when working with these
+classes:
+
+- The data can be turned into plain Python data types with the ``attr.asdict``
+  function. Make sure you add the ``retain_collection_types=True`` option, to
+  avoid the following issue: https://github.com/python-attrs/attrs/issues/646
+  For example.
+
+  .. code-block:: python
+
+      from iodata import load_one
+      import attr
+      iodata = load_one("example.xyz")
+      fields = attr.asdict(iodata, retain_collection_types=True)
+
+  A similar ``astuple`` function works as you would expect.
+
+- A `shallow copy`_ with a few modified attributes can be created with the
+  evolve method, which is a wrapper for ``attr.evolve``:
+
+  .. code-block:: python
+
+      from iodata import load_one
+      import attr
+      iodata1 = load_one("example.xyz")
+      iodata2 = attr.evolve(iodata1, title="another title")
+
+  The usage of evolve becomes mandatory when you want to change two or more
+  attributes whose shape need to be consistent. For example, the following
+  would fail:
+
+  .. code-block:: python
+
+      from iodata import IOData
+      iodata = IOData(atnums=[7, 7], atcoords=[[0, 0, 0], [2, 0, 0]])
+      # The next line will fail because the size of atnums and atcoords
+      # becomes inconsistent.
+      iodata.atnums = [8, 8, 8]
+      iodata.atcoords = [[0, 0, 0], [2, 0, 1], [4, 0, 0]]
+
+  The following code, which has the same intent, does work:
+
+  .. code-block:: python
+
+      from iodata import IOData
+      import attr
+      iodata1 = IOData(atnums=[7, 7], atcoords=[[0, 0, 0], [2, 0, 0]])
+      iodata2 = attr.evolve(
+          iodata1,
+          atnums=[8, 8, 8],
+          atcoords=[[0, 0, 0], [2, 0, 1], [4, 0, 0]],
+      )
+
+   For brevity, lists (of lists) were used in these examples. These are always
+   converted to arrays by the constructor or when assigning them to attributes.
+
+
+.. _Bash: https://en.wikipedia.org/wiki/Bash_(Unix_shell)
+.. _Python: https://en.wikipedia.org/wiki/Python_(programming_language)
 .. _type hinting: https://docs.python.org/3/library/typing.html
 .. _PEP 0563: https://www.python.org/dev/peps/pep-0563/
+.. _attrs: https://www.attrs.org/en/stable/
+.. _attr: https://github.com/denis-ryzhkov/attr
+.. _shallow copy: https://docs.python.org/3/library/copy.html?highlight=shallow

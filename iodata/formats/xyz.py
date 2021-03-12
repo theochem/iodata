@@ -30,7 +30,7 @@ atomic forces.
 
 .. code-block :: python
 
-    atom_columns = iodata.formats.xzy.DEFAULT_ATOM_COLUMNS + [
+    atom_columns = iodata.formats.xyz.DEFAULT_ATOM_COLUMNS + [
         # Atomic charges are stored in a dictionary atcharges and they key
         # refers to the name of the partitioning method.
         ("atcharges", "mulliken", (), float, float, "{:10.5f}".format),
@@ -52,7 +52,6 @@ When defining ``atom_columns``, no columns can be skipped, such that all
 information loaded from a file can also be written back out when dumping it.
 
 """
-
 
 from typing import TextIO, Iterator
 
@@ -95,11 +94,12 @@ string).
                    [], {"atom_columns": ATOM_COLUMNS_DOC})
 def load_one(lit: LineIterator, atom_columns=None) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    if atom_columns is None:
-        atom_columns = DEFAULT_ATOM_COLUMNS
     # Load the header.
     natom = int(next(lit))
-    data = {"title": next(lit).strip()}
+    title = next(lit).strip()
+    if atom_columns is None:
+        atom_columns = DEFAULT_ATOM_COLUMNS
+    data = {'title': title}
     # Initialize the arrays to be loaded from the XYZ file.
     for attrname, keyname, shapesuffix, dtype, _loadword, _dumpword in atom_columns:
         array = np.zeros((natom,) + shapesuffix, dtype=dtype)

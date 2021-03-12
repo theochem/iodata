@@ -152,3 +152,24 @@ IOData can be used to store data in a consistent format for writing at a future 
     mol = IOData(title="water")
     mol.atnums = np.array([8, 1, 1])
     mol.coordinates = np.array([[0, 0, 0,], [0, 1, 0,], [0, -1, 0,]])  # in Bohr
+
+
+.. _units:
+
+Unit conversion
+^^^^^^^^^^^^^^^
+
+IOData always represents all quantities in atomic units and unit conversion
+constants are defined in ``iodata.utils``. Conversion _to_ atomic units is done
+by _multiplication_ with a unit constant. This convention can be easily
+remembered with the following examples:
+
+- When you say "this bond length is 1.5 Å", the IOData equivalent is
+  ``bond_length = 1.5 * angstrom``.
+
+- The conversion from atomic units is similar to axes labels in old papers.
+  For example. a bond length in angstrom is printed as "Bond length / Å".
+  Expressing this with IOData's conventions gives
+  ``print("Bond length in Angstrom:", bond_length /  angstrom)``
+
+(This is rather different from the ASE conventions.)

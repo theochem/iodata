@@ -20,9 +20,13 @@
 
 from functools import wraps
 from numbers import Integral
-from typing import List, Dict, NamedTuple, Tuple, Union
+from typing import List, Dict, Tuple, Union
 
+import attr
 import numpy as np
+
+from .attrutils import validate_shape
+
 
 __all__ = ['angmom_sti', 'angmom_its', 'Shell', 'MolecularBasis',
            'convert_convention_shell', 'convert_conventions',
@@ -81,7 +85,9 @@ def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
     return ANGMOM_CHARS[angmom]
 
 
-class Shell(NamedTuple):
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
+class Shell:
     """A shell in a molecular basis representing (generalized) contractions with the same exponents.
 
     Attributes
@@ -107,10 +113,10 @@ class Shell(NamedTuple):
     """
 
     icenter: int
-    angmoms: List[int]
-    kinds: List[str]
-    exponents: np.ndarray
-    coeffs: np.ndarray
+    angmoms: List[int] = attr.ib(validator=validate_shape(("coeffs", 1)))
+    kinds: List[str] = attr.ib(validator=validate_shape(("coeffs", 1)))
+    exponents: np.ndarray = attr.ib(validator=validate_shape(("coeffs", 0)))
+    coeffs: np.ndarray = attr.ib(validator=validate_shape(("exponents", 0), ("kinds", 0)))
 
     @property
     def nbasis(self) -> int:   # noqa: D401
@@ -136,7 +142,9 @@ class Shell(NamedTuple):
         return len(self.angmoms)
 
 
-class MolecularBasis(NamedTuple):
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
+class MolecularBasis:
     """A complete molecular orbital or density basis set.
 
     Attributes
@@ -184,7 +192,7 @@ class MolecularBasis(NamedTuple):
 
     """
 
-    shells: tuple
+    shells: List[Shell]
     conventions: Dict[str, str]
     primitive_normalization: str
 
@@ -201,7 +209,7 @@ class MolecularBasis(NamedTuple):
                 shells.append(Shell(shell.icenter, [angmom], [kind],
                                     shell.exponents, coeffs.reshape(-1, 1)))
         # pylint: disable=no-member
-        return self._replace(shells=shells)
+        return attr.evolve(self, shells=shells)
 
 
 def convert_convention_shell(conv1: List[str], conv2: List[str], reverse=False) \

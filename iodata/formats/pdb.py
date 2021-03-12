@@ -52,6 +52,7 @@ def load_one(lit: LineIterator) -> dict:
     attypes = []
     restypes = []
     molecule_found = False
+    end_reached = False
     title = "PDB file from IOData"
     while True:
         try:
@@ -68,41 +69,36 @@ def load_one(lit: LineIterator) -> dict:
             if not words:
                 # If not guess it from the atom type
                 words = line[12:16].split()
+            # get atomic number and residue number
             symbol = words[0].title()
             nums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
-            resnum = int(line[23:26])
-            x = float(line[30:38])
-            y = float(line[38:46])
-            z = float(line[46:54])
-            occ = float(line[54:60])
-            b = float(line[60:66])
-            resnums.append(resnum)
-            coords.append([x, y, z])
-            occupancy.append(occ)
-            bfactor.append(b)
+            resnums.append(int(line[23:26]))
+            # add x, y, and z
+            coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
+            # get other properties
+            occupancy.append(float(line[54:60]))
+            bfactor.append(float(line[60:66]))
             attypes.append(line[12:16].strip())
             restypes.append(line[17:20].strip())
             molecule_found = True
         if line.startswith("END") and molecule_found:
-            atnums = np.array(nums)
-            atcoords = np.array(coords) * angstrom
-            attypes = np.array(attypes)
-            restypes = np.array(restypes)
-            resnums = np.array(resnums)
-            atffparams = {"attypes": attypes, "restypes": restypes, "resnums": resnums}
-            occupancy = np.array(occupancy)
-            bfactor = np.array(bfactor)
-            extra = {"occupancy": occupancy, "bfactor": bfactor}
-            result = {
-                'atcoords': atcoords,
-                'atnums': atnums,
-                'atffparams': atffparams,
-                'title': title,
-                'extra': extra
-            }
+            end_reached = True
             break
     if molecule_found is False:
-        raise lit.error("Molecule could not be read")
+        lit.error("Molecule could not be read!")
+    if not end_reached:
+        lit.warn("The END is not found, but the parsed data is returned!")
+
+    atffparams = {"attypes": np.array(attypes), "restypes": np.array(restypes),
+                  "resnums": np.array(resnums)}
+    extra = {"occupancy": np.array(occupancy), "bfactor": np.array(bfactor)}
+    result = {
+        'atcoords': np.array(coords) * angstrom,
+        'atnums': np.array(nums),
+        'atffparams': atffparams,
+        'title': title,
+        'extra': extra
+    }
     return result
 
 

@@ -16,12 +16,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=unsubscriptable-object,no-member
 """Test iodata.iodata module."""
 
 
 import numpy as np
-from numpy.testing import assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 import pytest
 
 from .common import compute_1rdm
@@ -97,37 +96,199 @@ def test_dm_ch3_rohf_g03():
 
 
 def test_charge_nelec1():
+    # pylint: disable=protected-access
     # One a blank IOData object, charge and nelec can be set independently.
     mol = IOData()
     mol.nelec = 4
     mol.charge = -1
     assert mol.nelec == 4
     assert mol.charge == -1
+    # The values should be stored as private attributes.
+    assert mol._nelec == 4
+    assert mol._charge == -1
 
 
 def test_charge_nelec2():
-    # When atcorenums is set, nelec and charge are coupled
+    # pylint: disable=protected-access
+    # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atcorenums = np.array([6.0, 1.0, 1.0, 1.0, 1.0])
     mol.nelec = 10
     assert mol.charge == 0
     mol.charge = 1
     assert mol.nelec == 9
+    # Only _nelec should be set.
+    assert mol._nelec == 9
+    assert mol._charge is None
 
 
 def test_charge_nelec3():
-    # When atnums is set, nelec and charge are coupled
+    # pylint: disable=protected-access
+    # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atnums = np.array([6, 1, 1, 1, 1])
     mol.nelec = 10
     assert mol.charge == 0
+    # Accessing charge should assign _atcorenums.
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
+    # Changing charge should change nelec.
     mol.charge = 1
     assert mol.nelec == 9
+    assert mol.charge == 1
+    # Only _nelec should be set.
+    assert mol._nelec == 9
+    assert mol._charge is None
+
+
+def test_charge_nelec4():
+    # pylint: disable=protected-access
+    # When atcorenums is set, nelec and charge become coupled.
+    mol = IOData()
+    mol.atnums = np.array([6, 1, 1, 1, 1])
+    mol.charge = 1
+    # _atcorenums, _nelec and charge should be set, not _charge
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
+    assert mol._nelec == 9
+    assert mol._charge is None
+    assert mol.charge == 1
+
+
+def test_charge_nelec5():
+    # pylint: disable=protected-access
+    # When atcorenums is set, nelec and charge become coupled.
+    mol = IOData()
+    mol.charge = 1
+    mol.atnums = np.array([6, 1, 1, 1, 1])
+    # Access atcorenums to trigger the setter
+    assert mol.atcorenums.sum() == 10
+    # _atcorenums, _nelec and charge should be set, not _charge
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
+    assert mol._nelec == 9
+    assert mol._charge is None
+    assert mol.charge == 1
+
+
+def test_charge_nelec6():
+    # pylint: disable=protected-access
+    # When atcorenums is set, nelec and charge become coupled.
+    mol = IOData()
+    mol.nelec = 8
+    mol.atnums = np.array([6, 1, 1, 1, 1])
+    # Access atcorenums to trigger the setter
+    assert mol.atcorenums.sum() == 10
+    # _atcorenums, _nelec and charge should be set, not _charge
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
+    assert mol._nelec == 8
+    assert mol._charge is None
+    assert mol.charge == 2
+
+
+def test_charge_nelec7():
+    # pylint: disable=protected-access
+    # When atcorenums is set, nelec and charge become coupled.
+    mol = IOData()
+    mol.nelec = 8
+    mol.charge = 1  # This will be discarded by setting _atcorenums.
+    mol.atnums = np.array([6, 1, 1, 1, 1])
+    # Access atcorenums to trigger the setter
+    assert mol.atcorenums.sum() == 10
+    # _atcorenums, _nelec and charge should be set, not _charge
+    assert_equal(mol._atcorenums, np.array([6.0, 1.0, 1.0, 1.0, 1.0]))
+    assert mol._nelec == 8
+    assert mol._charge is None
+    assert mol.charge == 2
+
+
+def test_charge_nelec8():
+    mol = IOData()
+    mol.charge = 0.0
+    mol.atcorenums = None
+    assert mol.charge == 0.0
+    assert mol.atcorenums is None
+    assert mol.nelec is None
+
+
+def test_charge_nelec9():
+    # pylint: disable=protected-access
+    mol = IOData()
+    mol.charge = 1.0
+    mol.atcorenums = np.array([8.0, 1.0, 1.0])
+    assert mol.charge == 1.0
+    assert mol._charge is None  # charge is derived
+    assert_equal(mol._atcorenums, np.array([8.0, 1.0, 1.0]))
+    assert mol.nelec == 9.0
+    mol.charge = None
+    assert mol.nelec is None
+
+
+def test_charge_nelec10():
+    # pylint: disable=protected-access
+    mol = IOData()
+    mol.charge = 1.0
+    mol.atnums = np.array([8, 1, 1])
+    assert mol.charge == 1.0  # This triggers atcorenums to be initialized.
+    assert mol._charge is None
+    assert_equal(mol._atcorenums, np.array([8.0, 1.0, 1.0]))
+    assert mol.nelec == 9.0
+    mol.charge = None
+    assert mol.nelec is None
+
+
+def test_charge_nelec11():
+    mol = IOData()
+    mol.atnums = np.array([8, 1, 1])
+    mol.charge = 1.0
+    assert mol.nelec == 9.0
+    mol.charge = None
+    assert mol.nelec is None
+
+
+def test_charge_nelec12():
+    mol = IOData()
+    mol.atnums = np.array([8, 1, 1])
+    mol.nelec = 11.0
+    assert mol.charge == -1.0
+    mol.nelec = None
+    assert mol.charge is None
+
+
+def test_charge_nelec13():
+    mol = IOData()
+    mol.atcorenums = np.array([8, 1, 1])
+    mol.charge = 1.0
+    mol.atcorenums = None
+    assert mol.charge == 1.0
+    assert mol.nelec == 9.0
+    assert mol.atcorenums is None
+
+
+def test_charge_nelec14():
+    # pylint: disable=protected-access
+    mol = IOData()
+    mol.nelec = 8
+    mol.atcorenums = None
+    mol.atcorenums = np.array([8, 1, 1])
+    assert mol.atcorenums.dtype == float
+    assert mol.charge == 2.0
+    assert mol._charge is None
+    mol.atcorenums = None
+    assert mol.nelec == 8
+    assert mol.charge == 2.0
+
+
+def test_charge_nelec15():
+    mol = IOData()
+    mol.nelec = 8
+    mol.atcorenums = np.array([8, 1, 1])
+    assert mol.charge == 2.0
+    mol.nelec = None
+    assert mol.nelec is None
+    assert mol.charge is None
 
 
 def test_undefined():
-    # One a blank IOData object, accessing undefined charge and nelec should raise
-    # an AttributeError.
+    # One a blank IOData object, accessing undefined charge and nelec should
+    # return None.
     mol = IOData()
     assert mol.charge is None
     assert mol.nelec is None
@@ -138,6 +299,46 @@ def test_undefined():
     mol = IOData()
     mol.charge = 1
     assert mol.nelec is None
+
+
+def test_spinpol1():
+    mol = IOData(spinpol=3)
+    assert mol.spinpol == 3
+
+
+def test_spinpol2():
+    mol = IOData()
+    mol.spinpol = 3
+    assert mol.spinpol == 3
+
+
+def test_derived1():
+    # pylint: disable=protected-access
+    # When loading a file with molecular orbitals, nelec, charge and spinpol are
+    # derived from the mo object:
+    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
+        mol = load_one(str(fn_fchk))
+    assert mol.nelec == mol.mo.nelec
+    assert mol.charge == mol.atcorenums.sum() - mol.mo.nelec
+    assert mol.spinpol == mol.mo.spinpol
+    assert mol._nelec is None
+    assert mol._charge is None
+    assert mol._spinpol is None
+    with pytest.raises(TypeError):
+        mol.charge = 2
+    with pytest.raises(TypeError):
+        mol.nelec = 3
+    with pytest.raises(TypeError):
+        mol.spinpol = 1
+
+
+def test_derived2():
+    # pylint: disable=protected-access
+    mol = IOData(atnums=[1, 1, 8], charge=1)
+    assert mol._charge is None
+    assert mol._nelec == mol.atcorenums.sum() - 1
+    assert mol.charge == 1.0
+    assert mol.nelec == mol.atcorenums.sum() - 1
 
 
 def test_natom():

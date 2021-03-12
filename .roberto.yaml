@@ -10,7 +10,9 @@ project:
         - build-py-inplace
         - cardboardlint-dynamic
         - pytest
+        - upload-codecov
         - build-sphinx-doc
+        - upload-docs-gh
         - build-py-source
         - build-conda
         - deploy-pypi
