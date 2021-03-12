@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
+# pylint: disable=too-many-branches, too-many-statements
 """QCSchema JSON file format.
 
 QCSchema defines four different subschema:
@@ -41,11 +42,8 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
 from ..utils import FileFormatError, FileFormatWarning, LineIterator
+from ..version import __version__
 
-try:
-    from iodata.version import __version__
-except ImportError:
-    __version__ = "0.0.0.post0"
 
 __all__ = []
 
@@ -58,7 +56,7 @@ PATTERNS = ["*.json"]
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Use python standard lib json module to read the file to a dict
-    json_in = json.load(lit._f)
+    json_in = json.load(lit.f)
     result = _parse_json(json_in, lit)
     return result
 
@@ -146,17 +144,16 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
 
     if schema_name == "qcschema_molecule":
         return _load_qcschema_molecule(result, lit)
-    elif schema_name == "qcschema_basis":
-        raise NotImplementedError("{} is not yet implemented in IOData.".format(schema_name))
-    elif schema_name == "qcschema_input":
-        raise NotImplementedError("{} is not yet implemented in IOData.".format(schema_name))
-    elif schema_name == "qcschema_output":
-        raise NotImplementedError("{} is not yet implemented in IOData.".format(schema_name))
-    else:
-        raise FileFormatError(
-            "{}: Invalid QCSchema type {}, should be one of `qcschema_molecule`, `qcschema_basis`,"
-            "`qcschema_input`, or `qcschema_output".format(lit.filename, result["schema_name"])
-        )
+    if schema_name == "qcschema_basis":
+        return _load_qcschema_basis(result, lit)
+    if schema_name == "qcschema_input":
+        return _load_qcschema_input(result, lit)
+    if schema_name == "qcschema_output":
+        return _load_qcschema_output(result, lit)
+    raise FileFormatError(
+        "{}: Invalid QCSchema type {}, should be one of `qcschema_molecule`, `qcschema_basis`,"
+        "`qcschema_input`, or `qcschema_output".format(lit.filename, result["schema_name"])
+    )
 
 
 def _load_qcschema_molecule(result: dict, lit: LineIterator) -> dict:
@@ -256,7 +253,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     topology_dict["atnums"] = atnums
     # Geometry is in a flattened list, convert to N x 3
     topology_dict["atcoords"] = np.array(
-        [mol["geometry"][3 * i : (3 * i) + 3] for i in range(0, len(mol["geometry"]) // 3)]  # noqa
+        [mol["geometry"][3 * i: (3 * i) + 3] for i in range(0, len(mol["geometry"]) // 3)]
     )
     # Check for missing charge, warn that this is a required field
     if "molecular_charge" not in mol:
@@ -392,6 +389,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     return topology_dict
 
 
+# pylint: disable=unused-argument
 def _load_qcschema_basis(result: dict, lit: LineIterator) -> dict:
     """Load qcschema_basis properties.
 
@@ -407,11 +405,12 @@ def _load_qcschema_basis(result: dict, lit: LineIterator) -> dict:
     basis_dict
         ...
     """
-    basis_dict = dict()
+    # basis_dict = dict()
+    # return basis_dict
+    raise NotImplementedError("qcschema_basis is not yet implemented in IOData.")
 
-    return basis_dict
 
-
+# pylint: disable=unused-argument
 def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
     """Load qcschema_input properties.
 
@@ -427,11 +426,12 @@ def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
     input_dict
         ...
     """
-    input_dict = dict()
+    # basis_dict = dict()
+    # return basis_dict
+    raise NotImplementedError("qcschema_input is not yet implemented in IOData.")
 
-    return input_dict
 
-
+# pylint: disable=unused-argument
 def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
     """Load qcschema_output properties.
 
@@ -447,9 +447,9 @@ def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
     output_dict
         ...
     """
-    output_dict = dict()
-
-    return output_dict
+    # basis_dict = dict()
+    # return basis_dict
+    raise NotImplementedError("qcschema_output is not yet implemented in IOData.")
 
 
 def _parse_provenance(
@@ -475,11 +475,10 @@ def _parse_provenance(
             raise FileFormatError(
                 "{}: `{}` provenance requires `creator` key".format(lit.filename, source)
             )
+        if append:
+            base_provenance = [provenance]
         else:
-            if append:
-                base_provenance = [provenance]
-            else:
-                return provenance
+            return provenance
     elif isinstance(provenance, list):
         for prov in provenance:
             if "creator" not in prov:
