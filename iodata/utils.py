@@ -71,12 +71,12 @@ class LineIterator:
 
         """
         self.filename = filename
-        self._f = open(filename)
+        self.f = open(filename)
         self.lineno = 0
         self.stack = []
 
     def __del__(self):
-        self._f.close()
+        self.f.close()
 
     def __iter__(self):
         return self
@@ -86,7 +86,7 @@ class LineIterator:
         if self.stack:
             line = self.stack.pop()
         else:
-            line = next(self._f)
+            line = next(self.f)
         self.lineno += 1
         return line
 
