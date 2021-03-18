@@ -41,7 +41,7 @@ ${geometry}
 
 @document_write_input("ORCA", ['atnums', 'atcoords'],
                       ['title', 'run_type', 'lot', 'obasis_name', 'spinmult', 'charge'])
-def write_input(f: TextIO, data: IOData, template: str = None):
+def write_input(f: TextIO, data: IOData, template: str = None, **kwargs):
     """Do not edit this docstring. It will be overwritten."""
     # initialize a dictionary with fields to replace in the template
     fields = populate_fields(data)
@@ -64,4 +64,5 @@ def write_input(f: TextIO, data: IOData, template: str = None):
     if template is None:
         template = default_template
     # populate files & write input
+    fields.update(kwargs)
     print(Template(template).substitute(fields), file=f)
