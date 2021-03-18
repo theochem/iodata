@@ -58,7 +58,7 @@ setup(
     author_email='horton.chemtools@gmail.com',
     url='https://github.com/theochem/iodata',
     package_dir={'iodata': 'iodata'},
-    packages=['iodata', 'iodata.formats', 'iodata.test', 'iodata.test.data'],
+    packages=['iodata', 'iodata.formats', 'iodata.inputs', 'iodata.test', 'iodata.test.data'],
     include_package_data=True,
     entry_points={
         'console_scripts': ['iodata-convert = iodata.__main__:main']
