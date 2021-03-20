@@ -7,8 +7,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-#version.py
-iodata/version.py
+iodata/_version.py
 
 # C extensions
 *.so
