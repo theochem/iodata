@@ -1,9 +1,9 @@
-abs: true  # Force absolute comparison for cardboardlint
+absolute: true  # Force absolute comparison for cardboardlint
 project:
   name: iodata
-  conda_requirements: [sympy]
+  requirements: [[sympy, sympy]]
   packages:
-    - conda_name: iodata
+    - dist_name: qc-iodata
       tools:
         - write-py-version
         - cardboardlint-static
