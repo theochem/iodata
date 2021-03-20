@@ -22,7 +22,7 @@
 
 IOData
 ======
-|Travis|
+|GithubActions|
 |Conda|
 |Pypi|
 |Codecov|
@@ -74,8 +74,8 @@ and then:
 
 See https://iodata.readthedocs.io/en/latest/install.html for full details.
 
-.. |Travis| image:: https://travis-ci.org/theochem/iodata.svg?branch=master
-    :target: https://travis-ci.org/theochem/iodata
+.. |GithubActions| image:: https://github.com/theochem/iodata/actions/workflows/ci.yml/badge.svg?branch=master
+    :target: https://github.com/theochem/iodata/actions/workflows/ci.yml
 .. |Version| image:: https://img.shields.io/pypi/pyversions/iodata.svg
 .. |License| image:: https://img.shields.io/github/license/theochem/iodata
 .. |Pypi| image:: https://img.shields.io/pypi/v/iodata.svg
