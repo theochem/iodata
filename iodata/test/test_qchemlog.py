@@ -42,7 +42,6 @@ def test_load_data_qchemlog_h2o():
     """Test load_qchemlog_low with water_hf_ccpvtz_freq_qchem.out."""
     data = helper_load_data_qchemlog_helper('water_hf_ccpvtz_freq_qchem.out')
     # check loaded data
-    assert data['natom'] == 3
     assert data['run_type'] == 'freq'
     assert data['lot'] == 'hf'
     assert data['obasis_name'] == 'cc-pvtz'
@@ -222,7 +221,6 @@ def test_load_data_qchemlog_h2o_dimer():
     """Test load_qchemlog_low with h2o_dimer_eda_qchem5.3.out."""
     data = helper_load_data_qchemlog_helper('h2o_dimer_eda_qchem5.3.out')
     # check loaded data
-    assert data['natom'] == 6
     assert data['run_type'] == 'eda'
     assert data['lot'] == 'wb97x-v'
     assert data['obasis_name'] == 'def2-tzvpd'
