@@ -118,7 +118,7 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
-def load_qchemlog_low(lit: LineIterator) -> dict:
+def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
     """Load the information from Q-Chem log file."""
     data = {}
     while True:
@@ -297,8 +297,7 @@ def _helper_mulliken(lit: LineIterator) -> np.ndarray:
     for line in lit:
         if line.strip().startswith('--------'):
             break
-        else:
-            mulliken_charges.append(line.strip().split()[2])
+        mulliken_charges.append(line.strip().split()[2])
     return np.array(mulliken_charges, dtype=np.float)
 
 
@@ -393,7 +392,7 @@ def _helper_thermo(lit: LineIterator) -> Tuple:
     return enthalpy_dict, entropy_dict
 
 
-def _helper_eda(lit: LineIterator) -> dict:
+def _helper_eda(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
     """Load Energy decomposition information."""
     next(lit)
     eda2_dic = {}
@@ -403,45 +402,41 @@ def _helper_eda(lit: LineIterator) -> dict:
             for line_2 in lit:
                 if line_2.startswith('     --------------------'):
                     break
-                else:
-                    info = line_2.strip().split()
-                    if info[0] in ['E_elec', 'E_pauli', 'E_disp']:
-                        eda2_dic[info[0].lower()] = float(info[4])
+                info = line_2.strip().split()
+                if info[0] in ['E_elec', 'E_pauli', 'E_disp']:
+                    eda2_dic[info[0].lower()] = float(info[4])
         elif line.startswith('     Terms summing to E_pauli'):
             next(lit)
             pauli = []
             for line_2 in lit:
                 if line_2.startswith('  --------------------'):
                     break
-                else:
-                    info = line_2.strip().split()
-                    pauli.append(float(info[3]))
+                info = line_2.strip().split()
+                pauli.append(float(info[3]))
             eda2_dic['e_pauli'] = np.array(pauli)
         elif line.startswith('  Classical Frozen Decomposition'):
             next(lit)
             for line_2 in lit:
                 if line_2.startswith('  --------------------'):
                     break
-                else:
-                    info = line_2.strip().split()
-                    if info[0] in ['E_cls_elec', 'E_cls_pauli']:
-                        eda2_dic[info[0].lower()] = float(info[5])
-                    elif info[0].split("[")[1] == 'E_mod_pauli':
-                        eda2_dic[info[0].split("[")[1].lower()] = float(info[5])
+                info = line_2.strip().split()
+                if info[0] in ['E_cls_elec', 'E_cls_pauli']:
+                    eda2_dic[info[0].lower()] = float(info[5])
+                elif info[0].split("[")[1] == 'E_mod_pauli':
+                    eda2_dic[info[0].split("[")[1].lower()] = float(info[5])
 
         elif line.startswith('Simplified EDA Summary'):
             next(lit)
             for line_2 in lit:
                 if line_2.startswith('--------------------'):
                     break
-                else:
-                    info = line_2.strip().split()
-                    if info[0] in ['PREPARATION', 'FROZEN', 'DISPERSION', 'POLARIZATION', 'TOTAL']:
-                        eda2_dic[info[0].lower()] = float(info[1])
-                    elif info[0].split("[")[-1] == 'PAULI':
-                        eda2_dic[info[0].split("[")[-1].lower()] = float(info[1].split("]")[0])
-                    elif info[0] == 'CHARGE':
-                        eda2_dic[info[0].lower() + ' ' + info[1].lower()] = float(info[2])
+                info = line_2.strip().split()
+                if info[0] in ['PREPARATION', 'FROZEN', 'DISPERSION', 'POLARIZATION', 'TOTAL']:
+                    eda2_dic[info[0].lower()] = float(info[1])
+                elif info[0].split("[")[-1] == 'PAULI':
+                    eda2_dic[info[0].split("[")[-1].lower()] = float(info[1].split("]")[0])
+                elif info[0] == 'CHARGE':
+                    eda2_dic[info[0].lower() + ' ' + info[1].lower()] = float(info[2])
         elif line.startswith(' --------------------------------------------------------------'):
             break
 
