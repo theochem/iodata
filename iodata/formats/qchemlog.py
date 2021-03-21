@@ -136,7 +136,6 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             # atnums, alpha_elec, beta_elec, nbasis, nuclear_replusion_energy, energy, atcoords
             data['atnums'], data['alpha_elec'], data['beta_elec'], data['nbasis'], \
                 data['nuclear_repulsion_energy'], data['atcoords'] = _helper_electron(lit)
-            data['natom'] = len(data['atnums'])
         # standard nuclear orientation for fragments in EDA jobs
         elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
             if 'frags' not in data:
@@ -174,7 +173,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             data['polarizability_tensor'] = _helper_polar(lit)
         # hessian matrix
         elif line.startswith('Hessian of the SCF Energy'):
-            data['athessian'] = _helper_hessian(lit, data['natom'])
+            data['athessian'] = _helper_hessian(lit, len(data['atnums']))
         # vibrational analysis
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
             data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)
@@ -332,11 +331,11 @@ def _helper_polar(lit: LineIterator) -> np.ndarray:
     return np.array(polarizability_tensor, dtype=np.float)
 
 
-def _helper_hessian(lit: LineIterator, natoms: int) -> np.ndarray:
+def _helper_hessian(lit: LineIterator, natom: int) -> np.ndarray:
     """Load hessian matrix."""
     # hessian in Cartesian coordinates, shape(3 * natom, 3 * natom)
     col_idx = [int(i) for i in next(lit).strip().split()]
-    hessian = np.empty((natoms * 3, natoms * 3), dtype=object)
+    hessian = np.empty((natom * 3, natom * 3), dtype=object)
     for line in lit:
         if line.strip().startswith('****************'):
             break
@@ -395,7 +394,7 @@ def _helper_thermo(lit: LineIterator) -> Tuple:
 
 
 def _helper_eda(lit: LineIterator) -> dict:
-    """Load Energy decomposition information"""
+    """Load Energy decomposition information."""
     next(lit)
     eda2_dic = {}
     for line in lit:
