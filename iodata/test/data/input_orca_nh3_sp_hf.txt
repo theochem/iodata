@@ -1,0 +1,8 @@
+! HF STO-3G Energy
+# Molden file created by orca_2mkl for BaseName=test
+*xyz 0 1
+N    -0.007455   0.044763   0.054913
+H     0.791232   0.011334   0.023580
+H    -0.313244  -0.879581   0.283126
+H    -0.374402   0.246289  -1.069692
+*

@@ -1,0 +1,13 @@
+{
+  "schema_name": "qcschema_molecule",
+  "schema_version": 2,
+  "symbols":  ["Li", "Cl"],
+  "geometry": [0.000000, 0.000000, -1.631761, 0.000000, 0.000000, 0.287958],
+  "real": [true, true],
+  "molecular_charge": 0,
+  "molecular_multiplicity": 1,
+  "provenance": {
+    "creator": "HORTON3",
+    "routine": "Manual validation"
+  }
+}

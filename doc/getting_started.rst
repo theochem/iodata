@@ -25,6 +25,7 @@ Getting Started
 
 IOData can be used to read and write different quantum chemistry file formats.
 
+
 Script usage
 ------------
 
@@ -36,11 +37,13 @@ The simplest way to use IOData, without writing any code is to use the ``iodata-
 
 See the :code:`--help` option for more details on usage.
 
+
 Code usage
 ----------
 
 More complex use cases can be implemented in Python, using IOData as a library.
 IOData stores an object containing the data read from the file.
+
 
 Reading
 ^^^^^^^
@@ -139,6 +142,38 @@ example. The following approach would be more memory efficient.
     dump_many(itermols(), "traj2.xyz")
 
 
+Input files
+^^^^^^^^^^^
+
+IOData can be used to write input files for quantum-chemistry software. By
+default minimal settings are used, which can be changed if needed. For example,
+the following will prepare a Gaussian input for a HF/STO-3G calculation from
+a PDB file:
+
+.. code-block:: python
+
+    from iodata import load_one, write_input
+
+    write_input(load_one("water.pdf"), "water.com", fmt="gaussian")
+
+The level of theory and other settings can be modified by setting corresponding
+attributes in the IOData object:
+
+.. code-block:: python
+
+    from iodata import load_one, write_input
+
+    mol = load_one("water.pdf")
+    mol.lot = "B3LYP"
+    mol.obasis_name = "6-31g*"
+    mol.run_type = "opt"
+    write_input(mold, "water.com", fmt="gaussian")
+
+The run types can be any of the following: ``energy``, ``energy_force``,
+``opt``, ``scan`` or ``freq``. These are translated into program-specific
+keywords when the file is written.
+
+
 Data storage
 ^^^^^^^^^^^^
 
@@ -155,6 +190,7 @@ IOData can be used to store data in a consistent format for writing at a future 
 
 
 .. _units:
+
 
 Unit conversion
 ^^^^^^^^^^^^^^^

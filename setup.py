@@ -31,14 +31,11 @@ from setuptools import setup
 
 
 def get_version_info():
-    """Read __version__ and classifier from version.py, using exec, not import."""
-    try:
-        with open(os.path.join('iodata', 'version.py'), 'r') as f:
-            myglobals = {}
-            exec(f.read(), myglobals)  # pylint: disable=exec-used
-        return myglobals['__version__'], myglobals['DEV_CLASSIFIER']
-    except IOError:
-        return "0.0.0.post0", "Development Status :: 2 - Pre-Alpha"
+    """Read __version__ and DEV_CLASSIFIER from version.py, using exec, not import."""
+    with open(os.path.join("iodata", 'version.py'), 'r') as f:
+        myglobals = {"__name__": "iodata.version"}
+        exec(f.read(), myglobals)  # pylint: disable=exec-used
+    return myglobals['__version__'], myglobals['DEV_CLASSIFIER']
 
 
 def get_readme():
@@ -58,7 +55,7 @@ setup(
     author_email='horton.chemtools@gmail.com',
     url='https://github.com/theochem/iodata',
     package_dir={'iodata': 'iodata'},
-    packages=['iodata', 'iodata.formats', 'iodata.test', 'iodata.test.data'],
+    packages=['iodata', 'iodata.formats', 'iodata.inputs', 'iodata.test', 'iodata.test.data'],
     include_package_data=True,
     entry_points={
         'console_scripts': ['iodata-convert = iodata.__main__:main']

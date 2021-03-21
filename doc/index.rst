@@ -70,6 +70,7 @@ User Documentation
    install
    getting_started
    formats
+   inputs
    basis
    changelog
    acknowledgments
