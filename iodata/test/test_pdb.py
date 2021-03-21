@@ -169,3 +169,16 @@ def test_load_dump_many_consistency(case, tmpdir):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
         assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+
+
+def test_load_2bcw():
+    with path("iodata.test.data", "2bcw.pdb") as fn_pdb:
+        mol = load_one(fn_pdb)
+    assert mol.natom == 191
+    assert (mol.atnums == 6).all()
+    assert (mol.atffparams["attypes"] == ["CA"] * mol.natom).all()
+    assert (mol.atffparams["restypes"][:3] == ['GLN', 'ILE', 'LYS']).all()
+    assert (mol.atffparams["restypes"][-4:] == ['LYS', 'ILE', 'THR', 'PRO']).all()
+    assert_allclose(mol.atcoords[0, 2] / angstrom, -86.956)
+    assert_allclose(mol.atcoords[190, 0] / angstrom, -24.547)
+    assert (mol.extra["chainid"] == ["A"] * 65 + ["B"] * 68 + ["C"] * 58).all()
