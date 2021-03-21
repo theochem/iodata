@@ -16,8 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-
-import warnings
+"""Gaussian input format."""
 
 import numpy as np
 
@@ -26,10 +25,13 @@ from ..periodic import sym2num
 from ..utils import angstrom, LineIterator
 
 
+__all__ = []
+
+
 PATTERNS = ["*.com", "*.gjf"]
 
 
-@document_load_one("Gaussian Input File", ['atcoords', 'atnums', 'lot', 'obasis_name', 'title'], [])
+@document_load_one("Gaussian Input File", ['atcoords', 'atnums', 'title'], [])
 def load_one(lit: LineIterator):
     """Do not edit this docstring. It will be overwritten."""
     line = next(lit)
@@ -55,7 +57,9 @@ def load_one(lit: LineIterator):
 
     data['title'] = title_line
 
-    charge_spin_mult_line = next(lit)
+    # charge_spin_mult_line
+    _ = next(lit)
+
     coord_line = next(lit)
 
     numbers = []

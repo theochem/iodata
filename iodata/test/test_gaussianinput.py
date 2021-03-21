@@ -35,11 +35,13 @@ def test_load_water_com():
         mol = load_one(str(fn_xyz))
     check_water(mol, 'water')
 
+
 def test_load_water_gjf():
     # test .com without Link 0 section
     with path('iodata.test.data', 'water.gjf') as fn_xyz:
         mol = load_one(str(fn_xyz))
     check_water(mol, 'water')
+
 
 def test_load_multi_link():
     # test .com with multiple #link 0 contents
@@ -47,23 +49,27 @@ def test_load_multi_link():
         mol = load_one(str(fn_xyz))
     check_water(mol, 'water')
 
+
 def test_load_multi_route():
     # test .com with multiple route contents
     with path('iodata.test.data', 'water_multi_route.com') as fn_xyz:
         mol = load_one(str(fn_xyz))
     check_water(mol, 'water')
 
+
 def test_load_multi_title():
-    # test .com with multiple title and concatenate 
+    # test .com with multiple title and concatenate
     with path('iodata.test.data', 'water_multi_title.com') as fn_xyz:
         mol = load_one(str(fn_xyz))
     check_water(mol, 'water water')
+
 
 def test_load_error():
     # test error raises when loading .com with z-matrix
     with assert_raises(ValueError):
         with path('iodata.test.data', 'water_z.com') as fn_xyz:
-            mol = load_one(str(fn_xyz))
+            load_one(str(fn_xyz))
+
 
 def check_water(mol, title):
     """Test water molecule attributes."""
