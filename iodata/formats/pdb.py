@@ -65,11 +65,11 @@ def load_one(lit: LineIterator) -> dict:
     atnums = []
     attypes = []
     restypes = []
-    chainid = []
+    chainids = []
     resnums = []
     coords = []
-    occupancy = []
-    bfactor = []
+    occupancies = []
+    bfactors = []
     molecule_found = False
     end_reached = False
     title = "PDB file from IOData"
@@ -93,13 +93,13 @@ def load_one(lit: LineIterator) -> dict:
             # atom name, residue name, chain id, & residue sequence number
             attypes.append(line[12:16].strip())
             restypes.append(line[17:20].strip())
-            chainid.append(line[21])
+            chainids.append(line[21])
             resnums.append(int(line[22:26]))
             # add x, y, and z
             coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
-            # get occupancy & temperature factor
-            occupancy.append(float(line[54:60]))
-            bfactor.append(float(line[60:66]))
+            # get occupancies & temperature factor
+            occupancies.append(float(line[54:60]))
+            bfactors.append(float(line[60:66]))
             molecule_found = True
         if line.startswith("END") and molecule_found:
             end_reached = True
@@ -111,10 +111,10 @@ def load_one(lit: LineIterator) -> dict:
 
     atffparams = {"attypes": np.array(attypes), "restypes": np.array(restypes),
                   "resnums": np.array(resnums)}
-    extra = {"occupancy": np.array(occupancy), "bfactor": np.array(bfactor)}
+    extra = {"occupancies": np.array(occupancies), "bfactors": np.array(bfactors)}
     # add chain id, if it wasn't all empty
-    if not np.all(chainid == [' '] * len(chainid)):
-        extra["chainid"] = np.array(chainid)
+    if not np.all(chainids == [' '] * len(chainids)):
+        extra["chainids"] = np.array(chainids)
     result = {
         'atcoords': np.array(coords) * angstrom,
         'atnums': np.array(atnums),
@@ -144,18 +144,18 @@ def dump_one(f: TextIO, data: IOData):
     attypes = data.atffparams.get('attypes', None)
     restypes = data.atffparams.get('restypes', None)
     resnums = data.atffparams.get('resnums', None)
-    occupancy = data.extra.get('occupancy', None)
-    bfactor = data.extra.get('bfactor', None)
-    chainid = data.extra.get('chainid', None)
+    occupancies = data.extra.get('occupancies', None)
+    bfactors = data.extra.get('bfactors', None)
+    chainids = data.extra.get('chainids', None)
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         resnum = -1 if resnums is None else resnums[i]
         x, y, z = data.atcoords[i] / angstrom
-        occ = 1.00 if occupancy is None else occupancy[i]
-        b = 0.00 if bfactor is None else bfactor[i]
+        occ = 1.00 if occupancies is None else occupancies[i]
+        b = 0.00 if bfactors is None else bfactors[i]
         attype = str(n + str(i + 1)) if attypes is None else attypes[i]
         restype = "XXX" if restypes is None else restypes[i]
-        chain = " " if chainid is None else chainid[i]
+        chain = " " if chainids is None else chainids[i]
         out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} {chain:1s}{resnum:>4d}    '
         out2 = f'{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}'
         print("ATOM  " + out1 + out2, file=f)
