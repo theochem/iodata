@@ -31,14 +31,17 @@ modernized and ported to Python 3. In this process, the API was seriously
 refactored, essentially designed from scratch. Compared to HORTON2, IOData 1.0.0
 contains the following API-breaking changes:
 
-* The user-facing API is now a set of four *free* functions:
+* The user-facing API is now a set of five functions:
   :py:func:`iodata.api.load_one`, :py:func:`iodata.api.dump_one`,
-  :py:func:`iodata.api.load_many`, :py:func:`iodata.api.dump_many`.
+  :py:func:`iodata.api.load_many`, :py:func:`iodata.api.dump_many` and
+  :py:func:`iodata.api.write_input`.
 * The :py:class:`iodata.iodata.IOData` object is implemented with the
   `attrs <https://www.attrs.org>`_ module, which facilites type hinting and
   checking.
 * The ``load_many`` and ``dump_many`` functions can handle trajectories and
   database formats. (At the time of writing, only XYZ and FCHK are supported.)
+* The ``write_input`` function can be used to prepare inputs for quantum
+  chemistry software. This function supports user-provided templates.
 * IOData does not impose a specific ordering of the atomic orbital basis
   functions (within one shell). Practically all possible conventions are
   supported and one can easily convert from one to another.

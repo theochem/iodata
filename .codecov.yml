@@ -1,3 +1,9 @@
-codecov:
-  notify:
-    require_ci_to_pass: no
+coverage:
+  status:
+    project:
+      default:
+        # Commits and PRs are never marked as "failed" due coverage issues.
+        # Codecov is only used as an informal tool when reviewing PRs,
+        # not in the least because of the many false failures.
+        target: 0%
+        threshold: 100%

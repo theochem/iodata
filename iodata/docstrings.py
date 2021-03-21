@@ -23,7 +23,8 @@
 from typing import List, Dict
 
 
-__all__ = ['document_load_one', 'document_load_many', 'document_dump_one', 'document_dump_many']
+__all__ = ['document_load_one', 'document_load_many', 'document_dump_one', 'document_dump_many',
+           'document_write_input']
 
 
 def _document_load(template: str, fmt: str, guaranteed: List[str], ifpresent: List[str] = None,
@@ -64,7 +65,7 @@ lit
 {kwdocs}
 Returns
 -------
-data
+result: dict
     A dictionary with IOData attributes. The following attributes are guaranteed to be
     loaded: {guaranteed}.{ifpresent}
 
@@ -105,19 +106,19 @@ def document_load_one(fmt: str, guaranteed: List[str], ifpresent: List[str] = No
 
 
 LOAD_MANY_DOC_TEMPLATE = """\
-Load multiple frame from a {fmt} file.
+Load multiple frames from a {fmt} file.
 
 Parameters
 ----------
 lit
     The line iterator to read the data from.
-
+{kwdocs}
 Yields
 ------
-data
+result: dict
     A dictionary with IOData attributes. The following attribtues are guaranteed to be
     loaded: {guaranteed}.{ifpresent}
-{kwdocs}
+
 Notes
 -----
 
@@ -151,7 +152,7 @@ def document_load_many(fmt: str, guaranteed: List[str], ifpresent: List[str] = N
         A decorator function.
 
     """
-    return _document_load(LOAD_ONE_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
+    return _document_load(LOAD_MANY_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 
 def _document_dump(template: str, fmt: str, required: List[str], optional: List[str] = None,
@@ -172,7 +173,7 @@ def _document_dump(template: str, fmt: str, required: List[str], optional: List[
             optional=optional_sentence,
             kwdocs="\n".join("{}\n    {}".format(name, docu.replace("\n", " "))
                              for name, docu in sorted(kwdocs.items())),
-            notes=notes,
+            notes=(notes or ""),
         )
         func.fmt = fmt
         func.required = required
@@ -237,10 +238,12 @@ Parameters
 ----------
 f
     A writeable file object.
-data
-    An IOData instance which must have the following attributes initialized:
+datas
+    An iterator over IOData instances which must have the following attributes initialized:
     {required}.{optional}
 {kwdocs}
+Notes
+-----
 
 {notes}
 
@@ -273,3 +276,82 @@ def document_dump_many(fmt: str, required: List[str], optional: List[str] = None
 
     """
     return _document_dump(DUMP_MANY_DOC_TEMPLATE, fmt, required, optional, kwdocs, notes)
+
+
+def _document_write(template: str, fmt: str, required: List[str], optional: List[str] = None,
+                    kwdocs: Dict[str, str] = {}, notes: str = None):
+    optional = optional or []
+
+    def decorator(func):
+        if optional:
+            optional_sentence = (
+                " If the following attributes are present, they are also written "
+                "into the file: {}. If these attributes are not assigned, "
+                "internal default values are used."
+            ).format(', '.join("``{}``".format(word) for word in optional))
+        else:
+            optional_sentence = ""
+        func.__doc__ = template.format(
+            fmt=fmt,
+            required=', '.join("``{}``".format(word) for word in required),
+            optional=optional_sentence,
+            kwdocs="\n".join("{}\n    {}".format(name, docu.replace("\n", " "))
+                             for name, docu in sorted(kwdocs.items())),
+            notes=(notes or ""),
+        )
+        func.fmt = fmt
+        func.required = required
+        func.optional = optional
+        func.kwdocs = kwdocs
+        func.notes = notes
+        return func
+    return decorator
+
+
+WRITE_INPUT_DOC_TEMPLATE = """\
+Write a {fmt} input file.
+
+Parameters
+----------
+f
+    A writeable file object.
+data
+    An IOData instance which must have the following attributes initialized:
+    {required}.{optional}
+template
+    A template input file.
+{kwdocs}
+Notes
+-----
+
+{notes}
+
+"""
+
+
+def document_write_input(fmt: str, required: List[str], optional: List[str] = None,
+                         kwdocs: Dict[str, str] = {}, notes: str = None):
+    """Decorate a write_input function to generate a docstring.
+
+    Parameters
+    ----------
+    fmt
+        The name of the file format.
+    required
+        A list of mandatory IOData attributes needed to write the file.
+    optional
+        A list of optional IOData attributes which can be include when writing the file.
+    kwdocs
+        A dictionary with documentation for keyword arguments. Each key is a
+        keyword argument name and the corresponding value is text explaining the
+        argument.
+    notes
+        Additional information to be added to the docstring.
+
+    Returns
+    -------
+    decorator
+        A decorator function.
+
+    """
+    return _document_write(WRITE_INPUT_DOC_TEMPLATE, fmt, required, optional, kwdocs, notes)

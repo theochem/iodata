@@ -151,7 +151,7 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> MolecularBasis:
             # read the exponent
             exponent = float(words[-1])
             exponents.append(exponent)
-            coeffs.append([1.0 / _get_cp2k_norm_corrections(angmom, exponent)])
+            coeffs.append(1.0 / _get_cp2k_norm_corrections(angmom, exponent))
             line = next(lit)
         # Build the shell
         kind = 'c' if angmom < 2 else 'p'

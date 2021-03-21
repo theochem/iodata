@@ -1,0 +1,28 @@
+{
+  "schema_name": "qcschema_molecule",
+  "schema_version": 2,
+  "symbols": ["O", "H"],
+  "geometry": [
+    0.0, 0.0, -0.12947694,
+    0.0, -1.49418734, 1.02744651
+  ],
+  "real": [true, true],
+  "connectivity": [
+    [0, 1, 1.0]
+  ],
+  "molecular_charge": 0,
+  "molecular_multiplicity": 2,
+  "fix_orientation": true,
+  "fix_symmetry": "c1",
+  "provenance": [
+    {
+    "creator": "QCElemental",
+    "version": "v0.2.6",
+    "routine": "qcelemental.models.results"
+    },
+    {
+      "creator": "HORTON3",
+      "routine": "Manual validation of molpro_uks_hydroxyl_radical_gradient_output.json"
+    }
+  ]
+}

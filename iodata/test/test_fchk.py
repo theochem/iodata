@@ -29,9 +29,9 @@ import pytest
 
 from ..api import load_one, load_many, dump_one
 from ..overlap import compute_overlap
-from ..utils import check_dm, FileFormatWarning
+from ..utils import check_dm
 
-from .common import check_orthonormal, compare_mols
+from .common import check_orthonormal, compare_mols, load_one_warning
 from .test_molekel import compare_mols_diff_formats
 
 try:
@@ -517,14 +517,21 @@ def test_load_nbasis_indep(tmpdir):
     assert mol2.mo.coeffs.shape == (38, 37)
 
 
-def check_load_dump_consistency(tmpdir, fn, match=None):
-    """Check if dumping and loading an FCHK file results in the same data."""
-    with path('iodata.test.data', fn) as file_name:
-        if match is None:
-            mol1 = load_one(str(file_name))
-        else:
-            with pytest.warns(FileFormatWarning, match=match):
-                mol1 = load_one(str(file_name))
+def check_load_dump_consistency(tmpdir: str, fn: str, match: str = None):
+    """Check if dumping and loading an FCHK file results in the same data.
+
+    Parameters
+    ----------
+    tmpdir
+        The temporary directory to dump and load the file.
+    fn
+        The filename to load.
+    match
+        When given, loading the file is expected to raise a warning whose
+        message string contains match.
+
+    """
+    mol1 = load_one_warning(fn, match=match)
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt='fchk')
     mol2 = load_one(fn_tmp, fmt='fchk')

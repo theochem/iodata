@@ -42,9 +42,7 @@ def test_load_data_qchemlog_h2o():
     """Test load_qchemlog_low with water_hf_ccpvtz_freq_qchem.out."""
     data = helper_load_data_qchemlog_helper('water_hf_ccpvtz_freq_qchem.out')
     # check loaded data
-    assert data['charge'] == 0
     assert data['natom'] == 3
-    assert data['spin_multi'] == 1
     assert data['run_type'] == 'freq'
     assert data['lot'] == 'hf'
     assert data['obasis_name'] == 'cc-pvtz'
@@ -173,7 +171,6 @@ def test_load_one_qchemlog():
                          1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01,
                          3.144706e-01]])
     assert_equal(mol.athessian, hessian)
-    assert mol.extra['spin_multi'] == 1
     assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
     assert mol.extra['imaginary_freq'] == 0
     # unit conversion for entropy terms, used atomic units + Kalvin

@@ -1,0 +1,16 @@
+! B3LYP def2-SVP Grid4 TightSCF NOFINALGRID KeepDens
+# Water
+%output PrintLevel Mini Print[ P_Mulliken ] 1 Print[P_AtCharges_M] 1 end
+%pal nprocs 4 end
+%coords
+    CTyp xyz
+    Charge 0
+    Mult 1
+    Units Angs
+    coords
+        H     0.783837  -0.492236  -0.000000
+        O    -0.000000   0.062020  -0.000000
+        H    -0.783837  -0.492236  -0.000000
+    end
+end
+

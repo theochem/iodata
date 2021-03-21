@@ -28,14 +28,38 @@
 Welcome to IOData's documentation!
 ==================================
 
-IOData is the HORTON3 module for reading and writing different quantum chemistry formats.
+IOData is a free and open-source Python library for parsing, storing, and
+converting various file formats commonly used by quantum chemistry,
+molecular dynamics, and plane-wave density-functional-theory software programs.
+It also supports a flexible framework for generating input files for various
+software packages.
 
-Currently we support the following formats to varying degrees: **XYZ, POSCAR,
-Cube, CHGCAR, LOCPOT, Fchk, Molden, MKL, WFN, FCIDUMP, CP2K ATOM output and
-Gaussian log**. See :ref:`file_formats` for details. IOData primarily focusses
-on correctly reading in wavefunctions from these file formats, where needed also
-correcting for common errors in the Molden and Molekel formats introduced by
-various programs (ORCA, TurboMole and pre-1.0 versions of PSI4).
+Please use the following citation in any publication using IOData library:
+
+    **"IOData: A python library for reading, writing, and converting computational chemistry file
+    formats and generating input files."**, T. Verstraelen, W. Adams, L. Pujal, A. Tehrani, B. D.
+    Kelly, L. Macaya, F. Meng, M. Richer, R. Hernandez‐Esparza, X. D. Yang, M. Chan, T. D. Kim, M.
+    Cools‐Ceuppens, V. Chuiko, E. Vohringer‐Martinez,P. W. Ayers, F. Heidar‐Zadeh,
+    `J Comput Chem. 2021; 42: 458– 464 <https://doi.org/10.1002/jcc.26468>`__.
+
+For the list of file formats that can be loaded or dumped by IOData, see
+:ref:`file_formats`. The two tables below summarize the file formats and
+features supported by IOData.
+
+======= ==========
+Code    Definition
+======= ==========
+**L**   loading is supported
+**D**   dumping is supported
+*(d)*   attribute may be derived from other attributes
+R       attribute is always read
+r       attribute is read if present
+W       attribute is always written
+w       attribute is is written if present
+======= ==========
+
+.. include:: formats_tab.inc
+
 
 User Documentation
 ^^^^^^^^^^^^^^^^^^
@@ -46,8 +70,10 @@ User Documentation
    install
    getting_started
    formats
+   inputs
    basis
    changelog
+   acknowledgments
 
 Developer Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -64,18 +90,6 @@ API Reference
    :maxdepth: 2
 
    pyapi/modules
-
-
-Acknowledgments
-===============
-
-This software was developed using funding from a variety of international
-sources including, but not limited to: Canarie, the Canada Research Chairs,
-Compute Canada, the European Union's Horizon 2020 Marie Sklodowska-Curie Actions (Individual
-Fellowship No 800130), the Foundation of Scientific Research--Flanders (FWO), McMaster
-University, the National Fund for Scientific and Technological Development of
-Chile (FONDECYT), the Natural Sciences and Engineering Research Council of
-Canada (NSERC), the Research Board of Ghent University (BOF), and Sharcnet.
 
 
 Indices and tables

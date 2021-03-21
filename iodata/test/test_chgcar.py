@@ -54,6 +54,6 @@ def test_load_chgcar_water():
     assert_allclose(mol.atcoords[1], coords, atol=1.e-7)
     assert_allclose(volume(mol.cellvecs), 15 ** 3, atol=1.e-4)
     assert_equal(len(mol.cube.shape), 3)
-    assert_equal(mol.cube.shape, 3)
+    assert_equal(mol.cube.shape, (3, 3, 3))
     assert_allclose(mol.cube.axes, mol.cellvecs / 3, atol=1.e-10)
     assert abs(mol.cube.origin).max() < 1e-10
