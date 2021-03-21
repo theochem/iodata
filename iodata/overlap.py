@@ -18,6 +18,7 @@
 # --
 """Module for computing overlap of atomic orbital basis functions."""
 
+import attr
 import numpy as np
 from scipy.special import binom, factorial2
 
@@ -193,7 +194,7 @@ def _compute_cart_shell_normalizations(shell: 'Shell') -> np.ndarray:
         shell is pure.
 
     """
-    shell = shell._replace(kinds=['c'] * shell.ncon)
+    shell = attr.evolve(shell, kinds=['c'] * shell.ncon)
     result = []
     for angmom in shell.angmoms:
         for exponent in shell.exponents:

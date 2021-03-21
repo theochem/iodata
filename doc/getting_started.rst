@@ -25,6 +25,7 @@ Getting Started
 
 IOData can be used to read and write different quantum chemistry file formats.
 
+
 Script usage
 ------------
 
@@ -36,11 +37,13 @@ The simplest way to use IOData, without writing any code is to use the ``iodata-
 
 See the :code:`--help` option for more details on usage.
 
+
 Code usage
 ----------
 
 More complex use cases can be implemented in Python, using IOData as a library.
 IOData stores an object containing the data read from the file.
+
 
 Reading
 ^^^^^^^
@@ -139,6 +142,38 @@ example. The following approach would be more memory efficient.
     dump_many(itermols(), "traj2.xyz")
 
 
+Input files
+^^^^^^^^^^^
+
+IOData can be used to write input files for quantum-chemistry software. By
+default minimal settings are used, which can be changed if needed. For example,
+the following will prepare a Gaussian input for a HF/STO-3G calculation from
+a PDB file:
+
+.. code-block:: python
+
+    from iodata import load_one, write_input
+
+    write_input(load_one("water.pdf"), "water.com", fmt="gaussian")
+
+The level of theory and other settings can be modified by setting corresponding
+attributes in the IOData object:
+
+.. code-block:: python
+
+    from iodata import load_one, write_input
+
+    mol = load_one("water.pdf")
+    mol.lot = "B3LYP"
+    mol.obasis_name = "6-31g*"
+    mol.run_type = "opt"
+    write_input(mold, "water.com", fmt="gaussian")
+
+The run types can be any of the following: ``energy``, ``energy_force``,
+``opt``, ``scan`` or ``freq``. These are translated into program-specific
+keywords when the file is written.
+
+
 Data storage
 ^^^^^^^^^^^^
 
@@ -152,3 +187,25 @@ IOData can be used to store data in a consistent format for writing at a future 
     mol = IOData(title="water")
     mol.atnums = np.array([8, 1, 1])
     mol.coordinates = np.array([[0, 0, 0,], [0, 1, 0,], [0, -1, 0,]])  # in Bohr
+
+
+.. _units:
+
+
+Unit conversion
+^^^^^^^^^^^^^^^
+
+IOData always represents all quantities in atomic units and unit conversion
+constants are defined in ``iodata.utils``. Conversion _to_ atomic units is done
+by _multiplication_ with a unit constant. This convention can be easily
+remembered with the following examples:
+
+- When you say "this bond length is 1.5 Å", the IOData equivalent is
+  ``bond_length = 1.5 * angstrom``.
+
+- The conversion from atomic units is similar to axes labels in old papers.
+  For example. a bond length in angstrom is printed as "Bond length / Å".
+  Expressing this with IOData's conventions gives
+  ``print("Bond length in Angstrom:", bond_length /  angstrom)``
+
+(This is rather different from the ASE conventions.)

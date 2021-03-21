@@ -34,6 +34,13 @@ molecular dynamics, and plane-wave density-functional-theory software programs.
 It also supports a flexible framework for generating input files for various
 software packages.
 
+Please use the following citation in any publication using IOData library:
+
+    **"IOData: A python library for reading, writing, and converting computational chemistry file
+    formats and generating input files."**, T. Verstraelen, W. Adams, L. Pujal, A. Tehrani, B. D.
+    Kelly, L. Macaya, F. Meng, M. Richer, R. Hernandez‐Esparza, X. D. Yang, M. Chan, T. D. Kim, M.
+    Cools‐Ceuppens, V. Chuiko, E. Vohringer‐Martinez,P. W. Ayers, F. Heidar‐Zadeh,
+    `J Comput Chem. 2021; 42: 458– 464 <https://doi.org/10.1002/jcc.26468>`__.
 
 For the list of file formats that can be loaded or dumped by IOData, see
 :ref:`file_formats`. The two tables below summarize the file formats and
@@ -63,6 +70,7 @@ User Documentation
    install
    getting_started
    formats
+   inputs
    basis
    changelog
    acknowledgments

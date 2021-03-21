@@ -73,7 +73,7 @@ def _convert_title_value(value: str):
                 try:
                     converted_value = np.array([strtobool(split) for split in list_of_splits],
                                                dtype=np.bool)
-                except KeyError:
+                except ValueError:
                     converted_value = np.array(list_of_splits, dtype=np.str)
     return converted_value
 

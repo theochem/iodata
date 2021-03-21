@@ -22,7 +22,7 @@
 
 IOData
 ======
-|Travis|
+|GithubActions|
 |Conda|
 |Pypi|
 |Codecov|
@@ -33,38 +33,49 @@ IOData
 
 About
 -----
-IOData is a HORTON 3 module for input/output of quantum chemistry file formats. Documentation is
-here: https://iodata.readthedocs.io/en/latest/index.html
 
+IOData is a HORTON 3 module for input/output of quantum chemistry file formats.
+Documentation is here: https://iodata.readthedocs.io/en/latest/index.html
 
-Dependencies
-------------
+Citation
+--------
 
-The following dependencies will be necessary for IOData to build properly,
+Please use the following citation in any publication using IOData library:
 
-* Python >= 3.6: http://www.python.org/
-* SciPy >= 0.11.0: http://www.scipy.org/
-* NumPy >= 1.9.1: http://www.numpy.org/
-* pytest >= 4.2.0: https://docs.pytest.org/
-
+    **"IOData: A python library for reading, writing, and converting computational chemistry file
+    formats and generating input files."**, T. Verstraelen, W. Adams, L. Pujal, A. Tehrani, B. D.
+    Kelly, L. Macaya, F. Meng, M. Richer, R. Hernandez‐Esparza, X. D. Yang, M. Chan, T. D. Kim, M.
+    Cools‐Ceuppens, V. Chuiko, E. Vohringer‐Martinez,P. W. Ayers, F. Heidar‐Zadeh,
+    `J Comput Chem. 2021; 42: 458– 464 <https://doi.org/10.1002/jcc.26468>`__.
 
 Installation
 ------------
 
-To install IOData using conda package management system, install
+To install IOData using the conda package management system, install
 `miniconda <https://conda.io/miniconda.html>`__ or
 `anaconda <https://www.anaconda.com/download>`__ first, and then:
 
 .. code-block:: bash
 
-    $ conda create -n iodata_env
-    $ source activate iodata_env
-    (iodata_env) $ conda install -c theochem iodata
+    # Create a horton3 conda environment. (optional, recommended)
+    conda create -n horton3
+    source activate horton3
+
+    # Install the stable release.
+    conda install -c theochem iodata
+
+To install IOData with pip, you may want to create a `virtual environment`_,
+and then:
+
+.. code-block:: bash
+
+    # Install the stable release.
+    pip install qc-iodata
 
 See https://iodata.readthedocs.io/en/latest/install.html for full details.
 
-.. |Travis| image:: https://travis-ci.org/theochem/iodata.svg?branch=master
-    :target: https://travis-ci.org/theochem/iodata
+.. |GithubActions| image:: https://github.com/theochem/iodata/actions/workflows/ci.yml/badge.svg?branch=master
+    :target: https://github.com/theochem/iodata/actions/workflows/ci.yml
 .. |Version| image:: https://img.shields.io/pypi/pyversions/iodata.svg
 .. |License| image:: https://img.shields.io/github/license/theochem/iodata
 .. |Pypi| image:: https://img.shields.io/pypi/v/iodata.svg
@@ -75,3 +86,4 @@ See https://iodata.readthedocs.io/en/latest/install.html for full details.
     :target: https://anaconda.org/theochem/iodata
 .. |CondaVersion| image:: https://img.shields.io/conda/pn/theochem/iodata.svg
     :target: https://anaconda.org/theochem/iodata
+.. _virtual environment: https://docs.python.org/3/tutorial/venv.html

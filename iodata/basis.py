@@ -20,13 +20,17 @@
 
 from functools import wraps
 from numbers import Integral
-from typing import List, Dict, NamedTuple, Tuple, Union
+from typing import List, Dict, Tuple, Union
 
+import attr
 import numpy as np
+
+from .attrutils import validate_shape
+
 
 __all__ = ['angmom_sti', 'angmom_its', 'Shell', 'MolecularBasis',
            'convert_convention_shell', 'convert_conventions',
-           'iter_cart_alphabet', 'HORTON2_CONVENTIONS', 'PSI4_CONVENTIONS']
+           'iter_cart_alphabet', 'HORTON2_CONVENTIONS', 'CCA_CONVENTIONS']
 
 ANGMOM_CHARS = 'spdfghiklmnoqrtuvwxyzabce'
 
@@ -81,7 +85,9 @@ def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
     return ANGMOM_CHARS[angmom]
 
 
-class Shell(NamedTuple):
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
+class Shell:
     """A shell in a molecular basis representing (generalized) contractions with the same exponents.
 
     Attributes
@@ -107,10 +113,10 @@ class Shell(NamedTuple):
     """
 
     icenter: int
-    angmoms: List[int]
-    kinds: List[str]
-    exponents: np.ndarray
-    coeffs: np.ndarray
+    angmoms: List[int] = attr.ib(validator=validate_shape(("coeffs", 1)))
+    kinds: List[str] = attr.ib(validator=validate_shape(("coeffs", 1)))
+    exponents: np.ndarray = attr.ib(validator=validate_shape(("coeffs", 0)))
+    coeffs: np.ndarray = attr.ib(validator=validate_shape(("exponents", 0), ("kinds", 0)))
 
     @property
     def nbasis(self) -> int:   # noqa: D401
@@ -136,7 +142,9 @@ class Shell(NamedTuple):
         return len(self.angmoms)
 
 
-class MolecularBasis(NamedTuple):
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
+class MolecularBasis:
     """A complete molecular orbital or density basis set.
 
     Attributes
@@ -184,7 +192,7 @@ class MolecularBasis(NamedTuple):
 
     """
 
-    shells: tuple
+    shells: List[Shell]
     conventions: Dict[str, str]
     primitive_normalization: str
 
@@ -201,7 +209,7 @@ class MolecularBasis(NamedTuple):
                 shells.append(Shell(shell.icenter, [angmom], [kind],
                                     shell.exponents, coeffs.reshape(-1, 1)))
         # pylint: disable=no-member
-        return self._replace(shells=shells)
+        return attr.evolve(self, shells=shells)
 
 
 def convert_convention_shell(conv1: List[str], conv2: List[str], reverse=False) \
@@ -333,20 +341,43 @@ def iter_cart_alphabet(n: int) -> np.ndarray:
             yield np.array((nx, ny, nz), dtype=int)
 
 
-def get_default_conventions():
-    """Produce a conventions dictionary compatible with HORTON2.
+def get_default_conventions() -> Tuple[Dict, Dict]:
+    """Produce conventions dictionaries compatible with HORTON2 and CCA.
 
-    Do not change this!!! This is also used by several file formats from other
-    QC codes who happen to follow the same conventions.
+    Do not change this! Both conventions are also used by several file formats
+    from other QC codes.
+
+    Common Component Architecture (CCA) conventions are defined in appendix B of
+    the following article:
+
+    Kenny, J. P.; Janssen, C. L.; Valeev, E. F.; Windus, T. L. Components for
+    Integral Evaluation in Quantum Chemistry: Components for Integral Evaluation
+    in Quantum Chemistry. J. Comput. Chem. 2008, 29 (4), 562–577.
+    https://doi.org/10.1002/jcc.20815.
+
+    The ordering of the spherical harmonics within one shell is rather vague
+    in appendix B and a more precise description is given on the LibInt Wiki:
+
+    https://github.com/evaleev/libint/wiki/using-modern-CPlusPlus-API
+
+    Returns
+    -------
+    horton2_conventions
+        A conventions dictionary for HORTON2, of which parts are used by various
+        file formats.
+    cca_conventions
+        A conventions dictionary compatible with the Common Component
+        Architecture (CCA).
+
     """
     horton2 = {(0, 'c'): ['1']}
-    psi4 = horton2.copy()
+    cca = horton2.copy()
     for angmom in range(1, 25):
         conv_cart = list('x' * nx + 'y' * ny + 'z' * nz
                          for nx, ny, nz in iter_cart_alphabet(angmom))
         key = (angmom, 'c')
         horton2[key] = conv_cart
-        psi4[key] = conv_cart
+        cca[key] = conv_cart
         if angmom > 1:
             conv_pure = ['c0']
             for absm in range(1, angmom + 1):
@@ -354,8 +385,8 @@ def get_default_conventions():
                 conv_pure.append('s{}'.format(absm))
             key = (angmom, 'p')
             horton2[key] = conv_pure
-            psi4[key] = conv_pure[:1:-2] + conv_pure[:1] + conv_pure[1::2]
-    return horton2, psi4
+            cca[key] = conv_pure[:1:-2] + conv_pure[:1] + conv_pure[1::2]
+    return horton2, cca
 
 
-HORTON2_CONVENTIONS, PSI4_CONVENTIONS = get_default_conventions()
+HORTON2_CONVENTIONS, CCA_CONVENTIONS = get_default_conventions()

@@ -19,15 +19,18 @@
 """Data structure for molecular orbitals."""
 
 
-from typing import NamedTuple
-
+import attr
 import numpy as np
+
+from .attrutils import validate_shape
 
 
 __all__ = ['MolecularOrbitals']
 
 
-class MolecularOrbitals(NamedTuple):
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
+class MolecularOrbitals:
     """Class of Orthonormal Molecular Orbitals.
 
     Attributes
@@ -64,10 +67,13 @@ class MolecularOrbitals(NamedTuple):
     kind: str
     norba: int
     norbb: int
-    occs: np.ndarray
-    coeffs: np.ndarray
-    energies: np.ndarray
-    irreps: np.ndarray
+    occs: np.ndarray = attr.ib(
+        validator=attr.validators.optional(validate_shape(("coeffs", 1))))
+    coeffs: np.ndarray = attr.ib(validator=validate_shape(None, None))
+    energies: np.ndarray = attr.ib(
+        validator=attr.validators.optional(validate_shape(("coeffs", 1))))
+    irreps: np.ndarray = attr.ib(
+        validator=attr.validators.optional(validate_shape(("coeffs", 1))))
 
     @property
     def nelec(self) -> float:
@@ -171,6 +177,3 @@ class MolecularOrbitals(NamedTuple):
         if self.kind == 'unrestricted':
             return self.energies[self.norba:]
         raise NotImplementedError
-
-
-MolecularOrbitals.__defaults__ = (None,)
