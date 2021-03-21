@@ -18,17 +18,26 @@
 # --
 """Utilities for unit tests."""
 
-from os import path
+import os
 from contextlib import contextmanager
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
+import pytest
 
+from ..api import load_one
 from ..overlap import compute_overlap
 from ..basis import convert_conventions
+from ..utils import FileFormatWarning
+
+try:
+    from importlib_resources import path
+except ImportError:
+    from importlib.resources import path
+
 
 __all__ = ['compute_mulliken_charges', 'compute_1rdm',
-           'compare_mols', 'check_orthonormal']
+           'compare_mols', 'check_orthonormal', 'load_one_warning']
 
 
 def compute_1rdm(iodata):
@@ -72,7 +81,7 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
 
     """
     fn_truncated = '%s/truncated_%i_%s' % (
-        tmpdir, nline, path.basename(fn_orig))
+        tmpdir, nline, os.path.basename(fn_orig))
     with open(fn_orig) as f_orig, open(fn_truncated, 'w') as f_truncated:
         for counter, line in enumerate(f_orig):
             if counter >= nline:
@@ -88,7 +97,7 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
     assert mol1.title == mol2.title
     assert_equal(mol1.atnums, mol2.atnums)
     assert_equal(mol1.atcorenums, mol2.atcorenums)
-    assert_allclose(mol1.atcoords, mol2.atcoords)
+    assert_allclose(mol1.atcoords, mol2.atcoords, atol=1e-10)
     # orbital basis
     if mol1.obasis is not None:
         # compare dictionaries
@@ -99,11 +108,6 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
             assert shell1.kinds == shell2.kinds
             assert_allclose(shell1.exponents, shell2.exponents, atol=atol, rtol=rtol)
             assert_allclose(shell1.coeffs, shell2.coeffs, atol=atol, rtol=rtol)
-        assert len(mol1.obasis.conventions) == len(mol2.obasis.conventions)
-        for key, conv in mol1.obasis.conventions.items():
-            s1 = set(word.lstrip('-') for word in conv)
-            s2 = set(word.lstrip('-') for word in mol2.obasis.conventions[key])
-            assert s1 == s2, (s1, s2)
         assert mol1.obasis.primitive_normalization == mol2.obasis.primitive_normalization
         # compute and compare Mulliken charges
         charges1 = compute_mulliken_charges(mol1)
@@ -158,3 +162,32 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
     message = 'Molecular orbitals are not orthonormal!'
     assert_allclose(mo_overlap, np.eye(mo_count),
                     rtol=0., atol=atol, err_msg=message)
+
+
+def load_one_warning(filename: str, fmt: str = None, match: str = None, **kwargs):
+    """Call load_one, catching expected FileFormatWarning.
+
+    Parameters
+    ----------
+    filename
+        The file in the unit test data directory to load.
+    fmt
+        The name of the file format module to use. When not given, it is guessed
+        from the filename.
+    match
+        When given, loading the file is expected to raise a warning whose
+        message string contains match.
+    **kwargs
+        Keyword arguments are passed on to the format-specific load_one function.
+
+    Returns
+    -------
+    out
+        The instance of IOData with data loaded from the input files.
+
+    """
+    with path('iodata.test.data', filename) as fn:
+        if match is None:
+            return load_one(str(fn), fmt, **kwargs)
+        with pytest.warns(FileFormatWarning, match=match):
+            return load_one(str(fn), fmt, **kwargs)

@@ -21,6 +21,7 @@
 
 import os
 
+import attr
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import pytest
@@ -259,6 +260,43 @@ def test_load_molden_nh3_psi4_1():
     assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
+@pytest.mark.parametrize("case", ["zn", "mn", "cuh"])
+def test_load_molden_high_am_psi4(case):
+    # The file tested here is created with PSI4 1.3.2.
+    # This is a special case because it contains higher angular momenta than
+    # officially supported by the Molden format. Most virtual orbitals were removed.
+    with path('iodata.test.data', f'psi4_{case}_cc_pvqz_pure.molden') as fn_molden:
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "unnormalized" in record[0].message.args[0]
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    if mol.mo.kind == "restricted":
+        check_orthonormal(mol.mo.coeffs, olp)
+    elif mol.mo.kind == "unrestricted":
+        check_orthonormal(mol.mo.coeffsa, olp)
+        check_orthonormal(mol.mo.coeffsb, olp)
+    else:
+        raise NotImplementedError
+
+
+@pytest.mark.parametrize("case", ["zn", "cuh"])
+def test_load_molden_high_am_orca(case):
+    # The file tested here is created with ORCA.
+    # This is a special case because it contains higher angular momenta than
+    # officially supported by the Molden format. Most virtual orbitals were removed.
+    with path('iodata.test.data', f'orca_{case}_cc_pvqz_pure.molden') as fn_molden:
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_molden))
+    assert len(record) == 1
+    assert "ORCA" in record[0].message.args[0]
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    assert mol.mo.kind == "restricted"
+    check_orthonormal(mol.mo.coeffs, olp)
+
+
 def test_load_molden_he2_ghost_psi4_1():
     # The file tested here is created with PSI4 (version 1.0).
     with path('iodata.test.data', 'he2_ghost_psi4_1.0.molden') as fn_molden:
@@ -388,77 +426,35 @@ def test_load_molden_f():
     assert_equal(mol.mo.irrepsb[:6], ['Ag', 'Ag', 'B3u', 'B2u', 'B1u', 'B3u'])
 
 
-def check_load_dump_consistency(fn, tmpdir):
-    """Check if data is preserved after dumping and loading a Molden file.
-
-    Parameters
-    ----------
-    fn : str
-        The Molden filename to load
-    tmpdir : str
-        The temporary directory to dump and load the file.
-
-    """
+@pytest.mark.parametrize("fn,match", [
+    ("h2o.molden.input", "ORCA"),
+    ("li2.molden.input", "ORCA"),
+    ("F.molden", "PSI4"),
+    ("nh3_molden_pure.molden", None),
+    ("nh3_molden_cart.molden", None),
+    ("he2_ghost_psi4_1.0.molden", None),
+    ("psi4_cuh_cc_pvqz_pure.molden", "unnormalized"),
+    ("hf_sto3g.fchk", None),
+    ("h_sto3g.fchk", None),
+    ("ch3_rohf_sto3g_g03.fchk", None),
+])
+def test_load_dump_consistency(tmpdir, fn, match):
     with path('iodata.test.data', fn) as file_name:
-        mol1 = load_one(str(file_name))
+        if match is None:
+            mol1 = load_one(str(file_name))
+        else:
+            with pytest.warns(FileFormatWarning, match=match):
+                mol1 = load_one(str(file_name))
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt='molden')
     mol2 = load_one(fn_tmp, fmt='molden')
+    # Remove and or fix some things in mol1 to make it compatible with what
+    # can be read from a Molden file:
+    # - Change basis of mol1 to segmented.
+    mol1.obasis = mol1.obasis.get_segmented()
+    # - Set default irreps in mol1, if not present.
+    if mol1.mo.irreps is None:
+        mol1.mo = attr.evolve(mol1.mo, irreps=['1a'] * mol1.mo.norb)
+    # - Remove the one_rdms from mol1.
+    mol1.one_rdms = {}
     compare_mols(mol1, mol2)
-
-
-def test_load_dump_consistency_h2o(tmpdir):
-    with pytest.warns(FileFormatWarning) as record:
-        check_load_dump_consistency('h2o.molden.input', tmpdir)
-    assert len(record) == 1
-    assert "ORCA" in record[0].message.args[0]
-
-
-def test_load_dump_consistency_li2(tmpdir):
-    with pytest.warns(FileFormatWarning) as record:
-        check_load_dump_consistency('li2.molden.input', tmpdir)
-    assert len(record) == 1
-    assert "ORCA" in record[0].message.args[0]
-
-
-def test_load_dump_consistency_f(tmpdir):
-    with pytest.warns(FileFormatWarning) as record:
-        check_load_dump_consistency('F.molden', tmpdir)
-    assert len(record) == 1
-    assert "PSI4" in record[0].message.args[0]
-
-
-def test_load_dump_consistency_nh3_molden_pure(tmpdir):
-    check_load_dump_consistency('nh3_molden_pure.molden', tmpdir)
-
-
-def test_load_dump_consistency_nh3_molden_cart(tmpdir):
-    check_load_dump_consistency('nh3_molden_cart.molden', tmpdir)
-
-
-def test_load_dump_consistency_he2_ghost_psi4_1(tmpdir):
-    check_load_dump_consistency('he2_ghost_psi4_1.0.molden', tmpdir)
-
-
-def test_dump_molden_from_fchk_restricted(tmpdir):
-    with path('iodata.test.data', 'hf_sto3g.fchk') as file_name:
-        mol = load_one(str(file_name))
-        fn_tmp = os.path.join(tmpdir, 'hf_sto3g.molden')
-        dump_one(mol, fn_tmp)
-        assert os.path.isfile(fn_tmp)
-
-
-def test_dump_molden_from_fchk_unrestricted(tmpdir):
-    with path('iodata.test.data', 'h_sto3g.fchk') as file_name:
-        mol = load_one(str(file_name))
-        fn_tmp = os.path.join(tmpdir, 'h_sto3g.molden')
-        dump_one(mol, fn_tmp)
-        assert os.path.isfile(fn_tmp)
-
-
-def test_dump_molden_from_fchk_rohf(tmpdir):
-    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as file_name:
-        mol = load_one(str(file_name))
-        fn_tmp = os.path.join(tmpdir, 'ch3_rohf_sto3g_g03.molden')
-        dump_one(mol, fn_tmp)
-        assert os.path.isfile(fn_tmp)

@@ -22,6 +22,7 @@
 import attr
 import numpy as np
 
+from .attrutils import convert_array_to, validate_shape
 from .basis import MolecularBasis
 from .orbitals import MolecularOrbitals
 from .utils import Cube
@@ -30,36 +31,9 @@ from .utils import Cube
 __all__ = ['IOData']
 
 
-def convert_array_to(dtype):
-    """Return a function to convert arrays to the given type."""
-    def converter(array):
-        if array is None:
-            return None
-        return np.array(array, copy=False, dtype=dtype)
-    return converter
-
-
-def validate_shape(*shape):
-    """Return a function to validate the shape of an array."""
-    def validator(obj, attrname, value):
-        if value is None:
-            return
-        myshape = tuple([obj.natom if size == 'natom' else size for size in shape])
-        if len(myshape) != len(value.shape):
-            raise TypeError('Expect ndim {} for attribute {}, got {}'.format(
-                len(myshape), attrname, len(value.shape)))
-        for axis, size in enumerate(myshape):
-            if size is None:
-                continue
-            if size != value.shape[axis]:
-                raise TypeError(
-                    'Expect size {} for axis {} of attribute {}, got {}'.format(
-                        size, axis, attrname, value.shape[axis]))
-    return validator
-
-
 # pylint: disable=too-many-instance-attributes
-@attr.s(auto_attribs=True, slots=True)
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
 class IOData:
     """A container class for data loaded from (or to be written to) a file.
 
@@ -114,7 +88,8 @@ class IOData:
         e.g. for a wire. Two vectors describe a 2D cell, e.g. for a membrane.
         Three vectors describe a 3D cell, e.g. a crystalline solid.
     charge
-        The net charge of the system.
+        The net charge of the system. When possible, this is derived from
+        atcorenums and nelec.
     core_energy
         The Hartree-Fock energy due to the core orbitals
     cube
@@ -169,8 +144,9 @@ class IOData:
         matrices. Names can be ``scf``, ``post_scf``, ``scf_spin``,
         ``post_scf_spin``. These matrices are always expressed in the AO basis.
     run_type
-        The type of calculation that lead to the results stored in IOData, e.g.
-        'energy', 'energy_force', 'opt', 'freq', ...
+        The type of calculation that lead to the results stored in IOData, which
+        must be one of the following: 'energy', 'energy_force', 'opt', 'scan',
+        'freq' or None.
     spinpol
         The spin polarization. By default, its value is derived from the
         molecular orbitals (mo attribute), as abs(nalpha - nbeta). In this case,
@@ -197,40 +173,40 @@ class IOData:
     atcharges: dict = {}
     atcoords: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape('natom', 3))
+        validator=attr.validators.optional(validate_shape('natom', 3)))
     _atcorenums: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape('natom'))
+        validator=attr.validators.optional(validate_shape('natom')))
     atffparams: dict = {}
     atfrozen: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(bool),
-        validator=validate_shape('natom'))
+        validator=attr.validators.optional(validate_shape('natom')))
     atgradient: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape('natom', 3))
+        validator=attr.validators.optional(validate_shape('natom', 3)))
     athessian: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape(None, None))
+        validator=attr.validators.optional(validate_shape(None, None)))
     atmasses: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape('natom'))
+        validator=attr.validators.optional(validate_shape('natom')))
     atnums: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(int),
-        validator=validate_shape('natom'))
+        validator=attr.validators.optional(validate_shape('natom')))
     basisdef: str = None
     bonds: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(int),
-        validator=validate_shape(None, 3))
+        validator=attr.validators.optional(validate_shape(None, 3)))
     cellvecs: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape(None, 3))
+        validator=attr.validators.optional(validate_shape(None, 3)))
     _charge: float = None
     core_energy: float = None
     cube: Cube = None
     energy: float = None
     extcharges: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
-        validator=validate_shape(None, 4))
+        validator=attr.validators.optional(validate_shape(None, 4)))
     extra: dict = {}
     g_rot: float = None
     lot: str = None
@@ -247,36 +223,66 @@ class IOData:
     two_ints: dict = {}
     two_rdms: dict = {}
 
+    def __attrs_post_init__(self):
+        # Trigger setter to acchieve consistency in properties
+        # atcorenums, nelec, charge, spinmult. This is needed because the
+        # attr constructor bypasses the setters. See
+        # https://www.attrs.org/en/stable/init.html#private-attributes
+        if self._atcorenums is not None:
+            self.atcorenums = self._atcorenums
+        if self._charge is not None:
+            self.charge = self._charge
+        if self._nelec is not None:
+            self.nelec = self._nelec
+        if self._spinpol is not None:
+            self.spinpol = self._spinpol
+
     # Public interfaces to private attributes
 
     @property
     def atcorenums(self) -> np.ndarray:
         """Return effective core charges."""
-        result = self._atcorenums
-        if result is None and self.atnums is not None:
+        if self._atcorenums is None and self.atnums is not None:
             # Known bug in pylint. See
             # https://stackoverflow.com/questions/47972143/using-attr-with-pylint
             # https://github.com/PyCQA/pylint/issues/1694
             # pylint: disable=no-member
-            result = self.atnums.astype(float)
-            self._atcorenums = result
-        return result
+            self.atcorenums = self.atnums.astype(float)
+        return self._atcorenums
 
     @atcorenums.setter
     def atcorenums(self, atcorenums):
-        self._atcorenums = atcorenums
+        if atcorenums is None:
+            if self.nelec is not None and self._atcorenums is not None:
+                # Set _charge because charge can no longer be derived from
+                # atcorenums and nelec.
+                self._charge = self._atcorenums.sum() - self.nelec
+            self._atcorenums = None
+        else:
+            if self._charge is not None:
+                # _charge is treated as the dependent one, while atcorenums and
+                # nelec are treated as independent.
+                if self._nelec is None:
+                    # Switch to storing _nelec.
+                    self._nelec = atcorenums.sum() - self._charge
+                self._charge = None
+            self._atcorenums = np.asarray(atcorenums, dtype=float)
 
     @property
     def charge(self) -> float:
         """Return the net charge of the system."""
-        if self.atcorenums is None:
+        # The internal _charge is used only if it cannot be derived.
+        if self.atcorenums is None or self.nelec is None:
             return self._charge
         return self.atcorenums.sum() - self.nelec
 
     @charge.setter
     def charge(self, charge: float):
+        # The internal _charge is used only if atcorenums is None.
         if self.atcorenums is None:
             self._charge = charge
+        elif charge is None:
+            self.nelec = None
         else:
             self.nelec = self.atcorenums.sum() - charge
 
@@ -286,8 +292,8 @@ class IOData:
         natom = None
         if self.atcoords is not None:
             natom = len(self.atcoords)
-        elif self.atcorenums is not None:
-            natom = len(self.atcorenums)
+        elif self._atcorenums is not None:
+            natom = len(self._atcorenums)
         elif self.atgradient is not None:
             natom = len(self.atgradient)
         elif self.atfrozen is not None:
@@ -301,9 +307,11 @@ class IOData:
     @property
     def nelec(self) -> float:
         """Return the number of electrons."""
-        if self.mo is None:
-            return self._nelec
-        return self.mo.nelec
+        # When the molecular orbitals are present, they determine the number
+        # of electrons. Only when mo is absent, we use a stored value.
+        if self.mo is not None:
+            return self.mo.nelec
+        return self._nelec
 
     @nelec.setter
     def nelec(self, nelec: float):
@@ -320,12 +328,14 @@ class IOData:
         number in ]0, 2[ implies spin polarizaiton, which may not always be a
         valid assumption.
         """
-        if self.mo is None:
-            return self._spinpol
-        return self.mo.spinpol
+        if self.mo is not None:
+            return self.mo.spinpol
+        return self._spinpol
 
     @spinpol.setter
     def spinpol(self, spinpol: float):
+        # When the molecular orbitals are present, they determine the spin
+        # polarization. Only when mo is absent, we use a stored value.
         if self.mo is None:
             self._spinpol = spinpol
         else:

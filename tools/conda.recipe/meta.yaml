@@ -7,26 +7,20 @@ source:
 
 build:
   number: 0
-  string: py{{ CONDA_PY }}_1
-  script:
-    - export CFLAGS="${CFLAGS} -isysroot ${CONDA_BUILD_SYSROOT}"  # [osx]
-    - python setup.py build_ext -I {{ PREFIX }}/include
-    - python setup.py install --single-version-externally-managed --record=record.txt
+  noarch: python
+  script: "{{ PYTHON }} -m pip install . --no-deps"
   entry_points:
     - iodata-convert = iodata.__main__:main
 
 requirements:
-  build:
-    - {{ compiler("c") }}
   host:
     - python
     - numpy >=1.0
-    - cython >=0.24.1
     - setuptools
   run:
     - python
     - scipy
-    - attrs >=19.1.0
+    - attrs >=20.1.0
     - importlib_resources  # [py<37]
 
 test:
@@ -37,9 +31,13 @@ test:
   imports:
     - iodata
   commands:
-    - conda inspect linkages iodata
     - pytest --pyargs iodata -v -n auto
 
 about:
-  home: https://github.com/theochem/iodata
+  description: Input and output module for quantum chemistry
+  home: https://iodata.readthedocs.io/en/latest
+  doc_url: https://iodata.readthedocs.io/en/latest
+  dev_url: https://github.com/theochem/iodata
   license: GNU Version 3
+  license_family: GPL
+  license_file: LICENSE

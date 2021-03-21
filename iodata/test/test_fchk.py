@@ -27,11 +27,12 @@ from numpy.testing import assert_equal, assert_allclose
 
 import pytest
 
-from ..api import load_one, load_many
+from ..api import load_one, load_many, dump_one
 from ..overlap import compute_overlap
 from ..utils import check_dm
 
-from .common import check_orthonormal
+from .common import check_orthonormal, compare_mols, load_one_warning
+from .test_molekel import compare_mols_diff_formats
 
 try:
     from importlib_resources import path
@@ -514,3 +515,195 @@ def test_load_nbasis_indep(tmpdir):
                 fout.write(line.replace("independent", "independant"))
     mol2 = load_one(fnout)
     assert mol2.mo.coeffs.shape == (38, 37)
+
+
+def check_load_dump_consistency(tmpdir: str, fn: str, match: str = None):
+    """Check if dumping and loading an FCHK file results in the same data.
+
+    Parameters
+    ----------
+    tmpdir
+        The temporary directory to dump and load the file.
+    fn
+        The filename to load.
+    match
+        When given, loading the file is expected to raise a warning whose
+        message string contains match.
+
+    """
+    mol1 = load_one_warning(fn, match=match)
+    fn_tmp = os.path.join(tmpdir, 'foo.bar')
+    dump_one(mol1, fn_tmp, fmt='fchk')
+    mol2 = load_one(fn_tmp, fmt='fchk')
+    # compare molecules
+    if fn.endswith('fchk'):
+        compare_mols(mol1, mol2)
+    else:
+        compare_mols_diff_formats(mol1, mol2)
+
+
+def test_dump_fchk_from_fchk_hf(tmpdir):
+    check_load_dump_consistency(tmpdir, 'hf_sto3g.fchk')
+
+
+def test_dump_fchk_from_fchk_h2o(tmpdir):
+    check_load_dump_consistency(tmpdir, 'h2o_sto3g.fchk')
+
+
+def test_dump_fchk_from_fchk_peroxide_irc(tmpdir):
+    check_load_dump_consistency(tmpdir, 'peroxide_irc.fchk')
+
+
+def test_dump_fchk_from_fchk_he(tmpdir):
+    check_load_dump_consistency(tmpdir, 'he_s_orbital.fchk')
+    check_load_dump_consistency(tmpdir, 'he_sp_orbital.fchk')
+    check_load_dump_consistency(tmpdir, 'he_spd_orbital.fchk')
+    check_load_dump_consistency(tmpdir, 'he_spdf_orbital.fchk')
+    check_load_dump_consistency(tmpdir, 'he_spdfgh_orbital.fchk')
+    check_load_dump_consistency(tmpdir, 'he_s_virtual.fchk')
+    check_load_dump_consistency(tmpdir, 'he_spdfgh_virtual.fchk')
+
+
+def test_dump_fchk_from_fchk_o2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_cart.fchk')
+    check_load_dump_consistency(tmpdir, 'o2_cc_pvtz_pure.fchk')
+
+
+def test_dump_fchk_from_fchk_water_dimer_ghost(tmpdir):
+    check_load_dump_consistency(tmpdir, 'water_dimer_ghost.fchk')
+
+
+def test_dump_fchk_from_molden_f(tmpdir):
+    check_load_dump_consistency(tmpdir, 'F.molden', "PSI4")
+
+
+def test_dump_fchk_from_molden_ne(tmpdir):
+    check_load_dump_consistency(tmpdir, 'neon_turbomole_def2-qzvp.molden', "Turbomole")
+
+
+def test_dump_fchk_from_molden_he2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'he2_ghost_psi4_1.0.molden')
+
+
+def test_dump_fchk_from_molden_nh3(tmpdir):
+    check_load_dump_consistency(tmpdir, 'nh3_orca.molden', "ORCA")
+    check_load_dump_consistency(tmpdir, 'nh3_psi4.molden', "PSI4")
+    check_load_dump_consistency(tmpdir, 'nh3_psi4_1.0.molden', "unnormalized")
+    check_load_dump_consistency(tmpdir, 'nh3_molpro2012.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_molden_cart.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_molden_pure.molden')
+    check_load_dump_consistency(tmpdir, 'nh3_turbomole.molden', "Turbomole")
+
+
+def test_dump_fchk_from_wfn_he(tmpdir):
+    check_load_dump_consistency(tmpdir, 'he_s_virtual.wfn')
+    check_load_dump_consistency(tmpdir, 'he_s_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_p_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_d_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_sp_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_spd_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_spdf_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_spdfgh_orbital.wfn')
+    check_load_dump_consistency(tmpdir, 'he_spdfgh_virtual.wfn')
+
+
+def test_dump_fchk_from_wfn_li(tmpdir):
+    check_load_dump_consistency(tmpdir, 'li_sp_virtual.wfn')
+    check_load_dump_consistency(tmpdir, 'li_sp_orbital.wfn')
+
+
+def test_dump_fchk_from_wfn_lih_cation(tmpdir):
+    check_load_dump_consistency(tmpdir, 'lih_cation_uhf.wfn')
+    check_load_dump_consistency(tmpdir, 'lih_cation_rohf.wfn')
+
+
+def test_dump_fchk_from_wfn_cisd_lih_cation(tmpdir):
+    check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfn')
+
+
+def test_dump_fchk_from_wfn_fci_lih_cation(tmpdir):
+    # Fractional occupations are not supported in FCHK and we have no
+    # alternative for solution for this yet.
+    with pytest.raises(ValueError):
+        check_load_dump_consistency(tmpdir, 'lih_cation_fci.wfn')
+
+
+def test_dump_fchk_from_wfn_fci_lif(tmpdir):
+    # Fractional occupations are not supported in FCHK and we have no
+    # alternative for solution for this yet.
+    with pytest.raises(ValueError):
+        check_load_dump_consistency(tmpdir, 'lif_fci.wfn')
+
+
+def test_dump_fchk_from_wfn_h2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'h2_ccpvqz.wfn')
+
+
+def test_dump_fchk_from_wfn_o2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'o2_uhf_virtual.wfn')
+    check_load_dump_consistency(tmpdir, 'o2_uhf.wfn')
+
+
+def test_dump_fchk_from_wfn_h2o(tmpdir):
+    check_load_dump_consistency(tmpdir, 'h2o_sto3g.wfn')
+    check_load_dump_consistency(tmpdir, 'h2o_sto3g_decontracted.wfn')
+
+
+def test_dump_fchk_from_wfn_ch3(tmpdir):
+    check_load_dump_consistency(tmpdir, 'ch3_rohf_sto3g_g03.fchk')
+
+
+def test_dump_fchk_from_wfn_cah110(tmpdir):
+    check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfn')
+
+
+def test_dump_fchk_from_wfx_h2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'h2_ub3lyp_ccpvtz.wfx')
+
+
+def test_dump_fchk_from_wfx_water(tmpdir):
+    check_load_dump_consistency(tmpdir, 'water_sto3g_hf.wfx')
+
+
+def test_dump_fchk_from_wfx_lih_cation(tmpdir):
+    check_load_dump_consistency(tmpdir, 'lih_cation_uhf.wfx')
+    check_load_dump_consistency(tmpdir, 'lih_cation_rohf.wfx')
+
+
+def test_dump_fchk_from_wfx_lih_cisd_cation(tmpdir):
+    # Fractional occupations are not supported in FCHK and we have no
+    # alternative for solution for this yet.
+    with pytest.raises(ValueError):
+        check_load_dump_consistency(tmpdir, 'lih_cation_cisd.wfx')
+
+
+def test_dump_fchk_from_wfx_cah110(tmpdir):
+    check_load_dump_consistency(tmpdir, 'cah110_hf_sto3g_g09.wfx')
+
+
+def test_dump_fchk_from_molekel_h2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'h2_sto3g.mkl', "ORCA")
+
+
+def test_dump_fchk_from_molekel_ethanol(tmpdir):
+    check_load_dump_consistency(tmpdir, 'ethanol.mkl', "ORCA")
+
+
+def test_dump_fchk_from_molekel_li2(tmpdir):
+    check_load_dump_consistency(tmpdir, 'li2.mkl', "ORCA")
+
+
+def test_dump_fchk_rdms_cc_nitrogen(tmpdir):
+    check_load_dump_consistency(tmpdir, "nitrogen-cc.fchk")
+
+
+def test_dump_fchk_rdms_ci_nitrogen(tmpdir):
+    check_load_dump_consistency(tmpdir, "nitrogen-ci.fchk")
+
+
+def test_dump_fchk_rdms_mp2_nitrogen(tmpdir):
+    check_load_dump_consistency(tmpdir, "nitrogen-mp2.fchk")
+
+
+def test_dump_fchk_rdms_mp3_nitrogen(tmpdir):
+    check_load_dump_consistency(tmpdir, "nitrogen-mp3.fchk")

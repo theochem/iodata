@@ -37,8 +37,9 @@ __all__ = []
 PATTERNS = ['*.qchemlog']
 
 
-@document_load_one("qchemlog", ['atcoords', 'atmasses', 'atnums', 'energy', 'g_rot',
-                                'mo', 'lot', 'nelec', 'obasis_name', 'run_type', 'extra'],
+@document_load_one("qchemlog",
+                   ['atcoords', 'atmasses', 'atnums', 'energy', 'g_rot', 'mo',
+                    'lot', 'obasis_name', 'run_type', 'extra'],
                    ['athessian'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
@@ -48,8 +49,6 @@ def load_one(lit: LineIterator) -> dict:
     result_labels = ['atcoords', 'atmasses', 'atnums', 'energy', 'g_rot',
                      'run_type', 'athessian', 'lot', 'obasis_name']
     result = {label: data[label] for label in result_labels if data.get(label) is not None}
-    # add number of electrons
-    result['nelec'] = data['alpha_elec'] + data['beta_elec']
 
     # mulliken charges
     if data.get("mulliken_charges") is not None:

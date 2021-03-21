@@ -20,12 +20,14 @@
 
 
 from fnmatch import fnmatch
-from typing import List, Tuple, Iterator
+from typing import List, Tuple, Iterator, TextIO
 
 import numpy as np
 
-from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS
+from ..iodata import IOData
+from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_load_one, document_load_many
+from ..docstrings import document_dump_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, amu
 
@@ -68,8 +70,6 @@ def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     fchk = _load_fchk_low(lit, [
         "Number of electrons", "Number of basis functions",
-        "Number of independant functions",  # independ__a__nt (g03)
-        "Number of independent functions",  # independ__e__nt (g09, g16, ...)
         "Number of alpha electrons", "Number of beta electrons",
         "Atomic numbers", "Current cartesian coordinates",
         "Real atomic weights",
@@ -168,10 +168,6 @@ def load_one(lit: LineIterator) -> dict:
         result['one_rdms'] = one_rdms
 
     # D) Load the wavefunction
-    # Handle small difference in spelling in fchk files from g03 and g09:
-    # "independ__e__nt" versus "independ__a__nt".
-    nbasis_indep = fchk.get("Number of independant functions",
-                            fchk.get("Number of independent functions", nbasis))
 
     # Load orbitals
     nalpha = fchk['Number of alpha electrons']
@@ -182,27 +178,28 @@ def load_one(lit: LineIterator) -> dict:
         raise ValueError('n_alpha={0} < n_beta={1} is not valid!'.format(nalpha, nbeta))
 
     norba = fchk['Alpha Orbital Energies'].shape[0]
-    mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(nbasis_indep, nbasis).T)
+    mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(norba, nbasis).T)
     mo_energies = np.copy(fchk['Alpha Orbital Energies'])
 
     if 'Beta Orbital Energies' in fchk:
         # unrestricted
         norbb = fchk['Beta Orbital Energies'].shape[0]
-        mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(nbasis_indep, nbasis).T)
+        mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(norbb, nbasis).T)
         mo_coeffs = np.concatenate((mo_coeffs, mo_coeffs_b), axis=1)
         mo_energies = np.concatenate((mo_energies, np.copy(fchk['Beta Orbital Energies'])), axis=0)
-        mo_occs = np.zeros(2 * nbasis_indep)
+        mo_occs = np.zeros(norba + norbb)
         mo_occs[:nalpha] = 1.0
-        mo_occs[nbasis_indep: nbasis_indep + nbeta] = 1.0
+        mo_occs[norba: norba + nbeta] = 1.0
         mo = MolecularOrbitals('unrestricted', norba, norbb, mo_occs, mo_coeffs, mo_energies, None)
     else:
         # restricted closed-shell and open-shell
-        mo_occs = np.zeros(nbasis_indep)
+        mo_occs = np.zeros(norba)
         mo_occs[:nalpha] = 1.0
         mo_occs[:nbeta] = 2.0
-        if nalpha != nbeta:
+        if nalpha != nbeta and 'one_rdms' in result:
             # delete dm_full_scf because it is known to be buggy
-            result['one_rdms'].pop('scf')
+            if 'scf' in result['one_rdms']:
+                result['one_rdms'].pop('scf')
         mo = MolecularOrbitals('restricted', norba, norba, mo_occs, mo_coeffs, mo_energies, None)
     result['mo'] = mo
 
@@ -435,3 +432,222 @@ def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
         result[:irow + 1, irow] = triangle[begin:end]
         begin = end
     return result
+
+
+# The fchk file has a very rigid format, to dump the information are
+# theses functions, both scalars and arrays, integer and real(float) variables
+def _dump_integer_scalars(name: str, val: int, f: TextIO):
+    """Dumper for a scalar integer."""
+    print("{0:40}   I     {1:12d}".format(name, int(val)), file=f)
+
+
+def _dump_real_scalars(name: str, val: float, f: TextIO):
+    """Dumper for a scalar float."""
+    print("{0:40}   R     {1: 16.8E}".format(name, float(val)), file=f)
+
+
+def _dump_integer_arrays(name: str, val: np.ndarray, f: TextIO):
+    """Dumper for a array of integers."""
+    nval = val.size
+    if nval != 0:
+        np.reshape(val, nval)
+        print("{0:40}   I   N={1:12}".format(name, nval), file=f)
+        k = 0
+        for i in range(nval):
+            print("{0:12}".format(int(val[i])), file=f, end='')
+            k += 1
+            if k == 6 or i == nval - 1:
+                print("", file=f)
+                k = 0
+
+
+def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
+    """Dumper for a array of float."""
+    nval = val.size
+    if nval != 0:
+        np.reshape(val, nval)
+        print("{0:40}   R   N={1:12}".format(name, nval), file=f)
+        k = 0
+        for i in range(nval):
+            print("{0: 16.8E}".format(val[i]), file=f, end='')
+            k += 1
+            if k == 5 or i == nval - 1:
+                print("", file=f)
+                k = 0
+
+
+@document_dump_one(
+    "Gaussian Formatted Checkpoint",
+    ['atnums', 'atcorenums'],
+    ['atcharges', 'atcoords', 'atfrozen', 'atgradient', 'athessian', 'atmasses',
+     'charge', 'energy', 'lot', 'mo', 'one_rdms', 'obasis_name',
+     'extra', 'moments'])
+def dump_one(f: TextIO, data: IOData):
+    """Do not edit this docstring. It will be overwritten."""
+    # write title
+    print("{0:72}".format(data.title or "FCHK generated by IOData"), file=f)
+
+    # write run type, level of theory, and basis set name (all in uppercase)
+    items = [getattr(data, item) or "NA" for item in ["run_type", "lot", "obasis_name"]]
+    if items[0] == "energy":
+        items[0] = "SP"
+    print(f"{items[0].upper():10s}{items[1].upper():30s}{items[2].upper():>33s}", file=f)
+
+    # write basic information
+    _dump_integer_scalars("Number of atoms", data.natom, f)
+    _dump_integer_scalars("Number of electrons", int(data.nelec), f)
+    if data.charge is not None:
+        _dump_integer_scalars("Charge", int(data.charge), f)
+    if data.mo is not None:
+        # check occupied orbitals are followed by virtuals
+        if data.mo.kind == "generalized":
+            raise ValueError("Cannot dump FCHK because given MO kind is generalized!")
+        # check integer occupations b/c FCHK doesn't support fractional occupations
+        not_frac_occs_a = all(np.equal(np.mod(data.mo.occsa, 1), 0.0))
+        not_frac_occs_b = all(np.equal(np.mod(data.mo.occsb, 1), 0.0))
+        if not (not_frac_occs_a and not_frac_occs_b):
+            raise ValueError("Cannot dump FCHK because given MO has fractional occupations!")
+        # assign number of alpha and beta electrons
+        na = int(np.sum(data.mo.occsa))
+        nb = int(np.sum(data.mo.occsb))
+        multiplicity = abs(na - nb) + 1
+        _dump_integer_scalars("Multiplicity", multiplicity, f)
+        _dump_integer_scalars("Number of alpha electrons", na, f)
+        _dump_integer_scalars("Number of beta electrons", nb, f)
+
+    # write atomic numbers, nuclear charges, and atomic coordinates
+    _dump_integer_arrays("Atomic numbers", data.atnums, f)
+    _dump_real_arrays("Nuclear charges", data.atcorenums, f)
+    if data.atcoords is not None:
+        _dump_real_arrays("Current cartesian coordinates", data.atcoords.flatten(), f)
+
+    # write atomic weights
+    if data.atmasses is not None:
+        masses = data.atmasses / amu
+        _dump_integer_arrays("Integer atomic weights", masses.round(), f)
+        _dump_real_arrays("Real atomic weights", masses, f)
+
+    # write molecular orbital basis set
+    if data.obasis is not None:
+
+        # number of primitives per shell
+        nprims = np.array([shell.nprim for shell in data.obasis.shells])
+        exponents = np.array([item for shell in data.obasis.shells for item in shell.exponents])
+        coeffs = np.array([s.coeffs[i][0] for s in data.obasis.shells for i in range(s.nprim)])
+        coordinates = np.array([data.atcoords[shell.icenter] for shell in data.obasis.shells])
+        shell_to_atom = np.array([shell.icenter + 1 for shell in data.obasis.shells])
+
+        # get list of shell types: 0=s, 1=p, -1=sp, 2=6d, -2=5d, 3=10f, -3=7f...
+        shell_types = []
+        for shell in data.obasis.shells:
+            if shell.ncon == 1 and shell.kinds == ['c']:
+                shell_types.append(shell.angmoms[0])
+            elif shell.ncon == 1 and shell.kinds == ['p']:
+                shell_types.append(-1 * shell.angmoms[0])
+            elif shell.ncon == 2 and shell.angmoms == [0, 1]:
+                shell_types.append(-1)
+            else:
+                raise ValueError("Cannot identify type of shell!")
+
+        num_pure_d_shells = sum([1 for st in shell_types if st == 2])
+        num_pure_f_shells = sum([1 for st in shell_types if st == 3])
+
+        _dump_integer_scalars("Number of basis functions", data.obasis.nbasis, f)
+        _dump_integer_scalars("Number of independent functions", data.obasis.nbasis, f)
+        _dump_integer_scalars("Number of contracted shells", len(data.obasis.shells), f)
+        _dump_integer_scalars("Number of primitive shells", nprims.sum(), f)
+        _dump_integer_scalars("Pure/Cartesian d shells", num_pure_d_shells, f)
+        _dump_integer_scalars("Pure/Cartesian f shells", num_pure_f_shells, f)
+        _dump_integer_scalars("Highest angular momentum", np.amax(np.abs(shell_types)), f)
+        _dump_integer_scalars("Largest degree of contraction", np.amax(nprims), f)
+
+        _dump_integer_arrays("Shell types", np.array(shell_types), f)
+        _dump_integer_arrays("Number of primitives per shell", nprims, f)
+        _dump_integer_arrays("Shell to atom map", shell_to_atom, f)
+
+        _dump_real_arrays("Primitive exponents", exponents, f)
+        _dump_real_arrays("Contraction coefficients", coeffs, f)
+
+        if -1 in shell_types:
+            sp_coeffs = []
+            for (shell, shell_type) in zip(data.obasis.shells, shell_types):
+                if shell_type == -1:
+                    sp_coeffs.extend([shell.coeffs[i][1] for i in range(shell.nprim)])
+                else:
+                    sp_coeffs.extend([0.0] * shell.nprim)
+            _dump_real_arrays("P(S=P) Contraction coefficients", np.array(sp_coeffs), f)
+        _dump_real_arrays("Coordinates of each shell", coordinates.flatten(), f)
+
+    # write energy
+    if data.energy is not None:
+        _dump_real_scalars("SCF Energy", data.energy, f)
+        _dump_real_scalars("Total Energy", data.energy, f)
+    else:
+        _dump_real_scalars("Total Energy", 0., f)
+
+    # write MO energies & coefficients
+    if data.mo is not None:
+        # convert to FCHK basis conventions
+        permutation, signs = convert_conventions(data.obasis, CONVENTIONS)
+        coeffsa = data.mo.coeffsa[permutation] * signs.reshape(-1, 1)
+        _dump_real_arrays("Alpha Orbital Energies", data.mo.energiesa, f)
+        _dump_real_arrays("Alpha MO coefficients", coeffsa.transpose().flatten(), f)
+        if data.mo.kind == "unrestricted":
+            coeffsb = data.mo.coeffsb[permutation] * signs.reshape(-1, 1)
+            _dump_real_arrays("Beta Orbital Energies", data.mo.energiesb, f)
+            _dump_real_arrays("Beta MO coefficients", coeffsb.transpose().flatten(), f)
+
+    # write reduced density matrix, if available
+    # get level of theory, use 'NA' if not available
+    level = data.lot.upper() if data.lot is not None else 'NA'
+    for item in ['MP2', 'MP3', 'CC', 'CI']:
+        if item in level:
+            level = item
+    for key, arr in data.one_rdms.items():
+        # get lower triangular elements of RDM
+        mat = arr[np.tril_indices(arr.shape[0])]
+
+        # identify type of RDMs
+        if key == "scf":
+            title = "Total SCF Density"
+        elif key == "scf_spin":
+            title = "Spin SCF Density"
+        elif key == "post_scf":
+            title = "Total {0} Density".format(level)
+        elif key == "post_scf_spin":
+            title = "Spin {0} Density".format(level)
+        else:
+            title = "Total SCF Density"
+        _dump_real_arrays(title, mat, f)
+
+    # write atomic charges
+    if 'mulliken' in data.atcharges:
+        _dump_real_arrays("Mulliken Charges", data.atcharges["mulliken"], f)
+    if 'esp' in data.atcharges:
+        _dump_real_arrays("ESP Charges", data.atcharges["esp"], f)
+    if 'npa' in data.atcharges:
+        _dump_real_arrays("NPA Charges", data.atcharges["npa"], f)
+
+    # write atomic gradient
+    if data.atgradient is not None:
+        _dump_real_arrays("Cartesian Gradient", data.atgradient.flatten(), f)
+
+    # write atomic hessian
+    if data.athessian is not None:
+        arr = data.athessian[np.tril_indices(data.athessian.shape[0])]
+        _dump_real_arrays("Cartesian Force Constants", arr, f)
+
+    # write moments
+    if (1, 'c') in data.moments:
+        _dump_real_arrays("Dipole Moment", data.moments[(1, 'c')], f)
+    if (2, 'c') in data.moments and len(data.moments[(2, 'c')]) != 0:
+        # quadrupole moments are stored as XX, XY, XZ, YY, YZ, ZZ in IOData, so they need to
+        # be permuted to have XX, YY, ZZ, XY, XZ, YZ order for FCHK.
+        quadrupole = data.moments[(2, 'c')][[0, 3, 5, 1, 2, 4]]
+        _dump_real_arrays("Quadrupole Moment", quadrupole, f)
+
+    # write polarizability tensor
+    if 'polarizability_tensor' in data.extra:
+        arr = data.extra["polarizability_tensor"]
+        arr = arr[np.tril_indices(arr.shape[0])]
+        _dump_real_arrays("Polarizability", arr, f)

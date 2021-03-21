@@ -19,12 +19,15 @@
 """Utility functions module."""
 
 
-from typing import Tuple, NamedTuple
+from typing import Tuple
 import warnings
 
+import attr
 import numpy as np
 import scipy.constants as spc
 from scipy.linalg import eigh
+
+from .attrutils import validate_shape
 
 
 __all__ = ['LineIterator', 'Cube', 'set_four_index_element', 'volume',
@@ -69,12 +72,12 @@ class LineIterator:
 
         """
         self.filename = filename
-        self._f = open(filename)
+        self.f = open(filename)
         self.lineno = 0
         self.stack = []
 
     def __del__(self):
-        self._f.close()
+        self.f.close()
 
     def __iter__(self):
         return self
@@ -84,7 +87,7 @@ class LineIterator:
         if self.stack:
             line = self.stack.pop()
         else:
-            line = next(self._f)
+            line = next(self.f)
         self.lineno += 1
         return line
 
@@ -117,7 +120,9 @@ class LineIterator:
         self.lineno -= 1
 
 
-class Cube(NamedTuple):
+@attr.s(auto_attribs=True, slots=True,
+        on_setattr=[attr.setters.validate, attr.setters.convert])
+class Cube:
     """The volumetric data from a cube (or similar) file.
 
     Attributes
@@ -128,17 +133,19 @@ class Cube(NamedTuple):
         A (3, 3) array where each row represents the spacing between two
         neighboring grid points along the first, second and third axis,
         respectively.
-    shape
-        A three-tuple with the number of points along each axis, respectively.
     data
         A (K, L, M) array of data on a uniform grid
 
     """
 
-    origin: np.ndarray
-    axes: np.ndarray
-    shape: np.ndarray
-    data: np.ndarray
+    origin: np.ndarray = attr.ib(validator=validate_shape(3))
+    axes: np.ndarray = attr.ib(validator=validate_shape(3, 3))
+    data: np.ndarray = attr.ib(validator=validate_shape(None, None, None))
+
+    @property
+    def shape(self):
+        """Shape of the rectangular grid."""  # noqa: D401
+        return self.data.shape
 
 
 def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int, l: int,

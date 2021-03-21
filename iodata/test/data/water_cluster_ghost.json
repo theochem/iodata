@@ -1,0 +1,94 @@
+{
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2,
+    "validated": true,
+    "symbols": [
+      "O",
+      "H",
+      "H",
+      "O",
+      "H",
+      "H",
+      "O",
+      "H",
+      "H"
+    ],
+    "geometry": [
+      0.89642203,
+      -5.54226399,
+      -0.00846561,
+      -0.95178676,
+      -5.37601203,
+      0.28515277,
+      1.05223529,
+      -7.39711506,
+      -0.16259813,
+      8.96288586,
+      3.04651373,
+      0.14787308,
+      8.08020123,
+      2.67199298,
+      -1.50025611,
+      9.07766139,
+      4.80660177,
+      0.2699804,
+      -9.53802898,
+      2.63769507,
+      0.18307869,
+      -10.52843908,
+      1.06554819,
+      0.12195923,
+      -9.30010336,
+      3.09342566,
+      -1.59412743
+    ],
+    "name": "H6O3",
+    "identifiers": null,
+    "comment": "Manually derived from water_cluster.json by TV",
+    "molecular_charge": 0,
+    "molecular_multiplicity": 1,
+    "masses": [
+      15.99491461957,
+      1.00782503223,
+      1.00782503223,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "real": [
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "atomic_numbers": [
+      8,
+      1,
+      1,
+      8,
+      1,
+      1,
+      8,
+      1,
+      1
+    ],
+    "fragment_charges": [
+      0
+    ],
+    "fragment_multiplicities": [
+      1
+    ],
+    "provenance": {
+      "creator": "QCElemental",
+      "version": "v0.12.0",
+      "routine": "qcelemental.molparse.from_schema"
+    }
+  }

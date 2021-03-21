@@ -27,20 +27,15 @@ Developers are recommended to use Roberto.
 
 import os
 
-import Cython.Build
-import numpy as np
-from setuptools import setup, Extension
+from setuptools import setup
 
 
-def get_version():
-    """Read __version__ from version.py, with exec to avoid importing it."""
-    try:
-        with open(os.path.join('iodata', 'version.py'), 'r') as f:
-            myglobals = {}
-            exec(f.read(), myglobals)  # pylint: disable=exec-used
-        return myglobals['__version__']
-    except IOError:
-        return "0.0.0.post0"
+def get_version_info():
+    """Read __version__ and DEV_CLASSIFIER from version.py, using exec, not import."""
+    with open(os.path.join("iodata", 'version.py'), 'r') as f:
+        myglobals = {"__name__": "iodata.version"}
+        exec(f.read(), myglobals)  # pylint: disable=exec-used
+    return myglobals['__version__'], myglobals['DEV_CLASSIFIER']
 
 
 def get_readme():
@@ -49,25 +44,24 @@ def get_readme():
         return fhandle.read()
 
 
+VERSION, DEV_CLASSIFIER = get_version_info()
+
 setup(
-    name='iodata',
-    version=get_version(),
+    name='qc-iodata',
+    version=VERSION,
     description='Python Input and Output Library for Quantum Chemistry.',
     long_description=get_readme(),
     author='HORTON-ChemTools Dev Team',
     author_email='horton.chemtools@gmail.com',
     url='https://github.com/theochem/iodata',
     package_dir={'iodata': 'iodata'},
-    packages=['iodata', 'iodata.formats', 'iodata.test', 'iodata.test.data'],
-    cmdclass={'build_ext': Cython.Build.build_ext},
-    ext_modules=[Extension("iodata.overlap_accel",
-                           sources=['iodata/overlap_accel.pyx'],
-                           include_dirs=[np.get_include()])],
+    packages=['iodata', 'iodata.formats', 'iodata.inputs', 'iodata.test', 'iodata.test.data'],
     include_package_data=True,
     entry_points={
         'console_scripts': ['iodata-convert = iodata.__main__:main']
     },
     classifiers=[
+        DEV_CLASSIFIER,
         'Environment :: Console',
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
         'Operating System :: POSIX :: Linux',
@@ -76,7 +70,7 @@ setup(
         'Topic :: Scientific/Engineering :: Chemistry',
         'Intended Audience :: Science/Research',
     ],
-    setup_requires=['numpy>=1.0', 'cython>=0.24.1'],
-    install_requires=['numpy>=1.0', 'cython>=0.24.1', 'scipy', 'attrs>=19.1.0',
+    setup_requires=['numpy>=1.0'],
+    install_requires=['numpy>=1.0', 'scipy', 'attrs>=20.1.0',
                       'importlib_resources; python_version < "3.7"'],
 )

@@ -1,0 +1,12 @@
+{
+  "geometry": [
+    0.0,  0.0,    -0.1294,
+    0.0, -1.4941,  1.0274,
+    0.0,  1.4941,  1.0274
+  ],
+  "symbols": ["O", "H", "H"],
+  "provenance": {
+    "creator": "HORTON3",
+    "routine": "Copied from QCSchema docs' Water MP2 example"
+  }
+}

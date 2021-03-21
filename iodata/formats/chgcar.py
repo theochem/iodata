@@ -134,7 +134,7 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
                 cube_data[i0, i1, i2] = float(words.pop(0))
 
     cube = Cube(origin=np.zeros(3), axes=cellvecs / shape.reshape(-1, 1),
-                shape=shape, data=cube_data)
+                data=cube_data)
 
     return {
         'title': title,

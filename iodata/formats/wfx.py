@@ -211,7 +211,7 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
 
 
 @document_load_one("WFX", ['atcoords', 'atgradient', 'atnums', 'energy',
-                           'exrtra', 'mo', 'obasis', 'title'])
+                           'extra', 'mo', 'obasis', 'title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # get data contained in WFX file with the proper type & shape

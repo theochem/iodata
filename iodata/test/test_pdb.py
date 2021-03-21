@@ -22,19 +22,29 @@ import os
 
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
+import pytest
 
 from ..api import load_one, load_many, dump_one, dump_many
-from ..utils import angstrom
+from ..utils import angstrom, FileFormatWarning
 try:
     from importlib_resources import path
 except ImportError:
     from importlib.resources import path
 
 
-def test_load_water():
+@pytest.mark.parametrize("case", ["single", "single_model"])
+def test_load_water(case):
     # test pdb of water
-    with path('iodata.test.data', 'water.pdb') as fn_pdb:
+    with path('iodata.test.data', f'water_{case}.pdb') as fn_pdb:
         mol = load_one(str(fn_pdb))
+    check_water(mol)
+
+
+def test_load_water_no_end():
+    # test pdb of water
+    with path('iodata.test.data', 'water_single_no_end.pdb') as fn_pdb:
+        with pytest.warns(FileFormatWarning, match="The END is not found"):
+            mol = load_one(str(fn_pdb))
     check_water(mol)
 
 
@@ -62,17 +72,18 @@ def check_load_dump_consistency(tmpdir, fn):
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
     assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
-    if mol0.atffparams:
+    if mol0.atffparams is not None:
         assert_equal(mol0.atffparams.get('attypes'), mol1.atffparams.get('attypes'))
         assert_equal(mol0.atffparams.get('restypes'), mol1.atffparams.get('restypes'))
         assert_equal(mol0.atffparams.get('resnums'), mol1.atffparams.get('resnums'))
-    if mol0.extra:
+    if mol0.extra is not None:
         assert_equal(mol0.extra.get('occupancy'), mol1.extra.get('occupancy'))
         assert_equal(mol0.extra.get('bfactor'), mol1.extra.get('bfactor'))
 
 
-def test_load_dump_consistency(tmpdir):
-    with path('iodata.test.data', 'water.pdb') as fn_pdb:
+@pytest.mark.parametrize("case", ["single", "single_model"])
+def test_load_dump_consistency(case, tmpdir):
+    with path('iodata.test.data', f'water_{case}.pdb') as fn_pdb:
         check_load_dump_consistency(tmpdir, fn_pdb)
 
 
@@ -128,8 +139,9 @@ def check_peptide(mol):
     assert_allclose(bfactor[-1], 0.00)
 
 
-def test_load_many():
-    with path('iodata.test.data', 'water_trajectory.pdb') as fn_pdb:
+@pytest.mark.parametrize("case", ['trajectory', 'trajectory_no_model'])
+def test_load_many(case):
+    with path('iodata.test.data', f"water_{case}.pdb") as fn_pdb:
         mols = list(load_many(str(fn_pdb)))
     assert len(mols) == 5
     for mol in mols:
@@ -140,8 +152,9 @@ def test_load_many():
     assert_allclose(mols[-1].atcoords[1] / angstrom, [-2.123, -3.355, -3.354])
 
 
-def test_load_dump_many_consistency(tmpdir):
-    with path('iodata.test.data', 'water_trajectory.pdb') as fn_pdb:
+@pytest.mark.parametrize("case", ['trajectory', 'trajectory_no_model'])
+def test_load_dump_many_consistency(case, tmpdir):
+    with path('iodata.test.data', f"water_{case}.pdb") as fn_pdb:
         mols0 = list(load_many(str(fn_pdb)))
     # write pdb file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test')

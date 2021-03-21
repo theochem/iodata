@@ -62,7 +62,7 @@ def load_one(lit: LineIterator) -> dict:
         try:
             words = next(lit)
         except StopIteration:
-            raise lit.error("Molecule specification did not end properly with $$$$")
+            lit.error("Molecule specification did not end properly with $$$$")
         if words == "$$$$\n":
             break
     return {

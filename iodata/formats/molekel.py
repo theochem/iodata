@@ -23,8 +23,6 @@ This format is used by two programs:
 `Orca <https://sites.google.com/site/orcainputlibrary/>`_.
 """
 
-import warnings
-
 from typing import Tuple, List, TextIO
 
 import numpy as np
@@ -280,15 +278,11 @@ def dump_one(f: TextIO, data: IOData):
 
     # CHARGES
     if 'mulliken' in data.atcharges:
-        charges = data.atcharges['mulliken']
-    else:
-        charges = {}
-        warnings.warn('Skip writing Mulliken charges, because they are not stored in IOData.')
-    f.write('$CHARGES\n')
-    for charge in charges:
-        f.write('  {: ,.6f}\n'.format(charge))
-    f.write('$END\n')
-    f.write('\n')
+        f.write('$CHARGES\n')
+        for charge in data.atcharges['mulliken']:
+            f.write('  {: ,.6f}\n'.format(charge))
+        f.write('$END\n')
+        f.write('\n')
 
     # BASIS
     f.write('$BASIS\n')
