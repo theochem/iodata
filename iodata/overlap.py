@@ -89,14 +89,14 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
             # START of Cartesian coordinates. Shell types are positive
             result = np.zeros((len(scales[i0][0]), len(scales[i1][0])))
 
-            a0 = np.min(shell0.exponents)
-            a1 = np.min(shell1.exponents)
+            a0_min = np.min(shell0.exponents)
+            a1_min = np.min(shell1.exponents)
 
             # prepare some constants to save FLOPS later on
             rij = r0 - r1
-            rij_norm_sq = np.linalg.norm(rij) ** 2
-            prefactor = np.exp(-a0 * a1 * rij_norm_sq / (a0 + a1))
-            if prefactor > 1.e-15:
+            rij_norm_sq = np.dot(rij, rij)
+            prefactor_max = np.exp(-a0_min * a1_min * rij_norm_sq / (a0_min + a1_min))
+            if prefactor_max > 1e-15:
                 # arrays of angular momentums [[2, 0, 0], [0, 2, 0], ..., [0, 1, 1]]
                 n0 = np.array(list(iter_cart_alphabet(shell0.angmoms[0])))
                 n1 = np.array(list(iter_cart_alphabet(shell1.angmoms[0])))
@@ -112,7 +112,7 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
 
                         at = a0 + a1
                         prefactor = np.exp(-a0 * a1 / at * rij_norm_sq)
-                        if prefactor < 1.0e-15:
+                        if prefactor < 1e-15:
                             continue
                         # prepare some pre-factors to save FLOPS in inner loop
                         two_at = 2 * at
