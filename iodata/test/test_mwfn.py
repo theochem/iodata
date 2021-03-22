@@ -40,7 +40,7 @@ def load_format_helper(fn_format):
 def test_load_mwfn_ch3_rohf_g03():
     mol = load_format_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
-    assert_equal(mol.mo.occs.sum(), 9.0)
+    assert_equal(mol.mo.occs.sum(), mol.extra["neleca"] + mol.extra["nelecb"])
     assert_equal(mol.mo.occs.min(), 0.0)
     assert_equal(mol.mo.occs.max(), 2.0)
     assert_equal(mol.extra['full_virial_ratio'], 2.00174844)
@@ -52,8 +52,8 @@ def test_load_mwfn_ch3_rohf_g03():
     assert_equal(mol.charge, 0.0)
     assert_equal(mol.nelec, 9)
     assert_equal(mol.natom, 4)
-    assert_equal(np.sum(mol.mo.occsa), 5.0)
-    assert_equal(np.sum(mol.mo.occsb), 4.0)
+    assert_equal(np.sum(mol.mo.occsa), mol.extra["neleca"])
+    assert_equal(np.sum(mol.mo.occsb), mol.extra["nelecb"])
     assert_equal(mol.energy, -3.90732095E+01)
     assert_allclose([shell.angmoms[0] for shell in mol.obasis.shells], [0, 0, 1, 0, 0, 0])
     assert_allclose([shell.icenter for shell in mol.obasis.shells], [0, 0, 0, 1, 2, 3])
@@ -129,17 +129,19 @@ def test_load_mwfn_ch3_hf_g03():
 def test_nelec_charge():
     mol1 = load_format_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
     assert mol1.nelec == 9
+    assert mol1.mo.occsa.sum() == mol1.extra["neleca"]
+    assert mol1.mo.occsb.sum() == mol1.extra["nelecb"]
     assert mol1.charge == 0
     mol2 = load_format_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
     assert mol2.nelec == 2
     assert mol2.charge == 0
-    assert np.sum(mol2.mo.occsa) == 1
-    assert np.sum(mol2.mo.occsb) == 1
+    assert mol2.mo.occsa.sum() == mol2.extra["neleca"]
+    assert mol2.mo.occsb.sum() == mol2.extra["nelecb"]
     mol3 = load_format_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
     assert mol3.nelec == 9
     assert mol3.charge == 0
-    assert np.sum(mol3.mo.occsa) == 5
-    assert np.sum(mol3.mo.occsb) == 4
+    assert mol3.mo.occsa.sum() == mol3.extra["neleca"]
+    assert mol3.mo.occsb.sum() == mol3.extra["nelecb"]
 
 
 def test_load_mwfn_he_spdfgh_g03():

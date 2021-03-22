@@ -255,8 +255,6 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # load MO information
     data.update(_load_helper_mo(lit, num_basis, num_mo))
 
-    # TODO: load data in '# Various matrices' section
-
     return data
 
 
@@ -269,7 +267,8 @@ def load_one(lit: LineIterator) -> dict:
     # store certain information loaded from MWFN in extra dictionary
     extra = {'wfntype': inp['Wfntype'], 'nbasis': inp['Nbasis'], 'nindbasis': inp['Nindbasis'],
              'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'],
-             'full_virial_ratio': inp['VT_ratio']}
+             'full_virial_ratio': inp['VT_ratio'],
+             "neleca": inp['Naelec'], "nelecb": inp['Nbelec']}
 
     # Build MolecularBasis instance
     # Unlike WFN, MWFN does include orbital expansion coefficients.
@@ -286,22 +285,23 @@ def load_one(lit: LineIterator) -> dict:
         counter += ncon
     obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
 
-    # MFWN provides number of alpha and beta electrons, this is a double check
-    # mo_type (integer, scalar): Orbital type
-    #     0: Alpha + Beta (i.e. spatial orbital)
-    #     1: Alpha
-    #     2: Beta
-    # TODO calculate number of alpha and beta electrons manually.
-
+    # Determine number of orbitals of each kind.
+    if inp["mo_kind"] == "restricted":
+        norba = len(inp["mo_type"])
+        norbb = norba
+    else:
+        # Legend
+        # 0: restricted doubly occupied
+        # 1: alpha
+        # 2: beta
+        norba = (inp["mo_type"] == 1).sum()
+        norbb = (inp["mo_type"] == 2).sum()
+        assert (inp["mo_type"] == 0).sum() == 0
     # Build MolecularOrbitals instance
-    mo = MolecularOrbitals(inp["mo_kind"],
-                           int(inp["Naelec"]),
-                           int(inp["Nbelec"]),
-                           inp['mo_occs'],
-                           inp['mo_coeffs'],
-                           inp['mo_energies'],
-                           None,
-                           )
+    mo = MolecularOrbitals(
+        inp["mo_kind"], norba, norbb, inp['mo_occs'], inp['mo_coeffs'],
+        inp['mo_energies'], None
+    )
 
     return {
         'title': inp['title'],
