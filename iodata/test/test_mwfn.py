@@ -30,15 +30,15 @@ except ImportError:
     from importlib.resources import path
 
 
-def load_format_helper(fn_format):
-    """Load a testing formatted file with iodata.iodata.load_one."""
-    with path('iodata.test.data', fn_format) as fn:
-        return load_one(fn)
+def load_helper(fn):
+    """Load a test file with iodata.iodata.load_one."""
+    with path('iodata.test.data', fn) as absfn:
+        return load_one(absfn)
 
 
 # pylint: disable=too-many-statements
 def test_load_mwfn_ch3_rohf_g03():
-    mol = load_format_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
+    mol = load_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
     assert_equal(mol.mo.occs.sum(), mol.extra["neleca"] + mol.extra["nelecb"])
     assert_equal(mol.mo.occs.min(), 0.0)
@@ -90,7 +90,7 @@ def test_load_mwfn_ch3_rohf_g03():
     assert_equal(mol.extra['mo_sym'][0], '?')
     # test that for the same molecule fchk and mwfn generate the same objects.
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    mol2 = load_format_helper('ch3_rohf_sto3g_g03.fchk')
+    mol2 = load_helper('ch3_rohf_sto3g_g03.fchk')
     olp_fchk = compute_overlap(mol2.obasis, mol2.atcoords)
     assert_allclose(mol.atcoords, mol2.atcoords, atol=1E-7, rtol=1E-7)
     assert_allclose(mol2.obasis.shells[0].coeffs, coeffs1)
@@ -103,7 +103,7 @@ def test_load_mwfn_ch3_rohf_g03():
 
 
 def test_load_mwfn_ch3_hf_g03():
-    mol = load_format_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
+    mol = load_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
     assert_equal(mol.extra['wfntype'], 1)
     # test first molecular orbital information
@@ -120,24 +120,24 @@ def test_load_mwfn_ch3_hf_g03():
     assert_equal(mol.extra['mo_sym'][0], '?')
     # test that for the same molecule fchk and mwfn generate the same objects.
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    mol2 = load_format_helper('ch3_hf_sto3g.fchk')
+    mol2 = load_helper('ch3_hf_sto3g.fchk')
     olp_fchk = compute_overlap(mol2.obasis, mol2.atcoords)
     assert_allclose(mol.atcoords, mol2.atcoords, atol=1E-7, rtol=1E-7)
     assert_allclose(olp, olp_fchk, atol=1E-7, rtol=1E-7)
 
 
 def test_nelec_charge():
-    mol1 = load_format_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
+    mol1 = load_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
     assert mol1.nelec == 9
     assert mol1.mo.occsa.sum() == mol1.extra["neleca"]
     assert mol1.mo.occsb.sum() == mol1.extra["nelecb"]
     assert mol1.charge == 0
-    mol2 = load_format_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
+    mol2 = load_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
     assert mol2.nelec == 2
     assert mol2.charge == 0
     assert mol2.mo.occsa.sum() == mol2.extra["neleca"]
     assert mol2.mo.occsb.sum() == mol2.extra["nelecb"]
-    mol3 = load_format_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
+    mol3 = load_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
     assert mol3.nelec == 9
     assert mol3.charge == 0
     assert mol3.mo.occsa.sum() == mol3.extra["neleca"]
@@ -145,7 +145,7 @@ def test_nelec_charge():
 
 
 def test_load_mwfn_he_spdfgh_g03():
-    mol = load_format_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
+    mol = load_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
     assert_equal(mol.extra['wfntype'], 0)
     # test first molecular orbital information
@@ -183,7 +183,7 @@ def test_load_mwfn_he_spdfgh_g03():
     assert_equal(mol.extra['mo_sym'][55], '?')
     # test that for the same molecule fchk and mwfn generate the same objects.
     olp = compute_overlap(mol.obasis, mol.atcoords)
-    mol2 = load_format_helper('he_spdfgh_virtual.fchk')
+    mol2 = load_helper('he_spdfgh_virtual.fchk')
     olp_fchk = compute_overlap(mol2.obasis, mol2.atcoords)
     assert_allclose(mol.atcoords, mol2.atcoords, atol=1E-7, rtol=1E-7)
     assert_allclose(olp, olp_fchk, atol=1E-7, rtol=1E-7)
