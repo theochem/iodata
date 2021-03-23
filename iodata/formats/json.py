@@ -20,10 +20,10 @@
 """QCSchema JSON file format.
 
 QCSchema defines four different subschema:
-* Molecule - specifying a molecular system
-* Input - specifying QC program input for a specific Molecule
-* Output - specifying QC program output for a specific Molecule
-* Basis - specifying a basis set for a specific Molecule
+- Molecule: specifying a molecular system
+- Input: specifying QC program input for a specific Molecule
+- Output: specifying QC program output for a specific Molecule
+- Basis: specifying a basis set for a specific Molecule
 
 The QCSchema subschema are in various levels of maturity, and are subject to change at any time
 without warning, as they are also used as the internal data representation for the QCElemental
@@ -164,7 +164,7 @@ def _load_qcschema_molecule(result: dict, lit: LineIterator) -> dict:
     Parameters
     ----------
     result
-        The JSON dict loaded from file, same as the `molecule` key in QCSchema input/output files.
+        The JSON dict loaded from file.
     lit
         The line iterator holding the file data.
 
@@ -198,7 +198,8 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     Parameters
     ----------
     mol
-        The 'molecule' key from the QCSchema file.
+        The 'molecule' key from the QCSchema input or output file, or the full result for a QCSchema
+        Molecule file.
     lit
         The line iterator holding the file data.
 
@@ -410,7 +411,24 @@ def _load_qcschema_basis(result: dict, lit: LineIterator) -> dict:
     raise NotImplementedError("qcschema_basis is not yet implemented in IOData.")
 
 
-# pylint: disable=unused-argument
+def _parse_basis_keys(basis: dict, lit: LineIterator) -> dict:
+    """Parse basis keys for a QCSchema input, output, or basis file.
+
+    Parameters
+    ----------
+    basis
+        The basis dictionary from a QCSchema basis file or QCSchema input or output 'method' key.
+    lit
+        The line iterator holding the file data.
+
+    Returns
+    -------
+    basis_dict
+        Dictionary containing ...
+    """
+    raise NotImplementedError("")
+
+
 def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
     """Load qcschema_input properties.
 
@@ -426,9 +444,242 @@ def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
     input_dict
         ...
     """
-    # basis_dict = dict()
-    # return basis_dict
-    raise NotImplementedError("qcschema_input is not yet implemented in IOData.")
+    extra_dict = dict()
+    input_dict = _parse_input_keys(result, lit)
+    extra_dict["input"] = input_dict["extra"]
+
+    if "molecule" not in result:
+        raise FileFormatError("{}: QCSchema Input requires 'molecule' key".format(lit.filename))
+    molecule_dict = _parse_topology_keys(result["molecule"], lit)
+    input_dict.update(molecule_dict)
+    extra_dict["molecule"] = molecule_dict["extra"]
+    input_dict["extra"] = extra_dict
+    input_dict["extra"]["schema_name"] = "qcschema_input"
+
+    return input_dict
+
+
+def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
+    """Parse input keys for QCSchema input or output files.
+
+    Parameters
+    ----------
+    result
+        The JSON dict loaded from file.
+    lit
+        The line iterator holding the file data.
+
+    Returns
+    -------
+    input_dict
+        Output dictionary containing ``lot`` and ``obasis_name`` keys and corresponding values.
+        It may contain ``obasis`` and ``extra`` keys and corresponding values as well.
+
+    """
+    # QCEngineRecords input files don't actually specify a name or version
+    should_be_required_keys = {"schema_name", "schema_version"}
+    input_keys = {"molecule", "driver", "model"}
+    for key in should_be_required_keys:
+        if key not in result:
+            warn(
+                "{}: QCSchema files should have a '{}' key.".format(lit.filename, key),
+                FileFormatWarning,
+                2,
+            )
+    for key in input_keys:
+        if key not in result:
+            raise FileFormatError(
+                "{}: QCSchema `qcschema_input` file requires '{}' key".format(lit.filename, key)
+            )
+    # Store all extra keys in extra_dict and gather at end
+    input_dict = dict()
+    extra_dict = dict()
+
+    # Save schema name & version
+    extra_dict["schema_name"] = "qcschema_input"
+    try:
+        version = result["schema_version"]
+    except KeyError:
+        version = -1
+    if float(version) < 1.0:
+        warn(
+            "{}: Unknown `qcschema_input` version {}, loading may produce invalid results".format(
+                lit.filename, version
+            ),
+            FileFormatWarning,
+            2,
+        )
+    extra_dict["schema_version"] = version
+
+    # Load driver
+    extra_dict["driver"] = _parse_driver(result["driver"], lit)
+
+    # Load model & call basis helper if needed
+    model = _parse_model(result["model"], lit)
+    input_dict.update(model)
+    extra_dict["model"] = model["extra"]
+
+    # Load keywords & store
+    # Currently, only the IOData run_type attribute is specifically parsed from keywords, but this
+    # is a good space for passing additional IOData-specific keywords, given that the official spec
+    # treats this as program-specific territory.
+    if "keywords" in result:
+        keywords_dict = result["keywords"]
+        if "run_type" in keywords_dict:
+            input_dict["run_type"] = keywords_dict["run_type"]
+        extra_dict["keywords"] = keywords_dict
+    # Check for extras
+    if "extras" in result:
+        extra_dict["extras"] = result["extras"]
+    # Check for ID
+    if "id" in result:
+        extra_dict["id"] = result["id"]
+    # Load protocols
+    if "protocols" in result:
+        extra_dict["protocols"] = _parse_protocols(result["protocols"], lit)
+    # Check for provenance
+    if "provenance" in result:
+        extra_dict["provenance"] = _parse_provenance(result["provenance"], lit, "qcschema_input")
+
+    input_dict["extra"] = extra_dict
+    return input_dict
+
+
+def _parse_driver(driver: str, lit: LineIterator) -> str:
+    """Load driver properties from QCSchema.
+
+    Parameters
+    ----------
+    driver
+        The `driver` key from the QCSchema input.
+    lit
+        The line iterator holding the file data.
+
+    Returns
+    -------
+    driver_dict
+        The driver for the QCSchema file, specifying what type of calculation is being performed.
+
+    Raises
+    ------
+    FileFormatError
+        If driver is not one of {"energy", "gradient", "hessian", "properties"}.
+
+    Notes
+    -----
+    This keyword is similar to, but not really interchangeable with, the `run_type` IOData
+    attribute. In order to specify the `run_type`, add it to the `keywords` dictionary.
+
+    """
+    if driver not in ["energy", "gradient", "hessian", "properties"]:
+        raise FileFormatError(
+            "{}: QCSchema driver must be one of `energy`, `gradient`, `hessian`, "
+            "or `properties`".format(
+                lit.filename
+            )
+        )
+    else:
+        return driver
+
+
+def _parse_model(model: dict, lit: LineIterator) -> dict:
+    """Load model properties from QCSchema.
+
+    Parameters
+    ----------
+    model
+        The dictionary corresponding to the 'model' key for a QCSchema input or output file.
+    lit
+        The line iterator holding the file data.
+
+    Returns
+    -------
+    model_dict
+        Output dictionary containing ``lot`` and ``obasis_name`` keys and corresponding values.
+        It may contain ``obasis`` key and corresponding values as well.
+
+    """
+    model_dict = dict()
+    extra_dict = dict()
+
+    if "method" not in model:
+        raise FileFormatError("{}: QCSchema `model` requires a `method`".format(lit.filename))
+    else:
+        model_dict["lot"] = model["method"]
+    # QCEngineRecords doesn't give an empty string for basis-free methods, omits req'd key instead
+    if "basis" not in model:
+        warn(
+            "{}: Model `basis` key should be given. Assuming basis-free method.".format(
+                lit.filename
+            )
+        )
+    elif isinstance(model["basis"], str):
+        if model["basis"] == "":
+            warn(
+                "{}: QCSchema `basis` could not be read and will be omitted."
+                "Unless model is for a basis-free method, check input file.".format(lit.filename),
+                FileFormatWarning,
+                2,
+            )
+        else:
+            model_dict["obasis_name"] = model["basis"]
+    elif isinstance(model["basis"], dict):
+        basis = _parse_basis_keys(model["basis"], lit)
+        model_dict.update(basis)
+        extra_dict["basis"] = basis["extra"]
+        pass
+
+    model_dict["extra"] = extra_dict
+    return model_dict
+
+
+def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
+    """Load protocols properties from QCSchema.
+
+    Parameters
+    ----------
+    protocols
+        Protocols key from a QCSchema input or output file.
+    lit
+        The line iterator holding the file data.
+
+    Returns
+    -------
+    protocols_dict
+        Protocols dictionary containing instructions for the manipulation of output generated from
+        this input.
+
+    """
+    if "wavefunction" not in protocols:
+        warn(
+            "{}: Protocols `wavefunction` key not specified, no properties will be kept.",
+            FileFormatWarning,
+            2
+        )
+        wavefunction = "none"
+    else:
+        wavefunction = protocols["wavefunction"]
+    if "stdout" not in protocols:
+        warn(
+            "{}: Protocols `stdout` key not specified, stdout will be kept.",
+            FileFormatWarning,
+            2
+        )
+        keep_stdout = True
+    else:
+        keep_stdout = protocols["stdout"]
+    protocols_dict = dict()
+    if wavefunction not in {"all", "orbitals_and_eigenvalues", "return_results", "none"}:
+        raise FileFormatError(
+            "{}: Invalid `protocols` `wavefunction` keyword.".format(lit.filename)
+        )
+    else:
+        protocols_dict["keep_wavefunction"] = wavefunction
+    if not isinstance(keep_stdout, bool):
+        raise FileFormatError("{}: `protocols` `stdout` option must be a boolean.")
+    else:
+        protocols_dict["keep_stdout"] = keep_stdout
+    return protocols_dict
 
 
 # pylint: disable=unused-argument
@@ -613,12 +864,5 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     if "unparsed" in data.extra:
         for k in data.extra["unparsed"]:
             molecule_dict[k] = data.extra["unparsed"][k]
-    # print(molecule_dict)
-    # for k,v in molecule_dict.items():
-    #     if isinstance(v, list):
-    #         types = "{}[{}]".format(type(v), type(v[0]))
-    #     else:
-    #         types = type(v)
-    #     print("{}: {}  | {}".format(k, v, types))
-    # print(type(molecule_dict["connectivity"][0][0]))
+
     return molecule_dict
