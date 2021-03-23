@@ -63,8 +63,10 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
     # Get a segmented basis, for simplicity
     obasis = obasis.get_segmented()
 
-    # Compute the normalization constants of the primitives
-    scales = [_compute_cart_shell_normalizations(shell) for shell in obasis.shells]
+    # Compute the normalization constants of the Cartesian primitives, with the
+    # contraction coefficients multiplied in.
+    scales = [_compute_cart_shell_normalizations(shell) * shell.coeffs
+              for shell in obasis.shells]
 
     n_max = np.max([np.max(shell.angmoms) for shell in obasis.shells])
     go = GaussianOverlap(n_max)
@@ -86,30 +88,28 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
             r1 = atcoords[shell1.icenter]
             end1 = begin1 + shell1.nbasis
 
-            # START of Cartesian coordinates. Shell types are positive
-            result = np.zeros((len(scales[i0][0]), len(scales[i1][0])))
-
-            a0_min = np.min(shell0.exponents)
-            a1_min = np.min(shell1.exponents)
-
             # prepare some constants to save FLOPS later on
             rij = r0 - r1
             rij_norm_sq = np.dot(rij, rij)
+
+            # Check if the result is going to signifcant
+            a0_min = np.min(shell0.exponents)
+            a1_min = np.min(shell1.exponents)
             prefactor_max = np.exp(-a0_min * a1_min * rij_norm_sq / (a0_min + a1_min))
             if prefactor_max > 1e-15:
+                # START of Cartesian coordinates. Shell types are positive
+
                 # arrays of angular momentums [[2, 0, 0], [0, 2, 0], ..., [0, 1, 1]]
                 n0 = np.array(list(iter_cart_alphabet(shell0.angmoms[0])))
                 n1 = np.array(list(iter_cart_alphabet(shell1.angmoms[0])))
+                result = np.zeros((n0.shape[0], n1.shape[0]))
 
                 # Loop over primitives in shell0 (Cartesian)
-                for iexp0, (a0, cc0) in enumerate(zip(shell0.exponents, shell0.coeffs[:, 0])):
-                    scales0 = scales[i0][iexp0]
+                for scales0, a0 in zip(scales[i0], shell0.exponents):
                     a0_r0 = a0 * r0
 
                     # Loop over primitives in shell1 (Cartesian)
-                    for iexp1, (a1, cc1) in enumerate(zip(shell1.exponents, shell1.coeffs[:, 0])):
-                        scales1 = scales[i1][iexp1]
-
+                    for scales1, a1 in zip(scales[i1], shell1.exponents):
                         at = a0 + a1
                         prefactor = np.exp(-a0 * a1 / at * rij_norm_sq)
                         if prefactor < 1e-15:
@@ -124,20 +124,20 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
                         v = np.prod(compute_overlap_1d(rn_0, rn_1, n0[:, None, :], n1[None, :, :],
                                                        two_at), axis=2)
                         v *= prefactor
-                        result = np.add(result, v * cc0 * cc1 * scales0[:, None] * scales1[None, :])
+                        result = np.add(result, v * scales0[:, None] * scales1[None, :])
 
-            # END of Cartesian coordinate system (if going to pure coordinates)
+                # END of Cartesian coordinate system (if going to pure coordinates)
 
-            # cart to pure
-            if shell0.kinds[0] == 'p':
-                result = np.dot(tfs[shell0.angmoms[0]], result)
-            if shell1.kinds[0] == 'p':
-                result = np.dot(result, tfs[shell1.angmoms[0]].T)
+                # cart to pure
+                if shell0.kinds[0] == 'p':
+                    result = np.dot(tfs[shell0.angmoms[0]], result)
+                if shell1.kinds[0] == 'p':
+                    result = np.dot(result, tfs[shell1.angmoms[0]].T)
 
-            # store lower triangular result
-            overlap[begin0:end0, begin1:end1] = result
-            # store upper triangular result
-            overlap[begin1:end1, begin0:end0] = result.T
+                # store lower triangular result
+                overlap[begin0:end0, begin1:end1] = result
+                # store upper triangular result
+                overlap[begin1:end1, begin0:end0] = result.T
 
             begin1 = end1
         begin0 = end0
@@ -171,11 +171,10 @@ class GaussianOverlap:
         value = 0
         for i in range(n1 + 1):
             pf_i = self.binomials[n1][i] * x1 ** (n1 - i)
-            for j in range(n2 + 1):
+            for j in range(i % 2, n2 + 1, 2):
                 m = i + j
-                if m % 2 == 0:
-                    integ = self.facts[m] / two_at ** (m / 2)
-                    value += pf_i * self.binomials[n2][j] * x2 ** (n2 - j) * integ
+                integ = self.facts[m] / two_at ** (m / 2)
+                value += pf_i * self.binomials[n2][j] * x2 ** (n2 - j) * integ
         return value
 
 
@@ -201,8 +200,8 @@ def _compute_cart_shell_normalizations(shell: 'Shell') -> np.ndarray:
             row = []
             for n in iter_cart_alphabet(angmom):
                 row.append(gob_cart_normalization(exponent, n))
-            result.append(np.array(row))
-    return result
+            result.append(row)
+    return np.array(result)
 
 
 def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:
