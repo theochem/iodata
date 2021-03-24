@@ -238,7 +238,7 @@ IOData can be used to store data in a consistent format for writing at a future 
 
     mol = IOData(title="water")
     mol.atnums = np.array([8, 1, 1])
-    mol.coordinates = np.array([[0, 0, 0,], [0, 1, 0,], [0, -1, 0,]])  # in Bohr
+    mol.atcoords = np.array([[0, 0, 0,], [0, 1, 0,], [0, -1, 0,]])  # in Bohr
 
 
 .. _units:
