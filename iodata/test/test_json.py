@@ -46,6 +46,8 @@ GEOMS = {
             [4.253724, -2.762010, 0.382764],
         ]
     ),
+    "H2O": np.array([[0.0, 0.0, -0.1295], [0.0, -1.4942, 1.0274], [0.0, 1.4942, 1.0274]]),
+    "H2O_MP2": np.array([[0.0, 0.0, -0.1294], [0.0, -1.4941, 1.0274], [0.0, 1.4941, 1.0274]])
 }
 # These molecule examples were manually generated for testing
 # MOL_FILES: (filename, atnums, charge, spinpol, geometry)
@@ -221,3 +223,85 @@ def test_ghost(tmpdir):
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
     assert mol2["real"] == [True] * 3 + [False] * 6
+
+
+# input_files: (filename, explicit_basis, lot, obasis_name, run_type, geometry)
+INPUT_FILES = [
+    ("H2O_HF_STO3G_Gaussian_input.json", False, "HF", "STO-3G", "energy", GEOMS["H2O"]),
+    ("LiCl_string_STO4G_input.json", False, "B3LYP", "Def2TZVP", None, GEOMS["LiCl"]),
+    ("LiCl_explicit_STO4G_input.json", True, "HF", None, None, GEOMS["LiCl"]),
+    ("LiCl_STO4G_Gaussian_input.json", False, "HF", "STO-4G", "freq", GEOMS["LiCl"]),
+    ("water_mp2_input.json", False, "MP2", "cc-pVDZ", None, GEOMS["H2O_MP2"])
+]
+
+
+@pytest.mark.parametrize(
+    "filename, explicit_basis, lot, obasis_name, run_type, geometry", INPUT_FILES
+)
+def test_qcschema_input(filename, explicit_basis, lot, obasis_name, run_type, geometry):
+    with path('iodata.test.data', filename) as qcschema_input:
+        try:
+            mol = load_one(str(qcschema_input))
+            assert mol.lot == lot
+            if obasis_name:
+                assert mol.obasis_name == obasis_name
+            if run_type:
+                assert mol.run_type == run_type
+            np.testing.assert_allclose(mol.atcoords, geometry)
+        # This will change if QCSchema Basis gets supported
+        except NotImplementedError:
+            assert explicit_basis
+
+
+# Test passthrough for input files using modified versions of CuSCN_molecule.json
+# PASSTHROUGH_INPUT_FILES: {filename, unparsed_dict, location}
+PASSTHROUGH_INPUT_FILES = [
+    ("LiCl_STO4G_Gaussian_input_extra.json", UNPARSED["extra"], "input"),
+    ("LiCl_STO4G_Gaussian_input_nested_extra.json", UNPARSED["nested_extra"], "input"),
+    ("LiCl_STO4G_Gaussian_input_extra_molecule.json", UNPARSED["extra"], "molecule"),
+]
+
+
+@pytest.mark.parametrize("filename, unparsed_dict, location", PASSTHROUGH_INPUT_FILES)
+def test_passthrough_qcschema_input(filename, unparsed_dict, location):
+    """Test qcschema_molecule parsing for passthrough of unparsed keys."""
+    with path("iodata.test.data", filename) as qcschema_input:
+        mol = load_one(str(qcschema_input))
+
+    assert mol.extra[location]["unparsed"] == unparsed_dict
+
+
+INOUT_INPUT_FILES = [
+    ("H2O_HF_STO3G_Gaussian_input.json", 0),
+    ("LiCl_string_STO4G_input.json", 0),
+    ("LiCl_STO4G_Gaussian_input.json", 0),
+    ("LiCl_STO4G_Gaussian_input_extra.json", 0),
+    ("LiCl_STO4G_Gaussian_input_nested_extra.json", 0),
+    ("LiCl_STO4G_Gaussian_input_extra_molecule.json", 0),
+]
+
+
+@pytest.mark.parametrize("filename, nwarn", INOUT_INPUT_FILES)
+def test_inout_qcschema_input(tmpdir, filename, nwarn):
+    """Test that loading and dumping qcschema_molecule files retains all data."""
+    with path("iodata.test.data", filename) as qcschema_input:
+        if nwarn == 0:
+            mol = load_one(str(qcschema_input))
+        else:
+            with pytest.warns(FileFormatWarning) as record:
+                mol = load_one(str(qcschema_input))
+            assert len(record) == nwarn
+        mol1 = json.loads(qcschema_input.read_bytes())
+
+    fn_tmp = os.path.join(tmpdir, 'test_input_mol.json')
+    dump_one(mol, fn_tmp)
+
+    with open(fn_tmp, "r") as mol2_in:
+        mol2 = json.load(mol2_in)
+
+    # IOData prints the most recent version, and it's not worth updating all test files each time
+    if "provenance" in mol1:
+        del mol1["provenance"]
+    if "provenance" in mol2:
+        del mol2["provenance"]
+    assert mol1 == mol2
