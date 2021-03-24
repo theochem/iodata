@@ -20,7 +20,6 @@
 # pylint: disable=unused-argument,redefined-builtin
 """Generate formats.rst."""
 
-from string import Template
 
 from gen_formats import _format_words, _print_section
 from iodata.api import INPUT_MODULES
@@ -43,8 +42,8 @@ Default Template
 ----------------
 .. code-block:: python
 
-    '''\\ 
-${code_block_lines}
+    '''\\
+{code_block_lines}
     '''
 """
 
@@ -77,8 +76,8 @@ def main():
         print()
         template = getattr(module, "default_template", None)
         if template:
-            code_block_lines = ["    "+l for l in template.split("\n")]
-            print(Template(TEMPLATE).substitute(code_block_lines="\n".join(code_block_lines)))
+            code_block_lines = ["    " + l for l in template.split("\n")]
+            print(TEMPLATE.format(code_block_lines="\n".join(code_block_lines)))
         print()
         print()
 
