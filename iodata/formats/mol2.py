@@ -29,7 +29,7 @@ import numpy as np
 
 from ..docstrings import (document_load_one, document_load_many, document_dump_one,
                           document_dump_many)
-from ..iodata import IOData
+from ..iodata import IOData, BOND_DTYPE
 from ..periodic import sym2num, num2sym
 from ..utils import angstrom, LineIterator
 
@@ -110,17 +110,13 @@ def _load_helper_atoms(lit: LineIterator, natoms: int)\
 
 def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
     """Load bond information."""
-    bonds = np.empty((nbonds, 3))
+    bonds = np.empty(nbonds, dtype=BOND_DTYPE)
     for i in range(nbonds):
         words = next(lit).split()
         if words[3] == 'am':
-            words[3] = 4
+            words[3] = 1.5
         # Substract one because of numbering starting at 0
-        bond = [int(words[1]) - 1, int(words[2]) - 1, int(words[3])]
-        if bond is None:
-            bond = [0, 0, 0]
-            lit.warn(f'Something wrong in the bond section: {bond}')
-        bonds[i] = bond
+        bonds[i] = int(words[1]) - 1, int(words[2]) - 1, float(words[3])
     return bonds
 
 
@@ -163,8 +159,8 @@ def dump_one(f: TextIO, data: IOData):
     if data.bonds is not None:
         print("@<TRIPOS>BOND", file=f)
         for i, bond in enumerate(data.bonds):
-            bondtype = 'am' if bond[2] == 4 else str(bond[2])
-            print(f'{i+1:6d} {bond[0]+1:4d} {bond[1]+1:4d} {bondtype:2s}',
+            bondtype = 'am' if 1.4 < bond["bo"] < 1.6 else str(int(np.round(bond[2])))
+            print(f'{i+1:6d} {bond["i"]+1:4d} {bond["j"]+1:4d} {bondtype:2s}',
                   file=f)
 
 

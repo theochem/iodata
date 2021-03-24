@@ -31,6 +31,9 @@ from .utils import Cube
 __all__ = ['IOData']
 
 
+BOND_DTYPE = np.dtype([("i", int), ("j", int), ("bo", float)])
+
+
 # pylint: disable=too-many-instance-attributes
 @attr.s(auto_attribs=True, slots=True,
         on_setattr=[attr.setters.validate, attr.setters.convert])
@@ -78,10 +81,10 @@ class IOData:
         specific atom in a molecule). The format of the values is to be decided
         when implementing a load function for basis set definitions.
     bonds
-        An (nbond, 3) array with the list of covalent bonds. Each row represents
-        one bond and consists of three integers: first atom index (starting
-        from zero), second atom index & an optional bond type (0: not known, 1:
-        single, 2: double, 3: triple, 4: conjugated).
+        An (nbond, ) array of dtype BOND_DTYPE, with the list of covalent bonds.
+        Each element represents one bond and consists of two integers and a
+        float: first atom index (starting from zero), second atom index & a
+        optional bond order. The default value of the bond order is 1.0.
     cellvecs
         A (NP, 3) array containing the (real-space) cell vectors describing
         periodic boundary conditions. A single vector corresponds to a 1D cell,
@@ -195,8 +198,8 @@ class IOData:
         validator=attr.validators.optional(validate_shape('natom')))
     basisdef: str = None
     bonds: np.ndarray = attr.ib(
-        default=None, converter=convert_array_to(int),
-        validator=attr.validators.optional(validate_shape(None, 3)))
+        default=None, converter=convert_array_to(BOND_DTYPE),
+        validator=attr.validators.optional(validate_shape(None,)))
     cellvecs: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
         validator=attr.validators.optional(validate_shape(None, 3)))

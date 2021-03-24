@@ -39,7 +39,7 @@ from warnings import warn
 import numpy as np
 
 from ..docstrings import document_dump_one, document_load_one
-from ..iodata import IOData
+from ..iodata import IOData, BOND_DTYPE
 from ..periodic import num2sym, sym2num
 from ..utils import FileFormatError, FileFormatWarning, LineIterator
 from ..version import __version__
@@ -314,7 +314,8 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     # Note: The QCSchema spec allows for non-integer bond_orders, these are forced to integers here
     # in accordance with current IOData specification
     if "connectivity" in mol:
-        topology_dict["bonds"] = np.array(mol["connectivity"], dtype=int)
+        topology_dict["bonds"] = np.array([
+            tuple(bond) for bond in mol["connectivity"]], dtype=BOND_DTYPE)
     # Check for fragment keys
     # List fragment indices in nested list (likely is a jagged array)
     if "fragments" in mol:
@@ -565,7 +566,10 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     if data.atmasses is not None:
         molecule_dict["masses"] = data.atmasses.tolist()
     if data.bonds is not None:
-        molecule_dict["connectivity"] = [[int(i) for i in bond] for bond in data.bonds]
+        molecule_dict["connectivity"] = [
+            [int(bond["i"]), int(bond["j"]), float(bond["bo"])]
+            for bond in data.bonds
+        ]
     if data.g_rot:
         molecule_dict["fix_symmetry"] = data.g_rot
 

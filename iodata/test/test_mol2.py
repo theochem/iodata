@@ -20,11 +20,13 @@
 
 import os
 
+import numpy as np
 import pytest
 from numpy.testing import assert_equal, assert_allclose
 
 from .common import truncated_file
 from ..api import load_one, load_many, dump_one, dump_many
+from ..iodata import BOND_DTYPE
 from ..utils import angstrom
 try:
     from importlib_resources import path
@@ -71,8 +73,11 @@ def check_example(mol):
     assert_allclose(mol.atcharges['mol2charges'][23], 0.0949)
     bonds = mol.bonds
     assert_equal(len(bonds), 25)
-    assert_allclose(bonds[0], [0, 1, 1])
-    assert_allclose(bonds[24], [13, 23, 1])
+    print(bonds[0])
+    assert bonds[0] == np.array((0, 1, 1.), BOND_DTYPE)
+    assert bonds[6] == np.array((2, 3, 2.0), BOND_DTYPE)
+    assert bonds[13] == np.array((6, 8, 1.5), BOND_DTYPE)
+    assert bonds[24] == np.array((13, 23, 1.0), BOND_DTYPE)
 
 
 def check_load_dump_consistency(tmpdir, fn):
