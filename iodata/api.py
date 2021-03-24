@@ -238,15 +238,11 @@ def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, *
     fmt
         The name of the software for which input file is generated.
     template
-        The template input file.
+        The template input string.
     **kwargs
         Keyword arguments are passed on to the input-specific write_input function.
 
     """
     input_module = _select_input_module(fmt)
-    # load template as a string
-    if template is not None:
-        with open(template, 'r') as t:
-            template = t.read()
     with open(filename, 'w') as f:
         input_module.write_input(f, iodata, template=template, **kwargs)
