@@ -121,10 +121,13 @@ def compute_overlap(obasis: MolecularBasis, atcoords: np.ndarray) -> np.ndarray:
                         rn_0 = rn - r0
                         rn_1 = rn - r1
 
-                        v = np.prod(compute_overlap_1d(rn_0, rn_1, n0[:, None, :], n1[None, :, :],
-                                                       two_at), axis=2)
-                        v *= prefactor
-                        result = np.add(result, v * scales0[:, None] * scales1[None, :])
+                        # Note that frompyfunc-ed functions return arrays with
+                        # dtype=object. This is converted back to floats as
+                        # early as possible to improve performance of subsequent
+                        # array operations.
+                        vs = compute_overlap_1d(rn_0, rn_1, n0[:, None, :], n1[None, :, :], two_at)
+                        v = np.prod(vs.astype(float), axis=2)
+                        result += v * prefactor * scales0[:, None] * scales1[None, :]
 
                 # END of Cartesian coordinate system (if going to pure coordinates)
 
