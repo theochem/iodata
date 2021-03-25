@@ -154,7 +154,7 @@ a PDB file:
 
     from iodata import load_one, write_input
 
-    write_input(load_one("water.pdf"), "water.com", fmt="gaussian")
+    write_input(load_one("water.pdb"), "water.com", fmt="gaussian")
 
 The level of theory and other settings can be modified by setting corresponding
 attributes in the IOData object:
@@ -163,16 +163,68 @@ attributes in the IOData object:
 
     from iodata import load_one, write_input
 
-    mol = load_one("water.pdf")
+    mol = load_one("water.pdb")
     mol.lot = "B3LYP"
     mol.obasis_name = "6-31g*"
     mol.run_type = "opt"
-    write_input(mold, "water.com", fmt="gaussian")
+    write_input(mol, "water.com", fmt="gaussian")
 
 The run types can be any of the following: ``energy``, ``energy_force``,
 ``opt``, ``scan`` or ``freq``. These are translated into program-specific
 keywords when the file is written.
 
+It is possible to define a custom input file template to allow for specialized
+commands. This is done by passing a template string using the optional ``template`` keyword:
+
+.. code-block:: python
+
+    from iodata import load_one, write_input
+
+    mol = load_one("water.pdb")
+    mol.lot = "B3LYP"
+    mol.obasis_name = "Def2QZVP"
+    mol.run_type = "opt"
+    custom_template = """\
+    %NProcShared=4
+    %mem=16GB
+    %chk=B3LYP_def2qzvp_H2O
+    #n ${lot}/${obasis_name} scf=(maxcycle=900,verytightlineq,xqc) integral=(grid=ultrafinegrid) pop=(cm5, hlygat, mbs, npa, esp)
+
+    ${title}
+
+    ${charge} ${spinmult}
+    ${geometry}
+
+    """
+    write_input(mol, "water.com", fmt="gaussian", template=custom_template)
+
+The input file template may also include keywords that are not part of the IOData
+object:
+
+.. code-block:: python
+
+    from iodata import load_one, write_input
+
+    mol = load_one("water.pdb")
+    mol.lot = "B3LYP"
+    mol.obasis_name = "Def2QZVP"
+    mol.run_type = "opt"
+    custom_template = """\
+    %chk=${chk_name}
+    #n ${lot}/${obasis_name} ${run_type}
+
+    ${title}
+
+    ${charge} ${spinmult}
+    ${geometry}
+
+    """
+    # Custom keywords as arguments (best for few extra arguments)
+    write_input(mol, "water.com", fmt="gaussian", template=custom_template, chk_name="B3LYP_def2qzvp_water")
+
+    # Custom keywords from a dict (in cases with many extra arguments)
+    custom_keywords = {"chk_name": "B3LYP_def2qzvp_waters"}
+    write_input(mol, "water.com", fmt="gaussian", template=custom_template, **custom_keywords)
 
 Data storage
 ^^^^^^^^^^^^
@@ -186,7 +238,7 @@ IOData can be used to store data in a consistent format for writing at a future 
 
     mol = IOData(title="water")
     mol.atnums = np.array([8, 1, 1])
-    mol.coordinates = np.array([[0, 0, 0,], [0, 1, 0,], [0, -1, 0,]])  # in Bohr
+    mol.atcoords = np.array([[0, 0, 0,], [0, 1, 0,], [0, -1, 0,]])  # in Bohr
 
 
 .. _units:
