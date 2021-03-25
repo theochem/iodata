@@ -59,11 +59,11 @@ def test_input_gaussian_from_xyz(tmpdir):
     mol.obasis_name = '6-31g*'
     # write input in a temporary folder using the user-template
     fname = os.path.join(tmpdir, 'input_from_xyz.com')
-    tname = """\
+    template = """\
 %chk=gaussian.chk
 %mem=3500MB
 %nprocs=4
-#p ${lot}/${obasis_name} opt scf(tight,xqc,fermi) integral(grid=ultrafine) nosymmetry
+#p ${lot}/${obasis_name} opt scf(tight,xqc,fermi) integral(grid=ultrafine) ${extra_cmd}
 
 ${title} ${lot}/${obasis_name} opt-force
 
@@ -80,7 +80,7 @@ gaussian.wfn
 
 
 """
-    write_input(mol, fname, fmt='gaussian', template=tname)
+    write_input(mol, fname, fmt='gaussian', template=template, extra_cmd="nosymmetry")
     # compare saved input to expected input
     with path('iodata.test.data', 'input_gaussian_h2o_opt_ub3lyp.txt') as fname_expected:
         check_load_input_and_compare(fname, fname_expected)
@@ -120,8 +120,8 @@ def test_input_orca_from_xyz(tmpdir):
     mol.obasis_name = 'def2-SVP'
     # write input in a temporary folder using the user-template
     fname = os.path.join(tmpdir, 'input_from_xyz.com')
-    tname = """\
-! ${lot} ${obasis_name} Grid4 TightSCF NOFINALGRID KeepDens
+    template = """\
+! ${lot} ${obasis_name} ${grid_stuff} KeepDens
 # ${title}
 %output PrintLevel Mini Print[ P_Mulliken ] 1 Print[P_AtCharges_M] 1 end
 %pal nprocs 4 end
@@ -135,7 +135,8 @@ ${geometry}
     end
 end
 """
-    write_input(mol, fname, fmt='orca', template=tname)
+    grid_stuff = "Grid4 TightSCF NOFINALGRID"
+    write_input(mol, fname, fmt='orca', template=template, grid_stuff=grid_stuff)
     # compare saved input to expected input
     with path('iodata.test.data', 'input_orca_h2o_sp_b3lyp.txt') as fname_expected:
         check_load_input_and_compare(fname, fname_expected)
