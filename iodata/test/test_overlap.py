@@ -18,13 +18,15 @@
 # --
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
+import itertools
+
 import attr
 import numpy as np
 from numpy.testing import assert_allclose
-from pytest import raises
+import pytest
 
 from ..api import load_one
-from ..basis import MolecularBasis, Shell
+from ..basis import MolecularBasis, Shell, convert_conventions
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 
 try:
@@ -83,5 +85,50 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
 def test_overlap_l1():
     dbasis = MolecularBasis([], {}, 'L1')
     atcoords = np.zeros((1, 3))
-    with raises(ValueError):
+    with pytest.raises(ValueError):
         _ = compute_overlap(dbasis, atcoords)
+
+
+FNS_TWO_BASIS = [
+    "h_sto3g.fchk",
+    "hf_sto3g.fchk",
+    "2h-azirine-cc.fchk",
+    "water_ccpvdz_pure_hf_g03.fchk"
+]
+
+
+@pytest.mark.parametrize("fn", FNS_TWO_BASIS)
+def test_overlap_two_basis_same(fn):
+    with path('iodata.test.data', fn) as pth:
+        mol = load_one(pth)
+    olp_a = compute_overlap(mol.obasis, mol.atcoords, mol.obasis, mol.atcoords)
+    olp_b = compute_overlap(mol.obasis, mol.atcoords)
+    assert_allclose(olp_a, olp_b, rtol=0, atol=1e-14)
+
+
+@pytest.mark.parametrize("fn0,fn1", itertools.combinations_with_replacement(FNS_TWO_BASIS, 2))
+def test_overlap_two_basis_different(fn0, fn1):
+    with path('iodata.test.data', fn0) as pth0:
+        mol0 = load_one(pth0)
+    with path('iodata.test.data', fn1) as pth1:
+        mol1 = load_one(pth1)
+    # Direct computation of the off-diagonal block.
+    olp_a = compute_overlap(mol0.obasis, mol0.atcoords, mol1.obasis, mol1.atcoords)
+    # Poor-man's approach: combine two molecules into one and compute its
+    # overlap matrix.
+    atcoords = np.concatenate([mol0.atcoords, mol1.atcoords])
+    shells = mol0.obasis.shells + [
+        attr.evolve(shell, icenter=shell.icenter + mol0.natom)
+        for shell in mol1.obasis.shells
+    ]
+    obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, "L2")
+    olp_big = compute_overlap(obasis, atcoords)
+    # Get the off-diagonal block and reorder.
+    olp_b = olp_big[:olp_a.shape[0], olp_a.shape[0]:]
+    assert olp_a.shape == olp_b.shape
+    permutation0, signs0 = convert_conventions(mol0.obasis, OVERLAP_CONVENTIONS, reverse=True)
+    olp_b = olp_b[permutation0] * signs0.reshape(-1, 1)
+    permutation1, signs1 = convert_conventions(mol1.obasis, OVERLAP_CONVENTIONS, reverse=True)
+    olp_b = olp_b[:, permutation1] * signs1
+    # Finally compare the numbers.
+    assert_allclose(olp_a, olp_b, rtol=0, atol=1e-14)
