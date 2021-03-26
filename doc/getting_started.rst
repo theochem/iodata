@@ -174,7 +174,8 @@ The run types can be any of the following: ``energy``, ``energy_force``,
 keywords when the file is written.
 
 It is possible to define a custom input file template to allow for specialized
-commands. This is done by passing a template string using the optional ``template`` keyword:
+commands. This is done by passing a template string using the optional ``template`` keyword,
+placing each IOData attribute (or additional keyword, as shown below) in curly brackets:
 
 .. code-block:: python
 
@@ -188,12 +189,12 @@ commands. This is done by passing a template string using the optional ``templat
     %NProcShared=4
     %mem=16GB
     %chk=B3LYP_def2qzvp_H2O
-    #n ${lot}/${obasis_name} scf=(maxcycle=900,verytightlineq,xqc) integral=(grid=ultrafinegrid) pop=(cm5, hlygat, mbs, npa, esp)
+    #n {lot}/{obasis_name} scf=(maxcycle=900,verytightlineq,xqc) integral=(grid=ultrafinegrid) pop=(cm5, hlygat, mbs, npa, esp)
 
-    ${title}
+    {title}
 
-    ${charge} ${spinmult}
-    ${geometry}
+    {charge} {spinmult}
+    {geometry}
 
     """
     write_input(mol, "water.com", fmt="gaussian", template=custom_template)
@@ -210,13 +211,13 @@ object:
     mol.obasis_name = "Def2QZVP"
     mol.run_type = "opt"
     custom_template = """\
-    %chk=${chk_name}
-    #n ${lot}/${obasis_name} ${run_type}
+    %chk={chk_name}
+    #n {lot}/{obasis_name} {run_type}
 
-    ${title}
+    {title}
 
-    ${charge} ${spinmult}
-    ${geometry}
+    {charge} {spinmult}
+    {geometry}
 
     """
     # Custom keywords as arguments (best for few extra arguments)

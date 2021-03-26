@@ -20,7 +20,6 @@
 
 
 from typing import TextIO
-from string import Template
 
 from .common import populate_fields
 
@@ -32,10 +31,10 @@ __all__ = []
 
 
 default_template = """\
-! ${lot} ${obasis_name} ${run_type}
-# ${title}
-*xyz ${charge} ${spinmult}
-${geometry}
+! {lot} {obasis_name} {run_type}
+# {title}
+*xyz {charge} {spinmult}
+{geometry}
 *"""
 
 
@@ -65,4 +64,4 @@ def write_input(f: TextIO, data: IOData, template: str = None, **kwargs):
         template = default_template
     # populate files & write input
     fields.update(kwargs)
-    print(Template(template).substitute(fields), file=f)
+    print(template.format(**fields), file=f)
