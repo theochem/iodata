@@ -32,10 +32,13 @@ from setuptools import setup
 
 def get_version_info():
     """Read __version__ and DEV_CLASSIFIER from version.py, using exec, not import."""
-    with open(os.path.join("iodata", 'version.py'), 'r') as f:
-        myglobals = {"__name__": "iodata.version"}
-        exec(f.read(), myglobals)  # pylint: disable=exec-used
-    return myglobals['__version__'], myglobals['DEV_CLASSIFIER']
+    fn_version = os.path.join("iodata", "_version.py")
+    if os.path.isfile(fn_version):
+        myglobals = {}
+        with open(fn_version, "r") as f:
+            exec(f.read(), myglobals)  # pylint: disable=exec-used
+        return myglobals["__version__"], myglobals["DEV_CLASSIFIER"]
+    return "0.0.0.post0", "Development Status :: 2 - Pre-Alpha"
 
 
 def get_readme():
