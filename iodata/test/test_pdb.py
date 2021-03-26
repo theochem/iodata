@@ -52,7 +52,6 @@ def check_water(mol):
     """Test some things on a water file."""
     assert_equal(mol.atnums, [1, 8, 1])
     # check bond length
-    print(np.linalg.norm(mol.atcoords[0] - mol.atcoords[2]) / angstrom)
     assert_allclose(np.linalg.norm(
         mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.9599, atol=1.e-4)
     assert_allclose(np.linalg.norm(
@@ -115,15 +114,10 @@ def test_load_dump_xyz_consistency(tmpdir):
         check_load_dump_xyz_consistency(tmpdir, fn_xyz)
 
 
-def test_load_peptide():
+def test_load_peptide_2luv():
     # test pdb of small peptide
     with path('iodata.test.data', '2luv.pdb') as fn_pdb:
         mol = load_one(str(fn_pdb))
-    check_peptide(mol)
-
-
-def check_peptide(mol):
-    """Test some things on a peptide file."""
     assert mol.title.startswith("INTEGRIN")
     assert_equal(len(mol.atnums), 547)
     restypes = mol.atffparams.get('restypes')
@@ -172,6 +166,7 @@ def test_load_dump_many_consistency(case, tmpdir):
 
 
 def test_load_2bcw():
+    # test pdb with multiple chains
     with path("iodata.test.data", "2bcw.pdb") as fn_pdb:
         mol = load_one(fn_pdb)
     assert mol.natom == 191
@@ -181,4 +176,15 @@ def test_load_2bcw():
     assert (mol.atffparams["restypes"][-4:] == ['LYS', 'ILE', 'THR', 'PRO']).all()
     assert_allclose(mol.atcoords[0, 2] / angstrom, -86.956)
     assert_allclose(mol.atcoords[190, 0] / angstrom, -24.547)
+    assert_allclose(mol.extra.get('occupancies'), np.ones(mol.natom))
     assert (mol.extra["chainids"] == ["A"] * 65 + ["B"] * 68 + ["C"] * 58).all()
+
+
+def test_load_pdb_dump_pdb(tmpdir):
+    # test dump pdb with single chain
+    with path("iodata.test.data", "2luv.pdb") as fn_pdb:
+        check_load_dump_consistency(tmpdir, fn_pdb)
+
+    # test dump pdb with multiple chain
+    with path('iodata.test.data', "2bcw.pdb") as fn_pdb:
+        check_load_dump_consistency(tmpdir, fn_pdb)
