@@ -98,6 +98,11 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
     assert_equal(mol1.atnums, mol2.atnums)
     assert_equal(mol1.atcorenums, mol2.atcorenums)
     assert_allclose(mol1.atcoords, mol2.atcoords, atol=1e-10)
+    # check energy (mol2 might not have energy stored depending on its format)
+    if mol1.energy is not None and mol2.energy is not None:
+        assert_allclose(mol1.energy, mol2.energy, atol=1e-7)
+    elif mol1.energy is None:
+        assert mol1.energy == mol2.energy
     # orbital basis
     if mol1.obasis is not None:
         # compare dictionaries
