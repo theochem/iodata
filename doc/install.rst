@@ -24,6 +24,16 @@
 Installation
 ============
 
+Stable releases
+---------------
+
+.. warning::
+
+    We are preparing a 1.0 release. Until then, these instructions for
+    installing a stable release will not work yet. If you enjoy living on the
+    edge, try the development release as explained in the
+    ":ref:`install-latest-git-revision`" section below.
+
 Python 3 (>=3.6) must be installed before you can install IOData. In addition,
 IOData has the following dependencies:
 
@@ -32,13 +42,11 @@ IOData has the following dependencies:
 - attrs >= 20.1.0: https://www.attrs.org/en/stable/index.html
 - importlib_resources [only for Python 3.6]: https://gitlab.com/python-devs/importlib_resources
 
-You only need to install these dependencies manually when installing IOData from
-source. We recommend installing IOData as a Conda or PyPI package instead, which
-will automatically install the dependencies (other than Python itself). Package
-details can be found here:
+Normally, you don't need to install these dependencies manually. They will be
+installed automatically when you follow the instructions below.
 
-- https://anaconda.org/theochem/iodata (Conda package)
-- https://pypi.org/project/qc-iodata (PyPI package)
+Installation with Ana- or Miniconda
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To install IOData using the conda package management system, install
 `miniconda <https://conda.io/miniconda.html>`__ or
@@ -57,7 +65,7 @@ To install IOData using the conda package management system, install
     # Install the stable release.
     conda install -c theochem iodata
 
-    # For developers:
+    # Unstable releases
     # (Only do this if you understand the implications.)
     # Install the testing release. (beta)
     conda install -c theochem/label/test iodata
@@ -65,7 +73,8 @@ To install IOData using the conda package management system, install
     conda install -c theochem/label/dev iodata
 
 
-There are two common methods to install IOData with pip:
+Installation with Pip
+^^^^^^^^^^^^^^^^^^^^^
 
 1. You can work in a `virtual environment`_:
 
@@ -107,13 +116,72 @@ There are two common methods to install IOData with pip:
 
 In case the ``pip3`` executable is not found, pip may be installed in a
 directory which is not included in your ``${PATH}`` variable. This seems to be a
-common issue on macOS. A simple workaround is to replace ``pip3`` by
-``python3 -m pip``.
+common issue on macOS. A simple workaround is to replace ``pip3`` by ``python3
+-m pip``.
 
 In case Python and your operating system are up to date, you may also use
 ``pip`` instead of ``pip3`` or ``python`` instead of ``python3``. The ``3`` is
 only used to avoid potential confusion with Python 2. Note that the ``3`` is
 only present in names of executables, not names of Python modules.
+
+
+.. _install-latest-git-revision:
+
+Latest git revision
+-------------------
+
+This section shows how one can install the latest revision of IOData from the
+git repository. This kind of installation comes with some risks (sudden API
+changes, bugs, ...) and so be prepared to accept them when using the following
+installation instructions.
+
+There are two installation methods:
+
+1. **Quick and dirty.** Of this method, there are four variants, depending on
+   the correctness of your ``PATH`` variable and the presence of a virtual or
+   conda environment. These different scenarios are explained in more detail in
+   the previous section.
+
+   .. code-block:: bash
+
+       # with env, correct PATH
+       pip install git+https://github.com/theochem/iodata.git
+       # with env, broken PATH
+       python -m pip install git+https://github.com/theochem/iodata.git
+       # without env, correct PATH
+       pip install git+https://github.com/theochem/iodata.git --user
+       # without env, broken PATH
+       python -m pip install git+https://github.com/theochem/iodata.git --user
+
+2. **Slow and smart.** In addition to the four variations in the quick and dirty
+   method, the slow and smart can be used with ``pip`` or just with
+   ``setup.py``. You also have the options to use *SSH* or *HTTPS* protocols to
+   clone the git repository. Pick whichever works best for you.
+
+   .. code-block:: bash
+
+        # A) Clone git repo with https OR ssh:
+        # The second one only works if you have ssh set up for Github
+        #  A1) https
+        git clone https://github.com/theochem/iodata.git
+        #  A2) ssh
+        git clone git@github.com:theochem/iodata.git
+        # B) Optionally write the version string
+        pip install roberto  # or any of the three other ways of running pip, see above.
+        rob write-version
+        # C) Actual install, 6 different methods.
+        #  C1) setup.py, with env
+        python setup.py install
+        #  C2) pip, with env, correct PATH
+        pip install .
+        #  C3) pip, with env, broken PATH
+        python -m pip install .
+        #  C4) setup.py, without env
+        python setup.py install --user
+        #  C5) pip, without env, correct PATH
+        pip install . --user
+        #  C6) pip, without env, broken PATH
+        python -m pip install . --user
 
 
 Testing
@@ -122,7 +190,7 @@ Testing
 The tests are automatically run when we build packages with conda, but you may
 try them again on your own machine after installation.
 
-With Conda:
+With Ana- or Miniconda:
 
 .. code-block:: bash
 
