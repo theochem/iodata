@@ -63,18 +63,18 @@ def test_input_gaussian_from_xyz(tmpdir):
 %chk=gaussian.chk
 %mem=3500MB
 %nprocs=4
-#p ${lot}/${obasis_name} opt scf(tight,xqc,fermi) integral(grid=ultrafine) ${extra_cmd}
+#p {lot}/{obasis_name} opt scf(tight,xqc,fermi) integral(grid=ultrafine) {extra_cmd}
 
-${title} ${lot}/${obasis_name} opt-force
+{title} {lot}/{obasis_name} opt-force
 
 0 1
-${geometry}
+{geometry}
 
 --Link1--
 %chk=gaussian.chk
 %mem=3500MB
 %nprocs=4
-#p ${lot}/${obasis_name} force guess=read geom=allcheck integral(grid=ultrafine) output=wfn
+#p {lot}/{obasis_name} force guess=read geom=allcheck integral(grid=ultrafine) output=wfn
 
 gaussian.wfn
 
@@ -121,17 +121,17 @@ def test_input_orca_from_xyz(tmpdir):
     # write input in a temporary folder using the user-template
     fname = os.path.join(tmpdir, 'input_from_xyz.com')
     template = """\
-! ${lot} ${obasis_name} ${grid_stuff} KeepDens
-# ${title}
+! {lot} {obasis_name} {grid_stuff} KeepDens
+# {title}
 %output PrintLevel Mini Print[ P_Mulliken ] 1 Print[P_AtCharges_M] 1 end
 %pal nprocs 4 end
 %coords
     CTyp xyz
-    Charge ${charge}
-    Mult ${spinmult}
+    Charge {charge}
+    Mult {spinmult}
     Units Angs
     coords
-${geometry}
+{geometry}
     end
 end
 """

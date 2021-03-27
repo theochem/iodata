@@ -99,7 +99,7 @@ IOData can also be used to write different file formats:
     dump_one(mol, 'water.molden')
 
 
-One could als convert (and manipulate) an entire trajectory. The following
+One could also convert (and manipulate) an entire trajectory. The following
 example converts a geometry optimization trajectory from a Gaussian FCHK file
 to an XYZ file:
 
@@ -174,7 +174,8 @@ The run types can be any of the following: ``energy``, ``energy_force``,
 keywords when the file is written.
 
 It is possible to define a custom input file template to allow for specialized
-commands. This is done by passing a template string using the optional ``template`` keyword:
+commands. This is done by passing a template string using the optional ``template`` keyword,
+placing each IOData attribute (or additional keyword, as shown below) in curly brackets:
 
 .. code-block:: python
 
@@ -188,12 +189,12 @@ commands. This is done by passing a template string using the optional ``templat
     %NProcShared=4
     %mem=16GB
     %chk=B3LYP_def2qzvp_H2O
-    #n ${lot}/${obasis_name} scf=(maxcycle=900,verytightlineq,xqc) integral=(grid=ultrafinegrid) pop=(cm5, hlygat, mbs, npa, esp)
+    #n {lot}/{obasis_name} scf=(maxcycle=900,verytightlineq,xqc) integral=(grid=ultrafinegrid) pop=(cm5, hlygat, mbs, npa, esp)
 
-    ${title}
+    {title}
 
-    ${charge} ${spinmult}
-    ${geometry}
+    {charge} {spinmult}
+    {geometry}
 
     """
     write_input(mol, "water.com", fmt="gaussian", template=custom_template)
@@ -210,13 +211,13 @@ object:
     mol.obasis_name = "Def2QZVP"
     mol.run_type = "opt"
     custom_template = """\
-    %chk=${chk_name}
-    #n ${lot}/${obasis_name} ${run_type}
+    %chk={chk_name}
+    #n {lot}/{obasis_name} {run_type}
 
-    ${title}
+    {title}
 
-    ${charge} ${spinmult}
-    ${geometry}
+    {charge} {spinmult}
+    {geometry}
 
     """
     # Custom keywords as arguments (best for few extra arguments)
@@ -225,6 +226,20 @@ object:
     # Custom keywords from a dict (in cases with many extra arguments)
     custom_keywords = {"chk_name": "B3LYP_def2qzvp_waters"}
     write_input(mol, "water.com", fmt="gaussian", template=custom_template, **custom_keywords)
+
+In some cases, it may be preferable to load the template from file, instead of
+defining it in the script:
+
+.. code-block:: python
+
+    from iodata import load_one, write_input
+
+    mol = load_one("water.pdb")
+    mol.lot = "B3LYP"
+    mol.obasis_name = "6-31g*"
+    mol.run_type = "opt"
+    write_input(mol, "water.com", fmt="gaussian", template=open("my_template.com", "r").read())
+
 
 Data storage
 ^^^^^^^^^^^^
@@ -248,8 +263,8 @@ Unit conversion
 ^^^^^^^^^^^^^^^
 
 IOData always represents all quantities in atomic units and unit conversion
-constants are defined in ``iodata.utils``. Conversion _to_ atomic units is done
-by _multiplication_ with a unit constant. This convention can be easily
+constants are defined in ``iodata.utils``. Conversion *to* atomic units is done
+by *multiplication* with a unit constant. This convention can be easily
 remembered with the following examples:
 
 - When you say "this bond length is 1.5 Å", the IOData equivalent is
