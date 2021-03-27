@@ -39,11 +39,12 @@ __all__ = []
 
 PATTERNS = ['*.mol2']
 
+
 # mol2 bond types
 MOL2_BOND_TYPES = ["1", "2", "3", "am", "ar", "du", "un", "nc"]
-MOL2_BOND_CONVERSION = dict(zip(MOL2_BOND_TYPES, range(len(MOL2_BOND_TYPES))))
+MOL2_BOND_CONVERSION = dict(zip(MOL2_BOND_TYPES, range(1, len(MOL2_BOND_TYPES) + 1)))
 
-@document_load_one("MOL2", ['atcoords', 'atnums', 'atcharges', 'atffparams'], ['title'])
+
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     molecule_found = False
