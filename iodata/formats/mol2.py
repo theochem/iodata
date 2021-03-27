@@ -39,6 +39,9 @@ __all__ = []
 
 PATTERNS = ['*.mol2']
 
+# mol2 bond types
+MOL2_BOND_TYPES = ["1", "2", "3", "am", "ar", "du", "un", "nc"]
+MOL2_BOND_CONVERSION = dict(zip(MOL2_BOND_TYPES, range(len(MOL2_BOND_TYPES))))
 
 @document_load_one("MOL2", ['atcoords', 'atnums', 'atcharges', 'atffparams'], ['title'])
 def load_one(lit: LineIterator) -> dict:
@@ -109,14 +112,25 @@ def _load_helper_atoms(lit: LineIterator, natoms: int)\
 
 
 def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
-    """Load bond information."""
+    """Load bond information.
+
+    Each line in a bond definition has the following structure
+    http://chemyang.ccnu.edu.cn/ccb/server/AIMMS/mol2.pdf
+    bond_index atom_1 atom_2 bond_type
+    e.g.
+    1 1 2 1
+    This would be the first bond between atom 1 and atom 2 and a single bond
+    """
     bonds = np.empty((nbonds, 3))
     for i in range(nbonds):
         words = next(lit).split()
-        if words[3] == 'am':
-            words[3] = 4
         # Substract one because of numbering starting at 0
-        bond = [int(words[1]) - 1, int(words[2]) - 1, int(words[3])]
+        bond = [
+            int(words[1]) - 1,
+            int(words[2]) - 1,
+            # convert mol2 bond type to integer
+            MOL2_BOND_CONVERSION.get(words[3]),
+        ]
         if bond is None:
             bond = [0, 0, 0]
             lit.warn(f'Something wrong in the bond section: {bond}')
