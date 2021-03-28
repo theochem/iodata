@@ -26,6 +26,8 @@ from numpy.testing import assert_equal, assert_allclose
 from .common import truncated_file
 from ..api import load_one, load_many, dump_one, dump_many
 from ..utils import angstrom
+from ..periodic import bond2num
+
 try:
     from importlib_resources import path
 except ImportError:
@@ -54,6 +56,12 @@ def test_mol2_symbol():
     assert_equal(mol.atnums, [14, 3, 8, 1, 8, 1, 8, 1])
 
 
+def test_bondtypes_benzene():
+    with path('iodata.test.data', 'benzene.mol2') as fn_test:
+        mol = load_one(str(fn_test))
+    assert_equal(mol.bonds[:, 2], [bond2num["ar"]] * 6 + [bond2num["1"]] * 6)
+
+
 def check_example(mol):
     """Test some things on example file."""
     assert mol.title == 'ZINC00001084'
@@ -70,7 +78,7 @@ def check_example(mol):
     assert_allclose(mol.atcharges['mol2charges'][0], 0.0684)
     assert_allclose(mol.atcharges['mol2charges'][23], 0.0949)
     bonds = mol.bonds
-    assert_equal(len(bonds), 25)
+    assert len(bonds) == 25
     assert_equal(bonds[0], [0, 1, 1])
     assert_equal(bonds[6], [2, 3, 2])
     assert_equal(bonds[13], [6, 8, 4])
@@ -94,6 +102,8 @@ def check_load_dump_consistency(tmpdir, fn):
 def test_load_dump_consistency(tmpdir):
     with path('iodata.test.data', 'caffeine.mol2') as fn_mol2:
         check_load_dump_consistency(tmpdir, fn_mol2)
+    with path('iodata.test.data', 'benzene.mol2') as fn_mol2:
+        check_load_dump_consistency(tmpdir, fn_mol2)
 
 
 def test_load_many():
@@ -102,7 +112,7 @@ def test_load_many():
     assert len(mols) == 2
     check_example(mols[0])
     assert mols[1].title == 'ZINC00001085'
-    assert_equal(mols[1].natom, 24)
+    assert mols[1].natom == 24
     assert_allclose(mols[0].atcoords[0] / angstrom, [-0.0178, 1.4608, 0.0101])
     assert_allclose(mols[1].atcoords[0] / angstrom, [-0.0100, 1.5608, 0.0201])
 
@@ -119,3 +129,4 @@ def test_load_dump_many_consistency(tmpdir):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
         assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+        assert_equal(mol0.bonds, mol1.bonds)

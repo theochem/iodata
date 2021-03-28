@@ -30,7 +30,7 @@ import numpy as np
 from ..docstrings import (document_load_one, document_load_many, document_dump_one,
                           document_dump_many)
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym
+from ..periodic import sym2num, num2sym, bond2num, num2bond
 from ..utils import angstrom, LineIterator
 
 
@@ -38,11 +38,6 @@ __all__ = []
 
 
 PATTERNS = ['*.mol2']
-
-
-# mol2 bond types
-MOL2_BOND_TYPES = ["1", "2", "3", "am", "ar", "du", "un", "nc"]
-MOL2_BOND_CONVERSION = dict(zip(MOL2_BOND_TYPES, range(1, len(MOL2_BOND_TYPES) + 1)))
 
 
 @document_load_one("MOL2", ['atcoords', 'atnums', 'atcharges', 'atffparams'], ['title'])
@@ -131,7 +126,7 @@ def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
             int(words[1]) - 1,
             int(words[2]) - 1,
             # convert mol2 bond type to integer
-            MOL2_BOND_CONVERSION.get(words[3], 7),
+            bond2num.get(words[3], bond2num["un"])
         ]
         if bond is None:
             bond = [0, 0, 0]
@@ -179,10 +174,7 @@ def dump_one(f: TextIO, data: IOData):
     if data.bonds is not None:
         print("@<TRIPOS>BOND", file=f)
         for i, bond in enumerate(data.bonds):
-            if bond[2] > 0 and bond[2] <= len(MOL2_BOND_TYPES):
-                bondtype = MOL2_BOND_TYPES[bond[2] - 1]
-            else:
-                bondtype = "un"
+            bondtype = num2bond.get(bond[2], "un")
             print(f'{i+1:6d} {bond[0]+1:4d} {bond[1]+1:4d} {bondtype:2s}',
                   file=f)
 
