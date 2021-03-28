@@ -407,12 +407,12 @@ def load_one(lit: LineIterator) -> dict:
         # Restricted wavefunction.
         mo = MolecularOrbitals(
             'restricted', norb_a + norb_ab, norb_a + norb_ab,
-            mo_occs, mo_coeffs, mo_energies, None)
+            mo_occs, mo_coeffs, mo_energies)
     else:
         # Unrestricted wavefunction.
         mo = MolecularOrbitals(
             'unrestricted', norb_a, norb_b,
-            mo_occs, mo_coeffs, mo_energies, None)
+            mo_occs, mo_coeffs, mo_energies)
     return {
         'title': title,
         'atcoords': atcoords,

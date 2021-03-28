@@ -58,25 +58,23 @@ def load_one(lit: LineIterator) -> dict:
     # restricted case
     if not data['unrestricted']:
         mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir']), axis=0)
-        mo_coeffs = np.full((data['nbasis'], data['norba']), np.nan)
-        mo_occs = np.zeros(mo_coeffs.shape[1])
+        mo_occs = np.zeros(data['norba'])
         mo_occs[:data['alpha_elec']] = 1.0
         mo_occs[:data['beta_elec']] += 1.0
         mo = MolecularOrbitals("restricted", data['norba'], data['norba'],
-                               mo_occs, mo_coeffs, mo_energies, None)
+                               occs=mo_occs, energies=mo_energies)
     # unrestricted case
     else:
         mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir'],
                                       data['mo_b_occ'], data['mo_b_vir']), axis=0)
-        mo_coeffs = np.full((data['nbasis'], data['norba'] + data['norbb']), np.nan)
-        mo_occs = np.zeros(mo_coeffs.shape[1])
+        mo_occs = np.zeros(data['norba'] + data['norbb'])
         # number of alpha & beta electrons and number of alpha molecular orbitals
         na, nb = data['alpha_elec'], data['beta_elec']
         na_mo = len(data['mo_a_occ']) + len(data['mo_a_vir'])
         mo_occs[:na] = 1.0
         mo_occs[na_mo: na_mo + nb] = 1.0
         mo = MolecularOrbitals("unrestricted", data['norba'], data['norbb'],
-                               mo_occs, mo_coeffs, mo_energies, None)
+                               occs=mo_occs, energies=mo_energies)
     result['mo'] = mo
 
     # moments
