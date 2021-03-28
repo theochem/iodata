@@ -147,3 +147,20 @@ num2sym: Dict[int, str] = {
 }
 
 sym2num: Dict[str, int] = dict((value, key) for key, value in num2sym.items())
+
+
+# Labels used for bond types.
+
+num2bond = {
+    1: "1",
+    2: "2",
+    3: "3",
+    # The following symbols are used in the MOL2 format:
+    4: "am",
+    5: "ar",
+    6: "du",
+    7: "un",
+    8: "nc"
+}
+
+bond2num: Dict[str, int] = dict((value, key) for key, value in num2bond.items())
