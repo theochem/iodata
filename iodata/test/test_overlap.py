@@ -87,6 +87,18 @@ def test_overlap_l1():
     atcoords = np.zeros((1, 3))
     with pytest.raises(ValueError):
         _ = compute_overlap(dbasis, atcoords)
+    obasis = MolecularBasis([], {}, 'L2')
+    with pytest.raises(ValueError):
+        _ = compute_overlap(obasis, atcoords, dbasis, atcoords)
+
+
+def test_overlap_two_basis_exceptions():
+    with path('iodata.test.data', 'hf_sto3g.fchk') as fn_fchk:
+        data = load_one(fn_fchk)
+    with pytest.raises(TypeError):
+        compute_overlap(data.obasis, data.atcoords, data.obasis, None)
+    with pytest.raises(TypeError):
+        compute_overlap(data.obasis, data.atcoords, None, data.atcoords)
 
 
 FNS_TWO_BASIS = [
