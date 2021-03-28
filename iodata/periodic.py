@@ -138,12 +138,12 @@ num2sym: Dict[int, str] = {
     110: "Ds",
     111: "Rg",
     112: "Cn",
-    113: "Uut",
+    113: "Nh",
     114: "Fl",
-    115: "Uup",
+    115: "Mc",
     116: "Lv",
-    117: "Uus",
-    118: "Uuo",
+    117: "Ts",
+    118: "Og",
 }
 
 sym2num: Dict[str, int] = dict((value, key) for key, value in num2sym.items())
