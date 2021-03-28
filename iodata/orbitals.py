@@ -127,7 +127,7 @@ class MolecularOrbitals:
         return self.coeffs.shape[0]
 
     @property
-    def norb(self):
+    def norb(self):  # pylint: disable=too-many-return-statements
         """Return the number of spatially distinct orbitals.
 
         Notes
