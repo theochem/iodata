@@ -45,6 +45,7 @@ MOL2_BOND_TYPES = ["1", "2", "3", "am", "ar", "du", "un", "nc"]
 MOL2_BOND_CONVERSION = dict(zip(MOL2_BOND_TYPES, range(1, len(MOL2_BOND_TYPES) + 1)))
 
 
+@document_load_one("MOL2", ['atcoords', 'atnums', 'atcharges', 'atffparams'], ['title'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     molecule_found = False
@@ -130,7 +131,7 @@ def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
             int(words[1]) - 1,
             int(words[2]) - 1,
             # convert mol2 bond type to integer
-            MOL2_BOND_CONVERSION.get(words[3]),
+            MOL2_BOND_CONVERSION.get(words[3], 7),
         ]
         if bond is None:
             bond = [0, 0, 0]
@@ -178,7 +179,10 @@ def dump_one(f: TextIO, data: IOData):
     if data.bonds is not None:
         print("@<TRIPOS>BOND", file=f)
         for i, bond in enumerate(data.bonds):
-            bondtype = 'am' if bond[2] == 4 else str(bond[2])
+            if bond[2] > 0 and bond[2] <= len(MOL2_BOND_TYPES):
+                bondtype = MOL2_BOND_TYPES[bond[2] - 1]
+            else:
+                bondtype = "un"
             print(f'{i+1:6d} {bond[0]+1:4d} {bond[1]+1:4d} {bondtype:2s}',
                   file=f)
 

@@ -71,8 +71,10 @@ def check_example(mol):
     assert_allclose(mol.atcharges['mol2charges'][23], 0.0949)
     bonds = mol.bonds
     assert_equal(len(bonds), 25)
-    assert_allclose(bonds[0], [0, 1, 1])
-    assert_allclose(bonds[24], [13, 23, 1])
+    assert_equal(bonds[0], [0, 1, 1])
+    assert_equal(bonds[6], [2, 3, 2])
+    assert_equal(bonds[13], [6, 8, 4])
+    assert_equal(bonds[24], [13, 23, 1])
 
 
 def check_load_dump_consistency(tmpdir, fn):

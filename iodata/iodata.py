@@ -80,8 +80,9 @@ class IOData:
     bonds
         An (nbond, 3) array with the list of covalent bonds. Each row represents
         one bond and consists of three integers: first atom index (starting
-        from zero), second atom index & an optional bond type (0: not known, 1:
-        single, 2: double, 3: triple, 4: conjugated).
+        from zero), second atom index & an optional bond type.
+        1=single, 2=double, 3=triple, 4=amide (am), 5=aromatic (ar),
+        6=dummy (du), 7=unknown (un), 8=not connected (nc).
     cellvecs
         A (NP, 3) array containing the (real-space) cell vectors describing
         periodic boundary conditions. A single vector corresponds to a 1D cell,
