@@ -79,10 +79,10 @@ def check_example(mol):
     assert_allclose(mol.atcharges['mol2charges'][23], 0.0949)
     bonds = mol.bonds
     assert len(bonds) == 25
-    assert_equal(bonds[0], [0, 1, 1])
-    assert_equal(bonds[6], [2, 3, 2])
-    assert_equal(bonds[13], [6, 8, 4])
-    assert_equal(bonds[24], [13, 23, 1])
+    assert_equal(bonds[0], [0, 1, bond2num["1"]])
+    assert_equal(bonds[6], [2, 3, bond2num["2"]])
+    assert_equal(bonds[13], [6, 8, bond2num["am"]])
+    assert_equal(bonds[24], [13, 23, bond2num["1"]])
 
 
 def check_load_dump_consistency(tmpdir, fn):
@@ -130,3 +130,13 @@ def test_load_dump_many_consistency(tmpdir):
         assert_equal(mol0.atnums, mol1.atnums)
         assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
         assert_equal(mol0.bonds, mol1.bonds)
+
+
+def test_load_dump_wrong_bond_num(tmpdir):
+    with path('iodata.test.data', 'silioh3.mol2') as fn_mol:
+        mol = load_one(str(fn_mol))
+    mol.bonds[0][2] = -1
+    fn_tmp = os.path.join(tmpdir, 'test.mol2')
+    dump_one(mol, fn_tmp)
+    mol2 = load_one(fn_tmp)
+    assert mol2.bonds[0][2] == bond2num["un"]
