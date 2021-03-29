@@ -22,7 +22,6 @@ This module will load Q-Chem log file into IODATA.
 """
 
 from typing import Tuple
-from collections import namedtuple
 from distutils.util import strtobool
 
 import numpy as np
@@ -133,9 +132,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
             data.update(_helper_job(lit))
         # standard nuclear orientation
         elif line.startswith('Standard Nuclear Orientation (Angstroms)') and 'atcoords' not in data:
-            # atnums, alpha_elec, beta_elec, nbasis, nuclear_replusion_energy, energy, atcoords
-            data['atnums'], data['alpha_elec'], data['beta_elec'], data['nbasis'], \
-                data['nuclear_repulsion_energy'], data['atcoords'] = _helper_electron(lit)
+            data.update(_helper_electron(lit))
         # standard nuclear orientation for fragments in EDA jobs
         elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
             if 'frags' not in data:
@@ -144,7 +141,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
             frag += 1
             frags[f'frag_{frag}'] = _helper_electron(lit)
             data['frags'] = frags
-            # energy
+        # energy
         elif line.startswith('Total energy in the final basis set'):
             data['energy'] = float(line.strip().split()[-1])
         elif line.startswith('the SCF tolerance is set'):
@@ -157,15 +154,14 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
             data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
         # orbital energies
         elif line.startswith('Orbital Energies (a.u.)') and data['unrestricted'] is True:
-            result = _helper_orbital_energies_unrestricted(lit)
-            data['mo_a_occ'], data['mo_b_occ'], data['mo_a_vir'], data['mo_b_vir'] = result
+            data.update(_helper_orbital_energies_unrestricted(lit))
             # compute number of alpha and beta molecular orbitals
             data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
             data['norbb'] = len(data['mo_b_occ']) + len(data['mo_b_vir'])
         # mulliken charges
         elif line.startswith('Ground-State Mulliken Net Atomic Charges'):
             data['mulliken_charges'] = _helper_mulliken(lit)
-        #  cartesian multipole moments
+        # cartesian multipole moments
         elif line.startswith('Cartesian Multipole Moments'):
             data['dipole'], data['quadrupole'], data['dipole_tol'] = _helper_dipole_moments(lit)
         # polarizability matrix
@@ -222,22 +218,18 @@ def _helper_electron(lit: LineIterator):
             break
         atom_symbols.append(line.strip().split()[1])
         atcoords.append([float(i) for i in line.strip().split()[2:]])
-    atnums = np.array([sym2num[i] for i in atom_symbols])
-    atcoords = np.array(atcoords) * angstrom
-    nuclear_repulsion_energy = float(next(lit).strip().split()[-2])
-    # number of num alpha electron and beta elections
+    subdata = {"atnums": np.array([sym2num[i] for i in atom_symbols]),
+               "atcoords": np.array(atcoords) * angstrom,
+               "nuclear_repulsion_energy": float(next(lit).strip().split()[-2])}
+    # number of alpha and beta elections
     line = next(lit).strip().split()
-    alpha_elec = int(line[2])
-    beta_elec = int(line[5])
-    # number of basis
+    subdata["alpha_elec"] = int(line[2])
+    subdata["beta_elec"] = int(line[5])
+    # number of basis functions
     next(lit)
-    nbasis = int(next(lit).strip().split()[-3])
+    subdata["nbasis"] = int(next(lit).strip().split()[-3])
 
-    elec_info = namedtuple('elec_info',
-                           ['atnums', 'alpha_elec', 'beta_elec', 'nbasis',
-                            'nuclear_repulsion_energy', 'atcoords'])
-
-    return elec_info(atnums, alpha_elec, beta_elec, nbasis, nuclear_repulsion_energy, atcoords)
+    return subdata
 
 
 def _helper_energy(lit: LineIterator):
@@ -259,15 +251,16 @@ def _helper_orbital_energies_restricted(lit: LineIterator) -> Tuple:
 
 def _helper_orbital_energies_unrestricted(lit: LineIterator) -> Tuple:
     """Load occupied and virtual orbital energies for unrestricted calculation."""
+    subdata = dict()
     # alpha occupied MOs
-    mo_a_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
+    subdata['mo_a_occ'] = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # alpha unoccupied MOs
-    mo_a_unoccupied = _helper_section('-- Virtual --', '', lit, backward=False)
+    subdata['mo_a_vir'] = _helper_section('-- Virtual --', '', lit, backward=False)
     # beta occupied MOs
-    mo_b_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
+    subdata['mo_b_occ'] = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # beta unoccupied MOs
-    mo_b_unoccupied = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
-    return mo_a_occupied, mo_b_occupied, mo_a_unoccupied, mo_b_unoccupied
+    subdata['mo_b_vir'] = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
+    return subdata
 
 
 def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = False) -> np.ndarray:
