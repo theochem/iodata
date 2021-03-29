@@ -31,16 +31,12 @@ except ImportError:
     from importlib.resources import path
 
 
-def helper_load_data_qchemlog_helper(fn_qchemlog):
-    """Load a testing Q-Chem log file with iodata.formats.wfx.load_qchemlog_low."""
-    with path('iodata.test.data', fn_qchemlog) as fq:
-        lit = LineIterator(str(fq))
-        return load_qchemlog_low(lit)
-
-
-def test_load_data_qchemlog_h2o():
+def test_load_qchemlog_low_h2o():
     """Test load_qchemlog_low with water_hf_ccpvtz_freq_qchem.out."""
-    data = helper_load_data_qchemlog_helper('water_hf_ccpvtz_freq_qchem.out')
+
+    with path('iodata.test.data', 'water_hf_ccpvtz_freq_qchem.out') as fq:
+        data = load_qchemlog_low(LineIterator(str(fq)))
+
     # check loaded data
     assert data['run_type'] == 'freq'
     assert data['lot'] == 'hf'
@@ -99,36 +95,27 @@ def test_load_data_qchemlog_h2o():
                                                           [-0.1911917, -7.180854, -1.0224452],
                                                           [0.8593603, -1.0224452, -6.52088]]))
     hessian = np.array([[3.162861e-01, 8.366060e-02, -2.326701e-01, -8.253820e-02,
-                         -1.226155e-01, -2.676000e-03, -2.337479e-01, 3.895480e-02,
-                         2.353461e-01],
+                         -1.226155e-01, -2.676000e-03, -2.337479e-01, 3.895480e-02, 2.353461e-01],
                         [8.366060e-02, 5.460341e-01, 2.252114e-01, -1.647100e-01,
-                         -4.652302e-01, -1.071603e-01, 8.104940e-02, -8.080390e-02,
-                         -1.180510e-01],
+                         -4.652302e-01, -1.071603e-01, 8.104940e-02, -8.080390e-02, -1.180510e-01],
                         [-2.326701e-01, 2.252114e-01, 3.738573e-01, -2.713570e-02,
-                         -1.472865e-01, -7.031900e-02, 2.598057e-01, -7.792490e-02,
-                         -3.035382e-01],
+                         -1.472865e-01, -7.031900e-02, 2.598057e-01, -7.792490e-02, -3.035382e-01],
                         [-8.253820e-02, -1.647100e-01, -2.713570e-02, 7.455040e-02,
-                         1.315365e-01, 1.474740e-02, 7.987800e-03, 3.317350e-02,
-                         1.238830e-02],
+                         1.315365e-01, 1.474740e-02, 7.987800e-03, 3.317350e-02, 1.238830e-02],
                         [-1.226155e-01, -4.652302e-01, -1.472865e-01, 1.315365e-01,
-                         4.787640e-01, 1.470895e-01, -8.921000e-03, -1.353380e-02,
-                         1.970000e-04],
+                         4.787640e-01, 1.470895e-01, -8.921000e-03, -1.353380e-02, 1.970000e-04],
                         [-2.676000e-03, -1.071603e-01, -7.031900e-02, 1.474740e-02,
-                         1.470895e-01, 8.125140e-02, -1.207140e-02, -3.992910e-02,
-                         -1.093230e-02],
+                         1.470895e-01, 8.125140e-02, -1.207140e-02, -3.992910e-02, -1.093230e-02],
                         [-2.337479e-01, 8.104940e-02, 2.598057e-01, 7.987800e-03,
-                         -8.921000e-03, -1.207140e-02, 2.257601e-01, -7.212840e-02,
-                         -2.477343e-01],
+                         -8.921000e-03, -1.207140e-02, 2.257601e-01, -7.212840e-02, -2.477343e-01],
                         [3.895480e-02, -8.080390e-02, -7.792490e-02, 3.317350e-02,
-                         -1.353380e-02, -3.992910e-02, -7.212840e-02, 9.433770e-02,
-                         1.178541e-01],
+                         -1.353380e-02, -3.992910e-02, -7.212840e-02, 9.433770e-02, 1.178541e-01],
                         [2.353461e-01, -1.180510e-01, -3.035382e-01, 1.238830e-02,
-                         1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01,
-                         3.144706e-01]])
+                         1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01, 3.144706e-01]])
     assert_equal(data['athessian'], hessian)
 
 
-def test_load_one_qchemlog():
+def test_load_one_qchemlog_freq():
     with path('iodata.test.data', 'water_hf_ccpvtz_freq_qchem.out') as fn_qchemlog:
         mol = load_one(str(fn_qchemlog), fmt='qchemlog')
     assert mol.energy == -76.0571936393
@@ -142,32 +129,23 @@ def test_load_one_qchemlog():
     assert_equal(mol.moments[(2, 'c')],
                  np.array([-6.1922, 0.2058, -0.9308, -5.0469, 1.1096, -5.762]))
     hessian = np.array([[3.162861e-01, 8.366060e-02, -2.326701e-01, -8.253820e-02,
-                         -1.226155e-01, -2.676000e-03, -2.337479e-01, 3.895480e-02,
-                         2.353461e-01],
+                         -1.226155e-01, -2.676000e-03, -2.337479e-01, 3.895480e-02, 2.353461e-01],
                         [8.366060e-02, 5.460341e-01, 2.252114e-01, -1.647100e-01,
-                         -4.652302e-01, -1.071603e-01, 8.104940e-02, -8.080390e-02,
-                         -1.180510e-01],
+                         -4.652302e-01, -1.071603e-01, 8.104940e-02, -8.080390e-02, -1.180510e-01],
                         [-2.326701e-01, 2.252114e-01, 3.738573e-01, -2.713570e-02,
-                         -1.472865e-01, -7.031900e-02, 2.598057e-01, -7.792490e-02,
-                         -3.035382e-01],
+                         -1.472865e-01, -7.031900e-02, 2.598057e-01, -7.792490e-02, -3.035382e-01],
                         [-8.253820e-02, -1.647100e-01, -2.713570e-02, 7.455040e-02,
-                         1.315365e-01, 1.474740e-02, 7.987800e-03, 3.317350e-02,
-                         1.238830e-02],
+                         1.315365e-01, 1.474740e-02, 7.987800e-03, 3.317350e-02, 1.238830e-02],
                         [-1.226155e-01, -4.652302e-01, -1.472865e-01, 1.315365e-01,
-                         4.787640e-01, 1.470895e-01, -8.921000e-03, -1.353380e-02,
-                         1.970000e-04],
+                         4.787640e-01, 1.470895e-01, -8.921000e-03, -1.353380e-02, 1.970000e-04],
                         [-2.676000e-03, -1.071603e-01, -7.031900e-02, 1.474740e-02,
-                         1.470895e-01, 8.125140e-02, -1.207140e-02, -3.992910e-02,
-                         -1.093230e-02],
+                         1.470895e-01, 8.125140e-02, -1.207140e-02, -3.992910e-02, -1.093230e-02],
                         [-2.337479e-01, 8.104940e-02, 2.598057e-01, 7.987800e-03,
-                         -8.921000e-03, -1.207140e-02, 2.257601e-01, -7.212840e-02,
-                         -2.477343e-01],
+                         -8.921000e-03, -1.207140e-02, 2.257601e-01, -7.212840e-02, -2.477343e-01],
                         [3.895480e-02, -8.080390e-02, -7.792490e-02, 3.317350e-02,
-                         -1.353380e-02, -3.992910e-02, -7.212840e-02, 9.433770e-02,
-                         1.178541e-01],
+                         -1.353380e-02, -3.992910e-02, -7.212840e-02, 9.433770e-02, 1.178541e-01],
                         [2.353461e-01, -1.180510e-01, -3.035382e-01, 1.238830e-02,
-                         1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01,
-                         3.144706e-01]])
+                         1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01, 3.144706e-01]])
     assert_equal(mol.athessian, hessian)
     assert mol.extra['nuclear_repulsion_energy'] == 9.19775748
     assert mol.extra['imaginary_freq'] == 0
@@ -217,9 +195,12 @@ def test_load_one_qchemlog():
     assert_allclose(mol.mo.energies[63:], virtual)
 
 
-def test_load_data_qchemlog_h2o_dimer():
+def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
     """Test load_qchemlog_low with h2o_dimer_eda_qchem5.3.out."""
-    data = helper_load_data_qchemlog_helper('h2o_dimer_eda_qchem5.3.out')
+
+    with path('iodata.test.data', 'h2o_dimer_eda_qchem5.3.out') as fq:
+        data = load_qchemlog_low(LineIterator(str(fq)))
+
     # check loaded data
     assert data['run_type'] == 'eda'
     assert data['lot'] == 'wb97x-v'
@@ -281,3 +262,25 @@ def test_load_data_qchemlog_h2o_dimer():
     assert_equal(eda['polarization'], -4.6371)
     assert_equal(eda['charge transfer'], -7.0689)
     assert_equal(eda['total'], -21.1126)
+
+    # check fragments
+    coords1 = [[-1.551007, -0.11452, 0.0], [-1.934259, 0.762503, 0.0], [-0.599677, 0.040712, 0.0]]
+    coords2 = [[1.350625, 0.111469, 0.0], [1.680398, -0.373741, -0.758561],
+               [1.680398, -0.373741, 0.758561]]
+    assert_equal(len(data['frags']), 2)
+
+    assert_equal(data['frags'][0]['atnums'], [8, 1, 1])
+    assert_equal(data['frags'][0]['alpha_elec'], 5)
+    assert_equal(data['frags'][0]['beta_elec'], 5)
+    assert_equal(data['frags'][0]['nbasis'], 58)
+    assert_allclose(data['frags'][0]['atcoords'], np.array(coords1) * angstrom)
+    assert_allclose(data['frags'][0]['nuclear_repulsion_energy'], 9.16383018)
+    assert_allclose(data['frags'][0]['energy'], -76.4345994141)
+
+    assert_equal(data['frags'][1]['atnums'], [8, 1, 1])
+    assert_equal(data['frags'][1]['alpha_elec'], 5)
+    assert_equal(data['frags'][1]['beta_elec'], 5)
+    assert_equal(data['frags'][1]['nbasis'], 58)
+    assert_allclose(data['frags'][1]['atcoords'], np.array(coords2) * angstrom)
+    assert_allclose(data['frags'][1]['nuclear_repulsion_energy'], 9.17803894)
+    assert_allclose(data['frags'][1]['energy'], -76.4346136883)

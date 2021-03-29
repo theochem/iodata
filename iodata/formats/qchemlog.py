@@ -130,56 +130,70 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
         # job specifications
         if line.startswith('$rem') and 'run_type' not in data:
             data.update(_helper_rem_job(lit))
-        # standard nuclear orientation
+
+        # standard nuclear orientation (make sure multi-step jobs does not over-write this)
         elif line.startswith('Standard Nuclear Orientation (Angstroms)') and 'atcoords' not in data:
-            data.update(_helper_electron(lit))
+            data.update(_helper_structure(lit))
+
         # standard nuclear orientation for fragments in EDA jobs
         elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
             if 'frags' not in data:
-                frags = {}
-                frag = 0
-            frag += 1
-            frags[f'frag_{frag}'] = _helper_electron(lit)
-            data['frags'] = frags
-        # energy
+                data['frags'] = []
+            data['frags'].append(_helper_structure(lit))
+
+        # energy (the last energy in a multi-step job)
         elif line.startswith('Total energy in the final basis set'):
             data['energy'] = float(line.strip().split()[-1])
         elif line.startswith('the SCF tolerance is set'):
             data['energy'] = _helper_energy(lit)
-        # orbital energies
+
+        # orbital energies (the last orbital energies in a multi-step job)
         elif line.startswith('Orbital Energies (a.u.)') and data['unrestricted'] is False:
             result = _helper_orbital_energies_restricted(lit)
             data['mo_a_occ'], data['mo_a_vir'] = result
             # compute number of alpha
             data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
-        # orbital energies
+
+        # orbital energies (the last orbital energies in a multi-step job)
         elif line.startswith('Orbital Energies (a.u.)') and data['unrestricted'] is True:
             data.update(_helper_orbital_energies_unrestricted(lit))
             # compute number of alpha and beta molecular orbitals
             data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
             data['norbb'] = len(data['mo_b_occ']) + len(data['mo_b_vir'])
-        # mulliken charges
+
+        # mulliken charges (the last charges in a multi-step job)
         elif line.startswith('Ground-State Mulliken Net Atomic Charges'):
             data['mulliken_charges'] = _helper_mulliken(lit)
-        # cartesian multipole moments
+
+        # cartesian multipole moments (the last mutipole moments in a multi-step job)
         elif line.startswith('Cartesian Multipole Moments'):
             data['dipole'], data['quadrupole'], data['dipole_tol'] = _helper_dipole_moments(lit)
+
         # polarizability matrix
         elif line.startswith('Polarizability Matrix (a.u.)'):
             data['polarizability_tensor'] = _helper_polar(lit)
+
         # hessian matrix
         elif line.startswith('Hessian of the SCF Energy'):
             data['athessian'] = _helper_hessian(lit, len(data['atnums']))
+
         # vibrational analysis
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
             data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)
+
         # rotational symmetry number
         elif line.startswith('Rotational Symmetry Number'):
             data['g_rot'] = int(line.split()[-1])
             data['enthalpy_dict'], data['entropy_dict'] = _helper_thermo(lit)
+
         # energy decomposition analysis 2 (EDA2)
         elif line.startswith('Results of EDA2'):
-            data['eda2'] = _helper_eda2(lit)
+            eda2 = _helper_eda2(lit)
+            # add fragment energies to frags
+            energies = eda2.pop('energies')
+            for index, energy in enumerate(energies):
+                data['frags'][index]['energy'] = energy
+            data['eda2'] = eda2
 
     return data
 
@@ -205,7 +219,7 @@ def _helper_rem_job(lit: LineIterator) -> Tuple:
     return data_rem
 
 
-def _helper_electron(lit: LineIterator):
+def _helper_structure(lit: LineIterator):
     """Load electron information from Q-Chem output file format."""
     next(lit)
     next(lit)
@@ -391,6 +405,12 @@ def _helper_eda2(lit: LineIterator) -> dict:  # pylint: disable=too-many-branche
     next(lit)
     eda2 = {}
     for line in lit:
+
+        if line.strip().startswith('Fragment Energies'):
+            for line_2 in lit:
+                if line_2.strip().startswith('-----'):
+                    break
+                eda2.setdefault('energies', []).append(float(line_2.strip().split()[-1]))
 
         if line.strip().startswith('Orthogonal Fragment Subspace Decomposition'):
             next(lit)
