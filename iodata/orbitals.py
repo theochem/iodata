@@ -93,10 +93,8 @@ class MolecularOrbitals:
 
     kind: str = attr.ib(
         validator=attr.validators.in_(["restricted", "unrestricted", "generalized"]))
-    norba: int = attr.ib(
-        default=None, validator=validate_norbab)
-    norbb: int = attr.ib(
-        default=None, validator=validate_norbab)
+    norba: int = attr.ib(validator=validate_norbab)
+    norbb: int = attr.ib(validator=validate_norbab)
     occs: np.ndarray = attr.ib(
         default=None, converter=convert_array_to(float),
         validator=attr.validators.optional(validate_shape("norb")))
