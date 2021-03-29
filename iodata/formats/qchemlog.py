@@ -129,7 +129,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
 
         # job specifications
         if line.startswith('$rem') and 'run_type' not in data:
-            data.update(_helper_job(lit))
+            data.update(_helper_rem_job(lit))
         # standard nuclear orientation
         elif line.startswith('Standard Nuclear Orientation (Angstroms)') and 'atcoords' not in data:
             data.update(_helper_electron(lit))
@@ -177,15 +177,15 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
         elif line.startswith('Rotational Symmetry Number'):
             data['g_rot'] = int(line.split()[-1])
             data['enthalpy_dict'], data['entropy_dict'] = _helper_thermo(lit)
-        # Energy Decomposition analysis (EDA)
-        elif line.startswith('Basic EDA Quantities'):
-            data['eda2'] = _helper_eda(lit)
+        # energy decomposition analysis 2 (EDA2)
+        elif line.startswith('Results of EDA2'):
+            data['eda2'] = _helper_eda2(lit)
 
     return data
 
 
-def _helper_job(lit: LineIterator) -> Tuple:
-    """Load job specifications from Q-Chem log out file format."""
+def _helper_rem_job(lit: LineIterator) -> Tuple:
+    """Load job specifications from Q-Chem output file format."""
     data_rem = {}
     for line in lit:
         if line.strip() == '$end':
@@ -197,7 +197,6 @@ def _helper_job(lit: LineIterator) -> Tuple:
         elif line.lower().startswith('method'):
             data_rem['lot'] = line.split()[1].lower()
         elif line.lower().startswith('unrestricted'):
-            data_rem['unrestricted'] = bool(line.split()[1])
             data_rem['unrestricted'] = bool(strtobool(line.split()[1]))
         elif line.split()[0].lower() == 'basis':
             data_rem['obasis_name'] = line.split()[1].lower()
@@ -207,18 +206,18 @@ def _helper_job(lit: LineIterator) -> Tuple:
 
 
 def _helper_electron(lit: LineIterator):
-    """Load electron information from Q-Chem log out file format."""
+    """Load electron information from Q-Chem output file format."""
     next(lit)
     next(lit)
     # atomic numbers and atomic coordinates (converted to A.U)
-    atom_symbols = []
+    atsymbols = []
     atcoords = []
     for line in lit:
         if line.strip().startswith('-------------'):
             break
-        atom_symbols.append(line.strip().split()[1])
+        atsymbols.append(line.strip().split()[1])
         atcoords.append([float(i) for i in line.strip().split()[2:]])
-    subdata = {"atnums": np.array([sym2num[i] for i in atom_symbols]),
+    subdata = {"atnums": np.array([sym2num[i] for i in atsymbols]),
                "atcoords": np.array(atcoords) * angstrom,
                "nuclear_repulsion_energy": float(next(lit).strip().split()[-2])}
     # number of alpha and beta elections
@@ -282,10 +281,12 @@ def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = Fa
 
 def _helper_mulliken(lit: LineIterator) -> np.ndarray:
     """Load mulliken net atomic charges."""
+    # skip line between 'Ground-State Mulliken Net Atomic Charges' line & atomic charge entries
     while True:
         line = next(lit).strip()
         if line.startswith('------'):
             break
+    # store atomic charges until enf of table is reached
     mulliken_charges = []
     for line in lit:
         if line.strip().startswith('--------'):
@@ -385,52 +386,55 @@ def _helper_thermo(lit: LineIterator) -> Tuple:
     return enthalpy_dict, entropy_dict
 
 
-def _helper_eda(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
+def _helper_eda2(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
     """Load Energy decomposition information."""
     next(lit)
-    eda2_dic = {}
+    eda2 = {}
     for line in lit:
-        if line.startswith('  Orthogonal Fragment Subspace Decomposition'):
+
+        if line.strip().startswith('Orthogonal Fragment Subspace Decomposition'):
             next(lit)
             for line_2 in lit:
-                if line_2.startswith('     --------------------'):
+                if line_2.strip().startswith('-----'):
                     break
                 info = line_2.strip().split()
                 if info[0] in ['E_elec', 'E_pauli', 'E_disp']:
-                    eda2_dic[info[0].lower()] = float(info[4])
-        elif line.startswith('     Terms summing to E_pauli'):
+                    eda2[info[0].lower()] = float(info[-1])
+
+        elif line.strip().startswith('Terms summing to E_pauli'):
             next(lit)
-            pauli = []
             for line_2 in lit:
-                if line_2.startswith('  --------------------'):
+                if line_2.strip().startswith('-----'):
                     break
                 info = line_2.strip().split()
-                pauli.append(float(info[3]))
-            eda2_dic['e_pauli'] = np.array(pauli)
-        elif line.startswith('  Classical Frozen Decomposition'):
+                if info[0] in ['E_kep_pauli', 'E_disp_free_pauli']:
+                    eda2[info[0].lower()] = float(info[-1])
+
+        elif line.strip().startswith('Classical Frozen Decomposition'):
             next(lit)
             for line_2 in lit:
-                if line_2.startswith('  --------------------'):
+                if line_2.strip().startswith('-----'):
                     break
                 info = line_2.strip().split()
                 if info[0] in ['E_cls_elec', 'E_cls_pauli']:
-                    eda2_dic[info[0].lower()] = float(info[5])
+                    eda2[info[0].lower()] = float(info[5])
                 elif info[0].split("[")[1] == 'E_mod_pauli':
-                    eda2_dic[info[0].split("[")[1].lower()] = float(info[5])
+                    eda2[info[0].split("[")[1].lower()] = float(info[5])
 
-        elif line.startswith('Simplified EDA Summary'):
+        elif line.strip().startswith('Simplified EDA Summary'):
             next(lit)
             for line_2 in lit:
-                if line_2.startswith('--------------------'):
+                if line_2.strip().startswith('-----'):
                     break
                 info = line_2.strip().split()
                 if info[0] in ['PREPARATION', 'FROZEN', 'DISPERSION', 'POLARIZATION', 'TOTAL']:
-                    eda2_dic[info[0].lower()] = float(info[1])
+                    eda2[info[0].lower()] = float(info[1])
                 elif info[0].split("[")[-1] == 'PAULI':
-                    eda2_dic[info[0].split("[")[-1].lower()] = float(info[1].split("]")[0])
+                    eda2[info[0].split("[")[-1].lower()] = float(info[1].split("]")[0])
                 elif info[0] == 'CHARGE':
-                    eda2_dic[info[0].lower() + ' ' + info[1].lower()] = float(info[2])
-        elif line.startswith(' --------------------------------------------------------------'):
+                    eda2[info[0].lower() + ' ' + info[1].lower()] = float(info[2])
+
+        elif line.strip().startswith('-------------------------------------------------------'):
             break
 
-    return eda2_dic
+    return eda2

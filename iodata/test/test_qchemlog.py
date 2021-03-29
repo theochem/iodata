@@ -268,7 +268,8 @@ def test_load_data_qchemlog_h2o_dimer():
     # check eda2 info
     eda = data['eda2']
     assert_equal(eda['e_elec'], -65.9887)
-    assert_equal(eda['e_pauli'], np.array([78.5700, -14.2495]))
+    assert_equal(eda['e_kep_pauli'], 78.5700)
+    assert_equal(eda['e_disp_free_pauli'], -14.2495)
     assert_equal(eda['e_disp'], -7.7384)
     assert_equal(eda['e_cls_elec'], -35.1257)
     assert_equal(eda['e_cls_pauli'], 25.7192)
