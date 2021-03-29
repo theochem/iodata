@@ -23,7 +23,7 @@ from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one
 from ..formats.qchemlog import load_qchemlog_low
-from ..utils import LineIterator, angstrom
+from ..utils import LineIterator, angstrom, kjmol
 
 try:
     from importlib_resources import path
@@ -33,7 +33,6 @@ except ImportError:
 
 def test_load_qchemlog_low_h2o():
     """Test load_qchemlog_low with water_hf_ccpvtz_freq_qchem.out."""
-
     with path('iodata.test.data', 'water_hf_ccpvtz_freq_qchem.out') as fq:
         data = load_qchemlog_low(LineIterator(str(fq)))
 
@@ -196,7 +195,6 @@ def test_load_one_qchemlog_freq():
 
 def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
     """Test load_qchemlog_low with h2o_dimer_eda_qchem5.3.out."""
-
     with path('iodata.test.data', 'h2o_dimer_eda_qchem5.3.out') as fq:
         data = load_qchemlog_low(LineIterator(str(fq)))
 
@@ -279,3 +277,93 @@ def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
     assert_allclose(data['frags'][1]['atcoords'], np.array(coords2) * angstrom)
     assert_allclose(data['frags'][1]['nuclear_repulsion_energy'], 9.17803894)
     assert_allclose(data['frags'][1]['energy'], -76.4346136883)
+
+
+def test_load_one_h2o_dimer_eda2():
+    """Test load_one with h2o_dimer_eda_qchem5.3.out."""
+    with path('iodata.test.data', 'h2o_dimer_eda_qchem5.3.out') as fn_qchemlog:
+        mol = load_one(str(fn_qchemlog), fmt='qchemlog')
+
+    # check loaded data
+    assert mol.run_type == 'eda'
+    assert mol.lot == 'wb97x-v'
+    assert mol.obasis_name == 'def2-tzvpd'
+    assert mol.mo.kind == 'restricted'
+    # assert data['symm'] is False
+    # # assert data['g_rot'] == 1
+    # assert data['alpha_elec'] == 10
+    # assert data['beta_elec'] == 10
+    assert_allclose(mol.extra['nuclear_repulsion_energy'], 36.66284801)
+    assert_allclose(mol.energy, -152.8772543727)
+    assert mol.mo.norba == 116
+    assert mol.mo.norbb == 116
+    assert_equal(mol.atnums, np.array([8, 1, 1, 8, 1, 1]))
+    # assert_equal(data['atmasses'], [15.99491, 1.00783, 1.00783])
+    atcoords = np.array([[-1.5510070000, -0.1145200000, 0.0000000000],
+                         [-1.9342590000, 0.7625030000, 0.0000000000],
+                         [-0.5996770000, 0.0407120000, 0.0000000000],
+                         [1.3506250000, 0.1114690000, 0.0000000000],
+                         [1.6803980000, -0.3737410000, -0.7585610000],
+                         [1.6803980000, -0.3737410000, 0.7585610000]]) * angstrom
+    assert_equal(mol.atcoords, atcoords)
+
+    # check MO energies
+    mo_energies_a = [-19.2455, -19.1897, -1.1734, -1.1173, -0.6729, -0.6242, -0.5373, -0.4825,
+                     -0.4530, -0.4045, 0.0485, 0.0863, 0.0927, 0.1035, 0.1344, 0.1474, 0.1539,
+                      0.1880, 0.1982, 0.2280, 0.2507, 0.2532, 0.2732, 0.2865, 0.2992, 0.3216,
+                      0.3260, 0.3454, 0.3542, 0.3850, 0.3991, 0.4016, 0.4155, 0.4831, 0.5016,
+                      0.5133, 0.5502, 0.5505, 0.5745, 0.5992, 0.6275, 0.6454, 0.6664, 0.6869,
+                      0.7423, 0.7874, 0.8039, 0.8204, 0.8457, 0.9021, 0.9149, 0.9749, 1.0168,
+                      1.0490, 1.1274, 1.2009, 1.6233, 1.6642, 1.6723, 1.6877, 1.7314, 1.7347,
+                      1.8246, 1.8635, 1.8877, 1.9254, 2.0091, 2.1339, 2.2139, 2.2489, 2.2799,
+                      2.3420, 2.3777, 2.5255, 2.6135, 2.6373, 2.6727, 2.7228, 2.8765, 2.8841,
+                      2.9076, 2.9624, 3.0377, 3.0978, 3.2509, 3.3613, 3.8767, 3.9603, 4.0824,
+                      4.1424, 5.1826, 5.2283, 5.3319, 5.3817, 5.4919, 5.5386, 5.5584, 5.5648,
+                      5.6049, 5.6226, 6.1591, 6.2079, 6.3862, 6.4446, 6.5805, 6.5926, 6.6092,
+                      6.6315, 6.6557, 6.6703, 7.0400, 7.1334, 7.1456, 7.2547, 43.7457, 43.9166]
+    assert_allclose(mol.mo.energiesa, mo_energies_a)
+    assert_allclose(mol.mo.energiesb, mo_energies_a)
+
+    assert_equal(mol.atcharges['mulliken'], np.array([-0.610250, 0.304021, 0.337060,
+                                                      -0.663525, 0.316347, 0.316347]))
+    assert_allclose(mol.moments[(1, 'c')], np.array([2.5689, 0.0770, 0.0000]))
+    assert_allclose(mol.moments[(2, 'c')],
+                    [-12.0581, -6.2544, -0.0000, -12.8954, -0.0000, -12.2310])
+
+    # check eda2 info
+    assert_equal(mol.extra['eda2']['e_elec'], -65.9887 * kjmol)
+    assert_equal(mol.extra['eda2']['e_kep_pauli'], 78.5700 * kjmol)
+    assert_equal(mol.extra['eda2']['e_disp_free_pauli'], -14.2495 * kjmol)
+    assert_equal(mol.extra['eda2']['e_disp'], -7.7384 * kjmol)
+    assert_equal(mol.extra['eda2']['e_cls_elec'], -35.1257 * kjmol)
+    assert_equal(mol.extra['eda2']['e_cls_pauli'], 25.7192 * kjmol)
+    assert_equal(mol.extra['eda2']['e_mod_pauli'], 33.4576 * kjmol)
+    assert_equal(mol.extra['eda2']['preparation'], 0.0000)
+    assert_equal(mol.extra['eda2']['frozen'], -1.6681 * kjmol)
+    assert_equal(mol.extra['eda2']['pauli'], 64.3205 * kjmol)
+    assert_equal(mol.extra['eda2']['dispersion'], -7.7384 * kjmol)
+    assert_equal(mol.extra['eda2']['polarization'], -4.6371 * kjmol)
+    assert_equal(mol.extra['eda2']['charge transfer'], -7.0689 * kjmol)
+    assert_equal(mol.extra['eda2']['total'], -21.1126 * kjmol)
+
+    # check fragments
+    coords1 = [[-1.551007, -0.11452, 0.0], [-1.934259, 0.762503, 0.0], [-0.599677, 0.040712, 0.0]]
+    coords2 = [[1.350625, 0.111469, 0.0], [1.680398, -0.373741, -0.758561],
+               [1.680398, -0.373741, 0.758561]]
+    assert_equal(len(mol.extra['frags']), 2)
+
+    assert_equal(mol.extra['frags'][0]['atnums'], [8, 1, 1])
+    assert_equal(mol.extra['frags'][0]['alpha_elec'], 5)
+    assert_equal(mol.extra['frags'][0]['beta_elec'], 5)
+    assert_equal(mol.extra['frags'][0]['nbasis'], 58)
+    assert_allclose(mol.extra['frags'][0]['atcoords'], np.array(coords1) * angstrom)
+    assert_allclose(mol.extra['frags'][0]['nuclear_repulsion_energy'], 9.16383018)
+    assert_allclose(mol.extra['frags'][0]['energy'], -76.4345994141)
+
+    assert_equal(mol.extra['frags'][1]['atnums'], [8, 1, 1])
+    assert_equal(mol.extra['frags'][1]['alpha_elec'], 5)
+    assert_equal(mol.extra['frags'][1]['beta_elec'], 5)
+    assert_equal(mol.extra['frags'][1]['nbasis'], 58)
+    assert_allclose(mol.extra['frags'][1]['atcoords'], np.array(coords2) * angstrom)
+    assert_allclose(mol.extra['frags'][1]['nuclear_repulsion_energy'], 9.17803894)
+    assert_allclose(mol.extra['frags'][1]['energy'], -76.4346136883)
