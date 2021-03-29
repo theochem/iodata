@@ -38,9 +38,11 @@ class MolecularOrbitals:
     kind
         Type of molecular orbitals, which can be 'restricted', 'unrestricted', or 'generalized'.
     norba
-        Number of alpha molecular orbitals, set to `None` in case of type=='generalized'.
+        Number of (occupied and virtual) alpha molecular orbitals.
+        Set to `None` in case oftype=='generalized'.
     norbb
-        Number of beta molecular orbitals, set to `None` in case of type=='generalized'.
+        Number of (occupied and virtual) beta molecular orbitals.
+        Set to `None` in case of type=='generalized'.
         This is expected to be equal to `norba` for the `restricted` kind.
     occs
         Molecular orbital occupation numbers. The length equals the number of columns of coeffs.
