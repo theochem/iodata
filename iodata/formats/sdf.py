@@ -21,6 +21,12 @@
 Usually, the different frames in a trajectory describe different geometries of the same
 molecule, with atoms in the same order. The ``load_many`` and ``dump_many`` functions
 below can also handle an SDF file with different molecules, e.g. a molecular database.
+
+The SDF format is somewhat documented on the following page:
+http://www.nonlinear.com/progenesis/sdf-studio/v0.9/faq/sdf-file-format-guidance.aspx
+
+This format is one of the chemical table file formats:
+https://en.wikipedia.org/wiki/Chemical_table_file
 """
 
 
@@ -31,7 +37,7 @@ import numpy as np
 from ..docstrings import (document_load_one, document_load_many, document_dump_one,
                           document_dump_many)
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym
+from ..periodic import sym2num, num2sym, bond2num, num2bond
 from ..utils import angstrom, LineIterator
 
 
@@ -39,6 +45,10 @@ __all__ = []
 
 
 PATTERNS = ['*.sdf']
+
+
+SDF2BOND = {1: "1", 2: "2", 3: "3", 4: "ar", 5: "sd", 6: "sar", 7: "dar", 8: "un"}
+BOND2SDF = dict((val, key) for key, val in SDF2BOND.items())
 
 
 @document_load_one("SDF", ['atcoords', 'atnums', 'bonds', 'title'])
@@ -51,6 +61,8 @@ def load_one(lit: LineIterator) -> dict:
     words = next(lit).split()
     natom = int(words[0])
     nbond = int(words[1])
+    if words[-1] != "V2000":
+        lit.error("Only V2000 SDF files are supported.")
     atcoords = np.empty((natom, 3), float)
     atnums = np.empty(natom, int)
     for iatom in range(natom):
@@ -64,7 +76,7 @@ def load_one(lit: LineIterator) -> dict:
         words = next(lit).split()
         bonds[ibond, 0] = int(words[0]) - 1
         bonds[ibond, 1] = int(words[1]) - 1
-        bonds[ibond, 2] = int(words[2])
+        bonds[ibond, 2] = bond2num[SDF2BOND.get(int(words[2]), "un")]
     while True:
         try:
             words = next(lit)
@@ -106,7 +118,10 @@ def dump_one(f: TextIO, data: IOData):
         print(f'{x:10.4f}{y:10.4f}{z:10.4f} {n:<3s} 0  0  0  0  0  0  0  0  0  0  0  0', file=f)
     if data.bonds is not None:
         for iatom, jatom, bondtype in data.bonds:
-            print(f'{iatom + 1:3d}{jatom + 1:3d}{bondtype:3d}  0  0  0  0', file=f)
+            print('{:3d}{:3d}{:3d}  0  0  0  0'.format(
+                iatom + 1, jatom + 1,
+                BOND2SDF.get(num2bond[bondtype], 8),
+            ), file=f)
     print('$$$$', file=f)
 
 

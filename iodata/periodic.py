@@ -156,13 +156,15 @@ num2bond = {
     2: "2",
     3: "3",
     # The following symbols are used in the MOL2 format.
-    # The order deviates slightly from the MOL2 format for consistency with
-    # the indexes used in the SDF format.
-    5: "ar",
-    4: "am",
-    6: "du",
-    7: "un",
-    8: "nc"
+    4: "am",  # amide
+    5: "ar",  # aromatic
+    6: "du",  # dummy
+    7: "un",  # unknown or any
+    8: "nc",  # not connected
+    # The following are defined in the SDF or chemical table format
+    9: "sd",  # single or double
+    10: "sar",  # single or aromatic
+    11: "dar",  # double or aromatic
 }
 
 bond2num: Dict[str, int] = dict((value, key) for key, value in num2bond.items())

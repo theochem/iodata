@@ -94,6 +94,9 @@ def test_load_dump_consistency(tmpdir):
         check_load_dump_consistency(tmpdir, fn_sdf)
     with path('iodata.test.data', 'formamide.sdf') as fn_sdf:
         check_load_dump_consistency(tmpdir, fn_sdf)
+    # The benzene mol2 file has aromatic bonds, which are less common in SDF files.
+    with path('iodata.test.data', 'benzene.mol2') as fn_sdf:
+        check_load_dump_consistency(tmpdir, fn_sdf)
 
 
 def test_load_many():
