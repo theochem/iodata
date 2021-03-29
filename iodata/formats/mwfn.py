@@ -265,10 +265,10 @@ def load_one(lit: LineIterator) -> dict:
     inp = _load_mwfn_low(lit)
 
     # store certain information loaded from MWFN in extra dictionary
-    extra = {'wfntype': inp['Wfntype'], 'nbasis': inp['Nbasis'], 'nindbasis': inp['Nindbasis'],
-             'mo_sym': inp['mo_sym'], 'mo_type': inp['mo_type'],
-             'full_virial_ratio': inp['VT_ratio'],
-             "neleca": inp['Naelec'], "nelecb": inp['Nbelec']}
+    extra = {'wfntype': inp['Wfntype'],
+             'nindbasis': inp['Nindbasis'],
+             'mo_sym': inp['mo_sym'],
+             'full_virial_ratio': inp['VT_ratio']}
 
     # Build MolecularBasis instance
     # Unlike WFN, MWFN does include orbital expansion coefficients.
@@ -284,6 +284,10 @@ def load_one(lit: LineIterator) -> dict:
         ))
         counter += ncon
     obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
+    # check number of basis functions
+    if obasis.nbasis != inp["Nbasis"]:
+        raise ValueError(f"Number of basis in MolecularBasis is not equal to the 'Nbasis'. "
+                         f"{obasis.nbasis} != {inp['Nbasis']}")
 
     # Determine number of orbitals of each kind.
     if inp["mo_kind"] == "restricted":
@@ -302,6 +306,16 @@ def load_one(lit: LineIterator) -> dict:
         inp["mo_kind"], norba, norbb, inp['mo_occs'], inp['mo_coeffs'],
         inp['mo_energies'], None
     )
+    # check number of electrons
+    if mo.nelec != inp['Naelec'] + inp['Nbelec']:
+        raise ValueError(f"Number of electrons in MolecularOrbitals is not equal to the sum of "
+                         f"'Naelec' and 'Nbelec'. {mo.nelec} != {inp['Naelec']} + {inp['Nbelec']}")
+    if mo.occsa.sum() != inp['Naelec']:
+        raise ValueError(f"Number of alpha electrons in MolecularOrbitals is not equal to the "
+                         f"'Naelec'. {mo.occsa.sum()} != {inp['Naelec']}")
+    if mo.occsb.sum() != inp['Nbelec']:
+        raise ValueError(f"Number of beta electrons in MolecularOrbitals is not equal to the "
+                         f"'Nbelec'. {mo.occsb.sum()} != {inp['Nbelec']}")
 
     return {
         'title': inp['title'],

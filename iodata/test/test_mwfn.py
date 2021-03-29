@@ -40,20 +40,16 @@ def load_helper(fn):
 def test_load_mwfn_ch3_rohf_g03():
     mol = load_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
-    assert_equal(mol.mo.occs.sum(), mol.extra["neleca"] + mol.extra["nelecb"])
     assert_equal(mol.mo.occs.min(), 0.0)
     assert_equal(mol.mo.occs.max(), 2.0)
     assert_equal(mol.extra['full_virial_ratio'], 2.00174844)
     assert_equal(mol.extra['nindbasis'], 8)
-    assert_equal(mol.extra['nbasis'], 8)
     assert_equal(np.sum([shell.nprim * shell.nbasis for shell in mol.obasis.shells]), 24)
     assert_equal(len(mol.obasis.shells), 6)
     assert_equal(np.sum([shell.nprim for shell in mol.obasis.shells]), 18)
     assert_equal(mol.charge, 0.0)
     assert_equal(mol.nelec, 9)
     assert_equal(mol.natom, 4)
-    assert_equal(np.sum(mol.mo.occsa), mol.extra["neleca"])
-    assert_equal(np.sum(mol.mo.occsb), mol.extra["nelecb"])
     assert_equal(mol.energy, -3.90732095E+01)
     assert_allclose([shell.angmoms[0] for shell in mol.obasis.shells], [0, 0, 1, 0, 0, 0])
     assert_allclose([shell.icenter for shell in mol.obasis.shells], [0, 0, 0, 1, 2, 3])
@@ -86,7 +82,6 @@ def test_load_mwfn_ch3_rohf_g03():
                             -1.26686819E-02, 6.64707810E-01, 7.68278159E-01, 7.69362712E-01])
     assert_allclose(mol.mo.energies, mo_energies)
     assert_equal(mol.mo.occs[0], 2.000000)
-    assert_equal(mol.extra['mo_type'][0], 0)
     assert_equal(mol.extra['mo_sym'][0], '?')
     # test that for the same molecule fchk and mwfn generate the same objects.
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -116,7 +111,6 @@ def test_load_mwfn_ch3_hf_g03():
                             3.28562907E-01, 7.04456296E-01, 7.88139770E-01, 7.89228899E-01])
     assert_allclose(mol.mo.energies, mo_energies)
     assert_equal(mol.mo.occs[0], 1.000000)
-    assert_equal(mol.extra['mo_type'][0], 1)
     assert_equal(mol.extra['mo_sym'][0], '?')
     # test that for the same molecule fchk and mwfn generate the same objects.
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -129,19 +123,13 @@ def test_load_mwfn_ch3_hf_g03():
 def test_nelec_charge():
     mol1 = load_helper('ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn')
     assert mol1.nelec == 9
-    assert mol1.mo.occsa.sum() == mol1.extra["neleca"]
-    assert mol1.mo.occsb.sum() == mol1.extra["nelecb"]
     assert mol1.charge == 0
     mol2 = load_helper('he_spdfgh_virtual_fchk_multiwfn3.7.mwfn')
     assert mol2.nelec == 2
     assert mol2.charge == 0
-    assert mol2.mo.occsa.sum() == mol2.extra["neleca"]
-    assert mol2.mo.occsb.sum() == mol2.extra["nelecb"]
     mol3 = load_helper('ch3_hf_sto3g_fchk_multiwfn3.7.mwfn')
     assert mol3.nelec == 9
     assert mol3.charge == 0
-    assert mol3.mo.occsa.sum() == mol3.extra["neleca"]
-    assert mol3.mo.occsb.sum() == mol3.extra["nelecb"]
 
 
 def test_load_mwfn_he_spdfgh_g03():
@@ -175,11 +163,9 @@ def test_load_mwfn_he_spdfgh_g03():
     # energies were truncated at 24 entries, this checks the last energy entry
     assert mol.mo.energies[55] == 6.12473238E+00
     assert_equal(mol.mo.occs[0], 2.000000)
-    assert_equal(mol.extra['mo_type'][0], 0)
     assert_equal(mol.extra['mo_sym'][0], '?')
     # this tests thhe last of the molecular orbital entries
     assert_equal(mol.mo.occs[55], 0.000000)
-    assert_equal(mol.extra['mo_type'][55], 0)
     assert_equal(mol.extra['mo_sym'][55], '?')
     # test that for the same molecule fchk and mwfn generate the same objects.
     olp = compute_overlap(mol.obasis, mol.atcoords)
