@@ -155,9 +155,11 @@ num2bond = {
     1: "1",
     2: "2",
     3: "3",
-    # The following symbols are used in the MOL2 format:
-    4: "am",
+    # The following symbols are used in the MOL2 format.
+    # The order deviates slightly from the MOL2 format for consistency with
+    # the indexes used in the SDF format.
     5: "ar",
+    4: "am",
     6: "du",
     7: "un",
     8: "nc"

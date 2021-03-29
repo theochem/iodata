@@ -32,11 +32,22 @@ except ImportError:
     from importlib.resources import path
 
 
-def test_sdf_load_one():
+def test_sdf_load_one_example():
     # test sdf one structure
     with path('iodata.test.data', 'example.sdf') as fn_sdf:
         mol = load_one(str(fn_sdf))
     check_example(mol)
+
+
+def test_sdf_load_one_formamide():
+    # test sdf one structure
+    with path('iodata.test.data', 'formamide.sdf') as fn_sdf:
+        mol = load_one(str(fn_sdf))
+    assert mol.title == "713"
+    assert mol.natom == 6
+    assert len(mol.bonds) == 5
+    assert_equal(mol.atnums, [8, 7, 6, 1, 1, 1])
+    assert_equal(mol.bonds, [[0, 2, 2], [1, 2, 1], [1, 3, 1], [1, 4, 1], [2, 5, 1]])
 
 
 def test_sdf_formaterror(tmpdir):
@@ -50,7 +61,8 @@ def test_sdf_formaterror(tmpdir):
 def check_example(mol):
     """Test some things on example file."""
     assert mol.title == '24978498'
-    assert_equal(mol.natom, 16)
+    assert mol.natom == 16
+    assert len(mol.bonds) == 15
     assert_equal(mol.atnums, [16, 8, 8, 8, 8, 7, 6, 6, 6, 1, 1, 1, 1, 1, 1, 1])
     # check coordinates
     atcoords_ang = mol.atcoords / angstrom
@@ -58,6 +70,9 @@ def check_example(mol):
     assert_allclose(atcoords_ang[1], [5.4641, 1.0600, 0.0000])
     assert_allclose(atcoords_ang[14], [6.0010, 1.3700, 0.0000])
     assert_allclose(atcoords_ang[15], [2.0000, -2.5600, 0.0000])
+    assert_equal(mol.bonds[0], [0, 3, 1])
+    assert_equal(mol.bonds[4], [2, 8, 2])
+    assert_equal(mol.bonds[14], [7, 11, 1])
 
 
 def check_load_dump_consistency(tmpdir, fn):
@@ -71,10 +86,13 @@ def check_load_dump_consistency(tmpdir, fn):
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
     assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+    assert_equal(mol0.bonds, mol1.bonds)
 
 
 def test_load_dump_consistency(tmpdir):
     with path('iodata.test.data', 'example.sdf') as fn_sdf:
+        check_load_dump_consistency(tmpdir, fn_sdf)
+    with path('iodata.test.data', 'formamide.sdf') as fn_sdf:
         check_load_dump_consistency(tmpdir, fn_sdf)
 
 
@@ -101,3 +119,4 @@ def test_load_dump_many_consistency(tmpdir):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
         assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+        assert_equal(mol0.bonds, mol1.bonds)
