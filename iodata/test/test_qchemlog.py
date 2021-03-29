@@ -46,21 +46,21 @@ def test_load_qchemlog_low_h2o():
     assert data['g_rot'] == 1
     assert data['alpha_elec'] == 5
     assert data['beta_elec'] == 5
-    assert data['nuclear_repulsion_energy'] == 9.19775748
-    assert data['energy'] == -76.0571936393
+    assert_allclose(data['nuclear_repulsion_energy'], 9.19775748)
+    assert_allclose(data['energy'], -76.0571936393)
     assert data['norba'] == 58
     assert data['norbb'] == 58
     assert data['dipole_tol'] == 2.0231
-    assert data['enthalpy_dict']['trans_enthalpy'] == 0.889
-    assert data['enthalpy_dict']['rot_enthalpy'] == 0.889
-    assert data['enthalpy_dict']['vib_enthalpy'] == 13.883
-    assert data['enthalpy_dict']['enthalpy_total'] == 16.253
-    assert data['entropy_dict']['trans_entropy'] == 34.608
-    assert data['entropy_dict']['rot_entropy'] == 11.82
-    assert data['entropy_dict']['vib_entropy'] == 0.003
-    assert data['entropy_dict']['entropy_total'] == 46.432
+    assert_allclose(data['enthalpy_dict']['trans_enthalpy'], 0.889)
+    assert_allclose(data['enthalpy_dict']['rot_enthalpy'], 0.889)
+    assert_allclose(data['enthalpy_dict']['vib_enthalpy'], 13.883)
+    assert_allclose(data['enthalpy_dict']['enthalpy_total'], 16.253)
+    assert_allclose(data['entropy_dict']['trans_entropy'], 34.608)
+    assert_allclose(data['entropy_dict']['rot_entropy'], 11.82)
+    assert_allclose(data['entropy_dict']['vib_entropy'], 0.003)
+    assert_allclose(data['entropy_dict']['entropy_total'], 46.432)
     assert data['imaginary_freq'] == 0
-    assert data['vib_energy'] == 13.882
+    assert_allclose(data['vib_energy'], 13.882)
     assert_equal(data['atnums'], np.array([8, 1, 1]))
     assert_equal(data['atmasses'], [15.99491, 1.00783, 1.00783])
     atcoords = np.array([[0.00575, 0.00426, -0.00301],
@@ -77,7 +77,7 @@ def test_load_qchemlog_low_h2o():
                                     4.6857, 4.8666, 5.1595, 5.2529, 5.5288, 6.0522, 6.5707,
                                     6.9264, 6.9442, 7.0027, 7.0224, 7.068, 7.1668, 7.2377,
                                     7.4574, 7.7953, 8.2906, 12.8843])
-    assert_equal(data['mo_a_vir'], alpha_mo_unoccupied)
+    assert_allclose(data['mo_a_vir'], alpha_mo_unoccupied)
     beta_mo_unoccupied = np.array([0.1423, 0.2041, 0.5445, 0.6021, 0.6682, 0.7874, 0.8014,
                                    0.8052, 0.861, 0.9557, 1.1314, 1.197, 1.5276, 1.5667,
                                    2.0366, 2.052, 2.0664, 2.1712, 2.2342, 2.591, 2.9639,
@@ -86,14 +86,13 @@ def test_load_qchemlog_low_h2o():
                                    4.6857, 4.8666, 5.1595, 5.2529, 5.5288, 6.0522, 6.5707,
                                    6.9264, 6.9442, 7.0027, 7.0224, 7.068, 7.1668, 7.2377,
                                    7.4574, 7.7953, 8.2906, 12.8843])
-    assert_equal(data['mo_b_vir'], beta_mo_unoccupied)
-    assert_equal(data['mulliken_charges'], np.array([-0.482641, 0.241321, 0.241321]))
-    assert_equal(data['dipole'], np.array([1.4989, 1.1097, -0.784]))
-    assert_equal(data['quadrupole'],
-                 np.array([-6.1922, 0.2058, -5.0469, -0.9308, 1.1096, -5.762]))
-    assert_equal(data['polarizability_tensor'], np.array([[-6.1256608, -0.1911917, 0.8593603],
-                                                          [-0.1911917, -7.180854, -1.0224452],
-                                                          [0.8593603, -1.0224452, -6.52088]]))
+    assert_allclose(data['mo_b_vir'], beta_mo_unoccupied)
+    assert_allclose(data['mulliken_charges'], np.array([-0.482641, 0.241321, 0.241321]))
+    assert_allclose(data['dipole'], np.array([1.4989, 1.1097, -0.784]))
+    assert_allclose(data['quadrupole'], [-6.1922, 0.2058, -5.0469, -0.9308, 1.1096, -5.762])
+    assert_allclose(data['polarizability_tensor'], [[-6.1256608, -0.1911917, 0.8593603],
+                                                    [-0.1911917, -7.180854, -1.0224452],
+                                                    [0.8593603, -1.0224452, -6.52088]])
     hessian = np.array([[3.162861e-01, 8.366060e-02, -2.326701e-01, -8.253820e-02,
                          -1.226155e-01, -2.676000e-03, -2.337479e-01, 3.895480e-02, 2.353461e-01],
                         [8.366060e-02, 5.460341e-01, 2.252114e-01, -1.647100e-01,
@@ -112,13 +111,13 @@ def test_load_qchemlog_low_h2o():
                          -1.353380e-02, -3.992910e-02, -7.212840e-02, 9.433770e-02, 1.178541e-01],
                         [2.353461e-01, -1.180510e-01, -3.035382e-01, 1.238830e-02,
                          1.970000e-04, -1.093230e-02, -2.477343e-01, 1.178541e-01, 3.144706e-01]])
-    assert_equal(data['athessian'], hessian)
+    assert_allclose(data['athessian'], hessian)
 
 
 def test_load_one_qchemlog_freq():
     with path('iodata.test.data', 'water_hf_ccpvtz_freq_qchem.out') as fn_qchemlog:
         mol = load_one(str(fn_qchemlog), fmt='qchemlog')
-    assert mol.energy == -76.0571936393
+    assert_allclose(mol.energy, -76.0571936393)
     assert mol.g_rot == 1
     assert mol.nelec == 10
     assert mol.run_type == 'freq'
@@ -207,24 +206,22 @@ def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
     assert data['obasis_name'] == 'def2-tzvpd'
     assert data['unrestricted'] is False
     assert data['symm'] is False
-    # assert data['g_rot'] == 1
     assert data['alpha_elec'] == 10
     assert data['beta_elec'] == 10
-    assert data['nuclear_repulsion_energy'] == 36.66284801
-    assert data['energy'] == -152.8772543727
+    assert_allclose(data['nuclear_repulsion_energy'], 36.66284801)
+    assert_allclose(data['energy'], -152.8772543727)
     assert data['norba'] == 116
-    assert data['dipole_tol'] == 2.5701
+    assert_allclose(data['dipole_tol'], 2.5701)
     assert_equal(data['atnums'], np.array([8, 1, 1, 8, 1, 1]))
-    # assert_equal(data['atmasses'], [15.99491, 1.00783, 1.00783])
     atcoords = np.array([[-1.5510070000, -0.1145200000, 0.0000000000],
                          [-1.9342590000, 0.7625030000, 0.0000000000],
                          [-0.5996770000, 0.0407120000, 0.0000000000],
                          [1.3506250000, 0.1114690000, 0.0000000000],
                          [1.6803980000, -0.3737410000, -0.7585610000],
                          [1.6803980000, -0.3737410000, 0.7585610000]]) * angstrom
-    assert_equal(data['atcoords'], atcoords)
-    assert_equal(data['mo_a_occ'], np.array([-19.2455, -19.1897, -1.1734, -1.1173, -0.6729, -0.6242,
-                                             -0.5373, -0.4825, -0.4530, -0.4045]))
+    assert_allclose(data['atcoords'], atcoords)
+    assert_allclose(data['mo_a_occ'], np.array([-19.2455, -19.1897, -1.1734, -1.1173, -0.6729,
+                                                -0.6242, -0.5373, -0.4825, -0.4530, -0.4045]))
 
     alpha_mo_unoccupied = np.array([0.0485, 0.0863, 0.0927, 0.1035, 0.1344, 0.1474, 0.1539, 0.1880,
                                     0.1982, 0.2280, 0.2507, 0.2532, 0.2732, 0.2865, 0.2992, 0.3216,
@@ -240,28 +237,26 @@ def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
                                     5.6049, 5.6226, 6.1591, 6.2079, 6.3862, 6.4446, 6.5805, 6.5926,
                                     6.6092, 6.6315, 6.6557, 6.6703, 7.0400, 7.1334, 7.1456, 7.2547,
                                     43.7457, 43.9166])
-    assert_equal(data['mo_a_vir'], alpha_mo_unoccupied)
-    assert_equal(data['mulliken_charges'], np.array([-0.610250, 0.304021, 0.337060,
+    assert_allclose(data['mo_a_vir'], alpha_mo_unoccupied)
+    assert_allclose(data['mulliken_charges'], np.array([-0.610250, 0.304021, 0.337060,
                                                      -0.663525, 0.316347, 0.316347]))
-    assert_equal(data['dipole'], np.array([2.5689, 0.0770, 0.0000]))
-    assert_equal(data['quadrupole'],
-                 np.array([-12.0581, -6.2544, -12.8954, -0.0000, -0.0000, -12.2310]))
+    assert_allclose(data['dipole'], np.array([2.5689, 0.0770, 0.0000]))
+    assert_allclose(data['quadrupole'], [-12.0581, -6.2544, -12.8954, -0.0000, -0.0000, -12.2310])
     # check eda2 info
-    eda = data['eda2']
-    assert_equal(eda['e_elec'], -65.9887)
-    assert_equal(eda['e_kep_pauli'], 78.5700)
-    assert_equal(eda['e_disp_free_pauli'], -14.2495)
-    assert_equal(eda['e_disp'], -7.7384)
-    assert_equal(eda['e_cls_elec'], -35.1257)
-    assert_equal(eda['e_cls_pauli'], 25.7192)
-    assert_equal(eda['e_mod_pauli'], 33.4576)
-    assert_equal(eda['preparation'], 0.0000)
-    assert_equal(eda['frozen'], -1.6681)
-    assert_equal(eda['pauli'], 64.3205)
-    assert_equal(eda['dispersion'], -7.7384)
-    assert_equal(eda['polarization'], -4.6371)
-    assert_equal(eda['charge transfer'], -7.0689)
-    assert_equal(eda['total'], -21.1126)
+    assert_allclose(data['eda2']['e_elec'], -65.9887)
+    assert_allclose(data['eda2']['e_kep_pauli'], 78.5700)
+    assert_allclose(data['eda2']['e_disp_free_pauli'], -14.2495)
+    assert_allclose(data['eda2']['e_disp'], -7.7384)
+    assert_allclose(data['eda2']['e_cls_elec'], -35.1257)
+    assert_allclose(data['eda2']['e_cls_pauli'], 25.7192)
+    assert_allclose(data['eda2']['e_mod_pauli'], 33.4576)
+    assert_allclose(data['eda2']['preparation'], 0.0000)
+    assert_allclose(data['eda2']['frozen'], -1.6681)
+    assert_allclose(data['eda2']['pauli'], 64.3205)
+    assert_allclose(data['eda2']['dispersion'], -7.7384)
+    assert_allclose(data['eda2']['polarization'], -4.6371)
+    assert_allclose(data['eda2']['charge transfer'], -7.0689)
+    assert_allclose(data['eda2']['total'], -21.1126)
 
     # check fragments
     coords1 = [[-1.551007, -0.11452, 0.0], [-1.934259, 0.762503, 0.0], [-0.599677, 0.040712, 0.0]]

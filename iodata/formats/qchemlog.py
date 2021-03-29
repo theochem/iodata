@@ -86,15 +86,17 @@ def load_one(lit: LineIterator) -> dict:
     if 'quadrupole' in data:
         # Convert to alphabetical ordering: xx, xy, xz, yy, yz, zz
         moments[(2, 'c')] = data['quadrupole'][[0, 1, 3, 2, 4, 5]]
+    # check total dipole parsed
+    if 'dipole_tol' in data and 'dipole' in data:
+        assert abs(np.linalg.norm(data['dipole']) - data['dipole_tol']) < 1.0e-4
     if moments:
         result['moments'] = moments
 
     # extra dictionary
     # ----------------
     # add labels to extra dictionary if they are loaded
-    extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
-                    'polarizability_tensor', 'imaginary_freq', 'vib_energy',
-                    'eda2', 'frags']
+    extra_labels = ['nuclear_repulsion_energy', 'polarizability_tensor', 'imaginary_freq',
+                    'vib_energy', 'eda2', 'frags']
 
     extra = {label: data[label] for label in extra_labels if data.get(label) is not None}
     # if present, convert vibrational energy from kcal/mol to "atomic units + K"
@@ -319,7 +321,7 @@ def _helper_dipole_moments(lit: LineIterator) -> Tuple:
     dipole = np.array([float(dipole) for idx, dipole in enumerate(dipole) if idx % 2 != 0])
     # parse total dipole moment
     dipole_tol = float(next(lit).strip().split()[-1])
-    # parse quadrupole moment
+    # parse quadrupole moment (xx, xy, yy, xz, yz, zz)
     next(lit)
     quadrupole = next(lit).strip().split()
     quadrupole.extend(next(lit).strip().split())
