@@ -58,6 +58,7 @@ def check_water(mol):
         mol.atcoords[2] - mol.atcoords[1]) / angstrom, 0.9599, atol=1.e-4)
     assert_allclose(np.linalg.norm(
         mol.atcoords[0] - mol.atcoords[2]) / angstrom, 1.568, atol=1.e-3)
+    assert_equal(mol.bonds[:, :2], [[0, 1], [1, 2]])
 
 
 def check_load_dump_consistency(tmpdir, fn):
@@ -79,11 +80,19 @@ def check_load_dump_consistency(tmpdir, fn):
         assert_equal(mol0.extra.get('occupancies'), mol1.extra.get('occupancies'))
         assert_equal(mol0.extra.get('bfactors'), mol1.extra.get('bfactors'))
         assert_equal(mol0.extra.get('chainids'), mol1.extra.get('chainids'))
+    if mol0.bonds is None:
+        assert mol1.bonds is None
+    else:
+        assert_equal(mol0.bonds, mol1.bonds)
 
 
-@pytest.mark.parametrize("case", ["single", "single_model"])
-def test_load_dump_consistency(case, tmpdir):
-    with path('iodata.test.data', f'water_{case}.pdb') as fn_pdb:
+@pytest.mark.parametrize("fn_base", [
+    "water_single.pdb",
+    "water_single_model.pdb",
+    "ch5plus.pdb",
+])
+def test_load_dump_consistency(fn_base, tmpdir):
+    with path('iodata.test.data', fn_base) as fn_pdb:
         check_load_dump_consistency(tmpdir, fn_pdb)
 
 
@@ -107,6 +116,8 @@ def check_load_dump_xyz_consistency(tmpdir, fn):
     # check if resnums are correct
     resnums = mol1.atffparams.get('resnums')
     assert_equal(resnums[0], -1)
+    # There should be no bonds
+    assert mol1.bonds is None
 
 
 def test_load_dump_xyz_consistency(tmpdir):
@@ -178,6 +189,12 @@ def test_load_2bcw():
     assert_allclose(mol.atcoords[190, 0] / angstrom, -24.547)
     assert_allclose(mol.extra.get('occupancies'), np.ones(mol.natom))
     assert (mol.extra["chainids"] == ["A"] * 65 + ["B"] * 68 + ["C"] * 58).all()
+
+
+def test_load_ch5plus_bonds():
+    with path("iodata.test.data", "ch5plus.pdb") as fn_pdb:
+        mol = load_one(fn_pdb)
+    assert_equal(mol.bonds[:, :2], [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5]])
 
 
 def test_load_pdb_dump_pdb(tmpdir):

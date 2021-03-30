@@ -41,9 +41,7 @@ __all__ = []
 PATTERNS = ['*.pdb']
 
 
-@document_load_one("PDB", ['atcoords', 'atnums', 'atffparams', 'extra'], ['title'])
-def load_one(lit: LineIterator) -> dict:
-    """Do not edit this docstring. It will be overwritten."""
+def _parse_pdb_atom_line(line):
     # Overview of ATOM records
     #     COLUMNS        DATA  TYPE    FIELD        DEFINITION
     # -------------------------------------------------------------------------------------
@@ -62,66 +60,116 @@ def load_one(lit: LineIterator) -> dict:
     # 61 - 66        Real(6.2)     tempFactor   Temperature  factor.
     # 77 - 78        LString(2)    element      Element symbol, right-justified.
     # 79 - 80        LString(2)    charge       Charge  on the atom.
+
+    # Get element symbol from position 77:78 in pdb format
+    words = line[76:78].split()
+    if not words:
+        # If not present, guess it from position 13:16 (atom name)
+        words = line[12:16].split()
+    # assign atomic number
+    symbol = words[0].title()
+    atnum = sym2num.get(symbol, sym2num.get(symbol[0], None))
+    # atom name, residue name, chain id, & residue sequence number
+    attype = line[12:16].strip()
+    restype = line[17:20].strip()
+    chainid = line[21]
+    resnum = int(line[22:26])
+    # add x, y, and z
+    atcoord = [
+        float(line[30:38]) * angstrom,
+        float(line[38:46]) * angstrom,
+        float(line[46:54]) * angstrom,
+    ]
+    # get occupancies & temperature factor
+    occupancy = float(line[54:60])
+    bfactor = float(line[60:66])
+    return atnum, attype, restype, chainid, resnum, atcoord, occupancy, bfactor
+
+
+def _parse_pdb_conect_line(line):
+    # Overview of CONECT records
+    # COLUMNS       DATA  TYPE      FIELD        DEFINITION
+    # -------------------------------------------------------------------------
+    #  1 -  6       Record name    "CONECT"
+    #  7 - 11       Integer        serial       Atom  serial number
+    # 12 - 16       Integer        serial       Serial number of bonded atom
+    # 17 - 21       Integer        serial       Serial number of bonded atom
+    # 22 - 26       Integer        serial       Serial number of bonded atom
+    # 27 - 31       Integer        serial       Serial number of bonded atom
+    iatom0 = int(line[7:12]) - 1
+    for ipos in 12, 17, 22, 27:
+        serial_str = line[ipos: ipos + 5].strip()
+        if serial_str != "":
+            iatom1 = int(serial_str) - 1
+            if iatom1 > iatom0:
+                yield iatom0, iatom1
+
+
+@document_load_one("PDB", ['atcoords', 'atnums', 'atffparams', 'extra'], ['title', 'bonds'])
+def load_one(lit: LineIterator) -> dict:
+    """Do not edit this docstring. It will be overwritten."""
+    title = "PDB file from IOData"
     atnums = []
     attypes = []
     restypes = []
     chainids = []
     resnums = []
-    coords = []
+    atcoords = []
     occupancies = []
     bfactors = []
+    bonds = []
     molecule_found = False
     end_reached = False
-    title = "PDB file from IOData"
     while True:
         try:
             line = next(lit)
         except StopIteration:
             break
-        # If the PDB file has a title replace it.
+        # If the PDB file has a title, replace the default.
         if line.startswith("TITLE") or line.startswith("COMPND"):
             title = line[10:].rstrip()
         if line.startswith("ATOM") or line.startswith("HETATM"):
-            # get element symbol from position 77:78 in pdb format
-            words = line[76:78].split()
-            if not words:
-                # If not present, guess it from position 13:16 (atom name)
-                words = line[12:16].split()
-            # assign atomic number
-            symbol = words[0].title()
-            atnums.append(sym2num.get(symbol, sym2num.get(symbol[0], None)))
-            # atom name, residue name, chain id, & residue sequence number
-            attypes.append(line[12:16].strip())
-            restypes.append(line[17:20].strip())
-            chainids.append(line[21])
-            resnums.append(int(line[22:26]))
-            # add x, y, and z
-            coords.append([float(line[30:38]), float(line[38:46]), float(line[46:54])])
-            # get occupancies & temperature factor
-            occupancies.append(float(line[54:60]))
-            bfactors.append(float(line[60:66]))
+            (atnum, attype, restype, chainid, resnum, atcoord, occupancy,
+             bfactor) = _parse_pdb_atom_line(line)
+            atnums.append(atnum)
+            attypes.append(attype)
+            restypes.append(restype)
+            chainids.append(chainid)
+            resnums.append(resnum)
+            atcoords.append(atcoord)
+            occupancies.append(occupancy)
+            bfactors.append(bfactor)
             molecule_found = True
+        if line.startswith("CONECT"):
+            for iatom0, iatom1 in _parse_pdb_conect_line(line):
+                bonds.append([iatom0, iatom1, 1])
         if line.startswith("END") and molecule_found:
             end_reached = True
             break
-    if molecule_found is False:
+    if not molecule_found:
         lit.error("Molecule could not be read!")
     if not end_reached:
         lit.warn("The END is not found, but the parsed data is returned!")
 
-    atffparams = {"attypes": np.array(attypes), "restypes": np.array(restypes),
-                  "resnums": np.array(resnums)}
+    atffparams = {
+        "attypes": np.array(attypes),
+        "restypes": np.array(restypes),
+        "resnums": np.array(resnums),
+    }
     extra = {"occupancies": np.array(occupancies), "bfactors": np.array(bfactors)}
     # add chain id, if it wasn't all empty
     if not np.all(chainids == [' '] * len(chainids)):
         extra["chainids"] = np.array(chainids)
     result = {
-        'atcoords': np.array(coords) * angstrom,
+        'atcoords': np.array(atcoords),
         'atnums': np.array(atnums),
         'atffparams': atffparams,
         'title': title,
-        'extra': extra
+        'extra': extra,
     }
+    # assign bonds only if some were present
+    if len(bonds) > 0:
+        result["bonds"] = np.array(bonds)
     return result
 
 
@@ -137,16 +185,18 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             return
 
 
-@document_dump_one("PDB", ['atcoords', 'atnums', 'extra'], ['atffparams', 'title'])
+@document_dump_one("PDB", ['atcoords', 'atnums', 'extra'], ['atffparams', 'title', 'bonds'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     print(str("TITLE     " + data.title) or "TITLE      Created with IOData", file=f)
+    # Prepare for ATOM lines.
     attypes = data.atffparams.get('attypes', None)
     restypes = data.atffparams.get('restypes', None)
     resnums = data.atffparams.get('resnums', None)
     occupancies = data.extra.get('occupancies', None)
     bfactors = data.extra.get('bfactors', None)
     chainids = data.extra.get('chainids', None)
+    # Write ATOM lines.
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         resnum = -1 if resnums is None else resnums[i]
@@ -159,6 +209,22 @@ def dump_one(f: TextIO, data: IOData):
         out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} {chain:1s}{resnum:>4d}    '
         out2 = f'{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}'
         print("ATOM  " + out1 + out2, file=f)
+    # Prepare for CONECT lines.
+    connections = [[] for iatom in range(data.natom)]
+    if data.bonds is not None:
+        for iatom0, iatom1 in data.bonds[:, :2]:
+            connections[iatom0].append(iatom1)
+            connections[iatom1].append(iatom0)
+    # Write CONECT lines.
+    for iatom0, iatoms1 in enumerate(connections):
+        if len(iatoms1) > 0:
+            # Write connection in groups of max 4
+            for ichunk in range(len(iatoms1) // 4 + 1):
+                print("CONECT{:5d}{}".format(
+                    iatom0 + 1, "".join(
+                        "{:5d}".format(iatom1 + 1)
+                        for iatom1 in iatoms1[ichunk * 4:ichunk * 4 + 4])
+                ), file=f)
     print("END", file=f)
 
 
