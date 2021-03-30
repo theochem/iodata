@@ -145,7 +145,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
 
         # energy (the last energy in a multi-step job)
         elif line.startswith('Total energy in the final basis set'):
-            data['energy'] = float(line.strip().split()[-1])
+            data['energy'] = float(line.split()[-1])
         elif line.startswith('the SCF tolerance is set'):
             data['energy'] = _helper_energy(lit)
 
@@ -231,18 +231,18 @@ def _helper_structure(lit: LineIterator):
     for line in lit:
         if line.strip().startswith('-------------'):
             break
-        atsymbols.append(line.strip().split()[1])
-        atcoords.append([float(i) for i in line.strip().split()[2:]])
+        atsymbols.append(line.split()[1])
+        atcoords.append([float(i) for i in line.split()[2:]])
     subdata = {"atnums": np.array([sym2num[i] for i in atsymbols]),
                "atcoords": np.array(atcoords) * angstrom,
-               "nuclear_repulsion_energy": float(next(lit).strip().split()[-2])}
+               "nuclear_repulsion_energy": float(next(lit).split()[-2])}
     # number of alpha and beta elections
-    line = next(lit).strip().split()
+    line = next(lit).split()
     subdata["alpha_elec"] = int(line[2])
     subdata["beta_elec"] = int(line[5])
     # number of basis functions
     next(lit)
-    subdata["nbasis"] = int(next(lit).strip().split()[-3])
+    subdata["nbasis"] = int(next(lit).split()[-3])
 
     return subdata
 
@@ -250,7 +250,7 @@ def _helper_structure(lit: LineIterator):
 def _helper_energy(lit: LineIterator):
     for line in lit:
         if line.strip().endswith('Convergence criterion met'):
-            energy = float(line.strip().split()[1])
+            energy = float(line.split()[1])
             break
     return energy
 
@@ -287,7 +287,7 @@ def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = Fa
             break
     for line in lit:
         if line.strip() != end:
-            data.extend(line.strip().split())
+            data.extend(line.split())
         else:
             break
     if backward:
@@ -307,7 +307,7 @@ def _helper_mulliken(lit: LineIterator) -> np.ndarray:
     for line in lit:
         if line.strip().startswith('--------'):
             break
-        mulliken_charges.append(line.strip().split()[2])
+        mulliken_charges.append(line.split()[2])
     return np.array(mulliken_charges, dtype=float)
 
 
@@ -317,14 +317,14 @@ def _helper_dipole_moments(lit: LineIterator) -> Tuple:
         if line.strip().startswith('Dipole Moment (Debye)'):
             break
     # parse dipole moment (only load the float numbers)
-    dipole = next(lit).strip().split()
+    dipole = next(lit).split()
     dipole = np.array([float(dipole) for idx, dipole in enumerate(dipole) if idx % 2 != 0])
     # parse total dipole moment
-    dipole_tol = float(next(lit).strip().split()[-1])
+    dipole_tol = float(next(lit).split()[-1])
     # parse quadrupole moment (xx, xy, yy, xz, yz, zz)
     next(lit)
-    quadrupole = next(lit).strip().split()
-    quadrupole.extend(next(lit).strip().split())
+    quadrupole = next(lit).split()
+    quadrupole.extend(next(lit).split())
     quadrupole = np.array([float(dipole) for idx, dipole in enumerate(quadrupole) if idx % 2 != 0])
     return dipole, quadrupole, dipole_tol
 
@@ -336,24 +336,24 @@ def _helper_polar(lit: LineIterator) -> np.ndarray:
     for line in lit:
         if line.strip().startswith('Calculating analytic Hessian'):
             break
-        polarizability_tensor.append(line.strip().split()[1:])
+        polarizability_tensor.append(line.split()[1:])
     return np.array(polarizability_tensor, dtype=float)
 
 
 def _helper_hessian(lit: LineIterator, natom: int) -> np.ndarray:
     """Load hessian matrix."""
     # hessian in Cartesian coordinates, shape(3 * natom, 3 * natom)
-    col_idx = [int(i) for i in next(lit).strip().split()]
+    col_idx = [int(i) for i in next(lit).split()]
     hessian = np.empty((natom * 3, natom * 3), dtype=object)
     for line in lit:
         if line.strip().startswith('****************'):
             break
         if not line.startswith('            '):
-            line_list = line.strip().split()
+            line_list = line.split()
             row_idx = int(line_list[0]) - 1
             hessian[row_idx, col_idx[0] - 1:col_idx[-1]] = line_list[1:]
         else:
-            col_idx = [int(i) for i in line.strip().split()]
+            col_idx = [int(i) for i in line.split()]
     return hessian.astype(float)
 
 
@@ -363,14 +363,14 @@ def _helper_vibrational(lit: LineIterator) -> Tuple:
         if line.strip().startswith('This Molecule has'):
             break
     # pylint: disable= W0631
-    imaginary_freq = int(line.strip().split()[3])
-    vib_energy = float(next(lit).strip().split()[-2])
+    imaginary_freq = int(line.split()[3])
+    vib_energy = float(next(lit).split()[-2])
     next(lit)
     atmasses = []
     for line in lit:
         if line.strip().startswith('Molecular Mass:'):
             break
-        atmasses.append(line.strip().split()[-1])
+        atmasses.append(line.split()[-1])
     atmasses = np.array(atmasses, dtype=float)
     return imaginary_freq, vib_energy, atmasses
 
@@ -412,14 +412,14 @@ def _helper_eda2(lit: LineIterator) -> dict:  # pylint: disable=too-many-branche
             for line_2 in lit:
                 if line_2.strip().startswith('-----'):
                     break
-                eda2.setdefault('energies', []).append(float(line_2.strip().split()[-1]))
+                eda2.setdefault('energies', []).append(float(line_2.split()[-1]))
 
         if line.strip().startswith('Orthogonal Fragment Subspace Decomposition'):
             next(lit)
             for line_2 in lit:
                 if line_2.strip().startswith('-----'):
                     break
-                info = line_2.strip().split()
+                info = line_2.split()
                 if info[0] in ['E_elec', 'E_pauli', 'E_disp']:
                     eda2[info[0].lower()] = float(info[-1])
 
@@ -428,7 +428,7 @@ def _helper_eda2(lit: LineIterator) -> dict:  # pylint: disable=too-many-branche
             for line_2 in lit:
                 if line_2.strip().startswith('-----'):
                     break
-                info = line_2.strip().split()
+                info = line_2.split()
                 if info[0] in ['E_kep_pauli', 'E_disp_free_pauli']:
                     eda2[info[0].lower()] = float(info[-1])
 
@@ -437,7 +437,7 @@ def _helper_eda2(lit: LineIterator) -> dict:  # pylint: disable=too-many-branche
             for line_2 in lit:
                 if line_2.strip().startswith('-----'):
                     break
-                info = line_2.strip().split()
+                info = line_2.split()
                 if info[0] in ['E_cls_elec', 'E_cls_pauli']:
                     eda2[info[0].lower()] = float(info[5])
                 elif info[0].split("[")[1] == 'E_mod_pauli':
@@ -448,7 +448,7 @@ def _helper_eda2(lit: LineIterator) -> dict:  # pylint: disable=too-many-branche
             for line_2 in lit:
                 if line_2.strip().startswith('-----'):
                     break
-                info = line_2.strip().split()
+                info = line_2.split()
                 if info[0] in ['PREPARATION', 'FROZEN', 'DISPERSION', 'POLARIZATION', 'TOTAL']:
                     eda2[info[0].lower()] = float(info[1])
                 elif info[0].split("[")[-1] == 'PAULI':
