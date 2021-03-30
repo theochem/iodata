@@ -25,7 +25,8 @@ from numpy.testing import assert_equal, assert_allclose
 
 from .common import truncated_file
 from ..api import load_one, load_many, dump_one, dump_many
-from ..utils import angstrom
+from ..utils import angstrom, FileFormatError
+
 try:
     from importlib_resources import path
 except ImportError:
@@ -123,3 +124,9 @@ def test_load_dump_many_consistency(tmpdir):
         assert_equal(mol0.atnums, mol1.atnums)
         assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
         assert_equal(mol0.bonds, mol1.bonds)
+
+
+def test_v2000_check():
+    with path('iodata.test.data', 'molv3000.sdf') as fn_sdf:
+        with pytest.raises(FileFormatError):
+            load_one(fn_sdf)
