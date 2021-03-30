@@ -195,6 +195,7 @@ def test_load_one_qchemlog_freq():
 
 def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
     """Test load_qchemlog_low with h2o_dimer_eda_qchem5.3.out."""
+    # pylint: disable=too-many-statements
     with path('iodata.test.data', 'h2o_dimer_eda_qchem5.3.out') as fq:
         data = load_qchemlog_low(LineIterator(str(fq)))
 
@@ -281,6 +282,7 @@ def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
 
 def test_load_one_h2o_dimer_eda2():
     """Test load_one with h2o_dimer_eda_qchem5.3.out."""
+    # pylint: disable=too-many-statements
     with path('iodata.test.data', 'h2o_dimer_eda_qchem5.3.out') as fn_qchemlog:
         mol = load_one(str(fn_qchemlog), fmt='qchemlog')
 
