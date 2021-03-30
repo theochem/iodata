@@ -451,7 +451,7 @@ def load_one(lit: LineIterator) -> dict:
                        oe_alpha, coeffs_alpha, obasis, restricted)
         mo = MolecularOrbitals(
             'restricted', norb, norb, 2 * orb_alpha_occs, orb_alpha_coeffs,
-            orb_alpha_energies, None)
+            orb_alpha_energies)
     else:
         norb_alpha = _get_norb_nel(oe_alpha)[0]
         norb_beta = _get_norb_nel(oe_beta)[0]
@@ -472,7 +472,6 @@ def load_one(lit: LineIterator) -> dict:
             np.concatenate((orb_alpha_occs, orb_beta_occs), axis=0),
             np.concatenate((orb_alpha_coeffs, orb_beta_coeffs), axis=1),
             np.concatenate((orb_alpha_energies, orb_beta_energies), axis=0),
-            None,
         )
 
     result = {

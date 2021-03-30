@@ -191,7 +191,7 @@ def load_one(lit: LineIterator) -> dict:
         mo_occs = np.zeros(norba + norbb)
         mo_occs[:nalpha] = 1.0
         mo_occs[norba: norba + nbeta] = 1.0
-        mo = MolecularOrbitals('unrestricted', norba, norbb, mo_occs, mo_coeffs, mo_energies, None)
+        mo = MolecularOrbitals('unrestricted', norba, norbb, mo_occs, mo_coeffs, mo_energies)
     else:
         # restricted closed-shell and open-shell
         mo_occs = np.zeros(norba)
@@ -201,7 +201,7 @@ def load_one(lit: LineIterator) -> dict:
             # delete dm_full_scf because it is known to be buggy
             if 'scf' in result['one_rdms']:
                 result['one_rdms'].pop('scf')
-        mo = MolecularOrbitals('restricted', norba, norba, mo_occs, mo_coeffs, mo_energies, None)
+        mo = MolecularOrbitals('restricted', norba, norba, mo_occs, mo_coeffs, mo_energies)
     result['mo'] = mo
 
     # E) Load properties
