@@ -61,7 +61,7 @@ def load_one(lit: LineIterator) -> dict:
     words = next(lit).split()
     natom = int(words[0])
     nbond = int(words[1])
-    if words[-1] != "V2000":
+    if words[-1].upper() != "V2000":
         lit.error("Only V2000 SDF files are supported.")
     atcoords = np.empty((natom, 3), float)
     atnums = np.empty(natom, int)
