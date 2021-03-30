@@ -138,12 +138,29 @@ num2sym: Dict[int, str] = {
     110: "Ds",
     111: "Rg",
     112: "Cn",
-    113: "Uut",
+    113: "Nh",
     114: "Fl",
-    115: "Uup",
+    115: "Mc",
     116: "Lv",
-    117: "Uus",
-    118: "Uuo",
+    117: "Ts",
+    118: "Og",
 }
 
 sym2num: Dict[str, int] = dict((value, key) for key, value in num2sym.items())
+
+
+# Labels used for bond types.
+
+num2bond = {
+    1: "1",
+    2: "2",
+    3: "3",
+    # The following symbols are used in the MOL2 format:
+    4: "am",
+    5: "ar",
+    6: "du",
+    7: "un",
+    8: "nc"
+}
+
+bond2num: Dict[str, int] = dict((value, key) for key, value in num2bond.items())

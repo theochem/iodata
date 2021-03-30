@@ -268,7 +268,7 @@ def load_one(lit: LineIterator) -> dict:
         # conventions for norba and norbb, see orbitals.py for details.
         mo = MolecularOrbitals(
             "restricted", norba, norba,  # This is not a typo!
-            data['mo_occs'], data['mo_coeffs'], data['mo_energies'], None)
+            data['mo_occs'], data['mo_coeffs'], data['mo_energies'])
 
     # unrestricted case with "Alpha" and "Beta" in mo_spins
     else:
@@ -284,7 +284,7 @@ def load_one(lit: LineIterator) -> dict:
         # conventions as WFX.
         mo = MolecularOrbitals(
             "unrestricted", norba, norbb,
-            data['mo_occs'], data['mo_coeffs'], data['mo_energies'], None)
+            data['mo_occs'], data['mo_coeffs'], data['mo_energies'])
 
     # prepare WFX-specific data for IOData
     extra_labels = ['keywords', 'model_name', 'num_perturbations', 'num_core_electrons',

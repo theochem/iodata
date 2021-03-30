@@ -319,7 +319,7 @@ data
     An IOData instance which must have the following attributes initialized:
     {required}.{optional}
 template
-    A template input file.
+    A template input string.
 {kwdocs}
 Notes
 -----

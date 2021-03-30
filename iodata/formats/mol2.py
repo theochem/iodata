@@ -30,7 +30,7 @@ import numpy as np
 from ..docstrings import (document_load_one, document_load_many, document_dump_one,
                           document_dump_many)
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym
+from ..periodic import sym2num, num2sym, bond2num, num2bond
 from ..utils import angstrom, LineIterator
 
 
@@ -109,14 +109,25 @@ def _load_helper_atoms(lit: LineIterator, natoms: int)\
 
 
 def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
-    """Load bond information."""
+    """Load bond information.
+
+    Each line in a bond definition has the following structure
+    http://chemyang.ccnu.edu.cn/ccb/server/AIMMS/mol2.pdf
+    bond_index atom_1 atom_2 bond_type
+    e.g.
+    1 1 2 1
+    This would be the first bond between atom 1 and atom 2 and a single bond
+    """
     bonds = np.empty((nbonds, 3))
     for i in range(nbonds):
         words = next(lit).split()
-        if words[3] == 'am':
-            words[3] = 4
         # Substract one because of numbering starting at 0
-        bond = [int(words[1]) - 1, int(words[2]) - 1, int(words[3])]
+        bond = [
+            int(words[1]) - 1,
+            int(words[2]) - 1,
+            # convert mol2 bond type to integer
+            bond2num.get(words[3], bond2num["un"])
+        ]
         if bond is None:
             bond = [0, 0, 0]
             lit.warn(f'Something wrong in the bond section: {bond}')
@@ -163,7 +174,7 @@ def dump_one(f: TextIO, data: IOData):
     if data.bonds is not None:
         print("@<TRIPOS>BOND", file=f)
         for i, bond in enumerate(data.bonds):
-            bondtype = 'am' if bond[2] == 4 else str(bond[2])
+            bondtype = num2bond.get(bond[2], "un")
             print(f'{i+1:6d} {bond[0]+1:4d} {bond[1]+1:4d} {bondtype:2s}',
                   file=f)
 

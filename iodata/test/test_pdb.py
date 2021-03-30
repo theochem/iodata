@@ -52,7 +52,6 @@ def check_water(mol):
     """Test some things on a water file."""
     assert_equal(mol.atnums, [1, 8, 1])
     # check bond length
-    print(np.linalg.norm(mol.atcoords[0] - mol.atcoords[2]) / angstrom)
     assert_allclose(np.linalg.norm(
         mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.9599, atol=1.e-4)
     assert_allclose(np.linalg.norm(
@@ -77,8 +76,9 @@ def check_load_dump_consistency(tmpdir, fn):
         assert_equal(mol0.atffparams.get('restypes'), mol1.atffparams.get('restypes'))
         assert_equal(mol0.atffparams.get('resnums'), mol1.atffparams.get('resnums'))
     if mol0.extra is not None:
-        assert_equal(mol0.extra.get('occupancy'), mol1.extra.get('occupancy'))
-        assert_equal(mol0.extra.get('bfactor'), mol1.extra.get('bfactor'))
+        assert_equal(mol0.extra.get('occupancies'), mol1.extra.get('occupancies'))
+        assert_equal(mol0.extra.get('bfactors'), mol1.extra.get('bfactors'))
+        assert_equal(mol0.extra.get('chainids'), mol1.extra.get('chainids'))
 
 
 @pytest.mark.parametrize("case", ["single", "single_model"])
@@ -103,6 +103,7 @@ def check_load_dump_xyz_consistency(tmpdir, fn):
     attypes = mol1.atffparams.get('attypes')
     assert restypes[0] == "XXX"
     assert attypes[0] == "H1"
+    assert mol1.extra.get("chainids") is None
     # check if resnums are correct
     resnums = mol1.atffparams.get('resnums')
     assert_equal(resnums[0], -1)
@@ -113,15 +114,10 @@ def test_load_dump_xyz_consistency(tmpdir):
         check_load_dump_xyz_consistency(tmpdir, fn_xyz)
 
 
-def test_load_peptide():
+def test_load_peptide_2luv():
     # test pdb of small peptide
     with path('iodata.test.data', '2luv.pdb') as fn_pdb:
         mol = load_one(str(fn_pdb))
-    check_peptide(mol)
-
-
-def check_peptide(mol):
-    """Test some things on a peptide file."""
     assert mol.title.startswith("INTEGRIN")
     assert_equal(len(mol.atnums), 547)
     restypes = mol.atffparams.get('restypes')
@@ -133,10 +129,9 @@ def check_peptide(mol):
     resnums = mol.atffparams.get('resnums')
     assert_equal(resnums[0], 1)
     assert_equal(resnums[-1], 35)
-    occupancy = mol.extra.get('occupancy')
-    assert_allclose(occupancy[0], 1.00)
-    bfactor = mol.extra.get('bfactor')
-    assert_allclose(bfactor[-1], 0.00)
+    assert_allclose(mol.extra.get('occupancies'), np.ones(mol.natom))
+    assert_allclose(mol.extra.get('bfactors'), np.zeros(mol.natom))
+    assert_equal(mol.extra.get('chainids'), ['A'] * mol.natom)
 
 
 @pytest.mark.parametrize("case", ['trajectory', 'trajectory_no_model'])
@@ -147,6 +142,9 @@ def test_load_many(case):
     for mol in mols:
         assert_equal(mol.atnums, [8, 1, 1])
         assert mol.atcoords.shape == (3, 3)
+        assert mol.extra.get('chainids') is None
+        assert_allclose(mol.extra.get('occupancies'), np.ones(3))
+        assert_allclose(mol.extra.get('bfactors'), np.zeros(3))
     assert_allclose(mols[0].atcoords[2] / angstrom, [2.864, 0.114, 3.364])
     assert_allclose(mols[2].atcoords[0] / angstrom, [-0.233, -0.790, -3.248])
     assert_allclose(mols[-1].atcoords[1] / angstrom, [-2.123, -3.355, -3.354])
@@ -165,3 +163,28 @@ def test_load_dump_many_consistency(case, tmpdir):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
         assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+
+
+def test_load_2bcw():
+    # test pdb with multiple chains
+    with path("iodata.test.data", "2bcw.pdb") as fn_pdb:
+        mol = load_one(fn_pdb)
+    assert mol.natom == 191
+    assert (mol.atnums == 6).all()
+    assert (mol.atffparams["attypes"] == ["CA"] * mol.natom).all()
+    assert (mol.atffparams["restypes"][:3] == ['GLN', 'ILE', 'LYS']).all()
+    assert (mol.atffparams["restypes"][-4:] == ['LYS', 'ILE', 'THR', 'PRO']).all()
+    assert_allclose(mol.atcoords[0, 2] / angstrom, -86.956)
+    assert_allclose(mol.atcoords[190, 0] / angstrom, -24.547)
+    assert_allclose(mol.extra.get('occupancies'), np.ones(mol.natom))
+    assert (mol.extra["chainids"] == ["A"] * 65 + ["B"] * 68 + ["C"] * 58).all()
+
+
+def test_load_pdb_dump_pdb(tmpdir):
+    # test dump pdb with single chain
+    with path("iodata.test.data", "2luv.pdb") as fn_pdb:
+        check_load_dump_consistency(tmpdir, fn_pdb)
+
+    # test dump pdb with multiple chain
+    with path('iodata.test.data', "2bcw.pdb") as fn_pdb:
+        check_load_dump_consistency(tmpdir, fn_pdb)

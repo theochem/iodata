@@ -63,9 +63,9 @@ CONVENTIONS = {
 # pylint: disable=too-many-branches,too-many-statements
 @document_load_one(
     "Gaussian Formatted Checkpoint",
-    ['atcharges', 'atcoords', 'atnums', 'atcorenums', 'energy', 'lot', 'mo', 'obasis',
+    ['atcharges', 'atcoords', 'atnums', 'atcorenums', 'lot', 'mo', 'obasis',
      'obasis_name', 'run_type', 'title'],
-    ['atfrozen', 'atgradient', 'athessian', 'atmasses', 'one_rdms', 'extra', 'moments'])
+    ['energy', 'atfrozen', 'atgradient', 'athessian', 'atmasses', 'one_rdms', 'extra', 'moments'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     fchk = _load_fchk_low(lit, [
@@ -92,7 +92,8 @@ def load_one(lit: LineIterator) -> dict:
     # A) Load a bunch of simple things
     result = {
         'title': fchk['title'],
-        'energy': fchk['Total Energy'],
+        # if "Total Energy" is not present in FCHk, None is returned.
+        'energy': fchk.get('Total Energy', None),
         'lot': fchk['lot'].lower(),
         'obasis_name': fchk['obasis_name'].lower(),
         'atcoords': fchk["Current cartesian coordinates"].reshape(-1, 3),
@@ -190,7 +191,7 @@ def load_one(lit: LineIterator) -> dict:
         mo_occs = np.zeros(norba + norbb)
         mo_occs[:nalpha] = 1.0
         mo_occs[norba: norba + nbeta] = 1.0
-        mo = MolecularOrbitals('unrestricted', norba, norbb, mo_occs, mo_coeffs, mo_energies, None)
+        mo = MolecularOrbitals('unrestricted', norba, norbb, mo_occs, mo_coeffs, mo_energies)
     else:
         # restricted closed-shell and open-shell
         mo_occs = np.zeros(norba)
@@ -200,7 +201,7 @@ def load_one(lit: LineIterator) -> dict:
             # delete dm_full_scf because it is known to be buggy
             if 'scf' in result['one_rdms']:
                 result['one_rdms'].pop('scf')
-        mo = MolecularOrbitals('restricted', norba, norba, mo_occs, mo_coeffs, mo_energies, None)
+        mo = MolecularOrbitals('restricted', norba, norba, mo_occs, mo_coeffs, mo_energies)
     result['mo'] = mo
 
     # E) Load properties
@@ -307,9 +308,8 @@ def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
         are either scalar or array data. Arrays are always one-dimensional.
 
     """
-    result = {}
     # Read the two-line header
-    result['title'] = next(lit).strip()
+    result = {'title': next(lit).strip()}
     words = next(lit).split()
     if len(words) == 3:
         result['command'], result['lot'], result['obasis_name'] = words
@@ -582,8 +582,6 @@ def dump_one(f: TextIO, data: IOData):
     if data.energy is not None:
         _dump_real_scalars("SCF Energy", data.energy, f)
         _dump_real_scalars("Total Energy", data.energy, f)
-    else:
-        _dump_real_scalars("Total Energy", 0., f)
 
     # write MO energies & coefficients
     if data.mo is not None:
