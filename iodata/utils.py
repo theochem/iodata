@@ -48,6 +48,7 @@ picosecond: float = 1e-12 * second
 amu: float = 1e-3 / (spc.value(u'electron mass') * spc.value(u'Avogadro constant'))
 kcalmol: float = 1e3 * spc.calorie / spc.value('Avogadro constant') / spc.value('Hartree energy')
 calmol: float = spc.calorie / spc.value('Avogadro constant') / spc.value('Hartree energy')
+kjmol: float = 1e3 / spc.value('Avogadro constant') / spc.value('Hartree energy')
 
 
 class FileFormatError(IOError):

@@ -21,24 +21,24 @@
 This module will load Q-Chem log file into IODATA.
 """
 
-
-import re
 from typing import Tuple
+from distutils.util import strtobool
 
 import numpy as np
 
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
-from ..utils import LineIterator, kcalmol, calmol
+from ..utils import LineIterator, angstrom, kcalmol, calmol, kjmol
 
 __all__ = []
 
 PATTERNS = ['*.qchemlog']
 
 
-@document_load_one("qchemlog", ['atcoords', 'atmasses', 'atnums', 'energy', 'g_rot',
-                                'mo', 'lot', 'obasis_name', 'run_type', 'extra'],
+@document_load_one("qchemlog",
+                   ['atcoords', 'atmasses', 'atnums', 'energy', 'g_rot', 'mo',
+                    'lot', 'obasis_name', 'run_type', 'extra'],
                    ['athessian'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
@@ -55,26 +55,28 @@ def load_one(lit: LineIterator) -> dict:
 
     # build molecular orbitals
     # ------------------------
-    # restricted case
-    if not data['unrestricted']:
-        mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir']), axis=0)
-        mo_occs = np.zeros(data['norba'])
-        mo_occs[:data['alpha_elec']] = 1.0
-        mo_occs[:data['beta_elec']] += 1.0
-        mo = MolecularOrbitals("restricted", data['norba'], data['norba'],
-                               occs=mo_occs, energies=mo_energies)
-    # unrestricted case
-    else:
+    if data['unrestricted']:
+        # unrestricted case
         mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir'],
                                       data['mo_b_occ'], data['mo_b_vir']), axis=0)
-        mo_occs = np.zeros(data['norba'] + data['norbb'])
+        mo_coeffs = np.full((data['nbasis'], data['norba'] + data['norbb']), np.nan)
+        mo_occs = np.zeros(mo_coeffs.shape[1])
         # number of alpha & beta electrons and number of alpha molecular orbitals
         na, nb = data['alpha_elec'], data['beta_elec']
         na_mo = len(data['mo_a_occ']) + len(data['mo_a_vir'])
         mo_occs[:na] = 1.0
         mo_occs[na_mo: na_mo + nb] = 1.0
         mo = MolecularOrbitals("unrestricted", data['norba'], data['norbb'],
-                               occs=mo_occs, energies=mo_energies)
+                               mo_occs, mo_coeffs, mo_energies, None)
+    else:
+        # restricted case
+        mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir']), axis=0)
+        mo_coeffs = np.full((data['nbasis'], data['norba']), np.nan)
+        mo_occs = np.zeros(mo_coeffs.shape[1])
+        mo_occs[:data['alpha_elec']] = 1.0
+        mo_occs[:data['beta_elec']] += 1.0
+        mo = MolecularOrbitals("restricted", data['norba'], data['norba'],
+                               mo_occs, mo_coeffs, mo_energies, None)
     result['mo'] = mo
 
     # moments
@@ -84,14 +86,18 @@ def load_one(lit: LineIterator) -> dict:
     if 'quadrupole' in data:
         # Convert to alphabetical ordering: xx, xy, xz, yy, yz, zz
         moments[(2, 'c')] = data['quadrupole'][[0, 1, 3, 2, 4, 5]]
+    # check total dipole parsed
+    if 'dipole_tol' in data and 'dipole' in data:
+        assert abs(np.linalg.norm(data['dipole']) - data['dipole_tol']) < 1.0e-4
     if moments:
         result['moments'] = moments
 
     # extra dictionary
     # ----------------
     # add labels to extra dictionary if they are loaded
-    extra_labels = ['spin_multi', 'nuclear_repulsion_energy',
-                    'polarizability_tensor', 'imaginary_freq', 'vib_energy']
+    extra_labels = ['nuclear_repulsion_energy', 'polarizability_tensor', 'imaginary_freq',
+                    'vib_energy', 'eda2', 'frags']
+
     extra = {label: data[label] for label in extra_labels if data.get(label) is not None}
     # if present, convert vibrational energy from kcal/mol to "atomic units + K"
     if 'vib_energy' in extra:
@@ -105,11 +111,15 @@ def load_one(lit: LineIterator) -> dict:
     if 'entropy_dict' in data:
         extra['entropy_dict'] = {k: v * calmol for k, v in data['entropy_dict'].items()}
 
+    # if present, convert eda terms from kj/mol to atomic units
+    if 'eda2' in data:
+        extra['eda2'] = {k: v * kjmol for k, v in data['eda2'].items()}
+
     result['extra'] = extra
     return result
 
 
-def load_qchemlog_low(lit: LineIterator) -> dict:
+def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
     """Load the information from Q-Chem log file."""
     data = {}
     while True:
@@ -119,67 +129,79 @@ def load_qchemlog_low(lit: LineIterator) -> dict:
             # Read until the end of the file.
             break
 
-        # get the atomic information
-        if line.startswith('$molecule'):
-            data['atnums'], data['atcoords'] = _helper_atoms(lit)
-            data['natom'] = len(data['atnums'])
         # job specifications
-        elif line.startswith('$rem'):
-            data.update(_helper_job(lit))
-        # standard nuclear orientation
+        if line.startswith('$rem') and 'run_type' not in data:
+            data.update(_helper_rem_job(lit))
+
+        # standard nuclear orientation (make sure multi-step jobs does not over-write this)
+        elif line.startswith('Standard Nuclear Orientation (Angstroms)') and 'atcoords' not in data:
+            data.update(_helper_structure(lit))
+
+        # standard nuclear orientation for fragments in EDA jobs
         elif line.startswith('Standard Nuclear Orientation (Angstroms)'):
-            # atnums, alpha_elec, beta_elec, nbasis, nuclear_replusion_energy, energy, atcoords
-            _, data['alpha_elec'], data['beta_elec'], data['nbasis'], \
-                data['nuclear_repulsion_energy'], data['energy'], _ = _helper_electron(lit)
-        # orbital energies
-        elif line.startswith('Orbital Energies (a.u.)'):
-            result = _helper_orbital_energies(lit)
-            data['mo_a_occ'], data['mo_b_occ'], data['mo_a_vir'], data['mo_b_vir'] = result
+            if 'frags' not in data:
+                data['frags'] = []
+            data['frags'].append(_helper_structure(lit))
+
+        # energy (the last energy in a multi-step job)
+        elif line.startswith('Total energy in the final basis set'):
+            data['energy'] = float(line.split()[-1])
+        elif line.startswith('the SCF tolerance is set'):
+            data['energy'] = _helper_energy(lit)
+
+        # orbital energies (the last orbital energies in a multi-step job)
+        elif line.startswith('Orbital Energies (a.u.)') and not data['unrestricted']:
+            result = _helper_orbital_energies_restricted(lit)
+            data['mo_a_occ'], data['mo_a_vir'] = result
+            # compute number of alpha
+            data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
+
+        # orbital energies (the last orbital energies in a multi-step job)
+        elif line.startswith('Orbital Energies (a.u.)') and data['unrestricted']:
+            data.update(_helper_orbital_energies_unrestricted(lit))
             # compute number of alpha and beta molecular orbitals
             data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
             data['norbb'] = len(data['mo_b_occ']) + len(data['mo_b_vir'])
-        # mulliken charges
+
+        # mulliken charges (the last charges in a multi-step job)
         elif line.startswith('Ground-State Mulliken Net Atomic Charges'):
             data['mulliken_charges'] = _helper_mulliken(lit)
-        #  cartesian multipole moments
+
+        # cartesian multipole moments (the last mutipole moments in a multi-step job)
         elif line.startswith('Cartesian Multipole Moments'):
             data['dipole'], data['quadrupole'], data['dipole_tol'] = _helper_dipole_moments(lit)
+
         # polarizability matrix
         elif line.startswith('Polarizability Matrix (a.u.)'):
             data['polarizability_tensor'] = _helper_polar(lit)
+
         # hessian matrix
         elif line.startswith('Hessian of the SCF Energy'):
-            data['athessian'] = _helper_hessian(lit, data['natom'])
+            data['athessian'] = _helper_hessian(lit, len(data['atnums']))
+
         # vibrational analysis
         elif line.startswith('**                       VIBRATIONAL ANALYSIS'):
             data['imaginary_freq'], data['vib_energy'], data['atmasses'] = _helper_vibrational(lit)
+
         # rotational symmetry number
         elif line.startswith('Rotational Symmetry Number'):
             data['g_rot'] = int(line.split()[-1])
             data['enthalpy_dict'], data['entropy_dict'] = _helper_thermo(lit)
 
+        # energy decomposition analysis 2 (EDA2)
+        elif line.startswith('Results of EDA2'):
+            eda2 = _helper_eda2(lit)
+            # add fragment energies to frags
+            energies = eda2.pop('energies')
+            for index, energy in enumerate(energies):
+                data['frags'][index]['energy'] = energy
+            data['eda2'] = eda2
+
     return data
 
 
-def _helper_atoms(lit: LineIterator) -> Tuple:
-    """Load list of coordinates from an Q-Chem log output file format."""
-    # Skip line with net charge and spin multiplicity
-    next(lit)
-    # atomic numbers and atomic coordinates (in Angstrom)
-    atom_symbols = []
-    atcoords = []
-    for line in lit:
-        if line.strip() == '$end':
-            break
-        atom_symbols.append(line.strip().split()[0])
-        atcoords.append([float(i) for i in line.strip().split()[1:]])
-    atnums = np.array([sym2num[i] for i in atom_symbols])
-    atcoords = np.array(atcoords)
-    return atnums, atcoords
-
-
-def _helper_job(lit: LineIterator) -> Tuple:
-    """Load job specifications from Q-Chem log out file format."""
+def _helper_rem_job(lit: LineIterator) -> Tuple:
+    """Load job specifications from Q-Chem output file format."""
     data_rem = {}
     for line in lit:
         if line.strip() == '$end':
@@ -191,54 +213,69 @@ def _helper_job(lit: LineIterator) -> Tuple:
         elif line.lower().startswith('method'):
             data_rem['lot'] = line.split()[1].lower()
         elif line.lower().startswith('unrestricted'):
-            data_rem['unrestricted'] = int(line.split()[1])
-        elif line.lower().startswith('basis'):
+            data_rem['unrestricted'] = bool(strtobool(line.split()[1]))
+        elif line.split()[0].lower() == 'basis':
             data_rem['obasis_name'] = line.split()[1].lower()
         elif line.lower().startswith('symmetry'):
-            data_rem['symm'] = int(line.split()[1])
+            data_rem['symm'] = bool(strtobool(line.split()[1]))
     return data_rem
 
 
-def _helper_electron(lit: LineIterator) -> Tuple:
-    """Load electron information from Q-Chem log out file format."""
+def _helper_structure(lit: LineIterator):
+    """Load electron information from Q-Chem output file format."""
     next(lit)
     next(lit)
-    atom_symbols = []
+    # atomic numbers and atomic coordinates (converted to A.U)
+    atsymbols = []
     atcoords = []
     for line in lit:
         if line.strip().startswith('-------------'):
             break
-        # print(line.strip())
-        atom_symbols.append(line.strip().split()[1])
-        atcoords.append([float(i) for i in line.strip().split()[2:]])
-    atnums = np.array([sym2num[i] for i in atom_symbols])
-    atcoords = np.array(atcoords)
-    # nuclear_replusion_energy = float(re.findall('\d+\.\d+', next(line).strip())[-2])
-    nuclear_replusion_energy = float(next(lit).strip().split()[-2])
-    # number of num alpha electron and beta elections
-    alpha_elec, beta_elec = [int(i) for i in re.findall(r'\d', next(lit).strip())]
-    # number of basis
+        atsymbols.append(line.split()[1])
+        atcoords.append([float(i) for i in line.split()[2:]])
+    subdata = {"atnums": np.array([sym2num[i] for i in atsymbols]),
+               "atcoords": np.array(atcoords) * angstrom,
+               "nuclear_repulsion_energy": float(next(lit).split()[-2])}
+    # number of alpha and beta elections
+    line = next(lit).split()
+    subdata["alpha_elec"] = int(line[2])
+    subdata["beta_elec"] = int(line[5])
+    # number of basis functions
     next(lit)
-    nbasis = int(next(lit).strip().split()[-3])
-    # total energy
+    subdata["nbasis"] = int(next(lit).split()[-3])
+
+    return subdata
+
+
+def _helper_energy(lit: LineIterator):
     for line in lit:
-        if line.strip().startswith('Total energy in the final basis set'):
+        if line.strip().endswith('Convergence criterion met'):
+            energy = float(line.split()[1])
             break
-    energy = float(line.strip().split()[-1])
-    return atnums, alpha_elec, beta_elec, nbasis, nuclear_replusion_energy, energy, atcoords
+    return energy
 
 
-def _helper_orbital_energies(lit: LineIterator) -> Tuple:
-    """Load occupied and virtual orbital energies."""
+def _helper_orbital_energies_restricted(lit: LineIterator) -> Tuple:
+    """Load occupied and virtual orbital energies for restricted calculation."""
     # alpha occupied MOs
     mo_a_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # alpha unoccupied MOs
-    mo_a_unoccupied = _helper_section('-- Virtual --', '', lit, backward=False)
+    mo_a_unoccupied = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
+    return mo_a_occupied, mo_a_unoccupied
+
+
+def _helper_orbital_energies_unrestricted(lit: LineIterator) -> Tuple:
+    """Load occupied and virtual orbital energies for unrestricted calculation."""
+    subdata = dict()
+    # alpha occupied MOs
+    subdata['mo_a_occ'] = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
+    # alpha unoccupied MOs
+    subdata['mo_a_vir'] = _helper_section('-- Virtual --', '', lit, backward=False)
     # beta occupied MOs
-    mo_b_occupied = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
+    subdata['mo_b_occ'] = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # beta unoccupied MOs
-    mo_b_unoccupied = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
-    return mo_a_occupied, mo_b_occupied, mo_a_unoccupied, mo_b_unoccupied
+    subdata['mo_b_vir'] = _helper_section('-- Virtual --', '-' * 62, lit, backward=False)
+    return subdata
 
 
 def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = False) -> np.ndarray:
@@ -250,26 +287,28 @@ def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = Fa
             break
     for line in lit:
         if line.strip() != end:
-            data.extend(line.strip().split())
+            data.extend(line.split())
         else:
             break
     if backward:
         lit.back(line)
-    return np.array(data, dtype=np.float)
+    return np.array(data, dtype=float)
 
 
 def _helper_mulliken(lit: LineIterator) -> np.ndarray:
     """Load mulliken net atomic charges."""
+    # skip line between 'Ground-State Mulliken Net Atomic Charges' line & atomic charge entries
     while True:
         line = next(lit).strip()
         if line.startswith('------'):
             break
+    # store atomic charges until enf of table is reached
     mulliken_charges = []
     for line in lit:
         if line.strip().startswith('--------'):
             break
-        mulliken_charges.append(line.strip().split()[-2])
-    return np.array(mulliken_charges, dtype=np.float)
+        mulliken_charges.append(line.split()[2])
+    return np.array(mulliken_charges, dtype=float)
 
 
 def _helper_dipole_moments(lit: LineIterator) -> Tuple:
@@ -278,14 +317,14 @@ def _helper_dipole_moments(lit: LineIterator) -> Tuple:
         if line.strip().startswith('Dipole Moment (Debye)'):
             break
     # parse dipole moment (only load the float numbers)
-    dipole = next(lit).strip().split()
+    dipole = next(lit).split()
     dipole = np.array([float(dipole) for idx, dipole in enumerate(dipole) if idx % 2 != 0])
     # parse total dipole moment
-    dipole_tol = float(next(lit).strip().split()[-1])
-    # parse quadrupole moment
+    dipole_tol = float(next(lit).split()[-1])
+    # parse quadrupole moment (xx, xy, yy, xz, yz, zz)
     next(lit)
-    quadrupole = next(lit).strip().split()
-    quadrupole.extend(next(lit).strip().split())
+    quadrupole = next(lit).split()
+    quadrupole.extend(next(lit).split())
     quadrupole = np.array([float(dipole) for idx, dipole in enumerate(quadrupole) if idx % 2 != 0])
     return dipole, quadrupole, dipole_tol
 
@@ -297,25 +336,25 @@ def _helper_polar(lit: LineIterator) -> np.ndarray:
     for line in lit:
         if line.strip().startswith('Calculating analytic Hessian'):
             break
-        polarizability_tensor.append(line.strip().split()[1:])
-    return np.array(polarizability_tensor, dtype=np.float)
+        polarizability_tensor.append(line.split()[1:])
+    return np.array(polarizability_tensor, dtype=float)
 
 
-def _helper_hessian(lit: LineIterator, natoms: int) -> np.ndarray:
+def _helper_hessian(lit: LineIterator, natom: int) -> np.ndarray:
     """Load hessian matrix."""
     # hessian in Cartesian coordinates, shape(3 * natom, 3 * natom)
-    col_idx = [int(i) for i in next(lit).strip().split()]
-    hessian = np.empty((natoms * 3, natoms * 3), dtype=object)
+    col_idx = [int(i) for i in next(lit).split()]
+    hessian = np.empty((natom * 3, natom * 3), dtype=object)
     for line in lit:
         if line.strip().startswith('****************'):
             break
-        if not line.startswith('            '):
-            line_list = line.strip().split()
+        if line.startswith('            '):
+            col_idx = [int(i) for i in line.split()]
+        else:
+            line_list = line.split()
             row_idx = int(line_list[0]) - 1
             hessian[row_idx, col_idx[0] - 1:col_idx[-1]] = line_list[1:]
-        else:
-            col_idx = [int(i) for i in line.strip().split()]
-    return hessian.astype(np.float)
+    return hessian.astype(float)
 
 
 def _helper_vibrational(lit: LineIterator) -> Tuple:
@@ -324,15 +363,15 @@ def _helper_vibrational(lit: LineIterator) -> Tuple:
         if line.strip().startswith('This Molecule has'):
             break
     # pylint: disable= W0631
-    imaginary_freq = int(line.strip().split()[3])
-    vib_energy = float(next(lit).strip().split()[-2])
+    imaginary_freq = int(line.split()[3])
+    vib_energy = float(next(lit).split()[-2])
     next(lit)
     atmasses = []
     for line in lit:
         if line.strip().startswith('Molecular Mass:'):
             break
-        atmasses.append(line.strip().split()[-1])
-    atmasses = np.array(atmasses, dtype=np.float)
+        atmasses.append(line.split()[-1])
+    atmasses = np.array(atmasses, dtype=float)
     return imaginary_freq, vib_energy, atmasses
 
 
@@ -361,3 +400,63 @@ def _helper_thermo(lit: LineIterator) -> Tuple:
         elif line_str.startswith('Total Entropy'):
             entropy_dict['entropy_total'] = float(line_str.split()[-2])
     return enthalpy_dict, entropy_dict
+
+
+def _helper_eda2(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
+    """Load Energy decomposition information."""
+    next(lit)
+    eda2 = {}
+    for line in lit:
+
+        if line.strip().startswith('Fragment Energies'):
+            for line_2 in lit:
+                if line_2.strip().startswith('-----'):
+                    break
+                eda2.setdefault('energies', []).append(float(line_2.split()[-1]))
+
+        if line.strip().startswith('Orthogonal Fragment Subspace Decomposition'):
+            next(lit)
+            for line_2 in lit:
+                if line_2.strip().startswith('-----'):
+                    break
+                info = line_2.split()
+                if info[0] in ['E_elec', 'E_pauli', 'E_disp']:
+                    eda2[info[0].lower()] = float(info[-1])
+
+        elif line.strip().startswith('Terms summing to E_pauli'):
+            next(lit)
+            for line_2 in lit:
+                if line_2.strip().startswith('-----'):
+                    break
+                info = line_2.split()
+                if info[0] in ['E_kep_pauli', 'E_disp_free_pauli']:
+                    eda2[info[0].lower()] = float(info[-1])
+
+        elif line.strip().startswith('Classical Frozen Decomposition'):
+            next(lit)
+            for line_2 in lit:
+                if line_2.strip().startswith('-----'):
+                    break
+                info = line_2.split()
+                if info[0] in ['E_cls_elec', 'E_cls_pauli']:
+                    eda2[info[0].lower()] = float(info[5])
+                elif info[0].split("[")[1] == 'E_mod_pauli':
+                    eda2[info[0].split("[")[1].lower()] = float(info[5])
+
+        elif line.strip().startswith('Simplified EDA Summary'):
+            next(lit)
+            for line_2 in lit:
+                if line_2.strip().startswith('-----'):
+                    break
+                info = line_2.split()
+                if info[0] in ['PREPARATION', 'FROZEN', 'DISPERSION', 'POLARIZATION', 'TOTAL']:
+                    eda2[info[0].lower()] = float(info[1])
+                elif info[0].split("[")[-1] == 'PAULI':
+                    eda2[info[0].split("[")[-1].lower()] = float(info[1].split("]")[0])
+                elif info[0] == 'CHARGE':
+                    eda2[info[0].lower() + ' ' + info[1].lower()] = float(info[2])
+
+        elif line.strip().startswith('-------------------------------------------------------'):
+            break
+
+    return eda2
