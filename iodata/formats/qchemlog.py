@@ -59,7 +59,8 @@ def load_one(lit: LineIterator) -> dict:
         # unrestricted case
         mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir'],
                                       data['mo_b_occ'], data['mo_b_vir']), axis=0)
-        mo_occs = np.zeros(data['norba'] + data['norbb'])
+        mo_coeffs = np.full((data['nbasis'], data['norba'] + data['norbb']), np.nan)
+        mo_occs = np.zeros(mo_coeffs.shape[1])
         # number of alpha & beta electrons and number of alpha molecular orbitals
         na, nb = data['alpha_elec'], data['beta_elec']
         na_mo = len(data['mo_a_occ']) + len(data['mo_a_vir'])
