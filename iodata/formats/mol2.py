@@ -75,7 +75,7 @@ def load_one(lit: LineIterator) -> dict:
             if words[0] == "@<TRIPOS>BOND":
                 bonds = _load_helper_bonds(lit, nbonds)
                 result['bonds'] = bonds
-    if molecule_found is False:
+    if not molecule_found:
         raise lit.error("Molecule could not be read")
     return result
 
