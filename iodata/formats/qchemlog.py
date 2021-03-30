@@ -56,7 +56,7 @@ def load_one(lit: LineIterator) -> dict:
     # build molecular orbitals
     # ------------------------
     # restricted case
-    if data['unrestricted'] is False:
+    if not data['unrestricted']:
         mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir']), axis=0)
         mo_coeffs = np.full((data['nbasis'], data['norba']), np.nan)
         mo_occs = np.zeros(mo_coeffs.shape[1])
@@ -150,14 +150,14 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
             data['energy'] = _helper_energy(lit)
 
         # orbital energies (the last orbital energies in a multi-step job)
-        elif line.startswith('Orbital Energies (a.u.)') and data['unrestricted'] is False:
+        elif line.startswith('Orbital Energies (a.u.)') and not data['unrestricted']:
             result = _helper_orbital_energies_restricted(lit)
             data['mo_a_occ'], data['mo_a_vir'] = result
             # compute number of alpha
             data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
 
         # orbital energies (the last orbital energies in a multi-step job)
-        elif line.startswith('Orbital Energies (a.u.)') and data['unrestricted'] is True:
+        elif line.startswith('Orbital Energies (a.u.)') and data['unrestricted']:
             data.update(_helper_orbital_energies_unrestricted(lit))
             # compute number of alpha and beta molecular orbitals
             data['norba'] = len(data['mo_a_occ']) + len(data['mo_a_vir'])
