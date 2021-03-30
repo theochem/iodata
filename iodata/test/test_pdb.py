@@ -90,6 +90,8 @@ def check_load_dump_consistency(tmpdir, fn):
     "water_single.pdb",
     "water_single_model.pdb",
     "ch5plus.pdb",
+    "2luv.pdb",
+    "2bcw.pdb",
 ])
 def test_load_dump_consistency(fn_base, tmpdir):
     with path('iodata.test.data', fn_base) as fn_pdb:
@@ -195,13 +197,3 @@ def test_load_ch5plus_bonds():
     with path("iodata.test.data", "ch5plus.pdb") as fn_pdb:
         mol = load_one(fn_pdb)
     assert_equal(mol.bonds[:, :2], [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5]])
-
-
-def test_load_pdb_dump_pdb(tmpdir):
-    # test dump pdb with single chain
-    with path("iodata.test.data", "2luv.pdb") as fn_pdb:
-        check_load_dump_consistency(tmpdir, fn_pdb)
-
-    # test dump pdb with multiple chain
-    with path('iodata.test.data', "2bcw.pdb") as fn_pdb:
-        check_load_dump_consistency(tmpdir, fn_pdb)
