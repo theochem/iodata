@@ -55,17 +55,8 @@ def load_one(lit: LineIterator) -> dict:
 
     # build molecular orbitals
     # ------------------------
-    # restricted case
-    if not data['unrestricted']:
-        mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir']), axis=0)
-        mo_coeffs = np.full((data['nbasis'], data['norba']), np.nan)
-        mo_occs = np.zeros(mo_coeffs.shape[1])
-        mo_occs[:data['alpha_elec']] = 1.0
-        mo_occs[:data['beta_elec']] += 1.0
-        mo = MolecularOrbitals("restricted", data['norba'], data['norba'],
-                               mo_occs, mo_coeffs, mo_energies, None)
-    # unrestricted case
-    else:
+    if data['unrestricted']:
+        # unrestricted case
         mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir'],
                                       data['mo_b_occ'], data['mo_b_vir']), axis=0)
         mo_coeffs = np.full((data['nbasis'], data['norba'] + data['norbb']), np.nan)
@@ -76,6 +67,15 @@ def load_one(lit: LineIterator) -> dict:
         mo_occs[:na] = 1.0
         mo_occs[na_mo: na_mo + nb] = 1.0
         mo = MolecularOrbitals("unrestricted", data['norba'], data['norbb'],
+                               mo_occs, mo_coeffs, mo_energies, None)
+    else:
+        # restricted case
+        mo_energies = np.concatenate((data['mo_a_occ'], data['mo_a_vir']), axis=0)
+        mo_coeffs = np.full((data['nbasis'], data['norba']), np.nan)
+        mo_occs = np.zeros(mo_coeffs.shape[1])
+        mo_occs[:data['alpha_elec']] = 1.0
+        mo_occs[:data['beta_elec']] += 1.0
+        mo = MolecularOrbitals("restricted", data['norba'], data['norba'],
                                mo_occs, mo_coeffs, mo_energies, None)
     result['mo'] = mo
 
@@ -348,12 +348,12 @@ def _helper_hessian(lit: LineIterator, natom: int) -> np.ndarray:
     for line in lit:
         if line.strip().startswith('****************'):
             break
-        if not line.startswith('            '):
+        if line.startswith('            '):
+            col_idx = [int(i) for i in line.split()]
+        else:
             line_list = line.split()
             row_idx = int(line_list[0]) - 1
             hessian[row_idx, col_idx[0] - 1:col_idx[-1]] = line_list[1:]
-        else:
-            col_idx = [int(i) for i in line.split()]
     return hessian.astype(float)
 
 
