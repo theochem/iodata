@@ -292,7 +292,7 @@ def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = Fa
             break
     if backward:
         lit.back(line)
-    return np.array(data, dtype=np.float)
+    return np.array(data, dtype=float)
 
 
 def _helper_mulliken(lit: LineIterator) -> np.ndarray:
@@ -308,7 +308,7 @@ def _helper_mulliken(lit: LineIterator) -> np.ndarray:
         if line.strip().startswith('--------'):
             break
         mulliken_charges.append(line.strip().split()[2])
-    return np.array(mulliken_charges, dtype=np.float)
+    return np.array(mulliken_charges, dtype=float)
 
 
 def _helper_dipole_moments(lit: LineIterator) -> Tuple:
@@ -337,7 +337,7 @@ def _helper_polar(lit: LineIterator) -> np.ndarray:
         if line.strip().startswith('Calculating analytic Hessian'):
             break
         polarizability_tensor.append(line.strip().split()[1:])
-    return np.array(polarizability_tensor, dtype=np.float)
+    return np.array(polarizability_tensor, dtype=float)
 
 
 def _helper_hessian(lit: LineIterator, natom: int) -> np.ndarray:
@@ -354,7 +354,7 @@ def _helper_hessian(lit: LineIterator, natom: int) -> np.ndarray:
             hessian[row_idx, col_idx[0] - 1:col_idx[-1]] = line_list[1:]
         else:
             col_idx = [int(i) for i in line.strip().split()]
-    return hessian.astype(np.float)
+    return hessian.astype(float)
 
 
 def _helper_vibrational(lit: LineIterator) -> Tuple:
@@ -371,7 +371,7 @@ def _helper_vibrational(lit: LineIterator) -> Tuple:
         if line.strip().startswith('Molecular Mass:'):
             break
         atmasses.append(line.strip().split()[-1])
-    atmasses = np.array(atmasses, dtype=np.float)
+    atmasses = np.array(atmasses, dtype=float)
     return imaginary_freq, vib_energy, atmasses
 
 
