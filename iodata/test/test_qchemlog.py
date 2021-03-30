@@ -203,8 +203,8 @@ def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
     assert data['run_type'] == 'eda'
     assert data['lot'] == 'wb97x-v'
     assert data['obasis_name'] == 'def2-tzvpd'
-    assert data['unrestricted'] is False
-    assert data['symm'] is False
+    assert not data['unrestricted']
+    assert not data['symm']
     assert data['alpha_elec'] == 10
     assert data['beta_elec'] == 10
     assert_allclose(data['nuclear_repulsion_energy'], 36.66284801)
@@ -291,7 +291,7 @@ def test_load_one_h2o_dimer_eda2():
     assert mol.lot == 'wb97x-v'
     assert mol.obasis_name == 'def2-tzvpd'
     assert mol.mo.kind == 'restricted'
-    # assert data['symm'] is False
+    # assert not data['symm']
     # # assert data['g_rot'] == 1
     # assert data['alpha_elec'] == 10
     # assert data['beta_elec'] == 10
