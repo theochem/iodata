@@ -52,7 +52,6 @@ Installation
 ------------
 
 ..
-
     : To install IOData using the conda package management system, install
     : `miniconda <https://conda.io/miniconda.html>`__ or
     : `anaconda <https://www.anaconda.com/download>`__ first, and then:
