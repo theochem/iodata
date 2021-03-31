@@ -307,8 +307,12 @@ def load_one(lit: LineIterator) -> dict:
 
 @document_dump_one("WFX", ['atcoords', 'atnums', 'atcorenums', 'mo', 'obasis', 'charge'],
                    ['title', 'energy', 'spinpol', 'lot', 'atgradient', 'extra'])
-def dump_one(f: TextIO, data: IOData):
+def dump_one(f: TextIO, data: IOData):  # pylint: disable=too-many-branches,too-many-statements
     """Do not edit this docstring. It will be overwritten."""
+    # occs_aminusb is not supported
+    if data.mo.occs_aminusb is not None:
+        raise ValueError("Cannot write WFX file when mo.occs_aminusb is set.")
+
     # pylint: disable=too-many-branches,too-many-statements
     # get all tags/labels that can be written into a WFX file
     lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, _ = _wfx_labels()

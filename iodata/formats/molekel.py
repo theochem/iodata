@@ -256,6 +256,10 @@ def load_one(lit: LineIterator) -> dict:
 @document_dump_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcharges'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
+    # occs_aminusb is not supported
+    if data.mo.occs_aminusb is not None:
+        raise ValueError("Cannot write Molekel file when mo.occs_aminusb is set.")
+
     # Header
     f.write('$MKL\n')
     f.write('#\n')
