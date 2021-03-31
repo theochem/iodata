@@ -101,7 +101,9 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
 
     # Determine schema type
     if "schema_name" in result:
-        if result["schema_name"] not in {
+        # Correct for qc_schema vs. qcschema, due to inconsistencies in prior versions
+        schema_name = result["schema_name"].replace("qc_schema", "qcschema")
+        if schema_name not in {
             "qcschema_molecule",
             "qcschema_basis",
             "qcschema_input",
@@ -134,8 +136,6 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
                 schema_name = "qcschema_input"
         else:
             raise FileFormatError("{}: Could not determine `schema_name`.".format(lit.filename))
-    else:
-        schema_name = result["schema_name"]
     if "schema_version" not in result:
         warn(
             "{}: QCSchema files should have a `schema_version` key."
