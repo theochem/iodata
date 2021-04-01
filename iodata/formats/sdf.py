@@ -37,7 +37,7 @@ import numpy as np
 from ..docstrings import (document_load_one, document_load_many, document_dump_one,
                           document_dump_many)
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym, bond2num, num2bond
+from ..periodic import sym2num, num2sym
 from ..utils import angstrom, LineIterator
 
 
@@ -45,10 +45,6 @@ __all__ = []
 
 
 PATTERNS = ['*.sdf']
-
-
-SDF2BOND = {1: "1", 2: "2", 3: "3", 4: "ar", 5: "sd", 6: "sar", 7: "dar", 8: "un"}
-BOND2SDF = dict((val, key) for key, val in SDF2BOND.items())
 
 
 @document_load_one("SDF", ['atcoords', 'atnums', 'bonds', 'title'])
@@ -76,7 +72,10 @@ def load_one(lit: LineIterator) -> dict:
         words = next(lit).split()
         bonds[ibond, 0] = int(words[0]) - 1
         bonds[ibond, 1] = int(words[1]) - 1
-        bonds[ibond, 2] = bond2num[SDF2BOND.get(int(words[2]), "un")]
+        # Bond types 1 to 8 (inclusive) are defined in the SDF format.
+        # Anything outside that range is not modified, just not to lose any
+        # information, but could be potentially meaningless.
+        bonds[ibond, 2] = int(words[2])
     while True:
         try:
             words = next(lit)
@@ -119,8 +118,7 @@ def dump_one(f: TextIO, data: IOData):
     if data.bonds is not None:
         for iatom, jatom, bondtype in data.bonds:
             print('{:3d}{:3d}{:3d}  0  0  0  0'.format(
-                iatom + 1, jatom + 1,
-                BOND2SDF.get(num2bond[bondtype], 8),
+                iatom + 1, jatom + 1, bondtype
             ), file=f)
     print('$$$$', file=f)
 
