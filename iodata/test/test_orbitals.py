@@ -56,6 +56,22 @@ def test_restricted_empty():
     assert mo.energiesb is None
     assert mo.irrepsa is None
     assert mo.irrepsb is None
+    # Test setters for occsa
+    occsa = np.array([1, 1, 0.5, 0.5, 0.0])
+    mo.occsa = occsa
+    assert_allclose(mo.occsa, occsa)
+    assert_allclose(mo.occsb, 0.0)
+    assert_allclose(mo.occs, occsa)
+    assert_allclose(mo.occs_aminusb, occsa)
+    # Test setters for occsb
+    mo.occs = None
+    mo.occs_aminusb = None
+    occsb = np.array([0.5, 1, 1, 0.5, 0.0])
+    mo.occsb = occsb
+    assert_allclose(mo.occsa, 0.0)
+    assert_allclose(mo.occsb, occsb)
+    assert_allclose(mo.occs, occsb)
+    assert_allclose(mo.occs_aminusb, -occsb)
 
 
 def test_restricted_occs():
@@ -256,6 +272,22 @@ def test_unrestricted_occs():
     assert mo.energiesb is None
     assert mo.irrepsa is None
     assert mo.irrepsb is None
+    # Test setters for occsa and occsb
+    occsa = np.array([1, 1, 0.5, 0.5, 0.0])
+    mo.occsa = occsa
+    assert_allclose(mo.occsa, occsa)
+    occsb = np.array([1, 0.7, 0.3])
+    mo.occsb = occsb
+    assert_allclose(mo.occsb, occsb)
+    assert_allclose(mo.occs, np.concatenate([occsa, occsb]))
+    # Test in-place modification of occsa and occsb, which should just work.
+    mo.occs = occs
+    mo.occsa[:] = occsa
+    assert_allclose(mo.occsa, occsa)
+    occsb = np.array([1, 0.7, 0.3])
+    mo.occsb[:] = occsb
+    assert_allclose(mo.occsb, occsb)
+    assert_allclose(mo.occs, np.concatenate([occsa, occsb]))
 
 
 def test_unrestricted_occs_aminusb():
@@ -466,6 +498,10 @@ def test_generalized_irreps():
         mo.occsa
     with pytest.raises(NotImplementedError):
         mo.occsb
+    with pytest.raises(NotImplementedError):
+        mo.occsa = [1, 1, 1, 0, 0, 0, 0]
+    with pytest.raises(NotImplementedError):
+        mo.occsb = [1, 1, 1, 0, 0, 0, 0]
     with pytest.raises(NotImplementedError):
         mo.coeffsa
     with pytest.raises(NotImplementedError):
