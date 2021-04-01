@@ -279,7 +279,7 @@ def document_dump_many(fmt: str, required: List[str], optional: List[str] = None
 
 
 def _document_write(template: str, fmt: str, required: List[str], optional: List[str] = None,
-                    kwdocs: Dict[str, str] = {}, notes: str = None):
+                    notes: str = None):
     optional = optional or []
 
     def decorator(func):
@@ -295,14 +295,11 @@ def _document_write(template: str, fmt: str, required: List[str], optional: List
             fmt=fmt,
             required=', '.join("``{}``".format(word) for word in required),
             optional=optional_sentence,
-            kwdocs="\n".join("{}\n    {}".format(name, docu.replace("\n", " "))
-                             for name, docu in sorted(kwdocs.items())),
             notes=(notes or ""),
         )
         func.fmt = fmt
         func.required = required
         func.optional = optional
-        func.kwdocs = kwdocs
         func.notes = notes
         return func
     return decorator
@@ -320,7 +317,12 @@ data
     {required}.{optional}
 template
     A template input string.
-{kwdocs}
+atom_line
+    A function taking three arguments: IOData instance, dictionary with
+    fields and iatom. This function returns a formatted line for the
+    corresponding atom.
+**kwargs
+    Keyword arguments are passed on to the input-specific write_input function.
 Notes
 -----
 
@@ -330,7 +332,7 @@ Notes
 
 
 def document_write_input(fmt: str, required: List[str], optional: List[str] = None,
-                         kwdocs: Dict[str, str] = {}, notes: str = None):
+                         notes: str = None):
     """Decorate a write_input function to generate a docstring.
 
     Parameters
@@ -341,10 +343,6 @@ def document_write_input(fmt: str, required: List[str], optional: List[str] = No
         A list of mandatory IOData attributes needed to write the file.
     optional
         A list of optional IOData attributes which can be include when writing the file.
-    kwdocs
-        A dictionary with documentation for keyword arguments. Each key is a
-        keyword argument name and the corresponding value is text explaining the
-        argument.
     notes
         Additional information to be added to the docstring.
 
@@ -354,4 +352,4 @@ def document_write_input(fmt: str, required: List[str], optional: List[str] = No
         A decorator function.
 
     """
-    return _document_write(WRITE_INPUT_DOC_TEMPLATE, fmt, required, optional, kwdocs, notes)
+    return _document_write(WRITE_INPUT_DOC_TEMPLATE, fmt, required, optional, notes)

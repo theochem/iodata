@@ -20,7 +20,7 @@
 
 
 import os
-from typing import Iterator
+from typing import Iterator, Callable
 from types import ModuleType
 from fnmatch import fnmatch
 from pkgutil import iter_modules
@@ -226,7 +226,8 @@ def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None, **kwarg
         format_module.dump_many(f, iodatas, **kwargs)
 
 
-def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, **kwargs):
+def write_input(iodata: IOData, filename: str, fmt: str, template: str = None,
+                atom_line: Callable = None, **kwargs):
     """Write input file using an instance of IOData for the specified software format.
 
     Parameters
@@ -239,10 +240,14 @@ def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, *
         The name of the software for which input file is generated.
     template
         The template input string.
+    atom_line
+        A function taking three arguments: IOData instance, dictionary with
+        fields and iatom. This function returns a formatted line for the
+        corresponding atom.
     **kwargs
         Keyword arguments are passed on to the input-specific write_input function.
 
     """
     input_module = _select_input_module(fmt)
     with open(filename, 'w') as f:
-        input_module.write_input(f, iodata, template=template, **kwargs)
+        input_module.write_input(f, iodata, template, atom_line, **kwargs)

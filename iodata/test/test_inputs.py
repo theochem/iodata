@@ -22,9 +22,12 @@
 import os
 import numpy as np
 
-from ..iodata import IOData
-from ..utils import angstrom
+import pytest
+
 from ..api import load_one, write_input
+from ..iodata import IOData
+from ..periodic import num2sym
+from ..utils import angstrom, FileFormatWarning
 
 try:
     from importlib_resources import path
@@ -111,6 +114,32 @@ def test_input_gaussian_from_fchk(tmpdir):
         check_load_input_and_compare(fname, fname_expected)
 
 
+def test_input_gaussian_atom_line(tmpdir):
+    template = """\
+# {lot}/{obasis_name} Counterpoise=2
+
+Counterpoise calculation on {extra[name]}
+
+0,1 0,1 0,1
+{geometry}
+
+"""
+
+    def atom_line(data, _fields, iatom):
+        symbol = num2sym[data.atnums[iatom]]
+        atcoord = data.atcoords[iatom] / angstrom
+        fid = data.extra["fragment_ids"][iatom]
+        return f"{symbol}(Fragment={fid}) {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
+
+    with path('iodata.test.data', 's66_4114_02WaterMeOH.xyz') as fn:
+        mol = load_one(fn, "extxyz")
+
+    fn_com = os.path.join(tmpdir, 'input_bsse.com')
+    write_input(mol, fn_com, 'gaussian', template, atom_line)
+    with path('iodata.test.data', 'input_gaussian_bsse.com') as fn_expected:
+        check_load_input_and_compare(fn_com, fn_expected)
+
+
 def test_input_orca_from_xyz(tmpdir):
     # load geometry from xyz file & add level of theory & basis set
     with path('iodata.test.data', 'water_number.xyz') as fn:
@@ -158,7 +187,8 @@ def test_input_orca_from_iodata(tmpdir):
 def test_input_orca_from_molden(tmpdir):
     # load orca molden
     with path('iodata.test.data', 'nh3_orca.molden') as fn:
-        mol = load_one(fn)
+        with pytest.warns(FileFormatWarning):
+            mol = load_one(str(fn))
     # write input in a temporary file
     fname = os.path.join(tmpdir, 'input_from_molden.in')
     write_input(mol, fname, fmt='orca')
