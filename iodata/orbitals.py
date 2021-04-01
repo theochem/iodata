@@ -197,9 +197,8 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
                     # restricted open-shell HF/KS
                     nbeta = np.clip(self.occs, 0, 1).sum()
                     return abs(self.nelec - 2 * nbeta)
-                else:
-                    # restricted closed-shell natural orbitals
-                    return 0.0
+                # restricted closed-shell natural orbitals
+                return 0.0
             return self.occs_aminusb.sum()
         return abs(self.occsa.sum() - self.occsb.sum())
 
