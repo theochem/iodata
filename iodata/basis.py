@@ -16,7 +16,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-"""Utility functions for working with basis sets."""
+"""Utility functions for working with basis sets.
+
+Notes
+-----
+Basis set conventions and terminology are documented in :ref:`basis_conventions`.
+
+"""
 
 from functools import wraps
 from numbers import Integral
@@ -119,7 +125,7 @@ class Shell:
     coeffs: np.ndarray = attr.ib(validator=validate_shape(("exponents", 0), ("kinds", 0)))
 
     @property
-    def nbasis(self) -> int:   # noqa: D401
+    def nbasis(self) -> int:  # noqa: D401
         """Number of basis functions (e.g. 3 for a P shell and 4 for an SP shell)."""
         result = 0
         for angmom, kind in zip(self.angmoms, self.kinds):
@@ -132,12 +138,12 @@ class Shell:
         return result
 
     @property
-    def nprim(self) -> int:   # noqa: D401
+    def nprim(self) -> int:  # noqa: D401
         """Number of primitives, also known as the contraction length."""
         return len(self.exponents)
 
     @property
-    def ncon(self) -> int:   # noqa: D401
+    def ncon(self) -> int:  # noqa: D401
         """Number of contractions. This is usually 1; e.g., it would be 2 for an SP shell."""
         return len(self.angmoms)
 
@@ -197,7 +203,7 @@ class MolecularBasis:
     primitive_normalization: str
 
     @property
-    def nbasis(self) -> int:   # noqa: D401
+    def nbasis(self) -> int:  # noqa: D401
         """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
 
