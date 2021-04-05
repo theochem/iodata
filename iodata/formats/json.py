@@ -381,13 +381,39 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
         "id",
         "extras",
     }
-    parsed_keys = molecule_keys.intersection(mol.keys())
-    for key in parsed_keys:
-        del mol[key]
-    if len(mol) > 0:
-        topology_dict["extra"]["unparsed"] = mol
+    passthrough_keys = _find_passthrough_keys(mol, molecule_keys)
+    if passthrough_keys:
+        topology_dict["extra"]["unparsed"] = passthrough_keys
 
     return topology_dict
+
+
+def _find_passthrough_keys(result: dict, keys: set) -> dict:
+    """Find all keys not specified for a given schema.
+
+    Parameters
+    ----------
+    result
+        The JSON dict loaded from file.
+    keys
+        The set of expected keys for a given schema type.
+
+    Returns
+    -------
+    passthrough_dict
+        All unparsed keys remaining in the parsed dict.
+    """
+    # Avoid altering original dict
+    result = result.copy()
+
+    passthrough_dict = dict()
+    parsed_keys = keys.intersection(result.keys())
+    for key in parsed_keys:
+        del result[key]
+    if len(result) > 0:
+        passthrough_dict = result
+
+    return passthrough_dict
 
 
 # pylint: disable=unused-argument
@@ -542,6 +568,23 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
         extra_dict["provenance"] = _parse_provenance(result["provenance"], lit, "qcschema_input")
 
     input_dict["extra"] = extra_dict
+
+    input_keys = {
+        "schema_name",
+        "schema_version",
+        "molecule",
+        "driver",
+        "model",
+        "extras",
+        "id",
+        "keywords",
+        "protocols",
+        "provenance",
+    }
+    passthrough_keys = _find_passthrough_keys(result, input_keys)
+    if passthrough_keys:
+        input_dict["extra"]["unparsed"] = passthrough_keys
+
     return input_dict
 
 
