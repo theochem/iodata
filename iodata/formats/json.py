@@ -914,3 +914,74 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
             molecule_dict[k] = data.extra["molecule"]["unparsed"][k]
 
     return molecule_dict
+
+
+def _dump_qcschema_input(data):
+    """Dump relevant attributes from IOData to qcschema_input.
+
+    Using this function requires keywords to be stored in two locations in the `extra` dict:
+    a `molecule` dict for the QCSchema Molecule extra keys, and an `input` dict for the QCSchema
+    Input extra keys.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to dump to file.
+
+    Returns
+    -------
+    input_dict
+        The dict that will produce the QCSchema JSON file.
+
+    """
+    input_dict = {"schema_name": "qcschema_input", "schema_version": 2.0}
+
+    # Gather required field data
+    input_dict["molecule"] = _dump_qcschema_molecule(data)
+    if "driver" not in data.extra["input"]:
+        raise FileFormatError("qcschema_input requires `driver` field in extra['input'].")
+    if data.extra["input"]["driver"] not in {"energy", "gradient", "hessian", "properties"}:
+        raise FileFormatError(
+            "QCSchema driver must be one of `energy`, `gradient`, `hessian`, or `properties`"
+        )
+    input_dict["driver"] = data.extra["input"]["driver"]
+    if "model" not in data.extra["input"]:
+        raise FileFormatError("qcschema_input requires `model` field in extra['input'].")
+    input_dict["model"] = dict()
+    if data.lot is None:
+        raise FileFormatError("qcschema_input requires specifed `lot`.")
+    input_dict["model"]["method"] = data.lot
+    if data.obasis_name is None and "basis" not in data.extra["input"]["model"]:
+        warn(
+            "No basis name given. QCSchema assumes this signifies a basis-free method; to"
+            "avoid this warning, specify `obasis_name` as an empty string.",
+            FileFormatWarning,
+            2,
+        )
+    if "basis" in data.extra["input"]["model"]:
+        raise NotImplementedError("qcschema_basis is not yet supported in IOData.")
+    input_dict["model"]["basis"] = data.obasis_name
+    if "keywords" in data.extra["input"]:
+        input_dict["keywords"] = data.extra["input"]["keywords"]
+    if "extras" in data.extra["input"]:
+        input_dict["extras"] = data.extra["input"]["extras"]
+    if "id" in data.extra["input"]:
+        input_dict["id"] = data.extra["input"]["id"]
+    if "protocols" in data.extra["input"]:
+        input_dict["protocols"] = dict()
+        # Remove 'keep_' from protocols keys (added in IOData for readability)
+        for keep in data.extra["input"]["protocols"]:
+            input_dict["protocols"][keep[5:]] = data.extra["input"]["protocols"][keep]
+    if "provenance" in data.extra["input"]:
+        input_dict["provenance"] = data.extra["input"]["provenance"]
+    else:
+        input_dict["provenance"] = {
+            "creator": "IOData",
+            "version": __version__,
+            "routine": "iodata.formats.json",
+        }
+    if "unparsed" in data.extra["input"]:
+        for k in data.extra["input"]["unparsed"]:
+            input_dict[k] = data.extra["input"]["unparsed"][k]
+
+    return input_dict
