@@ -457,7 +457,7 @@ def _parse_basis_keys(basis: dict, lit: LineIterator) -> dict:
     basis_dict
         Dictionary containing ...
     """
-    raise NotImplementedError("")
+    raise NotImplementedError("qcschema_basis is not yet implemented in IOData.")
 
 
 def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
@@ -626,8 +626,7 @@ def _parse_driver(driver: str, lit: LineIterator) -> str:
                 lit.filename
             )
         )
-    else:
-        return driver
+    return driver
 
 
 def _parse_model(model: dict, lit: LineIterator) -> dict:
@@ -652,8 +651,7 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
 
     if "method" not in model:
         raise FileFormatError("{}: QCSchema `model` requires a `method`".format(lit.filename))
-    else:
-        model_dict["lot"] = model["method"]
+    model_dict["lot"] = model["method"]
     # QCEngineRecords doesn't give an empty string for basis-free methods, omits req'd key instead
     if "basis" not in model:
         warn(
@@ -675,7 +673,6 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
         basis = _parse_basis_keys(model["basis"], lit)
         model_dict.update(basis)
         extra_dict["basis"] = basis["extra"]
-        pass
 
     model_dict["extra"] = extra_dict
     return model_dict
@@ -721,12 +718,10 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
         raise FileFormatError(
             "{}: Invalid `protocols` `wavefunction` keyword.".format(lit.filename)
         )
-    else:
-        protocols_dict["keep_wavefunction"] = wavefunction
+    protocols_dict["keep_wavefunction"] = wavefunction
     if not isinstance(keep_stdout, bool):
         raise FileFormatError("{}: `protocols` `stdout` option must be a boolean.")
-    else:
-        protocols_dict["keep_stdout"] = keep_stdout
+    protocols_dict["keep_stdout"] = keep_stdout
     return protocols_dict
 
 
