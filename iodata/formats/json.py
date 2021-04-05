@@ -808,9 +808,8 @@ def dump_one(f: TextIO, data: IOData):
         raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
         # return_dict = _dump_qcschema_basis(data)
     elif schema_name == "qcschema_input":
-        raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
-        # return_dict = _dump_qcschema_input(data)
-    elif schema_name == "qcschema_input":
+        return_dict = _dump_qcschema_input(data)
+    elif schema_name == "qcschema_output":
         raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
         # return_dict = _dump_qcschema_output(data)
     else:
@@ -835,7 +834,7 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
         The dict that will produce the QCSchema JSON file.
 
     """
-    molecule_dict = {"schema_name": "qcschema_molecule", "schema_version": 2}
+    molecule_dict = {"schema_name": "qcschema_molecule", "schema_version": 2.0}
 
     # Gather required field data
     if data.atnums is None or data.atcoords is None:
