@@ -180,6 +180,11 @@ def _load_qcschema_molecule(result: dict, lit: LineIterator) -> dict:
     # All Topology properties are found in the "molecule" key
     molecule_dict = _parse_topology_keys(result, lit)
 
+    # Move extra keys to molecule dict, for consistency with input/output
+    extra_dict = {"molecule": molecule_dict["extra"]}
+    molecule_dict["extra"] = extra_dict
+    molecule_dict["extra"]["schema_name"] = "qcschema_molecule"
+
     return molecule_dict
 
 
@@ -864,48 +869,49 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
         molecule_dict["fix_symmetry"] = data.g_rot
 
     # Check for other QCSchema keys from IOData extra dict
-    if "qcel_validated" in data.extra:
-        molecule_dict["validated"] = data.extra["qcel_validated"]
-    if "identifiers" in data.extra:
-        molecule_dict["identifiers"] = data.extra["identifiers"]
-    if "comment" in data.extra:
-        molecule_dict["comment"] = data.extra["comment"]
-    if "atom_labels" in data.extra:
-        molecule_dict["atom_labels"] = data.extra["atom_labels"]
-    if "atomic_numbers" in data.extra:
-        molecule_dict["atomic_numbers"] = data.extra["atomic_numbers"].tolist()
-    if "masses" in data.extra:
-        molecule_dict["masses"] = data.extra["masses"].tolist()
-    if "mass_numbers" in data.extra:
-        molecule_dict["mass_numbers"] = data.extra["mass_numbers"].tolist()
-    if "fragments" in data.extra:
-        if "indices" in data.extra["fragments"]:
+    if "qcel_validated" in data.extra["molecule"]:
+        molecule_dict["validated"] = data.extra["molecule"]["qcel_validated"]
+    if "identifiers" in data.extra["molecule"]:
+        molecule_dict["identifiers"] = data.extra["molecule"]["identifiers"]
+    if "comment" in data.extra["molecule"]:
+        molecule_dict["comment"] = data.extra["molecule"]["comment"]
+    if "atom_labels" in data.extra["molecule"]:
+        molecule_dict["atom_labels"] = data.extra["molecule"]["atom_labels"]
+    if "atomic_numbers" in data.extra["molecule"]:
+        molecule_dict["atomic_numbers"] = data.extra["molecule"]["atomic_numbers"].tolist()
+    if "masses" in data.extra["molecule"]:
+        molecule_dict["masses"] = data.extra["molecule"]["masses"].tolist()
+    if "mass_numbers" in data.extra["molecule"]:
+        molecule_dict["mass_numbers"] = data.extra["molecule"]["mass_numbers"].tolist()
+    if "fragments" in data.extra["molecule"]:
+        if "indices" in data.extra["molecule"]["fragments"]:
             molecule_dict["fragments"] = [
-                fragment.tolist() for fragment in data.extra["fragments"]["indices"]
+                fragment.tolist() for fragment in data.extra["molecule"]["fragments"]["indices"]
             ]
-        if "indices" in data.extra["fragments"]:
-            molecule_dict["fragment_charges"] = data.extra["fragments"]["charges"].tolist()
-        if "indices" in data.extra["fragments"]:
+        if "indices" in data.extra["molecule"]["fragments"]:
+            molecule_dict["fragment_charges"] = \
+                data.extra["molecule"]["fragments"]["charges"].tolist()
+        if "indices" in data.extra["molecule"]["fragments"]:
             molecule_dict["fragment_multiplicities"] = \
-                data.extra["fragments"]["multiplicities"].tolist()
-    if "fix_com" in data.extra:
-        molecule_dict["fix_com"] = data.extra["fix_com"]
-    if "fix_orientation" in data.extra:
-        molecule_dict["fix_orientation"] = data.extra["fix_orientation"]
-    if "provenance" in data.extra:
-        molecule_dict["provenance"] = data.extra["provenance"]
+                data.extra["molecule"]["fragments"]["multiplicities"].tolist()
+    if "fix_com" in data.extra["molecule"]:
+        molecule_dict["fix_com"] = data.extra["molecule"]["fix_com"]
+    if "fix_orientation" in data.extra["molecule"]:
+        molecule_dict["fix_orientation"] = data.extra["molecule"]["fix_orientation"]
+    if "provenance" in data.extra["molecule"]:
+        molecule_dict["provenance"] = data.extra["molecule"]["provenance"]
     else:
         molecule_dict["provenance"] = {
             "creator": "IOData",
             "version": __version__,
             "routine": "iodata.formats.json",
         }
-    if "id" in data.extra:
-        molecule_dict["id"] = data.extra["id"]
-    if "extras" in data.extra:
-        molecule_dict["extras"] = data.extra["extras"]
-    if "unparsed" in data.extra:
-        for k in data.extra["unparsed"]:
-            molecule_dict[k] = data.extra["unparsed"][k]
+    if "id" in data.extra["molecule"]:
+        molecule_dict["id"] = data.extra["molecule"]["id"]
+    if "extras" in data.extra["molecule"]:
+        molecule_dict["extras"] = data.extra["molecule"]["extras"]
+    if "unparsed" in data.extra["molecule"]:
+        for k in data.extra["molecule"]["unparsed"]:
+            molecule_dict[k] = data.extra["molecule"]["unparsed"][k]
 
     return molecule_dict

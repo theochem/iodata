@@ -140,7 +140,7 @@ def test_passthrough_qcschema_molecule(filename, unparsed_dict):
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(qcschema_molecule))
 
-    assert mol.extra["unparsed"] == unparsed_dict
+    assert mol.extra["molecule"]["unparsed"] == unparsed_dict
     assert len(record) == 1
 
 
