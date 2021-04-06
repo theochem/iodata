@@ -739,11 +739,120 @@ def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
     Returns
     -------
     output_dict
-        ...
+        Output dictionary containing ``lot`` and ``obasis_name`` keys and corresponding values.
+        It may contain ``energy``, ``obasis`` and ``extra`` keys and corresponding values as well.
+
     """
-    # basis_dict = dict()
-    # return basis_dict
-    raise NotImplementedError("qcschema_output is not yet implemented in IOData.")
+    extra_dict = dict()
+    output_dict = _parse_output_keys(result, lit)
+    extra_dict["output"] = output_dict["extra"]
+
+    if "molecule" not in result:
+        raise FileFormatError("{}: QCSchema Input requires 'molecule' key".format(lit.filename))
+    molecule_dict = _parse_topology_keys(result["molecule"], lit)
+    output_dict.update(molecule_dict)
+    extra_dict["molecule"] = molecule_dict["extra"]
+
+    input_dict = _parse_input_keys(result, lit)
+    output_dict.update(input_dict)
+    extra_dict["input"] = input_dict["extra"]
+    output_dict["extra"] = extra_dict
+    output_dict["extra"]["schema_name"] = "qcschema_output"
+
+    return output_dict
+
+
+def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
+    """Parse input keys for QCSchema input or output files.
+
+    Parameters
+    ----------
+    result
+        The JSON dict loaded from file.
+    lit
+        The line iterator holding the file data.
+
+    Returns
+    -------
+    input_dict
+        Output dictionary containing ``lot`` and ``obasis_name`` keys and corresponding values.
+        It may contain ``energy`` keys and corresponding values as well.
+
+    """
+    should_be_required_keys = {"schema_name", "schema_version"}
+    output_keys = {"provenance", "properties", "success", "return_result"}
+    for key in should_be_required_keys:
+        if key not in result:
+            warn(
+                "{}: QCSchema files should have a '{}' key.".format(lit.filename, key),
+                FileFormatWarning,
+                2,
+            )
+    for key in output_keys:
+        if key not in result:
+            raise FileFormatError(
+                "{}: QCSchema `qcschema_output` file requires '{}' key".format(lit.filename, key)
+            )
+
+    # Store all extra keys in extra_dict and gather at end
+    output_dict = dict()
+    extra_dict = dict()
+
+    extra_dict["schema_name"] = "qcschema_output"
+    try:
+        version = result["schema_version"]
+    except KeyError:
+        version = -1
+    if float(version) < 1.0:
+        warn(
+            "{}: Unknown `qcschema_input` version {}, loading may produce invalid results".format(
+                lit.filename, version
+            ),
+            FileFormatWarning,
+            2,
+        )
+    extra_dict["schema_version"] = version
+
+    extra_dict["return_result"] = result["return_result"]
+    extra_dict["success"] = result["success"]
+
+    # Parse properties
+    properties = result["properties"]
+    if "return_energy" in properties:
+        output_dict["energy"] = properties["return_energy"]
+    extra_dict["properties"] = properties
+
+    if "error" in result:
+        extra_dict["error"] = result["error"]
+    if "stderr" in result:
+        extra_dict["stderr"] = result["stderr"]
+    if "stdout" in result:
+        extra_dict["stderr"] = result["stdout"]
+    if "wavefunction" in result:
+        extra_dict["wavefunction"] = result["wavefunction"]
+
+    output_dict["extra"] = extra_dict
+
+    output_keys = {
+        "schema_name",
+        "schema_version",
+        "molecule",
+        "driver",
+        "model",
+        "extras",
+        "id",
+        "keywords",
+        "protocols",
+        "provenance",
+        "properties",
+        "success",
+        "return_result"
+    }
+    passthrough_keys = _find_passthrough_keys(result, output_keys)
+    if passthrough_keys:
+        output_dict["extra"]["unparsed"] = passthrough_keys
+
+    return output_dict
 
 
 def _parse_provenance(
@@ -805,8 +914,7 @@ def dump_one(f: TextIO, data: IOData):
     elif schema_name == "qcschema_input":
         return_dict = _dump_qcschema_input(data)
     elif schema_name == "qcschema_output":
-        raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
-        # return_dict = _dump_qcschema_output(data)
+        return_dict = _dump_qcschema_output(data)
     else:
         raise FileFormatError(
             "'schema_name' must be one of 'qcschema_molecule', 'qcschema_basis'"
@@ -911,7 +1019,7 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     return molecule_dict
 
 
-def _dump_qcschema_input(data):
+def _dump_qcschema_input(data: IOData) -> dict:
     """Dump relevant attributes from IOData to qcschema_input.
 
     Using this function requires keywords to be stored in two locations in the `extra` dict:
@@ -947,12 +1055,7 @@ def _dump_qcschema_input(data):
         raise FileFormatError("qcschema_input requires specifed `lot`.")
     input_dict["model"]["method"] = data.lot
     if data.obasis_name is None and "basis" not in data.extra["input"]["model"]:
-        warn(
-            "No basis name given. QCSchema assumes this signifies a basis-free method; to"
-            "avoid this warning, specify `obasis_name` as an empty string.",
-            FileFormatWarning,
-            2,
-        )
+        input_dict["model"]["basis"] = ""
     if "basis" in data.extra["input"]["model"]:
         raise NotImplementedError("qcschema_basis is not yet supported in IOData.")
     input_dict["model"]["basis"] = data.obasis_name
@@ -980,3 +1083,94 @@ def _dump_qcschema_input(data):
             input_dict[k] = data.extra["input"]["unparsed"][k]
 
     return input_dict
+
+
+def _dump_qcschema_output(data: IOData) -> dict:
+    """Dump relevant attributes from IOData to qcschema_output.
+
+    Using this function requires keywords to be stored in three locations in the `extra` dict:
+    a `molecule` dict for the QCSchema Molecule extra keys, an `input` dict for the QCSchema
+    Input extra keys, and an `output` dict for the QCSchema Output extra keys.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to dump to file.
+
+    Returns
+    -------
+    output_dict
+        The dict that will produce the QCSchema JSON file.
+
+    """
+    output_dict = {"schema_name": "qcschema_output", "schema_version": 2.0}
+
+    # Gather required field data
+    # Gather required field data
+    output_dict["molecule"] = _dump_qcschema_molecule(data)
+    if "driver" not in data.extra["input"]:
+        raise FileFormatError("qcschema_output requires `driver` field in extra['input'].")
+    if data.extra["input"]["driver"] not in {"energy", "gradient", "hessian", "properties"}:
+        raise FileFormatError(
+            "QCSchema driver must be one of `energy`, `gradient`, `hessian`, or `properties`"
+        )
+    output_dict["driver"] = data.extra["input"]["driver"]
+    if "model" not in data.extra["input"]:
+        raise FileFormatError("qcschema_output requires `model` field in extra['input'].")
+    output_dict["model"] = dict()
+    if data.lot is None:
+        raise FileFormatError("qcschema_output requires specifed `lot`.")
+    output_dict["model"]["method"] = data.lot
+    if data.obasis_name is None and "basis" not in data.extra["input"]["model"]:
+        warn(
+            "No basis name given. QCSchema assumes this signifies a basis-free method; to"
+            "avoid this warning, specify `obasis_name` as an empty string.",
+            FileFormatWarning,
+            2,
+        )
+    if "basis" in data.extra["input"]["model"]:
+        raise NotImplementedError("qcschema_basis is not yet supported in IOData.")
+    output_dict["model"]["basis"] = data.obasis_name
+    if "properties" not in data.extra["output"]:
+        raise FileFormatError("qcschema_output requires `properties` field in extra['output'].")
+    output_dict["properties"] = data.extra["output"]["properties"]
+    if data.energy is not None:
+        output_dict["properties"]["return_energy"] = data.energy
+        if output_dict["driver"] == "energy":
+            output_dict["return_result"] = data.energy
+    if "return_result" not in output_dict and "return_result" not in data.extra["output"]:
+        raise FileFormatError("qcschema_output requires `return_result` field in extra['output'].")
+    elif "return_result" in data.extra["output"]:
+        output_dict["return_result"] = data.extra["output"]["return_result"]
+    if "keywords" in data.extra["input"]:
+        output_dict["keywords"] = data.extra["input"]["keywords"]
+    if "extras" in data.extra["input"]:
+        output_dict["extras"] = data.extra["input"]["extras"]
+    if "id" in data.extra["input"]:
+        output_dict["id"] = data.extra["input"]["id"]
+    if "protocols" in data.extra["input"]:
+        output_dict["protocols"] = dict()
+        # Remove 'keep_' from protocols keys (added in IOData for readability)
+        for keep in data.extra["input"]["protocols"]:
+            output_dict["protocols"][keep[5:]] = data.extra["input"]["protocols"][keep]
+    if "error" in data.extra["output"]:
+        output_dict["error"] = data.extra["output"]["error"]
+    if "stderr" in data.extra["output"]:
+        output_dict["stderr"] = data.extra["output"]["stderr"]
+    if "stdout" in data.extra["output"]:
+        output_dict["stderr"] = data.extra["output"]["stdout"]
+    if "wavefunction" in data.extra["output"]:
+        output_dict["wavefunction"] = data.extra["output"]["wavefunction"]
+    if "provenance" in data.extra["input"]:
+        output_dict["provenance"] = data.extra["input"]["provenance"]
+    else:
+        output_dict["provenance"] = {
+            "creator": "IOData",
+            "version": __version__,
+            "routine": "iodata.formats.json",
+        }
+    if "unparsed" in data.extra["input"]:
+        for k in data.extra["input"]["unparsed"]:
+            output_dict[k] = data.extra["input"]["unparsed"][k]
+
+    return output_dict
