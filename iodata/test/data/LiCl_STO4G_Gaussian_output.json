@@ -1,0 +1,90 @@
+{
+  "schema_name": "qcschema_output",
+  "schema_version": 2.0,
+  "molecule": {
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2.0,
+    "symbols":  ["Li", "Cl"],
+    "geometry": [0.000000, 0.000000, -1.631761, 0.000000, 0.000000, 0.287958],
+    "molecular_charge": 0.0,
+    "molecular_multiplicity": 1,
+    "real": [true, true],
+    "provenance": [
+      {
+        "creator": "Gaussian 16",
+        "version": "ES64L-G16RevC.01"
+      },
+      {
+        "creator": "HORTON3",
+        "routine": "Manual validation"
+      }
+    ]
+  },
+  "id": "LiCl_HF_STO4G",
+  "driver": "energy",
+  "return_result": -464.626219879,
+  "model": {
+    "method": "HF",
+    "basis": "STO-4G"
+  },
+  "keywords": {
+    "program": "Gaussian",
+    "verbose": "normal",
+    "run_type": "Freq",
+    "geom": "AllCheck",
+    "mem": "7GB",
+    "nprocshared": "2",
+    "oldchk": "LiCl_OPT.chk",
+    "chk": "LiCl_HF_STO4G.chk"
+  },
+  "protocols": {
+    "wavefunction": "none",
+    "stdout": false
+  },
+  "properties": {
+    "calcinfo_nbasis": 14,
+    "calcinfo_nmo": 14,
+    "calcinfo_nalpha": 10,
+    "calcinfo_nbeta": 10,
+    "nuclear_repulsion_energy": 14.0583267322,
+    "return_energy": -464.626219879,
+    "scf_moments": [
+      [0.0000, 0.0000, -5.3718],
+      [-15.0269, 0.0000, 0.0000, 0.0000, -15.0269, 0.0000, 0.0000, 0.0000, -4.4203],
+      [
+        0.0000, 0.0000, 0.4291, 0.0000, 0.0000, 0.0000, 0.4291, 0.0000, 0.0000, 
+        0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.4291, 0.0000, 0.4291, 0.0000, 
+        0.4291, 0.0000, 0.0000, 0.0000, 0.4291, 0.0000, 0.0000, 0.0000, -19.3542
+      ],
+      [
+        -18.9062, 0.0000, 0.0000, 0.0000, -6.3021, 0.0000, 0.0000, 0.0000, -11.1046,
+        0.0000, -6.3021, 0.0000, -6.3021, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
+        0.0000, 0.0000, -11.1046, 0.0000, 0.0000, 0.0000, -11.1046, 0.0000, 0.0000,
+        0.0000, -6.3021, 0.0000, -6.3021, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000,
+        -6.3021, 0.0000, 0.0000, 0.0000, -18.9062, 0.0000, 0.0000, 0.0000, -11.1046,
+        0.0000, 0.0000, 0.0000, 0.0000, 0.0000, -11.1046, 0.0000, -11.1046, 0.0000,
+        0.0000, 0.0000, -11.1046, 0.0000, 0.0000, 0.0000, -11.1046, 0.0000, 0.0000,
+        0.0000, 0.0000, 0.0000, 0.0000, 0.0000, -11.1046, 0.0000, -11.1046, 0.0000,
+        -11.1046, 0.0000, 0.0000, 0.0000, -11.1046, 0.0000, 0.0000, 0.0000, -9.9113
+      ]
+    ],
+    "scf_energy": -464.626219879,
+    "scf_iterations": 9
+  },
+  "success": true,
+  "extras": {
+    "lewis_acid_group": "alkali_metals",
+    "lewis_base_group": "halides"
+  },
+  "provenance": [
+    {
+      "creator": "Gaussian 16",
+      "version": "ES64L-G16RevC.01"
+    },
+    {
+      "creator": "IOData",
+      "version": "X.X.X",
+      "routine": "iodata.dump_one.json"
+    }
+  ]
+}

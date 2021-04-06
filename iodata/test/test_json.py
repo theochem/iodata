@@ -25,7 +25,7 @@ import numpy as np
 import pytest
 
 from ..api import dump_one, load_one
-from ..utils import FileFormatWarning
+from ..utils import FileFormatError, FileFormatWarning
 
 
 try:
@@ -291,6 +291,73 @@ def test_inout_qcschema_input(tmpdir, filename, nwarn):
             with pytest.warns(FileFormatWarning) as record:
                 mol = load_one(str(qcschema_input))
             assert len(record) == nwarn
+        mol1 = json.loads(qcschema_input.read_bytes())
+
+    fn_tmp = os.path.join(tmpdir, 'test_input_mol.json')
+    dump_one(mol, fn_tmp)
+
+    with open(fn_tmp, "r") as mol2_in:
+        mol2 = json.load(mol2_in)
+
+    # IOData prints the most recent version, and it's not worth updating all test files each time
+    if "provenance" in mol1:
+        del mol1["provenance"]
+    if "provenance" in mol2:
+        del mol2["provenance"]
+    assert mol1 == mol2
+
+
+# output_files: (filename, lot, obasis_name, run_type, nwarn)
+OUTPUT_FILES = [
+    ("H2O_CCSDprTpr_STO3G_output.json", "CCSD(T)", "sto-3g", None, 0),
+    ("LiCl_STO4G_Gaussian_output.json", "HF", "STO-4G", "Freq", 0),
+    ("xtb_water_no_basis.json", "XTB", None, None, 3),
+]
+
+
+@pytest.mark.parametrize("filename, lot, obasis_name, run_type, nwarn", OUTPUT_FILES)
+def test_qcschema_output(filename, lot, obasis_name, run_type, nwarn):
+    with path("iodata.test.data", filename) as qcschema_output:
+        if nwarn == 0:
+            mol = load_one(str(qcschema_output))
+        else:
+            with pytest.warns(FileFormatWarning) as record:
+                mol = load_one(str(qcschema_output))
+            assert len(record) == nwarn
+
+        assert mol.lot == lot
+        assert mol.obasis_name == obasis_name
+        assert mol.run_type == run_type
+
+
+# Not a single valid example of qcschema_molecule is easily found for anything but water
+# Some of these files have been manually validated, as reflected in the provenance
+# bad_mol_files: (filename, error)
+BAD_OUTPUT_FILES = [
+    ("turbomole_water_energy_hf_output.json", FileFormatError),
+    ("turbomole_water_gradient_rimp2_output.json", FileFormatError),
+]
+
+
+@pytest.mark.parametrize("filename, error", BAD_OUTPUT_FILES)
+def test_bad_qcschema_files(filename, error):
+    # FIXME: these will move
+    with path('iodata.test.data', filename) as qcschema_input:
+        with pytest.raises(error):
+            load_one(str(qcschema_input))
+
+
+INOUT_OUTPUT_FILES = [
+    "H2O_CCSDprTpr_STO3G_output.json",
+    "LiCl_STO4G_Gaussian_output.json",
+]
+
+
+@pytest.mark.parametrize("filename", INOUT_OUTPUT_FILES)
+def test_inout_qcschema_output(tmpdir, filename):
+    """Test that loading and dumping qcschema_molecule files retains all data."""
+    with path("iodata.test.data", filename) as qcschema_input:
+        mol = load_one(str(qcschema_input))
         mol1 = json.loads(qcschema_input.read_bytes())
 
     fn_tmp = os.path.join(tmpdir, 'test_input_mol.json')
