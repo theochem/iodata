@@ -17,14 +17,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.7, 3.8, 3.9]
+        include:
+          - os: ubuntu-latest
+            python-version: 3.7
+          - os: ubuntu-latest
+            python-version: 3.8
+          - os: ubuntu-latest
+            python-version: 3.9
+          - os: macos-latest
+            python-version: 3.9
+          - os: windows-latest
+            python-version: 3.9
 
     runs-on: ${{ matrix.os }}
     env:
-      # Tell Roberto to upload coverage results
+      # Tell Roberto to upload coverage results.
       ROBERTO_UPLOAD_COVERAGE: 1
-      COMSPEC: bash
+      # Tell invoke to use Bash on Windows.
+      COMSPEC: 'C:\Program Files\Git\bin\bash.EXE'
     steps:
       - uses: actions/checkout@v2
         with:
