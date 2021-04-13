@@ -24,6 +24,7 @@ jobs:
     env:
       # Tell Roberto to upload coverage results
       ROBERTO_UPLOAD_COVERAGE: 1
+      COMSPEC: bash
     steps:
       - uses: actions/checkout@v2
         with:
