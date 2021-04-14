@@ -166,7 +166,7 @@ end
 """
 
     def atom_line(data, iatom):
-        """Custom atom_line with indentation."""
+        """Construct custom atom_line with indentation."""
         symbol = num2sym[data.atnums[iatom]]
         atcoord = data.atcoords[iatom] / angstrom
         return f"        {symbol:3s} {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
