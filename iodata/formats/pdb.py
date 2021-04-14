@@ -106,9 +106,10 @@ def _parse_pdb_conect_line(line):
 
 
 @document_load_one("PDB", ['atcoords', 'atnums', 'atffparams', 'extra'], ['title', 'bonds'])
-def load_one(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, too-many-statements
     """Do not edit this docstring. It will be overwritten."""
-    title = "PDB file from IOData"
+    title_lines = []
+    compnd_lines = []
     atnums = []
     attypes = []
     restypes = []
@@ -126,8 +127,10 @@ def load_one(lit: LineIterator) -> dict:
         except StopIteration:
             break
         # If the PDB file has a title, replace the default.
-        if line.startswith("TITLE") or line.startswith("COMPND"):
-            title = line[10:].rstrip()
+        if line.startswith("TITLE"):
+            title_lines.append(line[10:].strip())
+        if line.startswith("COMPND"):
+            compnd_lines.append(line[10:].strip())
         if line.startswith("ATOM") or line.startswith("HETATM"):
             (atnum, attype, restype, chainid, resnum, atcoord, occupancy,
              bfactor) = _parse_pdb_atom_line(line)
@@ -151,15 +154,33 @@ def load_one(lit: LineIterator) -> dict:
     if not end_reached:
         lit.warn("The END is not found, but the parsed data is returned!")
 
+    # Data related to force fields
     atffparams = {
         "attypes": np.array(attypes),
         "restypes": np.array(restypes),
         "resnums": np.array(resnums),
     }
-    extra = {"occupancies": np.array(occupancies), "bfactors": np.array(bfactors)}
+    # Extra data
+    extra = {
+        "occupancies": np.array(occupancies),
+        "bfactors": np.array(bfactors),
+    }
+    if len(compnd_lines) > 0:
+        extra["compound"] = "\n".join(compnd_lines)
     # add chain id, if it wasn't all empty
     if not np.all(chainids == [' '] * len(chainids)):
         extra["chainids"] = np.array(chainids)
+    # Set a useful title
+    if len(title_lines) == 0:
+        # Some files use COMPND instead of TITLE, in which case COMPND will be
+        # used as title.
+        if "compound" in extra:
+            title = extra["compound"]
+            del extra["compound"]
+        else:
+            title = "PDB file loaded by IOData"
+    else:
+        title = "\n".join(title_lines)
     result = {
         'atcoords': np.array(atcoords),
         'atnums': np.array(atnums),
@@ -185,10 +206,31 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             return
 
 
+def _dump_multiline_str(f: TextIO, key: str, value: str):
+    r"""Write a multiline string in PDB format.
+
+    Parameters
+    ----------
+    f
+        A file object to write to.
+    key
+        The key used to prefix the multiline string, e.g. `"TITLE"`.
+    value
+        A (multiline) string, with multiple lines separated by `\n`.
+
+    """
+    prefix = key.ljust(10)
+    for iline, line in enumerate(value.split("\n")):
+        print(prefix + line, file=f)
+        prefix = key + str(iline + 2).rjust(10 - len(key)) + " "
+
+
 @document_dump_one("PDB", ['atcoords', 'atnums', 'extra'], ['atffparams', 'title', 'bonds'])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    print(str("TITLE     " + data.title) or "TITLE      Created with IOData", file=f)
+    _dump_multiline_str(f, "TITLE", data.title or "Created with IOData")
+    if "compound" in data.extra:
+        _dump_multiline_str(f, "COMPND", data.extra["compound"])
     # Prepare for ATOM lines.
     attypes = data.atffparams.get('attypes', None)
     restypes = data.atffparams.get('restypes', None)

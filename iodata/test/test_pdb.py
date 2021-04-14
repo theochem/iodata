@@ -50,6 +50,7 @@ def test_load_water_no_end():
 
 def check_water(mol):
     """Test some things on a water file."""
+    assert mol.title == "water"
     assert_equal(mol.atnums, [1, 8, 1])
     # check bond length
     assert_allclose(np.linalg.norm(
@@ -182,6 +183,26 @@ def test_load_2bcw():
     # test pdb with multiple chains
     with path("iodata.test.data", "2bcw.pdb") as fn_pdb:
         mol = load_one(fn_pdb)
+    assert mol.title == """\
+COORDINATES OF THE N-TERMINAL DOMAIN OF RIBOSOMAL PROTEIN L11,C-
+TERMINAL DOMAIN OF RIBOSOMAL PROTEIN L7/L12 AND A PORTION OF THE G'
+DOMAIN OF ELONGATION FACTOR G, AS FITTED INTO CRYO-EM MAP OF AN
+ESCHERICHIA COLI 70S*EF-G*GDP*FUSIDIC ACID COMPLEX"""
+    assert mol.extra["compound"] == """\
+MOL_ID: 1;
+MOLECULE: 50S RIBOSOMAL PROTEIN L11;
+CHAIN: A;
+FRAGMENT: N-TERMINAL DOMAIN;
+MOL_ID: 2;
+MOLECULE: 50S RIBOSOMAL PROTEIN L7/L12;
+CHAIN: B;
+FRAGMENT: C-TERMINAL DOMAIN;
+SYNONYM: L8;
+MOL_ID: 3;
+MOLECULE: ELONGATION FACTOR G;
+CHAIN: C;
+FRAGMENT: A PORTION OF G' DOMAIN';
+SYNONYM: EF-G"""
     assert mol.natom == 191
     assert (mol.atnums == 6).all()
     assert (mol.atffparams["attypes"] == ["CA"] * mol.natom).all()

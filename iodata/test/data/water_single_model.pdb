@@ -1,4 +1,5 @@
 MODEL
+TITLE     water
 HETATM    1  H   HOH     0       0.784  -0.492   0.000  1.00  0.00           H  
 HETATM    2  O   HOH     1       0.000   0.062   0.000  1.00  0.00           O  
 HETATM    3  H   HOH     0      -0.784  -0.492   0.000  1.00  0.00           H  
