@@ -209,22 +209,22 @@ def dump_one(f: TextIO, data: IOData):
         out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} {chain:1s}{resnum:>4d}    '
         out2 = f'{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}'
         print("ATOM  " + out1 + out2, file=f)
-    # Prepare for CONECT lines.
-    connections = [[] for iatom in range(data.natom)]
     if data.bonds is not None:
+        # Prepare for CONECT lines.
+        connections = [[] for iatom in range(data.natom)]
         for iatom0, iatom1 in data.bonds[:, :2]:
             connections[iatom0].append(iatom1)
             connections[iatom1].append(iatom0)
-    # Write CONECT lines.
-    for iatom0, iatoms1 in enumerate(connections):
-        if len(iatoms1) > 0:
-            # Write connection in groups of max 4
-            for ichunk in range(len(iatoms1) // 4 + 1):
-                print("CONECT{:5d}{}".format(
-                    iatom0 + 1, "".join(
+        # Write CONECT lines.
+        for iatom0, iatoms1 in enumerate(connections):
+            if len(iatoms1) > 0:
+                # Write connection in groups of max 4
+                for ichunk in range(len(iatoms1) // 4 + 1):
+                    other_atoms_str = "".join(
                         "{:5d}".format(iatom1 + 1)
                         for iatom1 in iatoms1[ichunk * 4:ichunk * 4 + 4])
-                ), file=f)
+                    conect_line = f"CONECT{iatom0 + 1:5d}{other_atoms_str}"
+                    print(conect_line, file=f)
     print("END", file=f)
 
 
