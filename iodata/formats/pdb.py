@@ -31,7 +31,7 @@ import numpy as np
 from ..docstrings import (document_load_one, document_load_many, document_dump_one,
                           document_dump_many)
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym
+from ..periodic import sym2num, num2sym, bond2num
 from ..utils import angstrom, LineIterator
 
 
@@ -142,7 +142,7 @@ def load_one(lit: LineIterator) -> dict:
             molecule_found = True
         if line.startswith("CONECT"):
             for iatom0, iatom1 in _parse_pdb_conect_line(line):
-                bonds.append([iatom0, iatom1, 1])
+                bonds.append([iatom0, iatom1, bond2num["un"]])
         if line.startswith("END") and molecule_found:
             end_reached = True
             break
