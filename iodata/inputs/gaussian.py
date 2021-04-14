@@ -43,7 +43,7 @@ default_template = """\
 """
 
 
-def default_atom_line(data, _fields, iatom):
+def default_atom_line(data: IOData, iatom: int):
     """Format atom line for Gaussian input."""
     symbol = num2sym[data.atnums[iatom]]
     atcoord = data.atcoords[iatom] / angstrom

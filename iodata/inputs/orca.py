@@ -39,11 +39,11 @@ default_template = """\
 *"""
 
 
-def default_atom_line(data, fields, iatom):
+def default_atom_line(data: IOData, iatom: int):
     """Format atom line for ORCA input."""
     symbol = num2sym[data.atnums[iatom]]
     atcoord = data.atcoords[iatom] / angstrom
-    return f"{fields['indent']}{symbol:3s} {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
+    return f"{symbol:3s} {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
 
 
 @document_write_input("ORCA", ['atnums', 'atcoords'],
@@ -62,7 +62,6 @@ def write_input(f: TextIO, data: IOData, template: str = None,
         "lot": data.lot or 'HF',
         "obasis_name": data.obasis_name or 'STO-3G',
         "run_type": orca_keywords[(data.run_type or "energy").lower()],
-        "indent": "        " if "%coords" in template else "",
     }
     # User-specifield fields have priority, may overwrite default ones.
     fields.update(kwargs)

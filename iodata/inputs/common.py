@@ -43,6 +43,6 @@ def write_input_base(f: TextIO, data: IOData, template: str, atom_line: Callable
     # Generate geometry.
     geometry = []
     for iatom in range(data.natom):
-        geometry.append(atom_line(data, fields, iatom))
+        geometry.append(atom_line(data, iatom))
     fields["geometry"] = "\n".join(geometry)
     print(template.format(**fields), file=f)

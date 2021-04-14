@@ -318,9 +318,10 @@ data
 template
     A template input string.
 atom_line
-    A function taking three arguments: IOData instance, dictionary with
-    fields and iatom. This function returns a formatted line for the
-    corresponding atom.
+    A function taking two arguments: an IOData instance, and an index of
+    the atom. This function returns a formatted line for the corresponding
+    atom. When ommited, a default atom_line function for the selected
+    input format is used.
 **kwargs
     Keyword arguments are passed on to the input-specific write_input function.
 Notes

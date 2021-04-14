@@ -125,7 +125,7 @@ Counterpoise calculation on {extra[name]}
 
 """
 
-    def atom_line(data, _fields, iatom):
+    def atom_line(data, iatom):
         symbol = num2sym[data.atnums[iatom]]
         atcoord = data.atcoords[iatom] / angstrom
         fid = data.extra["fragment_ids"][iatom]
@@ -164,8 +164,15 @@ def test_input_orca_from_xyz(tmpdir):
     end
 end
 """
+
+    def atom_line(data, iatom):
+        """Custom atom_line with indentation."""
+        symbol = num2sym[data.atnums[iatom]]
+        atcoord = data.atcoords[iatom] / angstrom
+        return f"        {symbol:3s} {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
+
     grid_stuff = "Grid4 TightSCF NOFINALGRID"
-    write_input(mol, fname, fmt='orca', template=template, grid_stuff=grid_stuff)
+    write_input(mol, fname, 'orca', template, atom_line, grid_stuff=grid_stuff)
     # compare saved input to expected input
     with path('iodata.test.data', 'input_orca_h2o_sp_b3lyp.txt') as fname_expected:
         check_load_input_and_compare(fname, fname_expected)
