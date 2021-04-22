@@ -1145,7 +1145,7 @@ def _dump_qcschema_output(data: IOData) -> dict:
             output_dict["return_result"] = data.energy
     if "return_result" not in output_dict and "return_result" not in data.extra["output"]:
         raise FileFormatError("qcschema_output requires `return_result` field in extra['output'].")
-    elif "return_result" in data.extra["output"]:
+    if "return_result" in data.extra["output"]:
         output_dict["return_result"] = data.extra["output"]["return_result"]
     if "keywords" in data.extra["input"]:
         output_dict["keywords"] = data.extra["input"]["keywords"]
