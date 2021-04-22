@@ -552,10 +552,13 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
     # Load keywords & store
     # Currently, only the IOData run_type attribute is specifically parsed from keywords, but this
     # is a good space for passing additional IOData-specific keywords, given that the official spec
-    # treats this as program-specific territory.
+    # treats this as program-specific territory. If run_type is not one of the values expected by
+    # IOData, it will be stored only in the extra_dict.
     if "keywords" in result:
         keywords_dict = result["keywords"]
-        if "run_type" in keywords_dict:
+        if "run_type" in keywords_dict and keywords_dict["run_type"].lower() in {
+            "energy", "energy_force", "opt", "scan", "freq"
+        }:
             input_dict["run_type"] = keywords_dict["run_type"]
         extra_dict["keywords"] = keywords_dict
     # Check for extras
