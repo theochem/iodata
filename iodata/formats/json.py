@@ -386,14 +386,14 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
         "id",
         "extras",
     }
-    passthrough_keys = _find_passthrough_keys(mol, molecule_keys)
-    if passthrough_keys:
-        topology_dict["extra"]["unparsed"] = passthrough_keys
+    passthrough_dict = _find_passthrough_dict(mol, molecule_keys)
+    if passthrough_dict:
+        topology_dict["extra"]["unparsed"] = passthrough_dict
 
     return topology_dict
 
 
-def _find_passthrough_keys(result: dict, keys: set) -> dict:
+def _find_passthrough_dict(result: dict, keys: set) -> dict:
     """Find all keys not specified for a given schema.
 
     Parameters
@@ -586,9 +586,9 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
         "protocols",
         "provenance",
     }
-    passthrough_keys = _find_passthrough_keys(result, input_keys)
-    if passthrough_keys:
-        input_dict["extra"]["unparsed"] = passthrough_keys
+    passthrough_dict = _find_passthrough_dict(result, input_keys)
+    if passthrough_dict:
+        input_dict["extra"]["unparsed"] = passthrough_dict
 
     return input_dict
 
@@ -848,9 +848,9 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
         "success",
         "return_result"
     }
-    passthrough_keys = _find_passthrough_keys(result, output_keys)
-    if passthrough_keys:
-        output_dict["extra"]["unparsed"] = passthrough_keys
+    passthrough_dict = _find_passthrough_dict(result, output_keys)
+    if passthrough_dict:
+        output_dict["extra"]["unparsed"] = passthrough_dict
 
     return output_dict
 
