@@ -421,15 +421,14 @@ def _find_passthrough_dict(result: dict, keys: set) -> dict:
     return passthrough_dict
 
 
-# pylint: disable=unused-argument
-def _load_qcschema_basis(result: dict, lit: LineIterator) -> dict:
+def _load_qcschema_basis(_result: dict, _lit: LineIterator) -> dict:
     """Load qcschema_basis properties.
 
     Parameters
     ----------
-    result
+    _result
         The JSON dict loaded from file.
-    lit
+    _lit
         The line iterator holding the file data.
 
     Returns
@@ -442,14 +441,14 @@ def _load_qcschema_basis(result: dict, lit: LineIterator) -> dict:
     raise NotImplementedError("qcschema_basis is not yet implemented in IOData.")
 
 
-def _parse_basis_keys(basis: dict, lit: LineIterator) -> dict:
+def _parse_basis_keys(_basis: dict, _lit: LineIterator) -> dict:
     """Parse basis keys for a QCSchema input, output, or basis file.
 
     Parameters
     ----------
-    basis
+    _basis
         The basis dictionary from a QCSchema basis file or QCSchema input or output 'method' key.
-    lit
+    _lit
         The line iterator holding the file data.
 
     Returns
@@ -725,7 +724,6 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
     return protocols_dict
 
 
-# pylint: disable=unused-argument
 def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
     """Load qcschema_output properties.
 
