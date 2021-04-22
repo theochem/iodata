@@ -764,7 +764,7 @@ def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
 
 
 def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
-    """Parse input keys for QCSchema input or output files.
+    """Parse output keys for QCSchema input or output files.
 
     Parameters
     ----------
