@@ -873,6 +873,10 @@ def _parse_provenance(
     append
         Append IOData provenance entry to provenance list?
 
+    Returns
+    -------
+    base_provenance
+        The provenance data for a QCSchema file.
     """
     if isinstance(provenance, dict):
         if "creator" not in provenance:
