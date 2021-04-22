@@ -244,18 +244,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
 
     # Save schema name & version
     extra_dict["schema_name"] = "qcschema_molecule"
-    try:
-        version = mol["schema_version"]
-    except KeyError:
-        version = -1
-    if float(version) < 0 or float(version) > 2:
-        warn(
-            "{}: Unknown `qcschema_molecule` version {}, "
-            "loading may produce invalid results".format(lit.filename, version),
-            FileFormatWarning,
-            2,
-        )
-    extra_dict["schema_version"] = version
+    extra_dict["schema_version"] = _version_check(mol, 2, "qcschema_molecule", lit)
 
     # Geometry is in a flattened list, convert to N x 3
     topology_dict["atcoords"] = np.array(mol["geometry"]).reshape(-1, 3)
@@ -393,6 +382,39 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     return topology_dict
 
 
+def _version_check(result: dict, max_version: float, schema_name: str, lit: LineIterator) -> str:
+    """Check whether the QCSchema version is a known version.
+
+    Parameters
+    ----------
+    result
+        The JSON dict loaded from file.
+    max_version
+        The highest (most recent) known version for the QCSchema type.
+    schema_name
+        The `schema_name` key of a QCSchema file.
+    lit
+        The line iterator holding the file data.
+
+    Returns
+    -------
+    version
+        The version of the QCSchema file, -1 if unknown version.
+    """
+    try:
+        version = result["schema_version"]
+    except KeyError:
+        version = -1
+    if float(version) < 0 or float(version) > max_version:
+        warn(
+            f"{lit.filename}: Unknown {schema_name} version {version}, "
+            "loading may produce invalid results",
+            FileFormatWarning,
+            2,
+        )
+    return version
+
+
 def _find_passthrough_dict(result: dict, keys: set) -> dict:
     """Find all keys not specified for a given schema.
 
@@ -527,19 +549,7 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
 
     # Save schema name & version
     extra_dict["schema_name"] = "qcschema_input"
-    try:
-        version = result["schema_version"]
-    except KeyError:
-        version = -1
-    if float(version) < 1.0:
-        warn(
-            "{}: Unknown `qcschema_input` version {}, loading may produce invalid results".format(
-                lit.filename, version
-            ),
-            FileFormatWarning,
-            2,
-        )
-    extra_dict["schema_version"] = version
+    extra_dict["schema_version"] = _version_check(result, 1, "qcschema_input", lit)
 
     # Load driver
     extra_dict["driver"] = _parse_driver(result["driver"], lit)
@@ -800,19 +810,7 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
     extra_dict = dict()
 
     extra_dict["schema_name"] = "qcschema_output"
-    try:
-        version = result["schema_version"]
-    except KeyError:
-        version = -1
-    if float(version) < 1.0:
-        warn(
-            "{}: Unknown `qcschema_input` version {}, loading may produce invalid results".format(
-                lit.filename, version
-            ),
-            FileFormatWarning,
-            2,
-        )
-    extra_dict["schema_version"] = version
+    extra_dict["schema_version"] = _version_check(result, 2, "qcschema_output", lit)
 
     extra_dict["return_result"] = result["return_result"]
     extra_dict["success"] = result["success"]
