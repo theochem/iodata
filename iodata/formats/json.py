@@ -25,6 +25,65 @@ QCSchema defines four different subschema:
 - Output: specifying QC program output for a specific Molecule
 - Basis: specifying a basis set for a specific Molecule
 
+General Usage
+-------------
+The QCSchema format is intended to be a catch-all file format for storing and sharing QC calculation
+data. Due to the wide number of possibilities of the data contained in a single file, not every
+field in a QCSchema file directly corresponds to an IOData attribute. For example, `qcschema_output`
+files allow for many fields capturing different energy contributions, especially for coupled-cluster
+calculations. To accommodate this fact, IOData does not always assume the intent of the user;
+instead, IOData ensures that every field in the file is stored in a structured manner. When a
+QCSchema field does not correspond to an IOData attribute, that data is instead stored in the
+`extra` dict, in a dictionary corresponding to the subschema where that data was found. In cases
+where multiple subschema contain the relevant field (e.g. the Output subschema contains the entirety
+of the Input subschema), the data will be found in the smallest subschema (for the example above, in
+`IOData.extra["input"], not IOData.extra["output"]).
+
+Dumping an IOData instance to a QCSchema file involves adding relevant required (and optional, if
+needed) fields to the necessary dictionaries in the `extra` dict. One exception is the `provenance`
+field: if the only desired provenance data is the creation of the file by IOData, that data will be
+added automatically.
+
+The following sections will describe the requirements of each subschema and the behaviour to expect
+from IOData when loading in or dumping out a QCSchema file.
+
+Molecule
+--------
+The `qcschema_molecule` subschema describes a molecular system, and contains the data necessary to
+specify a molecular system and support I/O and manipulation processes.
+
+The required fields for a `qcschema_molecule` file are:
+
+====================== ============ ====================================================================================
+Field                  IOData attr. Description
+====================== ============ ====================================================================================
+schema_name            N/A          The name of the QCSchema subschema. Fixed as `'qcschema_molecule'`.
+schema_version         N/A          The version of the subschema specification. 2.0 is the current version.
+symbols                `atnums`     An array of the atomic symbols for the system.
+geometry               `atcoords`   An ordered array of XYZ atomic coordinates, corresponding to the order of `symbols`.
+molecular_charge       `charge`     The net electrostatic charge of the molecule. Some writers assume a default of 0.
+molecular_multiplicity `spinpol`    The total multiplicity of this molecule. Some writers assume a default of 1.
+provenance             N/A          Information about the file was generated, provided, and manipulated.
+====================== ============ ====================================================================================
+
+The following is an example of a minimal `qcschema_molecule` file:
+
+.. code-block :: JSON
+
+    {
+      "schema_name": "qcschema_molecule",
+      "schema_version": 2,
+      "symbols":  ["Li", "Cl"],
+      "geometry": [0.000000, 0.000000, -1.631761, 0.000000, 0.000000, 0.287958],
+      "molecular_charge": 0,
+      "molecular_multiplicity": 1,
+      "provenance": {
+        "creator": "HORTON3",
+        "routine": "Manual validation"
+      }
+    }
+
+
 The QCSchema subschema are in various levels of maturity, and are subject to change at any time
 without warning, as they are also used as the internal data representation for the QCElemental
 program. IOData currently supports the Molecule subschema for both ``load_one`` and ``dump_one``.
