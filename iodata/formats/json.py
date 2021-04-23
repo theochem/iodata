@@ -54,17 +54,23 @@ specify a molecular system and support I/O and manipulation processes.
 
 The required fields for a `qcschema_molecule` file are:
 
-====================== ============ ====================================================================================
+====================== ============ =================================================
 Field                  IOData attr. Description
-====================== ============ ====================================================================================
-schema_name            N/A          The name of the QCSchema subschema. Fixed as `'qcschema_molecule'`.
-schema_version         N/A          The version of the subschema specification. 2.0 is the current version.
+====================== ============ =================================================
+schema_name            N/A          The name of the QCSchema subschema. Fixed as
+                                    `'qcschema_molecule'`.
+schema_version         N/A          The version of the subschema specification.
+                                    2.0 is the current version.
 symbols                `atnums`     An array of the atomic symbols for the system.
-geometry               `atcoords`   An ordered array of XYZ atomic coordinates, corresponding to the order of `symbols`.
-molecular_charge       `charge`     The net electrostatic charge of the molecule. Some writers assume a default of 0.
-molecular_multiplicity `spinpol`    The total multiplicity of this molecule. Some writers assume a default of 1.
-provenance             N/A          Information about the file was generated, provided, and manipulated.
-====================== ============ ====================================================================================
+geometry               `atcoords`   An ordered array of XYZ atomic coordinates,
+                                    corresponding to the order of `symbols`.
+molecular_charge       `charge`     The net electrostatic charge of the molecule.
+                                    Some writers assume a default of 0.
+molecular_multiplicity `spinpol`    The total multiplicity of this molecule.
+                                    Some writers assume a default of 1.
+provenance             N/A          Information about the file was generated,
+                                    provided, and manipulated.
+====================== ============ =================================================
 
 The following is an example of a minimal `qcschema_molecule` file:
 
