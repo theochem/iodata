@@ -20,6 +20,7 @@
 """QCSchema JSON file format.
 
 QCSchema defines four different subschema:
+
 - Molecule: specifying a molecular system
 - Input: specifying QC program input for a specific Molecule
 - Output: specifying QC program output for a specific Molecule
@@ -29,50 +30,58 @@ General Usage
 -------------
 The QCSchema format is intended to be a catch-all file format for storing and sharing QC calculation
 data. Due to the wide number of possibilities of the data contained in a single file, not every
-field in a QCSchema file directly corresponds to an IOData attribute. For example, `qcschema_output`
-files allow for many fields capturing different energy contributions, especially for coupled-cluster
-calculations. To accommodate this fact, IOData does not always assume the intent of the user;
-instead, IOData ensures that every field in the file is stored in a structured manner. When a
-QCSchema field does not correspond to an IOData attribute, that data is instead stored in the
-`extra` dict, in a dictionary corresponding to the subschema where that data was found. In cases
+field in a QCSchema file directly corresponds to an IOData attribute. For example,
+``qcschema_output`` files allow for many fields capturing different energy contributions, especially
+for coupled-cluster calculations. To accommodate this fact, IOData does not always assume the intent
+of the user; instead, IOData ensures that every field in the file is stored in a structured manner.
+When a QCSchema field does not correspond to an IOData attribute, that data is instead stored in the
+``extra`` dict, in a dictionary corresponding to the subschema where that data was found. In cases
 where multiple subschema contain the relevant field (e.g. the Output subschema contains the entirety
 of the Input subschema), the data will be found in the smallest subschema (for the example above, in
-`IOData.extra["input"], not IOData.extra["output"]).
+``IOData.extra["input"]``, not ``IOData.extra["output"]``).
 
 Dumping an IOData instance to a QCSchema file involves adding relevant required (and optional, if
-needed) fields to the necessary dictionaries in the `extra` dict. One exception is the `provenance`
-field: if the only desired provenance data is the creation of the file by IOData, that data will be
-added automatically.
+needed) fields to the necessary dictionaries in the ``extra`` dict. One exception is the
+``provenance`` field: if the only desired provenance data is the creation of the file by IOData,
+that data will be added automatically.
 
 The following sections will describe the requirements of each subschema and the behaviour to expect
 from IOData when loading in or dumping out a QCSchema file.
 
-Molecule
---------
-The `qcschema_molecule` subschema describes a molecular system, and contains the data necessary to
+Schema Definitions
+------------------
+
+.. _json_schema_provenance:
+
+Provenance Information
+^^^^^^^^^^^^^^^^^^^^^^
+The provenance field contains information about how the associated QCSchema object and its
+attributes were generated, provided, and manipulated. A provenance entry expects these fields:
+
+======= ===========
+Field   Description
+======= ===========
+creator **Required**. The program that generated, provided, or manipulated this file.
+version The version of the creator.
+routine The routine of the creator.
+======= ===========
+
+In QCElemental, only a single provenance entry is permitted. When generating a QCSchema file for use
+with QCElemental, the easiest way to ensure compliance is to leave the provenance field blank, to
+allow the ``dump_one`` function to generate the correct provenance information. However, allowing
+only one entry for provenance information limits the ability to properly trace a file through
+several operations during complex workflows. With this in mind, IOData supports an enhanced
+provenance field, in the form of a list of provenance entries, with new entries appended to the end
+of the list.
+
+.. _json_schema_molecule:
+
+Molecule Schema
+^^^^^^^^^^^^^^^
+The ``qcschema_molecule`` subschema describes a molecular system, and contains the data necessary to
 specify a molecular system and support I/O and manipulation processes.
 
-The required fields for a `qcschema_molecule` file are:
-
-====================== ============ =================================================
-Field                  IOData attr. Description
-====================== ============ =================================================
-schema_name            N/A          The name of the QCSchema subschema. Fixed as
-                                    `'qcschema_molecule'`.
-schema_version         N/A          The version of the subschema specification.
-                                    2.0 is the current version.
-symbols                `atnums`     An array of the atomic symbols for the system.
-geometry               `atcoords`   An ordered array of XYZ atomic coordinates,
-                                    corresponding to the order of `symbols`.
-molecular_charge       `charge`     The net electrostatic charge of the molecule.
-                                    Some writers assume a default of 0.
-molecular_multiplicity `spinpol`    The total multiplicity of this molecule.
-                                    Some writers assume a default of 1.
-provenance             N/A          Information about the file was generated,
-                                    provided, and manipulated.
-====================== ============ =================================================
-
-The following is an example of a minimal `qcschema_molecule` file:
+The following is an example of a minimal ``qcschema_molecule`` file:
 
 .. code-block :: JSON
 
@@ -90,9 +99,456 @@ The following is an example of a minimal `qcschema_molecule` file:
     }
 
 
-The QCSchema subschema are in various levels of maturity, and are subject to change at any time
-without warning, as they are also used as the internal data representation for the QCElemental
-program. IOData currently supports the Molecule subschema for both ``load_one`` and ``dump_one``.
+The required fields and corresponding types for a ``qcschema_molecule`` file are:
+
+====================== ============ ============ =================================================
+Field                  Type         IOData attr. Description
+====================== ============ ============ =================================================
+schema_name            str          N/A          The name of the QCSchema subschema. Fixed as
+                                                 ``qcschema_molecule``.
+schema_version         str          N/A          The version of the subschema specification.
+                                                 2.0 is the current version.
+symbols                list(N_at)   ``atnums``   An array of the atomic symbols for the system.
+geometry               list(3*N_at) ``atcoords`` An ordered array of XYZ atomic coordinates,
+                                                 corresponding to the order of ``symbols``. The
+                                                 first three elements correspond to atom one,
+                                                 the second three to atom two, etc.
+molecular_charge       float        ``charge``   The net electrostatic charge of the molecule.
+                                                 Some writers assume a default of 0.
+molecular_multiplicity int          ``spinpol``  The total multiplicity of this molecule.
+                                                 Some writers assume a default of 1.
+provenance             dict or list N/A          Information about the file was generated,
+                                                 provided, and manipulated. See Provenance section
+                                                 above for more details.
+====================== ============ ============ =================================================
+
+Note: N_at corresponds to the number of atoms in the molecule, as defined by the length of
+``symbols``.
+
+The optional fields and corresponding types for a ``qcschema_molecule`` file are:
+
+======================= ============ ============== ==================================================
+Field                   Type         IOData attr.   Description
+======================= ============ ============== ==================================================
+atom_labels             list(N_at)   N/A            Additional per-atom labels. Typically used for
+                                                    model conversions, not user assignment. The
+                                                    indices of this array correspond to the
+                                                    ``symbols`` ordering.
+atomic_numbers          list(N_at)   ``atnums``     An array of atomic numbers for each atom.
+                                                    Typically inferred from ``symbols``.
+comment                 str          N/A            Additional comments for this molecule. These
+                                                    comments are intended for user information, not
+                                                    any computational tasks.
+connectivity            list         ``bonds``      The connectivity information between each atom
+                                                    in the ``symbols`` array. Each entry in this
+                                                    array is a 3-item array,
+                                                    ``[index_a, index_b, bond_order]``,
+                                                    where the indices correspond to the atom indices
+                                                    in ``symbols``.
+extras                  dict         N/A            Extra information to associate with this
+                                                    molecule.
+fix_symmetry            str          ``g_rot``      Maximal point group symmetry with which the
+                                                    molecule should be treated.
+fragments               list(N_fr)   N/A            An array that designates which sets of atoms are
+                                                    fragments within the molecule. This is a nested
+                                                    array, with the indices of the base array
+                                                    corresponding to the values in
+                                                    ``fragment_charges`` and
+                                                    ``fragment_multiplicities`` and the values in
+                                                    the nested arrays corresponding to the indices
+                                                    of ``symbols``.
+fragment_charges        list(N_fr)   N/A            The total charge of each fragment in
+                                                    ``fragments``. The indices of this array
+                                                    correspond to the ``fragments`` ordering.
+fragment_multiplicities list(N_fr)   N/A            The multiplicity of each fragment in
+                                                    ``fragments``. The indices of this array
+                                                    correspond to the ``fragments`` ordering.
+id                      str          N/A            A unique identifier for this molecule.
+identifiers             dict         N/A            Additional identifiers by which this molecule
+                                                    can be referenced, such as INCHI, SMILES, etc.
+real                    list(N_at)   ``atcorenums`` An array indicating whether each atom is real
+                                                    (true) or a ghost/virtual atom (false). The
+                                                    indices of this array correspond to the
+                                                    ``symbols`` ordering.
+mass_numbers            list(N_at)   ``atmasses``   An array of atomic mass numbers for each atom. The
+                                                    indices of this array correspond to the
+                                                    ``symbols`` ordering.
+masses                  list(N_at)   ``atmasses``   An array of atomic masses [u] for each atom.
+                                                    Typically inferred from ``symbols``. The indices
+                                                    of this array correspond to the ``symbols``
+                                                    ordering.
+name                    str          ``title``      An arbitrary, common, or human-readable name to
+                                                    assign to this molecule.
+======================= ============ ============== ==================================================
+
+Note: N_at corresponds to the number of atoms in the molecule, as defined by the length of
+``symbols``; N_fr corresponds to the number of fragments in the molecule, as defined by the length
+of ``fragments``. Fragment data is stored in a sub-dictionary, ``fragments``.
+
+The following are additional optional keywords used in QCElemental's QCSchema implementation. These
+keywords mostly correspond to specific QCElemental functionality, and may not necessarily produce
+similar results in other QCSchema parsers.
+
+======================= ============ ==================================================
+Field                   Type         Description
+======================= ============ ==================================================
+fix_com                 bool         An indicator to prevent pre-processing the
+                                     molecule by translating the COM to (0,0,0) in
+                                     Euclidean coordinate space.
+fix_orientation         bool         An indicator to prevent pre-processing the
+                                     molecule by orienting via the inertia tensor.
+validated               bool         An indicator that the input molecule data has been
+                                     previously checked for schema and physics (e.g.
+                                     non-overlapping atoms, feasible multiplicity)
+                                     compliance. Generally should only be true when set
+                                     by a trusted validator.
+======================= ============ ==================================================
+
+.. _json_schema_input:
+
+Input Schema
+^^^^^^^^^^^^
+The ``qcschema_input`` subschema describes all data necessary to generate and parse a QC program
+input file for a given molecule.
+
+The following is an example of a minimal ``qcschema_input`` file:
+
+.. code-block :: JSON
+
+    {
+      "schema_name": "qcschema_input",
+      "schema_version": 2.0,
+      "molecule": {
+        "schema_name": "qcschema_molecule",
+        "schema_version": 2.0,
+        "symbols":  ["Li", "Cl"],
+        "geometry": [0.000000, 0.000000, -1.631761, 0.000000, 0.000000, 0.287958],
+        "molecular_charge": 0.0,
+        "molecular_multiplicity": 1,
+        "provenance": {
+          "creator": "HORTON3",
+          "routine": "Manual validation"
+        }
+      },
+      "driver": "energy",
+      "model": {
+        "method": "B3LYP",
+        "basis": "Def2TZVP"
+      }
+    }
+
+The required fields and corresponding types for a ``qcschema_input`` file are:
+
+======================= ============ ============ ==================================================
+Field                   Type         IOData attr. Description
+======================= ============ ============ ==================================================
+schema_name             str          N/A          The QCSchema specification to which this model
+                                                  conforms. Fixed as ``qcschema_input``.
+schema_version          float        N/A          The version number of ``schema_name`` to which
+                                                  this model conforms, currently 2.
+molecule                dict         N/A          QCSchema Molecule instance.
+driver                  str          N/A          The type of calculation being performed. One of
+                                                  ``energy``, ``gradient``, ``hessian``, or
+                                                  ``properties``.
+model                   dict         N/A          The quantum chemistry model specification for a
+                                                  given operation to compute against.
+======================= ============ ============ ==================================================
+
+The optional fields and corresponding types for a `qcschema_input` file are:
+
+======================= ============ ============ ==================================================
+Field                   Type         IOData attr. Description
+======================= ============ ============ ==================================================
+extras                  dict         N/A          Extra information associated with the input.
+id                      str          N/A          An identifier for the input object.
+keywords                dict         N/A          QC program-specific keywords to be used for a
+                                                  computation. See details below for IOData-specific
+                                                  usages.
+protocols               dict         N/A          Protocols regarding the manipulation of the output
+                                                  that results from this input. See Protocols
+                                                  section below.
+provenance              dict or list N/A          Information about the file was generated,
+                                                  provided, and manipulated. See Provenance section
+                                                  above for more information.
+======================= ============ ============ ==================================================
+
+IOData currently supports the following keywords for ``qcschema_input`` files:
+
+======================= ============ ============ ==================================================
+Keyword                 Type         IOData attr. Description
+======================= ============ ============ ==================================================
+run_type                str          ``run_type`` The type of calculation that lead to the results
+                                                  stored in IOData, which must be one of the
+                                                  following: ``energy``, ``energy_force``, ``opt``,
+                                                  ``scan``, ``freq`` or None.
+======================= ============ ============ ==================================================
+
+.. _json_schema_model:
+
+Model Subschema
+^^^^^^^^^^^^^^^
+The ``model`` dict contains the following fields:
+
+======================= ============ ============ ==================================================
+Field                   Type         IOData attr. Description
+======================= ============ ============ ==================================================
+method                  str          ``lot``      The level of theory used for the computation (e.g.
+                                                  B3LYP, PBE, CCSD(T), etc.)
+basis                   str or dict  N/A          The quantum chemistry basis set to evaluate (e.g.
+                                                  6-31G, cc-pVDZ, etc.) Can be 'none' for methods
+                                                  without basis sets. Must be either a string
+                                                  specifying the basis set name (the same as its
+                                                  name in the Basis Set Exchange, when possible) or
+                                                  a qcschema_basis instance.
+======================= ============ ============ ==================================================
+
+.. _json_schema_protocols:
+
+Protocols Subschema
+^^^^^^^^^^^^^^^^^^^
+The ``protocols`` dict contains the following fields:
+
+======================= ============ ============ ==================================================
+Field                   Type         IOData attr. Description
+======================= ============ ============ ==================================================
+wavefunction            str          N/A          Specification of the wavefunction properties to
+                                                  keep from the resulting output. One of ``all``,
+                                                  ``orbitals_and_eigenvalues``, ``return_results``,
+                                                  or ``none``.
+keep_stdout             bool         N/A          An indicator to keep the output file from the
+                                                  resulting output.
+======================= ============ ============ ==================================================
+
+.. _json_schema_output:
+
+Output Schema
+^^^^^^^^^^^^^
+The ``qcschema_output`` subschema describes all data necessary to generate and parse a QC program's
+output file for a given molecule.
+
+The following is an example of a minimal ``qcschema_output`` file:
+
+.. code-block :: JSON
+
+    {
+      "schema_name": "qcschema_output",
+      "schema_version": 2.0,
+      "molecule": {
+        "schema_name": "qcschema_molecule",
+        "schema_version": 2.0,
+        "symbols":  ["Li", "Cl"],
+        "geometry": [0.000000, 0.000000, -1.631761, 0.000000, 0.000000, 0.287958],
+        "molecular_charge": 0.0,
+        "molecular_multiplicity": 1,
+        "provenance": {
+          "creator": "HORTON3",
+          "routine": "Manual validation"
+        }
+      },
+      "driver": "energy",
+      "model": {
+        "method": "HF",
+        "basis": "STO-4G"
+      },
+      "properties": {},
+      "return_result": -464.626219879,
+      "success": true
+    }
+
+The required fields and corresponding types for a ``qcschema_output`` file are:
+
+======================= ============ ============ ==================================================
+Field                   Type         IOData attr. Description
+======================= ============ ============ ==================================================
+schema_name             str          N/A          The QCSchema specification to which this model
+                                                  conforms. Fixed as ``qcschema_output``.
+schema_version          float        N/A          The version number of ``schema_name`` to which
+                                                  this model conforms, currently 2.
+molecule                dict         N/A          QCSchema Molecule instance.
+driver                  str          N/A          The type of calculation being performed. One of
+                                                  ``energy``, ``gradient``, ``hessian``, or
+                                                  ``properties``.
+model                   dict         N/A          The quantum chemistry model specification for a
+                                                  given operation to compute against.
+properties              dict         N/A          Named properties of quantum chemistry
+                                                  computations. See Properties section below.
+return_result           varies       N/A          The result requested by the ``driver``. The type
+                                                  depends on the ``driver``.
+success                 bool         N/A          An indicator for the success of the QC program's
+                                                  execution.
+======================= ============ ============ ==================================================
+
+The optional fields and corresponding types for a ``qcschema_output`` file are:
+
+======================= ============ ============ ==================================================
+Field                   Type         IOData attr. Description
+======================= ============ ============ ==================================================
+error                   dict         N/A          A complete description of an error-terminated
+                                                  computation. See Error section below.
+extras                  dict         N/A          Extra information associated with the input. Also
+                                                  specified for ``qcschema_input``.
+id                      str          N/A          An identifier for the input object. Also specified
+                                                  for ``qcschema_input``.
+keywords                dict         N/A          QC program-specific keywords to be used for a
+                                                  computation. See details below for IOData-specific
+                                                  usages. Also specified for ``qcschema_input``.
+protocols               dict         N/A          Protocols regarding the manipulation of the output
+                                                  that results from this input. See Protocols
+                                                  section above. Also specified for
+                                                  ``qcschema_input``.
+provenance              dict or list N/A          Information about the file was generated,
+                                                  provided, and manipulated. See Provenance section
+                                                  above for more information. Also specified for
+                                                  ``qcschema_input``.
+stderr                  str          N/A          The standard error (stderr) of the associated
+                                                  computation.
+stdout                  str          N/A          The standard output (stdout) of the associated
+                                                  computation.
+wavefunction            dict         N/A          The wavefunction properties of a QC computation.
+                                                  All matrices appear in column-major order. See
+                                                  Wavefunction section below.
+======================= ============ ============ ==================================================
+
+.. _json_schema_properties:
+
+Properties Subschema
+^^^^^^^^^^^^^^^^^^^^
+The ``properties`` dict contains named properties of quantum chemistry computations. Due to the
+variability possible for the contents of an output file, IOData does not guess at which properties
+are desired by the user, and stores all properties in the ``extra["output]["properties"]`` dict for
+easy retrieval. The current QCSchema standard provides names for the following properties:
+
+======================================== ===========================================================
+Field                                    Description
+======================================== ===========================================================
+calcinfo_nbasis                          The number of basis functions for the computation.
+calcinfo_nmo                             The number of molecular orbitals for the computation.
+calcinfo_nalpha                          The number of alpha electrons in the computation.
+calcinfo_nbeta                           The number of beta electrons in the computation.
+calcinfo_natom                           The number of atoms in the computation.
+nuclear_repulsion_energy                 The nuclear repulsion energy term.
+return_energy                            The energy of the requested method, identical to
+                                         ``return_value`` for energy computations.
+scf_one_electron_energy                  The one-electron (core Hamiltonian) energy contribution to
+                                         the total SCF energy.
+scf_two_electron_energy                  The two-electron energy contribution to the total SCF
+                                         energy.
+scf_vv10_energy                          The VV10 functional energy contribution to the total SCF
+                                         energy.
+scf_xc_energy                            The functional (XC) energy contribution to the total SCF
+                                         energy.
+scf_dispersion_correction_energy         The dispersion correction appended to an underlying
+                                         functional when a DFT-D method is requested.
+scf_dipole_moment                        The X, Y, and Z dipole components.
+scf_total_energy                         The total electronic energy of the SCF stage of the
+                                         calculation.
+scf_iterations                           The number of SCF iterations taken before convergence.
+mp2_same_spin_correlation_energy         The portion of MP2 doubles correlation energy from
+                                         same-spin (i.e. triplet) correlations.
+mp2_opposite_spin_correlation_energy     The portion of MP2 doubles correlation energy from
+                                         opposite-spin (i.e. singlet) correlations.
+mp2_singles_energy                       The singles portion of the MP2 correlation energy. Zero
+                                         except in ROHF.
+mp2_doubles_energy                       The doubles portion of the MP2 correlation energy including
+                                          same-spin and opposite-spin correlations.
+mp2_total_correlation_energy             The MP2 correlation energy.
+mp2_correlation_energy                   The MP2 correlation energy.
+mp2_total_energy                         The total MP2 energy (MP2 correlation energy + HF energy).
+mp2_dipole_moment                        The MP2 X, Y, and Z dipole components.
+ccsd_same_spin_correlation_energy        The portion of CCSD doubles correlation energy from
+                                         same-spin (i.e. triplet) correlations.
+ccsd_opposite_spin_correlation_energy    The portion of CCSD doubles correlation energy from
+                                         opposite-spin (i.e. singlet) correlations
+ccsd_singles_energy                      The singles portion of the CCSD correlation energy. Zero
+                                         except in ROHF.
+ccsd_doubles_energy                      The doubles portion of the CCSD correlation energy
+                                         including same-spin and opposite-spin correlations.
+ccsd_correlation_energy                  The CCSD correlation energy.
+ccsd_total_energy                        The total CCSD energy (CCSD correlation energy + HF
+                                         energy).
+ccsd_dipole_moment                       The CCSD X, Y, and Z dipole components.
+ccsd_iterations                          The number of CCSD iterations taken before convergence.
+ccsd_prt_pr_correlation_energy           The CCSD(T) correlation energy.
+ccsd_prt_pr_total_energy                 The total CCSD(T) energy (CCSD(T) correlation energy + HF
+                                         energy).
+ccsd_prt_pr_dipole_moment                The CCSD(T) X, Y, and Z dipole components.
+ccsd_prt_pr_iterations                   The number of CCSD(T) iterations taken before convergence.
+ccsdt_correlation_energy                 The CCSDT correlation energy.
+ccsdt_total_energy                       The total CCSDT energy (CCSDT correlation energy + HF
+                                         energy).
+ccsdt_dipole_moment                      The CCSDT X, Y, and Z dipole components.
+ccsdt_iterations                         The number of CCSDT iterations taken before convergence.
+ccsdtq_correlation_energy                The CCSDTQ correlation energy.
+ccsdtq_total_energy                      The total CCSDTQ energy (CCSDTQ correlation energy + HF
+                                         energy).
+ccsdtq_dipole_moment                     The CCSDTQ X, Y, and Z dipole components.
+ccsdtq_iterations                        The number of CCSDTQ iterations taken before convergence.
+======================================== ===========================================================
+
+.. _json_schema_error:
+
+Error Subschema
+^^^^^^^^^^^^^^^
+The ``error`` dict contains the following fields:
+
+======================= ============ ============ ==================================================
+Field                   Type         IOData attr. Description
+======================= ============ ============ ==================================================
+error_type              str          N/A          The type of error raised during the computation.
+error_message           str          N/A          Additional information related to the error, such
+                                                  as the backtrace.
+extras                  dict         N/A          Additional data associated with the error.
+======================= ============ ============ ==================================================
+
+.. _json_schema_wavefunction:
+
+Wavefunction subschema
+^^^^^^^^^^^^^^^^^^^^^^
+The wavefunction subschema contains the wavefunction properties of a QC computation. All matrices
+appear in column-major order. The current QCSchema standard provides names for the following
+wavefunction properties:
+
+.. CCA_convention_source:
+https://github.com/evaleev/libint/wiki/using-modern-CPlusPlus-API#solid-harmonic-gaussians-ordering-and-normalization
+
+======================================== ===========================================================
+Field                                    Description
+======================================== ===========================================================
+basis                                    A ``qcschema_basis`` instance for the one-electron AO basis
+                                         set. AO basis functions are ordered according to the CCA
+                                         standard as implemented in
+                                         :ref:`libint <CCA_convention_source>`.
+restricted                               An indicator for a restricted calculation (alpha == beta).
+                                         When true, all beta quantites are omitted, since quantity_b
+                                         == quantity_a
+h_core_a                                 Alpha-spin core (one-electron) Hamiltonian.
+h_core_b                                 Beta-spin core (one-electron) Hamiltonian.
+h_effective_a                            Alpha-spin effective core (one-electron) Hamiltonian.
+h_effective_b                            Beta-spin effective core (one-electron) Hamiltonian.
+scf_orbitals_a                           Alpha-spin SCF orbitals.
+scf_orbitals_b                           Beta-spin SCF orbitals.
+scf_density_a                            Alpha-spin SCF density matrix.
+scf_density_b                            Beta-spin SCF density matrix.
+scf_fock_a                               Alpha-spin SCF Fock matrix.
+scf_fock_b                               Beta-spin SCF Fock matrix.
+scf_eigenvalues_a                        Alpha-spin SCF eigenvalues.
+scf_eigenvalues_b                        Beta-spin SCF eigenvalues.
+scf_occupations_a                        Alpha-spin SCF orbital occupations.
+scf_occupations_b                        Beta-spin SCF orbital occupations.
+orbitals_a                               Keyword for the primary return alpha-spin orbitals.
+orbitals_b                               Keyword for the primary return beta-spin orbitals.
+density_a                                Keyword for the primary return alpha-spin density.
+density_b                                Keyword for the primary return beta-spin density.
+fock_a                                   Keyword for the primary return alpha-spin Fock matrix.
+fock_b                                   Keyword for the primary return beta-spin Fock matrix.
+eigenvalues_a                            Keyword for the primary return alpha-spin eigenvalues.
+eigenvalues_b                            Keyword for the primary return beta-spin eigenvalues.
+occupations_a                            Keyword for the primary return alpha-spin orbital
+                                         occupations.
+occupations_b                            Keyword for the primary return beta-spin orbital
+                                         occupations.
+======================================== ===========================================================
+
 
 """
 
