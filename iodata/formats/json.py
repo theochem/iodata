@@ -959,7 +959,7 @@ def _parse_provenance(
         raise FileFormatError("{}: Invalid `{}` provenance type".format(lit.filename, source))
     if append:
         base_provenance.append(
-            {"creator": "IOData", "version": __version__, "routine": "iodata.formats.json"}
+            {"creator": "IOData", "version": __version__, "routine": "iodata.formats.json.load_one"}
         )
     return base_provenance
 
@@ -1068,14 +1068,7 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
         molecule_dict["fix_com"] = data.extra["molecule"]["fix_com"]
     if "fix_orientation" in data.extra["molecule"]:
         molecule_dict["fix_orientation"] = data.extra["molecule"]["fix_orientation"]
-    if "provenance" in data.extra["molecule"]:
-        molecule_dict["provenance"] = data.extra["molecule"]["provenance"]
-    else:
-        molecule_dict["provenance"] = {
-            "creator": "IOData",
-            "version": __version__,
-            "routine": "iodata.formats.json",
-        }
+    molecule_dict["provenance"] = _dump_provenance(data, "molecule")
     if "id" in data.extra["molecule"]:
         molecule_dict["id"] = data.extra["molecule"]["id"]
     if "extras" in data.extra["molecule"]:
@@ -1085,6 +1078,37 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
             molecule_dict[k] = data.extra["molecule"]["unparsed"][k]
 
     return molecule_dict
+
+
+def _dump_provenance(data: IOData, source: str) -> Union[List[dict], dict]:
+    """Generate the provenance information for dumping an IOData instance to QCSchema.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to dump to file.
+    source
+        The `extra` dict location for the dump file, to find provenance data.
+
+    Returns
+    -------
+    provenance
+        The provenance information for the IOData instance.
+    """
+    new_provenance = {
+        "creator": "IOData",
+        "version": __version__,
+        "routine": "iodata.formats.json.dump_one",
+    }
+    if "provenance" in data.extra[source]:
+        provenance = data.extra[source]["provenance"]
+        if isinstance(provenance, dict):
+            return [provenance, new_provenance]
+        if isinstance(provenance, list):
+            provenance.append(new_provenance)
+            return provenance
+        raise FileFormatError("QCSchema provenance must be either a dict or list of dicts.")
+    return new_provenance
 
 
 def _dump_qcschema_input(data: IOData) -> dict:
@@ -1138,14 +1162,7 @@ def _dump_qcschema_input(data: IOData) -> dict:
         # Remove 'keep_' from protocols keys (added in IOData for readability)
         for keep in data.extra["input"]["protocols"]:
             input_dict["protocols"][keep[5:]] = data.extra["input"]["protocols"][keep]
-    if "provenance" in data.extra["input"]:
-        input_dict["provenance"] = data.extra["input"]["provenance"]
-    else:
-        input_dict["provenance"] = {
-            "creator": "IOData",
-            "version": __version__,
-            "routine": "iodata.formats.json",
-        }
+    input_dict["provenance"] = _dump_provenance(data, "input")
     if "unparsed" in data.extra["input"]:
         for k in data.extra["input"]["unparsed"]:
             input_dict[k] = data.extra["input"]["unparsed"][k]
@@ -1229,14 +1246,7 @@ def _dump_qcschema_output(data: IOData) -> dict:
         output_dict["stderr"] = data.extra["output"]["stdout"]
     if "wavefunction" in data.extra["output"]:
         output_dict["wavefunction"] = data.extra["output"]["wavefunction"]
-    if "provenance" in data.extra["input"]:
-        output_dict["provenance"] = data.extra["input"]["provenance"]
-    else:
-        output_dict["provenance"] = {
-            "creator": "IOData",
-            "version": __version__,
-            "routine": "iodata.formats.json",
-        }
+    output_dict["provenance"] = _dump_provenance(data, "input")
     if "unparsed" in data.extra["input"]:
         for k in data.extra["input"]["unparsed"]:
             output_dict[k] = data.extra["input"]["unparsed"][k]

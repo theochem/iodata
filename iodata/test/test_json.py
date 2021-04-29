@@ -144,6 +144,19 @@ def test_passthrough_qcschema_molecule(filename, unparsed_dict):
     assert len(record) == 1
 
 
+def _check_provenance(mol1, mol2):
+    """Test the provenance information, if available, to avoid updating version on test files."""
+    if "provenance" not in mol1:
+        return isinstance(mol2["provenance"], dict)
+    if isinstance(mol1["provenance"], dict):
+        return mol1["provenance"] in mol2["provenance"]
+    if isinstance(mol1["provenance"], list):
+        for entry in mol1["provenance"]:
+            assert entry in mol2["provenance"]
+        return True
+    return False
+
+
 INOUT_MOL_FILES = [
     ("LiCl_molecule.json", 0),
     ("Hydroxyl_radical_molecule.json", 0),
@@ -171,8 +184,12 @@ def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
 
-    # print(mol1)
-    # print(mol2)
+    # Check that prior provenance info is kept
+    assert _check_provenance(mol1, mol2)
+    if "provenance" in mol1:
+        del mol1["provenance"]
+    if "provenance" in mol2:
+        del mol2["provenance"]
     assert mol1 == mol2
 
 
@@ -211,6 +228,12 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     for key in keys:
         if isinstance(mol1[key], dict) and not bool(mol1[key]):
             del mol1[key]
+    # Check that prior provenance info is kept
+    assert _check_provenance(mol1, mol2)
+    if "provenance" in mol1:
+        del mol1["provenance"]
+    if "provenance" in mol2:
+        del mol2["provenance"]
     assert mol1 == mol2
 
 
@@ -299,11 +322,16 @@ def test_inout_qcschema_input(tmpdir, filename, nwarn):
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
 
-    # IOData prints the most recent version, and it's not worth updating all test files each time
+    # Check that prior provenance info is kept
+    assert _check_provenance(mol1, mol2)
     if "provenance" in mol1:
         del mol1["provenance"]
+    if "provenance" in mol1["molecule"]:
+        del mol1["molecule"]["provenance"]
     if "provenance" in mol2:
         del mol2["provenance"]
+    if "provenance" in mol2["molecule"]:
+        del mol2["molecule"]["provenance"]
     assert mol1 == mol2
 
 
@@ -366,9 +394,14 @@ def test_inout_qcschema_output(tmpdir, filename):
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
 
-    # IOData prints the most recent version, and it's not worth updating all test files each time
+    # Check that prior provenance info is kept
+    assert _check_provenance(mol1, mol2)
     if "provenance" in mol1:
         del mol1["provenance"]
+    if "provenance" in mol1["molecule"]:
+        del mol1["molecule"]["provenance"]
     if "provenance" in mol2:
         del mol2["provenance"]
+    if "provenance" in mol2["molecule"]:
+        del mol2["molecule"]["provenance"]
     assert mol1 == mol2
