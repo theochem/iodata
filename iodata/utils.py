@@ -72,7 +72,7 @@ class LineIterator:
 
         """
         self.filename = filename
-        self.f = open(filename)
+        self.f = open(filename)  # pylint: disable=consider-using-with
         self.lineno = 0
         self.stack = []
 
