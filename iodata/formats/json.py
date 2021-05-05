@@ -21,9 +21,9 @@
 
 QCSchema defines four different subschema:
 
-- Molecule: specifying a molecular system
-- Input: specifying QC program input for a specific Molecule
-- Output: specifying QC program output for a specific Molecule
+- :ref:`Molecule <json_schema_molecule>`: specifying a molecular system
+- :ref:`Input <json_schema_input>`: specifying QC program input for a specific Molecule
+- :ref:`Output <json_schema_output>`: specifying QC program output for a specific Molecule
 - Basis: specifying a basis set for a specific Molecule
 
 General Usage
@@ -118,7 +118,8 @@ molecular_charge       float        ``charge``   The net electrostatic charge of
 molecular_multiplicity int          ``spinpol``  The total multiplicity of this molecule.
                                                  Some writers assume a default of 1.
 provenance             dict or list N/A          Information about the file was generated,
-                                                 provided, and manipulated. See Provenance section
+                                                 provided, and manipulated. See
+                                                 :ref:`Provenance section <json_schema_provenance>`
                                                  above for more details.
 ====================== ============ ============ =================================================
 
@@ -127,9 +128,9 @@ Note: N_at corresponds to the number of atoms in the molecule, as defined by the
 
 The optional fields and corresponding types for a ``qcschema_molecule`` file are:
 
-======================= ============ ============== ==================================================
+======================= ============ ============== ================================================
 Field                   Type         IOData attr.   Description
-======================= ============ ============== ==================================================
+======================= ============ ============== ================================================
 atom_labels             list(N_at)   N/A            Additional per-atom labels. Typically used for
                                                     model conversions, not user assignment. The
                                                     indices of this array correspond to the
@@ -170,8 +171,8 @@ real                    list(N_at)   ``atcorenums`` An array indicating whether 
                                                     (true) or a ghost/virtual atom (false). The
                                                     indices of this array correspond to the
                                                     ``symbols`` ordering.
-mass_numbers            list(N_at)   ``atmasses``   An array of atomic mass numbers for each atom. The
-                                                    indices of this array correspond to the
+mass_numbers            list(N_at)   ``atmasses``   An array of atomic mass numbers for each atom.
+                                                    The indices of this array correspond to the
                                                     ``symbols`` ordering.
 masses                  list(N_at)   ``atmasses``   An array of atomic masses [u] for each atom.
                                                     Typically inferred from ``symbols``. The indices
@@ -179,7 +180,7 @@ masses                  list(N_at)   ``atmasses``   An array of atomic masses [u
                                                     ordering.
 name                    str          ``title``      An arbitrary, common, or human-readable name to
                                                     assign to this molecule.
-======================= ============ ============== ==================================================
+======================= ============ ============== ================================================
 
 Note: N_at corresponds to the number of atoms in the molecule, as defined by the length of
 ``symbols``; N_fr corresponds to the number of fragments in the molecule, as defined by the length
@@ -246,12 +247,14 @@ schema_name             str          N/A          The QCSchema specification to 
                                                   conforms. Fixed as ``qcschema_input``.
 schema_version          float        N/A          The version number of ``schema_name`` to which
                                                   this model conforms, currently 2.
-molecule                dict         N/A          QCSchema Molecule instance.
+molecule                dict         N/A          :ref:`QCSchema Molecule <json_schema_molecule>`
+                                                  instance.
 driver                  str          N/A          The type of calculation being performed. One of
                                                   ``energy``, ``gradient``, ``hessian``, or
                                                   ``properties``.
 model                   dict         N/A          The quantum chemistry model specification for a
-                                                  given operation to compute against.
+                                                  given operation to compute against. See
+                                                  :ref:`Model section <json_schema_model>` below.
 ======================= ============ ============ ==================================================
 
 The optional fields and corresponding types for a `qcschema_input` file are:
@@ -265,10 +268,12 @@ keywords                dict         N/A          QC program-specific keywords t
                                                   computation. See details below for IOData-specific
                                                   usages.
 protocols               dict         N/A          Protocols regarding the manipulation of the output
-                                                  that results from this input. See Protocols
-                                                  section below.
+                                                  that results from this input. See
+                                                  :ref:`Protocols section <json_schema_protocols>`
+                                                  below.
 provenance              dict or list N/A          Information about the file was generated,
-                                                  provided, and manipulated. See Provenance section
+                                                  provided, and manipulated. See
+                                                  :ref:`Provenance section <json_schema_provenance>`
                                                   above for more information.
 ======================= ============ ============ ==================================================
 
@@ -371,7 +376,9 @@ driver                  str          N/A          The type of calculation being 
 model                   dict         N/A          The quantum chemistry model specification for a
                                                   given operation to compute against.
 properties              dict         N/A          Named properties of quantum chemistry
-                                                  computations. See Properties section below.
+                                                  computations. See
+                                                  :ref:`Properties section <json_schema_properties>`
+                                                  below.
 return_result           varies       N/A          The result requested by the ``driver``. The type
                                                   depends on the ``driver``.
 success                 bool         N/A          An indicator for the success of the QC program's
@@ -384,29 +391,34 @@ The optional fields and corresponding types for a ``qcschema_output`` file are:
 Field                   Type         IOData attr. Description
 ======================= ============ ============ ==================================================
 error                   dict         N/A          A complete description of an error-terminated
-                                                  computation. See Error section below.
+                                                  computation. See
+                                                  :ref:`Error section <json_schema_error>` below.
 extras                  dict         N/A          Extra information associated with the input. Also
-                                                  specified for ``qcschema_input``.
+                                                  specified for
+                                                  :ref:`qcschema_input <json_schema_input>`.
 id                      str          N/A          An identifier for the input object. Also specified
-                                                  for ``qcschema_input``.
+                                                  for :ref:`qcschema_input <json_schema_input>`.
 keywords                dict         N/A          QC program-specific keywords to be used for a
                                                   computation. See details below for IOData-specific
-                                                  usages. Also specified for ``qcschema_input``.
+                                                  usages. Also specified for
+                                                  :ref:`qcschema_input <json_schema_input>`.
 protocols               dict         N/A          Protocols regarding the manipulation of the output
-                                                  that results from this input. See Protocols
-                                                  section above. Also specified for
-                                                  ``qcschema_input``.
+                                                  that results from this input. See
+                                                  :ref:`Protocols section <json_schema_protocols>`
+                                                  above. Also specified for
+                                                  :ref:`qcschema_input <json_schema_input>`.
 provenance              dict or list N/A          Information about the file was generated,
                                                   provided, and manipulated. See Provenance section
                                                   above for more information. Also specified for
-                                                  ``qcschema_input``.
+                                                  :ref:`qcschema_input <json_schema_input>`.
 stderr                  str          N/A          The standard error (stderr) of the associated
                                                   computation.
 stdout                  str          N/A          The standard output (stdout) of the associated
                                                   computation.
 wavefunction            dict         N/A          The wavefunction properties of a QC computation.
                                                   All matrices appear in column-major order. See
-                                                  Wavefunction section below.
+                                                  :ref:`Wavefunction <json_schema_wavefunction>`
+                                                  section below.
 ======================= ============ ============ ==================================================
 
 .. _json_schema_properties:
