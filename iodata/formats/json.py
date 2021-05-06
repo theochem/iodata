@@ -587,7 +587,7 @@ PATTERNS = ["*.json"]
 @document_load_one(
     "QCSchema",
     ["atnums", "atcorenums", "atcoords", "charge", "nelec", "spinpol"],
-    ["atmasses", "bonds", "g_rot", "title", "extra"])
+    ["atmasses", "bonds", "energy", "g_rot", "lot", "obasis", "obasis_name", "title", "extra"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Use python standard lib json module to read the file to a dict
@@ -599,11 +599,11 @@ def load_one(lit: LineIterator) -> dict:
 def _parse_json(json_in: dict, lit: LineIterator) -> dict:
     """Parse data from QCSchema JSON input file.
 
-    QCSchema supports four different schema types: `qcschema_molecule`, specifying one or more
-    molecules in a single system; `qcschema_basis`, specifying a basis set for a molecular system,
-    `qcschema_input`, specifying input to a QC program for a specific system; and `qcschema_output`,
-    specifying results of a QC program calculation for a specific system along with the input
-    information.
+    QCSchema supports four different schema types: :ref:`qcschema_molecule <json_schema_molecule>`,
+    specifying one or more molecules in a single system; `qcschema_basis`, specifying a basis set
+    for a molecular system, :ref:`qcschema_input <json_schema_input>`, specifying input to a QC
+    program for a specific system; and :ref:`qcschema_output <json_schema_output>`, specifying
+    results of a QC program calculation for a specific system along with the input information.
 
     Parameters
     ----------
@@ -692,7 +692,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
 
 
 def _load_qcschema_molecule(result: dict, lit: LineIterator) -> dict:
-    """Load qcschema_molecule properties.
+    """Load :ref:`qcschema_molecule <json_schema_molecule>` properties.
 
     Parameters
     ----------
@@ -704,10 +704,10 @@ def _load_qcschema_molecule(result: dict, lit: LineIterator) -> dict:
     Returns
     -------
     molecule_dict
-        Output dictionary containing ``atcoords``, ``atnums``, ``charge``,
+        Output dictionary containing ``atcoords``, ``atnums``, ``charge``, ``extra``,
         ``nelec`` & ``spinpol`` keys and corresponding values.
-        It may contain ``atmasses``, ``bonds``, ``g_rot``, ``title`` & ``extra``
-        keys and corresponding values as well.
+        It may contain ``atmasses``, ``bonds``, ``g_rot`` & ``title`` keys and corresponding values
+        as well.
 
     """
     # All Topology properties are found in the "molecule" key
@@ -725,9 +725,9 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     """Load topology properties from old QCSchema Molecule specifications.
 
     The qcschema_molecule v2 specification requires a topology for every file, specified in the
-    `molecule` key, containing at least the keys `schema_name`, `schema_version`, `symbols`,
-    `geometry`, `molecular_charge`, `molecular_multiplicity`, and `provenance`. This schema is
-    currently used in QCElemental (and thus the QCArchive ecosystem).
+    ``molecule`` key, containing at least the keys ``schema_name``, ``schema_version``, ``symbols``,
+    ``geometry``, ``molecular_charge``, ``molecular_multiplicity``, and ``provenance``. This schema
+    is currently used in QCElemental (and thus the QCArchive ecosystem).
 
     qcschema_molecule v1 only exists as the specification on the QCSchema website, and seems never
     to have been implemented in QCArchive. It is possible to accept v1 input, since all required
@@ -744,10 +744,10 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     Returns
     -------
     topology_dict
-        Output dictionary containing ``atcoords``, ``atnums``, ``charge``,
+        Output dictionary containing ``atcoords``, ``atnums``, ``charge``, ``extra``,
         ``nelec`` & ``spinpol`` keys and corresponding values.
-        It may contain ``atmasses``, ``bonds``, ``g_rot``, ``title`` & ``extra``
-        keys and corresponding values as well.
+        It may contain ``atmasses``, ``bonds``, ``g_rot`` & ``title`` keys and corresponding values
+        as well.
 
     """
     # Make sure required topology properties are present
@@ -925,7 +925,7 @@ def _version_check(result: dict, max_version: float, schema_name: str, lit: Line
     max_version
         The highest (most recent) known version for the QCSchema type.
     schema_name
-        The `schema_name` key of a QCSchema file.
+        The ``schema_name`` key of a QCSchema file.
     lit
         The line iterator holding the file data.
 
@@ -990,6 +990,13 @@ def _load_qcschema_basis(_result: dict, _lit: LineIterator) -> dict:
     -------
     basis_dict
         ...
+
+
+    Raises
+    ------
+    NotImplementedError
+        QCSchema Basis schema is not yet implemented in IOData.
+
     """
     # basis_dict = dict()
     # return basis_dict
@@ -1010,6 +1017,12 @@ def _parse_basis_keys(_basis: dict, _lit: LineIterator) -> dict:
     -------
     basis_dict
         Dictionary containing ...
+
+    Raises
+    ------
+    NotImplementedError
+        QCSchema Basis schema is not yet implemented in IOData.
+
     """
     raise NotImplementedError("qcschema_basis is not yet implemented in IOData.")
 
@@ -1027,7 +1040,10 @@ def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
     Returns
     -------
     input_dict
-        ...
+        Output dictionary containing ``atcoords``, ``atnums``, ``charge``, ``extra``, ``lot``,
+        ``nelec``, ``obasis_name`` & ``spinpol`` keys and corresponding values.
+        It may contain ``atmasses``, ``bonds``, ``g_rot``, ``obasis``, ``run_type`` & ``title``
+        keys and corresponding values as well.
     """
     extra_dict = dict()
     input_dict = _parse_input_keys(result, lit)
@@ -1057,8 +1073,9 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
     Returns
     -------
     input_dict
-        Output dictionary containing ``lot`` and ``obasis_name`` keys and corresponding values.
-        It may contain ``obasis`` and ``extra`` keys and corresponding values as well.
+        Output dictionary containing ``extra``, ``lot`` and ``obasis_name`` keys and corresponding
+        values.
+        It may contain ``obasis`` & ``run_type`` keys and corresponding values as well.
 
     """
     # QCEngineRecords input files don't actually specify a name or version
@@ -1144,7 +1161,7 @@ def _parse_driver(driver: str, lit: LineIterator) -> str:
     Parameters
     ----------
     driver
-        The `driver` key from the QCSchema input.
+        The ``driver`` key from the QCSchema input.
     lit
         The line iterator holding the file data.
 
@@ -1160,8 +1177,8 @@ def _parse_driver(driver: str, lit: LineIterator) -> str:
 
     Notes
     -----
-    This keyword is similar to, but not really interchangeable with, the `run_type` IOData
-    attribute. In order to specify the `run_type`, add it to the `keywords` dictionary.
+    This keyword is similar to, but not really interchangeable with, the ``run_type`` IOData
+    attribute. In order to specify the ``run_type``, add it to the ``keywords`` dictionary.
 
     """
     if driver not in ["energy", "gradient", "hessian", "properties"]:
@@ -1175,7 +1192,7 @@ def _parse_driver(driver: str, lit: LineIterator) -> str:
 
 
 def _parse_model(model: dict, lit: LineIterator) -> dict:
-    """Load model properties from QCSchema.
+    """Load :ref:`model <json_schema_model>` properties from QCSchema.
 
     Parameters
     ----------
@@ -1188,7 +1205,7 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
     -------
     model_dict
         Output dictionary containing ``lot`` and ``obasis_name`` keys and corresponding values.
-        It may contain ``obasis`` key and corresponding values as well.
+        It may contain ``obasis`` and ``extra`` keys and corresponding values as well.
 
     """
     model_dict = dict()
@@ -1224,7 +1241,7 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
 
 
 def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
-    """Load protocols properties from QCSchema.
+    """Load :ref:`protocols <json_schema_protocols>` properties from QCSchema.
 
     Parameters
     ----------
@@ -1271,7 +1288,7 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
 
 
 def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
-    """Load qcschema_output properties.
+    """Load :ref:`qcschema_output <json_schema_output>` properties.
 
     Parameters
     ----------
@@ -1283,8 +1300,10 @@ def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
     Returns
     -------
     output_dict
-        Output dictionary containing ``lot`` and ``obasis_name`` keys and corresponding values.
-        It may contain ``energy``, ``obasis`` and ``extra`` keys and corresponding values as well.
+        Output dictionary containing ``atcoords``, ``atnums``, ``charge``, ``extra``, ``lot``,
+        ``nelec``, ``obasis_name`` & ``spinpol`` keys and corresponding values.
+        It may contain ``atmasses``, ``bonds``, ``energy``, ``g_rot``, ``obasis``, ``run_type`` &
+        ``title`` keys and corresponding values as well.
 
     """
     extra_dict = dict()
@@ -1307,7 +1326,7 @@ def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
 
 
 def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
-    """Parse output keys for QCSchema input or output files.
+    """Parse output keys for QCSchema output files.
 
     Parameters
     ----------
@@ -1318,9 +1337,9 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
 
     Returns
     -------
-    input_dict
-        Output dictionary containing ``lot`` and ``obasis_name`` keys and corresponding values.
-        It may contain ``energy`` keys and corresponding values as well.
+    output_dict
+        Output dictionary containing ``extra`` key and corresponding values.
+        It may contain ``energy`` key and corresponding values as well.
 
     """
     should_be_required_keys = {"schema_name", "schema_version"}
@@ -1390,7 +1409,7 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
 def _parse_provenance(
     provenance: Union[List[dict], dict], lit: LineIterator, source: str, append=True
 ) -> Union[List[dict], dict]:
-    """Load provenance properties from QCSchema.
+    """Load :ref:`provenance <json_schema_provenance>` properties from QCSchema.
 
     Parameters
     ----------
@@ -1399,7 +1418,7 @@ def _parse_provenance(
     lit
         The line iterator holding the file data.
     source
-        The schema type {`qcschema_molecule`, `qcschema_input`, `qcschema_output`} associated
+        The schema type {``qcschema_molecule``, ``qcschema_input``, ``qcschema_output``} associated
         with this provenance data.
     append
         Append IOData provenance entry to provenance list?
@@ -1460,7 +1479,7 @@ def dump_one(f: TextIO, data: IOData):
 
 
 def _dump_qcschema_molecule(data: IOData) -> dict:
-    """Dump relevant attributes from IOData to qcschema_molecule.
+    """Dump relevant attributes from IOData to :ref:`qcschema_molecule <json_schema_molecule>`.
 
     Parameters
     ----------
@@ -1549,7 +1568,8 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
 
 
 def _dump_provenance(data: IOData, source: str) -> Union[List[dict], dict]:
-    """Generate the provenance information for dumping an IOData instance to QCSchema.
+    """Generate the :ref:`provenance <json_schema_provenance>` information for dumping an IOData
+    instance to QCSchema.
 
     Parameters
     ----------
@@ -1580,10 +1600,10 @@ def _dump_provenance(data: IOData, source: str) -> Union[List[dict], dict]:
 
 
 def _dump_qcschema_input(data: IOData) -> dict:
-    """Dump relevant attributes from IOData to qcschema_input.
+    """Dump relevant attributes from IOData to :ref:`qcschema_input <json_schema_input>`.
 
-    Using this function requires keywords to be stored in two locations in the `extra` dict:
-    a `molecule` dict for the QCSchema Molecule extra keys, and an `input` dict for the QCSchema
+    Using this function requires keywords to be stored in two locations in the ``extra`` dict:
+    a ``molecule`` dict for the QCSchema Molecule extra keys, and an ``input`` dict for the QCSchema
     Input extra keys.
 
     Parameters
@@ -1639,11 +1659,11 @@ def _dump_qcschema_input(data: IOData) -> dict:
 
 
 def _dump_qcschema_output(data: IOData) -> dict:
-    """Dump relevant attributes from IOData to qcschema_output.
+    """Dump relevant attributes from IOData to :ref:`qcschema_output <json_schema_output>`.
 
-    Using this function requires keywords to be stored in three locations in the `extra` dict:
-    a `molecule` dict for the QCSchema Molecule extra keys, an `input` dict for the QCSchema
-    Input extra keys, and an `output` dict for the QCSchema Output extra keys.
+    Using this function requires keywords to be stored in three locations in the ``extra`` dict:
+    a ``molecule`` dict for the QCSchema Molecule extra keys, an ``input`` dict for the QCSchema
+    Input extra keys, and an ``output`` dict for the QCSchema Output extra keys.
 
     Parameters
     ----------
