@@ -1568,8 +1568,9 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
 
 
 def _dump_provenance(data: IOData, source: str) -> Union[List[dict], dict]:
-    """Generate the :ref:`provenance <json_schema_provenance>` information for dumping an IOData
-    instance to QCSchema.
+    """Generate the :ref:`provenance <json_schema_provenance>` information.
+
+    This is used when dumping an IOData instance to QCSchema.
 
     Parameters
     ----------
@@ -1582,6 +1583,7 @@ def _dump_provenance(data: IOData, source: str) -> Union[List[dict], dict]:
     -------
     provenance
         The provenance information for the IOData instance.
+
     """
     new_provenance = {
         "creator": "IOData",
