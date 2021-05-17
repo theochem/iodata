@@ -152,15 +152,22 @@ sym2num: Dict[str, int] = dict((value, key) for key, value in num2sym.items())
 # Labels used for bond types.
 
 num2bond = {
-    1: "1",
-    2: "2",
-    3: "3",
-    # The following symbols are used in the MOL2 format:
-    4: "am",
-    5: "ar",
-    6: "du",
-    7: "un",
-    8: "nc"
+    # The following symbols are used in the SDF format. The numering is assumed
+    # to be consistent with the SDF spec. See
+    # http://www.nonlinear.com/progenesis/sdf-studio/v0.9/faq/sdf-file-format-guidance.aspx
+    # https://en.wikipedia.org/wiki/Chemical_table_file
+    1: "1",  # single
+    2: "2",  # double
+    3: "3",  # triple
+    4: "ar",  # aromatic
+    5: "sd",  # single or double
+    6: "sar",  # single or aromatic
+    7: "dar",  # double or aromatic
+    8: "un",  # unknown/any
+    # The following symbols are exclusively used in the MOL2 format.
+    9: "am",  # amide
+    10: "du",  # dummy
+    11: "nc",  # not connected
 }
 
 bond2num: Dict[str, int] = dict((value, key) for key, value in num2bond.items())
