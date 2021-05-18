@@ -1,0 +1,64 @@
+{
+  "molecule": {
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2,
+    "symbols": [
+      "O",
+      "H",
+      "H"
+    ],
+    "geometry": [
+      0.0,
+      0.0,
+      -0.12947694,
+      0.0,
+      -1.49418734,
+      1.02744651,
+      0.0,
+      1.49418734,
+      1.02744651
+    ],
+    "provenance": {
+    "creator": "QCElemental",
+    "routine": "unknown"
+  },
+    "connectivity": [
+      [
+        0,
+        1,
+        1.0
+      ],
+      [
+        0,
+        2,
+        1.0
+      ]
+    ]
+  },
+  "driver": "energy",
+  "model": {
+    "method": "XTB",
+    "basis": ""
+  },
+  "keywords": {},
+  "id": null,
+  "schema_name": "qcschema_output",
+  "schema_version": 1,
+  "provenance": {
+    "creator": "QCElemental",
+    "version": "v0.2.6",
+    "routine": "qcelemental.models.results"
+  },
+  "success": true,
+  "return_result": -5.7659905206521511,
+  "properties": {
+    "scf_total_energy": -5.7659905206521511,
+    "scf_iterations": 7,
+    "calcinfo_nbasis": 8,
+    "calcinfo_natom": 3
+  },
+  "extras": {
+    "scf_converged": true
+  },
+  "error": null
+}

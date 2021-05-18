@@ -25,7 +25,7 @@ import numpy as np
 import pytest
 
 from ..api import dump_one, load_one
-from ..utils import FileFormatWarning
+from ..utils import FileFormatError, FileFormatWarning
 
 
 try:
@@ -46,6 +46,8 @@ GEOMS = {
             [4.253724, -2.762010, 0.382764],
         ]
     ),
+    "H2O": np.array([[0.0, 0.0, -0.1295], [0.0, -1.4942, 1.0274], [0.0, 1.4942, 1.0274]]),
+    "H2O_MP2": np.array([[0.0, 0.0, -0.1294], [0.0, -1.4941, 1.0274], [0.0, 1.4941, 1.0274]])
 }
 # These molecule examples were manually generated for testing
 # MOL_FILES: (filename, atnums, charge, spinpol, geometry)
@@ -138,8 +140,21 @@ def test_passthrough_qcschema_molecule(filename, unparsed_dict):
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(qcschema_molecule))
 
-    assert mol.extra["unparsed"] == unparsed_dict
+    assert mol.extra["molecule"]["unparsed"] == unparsed_dict
     assert len(record) == 1
+
+
+def _check_provenance(mol1, mol2):
+    """Test the provenance information, if available, to avoid updating version on test files."""
+    if "provenance" not in mol1:
+        return isinstance(mol2["provenance"], dict)
+    if isinstance(mol1["provenance"], dict):
+        return mol1["provenance"] in mol2["provenance"]
+    if isinstance(mol1["provenance"], list):
+        for entry in mol1["provenance"]:
+            assert entry in mol2["provenance"]
+        return True
+    return False
 
 
 INOUT_MOL_FILES = [
@@ -169,8 +184,12 @@ def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
 
-    # print(mol1)
-    # print(mol2)
+    # Check that prior provenance info is kept
+    assert _check_provenance(mol1, mol2)
+    if "provenance" in mol1:
+        del mol1["provenance"]
+    if "provenance" in mol2:
+        del mol2["provenance"]
     assert mol1 == mol2
 
 
@@ -209,6 +228,12 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     for key in keys:
         if isinstance(mol1[key], dict) and not bool(mol1[key]):
             del mol1[key]
+    # Check that prior provenance info is kept
+    assert _check_provenance(mol1, mol2)
+    if "provenance" in mol1:
+        del mol1["provenance"]
+    if "provenance" in mol2:
+        del mol2["provenance"]
     assert mol1 == mol2
 
 
@@ -221,3 +246,162 @@ def test_ghost(tmpdir):
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
     assert mol2["real"] == [True] * 3 + [False] * 6
+
+
+# input_files: (filename, explicit_basis, lot, obasis_name, run_type, geometry)
+INPUT_FILES = [
+    ("H2O_HF_STO3G_Gaussian_input.json", False, "HF", "STO-3G", "energy", GEOMS["H2O"]),
+    ("LiCl_string_STO4G_input.json", False, "B3LYP", "Def2TZVP", None, GEOMS["LiCl"]),
+    ("LiCl_explicit_STO4G_input.json", True, "HF", None, None, GEOMS["LiCl"]),
+    ("LiCl_STO4G_Gaussian_input.json", False, "HF", "STO-4G", "freq", GEOMS["LiCl"]),
+    ("water_mp2_input.json", False, "MP2", "cc-pVDZ", None, GEOMS["H2O_MP2"])
+]
+
+
+@pytest.mark.parametrize(
+    "filename, explicit_basis, lot, obasis_name, run_type, geometry", INPUT_FILES
+)
+def test_qcschema_input(filename, explicit_basis, lot, obasis_name, run_type, geometry):
+    with path('iodata.test.data', filename) as qcschema_input:
+        try:
+            mol = load_one(str(qcschema_input))
+            assert mol.lot == lot
+            if obasis_name:
+                assert mol.obasis_name == obasis_name
+            if run_type:
+                assert mol.run_type == run_type
+            np.testing.assert_allclose(mol.atcoords, geometry)
+        # This will change if QCSchema Basis gets supported
+        except NotImplementedError:
+            assert explicit_basis
+
+
+# Test passthrough for input files using modified versions of CuSCN_molecule.json
+# PASSTHROUGH_INPUT_FILES: {filename, unparsed_dict, location}
+PASSTHROUGH_INPUT_FILES = [
+    ("LiCl_STO4G_Gaussian_input_extra.json", UNPARSED["extra"], "input"),
+    ("LiCl_STO4G_Gaussian_input_nested_extra.json", UNPARSED["nested_extra"], "input"),
+    ("LiCl_STO4G_Gaussian_input_extra_molecule.json", UNPARSED["extra"], "molecule"),
+]
+
+
+@pytest.mark.parametrize("filename, unparsed_dict, location", PASSTHROUGH_INPUT_FILES)
+def test_passthrough_qcschema_input(filename, unparsed_dict, location):
+    """Test qcschema_molecule parsing for passthrough of unparsed keys."""
+    with path("iodata.test.data", filename) as qcschema_input:
+        mol = load_one(str(qcschema_input))
+
+    assert mol.extra[location]["unparsed"] == unparsed_dict
+
+
+INOUT_INPUT_FILES = [
+    ("H2O_HF_STO3G_Gaussian_input.json", 0),
+    ("LiCl_string_STO4G_input.json", 0),
+    ("LiCl_STO4G_Gaussian_input.json", 0),
+    ("LiCl_STO4G_Gaussian_input_extra.json", 0),
+    ("LiCl_STO4G_Gaussian_input_nested_extra.json", 0),
+    ("LiCl_STO4G_Gaussian_input_extra_molecule.json", 0),
+]
+
+
+@pytest.mark.parametrize("filename, nwarn", INOUT_INPUT_FILES)
+def test_inout_qcschema_input(tmpdir, filename, nwarn):
+    """Test that loading and dumping qcschema_molecule files retains all data."""
+    with path("iodata.test.data", filename) as qcschema_input:
+        if nwarn == 0:
+            mol = load_one(str(qcschema_input))
+        else:
+            with pytest.warns(FileFormatWarning) as record:
+                mol = load_one(str(qcschema_input))
+            assert len(record) == nwarn
+        mol1 = json.loads(qcschema_input.read_bytes())
+
+    fn_tmp = os.path.join(tmpdir, 'test_input_mol.json')
+    dump_one(mol, fn_tmp)
+
+    with open(fn_tmp, "r") as mol2_in:
+        mol2 = json.load(mol2_in)
+
+    # Check that prior provenance info is kept
+    assert _check_provenance(mol1, mol2)
+    if "provenance" in mol1:
+        del mol1["provenance"]
+    if "provenance" in mol1["molecule"]:
+        del mol1["molecule"]["provenance"]
+    if "provenance" in mol2:
+        del mol2["provenance"]
+    if "provenance" in mol2["molecule"]:
+        del mol2["molecule"]["provenance"]
+    assert mol1 == mol2
+
+
+# output_files: (filename, lot, obasis_name, run_type, nwarn)
+OUTPUT_FILES = [
+    ("H2O_CCSDprTpr_STO3G_output.json", "CCSD(T)", "sto-3g", None, 0),
+    ("LiCl_STO4G_Gaussian_output.json", "HF", "STO-4G", "Freq", 0),
+    ("xtb_water_no_basis.json", "XTB", None, None, 3),
+]
+
+
+@pytest.mark.parametrize("filename, lot, obasis_name, run_type, nwarn", OUTPUT_FILES)
+def test_qcschema_output(filename, lot, obasis_name, run_type, nwarn):
+    with path("iodata.test.data", filename) as qcschema_output:
+        if nwarn == 0:
+            mol = load_one(str(qcschema_output))
+        else:
+            with pytest.warns(FileFormatWarning) as record:
+                mol = load_one(str(qcschema_output))
+            assert len(record) == nwarn
+
+        assert mol.lot == lot
+        assert mol.obasis_name == obasis_name
+        assert mol.run_type == run_type
+
+
+# Not a single valid example of qcschema_molecule is easily found for anything but water
+# Some of these files have been manually validated, as reflected in the provenance
+# bad_mol_files: (filename, error)
+BAD_OUTPUT_FILES = [
+    ("turbomole_water_energy_hf_output.json", FileFormatError),
+    ("turbomole_water_gradient_rimp2_output.json", FileFormatError),
+]
+
+
+@pytest.mark.parametrize("filename, error", BAD_OUTPUT_FILES)
+def test_bad_qcschema_files(filename, error):
+    # FIXME: these will move
+    with path('iodata.test.data', filename) as qcschema_input:
+        with pytest.raises(error):
+            load_one(str(qcschema_input))
+
+
+INOUT_OUTPUT_FILES = [
+    "H2O_CCSDprTpr_STO3G_output.json",
+    "LiCl_STO4G_Gaussian_output.json",
+]
+
+
+@pytest.mark.parametrize("filename", INOUT_OUTPUT_FILES)
+def test_inout_qcschema_output(tmpdir, filename):
+    """Test that loading and dumping qcschema_molecule files retains all data."""
+    with path("iodata.test.data", filename) as qcschema_input:
+        mol = load_one(str(qcschema_input))
+        mol1 = json.loads(qcschema_input.read_bytes())
+
+    fn_tmp = os.path.join(tmpdir, 'test_input_mol.json')
+    dump_one(mol, fn_tmp)
+
+    with open(fn_tmp, "r") as mol2_in:
+        mol2 = json.load(mol2_in)
+
+    # Check that prior provenance info is kept
+    assert _check_provenance(mol1, mol2)
+    if "provenance" in mol1:
+        del mol1["provenance"]
+    if "provenance" in mol1["molecule"]:
+        del mol1["molecule"]["provenance"]
+    if "provenance" in mol2:
+        del mol2["provenance"]
+    if "provenance" in mol2["molecule"]:
+        del mol2["molecule"]["provenance"]
+    assert mol1 == mol2
