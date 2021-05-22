@@ -120,6 +120,7 @@ def dump_one(f: TextIO, data: IOData):
             print('{:3d}{:3d}{:3d}  0  0  0  0'.format(
                 iatom + 1, jatom + 1, bondtype
             ), file=f)
+    print('M  END', file=f)
     print('$$$$', file=f)
 
 
