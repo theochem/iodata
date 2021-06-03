@@ -1,7 +1,11 @@
 absolute: true  # Force absolute comparison for cardboardlint
 project:
   name: iodata
-  requirements: [[sympy, sympy]]
+  requirements: [
+    # pylint 2.7.2 hangs on tools/harmonics.py
+    [pylint !=2.7.2, pylint !=2.7.2],
+    [sympy, sympy],
+  ]
   packages:
     - dist_name: qc-iodata
       tools:
