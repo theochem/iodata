@@ -104,7 +104,8 @@ def test_load_dump_h2o_5points(tmpdir):
     fn_cube2 = tmpdir.join('iodata_h2o_5points.cube')
     dump_one(mol1, fn_cube2)
     # read the contents as string (skip the first 2 lines) & compare
-    content1 = open(fn_cube1, "r").read().split("\n", 2)[-1]
+    with open(fn_cube1, "r") as f:
+        content1 = f.read().split("\n", 2)[-1]
     content2 = fn_cube2.read().split("\n", 2)[-1]
     assert content1 == content2
 
@@ -117,7 +118,8 @@ def test_load_dump_ch4_6points(tmpdir):
     fn_cube2 = tmpdir.join('iodata_ch4_6points.cube')
     dump_one(mol1, fn_cube2)
     # read the contents as string (skip the first 2 lines) & compare
-    content1 = open(fn_cube1, "r").read().split("\n", 2)[-1]
+    with open(fn_cube1, "r") as f:
+        content1 = f.read().split("\n", 2)[-1]
     content2 = fn_cube2.read().split("\n", 2)[-1]
     assert content1 == content2
 
@@ -130,6 +132,7 @@ def test_load_dump_nh3_7points(tmpdir):
     fn_cube2 = tmpdir.join('iodata_nh3_7points.cube')
     dump_one(mol1, fn_cube2)
     # read the contents as string (skip the first 2 lines) & compare
-    content1 = open(fn_cube1, "r").read().split("\n", 2)[-1]
+    with open(fn_cube1, "r") as f:
+        content1 = f.read().split("\n", 2)[-1]
     content2 = fn_cube2.read().split("\n", 2)[-1]
     assert content1 == content2
