@@ -559,6 +559,8 @@ def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     corrected = False
 
     for shell in obasis.shells:
+        pass
+    return obasis
 
 
 def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):

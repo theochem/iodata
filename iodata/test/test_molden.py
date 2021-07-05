@@ -39,6 +39,14 @@ try:
 except ImportError:
     from importlib.resources import path
 
+def test_load_molden_h_cfour():
+    # The file tested here is created with CFOUR 2.1.
+    with path('iodata.test.data', 'h_donly_sph.molden') as fn_molden:
+        mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
 
 def test_load_molden_li2_orca():
     with path('iodata.test.data', 'li2.molden.input') as fn_molden:
