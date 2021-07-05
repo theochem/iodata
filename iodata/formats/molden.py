@@ -548,6 +548,18 @@ def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
         return np.concatenate(correction)
     return None
 
+def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
+    """Return correction values for the MO coefficients for CFOUR.
+
+    CFOUR 2.1 uses a different normalizationion conventions for Cartesian
+    AO basis functions. The coefficients need to be divided by the returned
+    correction factor.
+    """
+    correction = []
+    corrected = False
+
+    for shell in obasis.shells:
+
 
 def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
     """Detect errors in the data loaded from a molden or mkl file and correct.
@@ -626,6 +638,9 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
                 result['mo'].coeffsa[:] = coeffsa_psi4
                 result['mo'].coeffsb[:] = coeffsb_psi4
             return
+    # --- CFOUR 2.1
+    cour_coeff_correction = _fix_mo_coeffs_cfour(obasis)
+
 
     lit.error('Could not correct the data read from {}. The molden or mkl file '
               'you are trying to load contains errors. Please make an issue '
