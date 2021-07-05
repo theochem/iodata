@@ -348,7 +348,8 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
     # every attempt because also the primitive normalization may differ in
     # different cases.
     olp = compute_overlap(obasis, atcoords)
-
+    print('checking normalization')
+    print(olp)
     # Convenient code for debugging files coming from crappy QC codes.
     # np.set_printoptions(linewidth=5000, precision=2, suppress=True, threshold=100000)
     # coeffs = orb_alpha._coeffs
@@ -377,6 +378,52 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
     # final judgement
     return error_max <= threshold
 
+def _fix_obasis_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
+    """Return correction values for the MO coefficients for CFOUR.
+
+    CFOUR 2.1 uses a different normalizationion conventions for Spherical
+    AO basis functions. The coefficients need to be divided by the returned
+    correction factor.
+    """
+    cfour_conventions = {
+        # (0, 'c'): ['1'],
+        # (1, 'c'): ['x', 'y', 'z'],
+        (2, 'p'): ['c0', 'c1', 's1', 'c2', 's2'],
+        (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
+        # (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
+        # (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
+        # (4, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4'],
+        # (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
+        #            'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
+        # # H functions are not officialy supported by Molden, but this is how
+        # # ORCA writes Molden files anyway:
+        # (5, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4', 'c5', 's5'],
+    }
+    fixed_shells = []
+    corrected = False
+    print('cfour parsing attempt')
+    # TODO: check whether sph or cartesian functions are used
+    # this can be checked by whether the coefficient matrix is square or
+    # rectangular.
+    for shell in obasis.shells:
+        fixed_shell = copy.deepcopy(shell)
+        fixed_shells.append(fixed_shell)
+        angmom = shell.angmoms[0]
+        kind = shell.kinds[0]
+        if kind == "c":
+            for iprim, exponent in enumerate(shell.exponents):
+                if angmom == 2:
+                    correction = gob_cart_normalization(exponent, np.array([2, 0, 0]))
+                elif angmom == 3:
+                    correction = gob_cart_normalization(exponent, np.array([1, 1, 1]))
+                elif angmom == 4:
+                    correction = gob_cart_normalization(exponent, np.array([2, 1, 1]))
+                print(correction)
+                if correction != 1.0:
+                    fixed_shell.coeffs[iprim, 0] /= correction
+        if kind == 'p':
+           print('Correcting spherical basis functions from cfour not yet supported')
+    return MolecularBasis(fixed_shells, cfour_conventions, obasis.primitive_normalization)
 
 def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
     """Return a new MolecularBasis correcting for errors from ORCA.
@@ -384,6 +431,7 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
     Orca has different normalization conventions for the primitives and also
     different sign conventions for some of the pure functions.
     """
+    print('orca parsing attempt')
     orca_conventions = {
         (0, 'c'): ['1'],
         (1, 'c'): ['x', 'y', 'z'],
@@ -548,19 +596,6 @@ def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
         return np.concatenate(correction)
     return None
 
-def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
-    """Return correction values for the MO coefficients for CFOUR.
-
-    CFOUR 2.1 uses a different normalizationion conventions for Cartesian
-    AO basis functions. The coefficients need to be divided by the returned
-    correction factor.
-    """
-    correction = []
-    corrected = False
-
-    for shell in obasis.shells:
-        pass
-    return obasis
 
 
 def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
@@ -616,6 +651,14 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         result['obasis'] = turbom_obasis
         return
 
+    # --- CFOUR 2.1
+    cfour_obasis = _fix_obasis_cfour(obasis)
+    if cfour_obasis is not None and \
+       _is_normalized_properly(cfour_obasis, atcoords, coeffsa, coeffsb):
+        lit.warn('Corrected for CFOUR errors in Molden/MKL file.')
+        result['obasis'] = cfour_obasis
+        return
+
     # --- Renormalized contractions
     normed_obasis = _fix_obasis_normalize_contractions(obasis)
     if _is_normalized_properly(normed_obasis, atcoords, coeffsa, coeffsb):
@@ -640,8 +683,6 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
                 result['mo'].coeffsa[:] = coeffsa_psi4
                 result['mo'].coeffsb[:] = coeffsb_psi4
             return
-    # --- CFOUR 2.1
-    cour_coeff_correction = _fix_mo_coeffs_cfour(obasis)
 
 
     lit.error('Could not correct the data read from {}. The molden or mkl file '
