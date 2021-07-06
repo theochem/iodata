@@ -63,14 +63,14 @@ To install IOData using the conda package management system, install
     source activate horton3
 
     # Install the stable release.
-    conda install -c theochem iodata
+    conda install -c theochem qc-iodata
 
     # Unstable releases
     # (Only do this if you understand the implications.)
     # Install the testing release. (beta)
-    conda install -c theochem/label/test iodata
+    conda install -c theochem/label/test qc-iodata
     # Install the development release. (alpha)
-    conda install -c theochem/label/dev iodata
+    conda install -c theochem/label/dev qc-iodata
 
 
 Installation with Pip
