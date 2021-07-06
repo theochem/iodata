@@ -1,6 +1,6 @@
 package:
   version: "{{ PROJECT_VERSION }}"
-  name: 'iodata'
+  name: 'qc-iodata'
 
 source:
   path: ../../
