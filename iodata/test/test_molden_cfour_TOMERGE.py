@@ -32,7 +32,7 @@ from ..basis import convert_conventions
 from ..formats.molden import _load_low
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 from ..utils import LineIterator, angstrom, FileFormatWarning
-
+import sys
 
 try:
     from importlib_resources import path
@@ -41,17 +41,31 @@ except ImportError:
 
 def test_load_molden_h_cfour():
     # The file tested here is created with CFOUR 2.1.
-    with path('iodata.test.data.cfour', 'h_donly_cart.molden') as fn_molden:
-        mol = load_one(str(fn_molden))
+    file_list = [
+                 'h_sonly_sph.molden',
+                 'h_ponly_sph.molden',
+                 'h_donly_sph.molden',
+                 'h_fonly_sph.molden',
+                 'h_gonly_sph.molden',
+                 'h_honly_sph.molden',
+                 'h_sonly_cart.molden',
+                 'h_ponly_cart.molden',
+                 'h_donly_cart.molden',
+                 'h_fonly_cart.molden',
+                 'h_gonly_cart.molden',
+                 'h_honly_cart.molden'
+                ]
 
-    # Check normalization
-    olp = compute_overlap(mol.obasis, mol.atcoords)
-    check_orthonormal(mol.mo.coeffs, olp)
-
-    # # The file tested here is created with CFOUR 2.1.
-    # with path('iodata.test.data.cfour', 'h_donly_sph.molden') as fn_molden:
-    #     mol = load_one(str(fn_molden))
-    #
-    # # Check normalization
-    # olp = compute_overlap(mol.obasis, mol.atcoords)
-    # check_orthonormal(mol.mo.coeffs, olp)
+    for i in file_list:
+        with path('iodata.test.data.cfour', i) as fn_molden:
+            print(str(fn_molden))
+            mol = load_one(str(fn_molden))
+            # Check normalization
+            olp = compute_overlap(mol.obasis, mol.atcoords)
+            print(olp)
+            #assert_allclose(olp, np.eye(olp.shape[0]))
+            np.set_printoptions(threshold=sys.maxsize)
+            np.set_printoptions(linewidth=np.inf)
+            print(mol.mo.coeffsa.T @ olp @ mol.mo.coeffsa)
+            check_orthonormal(mol.mo.coeffsa, olp)
+            check_orthonormal(mol.mo.coeffsb, olp)
