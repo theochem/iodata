@@ -547,6 +547,7 @@ def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
         return np.concatenate(correction)
     return None
 
+
 def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     """Return correction values for the MO coefficients.
 
@@ -554,7 +555,6 @@ def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     AO basis functions. The coefficients need to be divided by the returned
     correction factor.
     """
-
     correction = []
     corrected = False
     for shell in obasis.shells:
@@ -565,11 +565,12 @@ def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
         factors = None
         if kind == "c":
             if angmom == 2:
-                factors = np.array([1.0/np.sqrt(3.0)] * 3 + [1.0] * 3)
+                factors = np.array([1.0 / np.sqrt(3.0)] * 3 + [1.0] * 3)
             elif angmom == 3:
-                factors = np.array([1.0/np.sqrt(15.0)] * 3 + [1.0/(np.sqrt(3.0))] * 6 + [1.0])
+                factors = np.array([1.0 / np.sqrt(15.0)] * 3 + [1.0 / (np.sqrt(3.0))] * 6 + [1.0])
             elif angmom == 4:
-                factors = np.array([1.0/np.sqrt(105.0)] * 3 + [1.0/(np.sqrt(15.0))] * 6 + [1.0/3.0]*3 + [1.0/(np.sqrt(3.0))] * 3)
+                factors = np.array([1.0 / np.sqrt(105.0)] * 3 + [1.0 / (np.sqrt(15.0))] * 6
+                                   + [1.0 / 3.0] * 3 + [1.0 / (np.sqrt(3.0))] * 3)
         if factors is None:
             factors = np.ones(shell.nbasis)
         else:
@@ -579,8 +580,6 @@ def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     if corrected:
         return np.concatenate(correction)
     return None
-
-
 
 
 def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
@@ -644,23 +643,25 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         result['obasis'] = cfour_obasis
         return
     else:
-      cfour_coeff_correction = _fix_mo_coeffs_cfour(cfour_obasis)
-      if cfour_coeff_correction is not None:
-          coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
-          if coeffsb is None:
-              coeffsb_cfour = None
-          else:
-              coeffsb_cfour = coeffsb / cfour_coeff_correction[:, np.newaxis]
-          if _is_normalized_properly(cfour_obasis, atcoords, coeffsa_cfour, coeffsb_cfour) or True:
-              lit.warn('Corrected for CFOUR 2.1 errors in Molden/MKL file.')
-              result['obasis'] = cfour_obasis
-              if result['mo'].kind == 'restricted':
-                  result['mo'].coeffs[:] = coeffsa_cfour
-              else:
-                  result['mo'].coeffsa[:] = coeffsa_cfour
-                  result['mo'].coeffsb[:] = coeffsb_cfour
-              return
-    #TODO REMOVE
+        cfour_coeff_correction = _fix_mo_coeffs_cfour(cfour_obasis)
+        if cfour_coeff_correction is not None:
+            coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
+            if coeffsb is None:
+                coeffsb_cfour = None
+            else:
+                coeffsb_cfour = coeffsb / cfour_coeff_correction[:, np.newaxis]
+            if _is_normalized_properly(cfour_obasis,
+                                       atcoords,
+                                       coeffsa_cfour,
+                                       coeffsb_cfour) or True:
+                lit.warn('Corrected for CFOUR 2.1 errors in Molden/MKL file.')
+                result['obasis'] = cfour_obasis
+                if result['mo'].kind == 'restricted':
+                    result['mo'].coeffs[:] = coeffsa_cfour
+                else:
+                    result['mo'].coeffsa[:] = coeffsa_cfour
+                    result['mo'].coeffsb[:] = coeffsb_cfour
+                return
     result['obasis'] = cfour_obasis
     return
     # --- Renormalized contractions
@@ -687,7 +688,6 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
                 result['mo'].coeffsa[:] = coeffsa_psi4
                 result['mo'].coeffsb[:] = coeffsb_psi4
             return
-
 
     lit.error('Could not correct the data read from {}. The molden or mkl file '
               'you are trying to load contains errors. Please make an issue '
