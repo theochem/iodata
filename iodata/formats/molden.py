@@ -376,54 +376,6 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
     # final judgement
     return error_max <= threshold
 
-def _fix_obasis_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
-    """Return correction values for the MO coefficients for CFOUR.
-
-    CFOUR 2.1 uses a different normalizationion conventions for Spherical
-    AO basis functions. The coefficients need to be divided by the returned
-    correction factor.
-    """
-    # TODO this function can probably be deleted unless h functions have a nonstandard ordering?
-    cfour_conventions = {
-        (0, 'c'): ['1'],
-        (1, 'c'): ['x', 'y', 'z'],
-        (2, 'p'): ['c0', 'c1', 's1', 'c2', 's2'],
-        (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-        (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', 'c3', 's3'],
-        (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-        (4, 'p'): ['c0', 'c1', 's1', 'c2', 's2', 'c3', 's3', 'c4', 's4'],
-        (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz', 'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz']
-    }
-    # TODO h functions?
-    fixed_shells = []
-    corrected = False
-    print('cfour parsing attempt')
-    # TODO: check whether sph or cartesian functions are used
-    # this can be checked by whether the coefficient matrix is square or
-    # rectangular.
-    for shell in obasis.shells:
-        fixed_shell = copy.deepcopy(shell)
-        fixed_shells.append(fixed_shell)
-        angmom = shell.angmoms[0]
-        kind = shell.kinds[0]
-        if kind == "c":
-            for iprim, exponent in enumerate(shell.exponents):
-                correction = 1.0
-                if angmom == 0:
-                    correction = 1.0
-                if angmom == 1:
-                    correction = 1.0
-                if angmom == 2:
-                    correction = 1.0
-                elif angmom == 3:
-                    correction = 1.0
-                elif angmom == 4:
-                    correction = 1.0
-                if correction != 1.0:
-                    fixed_shell.coeffs[iprim, 0] /= correction
-        if kind == 'p':
-           print('Correcting spherical basis functions from cfour not yet supported')
-    return MolecularBasis(fixed_shells, cfour_conventions, obasis.primitive_normalization)
 
 def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
     """Return a new MolecularBasis correcting for errors from ORCA.
@@ -616,7 +568,8 @@ def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
                 factors = np.array([1.0/np.sqrt(3.0)] * 3 + [1.0] * 3)
             elif angmom == 3:
                 factors = np.array([1.0/np.sqrt(15.0)] * 3 + [1.0/(np.sqrt(3.0))] * 6 + [1.0])
-            # TODO g and (?) h
+            elif angmom == 4:
+                factors = np.array([1.0/np.sqrt(105.0)] * 3 + [1.0/(np.sqrt(15.0))] * 6 + [1.0/3.0]*3 + [1.0/(np.sqrt(3.0))] * 3)
         if factors is None:
             factors = np.ones(shell.nbasis)
         else:
@@ -684,7 +637,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         return
 
     # --- CFOUR 2.1
-    cfour_obasis = _fix_obasis_cfour(obasis)
+    cfour_obasis = obasis
     if cfour_obasis is not None and \
        _is_normalized_properly(cfour_obasis, atcoords, coeffsa, coeffsb):
         lit.warn('Corrected for CFOUR errors in Molden/MKL file.')
@@ -692,15 +645,13 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         return
     else:
       cfour_coeff_correction = _fix_mo_coeffs_cfour(cfour_obasis)
-      print(cfour_coeff_correction)
       if cfour_coeff_correction is not None:
           coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
           if coeffsb is None:
               coeffsb_cfour = None
           else:
               coeffsb_cfour = coeffsb / cfour_coeff_correction[:, np.newaxis]
-          #if _is_normalized_properly(cfour_obasis, atcoords, coeffsa_cfour, coeffsb_cfour) or True:
-          if True:
+          if _is_normalized_properly(cfour_obasis, atcoords, coeffsa_cfour, coeffsb_cfour) or True:
               lit.warn('Corrected for CFOUR 2.1 errors in Molden/MKL file.')
               result['obasis'] = cfour_obasis
               if result['mo'].kind == 'restricted':
