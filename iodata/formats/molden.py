@@ -112,7 +112,7 @@ def _load_low(lit: LineIterator) -> dict:
     title = None
 
     line = next(lit)
-    if line != '[Molden Format]\n':
+    if line.strip() != '[Molden Format]':
         lit.error('Molden header not found')
     # The order of sections, denoted by "[...]", is not fixed in the Molden
     # format, so we need a loop that checks for all possible sections at
