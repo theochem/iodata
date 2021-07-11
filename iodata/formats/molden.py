@@ -383,6 +383,7 @@ def _fix_obasis_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     AO basis functions. The coefficients need to be divided by the returned
     correction factor.
     """
+    # TODO this function can probably be deleted unless h functions have a nonstandard ordering?
     cfour_conventions = {
         (0, 'c'): ['1'],
         (1, 'c'): ['x', 'y', 'z'],
@@ -393,6 +394,7 @@ def _fix_obasis_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
         (4, 'p'): ['c0', 'c1', 's1', 'c2', 's2', 'c3', 's3', 'c4', 's4'],
         (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz', 'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz']
     }
+    # TODO h functions?
     fixed_shells = []
     corrected = False
     print('cfour parsing attempt')
@@ -406,13 +408,17 @@ def _fix_obasis_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
         kind = shell.kinds[0]
         if kind == "c":
             for iprim, exponent in enumerate(shell.exponents):
+                correction = 1.0
+                if angmom == 0:
+                    correction = 1.0
+                if angmom == 1:
+                    correction = 1.0
                 if angmom == 2:
-                    correction = gob_cart_normalization(exponent, np.array([2, 0, 0]))
+                    correction = 1.0
                 elif angmom == 3:
-                    correction = gob_cart_normalization(exponent, np.array([1, 1, 1]))
+                    correction = 1.0
                 elif angmom == 4:
-                    correction = gob_cart_normalization(exponent, np.array([2, 1, 1]))
-                print(correction)
+                    correction = 1.0
                 if correction != 1.0:
                     fixed_shell.coeffs[iprim, 0] /= correction
         if kind == 'p':
