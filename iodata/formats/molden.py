@@ -348,8 +348,6 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
     # every attempt because also the primitive normalization may differ in
     # different cases.
     olp = compute_overlap(obasis, atcoords)
-    print('checking normalization')
-    print(olp)
     # Convenient code for debugging files coming from crappy QC codes.
     # np.set_printoptions(linewidth=5000, precision=2, suppress=True, threshold=100000)
     # coeffs = orb_alpha._coeffs
@@ -386,18 +384,14 @@ def _fix_obasis_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     correction factor.
     """
     cfour_conventions = {
-        # (0, 'c'): ['1'],
-        # (1, 'c'): ['x', 'y', 'z'],
+        (0, 'c'): ['1'],
+        (1, 'c'): ['x', 'y', 'z'],
         (2, 'p'): ['c0', 'c1', 's1', 'c2', 's2'],
         (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-        # (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
-        # (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-        # (4, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4'],
-        # (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
-        #            'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
-        # # H functions are not officialy supported by Molden, but this is how
-        # # ORCA writes Molden files anyway:
-        # (5, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4', 'c5', 's5'],
+        (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', 'c3', 's3'],
+        (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
+        (4, 'p'): ['c0', 'c1', 's1', 'c2', 's2', 'c3', 's3', 'c4', 's4'],
+        (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz', 'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz']
     }
     fixed_shells = []
     corrected = False
@@ -431,7 +425,6 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
     Orca has different normalization conventions for the primitives and also
     different sign conventions for some of the pure functions.
     """
-    print('orca parsing attempt')
     orca_conventions = {
         (0, 'c'): ['1'],
         (1, 'c'): ['x', 'y', 'z'],
