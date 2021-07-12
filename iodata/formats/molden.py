@@ -596,6 +596,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         The line iterator to read the data from, used for warnings.
 
     """
+    # pylint: disable=too-many-return-statements
     obasis = result['obasis']
     atcoords = result['atcoords']
     if result['mo'].kind == 'restricted':
@@ -642,28 +643,28 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         lit.warn('Corrected for CFOUR errors in Molden/MKL file.')
         result['obasis'] = cfour_obasis
         return
-    else:
-        cfour_coeff_correction = _fix_mo_coeffs_cfour(cfour_obasis)
-        if cfour_coeff_correction is not None:
-            coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
-            if coeffsb is None:
-                coeffsb_cfour = None
+
+    cfour_coeff_correction = _fix_mo_coeffs_cfour(cfour_obasis)
+    if cfour_coeff_correction is not None:
+        coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
+        if coeffsb is None:
+            coeffsb_cfour = None
+        else:
+            coeffsb_cfour = coeffsb / cfour_coeff_correction[:, np.newaxis]
+        if _is_normalized_properly(cfour_obasis,
+                                   atcoords,
+                                   coeffsa_cfour,
+                                   coeffsb_cfour):
+            lit.warn('Corrected for CFOUR 2.1 errors in Molden/MKL file.')
+            result['obasis'] = cfour_obasis
+            if result['mo'].kind == 'restricted':
+                result['mo'].coeffs[:] = coeffsa_cfour
             else:
-                coeffsb_cfour = coeffsb / cfour_coeff_correction[:, np.newaxis]
-            if _is_normalized_properly(cfour_obasis,
-                                       atcoords,
-                                       coeffsa_cfour,
-                                       coeffsb_cfour) or True:
-                lit.warn('Corrected for CFOUR 2.1 errors in Molden/MKL file.')
-                result['obasis'] = cfour_obasis
-                if result['mo'].kind == 'restricted':
-                    result['mo'].coeffs[:] = coeffsa_cfour
-                else:
-                    result['mo'].coeffsa[:] = coeffsa_cfour
-                    result['mo'].coeffsb[:] = coeffsb_cfour
-                return
+                result['mo'].coeffsa[:] = coeffsa_cfour
+                result['mo'].coeffsb[:] = coeffsb_cfour
+            return
     result['obasis'] = cfour_obasis
-    return
+
     # --- Renormalized contractions
     normed_obasis = _fix_obasis_normalize_contractions(obasis)
     if _is_normalized_properly(normed_obasis, atcoords, coeffsa, coeffsb):
