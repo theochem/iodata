@@ -203,16 +203,16 @@ def test_load_molden_nh3_molden_cart():
 def test_load_molden_h_cfour():
     # The file tested here is created with CFOUR 2.1.
     file_list = [
-        'h_sonly_sph.molden',
-        'h_ponly_sph.molden',
-        'h_donly_sph.molden',
-        'h_fonly_sph.molden',
-        'h_gonly_sph.molden',
-        'h_sonly_cart.molden',
-        'h_ponly_cart.molden',
-        'h_donly_cart.molden',
-        'h_fonly_cart.molden',
-        'h_gonly_cart.molden']
+        'h_sonly_sph_cfour.molden',
+        'h_ponly_sph_cfour.molden',
+        'h_donly_sph_cfour.molden',
+        'h_fonly_sph_cfour.molden',
+        'h_gonly_sph_cfour.molden',
+        'h_sonly_cart_cfour.molden',
+        'h_ponly_cart_cfour.molden',
+        'h_donly_cart_cfour.molden',
+        'h_fonly_cart_cfour.molden',
+        'h_gonly_cart_cfour.molden']
 
     for i in file_list:
         with path('iodata.test.data', i) as fn_molden:
