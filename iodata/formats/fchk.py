@@ -85,7 +85,7 @@ def load_one(lit: LineIterator) -> dict:
         'Total CC Density', 'Spin CC Density',
         'Total CI Density', 'Spin CI Density',
         'Mulliken Charges', 'ESP Charges', 'NPA Charges',
-        'Type 6 Charges', 'Type 7 Charges',
+        'MBS Charges', 'Type 6 Charges', 'Type 7 Charges',
         'Polarizability', 'Dipole Moment', 'Quadrupole Moment',
         'Cartesian Gradient', 'Cartesian Force Constants', 'MicOpt',
     ])
@@ -223,6 +223,8 @@ def load_one(lit: LineIterator) -> dict:
         atcharges['esp'] = fchk['ESP Charges']
     if 'NPA Charges' in fchk:
         atcharges['npa'] = fchk['NPA Charges']
+    if 'MBS Charges' in fchk:
+        atcharges['mbs'] = fchk['MBS Charges']
     if 'Type 6 Charges' in fchk:
         atcharges['hirshfeld'] = fchk['Type 6 Charges']
     if 'Type 7 Charges' in fchk:
