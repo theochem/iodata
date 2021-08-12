@@ -632,6 +632,12 @@ def dump_one(f: TextIO, data: IOData):
         _dump_real_arrays("ESP Charges", data.atcharges["esp"], f)
     if 'npa' in data.atcharges:
         _dump_real_arrays("NPA Charges", data.atcharges["npa"], f)
+    if 'mbs' in data.atcharges:
+        _dump_real_arrays("MBS Charges", data.atcharges["mbs"], f)
+    if 'hirshfeld' in data.atcharges:
+        _dump_real_arrays("Type 6 Charges", data.atcharges["hirshfeld"], f)
+    if 'cm5' in data.atcharges:
+        _dump_real_arrays("Type 7 Charges", data.atcharges["cm5"], f)
 
     # write atomic gradient
     if data.atgradient is not None:
