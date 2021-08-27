@@ -1099,7 +1099,7 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
 
     # Save schema name & version
     extra_dict["schema_name"] = "qcschema_input"
-    extra_dict["schema_version"] = _version_check(result, 1, "qcschema_input", lit)
+    extra_dict["schema_version"] = _version_check(result, 2, "qcschema_input", lit)
 
     # Load driver
     extra_dict["driver"] = _parse_driver(result["driver"], lit)
