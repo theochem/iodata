@@ -218,7 +218,7 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     # Remove all null entries and empty dicts in json
     # QCEngine seems to add null entries and empty dicts even for optional and empty keys
     fix_keys = {k: v for k, v in mol1_preproc.items() if v is not None}
-    fix_subkeys = dict()
+    fix_subkeys = {}
     for key in fix_keys:
         if isinstance(fix_keys[key], dict):
             fix_subkeys[key] = {k: v for k, v in fix_keys[key].items() if v is not None}

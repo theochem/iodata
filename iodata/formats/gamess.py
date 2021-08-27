@@ -121,7 +121,7 @@ def _read_masses(lit: LineIterator, result: dict) -> np.ndarray:
                              'atnums', 'atcoords'])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    result = dict()
+    result = {}
     while True:
         try:
             line = next(lit)

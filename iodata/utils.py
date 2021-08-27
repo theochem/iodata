@@ -37,15 +37,15 @@ __all__ = ['LineIterator', 'Cube', 'set_four_index_element', 'volume',
 # The unit conversion factors below can be used as follows:
 # - Conversion to atomic units: distance = 5*angstrom
 # - Conversion from atomic units: print(distance/angstrom)
-angstrom: float = spc.angstrom / spc.value(u'atomic unit of length')
-electronvolt: float = 1 / spc.value(u'hartree-electron volt relationship')
+angstrom: float = spc.angstrom / spc.value('atomic unit of length')
+electronvolt: float = 1 / spc.value('hartree-electron volt relationship')
 # Unit conversion for Gromacs gro files
-meter: float = 1 / spc.value(u'Bohr radius')
+meter: float = 1 / spc.value('Bohr radius')
 nanometer: float = 1e-9 * meter
-second: float = 1 / spc.value(u'atomic unit of time')
+second: float = 1 / spc.value('atomic unit of time')
 picosecond: float = 1e-12 * second
 # atomic mass unit (not atomic unit of mass!)
-amu: float = 1e-3 / (spc.value(u'electron mass') * spc.value(u'Avogadro constant'))
+amu: float = 1e-3 / (spc.value('electron mass') * spc.value('Avogadro constant'))
 kcalmol: float = 1e3 * spc.calorie / spc.value('Avogadro constant') / spc.value('Hartree energy')
 calmol: float = spc.calorie / spc.value('Avogadro constant') / spc.value('Hartree energy')
 kjmol: float = 1e3 / spc.value('Avogadro constant') / spc.value('Hartree energy')
