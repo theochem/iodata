@@ -637,33 +637,25 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         return
 
     # --- CFOUR 2.1
-    cfour_obasis = obasis
-    if cfour_obasis is not None and \
-       _is_normalized_properly(cfour_obasis, atcoords, coeffsa, coeffsb):
-        lit.warn('Corrected for CFOUR errors in Molden/MKL file.')
-        result['obasis'] = cfour_obasis
-        return
-
-    cfour_coeff_correction = _fix_mo_coeffs_cfour(cfour_obasis)
+    cfour_coeff_correction = _fix_mo_coeffs_cfour(obasis)
     if cfour_coeff_correction is not None:
         coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
         if coeffsb is None:
             coeffsb_cfour = None
         else:
             coeffsb_cfour = coeffsb / cfour_coeff_correction[:, np.newaxis]
-        if _is_normalized_properly(cfour_obasis,
+        if _is_normalized_properly(obasis,
                                    atcoords,
                                    coeffsa_cfour,
                                    coeffsb_cfour):
             lit.warn('Corrected for CFOUR 2.1 errors in Molden/MKL file.')
-            result['obasis'] = cfour_obasis
+            result['obasis'] = obasis
             if result['mo'].kind == 'restricted':
                 result['mo'].coeffs[:] = coeffsa_cfour
             else:
                 result['mo'].coeffsa[:] = coeffsa_cfour
                 result['mo'].coeffsb[:] = coeffsb_cfour
             return
-    result['obasis'] = cfour_obasis
 
     # --- Renormalized contractions
     normed_obasis = _fix_obasis_normalize_contractions(obasis)
