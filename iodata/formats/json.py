@@ -621,7 +621,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
     # Remove all null entries and empty dicts in json
     # QCEngine seems to add null entries and empty dicts even for optional and empty keys
     fix_keys = {k: v for k, v in json_in.items() if v is not None}
-    fix_subkeys = dict()
+    fix_subkeys = {}
     for key in fix_keys:
         if isinstance(fix_keys[key], dict):
             fix_subkeys[key] = {k: v for k, v in fix_keys[key].items() if v is not None}
@@ -772,8 +772,8 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
                 "{}: QCSchema topology requires '{}' key".format(lit.filename, key)
             )
 
-    topology_dict = dict()
-    extra_dict = dict()
+    topology_dict = {}
+    extra_dict = {}
 
     # Save schema name & version
     extra_dict["schema_name"] = "qcschema_molecule"
@@ -966,7 +966,7 @@ def _find_passthrough_dict(result: dict, keys: set) -> dict:
     # Avoid altering original dict
     result = result.copy()
 
-    passthrough_dict = dict()
+    passthrough_dict = {}
     parsed_keys = keys.intersection(result.keys())
     for key in parsed_keys:
         del result[key]
@@ -998,7 +998,7 @@ def _load_qcschema_basis(_result: dict, _lit: LineIterator) -> dict:
         QCSchema Basis schema is not yet implemented in IOData.
 
     """
-    # basis_dict = dict()
+    # basis_dict = {}
     # return basis_dict
     raise NotImplementedError("qcschema_basis is not yet implemented in IOData.")
 
@@ -1045,7 +1045,7 @@ def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
         It may contain ``atmasses``, ``bonds``, ``g_rot``, ``obasis``, ``run_type`` & ``title``
         keys and corresponding values as well.
     """
-    extra_dict = dict()
+    extra_dict = {}
     input_dict = _parse_input_keys(result, lit)
     extra_dict["input"] = input_dict["extra"]
 
@@ -1094,8 +1094,8 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
                 "{}: QCSchema `qcschema_input` file requires '{}' key".format(lit.filename, key)
             )
     # Store all extra keys in extra_dict and gather at end
-    input_dict = dict()
-    extra_dict = dict()
+    input_dict = {}
+    extra_dict = {}
 
     # Save schema name & version
     extra_dict["schema_name"] = "qcschema_input"
@@ -1208,8 +1208,8 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
         It may contain ``obasis`` and ``extra`` keys and corresponding values as well.
 
     """
-    model_dict = dict()
-    extra_dict = dict()
+    model_dict = {}
+    extra_dict = {}
 
     if "method" not in model:
         raise FileFormatError("{}: QCSchema `model` requires a `method`".format(lit.filename))
@@ -1275,7 +1275,7 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
         keep_stdout = True
     else:
         keep_stdout = protocols["stdout"]
-    protocols_dict = dict()
+    protocols_dict = {}
     if wavefunction not in {"all", "orbitals_and_eigenvalues", "return_results", "none"}:
         raise FileFormatError(
             "{}: Invalid `protocols` `wavefunction` keyword.".format(lit.filename)
@@ -1306,7 +1306,7 @@ def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
         ``title`` keys and corresponding values as well.
 
     """
-    extra_dict = dict()
+    extra_dict = {}
     output_dict = _parse_output_keys(result, lit)
     extra_dict["output"] = output_dict["extra"]
 
@@ -1358,8 +1358,8 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
             )
 
     # Store all extra keys in extra_dict and gather at end
-    output_dict = dict()
-    extra_dict = dict()
+    output_dict = {}
+    extra_dict = {}
 
     extra_dict["schema_name"] = "qcschema_output"
     extra_dict["schema_version"] = _version_check(result, 2, "qcschema_output", lit)
@@ -1632,7 +1632,7 @@ def _dump_qcschema_input(data: IOData) -> dict:
     input_dict["driver"] = data.extra["input"]["driver"]
     if "model" not in data.extra["input"]:
         raise FileFormatError("qcschema_input requires `model` field in extra['input'].")
-    input_dict["model"] = dict()
+    input_dict["model"] = {}
     if data.lot is None:
         raise FileFormatError("qcschema_input requires specifed `lot`.")
     input_dict["model"]["method"] = data.lot
@@ -1648,7 +1648,7 @@ def _dump_qcschema_input(data: IOData) -> dict:
     if "id" in data.extra["input"]:
         input_dict["id"] = data.extra["input"]["id"]
     if "protocols" in data.extra["input"]:
-        input_dict["protocols"] = dict()
+        input_dict["protocols"] = {}
         # Remove 'keep_' from protocols keys (added in IOData for readability)
         for keep in data.extra["input"]["protocols"]:
             input_dict["protocols"][keep[5:]] = data.extra["input"]["protocols"][keep]
@@ -1692,7 +1692,7 @@ def _dump_qcschema_output(data: IOData) -> dict:
     output_dict["driver"] = data.extra["input"]["driver"]
     if "model" not in data.extra["input"]:
         raise FileFormatError("qcschema_output requires `model` field in extra['input'].")
-    output_dict["model"] = dict()
+    output_dict["model"] = {}
     if data.lot is None:
         raise FileFormatError("qcschema_output requires specifed `lot`.")
     output_dict["model"]["method"] = data.lot
@@ -1724,7 +1724,7 @@ def _dump_qcschema_output(data: IOData) -> dict:
     if "id" in data.extra["input"]:
         output_dict["id"] = data.extra["input"]["id"]
     if "protocols" in data.extra["input"]:
-        output_dict["protocols"] = dict()
+        output_dict["protocols"] = {}
         # Remove 'keep_' from protocols keys (added in IOData for readability)
         for keep in data.extra["input"]["protocols"]:
             output_dict["protocols"][keep[5:]] = data.extra["input"]["protocols"][keep]

@@ -112,7 +112,7 @@ def _load_low(lit: LineIterator) -> dict:
     title = None
 
     line = next(lit)
-    if line != '[Molden Format]\n':
+    if line.strip() != '[Molden Format]':
         lit.error('Molden header not found')
     # The order of sections, denoted by "[...]", is not fixed in the Molden
     # format, so we need a loop that checks for all possible sections at
@@ -348,7 +348,6 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
     # every attempt because also the primitive normalization may differ in
     # different cases.
     olp = compute_overlap(obasis, atcoords)
-
     # Convenient code for debugging files coming from crappy QC codes.
     # np.set_printoptions(linewidth=5000, precision=2, suppress=True, threshold=100000)
     # coeffs = orb_alpha._coeffs
@@ -549,6 +548,40 @@ def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     return None
 
 
+def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
+    """Return correction values for the MO coefficients.
+
+    CFOUR (up to current 2.1) uses different normalization conventions for Cartesian
+    AO basis functions. The coefficients need to be divided by the returned
+    correction factor.
+    """
+    correction = []
+    corrected = False
+    for shell in obasis.shells:
+        # We can safely assume segmented shells.
+        assert shell.ncon == 1
+        angmom = shell.angmoms[0]
+        kind = shell.kinds[0]
+        factors = None
+        if kind == "c":
+            if angmom == 2:
+                factors = np.array([1.0 / np.sqrt(3.0)] * 3 + [1.0] * 3)
+            elif angmom == 3:
+                factors = np.array([1.0 / np.sqrt(15.0)] * 3 + [1.0 / (np.sqrt(3.0))] * 6 + [1.0])
+            elif angmom == 4:
+                factors = np.array([1.0 / np.sqrt(105.0)] * 3 + [1.0 / (np.sqrt(15.0))] * 6
+                                   + [1.0 / 3.0] * 3 + [1.0 / (np.sqrt(3.0))] * 3)
+        if factors is None:
+            factors = np.ones(shell.nbasis)
+        else:
+            assert len(factors) == shell.nbasis
+            corrected = True
+        correction.append(factors)
+    if corrected:
+        return np.concatenate(correction)
+    return None
+
+
 def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
     """Detect errors in the data loaded from a molden or mkl file and correct.
 
@@ -563,6 +596,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         The line iterator to read the data from, used for warnings.
 
     """
+    # pylint: disable=too-many-return-statements
     obasis = result['obasis']
     atcoords = result['atcoords']
     if result['mo'].kind == 'restricted':
@@ -601,6 +635,27 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         lit.warn('Corrected for Turbomole errors in Molden/MKL file.')
         result['obasis'] = turbom_obasis
         return
+
+    # --- CFOUR 2.1
+    cfour_coeff_correction = _fix_mo_coeffs_cfour(obasis)
+    if cfour_coeff_correction is not None:
+        coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
+        if coeffsb is None:
+            coeffsb_cfour = None
+        else:
+            coeffsb_cfour = coeffsb / cfour_coeff_correction[:, np.newaxis]
+        if _is_normalized_properly(obasis,
+                                   atcoords,
+                                   coeffsa_cfour,
+                                   coeffsb_cfour):
+            lit.warn('Corrected for CFOUR 2.1 errors in Molden/MKL file.')
+            result['obasis'] = obasis
+            if result['mo'].kind == 'restricted':
+                result['mo'].coeffs[:] = coeffsa_cfour
+            else:
+                result['mo'].coeffsa[:] = coeffsa_cfour
+                result['mo'].coeffsb[:] = coeffsb_cfour
+            return
 
     # --- Renormalized contractions
     normed_obasis = _fix_obasis_normalize_contractions(obasis)

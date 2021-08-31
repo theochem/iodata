@@ -266,7 +266,7 @@ def _helper_orbital_energies_restricted(lit: LineIterator) -> Tuple:
 
 def _helper_orbital_energies_unrestricted(lit: LineIterator) -> Tuple:
     """Load occupied and virtual orbital energies for unrestricted calculation."""
-    subdata = dict()
+    subdata = {}
     # alpha occupied MOs
     subdata['mo_a_occ'] = _helper_section('-- Occupied --', '-- Virtual --', lit, backward=True)
     # alpha unoccupied MOs
