@@ -100,6 +100,18 @@ def test_load_fchk_hf_sto3g_num():
     check_orthonormal(mol.mo.coeffs, olp)
 
 
+def test_load_fchk_hf_water_atcharges():
+    mol = load_fchk_helper('water_atcharges.fchk')
+    assert_allclose(mol.atcharges['mulliken'], [-3.91150532E-01, 1.96895396E-01, 1.94255137E-01])
+    assert_allclose(mol.atcharges['npa'], [-4.98161654E-01, 2.50757174E-01, 2.47404480E-01])
+    assert_allclose(mol.atcharges['esp'], [-4.47363368E-01, 2.24922518E-01, 2.22440849E-01])
+    assert_allclose(mol.atcharges['mbs'], [-2.90505882E-01, 1.45850946E-01, 1.44654936E-01])
+    # hirshfeld is under label `Type 6 charges` in fchk
+    assert_allclose(mol.atcharges['hirshfeld'], [-3.37450356E-01, 1.68988978E-01, 1.68461239E-01])
+    # cm5 is under label `Type 7 charges` in fchk
+    assert_allclose(mol.atcharges['cm5'], [-3.77750403E-01, 1.89459551E-01, 1.88290713E-01])
+
+
 def test_load_fchk_h_sto3g_num():
     mol = load_fchk_helper('h_sto3g.fchk')
     assert mol.title == 'h_sto3g'
@@ -571,6 +583,10 @@ def test_dump_fchk_from_fchk_hf(tmpdir):
 
 def test_dump_fchk_from_fchk_h2o(tmpdir):
     check_load_dump_consistency(tmpdir, 'h2o_sto3g.fchk')
+
+
+def test_dump_fchk_from_fchk_water_atcharges(tmpdir):
+    check_load_dump_consistency(tmpdir, 'water_atcharges.fchk')
 
 
 def test_dump_fchk_from_fchk_h2o_qchem(tmpdir):

@@ -85,6 +85,7 @@ def load_one(lit: LineIterator) -> dict:
         'Total CC Density', 'Spin CC Density',
         'Total CI Density', 'Spin CI Density',
         'Mulliken Charges', 'ESP Charges', 'NPA Charges',
+        'MBS Charges', 'Type 6 Charges', 'Type 7 Charges',
         'Polarizability', 'Dipole Moment', 'Quadrupole Moment',
         'Cartesian Gradient', 'Cartesian Force Constants', 'MicOpt',
     ])
@@ -222,6 +223,12 @@ def load_one(lit: LineIterator) -> dict:
         atcharges['esp'] = fchk['ESP Charges']
     if 'NPA Charges' in fchk:
         atcharges['npa'] = fchk['NPA Charges']
+    if 'MBS Charges' in fchk:
+        atcharges['mbs'] = fchk['MBS Charges']
+    if 'Type 6 Charges' in fchk:
+        atcharges['hirshfeld'] = fchk['Type 6 Charges']
+    if 'Type 7 Charges' in fchk:
+        atcharges['cm5'] = fchk['Type 7 Charges']
     if atcharges:
         result['atcharges'] = atcharges
 
@@ -625,6 +632,12 @@ def dump_one(f: TextIO, data: IOData):
         _dump_real_arrays("ESP Charges", data.atcharges["esp"], f)
     if 'npa' in data.atcharges:
         _dump_real_arrays("NPA Charges", data.atcharges["npa"], f)
+    if 'mbs' in data.atcharges:
+        _dump_real_arrays("MBS Charges", data.atcharges["mbs"], f)
+    if 'hirshfeld' in data.atcharges:
+        _dump_real_arrays("Type 6 Charges", data.atcharges["hirshfeld"], f)
+    if 'cm5' in data.atcharges:
+        _dump_real_arrays("Type 7 Charges", data.atcharges["cm5"], f)
 
     # write atomic gradient
     if data.atgradient is not None:
