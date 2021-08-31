@@ -200,7 +200,7 @@ def test_load_molden_nh3_molden_cart():
     assert_allclose(charges, molden_charges, atol=1.e-3)
 
 
-def test_load_molden_h_cfour():
+def test_load_molden_cfour():
     # The file tested here is created with CFOUR 2.1.
     file_list = [
         'h_sonly_sph_cfour.molden',
@@ -212,7 +212,8 @@ def test_load_molden_h_cfour():
         'h_ponly_cart_cfour.molden',
         'h_donly_cart_cfour.molden',
         'h_fonly_cart_cfour.molden',
-        'h_gonly_cart_cfour.molden']
+        'h_gonly_cart_cfour.molden',
+        'h2o_ccpvdz_cfour.molden']
 
     for i in file_list:
         with path('iodata.test.data', i) as fn_molden:
