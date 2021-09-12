@@ -25,6 +25,7 @@ import numpy as np
 import pytest
 
 from ..api import dump_one, load_one
+from ..basis import CCA_CONVENTIONS
 from ..utils import FileFormatError, FileFormatWarning
 
 
@@ -405,3 +406,22 @@ def test_inout_qcschema_output(tmpdir, filename):
     if "provenance" in mol2["molecule"]:
         del mol2["molecule"]["provenance"]
     assert mol1 == mol2
+
+
+# BASIS_FILES: {filename}
+BASIS_FILES = [
+    ("LiCl_STO4G_basis.json"),
+]
+
+
+@pytest.mark.parametrize("filename", BASIS_FILES)
+def test_qcschema_basis(filename):
+    """Test qcschema_basis with quick check."""
+    with path("iodata.test.data", filename) as qcschema_basis:
+        basis = load_one(str(qcschema_basis))
+
+    print(basis.obasis)
+    assert basis.obasis_name == "STO-4G"
+    assert basis.obasis.conventions == CCA_CONVENTIONS
+    assert basis.obasis.primitive_normalization == "L2"
+    assert len(basis.obasis.shells) == 5
