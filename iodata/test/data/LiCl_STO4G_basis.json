@@ -2,9 +2,8 @@
   "schema_name": "qcschema_basis",
   "schema_version": 1,
   "name": "STO-4G",
-  "description": "STO-4G Minimal Basis (4 functions/AO)",
   "center_data": {
-    "li_STO-4G": {
+    "0": {
       "electron_shells": [
         {
           "angular_momentum": [
@@ -55,7 +54,7 @@
         }
       ]
     },
-    "cl_STO-4G": {
+    "1": {
       "electron_shells": [
         {
           "angular_momentum": [
@@ -134,5 +133,5 @@
       ]
     }
   },
-  "atom_map": ["li_STO-4G", "cl_STO-4G"]
+  "atom_map": ["0", "1"]
 }
