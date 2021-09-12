@@ -1542,8 +1542,7 @@ def dump_one(f: TextIO, data: IOData):
     if schema_name == "qcschema_molecule":
         return_dict = _dump_qcschema_molecule(data)
     elif schema_name == "qcschema_basis":
-        raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
-        # return_dict = _dump_qcschema_basis(data)
+        return_dict = _dump_qcschema_basis(data)
     elif schema_name == "qcschema_input":
         return_dict = _dump_qcschema_input(data)
     elif schema_name == "qcschema_output":
@@ -1820,3 +1819,51 @@ def _dump_qcschema_output(data: IOData) -> dict:
             output_dict[k] = data.extra["input"]["unparsed"][k]
 
     return output_dict
+
+
+def _dump_qcschema_basis(data: IOData) -> dict:
+    """Dump relevant attributes from IOData to `qcschema_basis`.
+
+    Using this function requires one entry in the `extra` dict: 'schema_name' = 'qcschema_basis'.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to dump to file.
+
+    Returns
+    -------
+    basis_dict
+        The dict that will produce the QCSchema JSON file.
+
+    """
+    basis_dict = {"schema_name": "qcschema_basis", "schema_version": 1}
+    if not data.obasis_name:
+        raise FileFormatError("qcschema_basis requires `obasis_name`")
+    if not data.obasis:
+        raise FileFormatError("qcschema_basis requires `obasis`")
+
+    basis_dict["name"] = data.obasis_name
+    basis_dict["center_data"] = dict()
+    for shell in data.obasis.shells:
+        if len(set(shell.kinds)) > 1:
+            raise FileFormatError("qcschema_basis does not support mixed kinds in one shell."
+                                  "To support this functionality consider the BasisSetExchange's"
+                                  "similar JSON schema.")
+        if shell.icenter not in basis_dict["center_data"]:
+            basis_dict["center_data"][str(shell.icenter)] = {"electron_shells": list()}
+        basis_dict["center_data"][str(shell.icenter)]["electron_shells"].append(
+            {
+                "angular_momentum": shell.angmoms,
+                "exponents": shell.exponents.tolist(),
+                "coefficients": shell.coeffs.tolist(),
+                "harmonic_type": shell.kinds[0]
+            }
+        )
+        basis_dict["atom_map"] = list(basis_dict["center_data"].keys())
+
+    return basis_dict
+
+
+
+
