@@ -571,6 +571,7 @@ from warnings import warn
 
 import numpy as np
 
+from ..basis import CCA_CONVENTIONS, Shell, MolecularBasis
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
@@ -976,55 +977,132 @@ def _find_passthrough_dict(result: dict, keys: set) -> dict:
     return passthrough_dict
 
 
-def _load_qcschema_basis(_result: dict, _lit: LineIterator) -> dict:
+def _load_qcschema_basis(result: dict, lit: LineIterator) -> dict:
     """Load qcschema_basis properties.
 
     Parameters
     ----------
-    _result
+    result
         The JSON dict loaded from file.
-    _lit
+    lit
         The line iterator holding the file data.
 
     Returns
     -------
     basis_dict
-        ...
-
-
-    Raises
-    ------
-    NotImplementedError
-        QCSchema Basis schema is not yet implemented in IOData.
+        Dictionary containing ``obasis``, ``obasis_name`` & ``extra`` keys.
 
     """
-    # basis_dict = {}
-    # return basis_dict
-    raise NotImplementedError("qcschema_basis is not yet implemented in IOData.")
+    extra_dict = dict()
+    basis_dict = _parse_basis_keys(result, lit)
+    extra_dict["basis"] = basis_dict["extra"]
+
+    basis_dict["extra"] = extra_dict
+    basis_dict["extra"]["schema_name"] = "qcschema_basis"
+
+    return basis_dict
 
 
-def _parse_basis_keys(_basis: dict, _lit: LineIterator) -> dict:
+def _parse_basis_keys(basis: dict, lit: LineIterator) -> dict:
     """Parse basis keys for a QCSchema input, output, or basis file.
 
     Parameters
     ----------
-    _basis
+    basis
         The basis dictionary from a QCSchema basis file or QCSchema input or output 'method' key.
-    _lit
+    lit
         The line iterator holding the file data.
 
     Returns
     -------
     basis_dict
-        Dictionary containing ...
-
-    Raises
-    ------
-    NotImplementedError
-        QCSchema Basis schema is not yet implemented in IOData.
+        Dictionary containing ``obasis``, ``obasis_name``, & ``extra`` keys.
 
     """
-    raise NotImplementedError("qcschema_basis is not yet implemented in IOData.")
+    # Check for required properties:
+    # NOTE: description is optional in QCElemental, required in v1.dev
+    basis_keys = {
+        "schema_name",
+        "schema_version",
+        "name",
+        "center_data",
+        "atom_map",
+    }
+    for key in basis_keys:
+        if key not in basis:
+            raise FileFormatWarning(
+                "{}: QCSchema `qcschema_basis` requires '{}' key".format(lit.filename, key)
+            )
+
+    basis_dict = dict()
+    extra_dict = dict()
+    extra_dict["schema_name"] = basis["schema_name"]
+    extra_dict["schema_version"] = basis["schema_version"]
+    basis_dict["obasis_name"] = basis["name"]
+    # Load basis data
+    center_data = basis["center_data"]
+    atom_map = basis["atom_map"]
+    center_shells = dict()
+    # Center_data is composed of basis_center, each has req'd electron_shells, ecp_electrons,
+    # and optional ecp_potentials
+    for center in center_data:
+        # Initiate lists for building basis
+        center_shells[center] = list()
+        # QCElemental example omits ecp_electrons for cases with default value (0)
+        if "electron_shells" not in center_data[center]:
+            raise FileFormatError(
+                "{}: Basis center {} requires `electron_shells` key".format(lit.filename, center)
+            )
+        if "ecp_electrons" in center_data[center]:
+            ecp_electrons = center["ecp_electrons"]
+        else:
+            ecp_electrons = 0
+        shells = center_data[center]["electron_shells"]
+        for shell in shells:
+            # electron_shell requires angular_momentum, harmonic_type, exponents, coefficients
+            for key in ["angular_momentum", "harmonic_type", "exponents", "coefficients"]:
+                if key not in shell:
+                    raise FileFormatError(
+                        "{}: Basis center {} contains a shell missing '{}' key".format(
+                            lit.filename, center, key
+                        )
+                    )
+            # Load shell data
+            if shell["harmonic_type"] not in {"cartesian", "spherical"}:
+                raise FileFormatError(
+                    "{}: `harmonic_type` must be `cartesian` or `spherical`".format(
+                        lit.filename,
+                    )
+                )
+            angmoms = shell["angular_momentum"]
+            exps = np.array(shell["exponents"])
+            coeffs = np.array([[x for x in segment] for segment in shell["coefficients"]])
+            coeffs = coeffs.T
+            kinds = [shell["harmonic_type"] for _ in range(len(angmoms))]
+
+            # Gather shell components
+            center_shells[center].append(
+                {"angmoms": angmoms, "kinds": kinds, "exponents": exps, "coeffs": coeffs}
+            )
+
+    # Build obasis shells using the atom_map
+    # Each atom in atom_map corresponds to a key in center_shells
+    obasis_shells = list()
+    for i, atom in enumerate(atom_map):
+        for shell in center_shells[atom]:
+            # Unpack angmoms, kinds, exponents, coeffs into obasis
+            obasis_shells.append(Shell(icenter=i, **shell))
+
+    # These are assumed within QCSchema
+    conventions = CCA_CONVENTIONS
+    prim_norm = "L2"
+
+    basis_dict["obasis"] = MolecularBasis(
+        shells=obasis_shells, conventions=conventions, primitive_normalization=prim_norm
+    )
+    basis_dict["extra"] = extra_dict
+
+    return basis_dict
 
 
 def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
