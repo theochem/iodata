@@ -1863,7 +1863,3 @@ def _dump_qcschema_basis(data: IOData) -> dict:
         basis_dict["atom_map"] = list(basis_dict["center_data"].keys())
 
     return basis_dict
-
-
-
-
