@@ -272,7 +272,7 @@ def check_load_azirine(key, numbers):
     """Perform some basic checks on a azirine fchk file."""
     mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
     assert mol.obasis.nbasis == 33
-    dm = mol.one_rdms['post_scf']
+    dm = mol.one_rdms['post_scf_ao']
     assert_equal(dm[0, 0], numbers[0])
     assert_equal(dm[32, 32], numbers[1])
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -299,7 +299,7 @@ def check_load_nitrogen(key, numbers, numbers_spin):
     """Perform some basic checks on a nitrogen fchk file."""
     mol = load_fchk_helper('nitrogen-{}.fchk'.format(key))
     assert mol.obasis.nbasis == 9
-    dm = mol.one_rdms['post_scf']
+    dm = mol.one_rdms['post_scf_ao']
     assert_equal(dm[0, 0], numbers[0])
     assert_equal(dm[8, 8], numbers[1])
     olp = compute_overlap(mol.obasis, mol.atcoords)
@@ -307,7 +307,7 @@ def check_load_nitrogen(key, numbers, numbers_spin):
     check_orthonormal(mol.mo.coeffsb, olp)
     check_dm(dm, olp, eps=1e-3, occ_max=2)
     assert_allclose(np.einsum('ab,ba', olp, dm), 7.0, atol=1.e-7, rtol=0)
-    dm_spin = mol.one_rdms['post_scf_spin']
+    dm_spin = mol.one_rdms['post_scf_spin_ao']
     assert_equal(dm_spin[0, 0], numbers_spin[0])
     assert_equal(dm_spin[8, 8], numbers_spin[1])
 
@@ -333,7 +333,7 @@ def check_normalization_dm_azirine(key):
     mol = load_fchk_helper('2h-azirine-{}.fchk'.format(key))
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)
-    dm = mol.one_rdms['post_scf']
+    dm = mol.one_rdms['post_scf_ao']
     check_dm(dm, olp, eps=1e-2, occ_max=2)
     assert_allclose(np.einsum('ab,ba', olp, dm), 22.0, atol=1.e-8, rtol=0)
 

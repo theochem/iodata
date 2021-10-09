@@ -131,7 +131,7 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
     cases = [
         ('one_ints', ['olp', 'kin_ao', 'na_ao']),
         ('two_ints', ['er_ao']),
-        ('one_rdms', ['scf', 'scf_spin', 'post_scf', 'post_scf_spin']),
+        ('one_rdms', ['scf', 'scf_spin', 'post_scf_ao', 'post_scf_spin_ao']),
     ]
     for attrname, keys in cases:
         d1 = getattr(mol1, attrname)
