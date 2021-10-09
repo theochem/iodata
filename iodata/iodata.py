@@ -129,20 +129,25 @@ class IOData:
         www.basissetexchange.org.
     one_ints
         Dictionary where keys are names and values are numpy arrays with
-        one-body operators, typically integrals of a one-body operator
-        with a pair of (Gaussian) basis functions. Names can start with ``olp``
+        one-body operators, typically integrals of a one-body operator with
+        a pair of (Gaussian) basis functions. Names can start with ``olp``
         (overlap), ``kin`` (kinetic energy), ``na`` (nuclear attraction),
-        ``core`` (core hamiltonian), etc. When relevant, these names must have a
-        suffix ``_ao`` or ``_mo`` to clarify in which basis the integrals are
-        computed. ``_ao`` is used to denote integrals in a non-orthogonal
-        (atomic orbital) basis. ``_mo`` is used to denote an orthogonal
-        (molecular orbital) basis. For the overlap integrals, this suffix can be
-        omitted because it is only useful to compute them in the atomic-orbital
-        basis.
+        ``core`` (core hamiltonian), etc., or ``one`` (general one-electron
+        integral). When relevant, these names must have a suffix ``_ao`` or
+        ``_mo`` to clarify in which basis the integrals are computed. ``_ao``
+        is used to denote integrals in a non-orthogonal (atomic orbital) basis.
+        ``_mo`` is used to denote an orthogonal (molecular orbital) basis. For
+        the overlap integrals, this suffix can be omitted because it is only
+        useful to compute them in the atomic-orbital basis.
     one_rdms
         Dictionary where keys are names and values are one-particle density
         matrices. Names can be ``scf``, ``post_scf``, ``scf_spin``,
-        ``post_scf_spin``. These matrices are always expressed in the AO basis.
+        ``post_scf_spin``. When relevant, these names must have a suffix
+        ``_ao`` or ``_mo`` to clarify in which basis the RDMs are computed.
+        ``_ao`` is used to denote a non-orthogonal (atomic orbital) basis.
+        ``_mo`` is used to denote an orthogonal (molecular orbital) basis.
+        For the SCF RDMs, this suffix can be omitted because it is only useful
+        to compute them in the atomic-orbital basis.
     run_type
         The type of calculation that lead to the results stored in IOData, which
         must be one of the following: 'energy', 'energy_force', 'opt', 'scan',
@@ -156,17 +161,18 @@ class IOData:
          A suitable name for the data.
     two_ints
         Dictionary where keys are names and values are numpy arrays with
-        two-body operators, typically integrals of two-body operator
-        with four of (Gaussian) basis functions. Names can start with ``er``
-        (electron repulsion) or ``two`` (general pairswise interaction). When
-        relevant, these names must have a suffix ``_ao`` or ``_mo`` to clarify
-        in which basis the integrals are computed, see one_ints for more
-        details. Array indexes are in physicist's notation.
+        two-body operators, typically integrals of two-body operator with four
+        of (Gaussian) basis functions. Names can start with ``er`` (electron
+        repulsion) or ``two`` (general pairswise interaction). When relevant,
+        these names must have a suffix ``_ao`` or ``_mo`` to clarify in which
+        basis the integrals are computed. See ``one_ints`` for more details.
+        Array indexes are in physicist's notation.
     two_rdms
         Dictionary where keys are names and values are two-particle density
-        matrices. Names can be ``post_scf`` or ``post_scf_spin``. These matrices
-        are always expressed in the AO basis. Array indexes are in physicist's
-        notation.
+        matrices. Names can be ``post_scf`` or ``post_scf_spin``. When relevant,
+        these names must have a suffix ``_ao`` or ``_mo`` to clarify in which
+        basis the RDMs are computed. See ``one_rdms`` for more details.
+        Array indexes are in physicist's notation.
 
     """
 
