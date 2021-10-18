@@ -68,7 +68,7 @@ def _parse_pdb_atom_line(line):
         words = line[12:16].split()
     # assign atomic number
     symbol = words[0].title()
-    atnum = sym2num.get(symbol, sym2num.get(symbol[0], None))
+    atnum = sym2num.get(symbol, sym2num.get(symbol[:2], sym2num.get(symbol[0], None)))
     # atom name, residue name, chain id, & residue sequence number
     attype = line[12:16].strip()
     restype = line[17:20].strip()

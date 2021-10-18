@@ -218,3 +218,12 @@ def test_load_ch5plus_bonds():
     with path("iodata.test.data", "ch5plus.pdb") as fn_pdb:
         mol = load_one(fn_pdb)
     assert_equal(mol.bonds[:, :2], [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5]])
+
+
+def test_indomethacin_dimer():
+    with path("iodata.test.data", "indomethacin-dimer.pdb") as fn_pdb:
+        mol = load_one(fn_pdb)
+    assert mol.atnums[13] == 6
+    assert mol.atnums[14] == 17
+    assert mol.atnums[15] == 6
+    assert mol.atnums[55] == 17
