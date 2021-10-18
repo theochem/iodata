@@ -1,7 +1,11 @@
 absolute: true  # Force absolute comparison for cardboardlint
 project:
   name: iodata
-  requirements: [[sympy, sympy]]
+  requirements: [
+    [sympy, sympy],
+    # pylint 2.11.* seems to have bugs which break the CI.
+    ["pylint <2.11.0", "pylint<2.11.0"]
+  ]
   packages:
     - dist_name: qc-iodata
       tools:
