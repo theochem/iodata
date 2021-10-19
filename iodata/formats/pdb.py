@@ -41,7 +41,36 @@ __all__ = []
 PATTERNS = ['*.pdb']
 
 
-def _parse_pdb_atom_line(line):
+def _parse_pdb_atom_line(line, lit):
+    """Parse an ATOM or HETATM line from a PDB file.
+
+    Parameters
+    ----------
+    line
+        A string with a single ATOM or HETATM line.
+    lit
+        The line iterator which read the line, used for generating warnings when needed.
+
+    Returns
+    -------
+    atnum
+        Atomic number.
+    atname
+        The atom name.
+    resname
+        The residua name.
+    chainid
+        The chain ID.
+    resnum
+        The residue number.
+    atcoord
+        Cartesian coordinates of the atomic nucleus.
+    occupancy
+        The occupancy (usually from the XRD analysis).
+    bfactor
+        The temperature factor (usually from the XRD analysis).
+
+    """
     # Overview of ATOM records
     #     COLUMNS        DATA  TYPE    FIELD        DEFINITION
     # -------------------------------------------------------------------------------------
@@ -62,16 +91,21 @@ def _parse_pdb_atom_line(line):
     # 79 - 80        LString(2)    charge       Charge  on the atom.
 
     # Get element symbol from position 77:78 in pdb format
-    words = line[76:78].split()
-    if not words:
+    symbol = line[76:78].strip()
+    if len(symbol) > 0:
+        atnum = sym2num.get(symbol)
+    else:
         # If not present, guess it from position 13:16 (atom name)
-        words = line[12:16].split()
-    # assign atomic number
-    symbol = words[0].title()
-    atnum = sym2num.get(symbol, sym2num.get(symbol[:2], sym2num.get(symbol[0], None)))
+        atname = line[12:16].strip()
+        atnum = sym2num.get(atname, sym2num.get(atname[:2].title(), sym2num.get(atname[0], None)))
+        lit.warn("Using the atom name in the PDB file to guess the chemical element.")
+    if atnum is None:
+        atnum = 0
+        lit.warn("Failed to determine the atomic number.")
+
     # atom name, residue name, chain id, & residue sequence number
-    attype = line[12:16].strip()
-    restype = line[17:20].strip()
+    atname = line[12:16].strip()
+    resname = line[17:20].strip()
     chainid = line[21]
     resnum = int(line[22:26])
     # add x, y, and z
@@ -83,7 +117,7 @@ def _parse_pdb_atom_line(line):
     # get occupancies & temperature factor
     occupancy = float(line[54:60])
     bfactor = float(line[60:66])
-    return atnum, attype, restype, chainid, resnum, atcoord, occupancy, bfactor
+    return atnum, atname, resname, chainid, resnum, atcoord, occupancy, bfactor
 
 
 def _parse_pdb_conect_line(line):
@@ -133,7 +167,7 @@ def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, t
             compnd_lines.append(line[10:].strip())
         if line.startswith("ATOM") or line.startswith("HETATM"):
             (atnum, attype, restype, chainid, resnum, atcoord, occupancy,
-             bfactor) = _parse_pdb_atom_line(line)
+             bfactor) = _parse_pdb_atom_line(line, lit)
             atnums.append(atnum)
             attypes.append(attype)
             restypes.append(restype)
