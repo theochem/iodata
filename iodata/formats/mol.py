@@ -69,10 +69,10 @@ def load_one(lit: LineIterator) -> dict:
 
     for ibond in range(nbond):              # iterate entire bond block
         words = next(lit).split()           # each element in bond line
-        bonds[ibond, 0] = int(words[0]) -1    # first atom for bond
-        bonds[ibond, 1] = int(words[1]) -1      # second atom for bond 
+        bonds[ibond, 0] = int(words[0])     # first atom for bond
+        bonds[ibond, 1] = int(words[1])     # second atom for bond 
         bonds[ibond, 2] = int(words[2])     # bond type (single,double,triple)
-#        bonds[ibond, 3] = int(words[3])     # bond sterochemistry???
+#        bonds[ibond, 3] = int(words[3])    # bond sterochemistry???
     
     while True:                             # iterate each commentary until EOF
         try:
