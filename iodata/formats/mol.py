@@ -61,19 +61,18 @@ def load_one(lit: LineIterator) -> dict:
         atcoords[iatom, 1] = float(words[1]) * angstrom     # coord angstrom
         atcoords[iatom, 2] = float(words[2]) * angstrom     # coord angstrom
         atnums[iatom] = sym2num.get(words[3].title())       # atomic symbol
-    for ibond in range(nbond):              # iterate entire bond block
-        words = next(lit).split()           # each element in bond line
-        bonds[ibond, 0] = int(words[0])     # first atom for bond
-        bonds[ibond, 1] = int(words[1])     # second atom for bond
-        bonds[ibond, 2] = int(words[2])     # bond type (single,double,triple)
-#        bonds[ibond, 3] = int(words[3])    # bond sterochemistry???
-    while True:                             # iterate each commentary until EOF
+    for ibond in range(nbond):                  # iterate entire bond block
+        words = next(lit).split()               # each element in bond line
+        bonds[ibond, 0] = int(words[0]) - 1     # first atom for bond
+        bonds[ibond, 1] = int(words[1]) - 1     # second atom for bond
+        bonds[ibond, 2] = int(words[2])         # bond type (single,double,triple)
+    while True:                                 # iterate each commentary until EOF
         try:
-            words = next(lit)               # skip each commentary line
-        except StopIteration:               # what if file has wrong termination?
+            words = next(lit)                   # skip each commentary line
+        except StopIteration:                   # what if file has wrong termination?
             lit.error("WARNING: Molecule specification did not end properly with M END !")
-        if words == 'M  END\n':             # what if file has right termination?
-            break                           # terminate while loop
+        if words == "M  END\n":                 # what if file has right termination?
+            break                               # terminate while loop
     return{
         'title': title,
         'atcoords': atcoords,
@@ -97,7 +96,7 @@ def dump_one(f: TextIO, data: IOData):
     print(data.title or 'Created with IOData', file=f)    # row 1, title
     print('', file=f)                                     # row 2, empty
     print('', file=f)                                     # row 3, empty
-    if data.bonds is None:                   # What if no bond block data?
+    if data.bonds is None:                  # What if no bond block data?
         nbond = 0
     else:                                   # What if bond block data?
         nbond = len(data.bonds)             # num bonds is length of bonds array
@@ -109,7 +108,8 @@ def dump_one(f: TextIO, data: IOData):
         print(f'{x:10.4f}{y:10.4f}{z:10.4f} {n:<3s} 0  0  0  0  0  0  0  0  0  0  0  0', file=f)
     if data.bonds is not None:              # populate bond block
         for beginatom, endatom, bondtype in data.bonds:
-            print('{:3d}{:3d}{:3d}  0  0  0  0'.format(beginatom, endatom, bondtype), file=f)
+            print('{:3d}{:3d}{:3d}  0  0  0  0'.format(beginatom + 1, endatom + 1,
+                                                       bondtype), file=f)
     print("M  END", file=f)
 
 
