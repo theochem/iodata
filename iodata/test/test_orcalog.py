@@ -26,13 +26,13 @@ from ..api import load_one
 from ..utils import angstrom
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_water_number():
-    with path('iodata.test.data', 'water_orca.out') as fn:
+    with as_file(files("iodata.test.data").joinpath("water_orca.out")) as fn:
         mol = load_one(fn)
     # Test atomic numbers and number of atoms
     assert mol.natom == 3

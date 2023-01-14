@@ -19,29 +19,28 @@
 """Test iodata.formats.xyz module."""
 
 import os
-
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one, load_many, dump_one, dump_many
 from ..utils import angstrom
 from ..formats.xyz import DEFAULT_ATOM_COLUMNS
-try:
-    from importlib_resources import path
-except ImportError:
-    from importlib.resources import path
 
+try:
+    from importlib_resources import as_file, files
+except ImportError:
+    from importlib.resources import as_file, files
 
 def test_load_water_number():
     # test xyz with atomic numbers
-    with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
+    with as_file(files('iodata.test.data').joinpath('water_number.xyz')) as fn_xyz:
         mol = load_one(str(fn_xyz))
     check_water(mol)
 
 
 def test_load_water_element():
     # test xyz file with atomic symbols
-    with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
+    with as_file(files('iodata.test.data').joinpath('water_element.xyz')) as fn_xyz:
         mol = load_one(str(fn_xyz))
     check_water(mol)
 
@@ -73,7 +72,7 @@ FCC_ATOM_COLUMNS = DEFAULT_ATOM_COLUMNS + [
 
 
 def test_load_fcc_columns():
-    with path('iodata.test.data', 'al_fcc.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("al_fcc.xyz")) as fn_xyz:
         mol = load_one(str(fn_xyz), atom_columns=FCC_ATOM_COLUMNS)
     assert "zs" in mol.extra
     assert mol.extra["zs"].dtype == int
@@ -108,27 +107,27 @@ def check_load_dump_consistency(tmpdir, fn, atom_columns=None):
 
 
 def test_load_dump_consistency(tmpdir):
-    with path('iodata.test.data', 'ch3_hf_sto3g.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("ch3_hf_sto3g.fchk")) as fn_fchk:
         check_load_dump_consistency(tmpdir, str(fn_fchk))
 
 
 def test_dump_xyz_water_element(tmpdir):
-    with path('iodata.test.data', 'water_element.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("water_element.xyz")) as fn_xyz:
         check_load_dump_consistency(tmpdir, str(fn_xyz))
 
 
 def test_dump_xyz_water_number(tmpdir):
-    with path('iodata.test.data', 'water_number.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("water_number.xyz")) as fn_xyz:
         check_load_dump_consistency(tmpdir, str(fn_xyz))
 
 
 def test_dump_xyz_fcc(tmpdir):
-    with path('iodata.test.data', 'al_fcc.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("al_fcc.xyz")) as fn_xyz:
         check_load_dump_consistency(tmpdir, str(fn_xyz), FCC_ATOM_COLUMNS)
 
 
 def test_load_many():
-    with path('iodata.test.data', 'water_trajectory.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("water_trajectory.xyz")) as fn_xyz:
         mols = list(load_many(str(fn_xyz)))
     assert len(mols) == 5
     for imol, mol in enumerate(mols):
@@ -141,7 +140,7 @@ def test_load_many():
 
 
 def test_load_many_dataset_emptylines():
-    with path('iodata.test.data', 'dataset_blanklines.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("dataset_blanklines.xyz")) as fn_xyz:
         mols = list(load_many(str(fn_xyz)))
     assert len(mols) == 3
     # Check 1st item
@@ -165,7 +164,7 @@ def test_load_many_dataset_emptylines():
 
 
 def test_load_dump_many_consistency(tmpdir):
-    with path('iodata.test.data', 'water_trajectory.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("water_trajectory.xyz")) as fn_xyz:
         mols0 = list(load_many(str(fn_xyz)))
     # write xyz file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test')

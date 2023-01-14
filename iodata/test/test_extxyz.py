@@ -23,14 +23,15 @@ from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one, load_many
 from ..utils import angstrom
+
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_fcc_extended():
-    with path('iodata.test.data', 'al_fcc.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("al_fcc.xyz")) as fn_xyz:
         mol = load_one(str(fn_xyz), fmt='extxyz')
     assert hasattr(mol, 'energy')
     assert isinstance(mol.energy, float)
@@ -51,7 +52,7 @@ def test_load_fcc_extended():
 
 
 def test_load_mgo():
-    with path('iodata.test.data', 'mgo.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("mgo.xyz")) as fn_xyz:
         mol = load_one(str(fn_xyz), fmt='extxyz')
     assert_equal(mol.atnums, [12] * 4 + [8] * 4)
     assert_equal(mol.atcoords[3], np.array([1, 1, 0]) * 2.10607000 * angstrom)
@@ -62,7 +63,7 @@ def test_load_mgo():
 
 
 def test_load_many_extended():
-    with path('iodata.test.data', 'water_extended_trajectory.xyz') as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("water_extended_trajectory.xyz")) as fn_xyz:
         mols = list(load_many(str(fn_xyz), fmt='extxyz'))
     assert len(mols) == 3
     assert 'some_label' in mols[0].extra

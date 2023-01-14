@@ -23,14 +23,15 @@ from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one
 from ..utils import angstrom, electronvolt, volume
+
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_locpot_oxygen():
-    with path('iodata.test.data', 'LOCPOT.oxygen') as fn:
+    with as_file(files("iodata.test.data").joinpath("LOCPOT.oxygen")) as fn:
         mol = load_one(str(fn))
     assert mol.title == 'O atom in a box'
     assert_equal(mol.atnums[0], 8)

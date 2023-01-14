@@ -26,14 +26,14 @@ from ..formats.qchemlog import load_qchemlog_low
 from ..utils import LineIterator, angstrom, kjmol
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_qchemlog_low_h2o():
     """Test load_qchemlog_low with water_hf_ccpvtz_freq_qchem.out."""
-    with path('iodata.test.data', 'water_hf_ccpvtz_freq_qchem.out') as fq:
+    with as_file(files("iodata.test.data").joinpath("water_hf_ccpvtz_freq_qchem.out")) as fq:
         data = load_qchemlog_low(LineIterator(str(fq)))
 
     # check loaded data
@@ -114,7 +114,8 @@ def test_load_qchemlog_low_h2o():
 
 
 def test_load_one_qchemlog_freq():
-    with path('iodata.test.data', 'water_hf_ccpvtz_freq_qchem.out') as fn_qchemlog:
+    source = files("iodata.test.data").joinpath("water_hf_ccpvtz_freq_qchem.out")
+    with as_file(source) as fn_qchemlog:
         mol = load_one(str(fn_qchemlog), fmt='qchemlog')
     assert_allclose(mol.energy, -76.0571936393)
     assert mol.g_rot == 1
@@ -196,7 +197,7 @@ def test_load_one_qchemlog_freq():
 def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
     """Test load_qchemlog_low with h2o_dimer_eda_qchem5.3.out."""
     # pylint: disable=too-many-statements
-    with path('iodata.test.data', 'h2o_dimer_eda_qchem5.3.out') as fq:
+    with as_file(files("iodata.test.data").joinpath("h2o_dimer_eda_qchem5.3.out")) as fq:
         data = load_qchemlog_low(LineIterator(str(fq)))
 
     # check loaded data
@@ -283,7 +284,7 @@ def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
 def test_load_one_h2o_dimer_eda2():
     """Test load_one with h2o_dimer_eda_qchem5.3.out."""
     # pylint: disable=too-many-statements
-    with path('iodata.test.data', 'h2o_dimer_eda_qchem5.3.out') as fn_qchemlog:
+    with as_file(files("iodata.test.data").joinpath("h2o_dimer_eda_qchem5.3.out")) as fn_qchemlog:
         mol = load_one(str(fn_qchemlog), fmt='qchemlog')
 
     # check loaded data

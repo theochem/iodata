@@ -19,7 +19,6 @@
 """Test iodata.formats.cp2klog module."""
 
 import pytest
-
 from numpy.testing import assert_equal, assert_allclose
 
 from .common import truncated_file, check_orthonormal
@@ -28,13 +27,13 @@ from ..api import load_one
 from ..overlap import compute_overlap
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_atom_si_uks():
-    with path('iodata.test.data', 'atom_si.cp2k.out') as fn_out:
+    with as_file(files("iodata.test.data").joinpath("atom_si.cp2k.out")) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [14])
     assert_equal(mol.atcorenums, [4])
@@ -59,7 +58,7 @@ def test_atom_si_uks():
 
 
 def test_atom_o_rks():
-    with path('iodata.test.data', 'atom_om2.cp2k.out') as fn_out:
+    with as_file(files("iodata.test.data").joinpath("atom_om2.cp2k.out")) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [8])
     assert_equal(mol.atcorenums, [6])
@@ -80,7 +79,7 @@ def test_atom_o_rks():
 
 
 def test_carbon_gs_ae_contracted():
-    with path('iodata.test.data', 'carbon_gs_ae_contracted.cp2k.out') as fn_out:
+    with as_file(files("iodata.test.data").joinpath("carbon_gs_ae_contracted.cp2k.out")) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [6])
@@ -97,7 +96,8 @@ def test_carbon_gs_ae_contracted():
 
 
 def test_carbon_gs_ae_uncontracted():
-    with path('iodata.test.data', 'carbon_gs_ae_uncontracted.cp2k.out') as fn_out:
+    source = files("iodata.test.data").joinpath("carbon_gs_ae_uncontracted.cp2k.out")
+    with as_file(source) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [6])
@@ -114,7 +114,7 @@ def test_carbon_gs_ae_uncontracted():
 
 
 def test_carbon_gs_pp_contracted():
-    with path('iodata.test.data', 'carbon_gs_pp_contracted.cp2k.out') as fn_out:
+    with as_file(files("iodata.test.data").joinpath("carbon_gs_pp_contracted.cp2k.out")) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [4])
@@ -131,7 +131,8 @@ def test_carbon_gs_pp_contracted():
 
 
 def test_carbon_gs_pp_uncontracted():
-    with path('iodata.test.data', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_out:
+    source = files("iodata.test.data").joinpath("carbon_gs_pp_uncontracted.cp2k.out")
+    with as_file(source) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [4])
@@ -148,7 +149,7 @@ def test_carbon_gs_pp_uncontracted():
 
 
 def test_carbon_sc_ae_contracted():
-    with path('iodata.test.data', 'carbon_sc_ae_contracted.cp2k.out') as fn_out:
+    with as_file(files("iodata.test.data").joinpath("carbon_sc_ae_contracted.cp2k.out")) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [6])
@@ -162,7 +163,8 @@ def test_carbon_sc_ae_contracted():
 
 
 def test_carbon_sc_ae_uncontracted():
-    with path('iodata.test.data', 'carbon_sc_ae_uncontracted.cp2k.out') as fn_out:
+    source = files("iodata.test.data").joinpath("carbon_sc_ae_uncontracted.cp2k.out")
+    with as_file(source) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [6])
@@ -176,7 +178,7 @@ def test_carbon_sc_ae_uncontracted():
 
 
 def test_carbon_sc_pp_contracted():
-    with path('iodata.test.data', 'carbon_sc_pp_contracted.cp2k.out') as fn_out:
+    with as_file(files("iodata.test.data").joinpath("carbon_sc_pp_contracted.cp2k.out")) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [4])
@@ -190,7 +192,8 @@ def test_carbon_sc_pp_contracted():
 
 
 def test_carbon_sc_pp_uncontracted():
-    with path('iodata.test.data', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_out:
+    source = files("iodata.test.data").joinpath("carbon_sc_pp_uncontracted.cp2k.out")
+    with as_file(source) as fn_out:
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [4])
@@ -204,7 +207,8 @@ def test_carbon_sc_pp_uncontracted():
 
 
 def test_errors(tmpdir):
-    with path('iodata.test.data', 'carbon_sc_pp_uncontracted.cp2k.out') as fn_test:
+    source = files("iodata.test.data").joinpath("carbon_sc_pp_uncontracted.cp2k.out")
+    with as_file(source) as fn_test:
         with truncated_file(fn_test, 0, 0, tmpdir) as fn:
             with pytest.raises(IOError):
                 load_one(fn)
@@ -217,7 +221,8 @@ def test_errors(tmpdir):
         with truncated_file(fn_test, 405, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 load_one(fn)
-    with path('iodata.test.data', 'carbon_gs_pp_uncontracted.cp2k.out') as fn_test:
+    source = files("iodata.test.data").joinpath("carbon_gs_pp_uncontracted.cp2k.out")
+    with as_file(source) as fn_test:
         with truncated_file(fn_test, 456, 10, tmpdir) as fn:
             with pytest.raises(IOError):
                 load_one(fn)

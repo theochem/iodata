@@ -19,9 +19,7 @@
 # pylint: disable=unsubscriptable-object,no-member
 """Test iodata.formats.fchk module."""
 
-
 import os
-
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
@@ -35,20 +33,20 @@ from .common import check_orthonormal, compare_mols, load_one_warning, compute_1
 from .test_molekel import compare_mols_diff_formats
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_fchk_nonexistent():
     with pytest.raises(IOError):
-        with path('iodata.test.data', 'fubar_crap.fchk') as fn:
+        with as_file(files("iodata.test.data").joinpath("fubar_crap.fchk")) as fn:
             load_one(str(fn))
 
 
 def load_fchk_helper(fn_fchk):
     """Load a testing fchk file with iodata.iodata.load_one."""
-    with path('iodata.test.data', fn_fchk) as fn:
+    with as_file(files("iodata.test.data").joinpath(fn_fchk)) as fn:
         return load_one(fn)
 
 
@@ -389,7 +387,7 @@ def test_load_monosilicic_acid_hf_lan():
 
 def load_fchk_trj_helper(fn_fchk):
     """Load a trajectory from a testing fchk file with iodata.iodata.load_many."""
-    with path('iodata.test.data', fn_fchk) as fn:
+    with as_file(files("iodata.test.data").joinpath(fn_fchk)) as fn:
         return list(load_many(fn))
 
 
@@ -543,7 +541,7 @@ def test_load_nbasis_indep(tmpdir):
     mol1 = load_fchk_helper('li2_g09_nbasis_indep.fchk')
     assert mol1.mo.coeffs.shape == (38, 37)
     # Fake an old g03 fchk file by rewriting one line
-    with path('iodata.test.data', 'li2_g09_nbasis_indep.fchk') as fnin:
+    with as_file(files("iodata.test.data").joinpath("li2_g09_nbasis_indep.fchk")) as fnin:
         fnout = os.path.join(tmpdir, 'tmpg03.fchk')
         with open(fnin) as fin, open(fnout, "w") as fout:
             for line in fin:

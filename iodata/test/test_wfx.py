@@ -19,7 +19,6 @@
 """Test iodata.formats.wfn module."""
 
 import os
-
 import pytest
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
@@ -33,14 +32,14 @@ from .common import (check_orthonormal, truncated_file, compare_mols,
                      compute_mulliken_charges, load_one_warning)
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def helper_load_data_wfx(fn_wfx):
     """Load a testing WFX file with iodata.formats.wfx.load_data_wfx."""
-    with path('iodata.test.data', fn_wfx) as fx:
+    with as_file(files("iodata.test.data").joinpath(fn_wfx)) as fx:
         lit = LineIterator(str(fx))
         return load_data_wfx(lit)
 
@@ -55,7 +54,7 @@ def check_load_dump_consistency(fn, tmpdir):
     tmpdir : str
         The temporary directory to dump and load the file.
     """
-    with path('iodata.test.data', fn) as file_name:
+    with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
         mol1 = load_one(str(file_name), fmt='wfx')
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt='wfx')
@@ -353,7 +352,7 @@ def test_load_data_wfx_water():
 
 def test_parse_wfx_missing_tag_h2o():
     """Check that missing sections result in an exception."""
-    with path('iodata.test.data', 'water_sto3g_hf.wfx') as fn_wfx:
+    with as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as fn_wfx:
         lit = LineIterator(fn_wfx)
         with pytest.raises(IOError) as error:
             parse_wfx(lit, required_tags=["<Foo Bar>"])
@@ -362,7 +361,7 @@ def test_parse_wfx_missing_tag_h2o():
 
 def test_load_data_wfx_h2o_error():
     """Check that sections without a closing tag result in an exception."""
-    with path('iodata.test.data', 'h2o_error.wfx') as fn_wfx:
+    with as_file(files("iodata.test.data").joinpath("h2o_error.wfx")) as fn_wfx:
         with pytest.raises(IOError) as error:
             load_one(str(fn_wfx))
     assert str(error.value).endswith(
@@ -371,7 +370,7 @@ def test_load_data_wfx_h2o_error():
 
 def test_load_truncated_h2o(tmpdir):
     """Check that a truncated file raises an exception."""
-    with path('iodata.test.data', 'water_sto3g_hf.wfx') as fn_wfx:
+    with as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as fn_wfx:
         with truncated_file(str(fn_wfx), 152, 0, tmpdir) as fn_truncated:
             with pytest.raises(IOError) as error:
                 load_one(str(fn_truncated))
@@ -381,7 +380,7 @@ def test_load_truncated_h2o(tmpdir):
 
 def test_load_one_h2o():
     """Test load_one with h2o sto-3g WFX input."""
-    with path('iodata.test.data', 'water_sto3g_hf.wfx') as file_wfx:
+    with as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as file_wfx:
         mol = load_one(str(file_wfx))
     assert_allclose(mol.atcoords,
                     np.array([[0.00000000e+00, 0.00000000e+00, 2.40242907e-01],
@@ -429,7 +428,7 @@ def test_load_one_h2o():
 
 def test_load_one_h2():
     """Test load_one with h2 ub3lyp_ccpvtz WFX input."""
-    with path('iodata.test.data', 'h2_ub3lyp_ccpvtz.wfx') as file_wfx:
+    with as_file(files("iodata.test.data").joinpath("h2_ub3lyp_ccpvtz.wfx")) as file_wfx:
         mol = load_one(str(file_wfx))
     assert_allclose(mol.atcoords,
                     np.array([[0.0, 0.0, 0.7019452462164],
@@ -468,7 +467,7 @@ def test_load_one_h2():
 
 
 def test_load_one_lih_cation_cisd():
-    with path('iodata.test.data', 'lih_cation_cisd.wfx') as file_wfx:
+    with as_file(files("iodata.test.data").joinpath("lih_cation_cisd.wfx")) as file_wfx:
         mol = load_one(str(file_wfx))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
@@ -491,7 +490,7 @@ def test_load_one_lih_cation_cisd():
 
 
 def test_load_one_lih_cation_uhf():
-    with path('iodata.test.data', 'lih_cation_uhf.wfx') as file_wfx:
+    with as_file(files("iodata.test.data").joinpath("lih_cation_uhf.wfx")) as file_wfx:
         mol = load_one(str(file_wfx))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
@@ -507,7 +506,7 @@ def test_load_one_lih_cation_uhf():
 
 
 def test_load_one_lih_cation_rohf():
-    with path('iodata.test.data', 'lih_cation_rohf.wfx') as file_wfx:
+    with as_file(files("iodata.test.data").joinpath("lih_cation_rohf.wfx")) as file_wfx:
         mol = load_one(str(file_wfx))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'restricted'

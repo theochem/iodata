@@ -20,7 +20,6 @@
 
 import os
 from contextlib import contextmanager
-
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 import pytest
@@ -31,10 +30,9 @@ from ..basis import convert_conventions
 from ..utils import FileFormatWarning
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
-
+    from importlib.resources import as_file, files
 
 __all__ = ['compute_mulliken_charges', 'compute_1rdm',
            'compare_mols', 'check_orthonormal', 'load_one_warning']
@@ -191,7 +189,7 @@ def load_one_warning(filename: str, fmt: str = None, match: str = None, **kwargs
         The instance of IOData with data loaded from the input files.
 
     """
-    with path('iodata.test.data', filename) as fn:
+    with as_file(files("iodata.test.data").joinpath(filename)) as fn:
         if match is None:
             return load_one(str(fn), fmt, **kwargs)
         with pytest.warns(FileFormatWarning, match=match):
