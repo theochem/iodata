@@ -43,7 +43,7 @@ def get_version_info():
 
 def get_readme():
     """Load README.rst for display on PyPI."""
-    with open('README.rst') as fhandle:
+    with open('README.rst', encoding="utf-8") as fhandle:
         return fhandle.read()
 
 
