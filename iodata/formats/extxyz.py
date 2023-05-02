@@ -65,16 +65,16 @@ def _convert_title_value(value: str):
     else:
         # Do the same but return it as a numpy array
         try:
-            converted_value = np.array(list_of_splits, dtype=np.int)
+            converted_value = np.array(list_of_splits, dtype=int)
         except ValueError:
             try:
-                converted_value = np.array(list_of_splits, dtype=np.float)
+                converted_value = np.array(list_of_splits, dtype=float)
             except ValueError:
                 try:
                     converted_value = np.array([strtobool(split) for split in list_of_splits],
-                                               dtype=np.bool)
+                                               dtype=bool)
                 except ValueError:
-                    converted_value = np.array(list_of_splits, dtype=np.str)
+                    converted_value = np.array(list_of_splits, dtype=str)
     return converted_value
 
 
@@ -132,7 +132,7 @@ def _parse_title(title: str):
     # A dict of predefined iodata atrributes with their names and dtype convertion functions
 
     def load_cellvecs(word):
-        return np.array(word.split(), dtype=np.float).reshape([3, 3]) * angstrom
+        return np.array(word.split(), dtype=float).reshape([3, 3]) * angstrom
     iodata_attrs = {'energy': ('energy', float),
                     'Lattice': ('cellvecs', load_cellvecs),
                     'charge': ('charge', float)}
