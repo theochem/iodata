@@ -41,11 +41,11 @@ def test_load_aelta():
     assert_equal(mol.cube.shape, (12, 12, 12))
     my_cellvecs = np.array([[1.8626, 0.1, 0.0],
                             [0.0, 1.8626, 0.0],
-                            [0.0, 0.0, 1.8626]], dtype=np.float) * 12
+                            [0.0, 0.0, 1.8626]], dtype=float) * 12
     assert_allclose(mol.cellvecs, my_cellvecs, atol=1.e-5)
     my_axes = np.array([[1.8626, 0.1, 0.0],
                         [0.0, 1.8626, 0.0],
-                        [0.0, 0.0, 1.8626]], dtype=np.float)
+                        [0.0, 0.0, 1.8626]], dtype=float)
     assert_allclose(mol.cube.axes, my_axes, atol=1.e-5)
     assert_allclose(mol.cube.origin, np.array([0.0, 1.2, 0.0]), atol=1.e-10)
 
