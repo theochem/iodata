@@ -31,6 +31,7 @@ try:
 except ImportError:
     from importlib.resources import as_file, files
 
+
 def test_load_water_number():
     # test xyz with atomic numbers
     with as_file(files('iodata.test.data').joinpath('water_number.xyz')) as fn_xyz:
