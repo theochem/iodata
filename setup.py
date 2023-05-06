@@ -75,5 +75,5 @@ setup(
     ],
     setup_requires=['numpy>=1.0'],
     install_requires=['numpy>=1.0', 'scipy', 'attrs>=20.1.0',
-                      'importlib_resources; python_version < "3.7"'],
+                      'importlib_resources; python_version < "3.8"'],
 )
