@@ -20,7 +20,6 @@
 """Test iodata.formats.molden module."""
 
 import os
-
 import attr
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -33,15 +32,14 @@ from ..formats.molden import _load_low
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 from ..utils import LineIterator, angstrom, FileFormatWarning
 
-
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_molden_li2_orca():
-    with path('iodata.test.data', 'li2.molden.input') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("li2.molden.input")) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -71,7 +69,7 @@ def test_load_molden_li2_orca():
 
 
 def test_load_molden_h2o_orca():
-    with path('iodata.test.data', 'h2o.molden.input') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("h2o.molden.input")) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -99,7 +97,7 @@ def test_load_molden_h2o_orca():
 def test_load_molden_nh3_molden_pure():
     # The file tested here is created with molden. It should be read in
     # properly without altering normalization and sign conventions.
-    with path('iodata.test.data', 'nh3_molden_pure.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_molden_pure.molden")) as fn_molden:
         mol = load_one(str(fn_molden))
     # Check geometry
     assert_equal(mol.atnums, [7, 1, 1, 1])
@@ -118,7 +116,7 @@ def test_load_molden_nh3_molden_pure():
 
 
 def test_load_molden_low_nh3_molden_cart():
-    with path('iodata.test.data', 'nh3_molden_cart.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_molden_cart.molden")) as fn_molden:
         lit = LineIterator(str(fn_molden))
         data = _load_low(lit)
     obasis = data['obasis']
@@ -186,7 +184,7 @@ def test_load_molden_low_nh3_molden_cart():
 def test_load_molden_nh3_molden_cart():
     # The file tested here is created with molden. It should be read in
     # properly without altering normalization and sign conventions.
-    with path('iodata.test.data', 'nh3_molden_cart.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_molden_cart.molden")) as fn_molden:
         mol = load_one(str(fn_molden))
 
     # Check normalization
@@ -216,7 +214,7 @@ def test_load_molden_cfour():
         'h2o_ccpvdz_cfour.molden']
 
     for i in file_list:
-        with path('iodata.test.data', i) as fn_molden:
+        with as_file(files("iodata.test.data").joinpath(i)) as fn_molden:
             print(str(fn_molden))
             mol = load_one(str(fn_molden))
             # Check normalization
@@ -228,7 +226,7 @@ def test_load_molden_cfour():
 def test_load_molden_nh3_orca():
     # The file tested here is created with ORCA. It should be read in
     # properly by altering normalization and sign conventions.
-    with path('iodata.test.data', 'nh3_orca.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_orca.molden")) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -248,7 +246,7 @@ def test_load_molden_nh3_orca():
 def test_load_molden_nh3_psi4():
     # The file tested here is created with PSI4 (pre 1.0). It should be read in
     # properly by altering normalization conventions.
-    with path('iodata.test.data', 'nh3_psi4.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_psi4.molden")) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -268,7 +266,7 @@ def test_load_molden_nh3_psi4():
 def test_load_molden_nh3_psi4_1():
     # The file tested here is created with PSI4 (version 1.0).
     # It should be read in properly by renormalizing the contractions.
-    with path('iodata.test.data', 'nh3_psi4_1.0.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_psi4_1.0.molden")) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -290,7 +288,8 @@ def test_load_molden_high_am_psi4(case):
     # The file tested here is created with PSI4 1.3.2.
     # This is a special case because it contains higher angular momenta than
     # officially supported by the Molden format. Most virtual orbitals were removed.
-    with path('iodata.test.data', f'psi4_{case}_cc_pvqz_pure.molden') as fn_molden:
+    source = files("iodata.test.data").joinpath(f"psi4_{case}_cc_pvqz_pure.molden")
+    with as_file(source) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -311,7 +310,8 @@ def test_load_molden_high_am_orca(case):
     # The file tested here is created with ORCA.
     # This is a special case because it contains higher angular momenta than
     # officially supported by the Molden format. Most virtual orbitals were removed.
-    with path('iodata.test.data', f'orca_{case}_cc_pvqz_pure.molden') as fn_molden:
+    source = files("iodata.test.data").joinpath(f"orca_{case}_cc_pvqz_pure.molden")
+    with as_file(source) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -324,7 +324,7 @@ def test_load_molden_high_am_orca(case):
 
 def test_load_molden_he2_ghost_psi4_1():
     # The file tested here is created with PSI4 (version 1.0).
-    with path('iodata.test.data', 'he2_ghost_psi4_1.0.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("he2_ghost_psi4_1.0.molden")) as fn_molden:
         mol = load_one(str(fn_molden))
     np.testing.assert_equal(mol.atcorenums, np.array([0.0, 2.0]))
 
@@ -342,7 +342,8 @@ def test_load_molden_he2_ghost_psi4_1():
 def test_load_molden_h2o_6_31g_d_cart_psi4():
     # The file tested here is created with PSI4 1.3.2. It should be read in
     # properly after fixing for errors in AO normalization conventions.
-    with path('iodata.test.data', 'h2o_psi4_1.3.2_6-31G_d_cart.molden') as fn_molden:
+    source = files("iodata.test.data").joinpath("h2o_psi4_1.3.2_6-31G_d_cart.molden")
+    with as_file(source) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -362,7 +363,8 @@ def test_load_molden_h2o_6_31g_d_cart_psi4():
 def test_load_molden_nh3_aug_cc_pvqz_cart_psi4():
     # The file tested here is created with PSI4 1.3.2. It should be read in
     # properly after fixing for errors in AO normalization conventions.
-    with path('iodata.test.data', 'nh3_psi4_1.3.2_aug_cc_pvqz_cart.molden') as fn_molden:
+    source = files("iodata.test.data").joinpath("nh3_psi4_1.3.2_aug_cc_pvqz_cart.molden")
+    with as_file(source) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -381,7 +383,7 @@ def test_load_molden_nh3_aug_cc_pvqz_cart_psi4():
 
 def test_load_molden_nh3_molpro2012():
     # The file tested here is created with MOLPRO2012.
-    with path('iodata.test.data', 'nh3_molpro2012.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_molpro2012.molden")) as fn_molden:
         mol = load_one(str(fn_molden))
 
     # Check normalization
@@ -397,7 +399,8 @@ def test_load_molden_nh3_molpro2012():
 
 def test_load_molden_neon_turbomole():
     # The file tested here is created with Turbomole 7.1.
-    with path('iodata.test.data', 'neon_turbomole_def2-qzvp.molden') as fn_molden:
+    source = files("iodata.test.data").joinpath("neon_turbomole_def2-qzvp.molden")
+    with as_file(source) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -414,7 +417,7 @@ def test_load_molden_neon_turbomole():
 
 def test_load_molden_nh3_turbomole():
     # The file tested here is created with Turbomole 7.1
-    with path('iodata.test.data', 'nh3_turbomole.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_turbomole.molden")) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -434,7 +437,7 @@ def test_load_molden_nh3_turbomole():
 
 
 def test_load_molden_f():
-    with path('iodata.test.data', 'F.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("F.molden")) as fn_molden:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(fn_molden))
     assert len(record) == 1
@@ -464,7 +467,7 @@ def test_load_molden_f():
     ("ch3_rohf_sto3g_g03.fchk", None),
 ])
 def test_load_dump_consistency(tmpdir, fn, match):
-    with path('iodata.test.data', fn) as file_name:
+    with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
         if match is None:
             mol1 = load_one(str(file_name))
         else:

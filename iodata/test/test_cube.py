@@ -19,20 +19,19 @@
 # pylint: disable=unsubscriptable-object
 """Test iodata.formats.cube module."""
 
-
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one, dump_one
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_aelta():
-    with path('iodata.test.data', 'aelta.cube') as fn_cube:
+    with as_file(files("iodata.test.data").joinpath("aelta.cube")) as fn_cube:
         mol = load_one(str(fn_cube))
     assert mol.title == 'Some random cube for testing (sort of) useless data'
     assert_equal(mol.natom, 72)
@@ -59,7 +58,7 @@ def test_load_aelta():
 
 
 def test_load_dump_load_aelta(tmpdir):
-    with path('iodata.test.data', 'aelta.cube') as fn_cube1:
+    with as_file(files("iodata.test.data").joinpath("aelta.cube")) as fn_cube1:
         mol1 = load_one(str(fn_cube1))
 
     fn_cube2 = '%s/%s' % (tmpdir, 'aelta.cube')
@@ -98,7 +97,7 @@ def test_load_dump_load_aelta(tmpdir):
 
 def test_load_dump_h2o_5points(tmpdir):
     # load cube file
-    with path('iodata.test.data', 'cubegen_h2o_5points.cube') as fn_cube1:
+    with as_file(files("iodata.test.data").joinpath("cubegen_h2o_5points.cube")) as fn_cube1:
         mol1 = load_one(str(fn_cube1))
     # write cube file in a temporary directory
     fn_cube2 = tmpdir.join('iodata_h2o_5points.cube')
@@ -112,7 +111,7 @@ def test_load_dump_h2o_5points(tmpdir):
 
 def test_load_dump_ch4_6points(tmpdir):
     # load cube file
-    with path('iodata.test.data', 'cubegen_ch4_6points.cube') as fn_cube1:
+    with as_file(files("iodata.test.data").joinpath("cubegen_ch4_6points.cube")) as fn_cube1:
         mol1 = load_one(str(fn_cube1))
     # write cube file in a temporary directory
     fn_cube2 = tmpdir.join('iodata_ch4_6points.cube')
@@ -126,7 +125,7 @@ def test_load_dump_ch4_6points(tmpdir):
 
 def test_load_dump_nh3_7points(tmpdir):
     # load cube file
-    with path('iodata.test.data', 'cubegen_nh3_7points.cube') as fn_cube1:
+    with as_file(files("iodata.test.data").joinpath("cubegen_nh3_7points.cube")) as fn_cube1:
         mol1 = load_one(str(fn_cube1))
     # write cube file in a temporary directory
     fn_cube2 = tmpdir.join('iodata_nh3_7points.cube')

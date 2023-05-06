@@ -18,25 +18,23 @@
 # --
 """Unit tests for iodata.__main__."""
 
-
 import os
 import functools
 import subprocess
-
 from numpy.testing import assert_equal, assert_allclose
 
 from ..__main__ import convert
 from ..api import load_one, load_many
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def _check_convert_one(myconvert, tmpdir):
     outfn = os.path.join(tmpdir, 'tmp.xyz')
-    with path('iodata.test.data', 'hf_sto3g.fchk') as infn:
+    with as_file(files("iodata.test.data").joinpath("hf_sto3g.fchk")) as infn:
         myconvert(infn, outfn)
     iodata = load_one(outfn)
     assert iodata.natom == 2
@@ -71,7 +69,7 @@ def test_script_one_manfmt(tmpdir):
 
 def _check_convert_many(myconvert, tmpdir):
     outfn = os.path.join(tmpdir, 'tmp.xyz')
-    with path('iodata.test.data', 'peroxide_relaxed_scan.fchk') as infn:
+    with as_file(files("iodata.test.data").joinpath("peroxide_relaxed_scan.fchk")) as infn:
         myconvert(infn, outfn)
     trj = list(load_many(outfn))
     assert len(trj) == 13

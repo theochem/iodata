@@ -26,14 +26,14 @@ from ..api import load_one
 from ..utils import angstrom, amu
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_crambin():
     # test CHARMM crd file of crambin
-    with path('iodata.test.data', 'crambin.crd') as fn_crd:
+    with as_file(files("iodata.test.data").joinpath("crambin.crd")) as fn_crd:
         mol = load_one(str(fn_crd))
     assert len(mol.title) == 125
     assert mol.atcoords.shape == (648, 3)

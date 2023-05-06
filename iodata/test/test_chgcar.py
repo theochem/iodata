@@ -26,13 +26,13 @@ from ..api import load_one
 from ..utils import angstrom, volume
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_chgcar_oxygen():
-    with path('iodata.test.data', 'CHGCAR.oxygen') as fn:
+    with as_file(files("iodata.test.data").joinpath("CHGCAR.oxygen")) as fn:
         mol = load_one(str(fn))
     assert_equal(mol.atnums, 8)
     assert_allclose(volume(mol.cellvecs), (10 * angstrom) ** 3, atol=1.e-10)
@@ -46,7 +46,7 @@ def test_load_chgcar_oxygen():
 
 
 def test_load_chgcar_water():
-    with path('iodata.test.data', 'CHGCAR.water') as fn:
+    with as_file(files("iodata.test.data").joinpath("CHGCAR.water")) as fn:
         mol = load_one(str(fn))
     assert mol.title == 'unknown system'
     assert_equal(mol.atnums, [8, 1, 1])

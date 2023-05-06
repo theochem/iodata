@@ -27,11 +27,11 @@ import pytest
 from ..api import dump_one, load_one
 from ..utils import FileFormatError, FileFormatWarning
 
-
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
+
 
 # Tests for qcschema_molecule
 # GEOMS: dict of str: np.ndarray(N, 3)
@@ -64,7 +64,7 @@ MOL_FILES = [
 @pytest.mark.parametrize("filename, atnums, charge, spinpol, geometry, nwarn", MOL_FILES)
 def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry, nwarn):
     """Test qcschema_molecule parsing using manually generated files."""
-    with path("iodata.test.data", filename) as qcschema_molecule:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
         if nwarn == 0:
             mol = load_one(str(qcschema_molecule))
         else:
@@ -108,7 +108,7 @@ MOLSSI_MOL_FILES = [
 @pytest.mark.parametrize("filename, atnums, charge, spinpol, nwarn", MOLSSI_MOL_FILES)
 def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, nwarn):
     """Test qcschema_molecule parsing using MolSSI-sourced files."""
-    with path("iodata.test.data", filename) as qcschema_molecule:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(qcschema_molecule))
 
@@ -136,7 +136,7 @@ PASSTHROUGH_MOL_FILES = [
 @pytest.mark.parametrize("filename, unparsed_dict", PASSTHROUGH_MOL_FILES)
 def test_passthrough_qcschema_molecule(filename, unparsed_dict):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
-    with path("iodata.test.data", filename) as qcschema_molecule:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(qcschema_molecule))
 
@@ -169,7 +169,7 @@ INOUT_MOL_FILES = [
 @pytest.mark.parametrize("filename, nwarn", INOUT_MOL_FILES)
 def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
     """Test that loading and dumping qcschema_molecule files retains all data."""
-    with path("iodata.test.data", filename) as qcschema_molecule:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
         if nwarn == 0:
             mol = load_one(str(qcschema_molecule))
         else:
@@ -202,7 +202,7 @@ INOUT_MOLSSI_MOL_FILES = [
 @pytest.mark.parametrize("filename", INOUT_MOLSSI_MOL_FILES)
 def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     """Test that loading and dumping qcschema_molecule files retains all relevant data."""
-    with path("iodata.test.data", filename) as qcschema_molecule:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
         with pytest.warns(FileFormatWarning) as record:
             mol = load_one(str(qcschema_molecule))
         mol1_preproc = json.loads(qcschema_molecule.read_bytes())
@@ -238,7 +238,8 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
 
 
 def test_ghost(tmpdir):
-    with path("iodata.test.data", "water_cluster_ghost.json") as qcschema_molecule:
+    source = files("iodata.test.data").joinpath("water_cluster_ghost.json")
+    with as_file(source) as qcschema_molecule:
         mol = load_one(str(qcschema_molecule))
     np.testing.assert_allclose(mol.atcorenums, [8, 1, 1, 0, 0, 0, 0, 0, 0])
     fn_tmp = os.path.join(tmpdir, 'test_ghost.json')
@@ -262,7 +263,7 @@ INPUT_FILES = [
     "filename, explicit_basis, lot, obasis_name, run_type, geometry", INPUT_FILES
 )
 def test_qcschema_input(filename, explicit_basis, lot, obasis_name, run_type, geometry):
-    with path('iodata.test.data', filename) as qcschema_input:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         try:
             mol = load_one(str(qcschema_input))
             assert mol.lot == lot
@@ -288,7 +289,7 @@ PASSTHROUGH_INPUT_FILES = [
 @pytest.mark.parametrize("filename, unparsed_dict, location", PASSTHROUGH_INPUT_FILES)
 def test_passthrough_qcschema_input(filename, unparsed_dict, location):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
-    with path("iodata.test.data", filename) as qcschema_input:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         mol = load_one(str(qcschema_input))
 
     assert mol.extra[location]["unparsed"] == unparsed_dict
@@ -307,7 +308,7 @@ INOUT_INPUT_FILES = [
 @pytest.mark.parametrize("filename, nwarn", INOUT_INPUT_FILES)
 def test_inout_qcschema_input(tmpdir, filename, nwarn):
     """Test that loading and dumping qcschema_molecule files retains all data."""
-    with path("iodata.test.data", filename) as qcschema_input:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         if nwarn == 0:
             mol = load_one(str(qcschema_input))
         else:
@@ -345,7 +346,7 @@ OUTPUT_FILES = [
 
 @pytest.mark.parametrize("filename, lot, obasis_name, run_type, nwarn", OUTPUT_FILES)
 def test_qcschema_output(filename, lot, obasis_name, run_type, nwarn):
-    with path("iodata.test.data", filename) as qcschema_output:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_output:
         if nwarn == 0:
             mol = load_one(str(qcschema_output))
         else:
@@ -370,7 +371,7 @@ BAD_OUTPUT_FILES = [
 @pytest.mark.parametrize("filename, error", BAD_OUTPUT_FILES)
 def test_bad_qcschema_files(filename, error):
     # FIXME: these will move
-    with path('iodata.test.data', filename) as qcschema_input:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         with pytest.raises(error):
             load_one(str(qcschema_input))
 
@@ -384,7 +385,7 @@ INOUT_OUTPUT_FILES = [
 @pytest.mark.parametrize("filename", INOUT_OUTPUT_FILES)
 def test_inout_qcschema_output(tmpdir, filename):
     """Test that loading and dumping qcschema_molecule files retains all data."""
-    with path("iodata.test.data", filename) as qcschema_input:
+    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         mol = load_one(str(qcschema_input))
         mol1 = json.loads(qcschema_input.read_bytes())
 

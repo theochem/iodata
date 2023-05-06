@@ -23,14 +23,14 @@ from numpy.testing import assert_equal, assert_allclose
 from ..api import load_one
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def load_log_helper(fn_log):
     """Load a testing Gaussian log file with iodata.load_one."""
-    with path('iodata.test.data', fn_log) as fn:
+    with as_file(files("iodata.test.data").joinpath(fn_log)) as fn:
         return load_one(fn)
 
 

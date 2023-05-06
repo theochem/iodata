@@ -19,20 +19,19 @@
 """Test iodata.formats.fcidump module."""
 
 import os
-
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one, dump_one
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_fcidump_psi4_h2():
-    with path('iodata.test.data', 'FCIDUMP.psi4.h2') as fn:
+    with as_file(files("iodata.test.data").joinpath("FCIDUMP.psi4.h2")) as fn:
         mol = load_one(str(fn))
     assert_allclose(mol.core_energy, 0.7151043364864863E+00)
     assert_equal(mol.nelec, 2)
@@ -59,7 +58,7 @@ def test_load_fcidump_psi4_h2():
 
 
 def test_load_fcidump_molpro_h2():
-    with path('iodata.test.data', 'FCIDUMP.molpro.h2') as fn:
+    with as_file(files("iodata.test.data").joinpath("FCIDUMP.molpro.h2")) as fn:
         mol = load_one(str(fn))
     assert_allclose(mol.core_energy, 0.7151043364864863E+00)
     assert_equal(mol.nelec, 2)
@@ -87,13 +86,13 @@ def test_load_fcidump_molpro_h2():
 
 def test_dump_load_fcidimp_consistency_ao(tmpdir):
     # Setup IOData
-    with path('iodata.test.data', 'water.xyz') as fn:
+    with as_file(files("iodata.test.data").joinpath("water.xyz")) as fn:
         mol0 = load_one(str(fn))
     mol0.nelec = 10
     mol0.spinpol = 0
-    with path('iodata.test.data', 'psi4_h2_one.npy') as fn:
+    with as_file(files("iodata.test.data").joinpath("psi4_h2_one.npy")) as fn:
         mol0.one_ints = {'core_mo': np.load(str(fn))}
-    with path('iodata.test.data', 'psi4_h2_two.npy') as fn:
+    with as_file(files("iodata.test.data").joinpath("psi4_h2_two.npy")) as fn:
         mol0.two_ints = {'two_mo': np.load(str(fn))}
 
     # Dump to a file and load it again
