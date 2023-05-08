@@ -19,7 +19,6 @@
 """Test iodata.formats.mol2 module."""
 
 import os
-
 import pytest
 from numpy.testing import assert_equal, assert_allclose
 
@@ -29,21 +28,21 @@ from ..utils import angstrom
 from ..periodic import bond2num
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_mol2_load_one():
     # test mol2 one structure
-    with path('iodata.test.data', 'caffeine.mol2') as fn_mol:
+    with as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_mol:
         mol = load_one(str(fn_mol))
     check_example(mol)
 
 
 def test_mol2_formaterror(tmpdir):
     # test if mol2 file has the wrong ending
-    with path('iodata.test.data', 'caffeine.mol2') as fn_test:
+    with as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_test:
         with truncated_file(fn_test, 2, 0, tmpdir) as fn:
             with pytest.raises(IOError):
                 load_one(str(fn))
@@ -51,13 +50,13 @@ def test_mol2_formaterror(tmpdir):
 
 def test_mol2_symbol():
     # test mol2 files with element symbols with two characters
-    with path('iodata.test.data', 'silioh3.mol2') as fn_mol:
+    with as_file(files("iodata.test.data").joinpath("silioh3.mol2")) as fn_mol:
         mol = load_one(str(fn_mol))
     assert_equal(mol.atnums, [14, 3, 8, 1, 8, 1, 8, 1])
 
 
 def test_bondtypes_benzene():
-    with path('iodata.test.data', 'benzene.mol2') as fn_test:
+    with as_file(files("iodata.test.data").joinpath("benzene.mol2")) as fn_test:
         mol = load_one(str(fn_test))
     assert_equal(mol.bonds[:, 2], [bond2num["ar"]] * 6 + [bond2num["1"]] * 6)
 
@@ -100,14 +99,14 @@ def check_load_dump_consistency(tmpdir, fn):
 
 
 def test_load_dump_consistency(tmpdir):
-    with path('iodata.test.data', 'caffeine.mol2') as fn_mol2:
+    with as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_mol2:
         check_load_dump_consistency(tmpdir, fn_mol2)
-    with path('iodata.test.data', 'benzene.mol2') as fn_mol2:
+    with as_file(files("iodata.test.data").joinpath("benzene.mol2")) as fn_mol2:
         check_load_dump_consistency(tmpdir, fn_mol2)
 
 
 def test_load_many():
-    with path('iodata.test.data', 'caffeine.mol2') as fn_mol2:
+    with as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_mol2:
         mols = list(load_many(str(fn_mol2)))
     assert len(mols) == 2
     check_example(mols[0])
@@ -118,7 +117,7 @@ def test_load_many():
 
 
 def test_load_dump_many_consistency(tmpdir):
-    with path('iodata.test.data', 'caffeine.mol2') as fn_mol2:
+    with as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_mol2:
         mols0 = list(load_many(str(fn_mol2)))
     # write mol2 file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test')
@@ -133,7 +132,7 @@ def test_load_dump_many_consistency(tmpdir):
 
 
 def test_load_dump_wrong_bond_num(tmpdir):
-    with path('iodata.test.data', 'silioh3.mol2') as fn_mol:
+    with as_file(files("iodata.test.data").joinpath("silioh3.mol2")) as fn_mol:
         mol = load_one(str(fn_mol))
     mol.bonds[0][2] = -1
     fn_tmp = os.path.join(tmpdir, 'test.mol2')

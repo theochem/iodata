@@ -25,14 +25,14 @@ from ..api import load_one, load_many
 from ..utils import nanometer, picosecond
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_water():
     # test gro file of one water
-    with path('iodata.test.data', 'water.gro') as fn_gro:
+    with as_file(files("iodata.test.data").joinpath("water.gro")) as fn_gro:
         mol = load_one(str(fn_gro))
     check_water(mol)
 
@@ -52,7 +52,7 @@ def check_water(mol):
 
 
 def test_load_many():
-    with path('iodata.test.data', 'water2.gro') as fn_gro:
+    with as_file(files("iodata.test.data").joinpath("water2.gro")) as fn_gro:
         mols = list(load_many(str(fn_gro)))
     assert len(mols) == 2
     assert mols[0].extra['time'] == 0.0 * picosecond

@@ -164,8 +164,8 @@ def load_one(lit: LineIterator) -> dict:
     _load_dm('Spin SCF Density', fchk, one_rdms, 'scf_spin')
     # only one of the lots should be present, hence using the same key
     for lot in 'MP2', 'MP3', 'CC', 'CI':
-        _load_dm('Total {} Density'.format(lot), fchk, one_rdms, 'post_scf')
-        _load_dm('Spin {} Density'.format(lot), fchk, one_rdms, 'post_scf_spin')
+        _load_dm('Total {} Density'.format(lot), fchk, one_rdms, 'post_scf_ao')
+        _load_dm('Spin {} Density'.format(lot), fchk, one_rdms, 'post_scf_spin_ao')
     if one_rdms:
         result['one_rdms'] = one_rdms
 
@@ -617,9 +617,9 @@ def dump_one(f: TextIO, data: IOData):
             title = "Total SCF Density"
         elif key == "scf_spin":
             title = "Spin SCF Density"
-        elif key == "post_scf":
+        elif key == "post_scf_ao":
             title = "Total {0} Density".format(level)
-        elif key == "post_scf_spin":
+        elif key == "post_scf_spin_ao":
             title = "Spin {0} Density".format(level)
         else:
             title = "Total SCF Density"

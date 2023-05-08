@@ -18,21 +18,21 @@
 # --
 """Test iodata.formats.mwfn module."""
 
-
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
+
 from ..api import load_one
 from ..overlap import compute_overlap
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def load_helper(fn):
     """Load a test file with iodata.iodata.load_one."""
-    with path('iodata.test.data', fn) as absfn:
+    with as_file(files("iodata.test.data").joinpath(fn)) as absfn:
         return load_one(absfn)
 
 

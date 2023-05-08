@@ -129,9 +129,9 @@ def load_data_wfx(lit: LineIterator) -> dict:
             assert len(value) == 1
             result[lbs_float[key]] = float(value[0])
         elif key in lbs_afloat:
-            result[lbs_afloat[key]] = np.fromstring(" ".join(value), dtype=np.float, sep=" ")
+            result[lbs_afloat[key]] = np.fromstring(" ".join(value), dtype=float, sep=" ")
         elif key in lbs_aint:
-            result[lbs_aint[key]] = np.fromstring(" ".join(value), dtype=np.int, sep=" ")
+            result[lbs_aint[key]] = np.fromstring(" ".join(value), dtype=int, sep=" ")
         elif key in lbs_other:
             result[lbs_other[key]] = value
         else:
