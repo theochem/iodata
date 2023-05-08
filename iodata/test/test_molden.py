@@ -20,6 +20,8 @@
 """Test iodata.formats.molden module."""
 
 import os
+import warnings
+
 import attr
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -66,6 +68,14 @@ def test_load_molden_li2_orca():
     charges = compute_mulliken_charges(mol)
     expected_charges = np.array([0.5, 0.5])
     assert_allclose(charges, expected_charges, atol=1.e-5)
+
+
+def test_load_molden_li2_orca_huge_threshold():
+    with as_file(files("iodata.test.data").joinpath("li2.molden.input")) as fn_molden:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            # The threshold is set very high, which skip a correction for ORCA.
+            mol = load_one(str(fn_molden), norm_threshold=1e4)
 
 
 def test_load_molden_h2o_orca():
