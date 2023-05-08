@@ -75,7 +75,7 @@ def test_load_molden_li2_orca_huge_threshold():
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             # The threshold is set very high, which skip a correction for ORCA.
-            mol = load_one(str(fn_molden), norm_threshold=1e4)
+            load_one(str(fn_molden), norm_threshold=1e4)
 
 
 def test_load_molden_h2o_orca():

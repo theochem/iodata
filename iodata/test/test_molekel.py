@@ -165,4 +165,4 @@ def test_load_mkl_h2_huge_threshold():
         with warnings.catch_warnings():
             warnings.simplefilter("error")
             # The threshold is set very high, which skip a correction for ORCA.
-            mol = load_one(str(fn_molekel), norm_threshold=1e4)
+            load_one(str(fn_molekel), norm_threshold=1e4)
