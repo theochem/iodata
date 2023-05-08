@@ -103,7 +103,7 @@ def test_load_dump_consistency(fn_base, should_warn, tmpdir):
 def test_load_dump_xyz_consistency(tmpdir):
     with as_file(files("iodata.test.data").joinpath("water.xyz")) as fn_xyz:
         mol0 = load_one(str(fn_xyz))
-        
+
     # write xyz file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test.pdb')
     dump_one(mol0, fn_tmp)

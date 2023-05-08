@@ -101,7 +101,7 @@ def _parse_pdb_atom_line(line, lit):
         lit.warn("Using the atom name in the PDB file to guess the chemical element.")
     if atnum is None:
         atnum = 0
-        lit.warn("Failed to determine the atomic number.")
+        lit.warn(f"Failed to determine the atomic number. atname='{atname}' symbol='{symbol}'")
 
     # atom name, residue name, chain id, & residue sequence number
     atname = line[12:16].strip()
