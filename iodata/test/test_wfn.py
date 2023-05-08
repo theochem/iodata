@@ -19,9 +19,7 @@
 """Test iodata.formats.wfn module."""
 
 import os
-
 import numpy as np
-
 from numpy.testing import assert_equal, assert_allclose
 
 from .common import compute_mulliken_charges, check_orthonormal, compare_mols
@@ -31,16 +29,16 @@ from ..overlap import compute_overlap
 from ..utils import LineIterator
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
+
 
 # TODO: removed density, kin, nucnuc checks
 
-
 def helper_load_wfn_low(fn_wfn):
     """Load a testing Gaussian log file with iodata.formats.wfn.load_wfn_low."""
-    with path('iodata.test.data', fn_wfn) as fn:
+    with as_file(files("iodata.test.data").joinpath(fn_wfn)) as fn:
         lit = LineIterator(str(fn))
         return load_wfn_low(lit)
 
@@ -130,7 +128,7 @@ def test_load_wfn_low_h2o():
 def check_wfn(fn_wfn, nbasis, energy, charges_mulliken):
     """Check that MO are orthonormal & energy and charges match expected values."""
     # load file
-    with path('iodata.test.data', fn_wfn) as file_wfn:
+    with as_file(files("iodata.test.data").joinpath(fn_wfn)) as file_wfn:
         mol = load_one(str(file_wfn))
     # check number of basis functions
     assert mol.obasis.nbasis == nbasis
@@ -243,7 +241,7 @@ def test_load_wfn_lih_cation_fci():
 
 
 def test_load_one_lih_cation_cisd():
-    with path('iodata.test.data', 'lih_cation_cisd.wfn') as file_wfn:
+    with as_file(files("iodata.test.data").joinpath("lih_cation_cisd.wfn")) as file_wfn:
         mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
@@ -259,7 +257,7 @@ def test_load_one_lih_cation_cisd():
 
 
 def test_load_one_lih_cation_uhf():
-    with path('iodata.test.data', 'lih_cation_uhf.wfn') as file_wfn:
+    with as_file(files("iodata.test.data").joinpath("lih_cation_uhf.wfn")) as file_wfn:
         mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
@@ -275,7 +273,7 @@ def test_load_one_lih_cation_uhf():
 
 
 def test_load_one_lih_cation_rohf():
-    with path('iodata.test.data', 'lih_cation_rohf.wfn') as file_wfn:
+    with as_file(files("iodata.test.data").joinpath("lih_cation_rohf.wfn")) as file_wfn:
         mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'restricted'
@@ -292,7 +290,7 @@ def test_load_one_lih_cation_rohf():
 
 
 def test_load_one_cah110_hf_sto3g_g09():
-    with path('iodata.test.data', 'cah110_hf_sto3g_g09.wfn') as file_wfn:
+    with as_file(files("iodata.test.data").joinpath("cah110_hf_sto3g_g09.wfn")) as file_wfn:
         mol = load_one(str(file_wfn))
     # check number of orbitals and occupation numbers
     assert mol.mo.kind == 'unrestricted'
@@ -326,7 +324,7 @@ def check_load_dump_consistency(fn, tmpdir, fmt_from='wfn', fmt_to='wfn', atol=1
         Format of filename to dump and then load again.
 
     """
-    with path('iodata.test.data', fn) as file_name:
+    with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
         mol1 = load_one(str(file_name), fmt=fmt_from)
     fn_tmp = os.path.join(tmpdir, 'foo.bar')
     dump_one(mol1, fn_tmp, fmt=fmt_to)

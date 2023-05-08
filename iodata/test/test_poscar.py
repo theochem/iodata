@@ -20,7 +20,6 @@
 """Test iodata.formats.poscar module."""
 
 import os
-
 import numpy as np
 from numpy.testing import assert_equal, assert_allclose
 
@@ -28,13 +27,13 @@ from ..api import load_one, dump_one
 from ..utils import angstrom, volume
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_poscar_water():
-    with path('iodata.test.data', 'POSCAR.water') as fn:
+    with as_file(files("iodata.test.data").joinpath("POSCAR.water")) as fn:
         mol = load_one(str(fn))
     assert mol.title == 'Water molecule in a box'
     assert_equal(mol.atnums, [8, 1, 1])
@@ -44,7 +43,7 @@ def test_load_poscar_water():
 
 
 def test_load_poscar_cubicbn_cartesian():
-    with path('iodata.test.data', 'POSCAR.cubicbn_cartesian') as fn:
+    with as_file(files("iodata.test.data").joinpath("POSCAR.cubicbn_cartesian")) as fn:
         mol = load_one(str(fn))
     assert mol.title == 'Cubic BN'
     assert_equal(mol.atnums, [5, 7])
@@ -54,7 +53,7 @@ def test_load_poscar_cubicbn_cartesian():
 
 
 def test_load_poscar_cubicbn_direct():
-    with path('iodata.test.data', 'POSCAR.cubicbn_direct') as fn:
+    with as_file(files("iodata.test.data").joinpath("POSCAR.cubicbn_direct")) as fn:
         mol = load_one(str(fn))
     assert mol.title == 'Cubic BN'
     assert_equal(mol.atnums, [5, 7])
@@ -64,7 +63,7 @@ def test_load_poscar_cubicbn_direct():
 
 
 def test_load_dump_consistency(tmpdir):
-    with path('iodata.test.data', 'water_element.xyz') as fn:
+    with as_file(files("iodata.test.data").joinpath("water_element.xyz")) as fn:
         mol0 = load_one(str(fn))
     # random matrix generated from a uniform distribution on [0., 5.0)
     mol0.cellvecs = np.array([[2.05278155, 0.23284023, 1.59024118],

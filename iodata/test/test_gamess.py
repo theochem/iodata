@@ -18,20 +18,19 @@
 # --
 """Test iodata.formats.gamess module."""
 
-
 from numpy.testing import assert_equal, assert_allclose
 
 from ..api import load_one
 from ..utils import angstrom
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_one_gamess_punch():
-    with path('iodata.test.data', 'PCGamess_PUNCH.dat') as f:
+    with as_file(files("iodata.test.data").joinpath("PCGamess_PUNCH.dat")) as f:
         data = load_one(str(f))
     N = len(["CL", "H", "H", "H", "H", "F", "F", "F", "F", "H", "F"])
     assert data.title == "Simple example sample optimization with Hessian output for Toon"

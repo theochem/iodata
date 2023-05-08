@@ -43,7 +43,7 @@ def get_version_info():
 
 def get_readme():
     """Load README.rst for display on PyPI."""
-    with open('README.rst') as fhandle:
+    with open('README.rst', encoding="utf-8") as fhandle:
         return fhandle.read()
 
 
@@ -75,5 +75,5 @@ setup(
     ],
     setup_requires=['numpy>=1.0'],
     install_requires=['numpy>=1.0', 'scipy', 'attrs>=20.1.0',
-                      'importlib_resources; python_version < "3.7"'],
+                      'importlib_resources; python_version < "3.8"'],
 )

@@ -18,7 +18,6 @@
 # --
 """Test iodata.iodata module."""
 
-
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 import pytest
@@ -26,10 +25,11 @@ import pytest
 from .common import compute_1rdm
 from ..api import load_one, IOData
 from ..overlap import compute_overlap
+
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_typecheck():
@@ -62,7 +62,7 @@ def test_unknown_format():
 
 
 def test_dm_water_sto3g_hf():
-    with path('iodata.test.data', 'water_sto3g_hf_g03.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("water_sto3g_hf_g03.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
     dm = mol.one_rdms['scf']
     assert_allclose(dm[0, 0], 2.10503807, atol=1.e-7)
@@ -71,7 +71,7 @@ def test_dm_water_sto3g_hf():
 
 
 def test_dm_lih_sto3g_hf():
-    with path('iodata.test.data', 'li_h_3-21G_hf_g09.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("li_h_3-21G_hf_g09.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
 
     dm = mol.one_rdms['scf']
@@ -88,7 +88,7 @@ def test_dm_lih_sto3g_hf():
 
 
 def test_dm_ch3_rohf_g03():
-    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("ch3_rohf_sto3g_g03.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
     olp = compute_overlap(mol.obasis, mol.atcoords)
     dm = compute_1rdm(mol)
@@ -316,7 +316,7 @@ def test_derived1():
     # pylint: disable=protected-access
     # When loading a file with molecular orbitals, nelec, charge and spinpol are
     # derived from the mo object:
-    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("ch3_rohf_sto3g_g03.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
     assert mol.nelec == mol.mo.nelec
     assert mol.charge == mol.atcorenums.sum() - mol.mo.nelec

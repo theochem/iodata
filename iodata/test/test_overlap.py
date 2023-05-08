@@ -19,7 +19,6 @@
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
 import itertools
-
 import attr
 import numpy as np
 from numpy.testing import assert_allclose
@@ -30,9 +29,9 @@ from ..basis import MolecularBasis, Shell, convert_conventions
 from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_normalization_basics_segmented():
@@ -56,27 +55,27 @@ def test_normalization_basics_generalized():
 
 
 def test_load_fchk_hf_sto3g_num():
-    with path('iodata.test.data', 'load_fchk_hf_sto3g_num.npy') as fn_npy:
+    with as_file(files("iodata.test.data").joinpath("load_fchk_hf_sto3g_num.npy")) as fn_npy:
         ref = np.load(str(fn_npy))
-    with path('iodata.test.data', 'hf_sto3g.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("hf_sto3g.fchk")) as fn_fchk:
         data = load_one(fn_fchk)
     assert_allclose(ref, compute_overlap(data.obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
-    with path('iodata.test.data',
-              'load_fchk_o2_cc_pvtz_pure_num.npy') as fn_npy:
+    source = files("iodata.test.data").joinpath("load_fchk_o2_cc_pvtz_pure_num.npy")
+    with as_file(source) as fn_npy:
         ref = np.load(str(fn_npy))
-    with path('iodata.test.data', 'o2_cc_pvtz_pure.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("o2_cc_pvtz_pure.fchk")) as fn_fchk:
         data = load_one(fn_fchk)
     assert_allclose(ref, compute_overlap(data.obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
-    with path('iodata.test.data',
-              'load_fchk_o2_cc_pvtz_cart_num.npy') as fn_npy:
+    source = files("iodata.test.data").joinpath("load_fchk_o2_cc_pvtz_cart_num.npy")
+    with as_file(source) as fn_npy:
         ref = np.load(str(fn_npy))
-    with path('iodata.test.data', 'o2_cc_pvtz_cart.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("o2_cc_pvtz_cart.fchk")) as fn_fchk:
         data = load_one(fn_fchk)
     obasis = attr.evolve(data.obasis, conventions=OVERLAP_CONVENTIONS)
     assert_allclose(ref, compute_overlap(obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
@@ -93,7 +92,7 @@ def test_overlap_l1():
 
 
 def test_overlap_two_basis_exceptions():
-    with path('iodata.test.data', 'hf_sto3g.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("hf_sto3g.fchk")) as fn_fchk:
         data = load_one(fn_fchk)
     with pytest.raises(TypeError):
         compute_overlap(data.obasis, data.atcoords, data.obasis, None)
@@ -111,7 +110,7 @@ FNS_TWO_BASIS = [
 
 @pytest.mark.parametrize("fn", FNS_TWO_BASIS)
 def test_overlap_two_basis_same(fn):
-    with path('iodata.test.data', fn) as pth:
+    with as_file(files("iodata.test.data").joinpath(fn)) as pth:
         mol = load_one(pth)
     olp_a = compute_overlap(mol.obasis, mol.atcoords, mol.obasis, mol.atcoords)
     olp_b = compute_overlap(mol.obasis, mol.atcoords)
@@ -120,9 +119,9 @@ def test_overlap_two_basis_same(fn):
 
 @pytest.mark.parametrize("fn0,fn1", itertools.combinations_with_replacement(FNS_TWO_BASIS, 2))
 def test_overlap_two_basis_different(fn0, fn1):
-    with path('iodata.test.data', fn0) as pth0:
+    with as_file(files("iodata.test.data").joinpath(fn0)) as pth0:
         mol0 = load_one(pth0)
-    with path('iodata.test.data', fn1) as pth1:
+    with as_file(files("iodata.test.data").joinpath(fn1)) as pth1:
         mol1 = load_one(pth1)
     # Direct computation of the off-diagonal block.
     olp_a = compute_overlap(mol0.obasis, mol0.atcoords, mol1.obasis, mol1.atcoords)

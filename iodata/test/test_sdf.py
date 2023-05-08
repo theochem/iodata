@@ -19,7 +19,6 @@
 """Test iodata.formats.sdf module."""
 
 import os
-
 import pytest
 from numpy.testing import assert_equal, assert_allclose
 
@@ -28,21 +27,21 @@ from ..api import load_one, load_many, dump_one, dump_many
 from ..utils import angstrom, FileFormatError
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_sdf_load_one_example():
     # test sdf one structure
-    with path('iodata.test.data', 'example.sdf') as fn_sdf:
+    with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_sdf:
         mol = load_one(str(fn_sdf))
     check_example(mol)
 
 
 def test_sdf_load_one_formamide():
     # test sdf one structure
-    with path('iodata.test.data', 'formamide.sdf') as fn_sdf:
+    with as_file(files("iodata.test.data").joinpath("formamide.sdf")) as fn_sdf:
         mol = load_one(str(fn_sdf))
     assert mol.title == "713"
     assert mol.natom == 6
@@ -53,7 +52,7 @@ def test_sdf_load_one_formamide():
 
 def test_sdf_formaterror(tmpdir):
     # test if sdf file has the wrong ending without $$$$
-    with path('iodata.test.data', 'example.sdf') as fn_test:
+    with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_test:
         with truncated_file(fn_test, 36, 0, tmpdir) as fn:
             with pytest.raises(IOError):
                 load_one(str(fn))
@@ -91,17 +90,17 @@ def check_load_dump_consistency(tmpdir, fn):
 
 
 def test_load_dump_consistency(tmpdir):
-    with path('iodata.test.data', 'example.sdf') as fn_sdf:
+    with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_sdf:
         check_load_dump_consistency(tmpdir, fn_sdf)
-    with path('iodata.test.data', 'formamide.sdf') as fn_sdf:
+    with as_file(files("iodata.test.data").joinpath("formamide.sdf")) as fn_sdf:
         check_load_dump_consistency(tmpdir, fn_sdf)
     # The benzene mol2 file has aromatic bonds, which are less common in SDF files.
-    with path('iodata.test.data', 'benzene.mol2') as fn_sdf:
+    with as_file(files("iodata.test.data").joinpath("benzene.mol2")) as fn_sdf:
         check_load_dump_consistency(tmpdir, fn_sdf)
 
 
 def test_load_many():
-    with path('iodata.test.data', 'example.sdf') as fn_sdf:
+    with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_sdf:
         mols = list(load_many(str(fn_sdf)))
     assert len(mols) == 2
     check_example(mols[0])
@@ -112,7 +111,7 @@ def test_load_many():
 
 
 def test_load_dump_many_consistency(tmpdir):
-    with path('iodata.test.data', 'example.sdf') as fn_sdf:
+    with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_sdf:
         mols0 = list(load_many(str(fn_sdf)))
     # write sdf file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test')
@@ -127,6 +126,6 @@ def test_load_dump_many_consistency(tmpdir):
 
 
 def test_v2000_check():
-    with path('iodata.test.data', 'molv3000.sdf') as fn_sdf:
+    with as_file(files("iodata.test.data").joinpath("molv3000.sdf")) as fn_sdf:
         with pytest.raises(FileFormatError):
             load_one(fn_sdf)
