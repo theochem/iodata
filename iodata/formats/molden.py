@@ -74,11 +74,18 @@ CONVENTIONS = {
 }
 
 
-@document_load_one("Molden", ['atcoords', 'atnums', 'atcorenums', 'mo', 'obasis'], ['title'])
-def load_one(lit: LineIterator) -> dict:
+@document_load_one(
+    "Molden",
+    ['atcoords', 'atnums', 'atcorenums', 'mo', 'obasis'],
+    ['title'],
+    {"norm_threshold": "When the normalization of one of the orbitals exceeds "
+                       "norm_threshold, a correction is attempted or an error "
+                       "is raised when no suitable correction can be found."}
+)
+def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     result = _load_low(lit)
-    _fix_molden_from_buggy_codes(result, lit)
+    _fix_molden_from_buggy_codes(result, lit, norm_threshold)
     return result
 
 
@@ -326,7 +333,7 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
 
 def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
                             orb_alpha: np.ndarray, orb_beta: np.ndarray,
-                            threshold: float = 1e-4) -> bool:
+                            norm_threshold: float = 1e-4) -> bool:
     """Test the normalization of the occupied and virtual orbitals.
 
     Parameters
@@ -339,8 +346,8 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
         The alpha orbitals coefficients
     orb_beta
         The beta orbitals (may be None).
-    threshold
-        When the maximal error on the norm is large than the threshold,
+    norm_threshold
+        When the error on one of the orbitals norm exceeds norm_threshold,
         the function returns False. True is returned otherwise.
 
     """
@@ -374,7 +381,7 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
             error_max = max(error_max, abs(norm - 1))
 
     # final judgement
-    return error_max <= threshold
+    return error_max <= norm_threshold
 
 
 def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
@@ -582,7 +589,7 @@ def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     return None
 
 
-def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
+def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold: float = 1e-4):
     """Detect errors in the data loaded from a molden or mkl file and correct.
 
     This function can recognize erroneous files created by PSI4, ORCA and
@@ -594,6 +601,11 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         A dictionary with the data loaded in the ``load_molden`` function.
     lit
         The line iterator to read the data from, used for warnings.
+    norm_threshold
+        When the error on one of the orbitals norm exceeds norm_threshold,
+        the (corrected) data loaded from the Molden file is considered to be
+        incorrect, in which case other corrections are tested or an exception
+        is raised when no more corrections can be applied.
 
     """
     # pylint: disable=too-many-return-statements
@@ -609,13 +621,13 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
     else:
         raise ValueError('Molecular orbital kind={0} not recognized'.format(result['mo'].kind))
 
-    if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb):
+    if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         # The file is good. No need to change obasis.
         return
 
     # --- ORCA
     orca_obasis = _fix_obasis_orca(obasis)
-    if _is_normalized_properly(orca_obasis, atcoords, coeffsa, coeffsb):
+    if _is_normalized_properly(orca_obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         lit.warn('Corrected for typical ORCA errors in Molden/MKL file.')
         result['obasis'] = orca_obasis
         return
@@ -623,7 +635,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
     # --- PSI4 < 1.0
     psi4_obasis = _fix_obasis_psi4(obasis)
     if psi4_obasis is not None and \
-       _is_normalized_properly(psi4_obasis, atcoords, coeffsa, coeffsb):
+       _is_normalized_properly(psi4_obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         lit.warn('Corrected for PSI4 < 1.0 errors in Molden/MKL file.')
         result['obasis'] = psi4_obasis
         return
@@ -631,7 +643,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
     # -- Turbomole
     turbom_obasis = _fix_obasis_turbomole(obasis)
     if turbom_obasis is not None and \
-       _is_normalized_properly(turbom_obasis, atcoords, coeffsa, coeffsb):
+       _is_normalized_properly(turbom_obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         lit.warn('Corrected for Turbomole errors in Molden/MKL file.')
         result['obasis'] = turbom_obasis
         return
@@ -647,7 +659,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         if _is_normalized_properly(obasis,
                                    atcoords,
                                    coeffsa_cfour,
-                                   coeffsb_cfour):
+                                   coeffsb_cfour, norm_threshold):
             lit.warn('Corrected for CFOUR 2.1 errors in Molden/MKL file.')
             result['obasis'] = obasis
             if result['mo'].kind == 'restricted':
@@ -659,7 +671,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
 
     # --- Renormalized contractions
     normed_obasis = _fix_obasis_normalize_contractions(obasis)
-    if _is_normalized_properly(normed_obasis, atcoords, coeffsa, coeffsb):
+    if _is_normalized_properly(normed_obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         lit.warn('Corrected for unnormalized contractions in Molden/MKL file.')
         result['obasis'] = normed_obasis
         return
@@ -672,7 +684,8 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
             coeffsb_psi4 = None
         else:
             coeffsb_psi4 = coeffsb / psi4_coeff_correction[:, np.newaxis]
-        if _is_normalized_properly(normed_obasis, atcoords, coeffsa_psi4, coeffsb_psi4):
+        if _is_normalized_properly(normed_obasis, atcoords, coeffsa_psi4,
+                                   coeffsb_psi4, norm_threshold):
             lit.warn('Corrected for PSI4 <= 1.3.2 errors in Molden/MKL file.')
             result['obasis'] = normed_obasis
             if result['mo'].kind == 'restricted':

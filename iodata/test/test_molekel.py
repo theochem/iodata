@@ -20,6 +20,7 @@
 """Test iodata.formats.molekel module."""
 
 import os
+import warnings
 
 from numpy.testing import assert_equal, assert_allclose
 
@@ -29,6 +30,11 @@ from ..basis import convert_conventions
 from ..api import load_one, dump_one
 from ..overlap import compute_overlap
 from ..utils import angstrom
+
+try:
+    from importlib_resources import as_file, files
+except ImportError:
+    from importlib.resources import as_file, files
 
 
 def compare_mols_diff_formats(mol1, mol2):
@@ -152,3 +158,11 @@ def test_load_mkl_h2():
     # check mo normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)
+
+
+def test_load_mkl_h2_huge_threshold():
+    with as_file(files("iodata.test.data").joinpath("h2_sto3g.mkl")) as fn_molekel:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            # The threshold is set very high, which skip a correction for ORCA.
+            load_one(str(fn_molekel), norm_threshold=1e4)

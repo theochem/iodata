@@ -161,8 +161,14 @@ def _load_helper_occ(lit: LineIterator) -> np.ndarray:
 
 
 # pylint: disable=too-many-branches,too-many-statements
-@document_load_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcharges'])
-def load_one(lit: LineIterator) -> dict:
+@document_load_one(
+    "Molekel",
+    ['atcoords', 'atnums', 'mo', 'obasis'], ['atcharges'],
+    {"norm_threshold": "When the normalization of one of the orbitals exceeds "
+                       "norm_threshold, a correction is attempted or an error "
+                       "is raised when no suitable correction can be found."}
+)
+def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     charge = None
     atnums = None
@@ -249,7 +255,7 @@ def load_one(lit: LineIterator) -> dict:
         'mo': mo,
         'atcharges': atcharges,
     }
-    _fix_molden_from_buggy_codes(result, lit)
+    _fix_molden_from_buggy_codes(result, lit, norm_threshold)
     return result
 
 
