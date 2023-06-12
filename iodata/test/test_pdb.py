@@ -62,9 +62,22 @@ def check_water(mol):
     assert_equal(mol.bonds[:, :2], [[0, 1], [1, 2]])
 
 
-def check_load_dump_consistency(tmpdir, fn):
-    """Check if dumping and loading an PDB file results in the same data."""
-    mol0 = load_one(str(fn))
+@pytest.mark.parametrize("fn_base,should_warn", [
+    ("water_single.pdb", False),
+    ("water_single_model.pdb", False),
+    ("ch5plus.pdb", False),
+    ("2luv.pdb", True),
+    ("2bcw.pdb", False),
+])
+def test_load_dump_consistency(fn_base, should_warn, tmpdir):
+    with as_file(files('iodata.test.data').joinpath(fn_base)) as fn_pdb:
+        if should_warn:
+            with pytest.warns(FileFormatWarning) as record:
+                mol0 = load_one(str(fn_pdb))
+            assert len(record) > 1
+        else:
+            mol0 = load_one(str(fn_pdb))
+
     # write pdb file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test.pdb')
     dump_one(mol0, fn_tmp)
@@ -87,21 +100,10 @@ def check_load_dump_consistency(tmpdir, fn):
         assert_equal(mol0.bonds, mol1.bonds)
 
 
-@pytest.mark.parametrize("fn_base", [
-    "water_single.pdb",
-    "water_single_model.pdb",
-    "ch5plus.pdb",
-    "2luv.pdb",
-    "2bcw.pdb",
-])
-def test_load_dump_consistency(fn_base, tmpdir):
-    with as_file(files("iodata.test.data").joinpath(fn_base)) as fn_pdb:
-        check_load_dump_consistency(tmpdir, fn_pdb)
+def test_load_dump_xyz_consistency(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("water.xyz")) as fn_xyz:
+        mol0 = load_one(str(fn_xyz))
 
-
-def check_load_dump_xyz_consistency(tmpdir, fn):
-    """Check if dumping PDB from an xyz file results in the same data."""
-    mol0 = load_one(str(fn))
     # write xyz file in a temporary folder & then read it
     fn_tmp = os.path.join(tmpdir, 'test.pdb')
     dump_one(mol0, fn_tmp)
@@ -123,15 +125,12 @@ def check_load_dump_xyz_consistency(tmpdir, fn):
     assert mol1.bonds is None
 
 
-def test_load_dump_xyz_consistency(tmpdir):
-    with as_file(files("iodata.test.data").joinpath("water.xyz")) as fn_xyz:
-        check_load_dump_xyz_consistency(tmpdir, fn_xyz)
-
-
 def test_load_peptide_2luv():
     # test pdb of small peptide
     with as_file(files("iodata.test.data").joinpath("2luv.pdb")) as fn_pdb:
-        mol = load_one(str(fn_pdb))
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(str(fn_pdb))
+    assert len(record) == 271
     assert mol.title.startswith("INTEGRIN")
     assert_equal(len(mol.atnums), 547)
     restypes = mol.atffparams.get('restypes')
@@ -218,3 +217,16 @@ def test_load_ch5plus_bonds():
     with as_file(files("iodata.test.data").joinpath("ch5plus.pdb")) as fn_pdb:
         mol = load_one(fn_pdb)
     assert_equal(mol.bonds[:, :2], [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5]])
+
+
+def test_indomethacin_dimer():
+    with as_file(files("iodata.test.data").joinpath("indomethacin-dimer.pdb")) as fn_pdb:
+        with pytest.warns(FileFormatWarning) as record:
+            mol = load_one(fn_pdb)
+    assert len(record) == 82
+    for item in record:
+        assert "Using the atom name in the PDB" in item.message.args[0]
+    assert mol.atnums[13] == 6
+    assert mol.atnums[14] == 17
+    assert mol.atnums[15] == 6
+    assert mol.atnums[55] == 17
