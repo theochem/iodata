@@ -32,7 +32,7 @@ __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
 
 
 def factorial2(n, exact=False):
-    """Wrap scipy.special.factorial2 to return 1.0 when the input is not positive.
+    """Wrap scipy.special.factorial2 to return 1.0 when the input is -1.
 
     This is a temporary workaround while we wait for Scipy's update.
     To learn more, see https://github.com/scipy/scipy/issues/18409.
@@ -40,12 +40,14 @@ def factorial2(n, exact=False):
     Parameters
     ----------
     n : int or np.ndarray
-        Values to calculate n!! for. If n <= 0, the return value is 1.
+        Values to calculate n!! for. If n={0, -1}, the return value is 1.
+        For n < -1, the return value is 0.
     """
     # Scipy  1.11.x returns an integer when n is an integer, but 1.10.x returns an array,
     # so np.array(n) is passed to make sure the output is always an array.
     out = scipy.special.factorial2(np.array(n), exact=exact)
     out[out <= 0] = 1.0
+    out[out <= -2] = 0.0
     return out
 
 
