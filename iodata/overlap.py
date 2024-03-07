@@ -45,9 +45,14 @@ def factorial2(n, exact=False):
     """
     # Scipy  1.11.x returns an integer when n is an integer, but 1.10.x returns an array,
     # so np.array(n) is passed to make sure the output is always an array.
-    out = scipy.special.factorial2(np.array(n), exact=exact)
-    out[out <= 0] = 1.0
-    out[out <= -2] = 0.0
+    if exact == False : #Keep when exact=False
+        out = scipy.special.factorial2(np.array(n), exact=exact)
+    else :
+        if n is not int:
+            n = np.array([n]) # convert n to a np.array
+            for x in range(len(n)):
+                x = n[x]
+                out = scipy.special.factorial2(x, exact) #compute on each individual element x of the array n
     return out
 
 
