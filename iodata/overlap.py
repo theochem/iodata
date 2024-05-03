@@ -48,7 +48,7 @@ def factorial2(n, exact=False):
     if exact == False : #Keep when exact=False
         out = scipy.special.factorial2(np.array(n), exact=exact)
     else :
-        if n is not int:
+        if not isinstance(n, int):
             n = np.array([n]) # convert n to a np.array
             for x in range(len(n)):
                 x = n[x]
