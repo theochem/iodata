@@ -45,7 +45,7 @@ def factorial2(n, exact=False):
     """
     # Scipy  1.11.x returns an integer when n is an integer, but 1.10.x returns an array,
     # so np.array(n) is passed to make sure the output is always an array.
-    if exact == False : #Keep when exact=False
+    if not exact:
         out = scipy.special.factorial2(np.array(n), exact=exact)
     else :
         if not isinstance(n, int):
