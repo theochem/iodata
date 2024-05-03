@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=65.0", "setuptools_scm[toml]>=7.1.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qc-iodata"
+authors = [
+  { name="HORTON-ChemTools Dev Team", email="horton.chemtools@gmail.com" },
+]
+description = "Python Input and Output Library for Quantum Chemistry"
+readme = "README.rst"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
+classifiers = [
+    "Environment :: Console",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Intended Audience :: Science/Research",
+]
+dependencies = [
+    "numpy>=1.0",
+    "scipy",
+    "attrs>=20.1.0",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-xdist"]
+
+[project.urls]
+Documentation = "https://iodata.readthedocs.io/en/latest/"
+Issues = "https://github.com/theochem/iodata/issues/"
+Source = "https://github.com/theochem/iodata/"
+
+[project.scripts]
+iodata-convert = "iodata.__main__:main"
+
+[tool.pytest.ini_options]
+addopts = "-n auto"
+
+[tool.setuptools]
+packages = ["iodata"]
+
+[tool.setuptools_scm]
+write_to = "iodata/_version.py"
+version_scheme = "post-release"
+local_scheme = "no-local-version"
