@@ -18,9 +18,18 @@
 # --
 """Unit tests for iodata.utils."""
 
+import pytest
 
-from ..utils import amu
+from ..utils import amu, strtobool
 
 
 def test_amu():
     assert abs(amu * 1.008 - 1837.47) < 1e-1
+
+
+def test_strtobool():
+    assert strtobool("T") is True
+    assert strtobool("false") is False
+    assert strtobool("y") is True
+    with pytest.raises(ValueError):
+        strtobool("whatever")

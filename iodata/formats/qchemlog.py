@@ -22,14 +22,13 @@ This module will load Q-Chem log file into IODATA.
 """
 
 from typing import Tuple
-from distutils.util import strtobool
 
 import numpy as np
 
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
-from ..utils import LineIterator, angstrom, kcalmol, calmol, kjmol
+from ..utils import LineIterator, angstrom, kcalmol, calmol, kjmol, strtobool
 
 __all__ = []
 
