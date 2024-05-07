@@ -31,7 +31,7 @@ from .attrutils import validate_shape
 
 
 __all__ = ['LineIterator', 'Cube', 'set_four_index_element', 'volume',
-           'derive_naturals', 'check_dm']
+           'derive_naturals', 'check_dm', 'strtobool']
 
 
 # The unit conversion factors below can be used as follows:
@@ -263,3 +263,27 @@ def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: fl
     if occupations.max() > occ_max + eps:
         raise ValueError('The density matrix has eigenvalues considerably larger than '
                          'max. error=%e' % (occupations.max() - 1))
+
+
+STRTOBOOL = {
+    'y': True,
+    'yes': True,
+    't': True,
+    'true': True,
+    'on': True,
+    '1': True,
+    'n': False,
+    'no': False,
+    'f': False,
+    'false': False,
+    'off': False,
+    '0': False
+}
+
+
+def strtobool(value: str) -> bool:
+    """Interpret string as a boolean."""
+    result = STRTOBOOL.get(value.lower())
+    if result is None:
+        raise ValueError(f"'{value}' cannot be converted to boolean")
+    return result

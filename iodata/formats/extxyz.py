@@ -27,7 +27,6 @@ handle an XYZ with different molecules, e.g. a molecular database.
 
 """
 
-from distutils.util import strtobool
 import shlex
 from typing import Iterator
 
@@ -35,7 +34,7 @@ import numpy as np
 
 from ..docstrings import document_load_one, document_load_many
 from ..periodic import sym2num, num2sym
-from ..utils import angstrom, amu, LineIterator
+from ..utils import angstrom, amu, LineIterator, strtobool
 
 from .xyz import load_one as load_one_xyz
 
