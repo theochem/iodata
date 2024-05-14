@@ -49,6 +49,8 @@ PATTERNS = ['*.mwfn']
 # F shell: F 0, F+1, F-1, F+2, F-2, F+3, F-3
 # G shell: G 0, G+1, G-1, G+2, G-2, G+3, G-3, G+4, G-4
 
+
+# fmt: off
 CONVENTIONS = {
     (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
     (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
@@ -63,7 +65,7 @@ CONVENTIONS = {
                'xyyzz', 'xyyyz', 'xyyyy', 'xxzzz', 'xxyzz', 'xxyyz', 'xxyyy', 'xxxzz',
                'xxxyz', 'xxxyy', 'xxxxz', 'xxxxy', 'xxxxx'],
 }
-
+# fmt: on
 
 def _load_helper_opener(lit: LineIterator) -> dict:
     """Read initial variables at the beginning of a MWFN file."""

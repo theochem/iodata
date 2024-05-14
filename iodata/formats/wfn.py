@@ -104,6 +104,7 @@ PATTERNS = ['*.wfn']
 # 56 HXXXXX (500)
 
 
+# fmt: off
 CONVENTIONS = {
     (0, 'c'): ['1'],
     (1, 'c'): ['x', 'y', 'z'],
@@ -115,7 +116,7 @@ CONVENTIONS = {
                'xyzzz', 'xyyzz', 'xyyyz', 'xyyyy', 'xxzzz', 'xxyzz', 'xxyyz',
                'xxyyy', 'xxxzz', 'xxxyz', 'xxxyy', 'xxxxz', 'xxxxy', 'xxxxx'],
 }
-
+# fmt: on
 
 # Definition of primitives in the WFN format. This is the order of the primitive
 # types as documented by aimall, used in the field TYPE ASSIGNMENTS.
