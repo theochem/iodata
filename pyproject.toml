@@ -48,3 +48,7 @@ packages = ["iodata"]
 write_to = "iodata/_version.py"
 version_scheme = "post-release"
 local_scheme = "no-local-version"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
