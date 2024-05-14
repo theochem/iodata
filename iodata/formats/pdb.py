@@ -23,13 +23,16 @@ last updated one and is described in this link:
 http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html
 """
 
-
 from typing import TextIO, Iterator
 
 import numpy as np
 
-from ..docstrings import (document_load_one, document_load_many, document_dump_one,
-                          document_dump_many)
+from ..docstrings import (
+    document_load_one,
+    document_load_many,
+    document_dump_one,
+    document_dump_many,
+)
 from ..iodata import IOData
 from ..periodic import sym2num, num2sym, bond2num
 from ..utils import angstrom, LineIterator
@@ -38,7 +41,7 @@ from ..utils import angstrom, LineIterator
 __all__ = []
 
 
-PATTERNS = ['*.pdb']
+PATTERNS = ["*.pdb"]
 
 
 def _parse_pdb_atom_line(line, lit):
@@ -132,14 +135,14 @@ def _parse_pdb_conect_line(line):
     # 27 - 31       Integer        serial       Serial number of bonded atom
     iatom0 = int(line[7:12]) - 1
     for ipos in 12, 17, 22, 27:
-        serial_str = line[ipos: ipos + 5].strip()
+        serial_str = line[ipos : ipos + 5].strip()
         if serial_str != "":
             iatom1 = int(serial_str) - 1
             if iatom1 > iatom0:
                 yield iatom0, iatom1
 
 
-@document_load_one("PDB", ['atcoords', 'atnums', 'atffparams', 'extra'], ['title', 'bonds'])
+@document_load_one("PDB", ["atcoords", "atnums", "atffparams", "extra"], ["title", "bonds"])
 def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, too-many-statements
     """Do not edit this docstring. It will be overwritten."""
     title_lines = []
@@ -166,8 +169,9 @@ def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, t
         if line.startswith("COMPND"):
             compnd_lines.append(line[10:].strip())
         if line.startswith("ATOM") or line.startswith("HETATM"):
-            (atnum, attype, restype, chainid, resnum, atcoord, occupancy,
-             bfactor) = _parse_pdb_atom_line(line, lit)
+            (atnum, attype, restype, chainid, resnum, atcoord, occupancy, bfactor) = (
+                _parse_pdb_atom_line(line, lit)
+            )
             atnums.append(atnum)
             attypes.append(attype)
             restypes.append(restype)
@@ -202,7 +206,7 @@ def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, t
     if len(compnd_lines) > 0:
         extra["compound"] = "\n".join(compnd_lines)
     # add chain id, if it wasn't all empty
-    if not np.all(chainids == [' '] * len(chainids)):
+    if not np.all(chainids == [" "] * len(chainids)):
         extra["chainids"] = np.array(chainids)
     # Set a useful title
     if len(title_lines) == 0:
@@ -216,11 +220,11 @@ def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, t
     else:
         title = "\n".join(title_lines)
     result = {
-        'atcoords': np.array(atcoords),
-        'atnums': np.array(atnums),
-        'atffparams': atffparams,
-        'title': title,
-        'extra': extra,
+        "atcoords": np.array(atcoords),
+        "atnums": np.array(atnums),
+        "atffparams": atffparams,
+        "title": title,
+        "extra": extra,
     }
     # assign bonds only if some were present
     if len(bonds) > 0:
@@ -228,7 +232,7 @@ def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, t
     return result
 
 
-@document_load_many("PDB", ['atcoords', 'atnums', 'atffparams', 'extra'], ['title'])
+@document_load_many("PDB", ["atcoords", "atnums", "atffparams", "extra"], ["title"])
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # PDB files with more molecules are a simple concatenation of individual PDB files,'
@@ -259,19 +263,19 @@ def _dump_multiline_str(f: TextIO, key: str, value: str):
         prefix = key + str(iline + 2).rjust(10 - len(key)) + " "
 
 
-@document_dump_one("PDB", ['atcoords', 'atnums', 'extra'], ['atffparams', 'title', 'bonds'])
+@document_dump_one("PDB", ["atcoords", "atnums", "extra"], ["atffparams", "title", "bonds"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     _dump_multiline_str(f, "TITLE", data.title or "Created with IOData")
     if "compound" in data.extra:
         _dump_multiline_str(f, "COMPND", data.extra["compound"])
     # Prepare for ATOM lines.
-    attypes = data.atffparams.get('attypes', None)
-    restypes = data.atffparams.get('restypes', None)
-    resnums = data.atffparams.get('resnums', None)
-    occupancies = data.extra.get('occupancies', None)
-    bfactors = data.extra.get('bfactors', None)
-    chainids = data.extra.get('chainids', None)
+    attypes = data.atffparams.get("attypes", None)
+    restypes = data.atffparams.get("restypes", None)
+    resnums = data.atffparams.get("resnums", None)
+    occupancies = data.extra.get("occupancies", None)
+    bfactors = data.extra.get("bfactors", None)
+    chainids = data.extra.get("chainids", None)
     # Write ATOM lines.
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
@@ -282,8 +286,8 @@ def dump_one(f: TextIO, data: IOData):
         attype = str(n + str(i + 1)) if attypes is None else attypes[i]
         restype = "XXX" if restypes is None else restypes[i]
         chain = " " if chainids is None else chainids[i]
-        out1 = f'{i+1:>5d} {attype:<4s} {restype:3s} {chain:1s}{resnum:>4d}    '
-        out2 = f'{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}'
+        out1 = f"{i+1:>5d} {attype:<4s} {restype:3s} {chain:1s}{resnum:>4d}    "
+        out2 = f"{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}"
         print("ATOM  " + out1 + out2, file=f)
     if data.bonds is not None:
         # Prepare for CONECT lines.
@@ -298,13 +302,14 @@ def dump_one(f: TextIO, data: IOData):
                 for ichunk in range(len(iatoms1) // 4 + 1):
                     other_atoms_str = "".join(
                         "{:5d}".format(iatom1 + 1)
-                        for iatom1 in iatoms1[ichunk * 4:ichunk * 4 + 4])
+                        for iatom1 in iatoms1[ichunk * 4 : ichunk * 4 + 4]
+                    )
                     conect_line = f"CONECT{iatom0 + 1:5d}{other_atoms_str}"
                     print(conect_line, file=f)
     print("END", file=f)
 
 
-@document_dump_many("PDB", ['atcoords', 'atnums', 'extra'], ['atffparams', 'title'])
+@document_dump_many("PDB", ["atcoords", "atnums", "extra"], ["atffparams", "title"])
 def dump_many(f: TextIO, datas: Iterator[IOData]):
     """Do not edit this docstring. It will be overwritten."""
     # Similar to load_many, this is relatively easy.

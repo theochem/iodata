@@ -32,18 +32,18 @@ except ImportError:
 
 def test_load_fcc_extended():
     with as_file(files("iodata.test.data").joinpath("al_fcc.xyz")) as fn_xyz:
-        mol = load_one(str(fn_xyz), fmt='extxyz')
-    assert hasattr(mol, 'energy')
+        mol = load_one(str(fn_xyz), fmt="extxyz")
+    assert hasattr(mol, "energy")
     assert isinstance(mol.energy, float)
     assert_allclose(mol.energy, -112.846680723)
-    assert hasattr(mol, 'cellvecs')
+    assert hasattr(mol, "cellvecs")
     assert mol.cellvecs.dtype == float
     assert_allclose(mol.cellvecs, np.eye(3) * 7.6 * angstrom)
-    assert 'pbc' in mol.extra
-    assert mol.extra['pbc'].dtype == bool
-    assert_equal(mol.extra['pbc'], np.array([True, False, True]))
-    assert 'species' in mol.extra
-    assert_equal(mol.extra['species'], np.array(['Al'] * 32))
+    assert "pbc" in mol.extra
+    assert mol.extra["pbc"].dtype == bool
+    assert_equal(mol.extra["pbc"], np.array([True, False, True]))
+    assert "species" in mol.extra
+    assert_equal(mol.extra["species"], np.array(["Al"] * 32))
     assert mol.atgradient.shape == (mol.natom, 3)
     assert_allclose(mol.atgradient[0, 0], -0.285831)
     assert_allclose(mol.atgradient[2, 1], 0.268537)
@@ -53,7 +53,7 @@ def test_load_fcc_extended():
 
 def test_load_mgo():
     with as_file(files("iodata.test.data").joinpath("mgo.xyz")) as fn_xyz:
-        mol = load_one(str(fn_xyz), fmt='extxyz')
+        mol = load_one(str(fn_xyz), fmt="extxyz")
     assert_equal(mol.atnums, [12] * 4 + [8] * 4)
     assert_equal(mol.atcoords[3], np.array([1, 1, 0]) * 2.10607000 * angstrom)
     assert_equal(mol.extra["spacegroup"], ["F", "m", "-3", "m"])
@@ -64,20 +64,21 @@ def test_load_mgo():
 
 def test_load_many_extended():
     with as_file(files("iodata.test.data").joinpath("water_extended_trajectory.xyz")) as fn_xyz:
-        mols = list(load_many(str(fn_xyz), fmt='extxyz'))
+        mols = list(load_many(str(fn_xyz), fmt="extxyz"))
     assert len(mols) == 3
-    assert 'some_label' in mols[0].extra
-    assert_equal(mols[0].extra['some_label'],
-                 np.array([[True, True], [False, True], [False, False]]))
-    assert 'is_true' in mols[0].extra
-    assert mols[0].extra['is_true']
-    assert hasattr(mols[0], 'charge')
+    assert "some_label" in mols[0].extra
+    assert_equal(
+        mols[0].extra["some_label"], np.array([[True, True], [False, True], [False, False]])
+    )
+    assert "is_true" in mols[0].extra
+    assert mols[0].extra["is_true"]
+    assert hasattr(mols[0], "charge")
     assert_allclose(mols[0].charge, 0)
-    assert 'pi' in mols[1].extra
-    assert_equal(mols[1].extra['pi'], 3.14)
+    assert "pi" in mols[1].extra
+    assert_equal(mols[1].extra["pi"], 3.14)
     assert_equal(mols[1].atnums, np.array([8, 1, 1, 1]))
     assert_equal(mols[1].atcoords[-1, 2], -12 * angstrom)
     assert_equal(mols[2].atnums, np.array([8, 1, 1]))
-    assert hasattr(mols[2], 'atmasses')
+    assert hasattr(mols[2], "atmasses")
     assert mols[2].atmasses.dtype == float
     assert_allclose(mols[2].atmasses, np.array([29164.39290107, 1837.47159474, 1837.47159474]))

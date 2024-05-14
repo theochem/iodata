@@ -60,7 +60,7 @@ def test_sdf_formaterror(tmpdir):
 
 def check_example(mol):
     """Test some things on example file."""
-    assert mol.title == '24978498'
+    assert mol.title == "24978498"
     assert mol.natom == 16
     assert len(mol.bonds) == 15
     assert_equal(mol.atnums, [16, 8, 8, 8, 8, 7, 6, 6, 6, 1, 1, 1, 1, 1, 1, 1])
@@ -79,13 +79,13 @@ def check_load_dump_consistency(tmpdir, fn):
     """Check if dumping and loading an SDF file results in the same data."""
     mol0 = load_one(str(fn))
     # write sdf file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test.sdf')
+    fn_tmp = os.path.join(tmpdir, "test.sdf")
     dump_one(mol0, fn_tmp)
     mol1 = load_one(fn_tmp)
     # check two sdf files
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
-    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)
     assert_equal(mol0.bonds, mol1.bonds)
 
 
@@ -104,7 +104,7 @@ def test_load_many():
         mols = list(load_many(str(fn_sdf)))
     assert len(mols) == 2
     check_example(mols[0])
-    assert mols[1].title == '24978481'
+    assert mols[1].title == "24978481"
     assert_equal(mols[1].natom, 21)
     assert_allclose(mols[0].atcoords[0] / angstrom, [2.8660, -0.4400, 0.0000])
     assert_allclose(mols[1].atcoords[1] / angstrom, [1.4030, 1.4030, 0.0000])
@@ -114,14 +114,14 @@ def test_load_dump_many_consistency(tmpdir):
     with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_sdf:
         mols0 = list(load_many(str(fn_sdf)))
     # write sdf file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test')
-    dump_many(mols0, fn_tmp, fmt='sdf')
-    mols1 = list(load_many(fn_tmp, fmt='sdf'))
+    fn_tmp = os.path.join(tmpdir, "test")
+    dump_many(mols0, fn_tmp, fmt="sdf")
+    mols1 = list(load_many(fn_tmp, fmt="sdf"))
     assert len(mols0) == len(mols1)
     for mol0, mol1 in zip(mols0, mols1):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
-        assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+        assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)
         assert_equal(mol0.bonds, mol1.bonds)
 
 

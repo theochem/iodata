@@ -52,9 +52,12 @@ def factorial2(n, exact=False):
 
 
 # pylint: disable=too-many-nested-blocks,too-many-statements,too-many-branches
-def compute_overlap(obasis0: MolecularBasis, atcoords0: np.ndarray,
-                    obasis1: Optional[MolecularBasis] = None,
-                    atcoords1: Optional[np.ndarray] = None,) -> np.ndarray:
+def compute_overlap(
+    obasis0: MolecularBasis,
+    atcoords0: np.ndarray,
+    obasis1: Optional[MolecularBasis] = None,
+    atcoords1: Optional[np.ndarray] = None,
+) -> np.ndarray:
     r"""Compute overlap matrix for the given molecular basis set(s).
 
     .. math::
@@ -86,9 +89,8 @@ def compute_overlap(obasis0: MolecularBasis, atcoords0: np.ndarray,
         The matrix with overlap integrals, ``shape=(obasis0.nbasis, obasis1.nbasis)``.
 
     """
-    if obasis0.primitive_normalization != 'L2':
-        raise ValueError('The overlap integrals are only implemented for L2 '
-                         'normalization.')
+    if obasis0.primitive_normalization != "L2":
+        raise ValueError("The overlap integrals are only implemented for L2 " "normalization.")
 
     # Get a segmented basis, for simplicity
     obasis0 = obasis0.get_segmented()
@@ -96,18 +98,21 @@ def compute_overlap(obasis0: MolecularBasis, atcoords0: np.ndarray,
     # Handle optional arguments
     if obasis1 is None:
         if atcoords1 is not None:
-            raise TypeError("When no second basis is given, no second second "
-                            "array of atomic coordinates is expected.")
+            raise TypeError(
+                "When no second basis is given, no second second "
+                "array of atomic coordinates is expected."
+            )
         obasis1 = obasis0
         atcoords1 = atcoords0
         identical = True
     else:
-        if obasis1.primitive_normalization != 'L2':
-            raise ValueError('The overlap integrals are only implemented for L2 '
-                             'normalization.')
+        if obasis1.primitive_normalization != "L2":
+            raise ValueError("The overlap integrals are only implemented for L2 " "normalization.")
         if atcoords1 is None:
-            raise TypeError("When a second basis is given, a second second "
-                            "array of atomic coordinates is expected.")
+            raise TypeError(
+                "When a second basis is given, a second second "
+                "array of atomic coordinates is expected."
+            )
         # Get a segmented basis, for simplicity
         obasis1 = obasis1.get_segmented()
         identical = False
@@ -117,13 +122,13 @@ def compute_overlap(obasis0: MolecularBasis, atcoords0: np.ndarray,
 
     # Compute the normalization constants of the Cartesian primitives, with the
     # contraction coefficients multiplied in.
-    scales0 = [_compute_cart_shell_normalizations(shell) * shell.coeffs
-               for shell in obasis0.shells]
+    scales0 = [_compute_cart_shell_normalizations(shell) * shell.coeffs for shell in obasis0.shells]
     if identical:
         scales1 = scales0
     else:
-        scales1 = [_compute_cart_shell_normalizations(shell) * shell.coeffs
-                   for shell in obasis1.shells]
+        scales1 = [
+            _compute_cart_shell_normalizations(shell) * shell.coeffs for shell in obasis1.shells
+        ]
 
     n_max = max(np.max(shell.angmoms) for shell in obasis0.shells)
     if not identical:
@@ -198,9 +203,9 @@ def compute_overlap(obasis0: MolecularBasis, atcoords0: np.ndarray,
                 # END of Cartesian coordinate system (if going to pure coordinates)
 
                 # cart to pure
-                if shell0.kinds[0] == 'p':
+                if shell0.kinds[0] == "p":
                     shell_overlap = np.dot(tfs[shell0.angmoms[0]], shell_overlap)
-                if shell1.kinds[0] == 'p':
+                if shell1.kinds[0] == "p":
                     shell_overlap = np.dot(shell_overlap, tfs[shell1.angmoms[0]].T)
 
                 # store lower triangular result
@@ -249,12 +254,12 @@ class GaussianOverlap:
             pf_i = self.binomials[n1][i] * x1 ** (n1 - i)
             for j in range(i % 2, n2 + 1, 2):
                 m = i + j
-                integ = self.facts[m] / two_at ** (m / 2)   # TODO // 2
+                integ = self.facts[m] / two_at ** (m / 2)  # TODO // 2
                 value += pf_i * self.binomials[n2][j] * x2 ** (n2 - j) * integ
         return value
 
 
-def _compute_cart_shell_normalizations(shell: 'Shell') -> np.ndarray:
+def _compute_cart_shell_normalizations(shell: "Shell") -> np.ndarray:
     """Return normalization constants for the primitives in a given shell.
 
     Parameters
@@ -269,7 +274,7 @@ def _compute_cart_shell_normalizations(shell: 'Shell') -> np.ndarray:
         shell is pure.
 
     """
-    shell = attr.evolve(shell, kinds=['c'] * shell.ncon)
+    shell = attr.evolve(shell, kinds=["c"] * shell.ncon)
     result = []
     for angmom in shell.angmoms:
         for exponent in shell.exponents:
@@ -296,5 +301,6 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:
         The normalization constant for the gaussian cartesian basis.
 
     """
-    return np.sqrt((4 * alpha) ** sum(n) * (2 * alpha / np.pi) ** 1.5
-                   / np.prod(factorial2(2 * n - 1)))
+    return np.sqrt(
+        (4 * alpha) ** sum(n) * (2 * alpha / np.pi) ** 1.5 / np.prod(factorial2(2 * n - 1))
+    )

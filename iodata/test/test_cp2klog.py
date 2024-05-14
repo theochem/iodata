@@ -37,20 +37,18 @@ def test_atom_si_uks():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [14])
     assert_equal(mol.atcorenums, [4])
-    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.kind == "unrestricted"
     assert_equal(mol.mo.occsa, [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
     assert_equal(mol.mo.occsb, [1, 0, 0, 0])
-    assert_allclose(mol.mo.energiesa,
-                    [-0.398761, -0.154896, -0.154896, -0.154896], atol=1.e-4)
-    assert_allclose(mol.mo.energiesb,
-                    [-0.334567, -0.092237, -0.092237, -0.092237], atol=1.e-4)
-    assert_allclose(mol.energy, -3.761587698067, atol=1.e-10)
+    assert_allclose(mol.mo.energiesa, [-0.398761, -0.154896, -0.154896, -0.154896], atol=1.0e-4)
+    assert_allclose(mol.mo.energiesb, [-0.334567, -0.092237, -0.092237, -0.092237], atol=1.0e-4)
+    assert_allclose(mol.energy, -3.761587698067, atol=1.0e-10)
     assert len(mol.obasis.shells) == 3
-    assert mol.obasis.shells[0].kinds == ['c', 'c']
+    assert mol.obasis.shells[0].kinds == ["c", "c"]
     assert_equal(mol.obasis.shells[1].angmoms, [1, 1])
-    assert mol.obasis.shells[1].kinds == ['c', 'c']
+    assert mol.obasis.shells[1].kinds == ["c", "c"]
     assert_equal(mol.obasis.shells[2].angmoms, [2])
-    assert mol.obasis.shells[2].kinds == ['p']
+    assert mol.obasis.shells[2].kinds == ["p"]
     # check mo normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp)
@@ -62,17 +60,17 @@ def test_atom_o_rks():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [8])
     assert_equal(mol.atcorenums, [6])
-    assert mol.mo.kind == 'restricted'
+    assert mol.mo.kind == "restricted"
     assert_equal(mol.mo.occs, [2, 2, 2, 2])
-    assert_allclose(mol.mo.energies, [0.102709, 0.606458, 0.606458, 0.606458], atol=1.e-4)
-    assert_allclose(mol.energy, -15.464982778766, atol=1.e-10)
+    assert_allclose(mol.mo.energies, [0.102709, 0.606458, 0.606458, 0.606458], atol=1.0e-4)
+    assert_allclose(mol.energy, -15.464982778766, atol=1.0e-10)
     assert_equal(mol.obasis.shells[0].angmoms, [0, 0])
     assert len(mol.obasis.shells) == 3
-    assert mol.obasis.shells[0].kinds == ['c', 'c']
+    assert mol.obasis.shells[0].kinds == ["c", "c"]
     assert_equal(mol.obasis.shells[1].angmoms, [1, 1])
-    assert mol.obasis.shells[1].kinds == ['c', 'c']
+    assert mol.obasis.shells[1].kinds == ["c", "c"]
     assert_equal(mol.obasis.shells[2].angmoms, [2])
-    assert mol.obasis.shells[2].kinds == ['p']
+    assert mol.obasis.shells[2].kinds == ["p"]
     # check mo normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)
@@ -83,7 +81,7 @@ def test_carbon_gs_ae_contracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [6])
-    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.kind == "unrestricted"
     assert_allclose(mol.mo.occsa, [1, 1, 2 / 3, 2 / 3, 2 / 3])
     assert_allclose(mol.mo.energiesa, [-10.058194, -0.526244, -0.214978, -0.214978, -0.214978])
     assert_allclose(mol.mo.occsb, [1, 1, 0, 0, 0])
@@ -101,7 +99,7 @@ def test_carbon_gs_ae_uncontracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [6])
-    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.kind == "unrestricted"
     assert_allclose(mol.mo.occsa, [1, 1, 2 / 3, 2 / 3, 2 / 3])
     assert_allclose(mol.mo.energiesa, [-10.050076, -0.528162, -0.217626, -0.217626, -0.217626])
     assert_allclose(mol.mo.occsb, [1, 1, 0, 0, 0])
@@ -118,7 +116,7 @@ def test_carbon_gs_pp_contracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [4])
-    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.kind == "unrestricted"
     assert_allclose(mol.mo.occsa, [1, 2.0 / 3.0, 2.0 / 3.0, 2.0 / 3.0])
     assert_allclose(mol.mo.energiesa, [-0.528007, -0.219974, -0.219974, -0.219974])
     assert_allclose(mol.mo.occsb, [1, 0, 0, 0])
@@ -136,7 +134,7 @@ def test_carbon_gs_pp_uncontracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [4])
-    assert mol.mo.kind == 'unrestricted'
+    assert mol.mo.kind == "unrestricted"
     assert_allclose(mol.mo.occsa, [1, 2 / 3, 2 / 3, 2 / 3])
     assert_allclose(mol.mo.energiesa, [-0.528146, -0.219803, -0.219803, -0.219803])
     assert_allclose(mol.mo.occsb, [1, 0, 0, 0])
@@ -153,7 +151,7 @@ def test_carbon_sc_ae_contracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [6])
-    assert mol.mo.kind == 'restricted'
+    assert mol.mo.kind == "restricted"
     assert_allclose(mol.mo.occs, [2, 2, 2 / 3, 2 / 3, 2 / 3])
     assert_allclose(mol.mo.energies, [-10.067251, -0.495823, -0.187878, -0.187878, -0.187878])
     assert_allclose(mol.energy, -37.793939631890)
@@ -168,7 +166,7 @@ def test_carbon_sc_ae_uncontracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [6])
-    assert mol.mo.kind == 'restricted'
+    assert mol.mo.kind == "restricted"
     assert_allclose(mol.mo.occs, [2, 2, 2 / 3, 2 / 3, 2 / 3])
     assert_allclose(mol.mo.energies, [-10.062206, -0.499716, -0.192580, -0.192580, -0.192580])
     assert_allclose(mol.energy, -37.800453482378)
@@ -182,7 +180,7 @@ def test_carbon_sc_pp_contracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [4])
-    assert mol.mo.kind == 'restricted'
+    assert mol.mo.kind == "restricted"
     assert_allclose(mol.mo.occs, [2, 2 / 3, 2 / 3, 2 / 3])
     assert_allclose(mol.mo.energies, [-0.500732, -0.193138, -0.193138, -0.193138])
     assert_allclose(mol.energy, -5.350765755382)
@@ -197,7 +195,7 @@ def test_carbon_sc_pp_uncontracted():
         mol = load_one(str(fn_out))
     assert_equal(mol.atnums, [6])
     assert_equal(mol.atcorenums, [4])
-    assert mol.mo.kind == 'restricted'
+    assert mol.mo.kind == "restricted"
     assert_allclose(mol.mo.occs, [2, 2 / 3, 2 / 3, 2 / 3])
     assert_allclose(mol.mo.energies, [-0.500238, -0.192365, -0.192365, -0.192365])
     assert_allclose(mol.energy, -5.352864672201)

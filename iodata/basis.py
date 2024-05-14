@@ -34,20 +34,30 @@ import numpy as np
 from .attrutils import validate_shape
 
 
-__all__ = ['angmom_sti', 'angmom_its', 'Shell', 'MolecularBasis',
-           'convert_convention_shell', 'convert_conventions',
-           'iter_cart_alphabet', 'HORTON2_CONVENTIONS', 'CCA_CONVENTIONS']
+__all__ = [
+    "angmom_sti",
+    "angmom_its",
+    "Shell",
+    "MolecularBasis",
+    "convert_convention_shell",
+    "convert_conventions",
+    "iter_cart_alphabet",
+    "HORTON2_CONVENTIONS",
+    "CCA_CONVENTIONS",
+]
 
-ANGMOM_CHARS = 'spdfghiklmnoqrtuvwxyzabce'
+ANGMOM_CHARS = "spdfghiklmnoqrtuvwxyzabce"
 
 
 def _alsolist(f):
     """Wrap a function to accepts also list as first argument and then return list."""
+
     @wraps(f)
     def wrapper(firsts, *args, **kwargs):
         if isinstance(firsts, (Integral, str)):
             return f(firsts, *args, **kwargs)
         return [f(first, *args, **kwargs) for first in firsts]
+
     return wrapper
 
 
@@ -91,8 +101,7 @@ def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
     return ANGMOM_CHARS[angmom]
 
 
-@attr.s(auto_attribs=True, slots=True,
-        on_setattr=[attr.setters.validate, attr.setters.convert])
+@attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
 class Shell:
     """A shell in a molecular basis representing (generalized) contractions with the same exponents.
 
@@ -129,12 +138,12 @@ class Shell:
         """Number of basis functions (e.g. 3 for a P shell and 4 for an SP shell)."""
         result = 0
         for angmom, kind in zip(self.angmoms, self.kinds):
-            if kind == 'c':  # Cartesian
+            if kind == "c":  # Cartesian
                 result += ((angmom + 1) * (angmom + 2)) // 2
-            elif kind == 'p' and angmom >= 2:
+            elif kind == "p" and angmom >= 2:
                 result += 2 * angmom + 1
             else:
-                raise TypeError('Unknown shell kind \'{}\'; expected \'c\' or \'p\'.'.format(kind))
+                raise TypeError("Unknown shell kind '{}'; expected 'c' or 'p'.".format(kind))
         return result
 
     @property
@@ -148,8 +157,7 @@ class Shell:
         return len(self.angmoms)
 
 
-@attr.s(auto_attribs=True, slots=True,
-        on_setattr=[attr.setters.validate, attr.setters.convert])
+@attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
 class MolecularBasis:
     """A complete molecular orbital or density basis set.
 
@@ -212,14 +220,16 @@ class MolecularBasis:
         shells = []
         for shell in self.shells:
             for angmom, kind, coeffs in zip(shell.angmoms, shell.kinds, shell.coeffs.T):
-                shells.append(Shell(shell.icenter, [angmom], [kind],
-                                    shell.exponents, coeffs.reshape(-1, 1)))
+                shells.append(
+                    Shell(shell.icenter, [angmom], [kind], shell.exponents, coeffs.reshape(-1, 1))
+                )
         # pylint: disable=no-member
         return attr.evolve(self, shells=shells)
 
 
-def convert_convention_shell(conv1: List[str], conv2: List[str], reverse=False) \
-        -> Tuple[np.ndarray, np.ndarray]:
+def convert_convention_shell(
+    conv1: List[str], conv2: List[str], reverse=False
+) -> Tuple[np.ndarray, np.ndarray]:
     """Return a permutation vector and sign changes to convert from 1 to 2.
 
     The transformation from convention 1 to convention 2 can be done applying
@@ -253,20 +263,22 @@ def convert_convention_shell(conv1: List[str], conv2: List[str], reverse=False) 
 
     """
     if len(conv1) != len(conv2):
-        raise TypeError('conv1 and conv2 must contain the same number of elements.')
+        raise TypeError("conv1 and conv2 must contain the same number of elements.")
     # Get signs from both
-    signs1 = [1 - 2 * el1.startswith('-') for el1 in conv1]
-    signs2 = [1 - 2 * el2.startswith('-') for el2 in conv2]
+    signs1 = [1 - 2 * el1.startswith("-") for el1 in conv1]
+    signs2 = [1 - 2 * el2.startswith("-") for el2 in conv2]
     # Strip signs from both
-    conv1 = [el1.lstrip('-') for el1 in conv1]
-    conv2 = [el2.lstrip('-') for el2 in conv2]
+    conv1 = [el1.lstrip("-") for el1 in conv1]
+    conv2 = [el2.lstrip("-") for el2 in conv2]
     if len(conv1) != len(set(conv1)):
-        raise TypeError('Argument conv1 contains duplicates.')
+        raise TypeError("Argument conv1 contains duplicates.")
     if len(conv2) != len(set(conv2)):
-        raise TypeError('Argument conv2 contains duplicates.')
+        raise TypeError("Argument conv2 contains duplicates.")
     if set(conv1) != set(conv2):
-        raise TypeError('Without the minus signs, conv1 and conv2 must contain '
-                        'the same elements. Got {} and {}.'.format(conv1, conv2))
+        raise TypeError(
+            "Without the minus signs, conv1 and conv2 must contain "
+            "the same elements. Got {} and {}.".format(conv1, conv2)
+        )
     # Get the permutation
     if reverse:
         permutation = [conv2.index(el1) for el1 in conv1]
@@ -277,8 +289,9 @@ def convert_convention_shell(conv1: List[str], conv2: List[str], reverse=False) 
     return permutation, signs
 
 
-def convert_conventions(molbasis: MolecularBasis, new_conventions: Dict[str, List[str]],
-                        reverse=False) -> Tuple[np.ndarray, np.ndarray]:
+def convert_conventions(
+    molbasis: MolecularBasis, new_conventions: Dict[str, List[str]], reverse=False
+) -> Tuple[np.ndarray, np.ndarray]:
     """Return a permutation vector and sign changes to convert from 1 to 2.
 
     The transformation from molbasis.convention to the new convention can be done
@@ -376,20 +389,21 @@ def get_default_conventions() -> Tuple[Dict, Dict]:
         Architecture (CCA).
 
     """
-    horton2 = {(0, 'c'): ['1']}
+    horton2 = {(0, "c"): ["1"]}
     cca = horton2.copy()
     for angmom in range(1, 25):
-        conv_cart = list('x' * nx + 'y' * ny + 'z' * nz
-                         for nx, ny, nz in iter_cart_alphabet(angmom))
-        key = (angmom, 'c')
+        conv_cart = list(
+            "x" * nx + "y" * ny + "z" * nz for nx, ny, nz in iter_cart_alphabet(angmom)
+        )
+        key = (angmom, "c")
         horton2[key] = conv_cart
         cca[key] = conv_cart
         if angmom > 1:
-            conv_pure = ['c0']
+            conv_pure = ["c0"]
             for absm in range(1, angmom + 1):
-                conv_pure.append('c{}'.format(absm))
-                conv_pure.append('s{}'.format(absm))
-            key = (angmom, 'p')
+                conv_pure.append("c{}".format(absm))
+                conv_pure.append("s{}".format(absm))
+            key = (angmom, "p")
             horton2[key] = conv_pure
             cca[key] = conv_pure[:1:-2] + conv_pure[:1] + conv_pure[1::2]
     return horton2, cca

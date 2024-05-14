@@ -29,13 +29,16 @@ This format is one of the chemical table file formats:
 https://en.wikipedia.org/wiki/Chemical_table_file
 """
 
-
 from typing import TextIO, Iterator
 
 import numpy as np
 
-from ..docstrings import (document_load_one, document_load_many, document_dump_one,
-                          document_dump_many)
+from ..docstrings import (
+    document_load_one,
+    document_load_many,
+    document_dump_one,
+    document_dump_many,
+)
 from ..iodata import IOData
 from ..periodic import sym2num, num2sym
 from ..utils import angstrom, LineIterator
@@ -44,10 +47,10 @@ from ..utils import angstrom, LineIterator
 __all__ = []
 
 
-PATTERNS = ['*.sdf']
+PATTERNS = ["*.sdf"]
 
 
-@document_load_one("SDF", ['atcoords', 'atnums', 'bonds', 'title'])
+@document_load_one("SDF", ["atcoords", "atnums", "bonds", "title"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     title = next(lit).strip()
@@ -84,14 +87,14 @@ def load_one(lit: LineIterator) -> dict:
         if words == "$$$$\n":
             break
     return {
-        'title': title,
-        'atcoords': atcoords,
-        'atnums': atnums,
-        'bonds': bonds,
+        "title": title,
+        "atcoords": atcoords,
+        "atnums": atnums,
+        "bonds": bonds,
     }
 
 
-@document_load_many("SDF", ['atcoords', 'atnums', 'bonds', 'title'])
+@document_load_many("SDF", ["atcoords", "atnums", "bonds", "title"])
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # SDF files with more molecules are a simple concatenation of individual SDF files,'
@@ -103,28 +106,26 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             return
 
 
-@document_dump_one("SDF", ['atcoords', 'atnums'], ['title', 'bonds'])
+@document_dump_one("SDF", ["atcoords", "atnums"], ["title", "bonds"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    print(data.title or 'Created with IOData', file=f)
-    print('', file=f)
-    print('', file=f)
+    print(data.title or "Created with IOData", file=f)
+    print("", file=f)
+    print("", file=f)
     nbond = 0 if data.bonds is None else len(data.bonds)
     print("{:3d}{:3d}  0     0  0  0  0  0  0999 V2000".format(data.natom, nbond), file=f)
     for iatom in range(data.natom):
         n = num2sym[data.atnums[iatom]]
         x, y, z = data.atcoords[iatom] / angstrom
-        print(f'{x:10.4f}{y:10.4f}{z:10.4f} {n:<3s} 0  0  0  0  0  0  0  0  0  0  0  0', file=f)
+        print(f"{x:10.4f}{y:10.4f}{z:10.4f} {n:<3s} 0  0  0  0  0  0  0  0  0  0  0  0", file=f)
     if data.bonds is not None:
         for iatom, jatom, bondtype in data.bonds:
-            print('{:3d}{:3d}{:3d}  0  0  0  0'.format(
-                iatom + 1, jatom + 1, bondtype
-            ), file=f)
-    print('M  END', file=f)
-    print('$$$$', file=f)
+            print("{:3d}{:3d}{:3d}  0  0  0  0".format(iatom + 1, jatom + 1, bondtype), file=f)
+    print("M  END", file=f)
+    print("$$$$", file=f)
 
 
-@document_dump_many("SDF", ['atcoords', 'atnums'], ['title', 'bonds'])
+@document_dump_many("SDF", ["atcoords", "atnums"], ["title", "bonds"])
 def dump_many(f: TextIO, datas: Iterator[IOData]):
     """Do not edit this docstring. It will be overwritten."""
     # Similar to load_many, this is relatively easy.

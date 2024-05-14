@@ -38,16 +38,19 @@ def test_load_water_number():
     assert mol.natom == 3
     assert_equal(mol.atnums, [8, 1, 1])
     # check bond length
-    assert_allclose(np.linalg.norm(
-        mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.9500, atol=1.e-5)
-    assert_allclose(np.linalg.norm(
-        mol.atcoords[0] - mol.atcoords[2]) / angstrom, 0.9500, atol=1.e-5)
-    assert_allclose(np.linalg.norm(
-        mol.atcoords[1] - mol.atcoords[2]) / angstrom, 1.5513, atol=1.e-4)
+    assert_allclose(
+        np.linalg.norm(mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.9500, atol=1.0e-5
+    )
+    assert_allclose(
+        np.linalg.norm(mol.atcoords[0] - mol.atcoords[2]) / angstrom, 0.9500, atol=1.0e-5
+    )
+    assert_allclose(
+        np.linalg.norm(mol.atcoords[1] - mol.atcoords[2]) / angstrom, 1.5513, atol=1.0e-4
+    )
     # check energies of scf cycles
     energies = np.array([-76.34739931, -76.34740001, -76.34740005, -76.34740029])
-    assert_allclose(mol.extra['scf_energies'], energies)
+    assert_allclose(mol.extra["scf_energies"], energies)
     # check scf energy
     assert_allclose(mol.energy, -76.347791524303, atol=1e-8)
     # check dipole moment
-    assert_allclose(mol.moments[(1, 'c')], [0.76499, 0.00000, 0.54230])
+    assert_allclose(mol.moments[(1, "c")], [0.76499, 0.00000, 0.54230])

@@ -38,14 +38,14 @@ def test_load_crambin():
     assert len(mol.title) == 125
     assert mol.atcoords.shape == (648, 3)
     assert_allclose(mol.atcoords[-1] / angstrom, [7.35403, -5.09628, 2.73659])
-    assert mol.atffparams['attypes'].shape == (648,)
-    assert mol.atffparams['resnums'].shape == (648,)
-    assert mol.atffparams['resnames'].shape == (648,)
-    assert mol.atffparams['attypes'][-1] == 'OT2'
-    assert_equal(mol.atffparams['resnums'][46:48], [4, 4])
-    assert mol.atffparams['resnames'][-1] == 'ASN'
-    assert mol.extra['segid'].shape == (648,)
-    assert mol.extra['resid'].shape == (648,)
-    assert mol.extra['segid'][-1] == 'MAIN'
-    assert mol.extra['resid'][-1] == 46
+    assert mol.atffparams["attypes"].shape == (648,)
+    assert mol.atffparams["resnums"].shape == (648,)
+    assert mol.atffparams["resnames"].shape == (648,)
+    assert mol.atffparams["attypes"][-1] == "OT2"
+    assert_equal(mol.atffparams["resnums"][46:48], [4, 4])
+    assert mol.atffparams["resnames"][-1] == "ASN"
+    assert mol.extra["segid"].shape == (648,)
+    assert mol.extra["resid"].shape == (648,)
+    assert mol.extra["segid"][-1] == "MAIN"
+    assert mol.extra["resid"][-1] == 46
     assert mol.atmasses[-1] == 15.99900 * amu

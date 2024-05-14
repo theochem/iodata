@@ -18,14 +18,13 @@
 # --
 """Data structure for molecular orbitals."""
 
-
 import attr
 import numpy as np
 
 from .attrutils import convert_array_to, validate_shape
 
 
-__all__ = ['MolecularOrbitals']
+__all__ = ["MolecularOrbitals"]
 
 
 def validate_norbab(mo, attribute, value):
@@ -44,19 +43,20 @@ def validate_norbab(mo, attribute, value):
     if mo.kind == "generalized":
         if value is not None:
             raise ValueError(
-                f"Attribute {attribute.name} must be None in case of generalized orbitals.")
+                f"Attribute {attribute.name} must be None in case of generalized orbitals."
+            )
         return
     if value is None:
         raise ValueError(
-            f"Attribute {attribute.name} cannot be None in case of (un)restricted orbitals.")
+            f"Attribute {attribute.name} cannot be None in case of (un)restricted orbitals."
+        )
     if mo.kind == "restricted":
         norb_other = mo.norbb if (attribute.name == "norba") else mo.norba
         if value != norb_other:
             raise ValueError("In case of restricted orbitals, norba must be equal to norbb.")
 
 
-@attr.s(auto_attribs=True, slots=True,
-        on_setattr=[attr.setters.validate, attr.setters.convert])
+@attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
 class MolecularOrbitals:
     """Class of Orthonormal Molecular Orbitals.
 
@@ -94,21 +94,28 @@ class MolecularOrbitals:
     """
 
     kind: str = attr.ib(
-        validator=attr.validators.in_(["restricted", "unrestricted", "generalized"]))
+        validator=attr.validators.in_(["restricted", "unrestricted", "generalized"])
+    )
     norba: int = attr.ib(validator=validate_norbab)
     norbb: int = attr.ib(validator=validate_norbab)
     occs: np.ndarray = attr.ib(
-        default=None, converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("norb")))
-    coeffs: np.ndarray = attr.ib(
-        default=None, converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape(None, "norb")))
-    energies: np.ndarray = attr.ib(
-        default=None, converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("norb")))
-    irreps: np.ndarray = attr.ib(
         default=None,
-        validator=attr.validators.optional(validate_shape("norb")))
+        converter=convert_array_to(float),
+        validator=attr.validators.optional(validate_shape("norb")),
+    )
+    coeffs: np.ndarray = attr.ib(
+        default=None,
+        converter=convert_array_to(float),
+        validator=attr.validators.optional(validate_shape(None, "norb")),
+    )
+    energies: np.ndarray = attr.ib(
+        default=None,
+        converter=convert_array_to(float),
+        validator=attr.validators.optional(validate_shape("norb")),
+    )
+    irreps: np.ndarray = attr.ib(
+        default=None, validator=attr.validators.optional(validate_shape("norb"))
+    )
 
     @property
     def nelec(self) -> float:
@@ -122,7 +129,7 @@ class MolecularOrbitals:
         """Return the number of spatial basis functions."""
         if self.coeffs is None:
             return None
-        if self.kind == 'generalized':
+        if self.kind == "generalized":
             return self.coeffs.shape[0] // 2
         return self.coeffs.shape[0]
 
@@ -158,7 +165,7 @@ class MolecularOrbitals:
             raise NotImplementedError
         if self.occs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             nbeta = np.clip(self.occs, 0, 1).sum()
             return abs(self.nelec - 2 * nbeta)
         return abs(self.occsa.sum() - self.occsb.sum())
@@ -170,9 +177,9 @@ class MolecularOrbitals:
             raise NotImplementedError
         if self.occs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return np.clip(self.occs, 0, 1)
-        return self.occs[:self.norba]
+        return self.occs[: self.norba]
 
     @property
     def occsb(self):
@@ -181,9 +188,9 @@ class MolecularOrbitals:
             raise NotImplementedError
         if self.occs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.occs - np.clip(self.occs, 0, 1)
-        return self.occs[self.norba:]
+        return self.occs[self.norba :]
 
     @property
     def coeffsa(self):
@@ -192,9 +199,9 @@ class MolecularOrbitals:
             raise NotImplementedError
         if self.coeffs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.coeffs
-        return self.coeffs[:, :self.norba]
+        return self.coeffs[:, : self.norba]
 
     @property
     def coeffsb(self):
@@ -203,9 +210,9 @@ class MolecularOrbitals:
             raise NotImplementedError
         if self.coeffs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.coeffs
-        return self.coeffs[:, self.norba:]
+        return self.coeffs[:, self.norba :]
 
     @property
     def energiesa(self):
@@ -214,9 +221,9 @@ class MolecularOrbitals:
             raise NotImplementedError
         if self.energies is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.energies
-        return self.energies[:self.norba]
+        return self.energies[: self.norba]
 
     @property
     def energiesb(self):
@@ -225,9 +232,9 @@ class MolecularOrbitals:
             raise NotImplementedError
         if self.energies is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.energies
-        return self.energies[self.norba:]
+        return self.energies[self.norba :]
 
     @property
     def irrepsa(self):
@@ -236,9 +243,9 @@ class MolecularOrbitals:
             raise NotImplementedError
         if self.irreps is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.irreps
-        return self.irreps[:self.norba]
+        return self.irreps[: self.norba]
 
     @property
     def irrepsb(self):
@@ -247,6 +254,6 @@ class MolecularOrbitals:
             raise NotImplementedError
         if self.irreps is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.irreps
-        return self.irreps[self.norba:]
+        return self.irreps[self.norba :]

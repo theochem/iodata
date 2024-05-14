@@ -36,10 +36,10 @@ except ImportError:
 
 def test_normalization_basics_segmented():
     for angmom in range(7):
-        shells = [Shell(0, [angmom], ['c'], np.array([0.23]), np.array([[1.0]]))]
+        shells = [Shell(0, [angmom], ["c"], np.array([0.23]), np.array([[1.0]]))]
         if angmom >= 2:
-            shells.append(Shell(0, [angmom], ['p'], np.array([0.23]), np.array([[1.0]])))
-        obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, 'L2')
+            shells.append(Shell(0, [angmom], ["p"], np.array([0.23]), np.array([[1.0]])))
+        obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, "L2")
         atcoords = np.zeros((1, 3))
         overlap = compute_overlap(obasis, atcoords)
         assert_allclose(np.diag(overlap), np.ones(obasis.nbasis))
@@ -47,8 +47,8 @@ def test_normalization_basics_segmented():
 
 def test_normalization_basics_generalized():
     for angmom in range(2, 7):
-        shells = [Shell(0, [angmom] * 2, ['c', 'p'], np.array([0.23]), np.array([[1.0, 1.0]]))]
-        obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, 'L2')
+        shells = [Shell(0, [angmom] * 2, ["c", "p"], np.array([0.23]), np.array([[1.0, 1.0]]))]
+        obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, "L2")
         atcoords = np.zeros((1, 3))
         overlap = compute_overlap(obasis, atcoords)
         assert_allclose(np.diag(overlap), np.ones(obasis.nbasis))
@@ -59,7 +59,7 @@ def test_load_fchk_hf_sto3g_num():
         ref = np.load(str(fn_npy))
     with as_file(files("iodata.test.data").joinpath("hf_sto3g.fchk")) as fn_fchk:
         data = load_one(fn_fchk)
-    assert_allclose(ref, compute_overlap(data.obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
+    assert_allclose(ref, compute_overlap(data.obasis, data.atcoords), rtol=1.0e-5, atol=1.0e-8)
 
 
 def test_load_fchk_o2_cc_pvtz_pure_num():
@@ -68,7 +68,7 @@ def test_load_fchk_o2_cc_pvtz_pure_num():
         ref = np.load(str(fn_npy))
     with as_file(files("iodata.test.data").joinpath("o2_cc_pvtz_pure.fchk")) as fn_fchk:
         data = load_one(fn_fchk)
-    assert_allclose(ref, compute_overlap(data.obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
+    assert_allclose(ref, compute_overlap(data.obasis, data.atcoords), rtol=1.0e-5, atol=1.0e-8)
 
 
 def test_load_fchk_o2_cc_pvtz_cart_num():
@@ -78,15 +78,15 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
     with as_file(files("iodata.test.data").joinpath("o2_cc_pvtz_cart.fchk")) as fn_fchk:
         data = load_one(fn_fchk)
     obasis = attr.evolve(data.obasis, conventions=OVERLAP_CONVENTIONS)
-    assert_allclose(ref, compute_overlap(obasis, data.atcoords), rtol=1.e-5, atol=1.e-8)
+    assert_allclose(ref, compute_overlap(obasis, data.atcoords), rtol=1.0e-5, atol=1.0e-8)
 
 
 def test_overlap_l1():
-    dbasis = MolecularBasis([], {}, 'L1')
+    dbasis = MolecularBasis([], {}, "L1")
     atcoords = np.zeros((1, 3))
     with pytest.raises(ValueError):
         _ = compute_overlap(dbasis, atcoords)
-    obasis = MolecularBasis([], {}, 'L2')
+    obasis = MolecularBasis([], {}, "L2")
     with pytest.raises(ValueError):
         _ = compute_overlap(obasis, atcoords, dbasis, atcoords)
 
@@ -104,7 +104,7 @@ FNS_TWO_BASIS = [
     "h_sto3g.fchk",
     "hf_sto3g.fchk",
     "2h-azirine-cc.fchk",
-    "water_ccpvdz_pure_hf_g03.fchk"
+    "water_ccpvdz_pure_hf_g03.fchk",
 ]
 
 
@@ -129,13 +129,12 @@ def test_overlap_two_basis_different(fn0, fn1):
     # overlap matrix.
     atcoords = np.concatenate([mol0.atcoords, mol1.atcoords])
     shells = mol0.obasis.shells + [
-        attr.evolve(shell, icenter=shell.icenter + mol0.natom)
-        for shell in mol1.obasis.shells
+        attr.evolve(shell, icenter=shell.icenter + mol0.natom) for shell in mol1.obasis.shells
     ]
     obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, "L2")
     olp_big = compute_overlap(obasis, atcoords)
     # Get the off-diagonal block and reorder.
-    olp_b = olp_big[:olp_a.shape[0], olp_a.shape[0]:]
+    olp_b = olp_big[: olp_a.shape[0], olp_a.shape[0] :]
     assert olp_a.shape == olp_b.shape
     permutation0, signs0 = convert_conventions(mol0.obasis, OVERLAP_CONVENTIONS, reverse=True)
     olp_b = olp_b[permutation0] * signs0.reshape(-1, 1)

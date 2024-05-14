@@ -18,7 +18,6 @@
 # --
 """Utilities for building attr classes."""
 
-
 import numpy as np
 
 
@@ -27,10 +26,12 @@ __all__ = ["convert_array_to", "validate_shape"]
 
 def convert_array_to(dtype):
     """Return a function to convert arrays to the given type."""
+
     def converter(array):
         if array is None:
             return None
         return np.array(array, copy=False, dtype=dtype)
+
     return converter
 
 
@@ -73,6 +74,7 @@ def validate_shape(*shape_requirements: tuple):
        the expected size of the array being checked along axis ``i``.
 
     """
+
     def validator(obj, attribute, value):
         # Build the expected shape, with the rules from the docstring.
         expected_shape = []
@@ -85,9 +87,7 @@ def validate_shape(*shape_requirements: tuple):
                 other_name, other_axis = item
                 other = getattr(obj, other_name)
                 if other is None:
-                    raise TypeError(
-                        "Other attribute '{}' is not set.".format(other_name)
-                    )
+                    raise TypeError("Other attribute '{}' is not set.".format(other_name))
                 if other_axis == 0:
                     expected_shape.append(len(other))
                 else:

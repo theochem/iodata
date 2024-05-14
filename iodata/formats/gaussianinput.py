@@ -31,31 +31,31 @@ __all__ = []
 PATTERNS = ["*.com", "*.gjf"]
 
 
-@document_load_one("Gaussian Input File", ['atcoords', 'atnums', 'title'], [])
+@document_load_one("Gaussian Input File", ["atcoords", "atnums", "title"], [])
 def load_one(lit: LineIterator):
     """Do not edit this docstring. It will be overwritten."""
     line = next(lit)
     # check multiple-link 0 section starts with '%'
-    while line.startswith(r'%'):
+    while line.startswith(r"%"):
         line = next(lit)
     # check multiple-line route section
     data = {}
 
-    route_line = ''
+    route_line = ""
     while line.strip():
-        route_line += (' ' + line.strip())
+        route_line += " " + line.strip()
         line = next(lit)
     route_line = route_line[1:]
 
     line = next(lit)
 
-    title_line = ''
+    title_line = ""
     while line.strip():
-        title_line += (' ' + line.strip())
+        title_line += " " + line.strip()
         line = next(lit)
     title_line = title_line[1:]
 
-    data['title'] = title_line
+    data["title"] = title_line
 
     # charge_spin_mult_line
     _ = next(lit)
@@ -74,7 +74,7 @@ def load_one(lit: LineIterator):
         coor = list(map(float, contents[1:]))
         coordinates.append(coor)
         coord_line = next(lit)
-    data['atnums'] = np.array(numbers)
-    data['atcoords'] = np.array(coordinates) * angstrom
+    data["atnums"] = np.array(numbers)
+    data["atcoords"] = np.array(coordinates) * angstrom
 
     return data

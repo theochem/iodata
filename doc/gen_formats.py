@@ -40,7 +40,7 @@ FNNAMES = ["load_one", "dump_one", "load_many", "dump_many"]
 
 
 def _format_words(words):
-    return ', '.join('``{}``'.format(word) for word in words)
+    return ", ".join("``{}``".format(word) for word in words)
 
 
 def _print_section(title, linechar):
@@ -61,11 +61,11 @@ def main():
                 break
         if skip:
             continue
-        lines = module.__doc__.split('\n')
+        lines = module.__doc__.split("\n")
         # add labels for cross-referencing format (e.g. in formats table)
         print(f".. _format_{modname}:")
         print()
-        _print_section('{} (``{}``)'.format(lines[0][:-1], modname), "=")
+        _print_section("{} (``{}``)".format(lines[0][:-1], modname), "=")
         print()
         for line in lines[2:]:
             print(line)
@@ -95,5 +95,5 @@ def main():
         print()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

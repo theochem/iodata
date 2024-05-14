@@ -564,7 +564,6 @@ occupations_b                            Keyword for the primary return beta-spi
 
 """
 
-
 import json
 from typing import List, TextIO, Union
 from warnings import warn
@@ -587,7 +586,8 @@ PATTERNS = ["*.json"]
 @document_load_one(
     "QCSchema",
     ["atnums", "atcorenums", "atcoords", "charge", "nelec", "spinpol"],
-    ["atmasses", "bonds", "energy", "g_rot", "lot", "obasis", "obasis_name", "title", "extra"])
+    ["atmasses", "bonds", "energy", "g_rot", "lot", "obasis", "obasis_name", "title", "extra"],
+)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Use python standard lib json module to read the file to a dict
@@ -1117,7 +1117,11 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
     if "keywords" in result:
         keywords_dict = result["keywords"]
         if "run_type" in keywords_dict and keywords_dict["run_type"].lower() in {
-            "energy", "energy_force", "opt", "scan", "freq"
+            "energy",
+            "energy_force",
+            "opt",
+            "scan",
+            "freq",
         }:
             input_dict["run_type"] = keywords_dict["run_type"]
         extra_dict["keywords"] = keywords_dict
@@ -1184,9 +1188,7 @@ def _parse_driver(driver: str, lit: LineIterator) -> str:
     if driver not in ["energy", "gradient", "hessian", "properties"]:
         raise FileFormatError(
             "{}: QCSchema driver must be one of `energy`, `gradient`, `hessian`, "
-            "or `properties`".format(
-                lit.filename
-            )
+            "or `properties`".format(lit.filename)
         )
     return driver
 
@@ -1261,17 +1263,13 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
         warn(
             "{}: Protocols `wavefunction` key not specified, no properties will be kept.",
             FileFormatWarning,
-            2
+            2,
         )
         wavefunction = "none"
     else:
         wavefunction = protocols["wavefunction"]
     if "stdout" not in protocols:
-        warn(
-            "{}: Protocols `stdout` key not specified, stdout will be kept.",
-            FileFormatWarning,
-            2
-        )
+        warn("{}: Protocols `stdout` key not specified, stdout will be kept.", FileFormatWarning, 2)
         keep_stdout = True
     else:
         keep_stdout = protocols["stdout"]
@@ -1397,7 +1395,7 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
         "provenance",
         "properties",
         "success",
-        "return_result"
+        "return_result",
     }
     passthrough_dict = _find_passthrough_dict(result, output_keys)
     if passthrough_dict:
@@ -1454,7 +1452,8 @@ def _parse_provenance(
 @document_dump_one(
     "QCSchema",
     ["atnums", "atcoords", "charge", "spinpol"],
-    ["title", "atcorenums", "atmasses", "bonds", "g_rot", "extra"])
+    ["title", "atcorenums", "atmasses", "bonds", "g_rot", "extra"],
+)
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     if "schema_name" not in data.extra:
@@ -1546,11 +1545,13 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
                 fragment.tolist() for fragment in data.extra["molecule"]["fragments"]["indices"]
             ]
         if "indices" in data.extra["molecule"]["fragments"]:
-            molecule_dict["fragment_charges"] = \
-                data.extra["molecule"]["fragments"]["charges"].tolist()
+            molecule_dict["fragment_charges"] = data.extra["molecule"]["fragments"][
+                "charges"
+            ].tolist()
         if "indices" in data.extra["molecule"]["fragments"]:
-            molecule_dict["fragment_multiplicities"] = \
-                data.extra["molecule"]["fragments"]["multiplicities"].tolist()
+            molecule_dict["fragment_multiplicities"] = data.extra["molecule"]["fragments"][
+                "multiplicities"
+            ].tolist()
     if "fix_com" in data.extra["molecule"]:
         molecule_dict["fix_com"] = data.extra["molecule"]["fix_com"]
     if "fix_orientation" in data.extra["molecule"]:

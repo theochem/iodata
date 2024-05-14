@@ -18,7 +18,6 @@
 # --
 """Functions to be used by end users."""
 
-
 import os
 from typing import Iterator
 from types import ModuleType
@@ -30,16 +29,16 @@ from .iodata import IOData
 from .utils import LineIterator
 
 
-__all__ = ['load_one', 'load_many', 'dump_one', 'dump_many', 'write_input']
+__all__ = ["load_one", "load_many", "dump_one", "dump_many", "write_input"]
 
 
 def _find_format_modules():
     """Return all file-format modules found with importlib."""
     result = {}
-    for module_info in iter_modules(import_module('iodata.formats').__path__):
+    for module_info in iter_modules(import_module("iodata.formats").__path__):
         if not module_info.ispkg:
-            format_module = import_module('iodata.formats.' + module_info.name)
-            if hasattr(format_module, 'PATTERNS'):
+            format_module = import_module("iodata.formats." + module_info.name)
+            if hasattr(format_module, "PATTERNS"):
                 result[module_info.name] = format_module
     return result
 
@@ -74,16 +73,17 @@ def _select_format_module(filename: str, attrname: str, fmt: str = None) -> Modu
                     return format_module
     else:
         return FORMAT_MODULES[fmt]
-    raise ValueError('Could not find file format with feature {} for file {}'.format(
-        attrname, filename))
+    raise ValueError(
+        "Could not find file format with feature {} for file {}".format(attrname, filename)
+    )
 
 
 def _find_input_modules():
     """Return all input modules found with importlib."""
     result = {}
-    for module_info in iter_modules(import_module('iodata.inputs').__path__):
+    for module_info in iter_modules(import_module("iodata.inputs").__path__):
         if not module_info.ispkg:
-            input_module = import_module('iodata.inputs.' + module_info.name)
+            input_module = import_module("iodata.inputs." + module_info.name)
             if hasattr(input_module, "write_input"):
                 result[module_info.name] = input_module
     return result
@@ -107,8 +107,8 @@ def _select_input_module(fmt: str) -> ModuleType:
 
     """
     if fmt in INPUT_MODULES:
-        if not hasattr(INPUT_MODULES[fmt], 'write_input'):
-            raise ValueError(f'{fmt} input module does not have write_input!')
+        if not hasattr(INPUT_MODULES[fmt], "write_input"):
+            raise ValueError(f"{fmt} input module does not have write_input!")
         return INPUT_MODULES[fmt]
     raise ValueError(f"Could not find input format {fmt}!")
 
@@ -136,7 +136,7 @@ def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
         The instance of IOData with data loaded from the input files.
 
     """
-    format_module = _select_format_module(filename, 'load_one', fmt)
+    format_module = _select_format_module(filename, "load_one", fmt)
     lit = LineIterator(filename)
     try:
         iodata = IOData(**format_module.load_one(lit, **kwargs))
@@ -168,7 +168,7 @@ def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
         An instance of IOData with data for one frame loaded for the file.
 
     """
-    format_module = _select_format_module(filename, 'load_many', fmt)
+    format_module = _select_format_module(filename, "load_many", fmt)
     lit = LineIterator(filename)
     for data in format_module.load_many(lit, **kwargs):
         try:
@@ -197,8 +197,8 @@ def dump_one(iodata: IOData, filename: str, fmt: str = None, **kwargs):
         Keyword arguments are passed on to the format-specific dump_one function.
 
     """
-    format_module = _select_format_module(filename, 'dump_one', fmt)
-    with open(filename, 'w') as f:
+    format_module = _select_format_module(filename, "dump_one", fmt)
+    with open(filename, "w") as f:
         format_module.dump_one(f, iodata, **kwargs)
 
 
@@ -221,8 +221,8 @@ def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None, **kwarg
         Keyword arguments are passed on to the format-specific dump_many function.
 
     """
-    format_module = _select_format_module(filename, 'dump_many', fmt)
-    with open(filename, 'w') as f:
+    format_module = _select_format_module(filename, "dump_many", fmt)
+    with open(filename, "w") as f:
         format_module.dump_many(f, iodatas, **kwargs)
 
 
@@ -244,5 +244,5 @@ def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, *
 
     """
     input_module = _select_input_module(fmt)
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         input_module.write_input(f, iodata, template=template, **kwargs)

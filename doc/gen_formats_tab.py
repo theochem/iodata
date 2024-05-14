@@ -20,7 +20,6 @@
 # pylint: disable=unused-argument,redefined-builtin
 """Generate formats.rst."""
 
-
 from collections import defaultdict
 import inspect
 
@@ -86,13 +85,12 @@ def generate_table_rst():
         table with rows of each property and columns of each format
 
     """
-    fmt_names, has_load, guaranteed, ifpresent, has_dump, required, optional = \
+    fmt_names, has_load, guaranteed, ifpresent, has_dump, required, optional = (
         _generate_all_format_parser()
+    )
 
     # Sort rows by number of times the attribute is used in decreasing order.
-    rows = sorted(
-        attr_name for attr_name in dir(iodata.IOData)
-        if not attr_name.startswith('_'))
+    rows = sorted(attr_name for attr_name in dir(iodata.IOData) if not attr_name.startswith("_"))
 
     # Order columns based on number of guaranteed and ifpresent entries for each format.
     # Also keep track of which format has a load_one and dump_one function.
@@ -106,10 +104,9 @@ def generate_table_rst():
     # Construct header with cross-referencing columns.
     header = ["Attribute"]
     for fmt_name in cols:
-        col_name = f':ref:`{fmt_name} <format_{fmt_name}>`'
+        col_name = f":ref:`{fmt_name} <format_{fmt_name}>`"
         col_name += ": {}{}".format(
-            "L" if fmt_name in has_load else "",
-            "D" if fmt_name in has_dump else ""
+            "L" if fmt_name in has_load else "", "D" if fmt_name in has_dump else ""
         )
         header.append(col_name)
     table = [header]

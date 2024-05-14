@@ -25,22 +25,21 @@ http://manual.gromacs.org/current/reference-manual/file-formats.html#gro
 
 """
 
-
 from typing import Tuple, Iterator
 
 import numpy as np
 
-from ..docstrings import (document_load_one, document_load_many)
+from ..docstrings import document_load_one, document_load_many
 from ..utils import nanometer, picosecond, LineIterator
 
 
 __all__ = []
 
 
-PATTERNS = ['*.gro']
+PATTERNS = ["*.gro"]
 
 
-@document_load_one('GRO', ['atcoords', 'atffparams', 'cellvecs', 'extra', 'title'])
+@document_load_one("GRO", ["atcoords", "atffparams", "cellvecs", "extra", "title"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     while True:
@@ -56,27 +55,20 @@ def load_one(lit: LineIterator) -> dict:
         atcoords = data[5]
         velocities = data[6]
         cellvecs = data[7]
-        atffparams = {
-            'attypes': attypes,
-            'resnames': resnames,
-            'resnums': resnums
-        }
-        extra = {
-            'time': time,
-            'velocities': velocities
-        }
+        atffparams = {"attypes": attypes, "resnames": resnames, "resnums": resnums}
+        extra = {"time": time, "velocities": velocities}
         result = {
-            'atcoords': atcoords,
-            'atffparams': atffparams,
-            'cellvecs': cellvecs,
-            'extra': extra,
-            'title': title,
+            "atcoords": atcoords,
+            "atffparams": atffparams,
+            "cellvecs": cellvecs,
+            "extra": extra,
+            "title": title,
         }
         return result
-    lit.error('Gromacs gro file could not be read.')
+    lit.error("Gromacs gro file could not be read.")
 
 
-@document_load_many('GRO', ['atcoords', 'atffparams', 'cellvecs', 'extra', 'title'])
+@document_load_many("GRO", ["atcoords", "atffparams", "cellvecs", "extra", "title"])
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # gro files can be used as trajectory by simply concatenating files,
@@ -93,10 +85,10 @@ def _helper_read_frame(lit: LineIterator) -> Tuple:
     # Read the first line, get the title and try to get the time.
     # Time field is optional.
     line = next(lit)
-    title = line.split(',')[0] if 't=' in line else line[:-1]
+    title = line.split(",")[0] if "t=" in line else line[:-1]
     time = 0.0
-    if 't=' in line:
-        time = float(line.split('t=')[1]) * picosecond
+    if "t=" in line:
+        time = float(line.split("t=")[1]) * picosecond
     # Read the second line for number of atoms.
     natoms = int(next(lit))
     # Read the atom lines

@@ -48,15 +48,15 @@ def test_load_molden_li2_orca():
     assert "ORCA" in record[0].message.args[0]
 
     # Checkt title
-    assert mol.title == 'Molden file created by orca_2mkl for BaseName=li2'
+    assert mol.title == "Molden file created by orca_2mkl for BaseName=li2"
 
     # Check geometry
     assert_equal(mol.atnums, [3, 3])
     assert_allclose(mol.mo.occsa[:4], [1, 1, 1, 0])
     assert_allclose(mol.mo.occsb[:4], [1, 1, 0, 0])
-    assert_equal(mol.mo.irreps, ['1a'] * mol.mo.norb)
-    assert_equal(mol.mo.irrepsa, ['1a'] * mol.mo.norba)
-    assert_equal(mol.mo.irrepsb, ['1a'] * mol.mo.norbb)
+    assert_equal(mol.mo.irreps, ["1a"] * mol.mo.norb)
+    assert_equal(mol.mo.irrepsa, ["1a"] * mol.mo.norba)
+    assert_equal(mol.mo.irrepsb, ["1a"] * mol.mo.norbb)
     assert_allclose(mol.atcoords[1], [5.2912331750, 0.0, 0.0])
 
     # Check normalization
@@ -67,7 +67,7 @@ def test_load_molden_li2_orca():
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
     expected_charges = np.array([0.5, 0.5])
-    assert_allclose(charges, expected_charges, atol=1.e-5)
+    assert_allclose(charges, expected_charges, atol=1.0e-5)
 
 
 def test_load_molden_li2_orca_huge_threshold():
@@ -86,12 +86,12 @@ def test_load_molden_h2o_orca():
     assert "ORCA" in record[0].message.args[0]
 
     # Checkt title
-    assert mol.title == 'Molden file created by orca_2mkl for BaseName=h2o'
+    assert mol.title == "Molden file created by orca_2mkl for BaseName=h2o"
 
     # Check geometry
     assert_equal(mol.atnums, [8, 1, 1])
     assert_allclose(mol.mo.occs[:6], [2, 2, 2, 2, 2, 0])
-    assert_equal(mol.mo.irreps, ['1a'] * mol.mo.norb)
+    assert_equal(mol.mo.irreps, ["1a"] * mol.mo.norb)
     assert_allclose(mol.atcoords[2], [0.0, -0.1808833432, 1.9123825806])
 
     # Check normalization
@@ -101,7 +101,7 @@ def test_load_molden_h2o_orca():
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
     expected_charges = np.array([-0.816308, 0.408154, 0.408154])
-    assert_allclose(charges, expected_charges, atol=1.e-5)
+    assert_allclose(charges, expected_charges, atol=1.0e-5)
 
 
 def test_load_molden_nh3_molden_pure():
@@ -122,18 +122,18 @@ def test_load_molden_nh3_molden_pure():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_low_nh3_molden_cart():
     with as_file(files("iodata.test.data").joinpath("nh3_molden_cart.molden")) as fn_molden:
         lit = LineIterator(str(fn_molden))
         data = _load_low(lit)
-    obasis = data['obasis']
+    obasis = data["obasis"]
     assert obasis.nbasis == 52
     assert len(obasis.shells) == 24
     for shell in obasis.shells:
-        assert shell.kinds == ['c']
+        assert shell.kinds == ["c"]
         assert shell.ncon == 1
     for ishell in [0, 1, 2, 3, 9, 10, 11, 14, 15, 16, 19, 20, 21]:
         shell = obasis.shells[ishell]
@@ -155,40 +155,91 @@ def test_load_molden_low_nh3_molden_cart():
 
     shell0 = obasis.shells[0]
     assert shell0.nprim == 8
-    assert shell0.exponents.shape == (8, )
-    assert_allclose(shell0.exponents[4], 0.2856000000E+02)
+    assert shell0.exponents.shape == (8,)
+    assert_allclose(shell0.exponents[4], 0.2856000000e02)
     assert shell0.coeffs.shape == (8, 1)
-    assert_allclose(shell0.coeffs[4, 0], 0.2785706633E+00)
+    assert_allclose(shell0.coeffs[4, 0], 0.2785706633e00)
     shell7 = obasis.shells[7]
     assert shell7.nprim == 1
-    assert shell7.exponents.shape == (1, )
-    assert_allclose(shell7.exponents, [0.8170000000E+00])
+    assert shell7.exponents.shape == (1,)
+    assert_allclose(shell7.exponents, [0.8170000000e00])
     assert_allclose(shell7.coeffs, [[1.0]])
     assert shell7.coeffs.shape == (1, 1)
     shell19 = obasis.shells[19]
     assert shell19.nprim == 3
-    assert shell19.exponents.shape == (3, )
-    assert_allclose(shell19.exponents, [
-        0.1301000000E+02, 0.1962000000E+01, 0.4446000000E+00])
-    assert_allclose(shell19.coeffs, [
-        [0.3349872639E-01], [0.2348008012E+00], [0.8136829579E+00]])
+    assert shell19.exponents.shape == (3,)
+    assert_allclose(shell19.exponents, [0.1301000000e02, 0.1962000000e01, 0.4446000000e00])
+    assert_allclose(shell19.coeffs, [[0.3349872639e-01], [0.2348008012e00], [0.8136829579e00]])
     assert shell19.coeffs.shape == (3, 1)
 
-    assert data['mo'].coeffs.shape == (52, 52)
-    assert_allclose(data['mo'].coeffs[:2, 0], [1.002730, 0.005420])
-    assert_allclose(data['mo'].coeffs[-2:, 1], [0.003310, -0.011620])
-    assert_allclose(data['mo'].coeffs[-4:-2, -1], [-0.116400, 0.098220])
+    assert data["mo"].coeffs.shape == (52, 52)
+    assert_allclose(data["mo"].coeffs[:2, 0], [1.002730, 0.005420])
+    assert_allclose(data["mo"].coeffs[-2:, 1], [0.003310, -0.011620])
+    assert_allclose(data["mo"].coeffs[-4:-2, -1], [-0.116400, 0.098220])
 
     permutation, signs = convert_conventions(obasis, OVERLAP_CONVENTIONS)
-    assert_equal(permutation, [
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 14, 18, 15, 19,
-        22, 23, 20, 24, 21, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
-        38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51])
+    assert_equal(
+        permutation,
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            16,
+            17,
+            14,
+            18,
+            15,
+            19,
+            22,
+            23,
+            20,
+            24,
+            21,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+        ],
+    )
     assert_equal(signs, [1] * 52)
 
     # Check normalization
-    olp = compute_overlap(obasis, data['atcoords'])
-    check_orthonormal(data['mo'].coeffs, olp, atol=1e-4)  # low precision in file
+    olp = compute_overlap(obasis, data["atcoords"])
+    check_orthonormal(data["mo"].coeffs, olp, atol=1e-4)  # low precision in file
 
 
 def test_load_molden_nh3_molden_cart():
@@ -205,23 +256,24 @@ def test_load_molden_nh3_molden_cart():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.3138, -0.4300, -0.0667, 0.1829])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_cfour():
     # The file tested here is created with CFOUR 2.1.
     file_list = [
-        'h_sonly_sph_cfour.molden',
-        'h_ponly_sph_cfour.molden',
-        'h_donly_sph_cfour.molden',
-        'h_fonly_sph_cfour.molden',
-        'h_gonly_sph_cfour.molden',
-        'h_sonly_cart_cfour.molden',
-        'h_ponly_cart_cfour.molden',
-        'h_donly_cart_cfour.molden',
-        'h_fonly_cart_cfour.molden',
-        'h_gonly_cart_cfour.molden',
-        'h2o_ccpvdz_cfour.molden']
+        "h_sonly_sph_cfour.molden",
+        "h_ponly_sph_cfour.molden",
+        "h_donly_sph_cfour.molden",
+        "h_fonly_sph_cfour.molden",
+        "h_gonly_sph_cfour.molden",
+        "h_sonly_cart_cfour.molden",
+        "h_ponly_cart_cfour.molden",
+        "h_donly_cart_cfour.molden",
+        "h_fonly_cart_cfour.molden",
+        "h_gonly_cart_cfour.molden",
+        "h2o_ccpvdz_cfour.molden",
+    ]
 
     for i in file_list:
         with as_file(files("iodata.test.data").joinpath(i)) as fn_molden:
@@ -250,7 +302,7 @@ def test_load_molden_nh3_orca():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_nh3_psi4():
@@ -270,7 +322,7 @@ def test_load_molden_nh3_psi4():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_nh3_psi4_1():
@@ -290,7 +342,7 @@ def test_load_molden_nh3_psi4_1():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 @pytest.mark.parametrize("case", ["zn", "mn", "cuh"])
@@ -367,7 +419,7 @@ def test_load_molden_h2o_6_31g_d_cart_psi4():
     # Comparison with numbers from PSI4 output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([-0.86514, 0.43227, 0.43288])
-    assert_allclose(charges, molden_charges, atol=1.e-5)
+    assert_allclose(charges, molden_charges, atol=1.0e-5)
 
 
 def test_load_molden_nh3_aug_cc_pvqz_cart_psi4():
@@ -388,7 +440,7 @@ def test_load_molden_nh3_aug_cc_pvqz_cart_psi4():
     # Comparison with numbers from PSI4 output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([-0.74507, 0.35743, 0.24197, 0.14567])
-    assert_allclose(charges, molden_charges, atol=1.e-5)
+    assert_allclose(charges, molden_charges, atol=1.0e-5)
 
 
 def test_load_molden_nh3_molpro2012():
@@ -404,7 +456,7 @@ def test_load_molden_nh3_molpro2012():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_neon_turbomole():
@@ -443,7 +495,7 @@ def test_load_molden_nh3_turbomole():
     # Cartesian functions.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.03801, -0.27428, 0.01206, 0.22421])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_f():
@@ -460,22 +512,25 @@ def test_load_molden_f():
 
     assert_allclose(mol.mo.occsa[:6], [1, 1, 1, 1, 1, 0])
     assert_allclose(mol.mo.occsb[:6], [1, 1, 1, 1, 0, 0])
-    assert_equal(mol.mo.irrepsa[:6], ['Ag', 'Ag', 'B3u', 'B2u', 'B1u', 'B3u'])
-    assert_equal(mol.mo.irrepsb[:6], ['Ag', 'Ag', 'B3u', 'B2u', 'B1u', 'B3u'])
+    assert_equal(mol.mo.irrepsa[:6], ["Ag", "Ag", "B3u", "B2u", "B1u", "B3u"])
+    assert_equal(mol.mo.irrepsb[:6], ["Ag", "Ag", "B3u", "B2u", "B1u", "B3u"])
 
 
-@pytest.mark.parametrize("fn,match", [
-    ("h2o.molden.input", "ORCA"),
-    ("li2.molden.input", "ORCA"),
-    ("F.molden", "PSI4"),
-    ("nh3_molden_pure.molden", None),
-    ("nh3_molden_cart.molden", None),
-    ("he2_ghost_psi4_1.0.molden", None),
-    ("psi4_cuh_cc_pvqz_pure.molden", "unnormalized"),
-    ("hf_sto3g.fchk", None),
-    ("h_sto3g.fchk", None),
-    ("ch3_rohf_sto3g_g03.fchk", None),
-])
+@pytest.mark.parametrize(
+    "fn,match",
+    [
+        ("h2o.molden.input", "ORCA"),
+        ("li2.molden.input", "ORCA"),
+        ("F.molden", "PSI4"),
+        ("nh3_molden_pure.molden", None),
+        ("nh3_molden_cart.molden", None),
+        ("he2_ghost_psi4_1.0.molden", None),
+        ("psi4_cuh_cc_pvqz_pure.molden", "unnormalized"),
+        ("hf_sto3g.fchk", None),
+        ("h_sto3g.fchk", None),
+        ("ch3_rohf_sto3g_g03.fchk", None),
+    ],
+)
 def test_load_dump_consistency(tmpdir, fn, match):
     with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
         if match is None:
@@ -483,16 +538,16 @@ def test_load_dump_consistency(tmpdir, fn, match):
         else:
             with pytest.warns(FileFormatWarning, match=match):
                 mol1 = load_one(str(file_name))
-    fn_tmp = os.path.join(tmpdir, 'foo.bar')
-    dump_one(mol1, fn_tmp, fmt='molden')
-    mol2 = load_one(fn_tmp, fmt='molden')
+    fn_tmp = os.path.join(tmpdir, "foo.bar")
+    dump_one(mol1, fn_tmp, fmt="molden")
+    mol2 = load_one(fn_tmp, fmt="molden")
     # Remove and or fix some things in mol1 to make it compatible with what
     # can be read from a Molden file:
     # - Change basis of mol1 to segmented.
     mol1.obasis = mol1.obasis.get_segmented()
     # - Set default irreps in mol1, if not present.
     if mol1.mo.irreps is None:
-        mol1.mo = attr.evolve(mol1.mo, irreps=['1a'] * mol1.mo.norb)
+        mol1.mo = attr.evolve(mol1.mo, irreps=["1a"] * mol1.mo.norb)
     # - Remove the one_rdms from mol1.
     mol1.one_rdms = {}
     compare_mols(mol1, mol2)
