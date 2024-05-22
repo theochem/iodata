@@ -33,9 +33,11 @@ def _document_load(
     fmt: str,
     guaranteed: list[str],
     ifpresent: list[str] = None,
-    kwdocs: dict[str, str] = {},
+    kwdocs: dict[str, str] = None,
     notes: str = None,
 ):
+    if kwdocs is None:
+        kwdocs = {}
     ifpresent = ifpresent or []
 
     def decorator(func):
@@ -91,7 +93,7 @@ def document_load_one(
     fmt: str,
     guaranteed: list[str],
     ifpresent: list[str] = None,
-    kwdocs: dict[str, str] = {},
+    kwdocs: dict[str, str] = None,
     notes: str = None,
 ):
     """Decorate a load_one function to generate a docstring.
@@ -117,6 +119,8 @@ def document_load_one(
         A decorator function.
 
     """
+    if kwdocs is None:
+        kwdocs = {}
     return _document_load(LOAD_ONE_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 
@@ -146,7 +150,7 @@ def document_load_many(
     fmt: str,
     guaranteed: list[str],
     ifpresent: list[str] = None,
-    kwdocs: dict[str, str] = {},
+    kwdocs: dict[str, str] = None,
     notes: str = None,
 ):
     """Decorate a load_many function to generate a docstring.
@@ -172,6 +176,8 @@ def document_load_many(
         A decorator function.
 
     """
+    if kwdocs is None:
+        kwdocs = {}
     return _document_load(LOAD_MANY_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 
@@ -180,9 +186,11 @@ def _document_dump(
     fmt: str,
     required: list[str],
     optional: list[str] = None,
-    kwdocs: dict[str, str] = {},
+    kwdocs: dict[str, str] = None,
     notes: str = None,
 ):
+    if kwdocs is None:
+        kwdocs = {}
     optional = optional or []
 
     def decorator(func):
@@ -236,7 +244,7 @@ def document_dump_one(
     fmt: str,
     required: list[str],
     optional: list[str] = None,
-    kwdocs: dict[str, str] = {},
+    kwdocs: dict[str, str] = None,
     notes: str = None,
 ):
     """Decorate a dump_one function to generate a docstring.
@@ -262,6 +270,8 @@ def document_dump_one(
         A decorator function.
 
     """
+    if kwdocs is None:
+        kwdocs = {}
     return _document_dump(DUMP_ONE_DOC_TEMPLATE, fmt, required, optional, kwdocs, notes)
 
 
@@ -288,7 +298,7 @@ def document_dump_many(
     fmt: str,
     required: list[str],
     optional: list[str] = None,
-    kwdocs: dict[str, str] = {},
+    kwdocs: dict[str, str] = None,
     notes: str = None,
 ):
     """Decorate a dump_many function to generate a docstring.
@@ -314,6 +324,8 @@ def document_dump_many(
         A decorator function.
 
     """
+    if kwdocs is None:
+        kwdocs = {}
     return _document_dump(DUMP_MANY_DOC_TEMPLATE, fmt, required, optional, kwdocs, notes)
 
 
@@ -322,9 +334,11 @@ def _document_write(
     fmt: str,
     required: list[str],
     optional: list[str] = None,
-    kwdocs: dict[str, str] = {},
+    kwdocs: dict[str, str] = None,
     notes: str = None,
 ):
+    if kwdocs is None:
+        kwdocs = {}
     optional = optional or []
 
     def decorator(func):
@@ -381,7 +395,7 @@ def document_write_input(
     fmt: str,
     required: list[str],
     optional: list[str] = None,
-    kwdocs: dict[str, str] = {},
+    kwdocs: dict[str, str] = None,
     notes: str = None,
 ):
     """Decorate a write_input function to generate a docstring.
@@ -407,4 +421,6 @@ def document_write_input(
         A decorator function.
 
     """
+    if kwdocs is None:
+        kwdocs = {}
     return _document_write(WRITE_INPUT_DOC_TEMPLATE, fmt, required, optional, kwdocs, notes)

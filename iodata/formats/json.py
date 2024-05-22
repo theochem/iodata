@@ -648,7 +648,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
             f"{lit.filename}: QCSchema files should have a `schema_name` key."
             "Attempting to determine schema type...",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         # Geometry is required in any molecule schema
         if "geometry" in result:
@@ -673,7 +673,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
             f"{lit.filename}: QCSchema files should have a `schema_version` key."
             "Attempting to load without version number.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
 
     if schema_name == "qcschema_molecule":
@@ -763,7 +763,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
             warn(
                 f"{lit.filename}: QCSchema files should have a '{key}' key.",
                 FileFormatWarning,
-                2,
+                stacklevel=2,
             )
     for key in topology_keys:
         if key not in mol:
@@ -789,7 +789,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
             "Some QCSchema writers omit this key for default value 0.0,"
             "Ensure this value is correct.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         formal_charge = 0.0
     else:
@@ -804,7 +804,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
             "Some QCSchema writers omit this key for default value 1,"
             "Ensure this value is correct.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         topology_dict["spinpol"] = 0
     else:
@@ -827,7 +827,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
             "{}: Both `masses` and `mass_numbers` given. "
             "Both values will be written to `extra` dict.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         extra_dict["mass_numbers"] = np.array(mol["mass_numbers"])
         extra_dict["masses"] = np.array(mol["masses"])
@@ -940,7 +940,7 @@ def _version_check(result: dict, max_version: float, schema_name: str, lit: Line
             f"{lit.filename}: Unknown {schema_name} version {version}, "
             "loading may produce invalid results",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
     return version
 
@@ -1083,7 +1083,7 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
             warn(
                 f"{lit.filename}: QCSchema files should have a '{key}' key.",
                 FileFormatWarning,
-                2,
+                stacklevel=2,
             )
     for key in input_keys:
         if key not in result:
@@ -1215,14 +1215,17 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
     model_dict["lot"] = model["method"]
     # QCEngineRecords doesn't give an empty string for basis-free methods, omits req'd key instead
     if "basis" not in model:
-        warn(f"{lit.filename}: Model `basis` key should be given. Assuming basis-free method.")
+        warn(
+            f"{lit.filename}: Model `basis` key should be given. Assuming basis-free method.",
+            stacklevel=2,
+        )
     elif isinstance(model["basis"], str):
         if model["basis"] == "":
             warn(
                 f"{lit.filename}: QCSchema `basis` could not be read and will be omitted."
                 "Unless model is for a basis-free method, check input file.",
                 FileFormatWarning,
-                2,
+                stacklevel=2,
             )
         else:
             model_dict["obasis_name"] = model["basis"]
@@ -1256,13 +1259,17 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
         warn(
             "{}: Protocols `wavefunction` key not specified, no properties will be kept.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         wavefunction = "none"
     else:
         wavefunction = protocols["wavefunction"]
     if "stdout" not in protocols:
-        warn("{}: Protocols `stdout` key not specified, stdout will be kept.", FileFormatWarning, 2)
+        warn(
+            "{}: Protocols `stdout` key not specified, stdout will be kept.",
+            FileFormatWarning,
+            stacklevel=2,
+        )
         keep_stdout = True
     else:
         keep_stdout = protocols["stdout"]
@@ -1338,7 +1345,7 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
             warn(
                 f"{lit.filename}: QCSchema files should have a '{key}' key.",
                 FileFormatWarning,
-                2,
+                stacklevel=2,
             )
     for key in output_keys:
         if key not in result:
@@ -1494,7 +1501,7 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
             "`charge` and `spinpol` should be given to write qcschema_molecule file:"
             "QCSchema defaults to charge = 0 and multiplicity = 1 if no values given.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
     if data.charge is not None:
         molecule_dict["molecular_charge"] = data.charge
@@ -1691,7 +1698,7 @@ def _dump_qcschema_output(data: IOData) -> dict:
             "No basis name given. QCSchema assumes this signifies a basis-free method; to"
             "avoid this warning, specify `obasis_name` as an empty string.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
     if "basis" in data.extra["input"]["model"]:
         raise NotImplementedError("qcschema_basis is not yet supported in IOData.")

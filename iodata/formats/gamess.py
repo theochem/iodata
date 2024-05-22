@@ -48,7 +48,7 @@ def _read_data(lit: LineIterator) -> tuple:
 
 def _read_coordinates(lit: LineIterator, result: dict) -> tuple:
     """Extract ``numbers`` and ``coordinates`` from the punch file."""
-    for i in range(2):
+    for _ in range(2):
         next(lit)
     natom = len(result["symbols"])
     # if the data are already read before, just overwrite them

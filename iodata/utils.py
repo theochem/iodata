@@ -115,7 +115,7 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        warnings.warn(f"{self.filename}:{self.lineno} {msg}", FileFormatWarning, 2)
+        warnings.warn(f"{self.filename}:{self.lineno} {msg}", FileFormatWarning, stacklevel=2)
 
     def back(self, line):
         """Go one line back and decrease the lineno attribute by one."""

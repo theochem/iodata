@@ -264,23 +264,23 @@ def test_generalized_empty():
     assert mo.nbasis is None
     assert mo.norb is None
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb
 
 
 def test_generalized_occs():
@@ -291,23 +291,23 @@ def test_generalized_occs():
     assert mo.nbasis is None
     assert mo.norb == 7
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb
 
 
 def test_generalized_coeffs():
@@ -319,23 +319,23 @@ def test_generalized_coeffs():
     assert mo.nbasis == 5  # 5 *spatial* basis functions!
     assert mo.norb == 7
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb
 
 
 def test_generalized_energies():
@@ -347,23 +347,23 @@ def test_generalized_energies():
     assert mo.nbasis is None
     assert mo.norb == 7
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb
 
 
 def test_generalized_irreps():
@@ -375,20 +375,20 @@ def test_generalized_irreps():
     assert mo.nbasis is None
     assert mo.norb == 7
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb

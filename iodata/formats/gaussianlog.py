@@ -124,7 +124,7 @@ def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
     """
     result = np.zeros((nbasis, nbasis, nbasis, nbasis))
     # Skip first six lines
-    for i in range(6):
+    for _i in range(6):
         next(lit)
     # Start reading elements until a line is encountered that does not start
     # with ' I='
