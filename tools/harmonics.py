@@ -19,7 +19,6 @@
 # --
 """Build transformation matrices from Cartesian to pure basis functions."""
 
-
 import argparse
 
 import numpy as np
@@ -190,9 +189,7 @@ def get_cart_l2_norm(alpha, nx, ny, nz):
 def get_pure_l2_norm(alpha, l):
     """Compute the norm of a pure gaussian primitive."""
     return sp.sqrt(
-        int(fac2(2 * l - 1))
-        / (2 * alpha / sp.pi) ** sp.Rational(3, 2)
-        / (4 * alpha) ** l
+        int(fac2(2 * l - 1)) / (2 * alpha / sp.pi) ** sp.Rational(3, 2) / (4 * alpha) ** l
     )
 
 
@@ -215,6 +212,7 @@ def include_l2_norm(tfs):
 
 def print_latex(tfs):
     """Print transformation matrices in Latex code."""
+
     def iter_pure_labels(l):
         """Iterate over labels for pure functions."""
         yield "C_{{{}0}}".format(l)
@@ -257,6 +255,7 @@ def print_latex(tfs):
 
 def print_python(tfs):
     """Print transformation matrices in Python code."""
+
     def tostr(v):
         """Format an sympy expression as a float with sufficient digits."""
         s = repr(v.evalf(17))
@@ -269,9 +268,7 @@ def print_python(tfs):
         print("tf{} = np.array([".format(l))
         for ipure in range(npure):
             print(
-                "    [{}],".format(
-                    ", ".join([tostr(tf[ipure, icart]) for icart in range(ncart)])
-                )
+                "    [{}],".format(", ".join([tostr(tf[ipure, icart]) for icart in range(ncart)]))
             )
         print("])")
     print("tfs = [{}]".format(", ".join("tf{}".format(l) for l in range(len(tfs)))))
@@ -285,31 +282,24 @@ def test_manual():
     assert rrsh[1] == z
     assert rrsh[2] == x
     assert rrsh[3] == y
-    assert rrsh[4].expand() == (sp.Rational(3, 2) * z ** 2 - r2 / 2).expand()
+    assert rrsh[4].expand() == (sp.Rational(3, 2) * z**2 - r2 / 2).expand()
     assert rrsh[5].expand() == (sp.sqrt(3) * x * z)
     assert rrsh[6].expand() == (sp.sqrt(3) * y * z)
-    assert rrsh[7].expand() == (sp.sqrt(3) / 2 * (x ** 2 - y ** 2)).expand()
+    assert rrsh[7].expand() == (sp.sqrt(3) / 2 * (x**2 - y**2)).expand()
     assert rrsh[8].expand() == (sp.sqrt(3) * x * y)
-    assert (
-        rrsh[9].expand()
-        == (sp.Rational(5, 2) * z ** 3 - sp.Rational(3, 2) * r2 * z).expand()
-    )
+    assert rrsh[9].expand() == (sp.Rational(5, 2) * z**3 - sp.Rational(3, 2) * r2 * z).expand()
     assert (
         rrsh[10].expand()
-        == (
-            x / sp.sqrt(6) * (sp.Rational(15, 2) * z ** 2 - sp.Rational(3, 2) * r2)
-        ).expand()
+        == (x / sp.sqrt(6) * (sp.Rational(15, 2) * z**2 - sp.Rational(3, 2) * r2)).expand()
     )
     assert (
         rrsh[11].expand()
-        == (
-            y / sp.sqrt(6) * (sp.Rational(15, 2) * z ** 2 - sp.Rational(3, 2) * r2)
-        ).expand()
+        == (y / sp.sqrt(6) * (sp.Rational(15, 2) * z**2 - sp.Rational(3, 2) * r2)).expand()
     )
-    assert rrsh[12].expand() == (sp.sqrt(15) * z / 2 * (x ** 2 - y ** 2)).expand()
+    assert rrsh[12].expand() == (sp.sqrt(15) * z / 2 * (x**2 - y**2)).expand()
     assert rrsh[13].expand() == (sp.sqrt(15) * x * y * z).expand()
-    assert rrsh[14].expand() == (sp.sqrt(10) / 4 * (x ** 3 - 3 * x * y ** 2)).expand()
-    assert rrsh[15].expand() == (sp.sqrt(10) / 4 * (3 * x ** 2 * y - y ** 3)).expand()
+    assert rrsh[14].expand() == (sp.sqrt(10) / 4 * (x**3 - 3 * x * y**2)).expand()
+    assert rrsh[15].expand() == (sp.sqrt(10) / 4 * (3 * x**2 * y - y**3)).expand()
 
 
 def test_library():
@@ -337,7 +327,7 @@ def test_library():
         # Undo the Condon-Shortley phase
         ref *= (-sp.Integer(1)) ** abs(m)
         # Convert to regular solid harmonics
-        ref = (sp.sqrt(4 * sp.pi / (2 * l + 1)) * ref * r ** l).expand()
+        ref = (sp.sqrt(4 * sp.pi / (2 * l + 1)) * ref * r**l).expand()
         # From spherical to Cartesian coordinates
         ref = ref.subs(sp.cos(phi), x / (r * sp.sin(theta)))
         ref = ref.subs(sp.sin(phi), y / (r * sp.sin(theta)))

@@ -36,12 +36,12 @@ def load_log_helper(fn_log):
 
 def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
-    mol = load_log_helper('water_sto3g_hf_g03.log')
+    mol = load_log_helper("water_sto3g_hf_g03.log")
 
-    olp = mol.one_ints['olp']
-    kin_ao = mol.one_ints['kin_ao']
-    na_ao = mol.one_ints['na_ao']
-    er_ao = mol.two_ints['er_ao']
+    olp = mol.one_ints["olp"]
+    kin_ao = mol.one_ints["kin_ao"]
+    na_ao = mol.one_ints["na_ao"]
+    er_ao = mol.two_ints["er_ao"]
 
     assert_equal(olp.shape, (7, 7))
     assert_equal(kin_ao.shape, (7, 7))
@@ -71,12 +71,12 @@ def test_load_operators_water_sto3g_hf_g03():
 
 def test_load_operators_water_ccpvdz_pure_hf_g03():
     eps = 1e-5
-    mol = load_log_helper('water_ccpvdz_pure_hf_g03.log')
+    mol = load_log_helper("water_ccpvdz_pure_hf_g03.log")
 
-    olp = mol.one_ints['olp']
-    kin_ao = mol.one_ints['kin_ao']
-    na_ao = mol.one_ints['na_ao']
-    er_ao = mol.two_ints['er_ao']
+    olp = mol.one_ints["olp"]
+    kin_ao = mol.one_ints["kin_ao"]
+    na_ao = mol.one_ints["na_ao"]
+    er_ao = mol.two_ints["er_ao"]
 
     assert_equal(olp.shape, (24, 24))
     assert_equal(kin_ao.shape, (24, 24))

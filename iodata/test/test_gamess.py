@@ -45,15 +45,15 @@ def test_load_one_gamess_punch():
     assert_allclose(data.atcoords[-1, 0] / angstrom, 3.8608437748)
     assert_allclose(data.energy, -959.9675629527)
     assert_equal(data.atgradient.shape, (N, 3))
-    assert data.atgradient[0, 1] - 1.5314677838E-05 < 1e-10
-    assert abs(data.atgradient[3, -1] - 8.5221217336E-06) < 1e-10
-    assert abs(data.atgradient[-1, 0] - 2.1211421041E-05) < 1e-10
+    assert data.atgradient[0, 1] - 1.5314677838e-05 < 1e-10
+    assert abs(data.atgradient[3, -1] - 8.5221217336e-06) < 1e-10
+    assert abs(data.atgradient[-1, 0] - 2.1211421041e-05) < 1e-10
     assert_equal(data.athessian.shape, (3 * N, 3 * N))
     assert abs(data.athessian - data.athessian.transpose()).max() < 1e-10
-    assert abs(data.athessian[0, 0] - 2.51645239E-02) < 1e-10
-    assert abs(data.athessian[0, -1] - -1.27201108E-04) < 1e-10
-    assert abs(data.athessian[-1, 0] - -1.27201108E-04) < 1e-10
-    assert abs(data.athessian[-1, -1] - 7.34538698E-03) < 1e-10
+    assert abs(data.athessian[0, 0] - 2.51645239e-02) < 1e-10
+    assert abs(data.athessian[0, -1] - -1.27201108e-04) < 1e-10
+    assert abs(data.athessian[-1, 0] - -1.27201108e-04) < 1e-10
+    assert abs(data.athessian[-1, -1] - 7.34538698e-03) < 1e-10
     assert_equal(data.atmasses.shape, (N,))
     assert_allclose(data.atmasses[0], 34.96885)
     assert_allclose(data.atmasses[3], 1.00782)

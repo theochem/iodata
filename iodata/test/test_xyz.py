@@ -34,30 +34,33 @@ except ImportError:
 
 def test_load_water_number():
     # test xyz with atomic numbers
-    with as_file(files('iodata.test.data').joinpath('water_number.xyz')) as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("water_number.xyz")) as fn_xyz:
         mol = load_one(str(fn_xyz))
     check_water(mol)
 
 
 def test_load_water_element():
     # test xyz file with atomic symbols
-    with as_file(files('iodata.test.data').joinpath('water_element.xyz')) as fn_xyz:
+    with as_file(files("iodata.test.data").joinpath("water_element.xyz")) as fn_xyz:
         mol = load_one(str(fn_xyz))
     check_water(mol)
 
 
 def check_water(mol):
     """Test some things on a water file."""
-    assert mol.title == 'Water'
+    assert mol.title == "Water"
     assert_equal(mol.atnums, [1, 8, 1])
     # check bond length
     print(np.linalg.norm(mol.atcoords[0] - mol.atcoords[2]) / angstrom)
-    assert_allclose(np.linalg.norm(
-        mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.960, atol=1.e-5)
-    assert_allclose(np.linalg.norm(
-        mol.atcoords[2] - mol.atcoords[1]) / angstrom, 0.960, atol=1.e-5)
-    assert_allclose(np.linalg.norm(
-        mol.atcoords[0] - mol.atcoords[2]) / angstrom, 1.568, atol=1.e-3)
+    assert_allclose(
+        np.linalg.norm(mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.960, atol=1.0e-5
+    )
+    assert_allclose(
+        np.linalg.norm(mol.atcoords[2] - mol.atcoords[1]) / angstrom, 0.960, atol=1.0e-5
+    )
+    assert_allclose(
+        np.linalg.norm(mol.atcoords[0] - mol.atcoords[2]) / angstrom, 1.568, atol=1.0e-3
+    )
 
 
 FCC_ATOM_COLUMNS = DEFAULT_ATOM_COLUMNS + [
@@ -66,9 +69,14 @@ FCC_ATOM_COLUMNS = DEFAULT_ATOM_COLUMNS + [
     ("extra", "zs", (), int, int, "{:2d}".format),
     # Note that in IOData, the energy gradient is stored, which contains the
     # negative forces.
-    ("atgradient", None, (3,), float,
-     (lambda word: -float(word)),
-     (lambda value: "{:15.10f}".format(-value)))
+    (
+        "atgradient",
+        None,
+        (3,),
+        float,
+        (lambda word: -float(word)),
+        (lambda value: "{:15.10f}".format(-value)),
+    ),
 ]
 
 
@@ -93,7 +101,7 @@ def check_load_dump_consistency(tmpdir, fn, atom_columns=None):
     else:
         mol0 = load_one(str(fn))
     # write xyz file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test.xyz')
+    fn_tmp = os.path.join(tmpdir, "test.xyz")
     dump_one(mol0, fn_tmp, atom_columns=atom_columns)
     mol1 = load_one(fn_tmp, atom_columns=atom_columns)
     # check two xyz files
@@ -168,11 +176,11 @@ def test_load_dump_many_consistency(tmpdir):
     with as_file(files("iodata.test.data").joinpath("water_trajectory.xyz")) as fn_xyz:
         mols0 = list(load_many(str(fn_xyz)))
     # write xyz file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test')
-    dump_many(mols0, fn_tmp, fmt='xyz')
-    mols1 = list(load_many(fn_tmp, fmt='xyz'))
+    fn_tmp = os.path.join(tmpdir, "test")
+    dump_many(mols0, fn_tmp, fmt="xyz")
+    mols1 = list(load_many(fn_tmp, fmt="xyz"))
     assert len(mols0) == len(mols1)
     for mol0, mol1 in zip(mols0, mols1):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
-        assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+        assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)

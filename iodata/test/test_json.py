@@ -47,7 +47,7 @@ GEOMS = {
         ]
     ),
     "H2O": np.array([[0.0, 0.0, -0.1295], [0.0, -1.4942, 1.0274], [0.0, 1.4942, 1.0274]]),
-    "H2O_MP2": np.array([[0.0, 0.0, -0.1294], [0.0, -1.4941, 1.0274], [0.0, 1.4941, 1.0274]])
+    "H2O_MP2": np.array([[0.0, 0.0, -0.1294], [0.0, -1.4941, 1.0274], [0.0, 1.4941, 1.0274]]),
 }
 # These molecule examples were manually generated for testing
 # MOL_FILES: (filename, atnums, charge, spinpol, geometry)
@@ -178,7 +178,7 @@ def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
             assert len(record) == nwarn
         mol1 = json.loads(qcschema_molecule.read_bytes())
 
-    fn_tmp = os.path.join(tmpdir, 'test_qcschema_mol.json')
+    fn_tmp = os.path.join(tmpdir, "test_qcschema_mol.json")
     dump_one(mol, fn_tmp)
 
     with open(fn_tmp, "r") as mol2_in:
@@ -208,7 +208,7 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
         mol1_preproc = json.loads(qcschema_molecule.read_bytes())
     assert len(record) == 1
 
-    fn_tmp = os.path.join(tmpdir, 'test_qcschema_mol.json')
+    fn_tmp = os.path.join(tmpdir, "test_qcschema_mol.json")
     dump_one(mol, fn_tmp)
 
     with open(fn_tmp, "r") as mol2_in:
@@ -242,7 +242,7 @@ def test_ghost(tmpdir):
     with as_file(source) as qcschema_molecule:
         mol = load_one(str(qcschema_molecule))
     np.testing.assert_allclose(mol.atcorenums, [8, 1, 1, 0, 0, 0, 0, 0, 0])
-    fn_tmp = os.path.join(tmpdir, 'test_ghost.json')
+    fn_tmp = os.path.join(tmpdir, "test_ghost.json")
     dump_one(mol, fn_tmp)
     with open(fn_tmp, "r") as mol2_in:
         mol2 = json.load(mol2_in)
@@ -255,7 +255,7 @@ INPUT_FILES = [
     ("LiCl_string_STO4G_input.json", False, "B3LYP", "Def2TZVP", None, GEOMS["LiCl"]),
     ("LiCl_explicit_STO4G_input.json", True, "HF", None, None, GEOMS["LiCl"]),
     ("LiCl_STO4G_Gaussian_input.json", False, "HF", "STO-4G", "freq", GEOMS["LiCl"]),
-    ("water_mp2_input.json", False, "MP2", "cc-pVDZ", None, GEOMS["H2O_MP2"])
+    ("water_mp2_input.json", False, "MP2", "cc-pVDZ", None, GEOMS["H2O_MP2"]),
 ]
 
 
@@ -317,7 +317,7 @@ def test_inout_qcschema_input(tmpdir, filename, nwarn):
             assert len(record) == nwarn
         mol1 = json.loads(qcschema_input.read_bytes())
 
-    fn_tmp = os.path.join(tmpdir, 'test_input_mol.json')
+    fn_tmp = os.path.join(tmpdir, "test_input_mol.json")
     dump_one(mol, fn_tmp)
 
     with open(fn_tmp, "r") as mol2_in:
@@ -389,7 +389,7 @@ def test_inout_qcschema_output(tmpdir, filename):
         mol = load_one(str(qcschema_input))
         mol1 = json.loads(qcschema_input.read_bytes())
 
-    fn_tmp = os.path.join(tmpdir, 'test_input_mol.json')
+    fn_tmp = os.path.join(tmpdir, "test_input_mol.json")
     dump_one(mol, fn_tmp)
 
     with open(fn_tmp, "r") as mol2_in:

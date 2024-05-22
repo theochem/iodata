@@ -34,8 +34,13 @@ try:
 except ImportError:
     from importlib.resources import as_file, files
 
-__all__ = ['compute_mulliken_charges', 'compute_1rdm',
-           'compare_mols', 'check_orthonormal', 'load_one_warning']
+__all__ = [
+    "compute_mulliken_charges",
+    "compute_1rdm",
+    "compare_mols",
+    "check_orthonormal",
+    "load_one_warning",
+]
 
 
 def compute_1rdm(iodata):
@@ -57,8 +62,7 @@ def compute_mulliken_charges(iodata):
         basis_center.extend([shell.icenter] * shell.nbasis)
     basis_center = np.array(basis_center)
     # compute atomic populations
-    populations = np.array([np.sum(bp[basis_center == index])
-                            for index in range(iodata.natom)])
+    populations = np.array([np.sum(bp[basis_center == index]) for index in range(iodata.natom)])
     return iodata.atcorenums - np.array(populations)
 
 
@@ -78,15 +82,14 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
         A temporary directory where the truncated file is stored.
 
     """
-    fn_truncated = '%s/truncated_%i_%s' % (
-        tmpdir, nline, os.path.basename(fn_orig))
-    with open(fn_orig) as f_orig, open(fn_truncated, 'w') as f_truncated:
+    fn_truncated = "%s/truncated_%i_%s" % (tmpdir, nline, os.path.basename(fn_orig))
+    with open(fn_orig) as f_orig, open(fn_truncated, "w") as f_truncated:
         for counter, line in enumerate(f_orig):
             if counter >= nline:
                 break
             f_truncated.write(line)
         for _ in range(nadd):
-            f_truncated.write('\n')
+            f_truncated.write("\n")
     yield fn_truncated
 
 
@@ -127,9 +130,9 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
     assert_equal(mol1.mo.irreps, mol2.mo.irreps)
     # operators and density matrices
     cases = [
-        ('one_ints', ['olp', 'kin_ao', 'na_ao']),
-        ('two_ints', ['er_ao']),
-        ('one_rdms', ['scf', 'scf_spin', 'post_scf_ao', 'post_scf_spin_ao']),
+        ("one_ints", ["olp", "kin_ao", "na_ao"]),
+        ("two_ints", ["er_ao"]),
+        ("one_rdms", ["scf", "scf_spin", "post_scf_ao", "post_scf_spin_ao"]),
     ]
     for attrname, keys in cases:
         d1 = getattr(mol1, attrname)
@@ -162,9 +165,8 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
     # compute MO overlap & number of MO orbitals
     mo_overlap = np.dot(mo_coeffs.T, np.dot(ao_overlap, mo_coeffs))
     mo_count = mo_coeffs.shape[1]
-    message = 'Molecular orbitals are not orthonormal!'
-    assert_allclose(mo_overlap, np.eye(mo_count),
-                    rtol=0., atol=atol, err_msg=message)
+    message = "Molecular orbitals are not orthonormal!"
+    assert_allclose(mo_overlap, np.eye(mo_count), rtol=0.0, atol=atol, err_msg=message)
 
 
 def load_one_warning(filename: str, fmt: str = None, match: str = None, **kwargs):

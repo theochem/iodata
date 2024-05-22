@@ -18,7 +18,6 @@
 # --
 """GAMESS punch file format."""
 
-
 import numpy as np
 
 from ..docstrings import document_load_one
@@ -28,7 +27,7 @@ from ..utils import angstrom, LineIterator
 __all__ = []
 
 
-PATTERNS = ['*.dat']
+PATTERNS = ["*.dat"]
 
 
 def _read_data(lit: LineIterator) -> tuple:
@@ -99,7 +98,7 @@ def _read_hessian(lit: LineIterator, result: dict) -> np.ndarray:
             break
         line = line[5:-1]
         for j in range(len(line) // 15):
-            tmp[counter] = float(line[j * 15:(j + 1) * 15])
+            tmp[counter] = float(line[j * 15 : (j + 1) * 15])
             counter += 1
     return hessian
 
@@ -117,8 +116,10 @@ def _read_masses(lit: LineIterator, result: dict) -> np.ndarray:
     return masses
 
 
-@document_load_one("PUNCH", ['title', 'energy', 'grot', 'atgradient', 'athessian', 'atmasses',
-                             'atnums', 'atcoords'])
+@document_load_one(
+    "PUNCH",
+    ["title", "energy", "grot", "atgradient", "athessian", "atmasses", "atnums", "atcoords"],
+)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     result = {}

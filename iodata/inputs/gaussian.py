@@ -18,7 +18,6 @@
 # --
 """Gaussian Input Module."""
 
-
 from typing import TextIO
 
 from .common import populate_fields
@@ -42,18 +41,26 @@ default_template = """\
 """
 
 
-@document_write_input("GAUSSIAN", ['atnums', 'atcoords'],
-                      ['title', 'run_type', 'lot', 'obasis_name', 'spinmult', 'charge'])
+@document_write_input(
+    "GAUSSIAN",
+    ["atnums", "atcoords"],
+    ["title", "run_type", "lot", "obasis_name", "spinmult", "charge"],
+)
 def write_input(f: TextIO, data: IOData, template: str = None, **kwargs):
     """Do not edit this docstring. It will be overwritten."""
     # initialize a dictionary with fields to replace in the template
     fields = populate_fields(data)
     # set format-specific defaults
-    fields["lot"] = data.lot if data.lot is not None else 'hf'
-    fields["obasis_name"] = data.obasis_name if data.obasis_name is not None else 'sto-3g'
+    fields["lot"] = data.lot if data.lot is not None else "hf"
+    fields["obasis_name"] = data.obasis_name if data.obasis_name is not None else "sto-3g"
     # convert run type to Gaussian keywords
-    run_types = {"energy": "sp", "energy_force": "force", "opt": "opt", "scan": "scan",
-                 "freq": "freq"}
+    run_types = {
+        "energy": "sp",
+        "energy_force": "force",
+        "opt": "opt",
+        "scan": "scan",
+        "freq": "freq",
+    }
     fields["run_type"] = run_types[fields["run_type"].lower()]
     # generate geometry (in angstrom)
     geometry = []

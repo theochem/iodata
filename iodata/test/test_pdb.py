@@ -35,14 +35,14 @@ except ImportError:
 @pytest.mark.parametrize("case", ["single", "single_model"])
 def test_load_water(case):
     # test pdb of water
-    with as_file(files("iodata.test.data").joinpath(f'water_{case}.pdb')) as fn_pdb:
+    with as_file(files("iodata.test.data").joinpath(f"water_{case}.pdb")) as fn_pdb:
         mol = load_one(str(fn_pdb))
     check_water(mol)
 
 
 def test_load_water_no_end():
     # test pdb of water
-    with as_file(files("iodata.test.data").joinpath('water_single_no_end.pdb')) as fn_pdb:
+    with as_file(files("iodata.test.data").joinpath("water_single_no_end.pdb")) as fn_pdb:
         with pytest.warns(FileFormatWarning, match="The END is not found"):
             mol = load_one(str(fn_pdb))
     check_water(mol)
@@ -53,24 +53,30 @@ def check_water(mol):
     assert mol.title == "water"
     assert_equal(mol.atnums, [1, 8, 1])
     # check bond length
-    assert_allclose(np.linalg.norm(
-        mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.9599, atol=1.e-4)
-    assert_allclose(np.linalg.norm(
-        mol.atcoords[2] - mol.atcoords[1]) / angstrom, 0.9599, atol=1.e-4)
-    assert_allclose(np.linalg.norm(
-        mol.atcoords[0] - mol.atcoords[2]) / angstrom, 1.568, atol=1.e-3)
+    assert_allclose(
+        np.linalg.norm(mol.atcoords[0] - mol.atcoords[1]) / angstrom, 0.9599, atol=1.0e-4
+    )
+    assert_allclose(
+        np.linalg.norm(mol.atcoords[2] - mol.atcoords[1]) / angstrom, 0.9599, atol=1.0e-4
+    )
+    assert_allclose(
+        np.linalg.norm(mol.atcoords[0] - mol.atcoords[2]) / angstrom, 1.568, atol=1.0e-3
+    )
     assert_equal(mol.bonds[:, :2], [[0, 1], [1, 2]])
 
 
-@pytest.mark.parametrize("fn_base,should_warn", [
-    ("water_single.pdb", False),
-    ("water_single_model.pdb", False),
-    ("ch5plus.pdb", False),
-    ("2luv.pdb", True),
-    ("2bcw.pdb", False),
-])
+@pytest.mark.parametrize(
+    "fn_base,should_warn",
+    [
+        ("water_single.pdb", False),
+        ("water_single_model.pdb", False),
+        ("ch5plus.pdb", False),
+        ("2luv.pdb", True),
+        ("2bcw.pdb", False),
+    ],
+)
 def test_load_dump_consistency(fn_base, should_warn, tmpdir):
-    with as_file(files('iodata.test.data').joinpath(fn_base)) as fn_pdb:
+    with as_file(files("iodata.test.data").joinpath(fn_base)) as fn_pdb:
         if should_warn:
             with pytest.warns(FileFormatWarning) as record:
                 mol0 = load_one(str(fn_pdb))
@@ -79,21 +85,21 @@ def test_load_dump_consistency(fn_base, should_warn, tmpdir):
             mol0 = load_one(str(fn_pdb))
 
     # write pdb file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test.pdb')
+    fn_tmp = os.path.join(tmpdir, "test.pdb")
     dump_one(mol0, fn_tmp)
     mol1 = load_one(fn_tmp)
     # check two pdb files
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
-    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)
     if mol0.atffparams is not None:
-        assert_equal(mol0.atffparams.get('attypes'), mol1.atffparams.get('attypes'))
-        assert_equal(mol0.atffparams.get('restypes'), mol1.atffparams.get('restypes'))
-        assert_equal(mol0.atffparams.get('resnums'), mol1.atffparams.get('resnums'))
+        assert_equal(mol0.atffparams.get("attypes"), mol1.atffparams.get("attypes"))
+        assert_equal(mol0.atffparams.get("restypes"), mol1.atffparams.get("restypes"))
+        assert_equal(mol0.atffparams.get("resnums"), mol1.atffparams.get("resnums"))
     if mol0.extra is not None:
-        assert_equal(mol0.extra.get('occupancies'), mol1.extra.get('occupancies'))
-        assert_equal(mol0.extra.get('bfactors'), mol1.extra.get('bfactors'))
-        assert_equal(mol0.extra.get('chainids'), mol1.extra.get('chainids'))
+        assert_equal(mol0.extra.get("occupancies"), mol1.extra.get("occupancies"))
+        assert_equal(mol0.extra.get("bfactors"), mol1.extra.get("bfactors"))
+        assert_equal(mol0.extra.get("chainids"), mol1.extra.get("chainids"))
     if mol0.bonds is None:
         assert mol1.bonds is None
     else:
@@ -105,21 +111,21 @@ def test_load_dump_xyz_consistency(tmpdir):
         mol0 = load_one(str(fn_xyz))
 
     # write xyz file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test.pdb')
+    fn_tmp = os.path.join(tmpdir, "test.pdb")
     dump_one(mol0, fn_tmp)
     mol1 = load_one(fn_tmp)
     # check two molecule classes to be the same
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
-    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-2)
+    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-2)
     # check if the general restype and attype are correct
-    restypes = mol1.atffparams.get('restypes')
-    attypes = mol1.atffparams.get('attypes')
+    restypes = mol1.atffparams.get("restypes")
+    attypes = mol1.atffparams.get("attypes")
     assert restypes[0] == "XXX"
     assert attypes[0] == "H1"
     assert mol1.extra.get("chainids") is None
     # check if resnums are correct
-    resnums = mol1.atffparams.get('resnums')
+    resnums = mol1.atffparams.get("resnums")
     assert_equal(resnums[0], -1)
     # There should be no bonds
     assert mol1.bonds is None
@@ -133,21 +139,21 @@ def test_load_peptide_2luv():
     assert len(record) == 271
     assert mol.title.startswith("INTEGRIN")
     assert_equal(len(mol.atnums), 547)
-    restypes = mol.atffparams.get('restypes')
+    restypes = mol.atffparams.get("restypes")
     assert restypes[0] == "LYS"
     assert restypes[-1] == "LYS"
-    attypes = mol.atffparams.get('attypes')
+    attypes = mol.atffparams.get("attypes")
     assert attypes[0] == "N"
     assert attypes[-1] == "O"
-    resnums = mol.atffparams.get('resnums')
+    resnums = mol.atffparams.get("resnums")
     assert_equal(resnums[0], 1)
     assert_equal(resnums[-1], 35)
-    assert_allclose(mol.extra.get('occupancies'), np.ones(mol.natom))
-    assert_allclose(mol.extra.get('bfactors'), np.zeros(mol.natom))
-    assert_equal(mol.extra.get('chainids'), ['A'] * mol.natom)
+    assert_allclose(mol.extra.get("occupancies"), np.ones(mol.natom))
+    assert_allclose(mol.extra.get("bfactors"), np.zeros(mol.natom))
+    assert_equal(mol.extra.get("chainids"), ["A"] * mol.natom)
 
 
-@pytest.mark.parametrize("case", ['trajectory', 'trajectory_no_model'])
+@pytest.mark.parametrize("case", ["trajectory", "trajectory_no_model"])
 def test_load_many(case):
     with as_file(files("iodata.test.data").joinpath(f"water_{case}.pdb")) as fn_pdb:
         mols = list(load_many(str(fn_pdb)))
@@ -155,39 +161,44 @@ def test_load_many(case):
     for mol in mols:
         assert_equal(mol.atnums, [8, 1, 1])
         assert mol.atcoords.shape == (3, 3)
-        assert mol.extra.get('chainids') is None
-        assert_allclose(mol.extra.get('occupancies'), np.ones(3))
-        assert_allclose(mol.extra.get('bfactors'), np.zeros(3))
+        assert mol.extra.get("chainids") is None
+        assert_allclose(mol.extra.get("occupancies"), np.ones(3))
+        assert_allclose(mol.extra.get("bfactors"), np.zeros(3))
     assert_allclose(mols[0].atcoords[2] / angstrom, [2.864, 0.114, 3.364])
     assert_allclose(mols[2].atcoords[0] / angstrom, [-0.233, -0.790, -3.248])
     assert_allclose(mols[-1].atcoords[1] / angstrom, [-2.123, -3.355, -3.354])
 
 
-@pytest.mark.parametrize("case", ['trajectory', 'trajectory_no_model'])
+@pytest.mark.parametrize("case", ["trajectory", "trajectory_no_model"])
 def test_load_dump_many_consistency(case, tmpdir):
     with as_file(files("iodata.test.data").joinpath(f"water_{case}.pdb")) as fn_pdb:
         mols0 = list(load_many(str(fn_pdb)))
     # write pdb file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test')
-    dump_many(mols0, fn_tmp, fmt='pdb')
-    mols1 = list(load_many(fn_tmp, fmt='pdb'))
+    fn_tmp = os.path.join(tmpdir, "test")
+    dump_many(mols0, fn_tmp, fmt="pdb")
+    mols1 = list(load_many(fn_tmp, fmt="pdb"))
     assert len(mols0) == len(mols1)
     for mol0, mol1 in zip(mols0, mols1):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
-        assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+        assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)
 
 
 def test_load_2bcw():
     # test pdb with multiple chains
     with as_file(files("iodata.test.data").joinpath("2bcw.pdb")) as fn_pdb:
         mol = load_one(fn_pdb)
-    assert mol.title == """\
+    assert (
+        mol.title
+        == """\
 COORDINATES OF THE N-TERMINAL DOMAIN OF RIBOSOMAL PROTEIN L11,C-
 TERMINAL DOMAIN OF RIBOSOMAL PROTEIN L7/L12 AND A PORTION OF THE G'
 DOMAIN OF ELONGATION FACTOR G, AS FITTED INTO CRYO-EM MAP OF AN
 ESCHERICHIA COLI 70S*EF-G*GDP*FUSIDIC ACID COMPLEX"""
-    assert mol.extra["compound"] == """\
+    )
+    assert (
+        mol.extra["compound"]
+        == """\
 MOL_ID: 1;
 MOLECULE: 50S RIBOSOMAL PROTEIN L11;
 CHAIN: A;
@@ -202,14 +213,15 @@ MOLECULE: ELONGATION FACTOR G;
 CHAIN: C;
 FRAGMENT: A PORTION OF G' DOMAIN';
 SYNONYM: EF-G"""
+    )
     assert mol.natom == 191
     assert (mol.atnums == 6).all()
     assert (mol.atffparams["attypes"] == ["CA"] * mol.natom).all()
-    assert (mol.atffparams["restypes"][:3] == ['GLN', 'ILE', 'LYS']).all()
-    assert (mol.atffparams["restypes"][-4:] == ['LYS', 'ILE', 'THR', 'PRO']).all()
+    assert (mol.atffparams["restypes"][:3] == ["GLN", "ILE", "LYS"]).all()
+    assert (mol.atffparams["restypes"][-4:] == ["LYS", "ILE", "THR", "PRO"]).all()
     assert_allclose(mol.atcoords[0, 2] / angstrom, -86.956)
     assert_allclose(mol.atcoords[190, 0] / angstrom, -24.547)
-    assert_allclose(mol.extra.get('occupancies'), np.ones(mol.natom))
+    assert_allclose(mol.extra.get("occupancies"), np.ones(mol.natom))
     assert (mol.extra["chainids"] == ["A"] * 65 + ["B"] * 68 + ["C"] * 58).all()
 
 

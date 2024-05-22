@@ -26,7 +26,6 @@ Note that the second column in the geometry specification of the cube file is in
 as the effective core charges.
 """
 
-
 from typing import TextIO, Dict, Tuple
 
 import numpy as np
@@ -39,11 +38,12 @@ from ..utils import LineIterator, Cube
 __all__ = []
 
 
-PATTERNS = ['*.cube', '*.cub']
+PATTERNS = ["*.cube", "*.cub"]
 
 
-def _read_cube_header(lit: LineIterator) \
-        -> Tuple[str, np.ndarray, np.ndarray, np.ndarray, Dict[str, np.ndarray], np.ndarray]:
+def _read_cube_header(
+    lit: LineIterator,
+) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray, Dict[str, np.ndarray], np.ndarray]:
     """Load header data from a CUBE file object.
 
     Parameters
@@ -68,7 +68,7 @@ def _read_cube_header(lit: LineIterator) \
         words = line.split()
         return (
             int(words[0]),
-            np.array([float(words[1]), float(words[2]), float(words[3])], float)
+            np.array([float(words[1]), float(words[2]), float(words[3])], float),
             # all coordinates in a cube file are in atomic units
         )
 
@@ -82,14 +82,15 @@ def _read_cube_header(lit: LineIterator) \
     axes = np.array([axis0, axis1, axis2])
 
     cellvecs = axes * shape.reshape(-1, 1)
-    cube = {"origin": origin, 'axes': axes, 'shape': shape}
+    cube = {"origin": origin, "axes": axes, "shape": shape}
 
     def read_atom_line(line: str) -> Tuple[int, float, np.ndarray]:
         """Read an atomic number and coordinate from the cube file."""
         words = line.split()
         return (
-            int(words[0]), float(words[1]),
-            np.array([float(words[2]), float(words[3]), float(words[4])], float)
+            int(words[0]),
+            float(words[1]),
+            np.array([float(words[2]), float(words[3]), float(words[4])], float),
             # all coordinates in a cube file are in atomic units
         )
 
@@ -120,8 +121,8 @@ def _read_cube_data(lit: LineIterator, cube: Dict[str, np.ndarray]):
         The cube data array.
 
     """
-    cube['data'] = np.zeros(tuple(cube['shape']), float)
-    tmp = cube['data'].ravel()
+    cube["data"] = np.zeros(tuple(cube["shape"]), float)
+    tmp = cube["data"].ravel()
     counter = 0
     words = []
     while counter < tmp.size:
@@ -131,56 +132,62 @@ def _read_cube_data(lit: LineIterator, cube: Dict[str, np.ndarray]):
         counter += 1
 
 
-@document_load_one("Gaussian Cube", ['atcoords', 'atcorenums', 'atnums', 'cellvecs', 'cube'])
+@document_load_one("Gaussian Cube", ["atcoords", "atcorenums", "atnums", "cellvecs", "cube"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     title, atcoords, atnums, cellvecs, cube, atcorenums = _read_cube_header(lit)
     _read_cube_data(lit, cube)
     del cube["shape"]
     return {
-        'title': title,
-        'atcoords': atcoords,
-        'atnums': atnums,
-        'cellvecs': cellvecs,
-        'cube': Cube(**cube),
-        'atcorenums': atcorenums,
+        "title": title,
+        "atcoords": atcoords,
+        "atnums": atnums,
+        "cellvecs": cellvecs,
+        "cube": Cube(**cube),
+        "atcorenums": atcorenums,
     }
 
 
-def _write_cube_header(f: TextIO, title: str, atcoords: np.ndarray, atnums: np.ndarray,
-                       cube: Dict[str, np.ndarray], atcorenums: np.ndarray):
+def _write_cube_header(
+    f: TextIO,
+    title: str,
+    atcoords: np.ndarray,
+    atnums: np.ndarray,
+    cube: Dict[str, np.ndarray],
+    atcorenums: np.ndarray,
+):
     print(title, file=f)
-    print('OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z', file=f)
+    print("OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z", file=f)
     natom = len(atnums)
     x, y, z = cube.origin
-    print(f'{natom:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
+    print(f"{natom:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}", file=f)
     for i in range(3):
         x, y, z = cube.axes[i]
-        print(f'{cube.shape[i]:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
+        print(f"{cube.shape[i]:5d} {x: 11.6f} {y: 11.6f} {z: 11.6f}", file=f)
     for i in range(natom):
         q = atcorenums[i]
         x, y, z = atcoords[i]
-        print(f'{atnums[i]:5d} {q: 11.6f} {x: 11.6f} {y: 11.6f} {z: 11.6f}', file=f)
+        print(f"{atnums[i]:5d} {q: 11.6f} {x: 11.6f} {y: 11.6f} {z: 11.6f}", file=f)
 
 
 def _write_cube_data(f: TextIO, cube_data: np.ndarray, block_size: int):
     counter = 0
     for value in cube_data.flat:
-        f.write(f' {value: 12.5E}')
+        f.write(f" {value: 12.5E}")
         # go to next line after adding 6 values on a line
         if counter % 6 == 5:
-            f.write('\n')
+            f.write("\n")
         # go to next line after reaching the block_size & reset counter
         if block_size % 6 != 0 and counter % block_size == block_size - 1:
-            f.write('\n')
+            f.write("\n")
             counter = 0
             continue
         counter += 1
 
 
-@document_dump_one("Gaussian Cube", ['atcoords', 'atnums', 'cube'], ['title', 'atcorenums'])
+@document_dump_one("Gaussian Cube", ["atcoords", "atnums", "cube"], ["title", "atcorenums"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    title = data.title or 'Created with IOData'
+    title = data.title or "Created with IOData"
     _write_cube_header(f, title, data.atcoords, data.atnums, data.cube, data.atcorenums)
     _write_cube_data(f, data.cube.data, data.cube.shape[2])

@@ -20,7 +20,6 @@
 # pylint: disable=unused-argument,redefined-builtin
 """Generate formats.rst."""
 
-
 from gen_formats import _format_words, _print_section
 from iodata.api import INPUT_MODULES
 
@@ -54,11 +53,11 @@ def main():
     for modname, module in sorted(INPUT_MODULES.items()):
         if not hasattr(module, "write_input"):
             continue
-        lines = module.__doc__.split('\n')
+        lines = module.__doc__.split("\n")
         # add labels for cross-referencing format (e.g. in formats table)
         print(f".. _input_{modname}:")
         print()
-        _print_section('{} (``{}``)'.format(lines[0][:-1], modname), "=")
+        _print_section("{} (``{}``)".format(lines[0][:-1], modname), "=")
         print()
         for line in lines[2:]:
             print(line)
@@ -82,5 +81,5 @@ def main():
         print()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -18,7 +18,6 @@
 # --
 """Gaussian FCHK file format."""
 
-
 from fnmatch import fnmatch
 from typing import List, Tuple, Iterator, TextIO
 
@@ -35,89 +34,126 @@ from ..utils import LineIterator, amu
 __all__ = []
 
 
-PATTERNS = ['*.fchk', '*.fch']
+PATTERNS = ["*.fchk", "*.fch"]
 
 
 CONVENTIONS = {
-    (9, 'p'): HORTON2_CONVENTIONS[(9, 'p')],
-    (8, 'p'): HORTON2_CONVENTIONS[(8, 'p')],
-    (7, 'p'): HORTON2_CONVENTIONS[(7, 'p')],
-    (6, 'p'): HORTON2_CONVENTIONS[(6, 'p')],
-    (5, 'p'): HORTON2_CONVENTIONS[(5, 'p')],
-    (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
-    (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
-    (2, 'p'): HORTON2_CONVENTIONS[(2, 'p')],
-    (0, 'c'): ['1'],
-    (1, 'c'): ['x', 'y', 'z'],
-    (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-    (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-    (4, 'c'): HORTON2_CONVENTIONS[(4, 'c')][::-1],
-    (5, 'c'): HORTON2_CONVENTIONS[(5, 'c')][::-1],
-    (6, 'c'): HORTON2_CONVENTIONS[(6, 'c')][::-1],
-    (7, 'c'): HORTON2_CONVENTIONS[(7, 'c')][::-1],
-    (8, 'c'): HORTON2_CONVENTIONS[(8, 'c')][::-1],
-    (9, 'c'): HORTON2_CONVENTIONS[(9, 'c')][::-1],
+    (9, "p"): HORTON2_CONVENTIONS[(9, "p")],
+    (8, "p"): HORTON2_CONVENTIONS[(8, "p")],
+    (7, "p"): HORTON2_CONVENTIONS[(7, "p")],
+    (6, "p"): HORTON2_CONVENTIONS[(6, "p")],
+    (5, "p"): HORTON2_CONVENTIONS[(5, "p")],
+    (4, "p"): HORTON2_CONVENTIONS[(4, "p")],
+    (3, "p"): HORTON2_CONVENTIONS[(3, "p")],
+    (2, "p"): HORTON2_CONVENTIONS[(2, "p")],
+    (0, "c"): ["1"],
+    (1, "c"): ["x", "y", "z"],
+    (2, "c"): ["xx", "yy", "zz", "xy", "xz", "yz"],
+    (3, "c"): ["xxx", "yyy", "zzz", "xyy", "xxy", "xxz", "xzz", "yzz", "yyz", "xyz"],
+    (4, "c"): HORTON2_CONVENTIONS[(4, "c")][::-1],
+    (5, "c"): HORTON2_CONVENTIONS[(5, "c")][::-1],
+    (6, "c"): HORTON2_CONVENTIONS[(6, "c")][::-1],
+    (7, "c"): HORTON2_CONVENTIONS[(7, "c")][::-1],
+    (8, "c"): HORTON2_CONVENTIONS[(8, "c")][::-1],
+    (9, "c"): HORTON2_CONVENTIONS[(9, "c")][::-1],
 }
 
 
 # pylint: disable=too-many-branches,too-many-statements
 @document_load_one(
     "Gaussian Formatted Checkpoint",
-    ['atcharges', 'atcoords', 'atnums', 'atcorenums', 'lot', 'mo', 'obasis',
-     'obasis_name', 'run_type', 'title'],
-    ['energy', 'atfrozen', 'atgradient', 'athessian', 'atmasses', 'one_rdms', 'extra', 'moments'])
+    [
+        "atcharges",
+        "atcoords",
+        "atnums",
+        "atcorenums",
+        "lot",
+        "mo",
+        "obasis",
+        "obasis_name",
+        "run_type",
+        "title",
+    ],
+    ["energy", "atfrozen", "atgradient", "athessian", "atmasses", "one_rdms", "extra", "moments"],
+)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    fchk = _load_fchk_low(lit, [
-        "Number of electrons", "Number of basis functions",
-        "Number of alpha electrons", "Number of beta electrons",
-        "Atomic numbers", "Current cartesian coordinates",
-        "Real atomic weights",
-        "Shell types", "Shell to atom map", "Shell to atom map",
-        "Number of primitives per shell", "Primitive exponents",
-        "Contraction coefficients", "P(S=P) Contraction coefficients",
-        "Alpha Orbital Energies", "Alpha MO coefficients",
-        "Beta Orbital Energies", "Beta MO coefficients",
-        "Total Energy", "Nuclear charges",
-        'Total SCF Density', 'Spin SCF Density',
-        'Total MP2 Density', 'Spin MP2 Density',
-        'Total MP3 Density', 'Spin MP3 Density',
-        'Total CC Density', 'Spin CC Density',
-        'Total CI Density', 'Spin CI Density',
-        'Mulliken Charges', 'ESP Charges', 'NPA Charges',
-        'MBS Charges', 'Type 6 Charges', 'Type 7 Charges',
-        'Polarizability', 'Dipole Moment', 'Quadrupole Moment',
-        'Cartesian Gradient', 'Cartesian Force Constants', 'MicOpt',
-    ])
+    fchk = _load_fchk_low(
+        lit,
+        [
+            "Number of electrons",
+            "Number of basis functions",
+            "Number of alpha electrons",
+            "Number of beta electrons",
+            "Atomic numbers",
+            "Current cartesian coordinates",
+            "Real atomic weights",
+            "Shell types",
+            "Shell to atom map",
+            "Shell to atom map",
+            "Number of primitives per shell",
+            "Primitive exponents",
+            "Contraction coefficients",
+            "P(S=P) Contraction coefficients",
+            "Alpha Orbital Energies",
+            "Alpha MO coefficients",
+            "Beta Orbital Energies",
+            "Beta MO coefficients",
+            "Total Energy",
+            "Nuclear charges",
+            "Total SCF Density",
+            "Spin SCF Density",
+            "Total MP2 Density",
+            "Spin MP2 Density",
+            "Total MP3 Density",
+            "Spin MP3 Density",
+            "Total CC Density",
+            "Spin CC Density",
+            "Total CI Density",
+            "Spin CI Density",
+            "Mulliken Charges",
+            "ESP Charges",
+            "NPA Charges",
+            "MBS Charges",
+            "Type 6 Charges",
+            "Type 7 Charges",
+            "Polarizability",
+            "Dipole Moment",
+            "Quadrupole Moment",
+            "Cartesian Gradient",
+            "Cartesian Force Constants",
+            "MicOpt",
+        ],
+    )
 
     # A) Load a bunch of simple things
     result = {
-        'title': fchk['title'],
+        "title": fchk["title"],
         # if "Total Energy" is not present in FCHk, None is returned.
-        'energy': fchk.get('Total Energy', None),
-        'lot': fchk['lot'].lower(),
-        'obasis_name': fchk['obasis_name'].lower(),
-        'atcoords': fchk["Current cartesian coordinates"].reshape(-1, 3),
-        'atnums': fchk["Atomic numbers"],
-        'atcorenums': fchk["Nuclear charges"],
+        "energy": fchk.get("Total Energy", None),
+        "lot": fchk["lot"].lower(),
+        "obasis_name": fchk["obasis_name"].lower(),
+        "atcoords": fchk["Current cartesian coordinates"].reshape(-1, 3),
+        "atnums": fchk["Atomic numbers"],
+        "atcorenums": fchk["Nuclear charges"],
     }
 
     atmasses = fchk.get("Real atomic weights")
     if atmasses is not None:
-        result['atmasses'] = atmasses * amu
-    atgradient = fchk.get('Cartesian Gradient')
+        result["atmasses"] = atmasses * amu
+    atgradient = fchk.get("Cartesian Gradient")
     if atgradient is not None:
-        result['atgradient'] = atgradient.reshape(-1, 3)
-    athessian = fchk.get('Cartesian Force Constants')
+        result["atgradient"] = atgradient.reshape(-1, 3)
+    athessian = fchk.get("Cartesian Force Constants")
     if athessian is not None:
-        result['athessian'] = _triangle_to_dense(athessian)
+        result["athessian"] = _triangle_to_dense(athessian)
     atfrozen = fchk.get("MicOpt")
     if atfrozen is not None:
-        result['atfrozen'] = (atfrozen == -2)
-    run_types = {'SP': 'energy', 'FOpt': 'opt', 'Scan': 'scan', 'Freq': 'freq'}
-    run_type = run_types.get(fchk['command'])
+        result["atfrozen"] = atfrozen == -2
+    run_types = {"SP": "energy", "FOpt": "opt", "Scan": "scan", "Freq": "freq"}
+    run_type = run_types.get(fchk["command"])
     if run_type is not None:
-        result['run_type'] = run_type
+        result["run_type"] = run_type
 
     # B) Load the orbital basis set
     shell_types = fchk["Shell types"]
@@ -133,104 +169,113 @@ def load_one(lit: LineIterator) -> dict:
     for i, n in enumerate(nprims):
         if shell_types[i] == -1:
             # Special treatment for SP shell type
-            shells.append(Shell(
-                shell_map[i],
-                [0, 1],
-                ['c', 'c'],
-                exponents[counter:counter + n],
-                np.stack([ccoeffs_level1[counter:counter + n],
-                          ccoeffs_level2[counter:counter + n]], axis=1)
-            ))
+            shells.append(
+                Shell(
+                    shell_map[i],
+                    [0, 1],
+                    ["c", "c"],
+                    exponents[counter : counter + n],
+                    np.stack(
+                        [
+                            ccoeffs_level1[counter : counter + n],
+                            ccoeffs_level2[counter : counter + n],
+                        ],
+                        axis=1,
+                    ),
+                )
+            )
         else:
-            shells.append(Shell(
-                shell_map[i],
-                [abs(shell_types[i])],
-                ['p' if shell_types[i] < 0 else 'c'],
-                exponents[counter:counter + n],
-                ccoeffs_level1[counter:counter + n][:, np.newaxis]
-            ))
+            shells.append(
+                Shell(
+                    shell_map[i],
+                    [abs(shell_types[i])],
+                    ["p" if shell_types[i] < 0 else "c"],
+                    exponents[counter : counter + n],
+                    ccoeffs_level1[counter : counter + n][:, np.newaxis],
+                )
+            )
         counter += n
     del shell_map
     del shell_types
     del nprims
     del exponents
 
-    result['obasis'] = MolecularBasis(shells, CONVENTIONS, 'L2')
+    result["obasis"] = MolecularBasis(shells, CONVENTIONS, "L2")
     nbasis = fchk["Number of basis functions"]
 
     # C) Load density matrices
     one_rdms = {}
-    _load_dm('Total SCF Density', fchk, one_rdms, 'scf')
-    _load_dm('Spin SCF Density', fchk, one_rdms, 'scf_spin')
+    _load_dm("Total SCF Density", fchk, one_rdms, "scf")
+    _load_dm("Spin SCF Density", fchk, one_rdms, "scf_spin")
     # only one of the lots should be present, hence using the same key
-    for lot in 'MP2', 'MP3', 'CC', 'CI':
-        _load_dm('Total {} Density'.format(lot), fchk, one_rdms, 'post_scf_ao')
-        _load_dm('Spin {} Density'.format(lot), fchk, one_rdms, 'post_scf_spin_ao')
+    for lot in "MP2", "MP3", "CC", "CI":
+        _load_dm("Total {} Density".format(lot), fchk, one_rdms, "post_scf_ao")
+        _load_dm("Spin {} Density".format(lot), fchk, one_rdms, "post_scf_spin_ao")
     if one_rdms:
-        result['one_rdms'] = one_rdms
+        result["one_rdms"] = one_rdms
 
     # D) Load the wavefunction
 
     # Load orbitals
-    nalpha = fchk['Number of alpha electrons']
-    nbeta = fchk['Number of beta electrons']
+    nalpha = fchk["Number of alpha electrons"]
+    nbeta = fchk["Number of beta electrons"]
     if nalpha < 0 or nbeta < 0 or nalpha + nbeta <= 0:
-        lit.error('The number of electrons is not positive.')
+        lit.error("The number of electrons is not positive.")
     if nalpha < nbeta:
-        raise ValueError('n_alpha={0} < n_beta={1} is not valid!'.format(nalpha, nbeta))
+        raise ValueError("n_alpha={0} < n_beta={1} is not valid!".format(nalpha, nbeta))
 
-    norba = fchk['Alpha Orbital Energies'].shape[0]
-    mo_coeffs = np.copy(fchk['Alpha MO coefficients'].reshape(norba, nbasis).T)
-    mo_energies = np.copy(fchk['Alpha Orbital Energies'])
+    norba = fchk["Alpha Orbital Energies"].shape[0]
+    mo_coeffs = np.copy(fchk["Alpha MO coefficients"].reshape(norba, nbasis).T)
+    mo_energies = np.copy(fchk["Alpha Orbital Energies"])
 
-    if 'Beta Orbital Energies' in fchk:
+    if "Beta Orbital Energies" in fchk:
         # unrestricted
-        norbb = fchk['Beta Orbital Energies'].shape[0]
-        mo_coeffs_b = np.copy(fchk['Beta MO coefficients'].reshape(norbb, nbasis).T)
+        norbb = fchk["Beta Orbital Energies"].shape[0]
+        mo_coeffs_b = np.copy(fchk["Beta MO coefficients"].reshape(norbb, nbasis).T)
         mo_coeffs = np.concatenate((mo_coeffs, mo_coeffs_b), axis=1)
-        mo_energies = np.concatenate((mo_energies, np.copy(fchk['Beta Orbital Energies'])), axis=0)
+        mo_energies = np.concatenate((mo_energies, np.copy(fchk["Beta Orbital Energies"])), axis=0)
         mo_occs = np.zeros(norba + norbb)
         mo_occs[:nalpha] = 1.0
-        mo_occs[norba: norba + nbeta] = 1.0
-        mo = MolecularOrbitals('unrestricted', norba, norbb, mo_occs, mo_coeffs, mo_energies)
+        mo_occs[norba : norba + nbeta] = 1.0
+        mo = MolecularOrbitals("unrestricted", norba, norbb, mo_occs, mo_coeffs, mo_energies)
     else:
         # restricted closed-shell and open-shell
         mo_occs = np.zeros(norba)
         mo_occs[:nalpha] = 1.0
         mo_occs[:nbeta] = 2.0
-        if nalpha != nbeta and 'one_rdms' in result:
+        if nalpha != nbeta and "one_rdms" in result:
             # delete dm_full_scf because it is known to be buggy
-            if 'scf' in result['one_rdms']:
-                result['one_rdms'].pop('scf')
-        mo = MolecularOrbitals('restricted', norba, norba, mo_occs, mo_coeffs, mo_energies)
-    result['mo'] = mo
+            if "scf" in result["one_rdms"]:
+                result["one_rdms"].pop("scf")
+        mo = MolecularOrbitals("restricted", norba, norba, mo_occs, mo_coeffs, mo_energies)
+    result["mo"] = mo
 
     # E) Load properties
-    if 'Polarizability' in fchk:
-        result['extra'] = {'polarizability_tensor': _triangle_to_dense(fchk['Polarizability'])}
+    if "Polarizability" in fchk:
+        result["extra"] = {"polarizability_tensor": _triangle_to_dense(fchk["Polarizability"])}
     moments = {}
-    if 'Dipole Moment' in fchk:
-        moments[(1, 'c')] = fchk['Dipole Moment']
-    if 'Quadrupole Moment' in fchk:
+    if "Dipole Moment" in fchk:
+        moments[(1, "c")] = fchk["Dipole Moment"]
+    if "Quadrupole Moment" in fchk:
         # Convert to alphabetical ordering: xx, xy, xz, yy, yz, zz
-        moments[(2, 'c')] = fchk['Quadrupole Moment'][[0, 3, 4, 1, 5, 2]]
+        moments[(2, "c")] = fchk["Quadrupole Moment"][[0, 3, 4, 1, 5, 2]]
     if moments:
-        result['moments'] = moments
+        result["moments"] = moments
     atcharges = {}
-    if 'Mulliken Charges' in fchk:
-        atcharges['mulliken'] = fchk['Mulliken Charges']
-    if 'ESP Charges' in fchk:
-        atcharges['esp'] = fchk['ESP Charges']
-    if 'NPA Charges' in fchk:
-        atcharges['npa'] = fchk['NPA Charges']
-    if 'MBS Charges' in fchk:
-        atcharges['mbs'] = fchk['MBS Charges']
-    if 'Type 6 Charges' in fchk:
-        atcharges['hirshfeld'] = fchk['Type 6 Charges']
-    if 'Type 7 Charges' in fchk:
-        atcharges['cm5'] = fchk['Type 7 Charges']
+    if "Mulliken Charges" in fchk:
+        atcharges["mulliken"] = fchk["Mulliken Charges"]
+    if "ESP Charges" in fchk:
+        atcharges["esp"] = fchk["ESP Charges"]
+    if "NPA Charges" in fchk:
+        atcharges["npa"] = fchk["NPA Charges"]
+    if "MBS Charges" in fchk:
+        atcharges["mbs"] = fchk["MBS Charges"]
+    if "Type 6 Charges" in fchk:
+        atcharges["hirshfeld"] = fchk["Type 6 Charges"]
+    if "Type 7 Charges" in fchk:
+        atcharges["cm5"] = fchk["Type 7 Charges"]
     if atcharges:
-        result['atcharges'] = atcharges
+        result["atcharges"] = atcharges
 
     return result
 
@@ -251,13 +296,26 @@ attribute:
 """
 
 
-@document_load_many("XYZ", ['atcoords', 'atgradient', 'atnums', 'atcorenums',
-                            'energy', 'extra', 'title'], [], {}, LOAD_MANY_NOTES)
+@document_load_many(
+    "XYZ",
+    ["atcoords", "atgradient", "atnums", "atcorenums", "energy", "extra", "title"],
+    [],
+    {},
+    LOAD_MANY_NOTES,
+)
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
-    fchk = _load_fchk_low(lit, [
-        "Atomic numbers", "Current cartesian coordinates", "Nuclear charges",
-        "IRC *", "Optimization *", "Opt point *"])
+    fchk = _load_fchk_low(
+        lit,
+        [
+            "Atomic numbers",
+            "Current cartesian coordinates",
+            "Nuclear charges",
+            "IRC *",
+            "Optimization *",
+            "Opt point *",
+        ],
+    )
 
     # Determine the type of calculation: IRC or Optimization
     if "IRC Number of geometries" in fchk:
@@ -272,29 +330,34 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     natom = fchk["Atomic numbers"].size
     for ipoint, nstep in enumerate(nsteps):
         results_geoms = fchk["{} {:7d} Results for each geome".format(prefix, ipoint + 1)]
-        trajectory = list(zip(
-            results_geoms[::2], results_geoms[1::2],
-            fchk["{} {:7d} Geometries".format(prefix, ipoint + 1)].reshape(-1, natom, 3),
-            fchk["{} {:7d} Gradient at each geome".format(prefix, ipoint + 1)].reshape(-1, natom, 3)
-        ))
+        trajectory = list(
+            zip(
+                results_geoms[::2],
+                results_geoms[1::2],
+                fchk["{} {:7d} Geometries".format(prefix, ipoint + 1)].reshape(-1, natom, 3),
+                fchk["{} {:7d} Gradient at each geome".format(prefix, ipoint + 1)].reshape(
+                    -1, natom, 3
+                ),
+            )
+        )
         assert len(trajectory) == nstep
         for istep, (energy, recor, atcoords, gradients) in enumerate(trajectory):
             data = {
-                'title': fchk['title'],
-                'atnums': fchk["Atomic numbers"],
-                'atcorenums': fchk["Nuclear charges"],
-                'energy': energy,
-                'atcoords': atcoords,
-                'atgradient': gradients,
-                'extra': {
-                    'ipoint': ipoint,
-                    'npoint': len(nsteps),
-                    'istep': istep,
-                    'nstep': nstep,
+                "title": fchk["title"],
+                "atnums": fchk["Atomic numbers"],
+                "atcorenums": fchk["Nuclear charges"],
+                "energy": energy,
+                "atcoords": atcoords,
+                "atgradient": gradients,
+                "extra": {
+                    "ipoint": ipoint,
+                    "npoint": len(nsteps),
+                    "istep": istep,
+                    "nstep": nstep,
                 },
             }
             if prefix == "IRC point":
-                data['extra']['reaction_coordinate'] = recor
+                data["extra"]["reaction_coordinate"] = recor
             yield data
 
 
@@ -316,14 +379,14 @@ def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
 
     """
     # Read the two-line header
-    result = {'title': next(lit).strip()}
+    result = {"title": next(lit).strip()}
     words = next(lit).split()
     if len(words) == 3:
-        result['command'], result['lot'], result['obasis_name'] = words
+        result["command"], result["lot"], result["obasis_name"] = words
     elif len(words) == 2:
-        result['command'], result['lot'] = words
+        result["command"], result["lot"] = words
     else:
-        lit.error('The second line of the FCHK file should contain two or three words.')
+        lit.error("The second line of the FCHK file should contain two or three words.")
 
     while True:
         try:
@@ -362,14 +425,16 @@ def _load_fchk_field(lit: LineIterator, label_patterns: List[str]) -> Tuple[str,
         words = line[43:].split()
         if not words:
             continue
-        if words[0] == 'I':
+        if words[0] == "I":
             datatype = int
-        elif words[0] == 'R':
+        elif words[0] == "R":
             datatype = float
         else:
             continue
-        if not (label_patterns is None
-                or any(fnmatch(label, label_pattern) for label_pattern in label_patterns)):
+        if not (
+            label_patterns is None
+            or any(fnmatch(label, label_pattern) for label_pattern in label_patterns)
+        ):
             continue
         if len(words) == 2:
             try:
@@ -390,7 +455,7 @@ def _load_fchk_field(lit: LineIterator, label_patterns: List[str]) -> Tuple[str,
                 try:
                     value[counter] = datatype(word)
                 except (ValueError, OverflowError):
-                    lit.error('Could not interpret: {}'.format(word))
+                    lit.error("Could not interpret: {}".format(word))
                 counter += 1
             return label, value
 
@@ -435,8 +500,8 @@ def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
     begin = 0
     for irow in range(nrow):
         end = begin + irow + 1
-        result[irow, :irow + 1] = triangle[begin:end]
-        result[:irow + 1, irow] = triangle[begin:end]
+        result[irow, : irow + 1] = triangle[begin:end]
+        result[: irow + 1, irow] = triangle[begin:end]
         begin = end
     return result
 
@@ -461,7 +526,7 @@ def _dump_integer_arrays(name: str, val: np.ndarray, f: TextIO):
         print("{0:40}   I   N={1:12}".format(name, nval), file=f)
         k = 0
         for i in range(nval):
-            print("{0:12}".format(int(val[i])), file=f, end='')
+            print("{0:12}".format(int(val[i])), file=f, end="")
             k += 1
             if k == 6 or i == nval - 1:
                 print("", file=f)
@@ -476,7 +541,7 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
         print("{0:40}   R   N={1:12}".format(name, nval), file=f)
         k = 0
         for i in range(nval):
-            print("{0: 16.8E}".format(val[i]), file=f, end='')
+            print("{0: 16.8E}".format(val[i]), file=f, end="")
             k += 1
             if k == 5 or i == nval - 1:
                 print("", file=f)
@@ -485,10 +550,24 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
 
 @document_dump_one(
     "Gaussian Formatted Checkpoint",
-    ['atnums', 'atcorenums'],
-    ['atcharges', 'atcoords', 'atfrozen', 'atgradient', 'athessian', 'atmasses',
-     'charge', 'energy', 'lot', 'mo', 'one_rdms', 'obasis_name',
-     'extra', 'moments'])
+    ["atnums", "atcorenums"],
+    [
+        "atcharges",
+        "atcoords",
+        "atfrozen",
+        "atgradient",
+        "athessian",
+        "atmasses",
+        "charge",
+        "energy",
+        "lot",
+        "mo",
+        "one_rdms",
+        "obasis_name",
+        "extra",
+        "moments",
+    ],
+)
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     # write title
@@ -536,7 +615,6 @@ def dump_one(f: TextIO, data: IOData):
 
     # write molecular orbital basis set
     if data.obasis is not None:
-
         # number of primitives per shell
         nprims = np.array([shell.nprim for shell in data.obasis.shells])
         exponents = np.array([item for shell in data.obasis.shells for item in shell.exponents])
@@ -547,9 +625,9 @@ def dump_one(f: TextIO, data: IOData):
         # get list of shell types: 0=s, 1=p, -1=sp, 2=6d, -2=5d, 3=10f, -3=7f...
         shell_types = []
         for shell in data.obasis.shells:
-            if shell.ncon == 1 and shell.kinds == ['c']:
+            if shell.ncon == 1 and shell.kinds == ["c"]:
                 shell_types.append(shell.angmoms[0])
-            elif shell.ncon == 1 and shell.kinds == ['p']:
+            elif shell.ncon == 1 and shell.kinds == ["p"]:
                 shell_types.append(-1 * shell.angmoms[0])
             elif shell.ncon == 2 and shell.angmoms == [0, 1]:
                 shell_types.append(-1)
@@ -577,7 +655,7 @@ def dump_one(f: TextIO, data: IOData):
 
         if -1 in shell_types:
             sp_coeffs = []
-            for (shell, shell_type) in zip(data.obasis.shells, shell_types):
+            for shell, shell_type in zip(data.obasis.shells, shell_types):
                 if shell_type == -1:
                     sp_coeffs.extend([shell.coeffs[i][1] for i in range(shell.nprim)])
                 else:
@@ -604,8 +682,8 @@ def dump_one(f: TextIO, data: IOData):
 
     # write reduced density matrix, if available
     # get level of theory, use 'NA' if not available
-    level = data.lot.upper() if data.lot is not None else 'NA'
-    for item in ['MP2', 'MP3', 'CC', 'CI']:
+    level = data.lot.upper() if data.lot is not None else "NA"
+    for item in ["MP2", "MP3", "CC", "CI"]:
         if item in level:
             level = item
     for key, arr in data.one_rdms.items():
@@ -626,17 +704,17 @@ def dump_one(f: TextIO, data: IOData):
         _dump_real_arrays(title, mat, f)
 
     # write atomic charges
-    if 'mulliken' in data.atcharges:
+    if "mulliken" in data.atcharges:
         _dump_real_arrays("Mulliken Charges", data.atcharges["mulliken"], f)
-    if 'esp' in data.atcharges:
+    if "esp" in data.atcharges:
         _dump_real_arrays("ESP Charges", data.atcharges["esp"], f)
-    if 'npa' in data.atcharges:
+    if "npa" in data.atcharges:
         _dump_real_arrays("NPA Charges", data.atcharges["npa"], f)
-    if 'mbs' in data.atcharges:
+    if "mbs" in data.atcharges:
         _dump_real_arrays("MBS Charges", data.atcharges["mbs"], f)
-    if 'hirshfeld' in data.atcharges:
+    if "hirshfeld" in data.atcharges:
         _dump_real_arrays("Type 6 Charges", data.atcharges["hirshfeld"], f)
-    if 'cm5' in data.atcharges:
+    if "cm5" in data.atcharges:
         _dump_real_arrays("Type 7 Charges", data.atcharges["cm5"], f)
 
     # write atomic gradient
@@ -649,16 +727,16 @@ def dump_one(f: TextIO, data: IOData):
         _dump_real_arrays("Cartesian Force Constants", arr, f)
 
     # write moments
-    if (1, 'c') in data.moments:
-        _dump_real_arrays("Dipole Moment", data.moments[(1, 'c')], f)
-    if (2, 'c') in data.moments and len(data.moments[(2, 'c')]) != 0:
+    if (1, "c") in data.moments:
+        _dump_real_arrays("Dipole Moment", data.moments[(1, "c")], f)
+    if (2, "c") in data.moments and len(data.moments[(2, "c")]) != 0:
         # quadrupole moments are stored as XX, XY, XZ, YY, YZ, ZZ in IOData, so they need to
         # be permuted to have XX, YY, ZZ, XY, XZ, YZ order for FCHK.
-        quadrupole = data.moments[(2, 'c')][[0, 3, 5, 1, 2, 4]]
+        quadrupole = data.moments[(2, "c")][[0, 3, 5, 1, 2, 4]]
         _dump_real_arrays("Quadrupole Moment", quadrupole, f)
 
     # write polarizability tensor
-    if 'polarizability_tensor' in data.extra:
+    if "polarizability_tensor" in data.extra:
         arr = data.extra["polarizability_tensor"]
         arr = arr[np.tril_indices(arr.shape[0])]
         _dump_real_arrays("Polarizability", arr, f)

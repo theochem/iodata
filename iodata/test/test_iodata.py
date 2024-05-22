@@ -36,8 +36,11 @@ def test_typecheck():
     m = IOData(atcoords=np.array([[1, 2, 3], [2, 3, 1]]))
     assert np.issubdtype(m.atcoords.dtype, np.floating)
     assert m.atnums is None
-    m = IOData(atnums=np.array([2.0, 3.0]), atcorenums=np.array([1, 1]),
-               atcoords=np.array([[1, 2, 3], [2, 3, 1]]))
+    m = IOData(
+        atnums=np.array([2.0, 3.0]),
+        atcorenums=np.array([1, 1]),
+        atcoords=np.array([[1, 2, 3], [2, 3, 1]]),
+    )
     assert np.issubdtype(m.atnums.dtype, np.integer)
     assert np.issubdtype(m.atcorenums.dtype, np.floating)
     assert m.atnums is not None
@@ -50,41 +53,39 @@ def test_typecheck_raises():
     pytest.raises(TypeError, IOData, atcoords=np.array([[1, 2], [2, 3]]))
     pytest.raises(TypeError, IOData, atnums=np.array([[1, 2], [2, 3]]))
     # check inconsistency between various attributes
-    atnums, atcorenums, atcoords = np.array(
-        [2, 3]), np.array([1]), np.array([[1, 2, 3]])
-    pytest.raises(TypeError, IOData, atnums=atnums,
-                  atcorenums=atcorenums)
+    atnums, atcorenums, atcoords = np.array([2, 3]), np.array([1]), np.array([[1, 2, 3]])
+    pytest.raises(TypeError, IOData, atnums=atnums, atcorenums=atcorenums)
     pytest.raises(TypeError, IOData, atnums=atnums, atcoords=atcoords)
 
 
 def test_unknown_format():
-    pytest.raises(ValueError, load_one, 'foo.unknown_file_extension')
+    pytest.raises(ValueError, load_one, "foo.unknown_file_extension")
 
 
 def test_dm_water_sto3g_hf():
     with as_file(files("iodata.test.data").joinpath("water_sto3g_hf_g03.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
-    dm = mol.one_rdms['scf']
-    assert_allclose(dm[0, 0], 2.10503807, atol=1.e-7)
-    assert_allclose(dm[0, 1], -0.439115917, atol=1.e-7)
-    assert_allclose(dm[1, 1], 1.93312061, atol=1.e-7)
+    dm = mol.one_rdms["scf"]
+    assert_allclose(dm[0, 0], 2.10503807, atol=1.0e-7)
+    assert_allclose(dm[0, 1], -0.439115917, atol=1.0e-7)
+    assert_allclose(dm[1, 1], 1.93312061, atol=1.0e-7)
 
 
 def test_dm_lih_sto3g_hf():
     with as_file(files("iodata.test.data").joinpath("li_h_3-21G_hf_g09.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
 
-    dm = mol.one_rdms['scf']
-    assert_allclose(dm[0, 0], 1.96589709, atol=1.e-7)
-    assert_allclose(dm[0, 1], 0.122114249, atol=1.e-7)
-    assert_allclose(dm[1, 1], 0.0133112081, atol=1.e-7)
-    assert_allclose(dm[10, 10], 4.23924688E-01, atol=1.e-7)
+    dm = mol.one_rdms["scf"]
+    assert_allclose(dm[0, 0], 1.96589709, atol=1.0e-7)
+    assert_allclose(dm[0, 1], 0.122114249, atol=1.0e-7)
+    assert_allclose(dm[1, 1], 0.0133112081, atol=1.0e-7)
+    assert_allclose(dm[10, 10], 4.23924688e-01, atol=1.0e-7)
 
-    dm_spin = mol.one_rdms['scf_spin']
-    assert_allclose(dm_spin[0, 0], 1.40210760E-03, atol=1.e-9)
-    assert_allclose(dm_spin[0, 1], -2.65370873E-03, atol=1.e-9)
-    assert_allclose(dm_spin[1, 1], 5.38701212E-03, atol=1.e-9)
-    assert_allclose(dm_spin[10, 10], 4.23889148E-01, atol=1.e-7)
+    dm_spin = mol.one_rdms["scf_spin"]
+    assert_allclose(dm_spin[0, 0], 1.40210760e-03, atol=1.0e-9)
+    assert_allclose(dm_spin[0, 1], -2.65370873e-03, atol=1.0e-9)
+    assert_allclose(dm_spin[1, 1], 5.38701212e-03, atol=1.0e-9)
+    assert_allclose(dm_spin[10, 10], 4.23889148e-01, atol=1.0e-7)
 
 
 def test_dm_ch3_rohf_g03():
@@ -92,7 +93,7 @@ def test_dm_ch3_rohf_g03():
         mol = load_one(str(fn_fchk))
     olp = compute_overlap(mol.obasis, mol.atcoords)
     dm = compute_1rdm(mol)
-    assert_allclose(np.einsum('ab,ba', olp, dm), 9, atol=1.e-6)
+    assert_allclose(np.einsum("ab,ba", olp, dm), 9, atol=1.0e-6)
 
 
 def test_charge_nelec1():

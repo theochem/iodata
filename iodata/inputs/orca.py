@@ -18,7 +18,6 @@
 # --
 """Orca Input Module."""
 
-
 from typing import TextIO
 
 from .common import populate_fields
@@ -38,15 +37,18 @@ default_template = """\
 *"""
 
 
-@document_write_input("ORCA", ['atnums', 'atcoords'],
-                      ['title', 'run_type', 'lot', 'obasis_name', 'spinmult', 'charge'])
+@document_write_input(
+    "ORCA",
+    ["atnums", "atcoords"],
+    ["title", "run_type", "lot", "obasis_name", "spinmult", "charge"],
+)
 def write_input(f: TextIO, data: IOData, template: str = None, **kwargs):
     """Do not edit this docstring. It will be overwritten."""
     # initialize a dictionary with fields to replace in the template
     fields = populate_fields(data)
     # set format-specific defaults
-    fields["lot"] = data.lot if data.lot is not None else 'HF'
-    fields["obasis_name"] = data.obasis_name if data.obasis_name is not None else 'STO-3G'
+    fields["lot"] = data.lot if data.lot is not None else "HF"
+    fields["obasis_name"] = data.obasis_name if data.obasis_name is not None else "STO-3G"
     # convert run type to Orca keywords
     run_types = {"energy": "Energy", "freq": "Freq", "opt": "Opt"}
     fields["run_type"] = run_types[fields["run_type"].lower()]

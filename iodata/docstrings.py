@@ -19,31 +19,43 @@
 # pylint: disable=dangerous-default-value
 """Docstring decorators for file format implementations."""
 
-
 from typing import List, Dict
 
 
-__all__ = ['document_load_one', 'document_load_many', 'document_dump_one', 'document_dump_many',
-           'document_write_input']
+__all__ = [
+    "document_load_one",
+    "document_load_many",
+    "document_dump_one",
+    "document_dump_many",
+    "document_write_input",
+]
 
 
-def _document_load(template: str, fmt: str, guaranteed: List[str], ifpresent: List[str] = None,
-                   kwdocs: Dict[str, str] = {}, notes: str = None):
+def _document_load(
+    template: str,
+    fmt: str,
+    guaranteed: List[str],
+    ifpresent: List[str] = None,
+    kwdocs: Dict[str, str] = {},
+    notes: str = None,
+):
     ifpresent = ifpresent or []
 
     def decorator(func):
         if ifpresent:
-            ifpresent_sentence = (
-                " The following may be loaded if present in the file: {}.".format(
-                    ', '.join("``{}``".format(word) for word in ifpresent)))
+            ifpresent_sentence = " The following may be loaded if present in the file: {}.".format(
+                ", ".join("``{}``".format(word) for word in ifpresent)
+            )
         else:
             ifpresent_sentence = ""
         func.__doc__ = template.format(
             fmt=fmt,
-            guaranteed=', '.join("``{}``".format(word) for word in guaranteed),
+            guaranteed=", ".join("``{}``".format(word) for word in guaranteed),
             ifpresent=ifpresent_sentence,
-            kwdocs="\n".join("{}\n    {}".format(name, docu.replace("\n", " "))
-                             for name, docu in sorted(kwdocs.items())),
+            kwdocs="\n".join(
+                "{}\n    {}".format(name, docu.replace("\n", " "))
+                for name, docu in sorted(kwdocs.items())
+            ),
             notes=(notes or ""),
         )
         func.fmt = fmt
@@ -52,6 +64,7 @@ def _document_load(template: str, fmt: str, guaranteed: List[str], ifpresent: Li
         func.kwdocs = kwdocs
         func.notes = notes
         return func
+
     return decorator
 
 
@@ -77,8 +90,13 @@ Notes
 """
 
 
-def document_load_one(fmt: str, guaranteed: List[str], ifpresent: List[str] = None,
-                      kwdocs: Dict[str, str] = {}, notes: str = None):
+def document_load_one(
+    fmt: str,
+    guaranteed: List[str],
+    ifpresent: List[str] = None,
+    kwdocs: Dict[str, str] = {},
+    notes: str = None,
+):
     """Decorate a load_one function to generate a docstring.
 
     Parameters
@@ -127,8 +145,13 @@ Notes
 """
 
 
-def document_load_many(fmt: str, guaranteed: List[str], ifpresent: List[str] = None,
-                       kwdocs: Dict[str, str] = {}, notes: str = None):
+def document_load_many(
+    fmt: str,
+    guaranteed: List[str],
+    ifpresent: List[str] = None,
+    kwdocs: Dict[str, str] = {},
+    notes: str = None,
+):
     """Decorate a load_many function to generate a docstring.
 
     Parameters
@@ -155,8 +178,14 @@ def document_load_many(fmt: str, guaranteed: List[str], ifpresent: List[str] = N
     return _document_load(LOAD_MANY_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 
-def _document_dump(template: str, fmt: str, required: List[str], optional: List[str] = None,
-                   kwdocs: Dict[str, str] = {}, notes: str = None):
+def _document_dump(
+    template: str,
+    fmt: str,
+    required: List[str],
+    optional: List[str] = None,
+    kwdocs: Dict[str, str] = {},
+    notes: str = None,
+):
     optional = optional or []
 
     def decorator(func):
@@ -164,15 +193,17 @@ def _document_dump(template: str, fmt: str, required: List[str], optional: List[
             optional_sentence = (
                 " If the following attributes are present, they are also dumped "
                 "into the file: {}."
-            ).format(', '.join("``{}``".format(word) for word in optional))
+            ).format(", ".join("``{}``".format(word) for word in optional))
         else:
             optional_sentence = ""
         func.__doc__ = template.format(
             fmt=fmt,
-            required=', '.join("``{}``".format(word) for word in required),
+            required=", ".join("``{}``".format(word) for word in required),
             optional=optional_sentence,
-            kwdocs="\n".join("{}\n    {}".format(name, docu.replace("\n", " "))
-                             for name, docu in sorted(kwdocs.items())),
+            kwdocs="\n".join(
+                "{}\n    {}".format(name, docu.replace("\n", " "))
+                for name, docu in sorted(kwdocs.items())
+            ),
             notes=(notes or ""),
         )
         func.fmt = fmt
@@ -181,6 +212,7 @@ def _document_dump(template: str, fmt: str, required: List[str], optional: List[
         func.kwdocs = kwdocs
         func.notes = notes
         return func
+
     return decorator
 
 
@@ -203,8 +235,13 @@ Notes
 """
 
 
-def document_dump_one(fmt: str, required: List[str], optional: List[str] = None,
-                      kwdocs: Dict[str, str] = {}, notes: str = None):
+def document_dump_one(
+    fmt: str,
+    required: List[str],
+    optional: List[str] = None,
+    kwdocs: Dict[str, str] = {},
+    notes: str = None,
+):
     """Decorate a dump_one function to generate a docstring.
 
     Parameters
@@ -250,8 +287,13 @@ Notes
 """
 
 
-def document_dump_many(fmt: str, required: List[str], optional: List[str] = None,
-                       kwdocs: Dict[str, str] = {}, notes: str = None):
+def document_dump_many(
+    fmt: str,
+    required: List[str],
+    optional: List[str] = None,
+    kwdocs: Dict[str, str] = {},
+    notes: str = None,
+):
     """Decorate a dump_many function to generate a docstring.
 
     Parameters
@@ -278,8 +320,14 @@ def document_dump_many(fmt: str, required: List[str], optional: List[str] = None
     return _document_dump(DUMP_MANY_DOC_TEMPLATE, fmt, required, optional, kwdocs, notes)
 
 
-def _document_write(template: str, fmt: str, required: List[str], optional: List[str] = None,
-                    kwdocs: Dict[str, str] = {}, notes: str = None):
+def _document_write(
+    template: str,
+    fmt: str,
+    required: List[str],
+    optional: List[str] = None,
+    kwdocs: Dict[str, str] = {},
+    notes: str = None,
+):
     optional = optional or []
 
     def decorator(func):
@@ -288,15 +336,17 @@ def _document_write(template: str, fmt: str, required: List[str], optional: List
                 " If the following attributes are present, they are also written "
                 "into the file: {}. If these attributes are not assigned, "
                 "internal default values are used."
-            ).format(', '.join("``{}``".format(word) for word in optional))
+            ).format(", ".join("``{}``".format(word) for word in optional))
         else:
             optional_sentence = ""
         func.__doc__ = template.format(
             fmt=fmt,
-            required=', '.join("``{}``".format(word) for word in required),
+            required=", ".join("``{}``".format(word) for word in required),
             optional=optional_sentence,
-            kwdocs="\n".join("{}\n    {}".format(name, docu.replace("\n", " "))
-                             for name, docu in sorted(kwdocs.items())),
+            kwdocs="\n".join(
+                "{}\n    {}".format(name, docu.replace("\n", " "))
+                for name, docu in sorted(kwdocs.items())
+            ),
             notes=(notes or ""),
         )
         func.fmt = fmt
@@ -305,6 +355,7 @@ def _document_write(template: str, fmt: str, required: List[str], optional: List
         func.kwdocs = kwdocs
         func.notes = notes
         return func
+
     return decorator
 
 
@@ -329,8 +380,13 @@ Notes
 """
 
 
-def document_write_input(fmt: str, required: List[str], optional: List[str] = None,
-                         kwdocs: Dict[str, str] = {}, notes: str = None):
+def document_write_input(
+    fmt: str,
+    required: List[str],
+    optional: List[str] = None,
+    kwdocs: Dict[str, str] = {},
+    notes: str = None,
+):
     """Decorate a write_input function to generate a docstring.
 
     Parameters

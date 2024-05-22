@@ -63,19 +63,20 @@ def test_bondtypes_benzene():
 
 def check_example(mol):
     """Test some things on example file."""
-    assert mol.title == 'ZINC00001084'
+    assert mol.title == "ZINC00001084"
     assert_equal(mol.natom, 24)
-    assert_equal(mol.atnums, [6, 7, 6, 7, 6, 6, 6, 8, 7, 6, 8, 7, 6, 6,
-                              1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
-    assert mol.atffparams['attypes'][0] == 'C.3'
+    assert_equal(
+        mol.atnums, [6, 7, 6, 7, 6, 6, 6, 8, 7, 6, 8, 7, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    )
+    assert mol.atffparams["attypes"][0] == "C.3"
     # check coordinates
     atcoords_ang = mol.atcoords / angstrom
     assert_allclose(atcoords_ang[0], [-0.0178, 1.4608, 0.0101])
     assert_allclose(atcoords_ang[1], [0.0021, -0.0041, 0.0020])
     assert_allclose(atcoords_ang[22], [0.5971, -2.2951, 5.2627])
     assert_allclose(atcoords_ang[23], [0.5705, -0.5340, 5.0055])
-    assert_allclose(mol.atcharges['mol2charges'][0], 0.0684)
-    assert_allclose(mol.atcharges['mol2charges'][23], 0.0949)
+    assert_allclose(mol.atcharges["mol2charges"][0], 0.0684)
+    assert_allclose(mol.atcharges["mol2charges"][23], 0.0949)
     bonds = mol.bonds
     assert len(bonds) == 25
     assert_equal(bonds[0], [0, 1, bond2num["1"]])
@@ -88,13 +89,13 @@ def check_load_dump_consistency(tmpdir, fn):
     """Check if dumping and loading an MOL2 file results in the same data."""
     mol0 = load_one(str(fn))
     # write mol2 file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test.mol2')
-    dump_one(mol0, fn_tmp, fmt='mol2')
+    fn_tmp = os.path.join(tmpdir, "test.mol2")
+    dump_one(mol0, fn_tmp, fmt="mol2")
     mol1 = load_one(fn_tmp)
     # check two mol2 files
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
-    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+    assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)
     assert_equal(mol0.bonds, mol1.bonds)
 
 
@@ -110,7 +111,7 @@ def test_load_many():
         mols = list(load_many(str(fn_mol2)))
     assert len(mols) == 2
     check_example(mols[0])
-    assert mols[1].title == 'ZINC00001085'
+    assert mols[1].title == "ZINC00001085"
     assert mols[1].natom == 24
     assert_allclose(mols[0].atcoords[0] / angstrom, [-0.0178, 1.4608, 0.0101])
     assert_allclose(mols[1].atcoords[0] / angstrom, [-0.0100, 1.5608, 0.0201])
@@ -120,14 +121,14 @@ def test_load_dump_many_consistency(tmpdir):
     with as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_mol2:
         mols0 = list(load_many(str(fn_mol2)))
     # write mol2 file in a temporary folder & then read it
-    fn_tmp = os.path.join(tmpdir, 'test')
-    dump_many(mols0, fn_tmp, fmt='mol2')
-    mols1 = list(load_many(fn_tmp, fmt='mol2'))
+    fn_tmp = os.path.join(tmpdir, "test")
+    dump_many(mols0, fn_tmp, fmt="mol2")
+    mols1 = list(load_many(fn_tmp, fmt="mol2"))
     assert len(mols0) == len(mols1)
     for mol0, mol1 in zip(mols0, mols1):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
-        assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.e-5)
+        assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)
         assert_equal(mol0.bonds, mol1.bonds)
 
 
@@ -135,7 +136,7 @@ def test_load_dump_wrong_bond_num(tmpdir):
     with as_file(files("iodata.test.data").joinpath("silioh3.mol2")) as fn_mol:
         mol = load_one(str(fn_mol))
     mol.bonds[0][2] = -1
-    fn_tmp = os.path.join(tmpdir, 'test.mol2')
+    fn_tmp = os.path.join(tmpdir, "test.mol2")
     dump_one(mol, fn_tmp)
     mol2 = load_one(fn_tmp)
     assert mol2.bonds[0][2] == bond2num["un"]

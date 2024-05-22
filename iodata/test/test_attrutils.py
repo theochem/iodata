@@ -18,7 +18,6 @@
 # --
 """Unit tests for iodata.attrutils."""
 
-
 import attr
 import numpy as np
 from numpy.testing import assert_allclose
@@ -73,9 +72,7 @@ class Spam:
 
 def test_validate_shape_init():
     # Construct a Spam instance with valid arguments. This should just work
-    spam = Spam(
-        np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde"
-    )
+    spam = Spam(np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde")
     # Double check
     attr.validate(spam)
     # Call constructor with invalid arguments
@@ -132,9 +129,7 @@ def test_validate_shape_init():
 
 def test_validate_shape_assign():
     # Construct a Spam instance with valid arguments. This should just work
-    spam = Spam(
-        np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde"
-    )
+    spam = Spam(np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde")
     # Double check
     attr.validate(spam)
     # assign invalid attributes
