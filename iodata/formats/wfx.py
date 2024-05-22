@@ -150,7 +150,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
     # process nuclear gradient, if present
     if "nuclear_gradient" in result:
         gradient_mix = np.array([i.split() for i in result.pop("nuclear_gradient")]).reshape(-1, 4)
-        gradient_atoms = gradient_mix[:, 0].astype(np.unicode_)
+        gradient_atoms = gradient_mix[:, 0].astype(np.str_)
         index = [result["nuclear_names"].index(atom) for atom in gradient_atoms]
         result["atgradient"] = np.full((len(result["nuclear_names"]), 3), np.nan)
         result["atgradient"][index] = gradient_mix[:, 1:].astype(float)
