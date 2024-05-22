@@ -75,7 +75,7 @@ def main():
         print()
         template = getattr(module, "default_template", None)
         if template:
-            code_block_lines = ["    " + l for l in template.split("\n")]
+            code_block_lines = ["    " + ell for ell in template.split("\n")]
             print(TEMPLATE.format(code_block_lines="\n".join(code_block_lines)))
         print()
         print()

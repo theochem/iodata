@@ -19,10 +19,14 @@
 """Input and Output Module."""
 
 try:
-    from ._version import __version__
+    from ._version import __version__, __version_tuple__
 except ImportError:
     __version__ = "0.0.0.post0"
+    __version_tuple__ = (0, 0, 0, "a-dev")
 
 
 from .iodata import IOData
-from .api import *
+from .api import load_one, load_many, dump_one, dump_many, write_input
+
+
+__all__ = ("IOData", "load_one", "load_many", "dump_one", "dump_many", "write_input")

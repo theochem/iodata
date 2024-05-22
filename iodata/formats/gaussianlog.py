@@ -133,12 +133,12 @@ def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
         if not line.startswith(" I="):
             break
         # print line[3:7], line[9:13], line[15:19], line[21:25], line[28:].replace('D', 'E')
-        i = int(line[3:7]) - 1
-        j = int(line[9:13]) - 1
-        k = int(line[15:19]) - 1
-        l = int(line[21:25]) - 1
+        i0 = int(line[3:7]) - 1
+        i1 = int(line[9:13]) - 1
+        i2 = int(line[15:19]) - 1
+        i3 = int(line[21:25]) - 1
         value = float(line[29:].replace("D", "E"))
         # Gaussian uses the chemists notation for the 4-center indexes. IOdata
         # uses the physicists notation.
-        set_four_index_element(result, i, k, j, l, value)
+        set_four_index_element(result, i0, i2, i1, i3, value)
     return result

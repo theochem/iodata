@@ -25,8 +25,9 @@ import numpy as np
 import scipy.special
 
 from .overlap_cartpure import tfs
-from .basis import convert_conventions, iter_cart_alphabet, MolecularBasis
+from .basis import convert_conventions, iter_cart_alphabet, MolecularBasis, Shell
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
+
 
 __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
 
@@ -259,7 +260,7 @@ class GaussianOverlap:
         return value
 
 
-def _compute_cart_shell_normalizations(shell: "Shell") -> np.ndarray:
+def _compute_cart_shell_normalizations(shell: Shell) -> np.ndarray:
     """Return normalization constants for the primitives in a given shell.
 
     Parameters

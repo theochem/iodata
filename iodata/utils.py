@@ -153,7 +153,7 @@ class Cube:
 
 
 def set_four_index_element(
-    four_index_object: np.ndarray, i: int, j: int, k: int, l: int, value: float
+    four_index_object: np.ndarray, i0: int, i1: int, i2: int, i3: int, value: float
 ):
     """Assign values to a four index object, account for 8-fold index symmetry.
 
@@ -164,20 +164,20 @@ def set_four_index_element(
     four_index_object
         The four-index object. It will be written to.
         shape=(nbasis, nbasis, nbasis, nbasis), dtype=float
-    i, j, k, l
+    i0, i1, i2, i3
         The indices to assign to.
     value
         The value of the matrix element to store.
 
     """
-    four_index_object[i, j, k, l] = value
-    four_index_object[j, i, l, k] = value
-    four_index_object[k, j, i, l] = value
-    four_index_object[i, l, k, j] = value
-    four_index_object[k, l, i, j] = value
-    four_index_object[l, k, j, i] = value
-    four_index_object[j, k, l, i] = value
-    four_index_object[l, i, j, k] = value
+    four_index_object[i0, i1, i2, i3] = value
+    four_index_object[i1, i0, i3, i2] = value
+    four_index_object[i2, i1, i0, i3] = value
+    four_index_object[i0, i3, i2, i1] = value
+    four_index_object[i2, i3, i0, i1] = value
+    four_index_object[i3, i2, i1, i0] = value
+    four_index_object[i1, i2, i3, i0] = value
+    four_index_object[i3, i0, i1, i2] = value
 
 
 def volume(cellvecs: np.ndarray) -> float:

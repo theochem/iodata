@@ -44,7 +44,7 @@ CONVENTIONS = {
 
 
 def _get_cp2k_norm_corrections(
-    l: int, alphas: Union[float, np.ndarray]
+    ell: int, alphas: Union[float, np.ndarray]
 ) -> Union[float, np.ndarray]:
     """Compute the corrections for the normalization of the basis functions.
 
@@ -54,7 +54,7 @@ def _get_cp2k_norm_corrections(
 
     Parameters
     ----------
-    l
+    ell
         The angular momentum of the (pure) basis function. (s=0, p=1, ...)
     alphas
         The exponent or exponents of the Gaussian primitives for which the correction
@@ -68,8 +68,8 @@ def _get_cp2k_norm_corrections(
         applied to the contraction coefficients.
 
     """
-    expzet = 0.25 * (2 * l + 3)
-    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (l + 2) * factorialk(2 * l + 1, 2))
+    expzet = 0.25 * (2 * ell + 3)
+    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (ell + 2) * factorialk(2 * ell + 1, 2))
     zeta = 2.0 * alphas
     return zeta**expzet / prefac
 
@@ -225,13 +225,13 @@ def _read_cp2k_occupations_energies(
             continue
         empty = 0
         s = int(words[0])
-        l = int(words[2 - restricted])
+        ell = int(words[2 - restricted])
         occ = float(words[3 - restricted])
         ener = float(words[4 - restricted])
         if restricted or words[1] == "alpha":
-            oe_alpha.append((l, s, occ, ener))
+            oe_alpha.append((ell, s, occ, ener))
         else:
-            oe_beta.append((l, s, occ, ener))
+            oe_beta.append((ell, s, occ, ener))
     return oe_alpha, oe_beta
 
 
@@ -330,21 +330,21 @@ def _fill_orbitals(
     offset = 0
     offsets = []
     ls = np.concatenate([shell.angmoms for shell in obasis.shells])
-    for l in sorted(set(ls)):
+    for ell in sorted(set(ls)):
         offsets.append(offset)
-        offset += (2 * l + 1) * (l == ls).sum()
+        offset += (2 * ell + 1) * (ell == ls).sum()
     del offset
 
     # Fill in the coefficients
     iorb = 0
-    for l, state, occ, ener in oe:
-        cs = coeffs.get((l, state))
-        stride = 2 * l + 1
-        for im in range(2 * l + 1):
+    for ell, state, occ, ener in oe:
+        cs = coeffs.get((ell, state))
+        stride = 2 * ell + 1
+        for im in range(2 * ell + 1):
             orb_energies[iorb] = ener
-            orb_occupations[iorb] = occ / float((restricted + 1) * (2 * l + 1))
+            orb_occupations[iorb] = occ / float((restricted + 1) * (2 * ell + 1))
             for ic, c in enumerate(cs):
-                orb_coeffs[offsets[l] + stride * ic + im, iorb] = c
+                orb_coeffs[offsets[ell] + stride * ic + im, iorb] = c
             iorb += 1
 
 
