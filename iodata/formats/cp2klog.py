@@ -163,7 +163,6 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> MolecularBasis:
     return MolecularBasis(shells, CONVENTIONS, "L2")
 
 
-# pylint: disable=inconsistent-return-statements
 def _read_cp2k_obasis(lit: LineIterator) -> dict:
     """Read atomic orbital basis set from a CP2K ATOM file object.
 
@@ -366,7 +365,6 @@ ATOM input file, in the section ``ATOM%PRINT``:
 """
 
 
-# pylint: disable=too-many-branches,too-many-statements
 @document_load_one(
     "CP2K ATOM outupt",
     ["atcoords", "atcorenums", "atnums", "energy", "mo", "obasis"],

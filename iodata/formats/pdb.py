@@ -143,7 +143,7 @@ def _parse_pdb_conect_line(line):
 
 
 @document_load_one("PDB", ["atcoords", "atnums", "atffparams", "extra"], ["title", "bonds"])
-def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, too-many-statements
+def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     title_lines = []
     compnd_lines = []

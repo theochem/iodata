@@ -29,7 +29,6 @@ from .utils import Cube
 __all__ = ["IOData"]
 
 
-# pylint: disable=too-many-instance-attributes
 @attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
 class IOData:
     """A container class for data loaded from (or to be written to) a file.
@@ -266,10 +265,6 @@ class IOData:
     def atcorenums(self) -> np.ndarray:
         """Return effective core charges."""
         if self._atcorenums is None and self.atnums is not None:
-            # Known bug in pylint. See
-            # https://stackoverflow.com/questions/47972143/using-attr-with-pylint
-            # https://github.com/PyCQA/pylint/issues/1694
-            # pylint: disable=no-member
             self.atcorenums = self.atnums.astype(float)
         return self._atcorenums
 

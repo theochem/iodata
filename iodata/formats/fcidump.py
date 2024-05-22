@@ -133,7 +133,7 @@ def dump_one(f: TextIO, data: IOData):
 
     # Write integrals and core energy
     two_mo = data.two_ints["two_mo"]
-    for i0 in range(nactive):  # pylint: disable=too-many-nested-blocks
+    for i0 in range(nactive):
         for i1 in range(i0 + 1):
             for i2 in range(nactive):
                 for i3 in range(i2 + 1):

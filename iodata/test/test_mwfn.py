@@ -36,7 +36,6 @@ def load_helper(fn):
         return load_one(absfn)
 
 
-# pylint: disable=too-many-statements
 def test_load_mwfn_ch3_rohf_g03():
     mol = load_helper("ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn")
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])

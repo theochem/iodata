@@ -110,7 +110,6 @@ def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
     return result
 
 
-# pylint: disable=too-many-branches,too-many-statements
 def _load_low(lit: LineIterator) -> dict:
     """Load data from a MOLDEN input file format, without trying to fix errors.
 
@@ -472,7 +471,6 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
                 correction = gob_cart_normalization(exponent, np.array([5, 0, 0]))
             if correction != 1.0:
                 fixed_shell.coeffs[iprim, 0] /= correction
-            iprim += 1
     return MolecularBasis(fixed_shells, orca_conventions, obasis.primitive_normalization)
 
 
@@ -654,7 +652,6 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
         is raised when no more corrections can be applied.
 
     """
-    # pylint: disable=too-many-return-statements
     obasis = result["obasis"]
     atcoords = result["atcoords"]
     if result["mo"].kind == "restricted":
@@ -804,9 +801,8 @@ def dump_one(f: TextIO, data: IOData):
             f.write("[5D]\n")
         else:
             f.write("[5D10F]\n")
-    else:
-        if angmom_kinds[3] == "p":
-            f.write("[7F]\n")
+    elif angmom_kinds[3] == "p":
+        f.write("[7F]\n")
     if angmom_kinds[4] == "p":
         f.write("[9G]\n")
 

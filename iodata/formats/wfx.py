@@ -167,7 +167,6 @@ def load_data_wfx(lit: LineIterator) -> dict:
 
 def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
     """Load data in all sections existing in the given WFX file LineIterator."""
-    # pylint: disable=too-many-branches
     data = {}
     mo_start = "<Molecular Orbital Primitive Coefficients>"
     section_start = None
@@ -335,7 +334,6 @@ def load_one(lit: LineIterator) -> dict:
 )
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    # pylint: disable=too-many-branches,too-many-statements
     # get all tags/labels that can be written into a WFX file
     lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, _ = _wfx_labels()
     # put all labels in one dictionary and flip key and value for easier use

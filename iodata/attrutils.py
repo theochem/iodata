@@ -34,7 +34,6 @@ def convert_array_to(dtype):
     return converter
 
 
-# pylint: disable=too-many-branches
 def validate_shape(*shape_requirements: tuple):
     """Return a validator for the shape of an array or the length of an iterable.
 

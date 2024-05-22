@@ -222,7 +222,6 @@ class MolecularBasis:
                 shells.append(
                     Shell(shell.icenter, [angmom], [kind], shell.exponents, coeffs.reshape(-1, 1))
                 )
-        # pylint: disable=no-member
         return attr.evolve(self, shells=shells)
 
 

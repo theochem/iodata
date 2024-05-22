@@ -253,7 +253,6 @@ def load_wfn_low(lit: LineIterator) -> tuple:
     )
 
 
-# pylint: disable=too-many-branches
 def build_obasis(
     icenters: np.ndarray, type_assignments: np.ndarray, exponents: np.ndarray, lit: LineIterator
 ) -> tuple[MolecularBasis, np.ndarray]:

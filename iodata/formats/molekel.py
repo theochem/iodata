@@ -49,8 +49,7 @@ def _load_helper_charge_spinpol(lit: LineIterator) -> list[int]:
 def _load_helper_charges(lit: LineIterator) -> dict:
     atcharges = []
     for line in lit:
-        line = line.strip()
-        if line == "$END":
+        if line.strip() == "$END":
             break
         atcharges.append(float(line))
 
@@ -113,8 +112,7 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[np.ndarray, np.
 
     in_orb = 0
     for line in lit:
-        line = line.strip()
-        if line == "$END":
+        if line.strip() == "$END":
             break
         if in_orb == 0:
             # read a1g line
@@ -150,15 +148,13 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[np.ndarray, np.
 def _load_helper_occ(lit: LineIterator) -> np.ndarray:
     occs = []
     for line in lit:
-        line = line.strip()
-        if line == "$END":
+        if line.strip() == "$END":
             break
         for word in line.split():
             occs.append(float(word))
     return np.array(occs)
 
 
-# pylint: disable=too-many-branches,too-many-statements
 @document_load_one(
     "Molekel",
     ["atcoords", "atnums", "mo", "obasis"],

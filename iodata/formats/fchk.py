@@ -58,7 +58,6 @@ CONVENTIONS = {
 }
 
 
-# pylint: disable=too-many-branches,too-many-statements
 @document_load_one(
     "Gaussian Formatted Checkpoint",
     [
@@ -395,7 +394,6 @@ def _load_fchk_low(lit: LineIterator, label_patterns: list[str] = None) -> dict:
     return result
 
 
-# pylint: disable=too-many-branches
 def _load_fchk_field(lit: LineIterator, label_patterns: list[str]) -> tuple[str, object]:
     """Read a single field matching one of the given label_patterns.
 

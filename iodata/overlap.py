@@ -51,7 +51,6 @@ def factorial2(n, exact=False):
     return out
 
 
-# pylint: disable=too-many-nested-blocks,too-many-statements,too-many-branches
 def compute_overlap(
     obasis0: MolecularBasis,
     atcoords0: np.ndarray,
@@ -132,7 +131,7 @@ def compute_overlap(
 
     n_max = max(np.max(shell.angmoms) for shell in obasis0.shells)
     if not identical:
-        n_max = max(n_max, max(np.max(shell.angmoms) for shell in obasis1.shells))
+        n_max = max(n_max, *(np.max(shell.angmoms) for shell in obasis1.shells))
     go = GaussianOverlap(n_max)
 
     # define a python ufunc (numpy function) for broadcasted calling over angular momentums
@@ -141,7 +140,6 @@ def compute_overlap(
     # Loop over shell0
     begin0 = 0
 
-    # pylint: disable=too-many-nested-blocks
     for i0, shell0 in enumerate(obasis0.shells):
         r0 = atcoords0[shell0.icenter]
         end0 = begin0 + shell0.nbasis

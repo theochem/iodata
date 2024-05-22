@@ -146,7 +146,7 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
-def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
+def load_qchemlog_low(lit: LineIterator) -> dict:
     """Load the information from Q-Chem log file."""
     data = {}
     while True:
@@ -227,24 +227,24 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
     return data
 
 
-def _helper_rem_job(lit: LineIterator) -> tuple:
+def _helper_rem_job(lit: LineIterator) -> dict:
     """Load job specifications from Q-Chem output file format."""
     data_rem = {}
     for line in lit:
-        if line.strip() == "$end":
+        words = line.strip().lower().split(maxsplit=1)
+        if words[0] == "$end":
             break
-        line = line.strip()
         # parse job type section; some sections might not be available
-        if line.lower().startswith("jobtype"):
-            data_rem["run_type"] = line.split()[1].lower()
-        elif line.lower().startswith("method"):
-            data_rem["lot"] = line.split()[1].lower()
-        elif line.lower().startswith("unrestricted"):
-            data_rem["unrestricted"] = bool(strtobool(line.split()[1]))
-        elif line.split()[0].lower() == "basis":
-            data_rem["obasis_name"] = line.split()[1].lower()
-        elif line.lower().startswith("symmetry"):
-            data_rem["symm"] = bool(strtobool(line.split()[1]))
+        if words[0] == "jobtype":
+            data_rem["run_type"] = words[1]
+        elif words[0] == "method":
+            data_rem["lot"] = words[1]
+        elif words[0] == "unrestricted":
+            data_rem["unrestricted"] = strtobool(words[1])
+        elif words[0] == "basis":
+            data_rem["obasis_name"] = words[1]
+        elif words[0] == "symmetry":
+            data_rem["symm"] = strtobool(words[1])
     return data_rem
 
 
@@ -391,7 +391,6 @@ def _helper_vibrational(lit: LineIterator) -> tuple:
     for line in lit:
         if line.strip().startswith("This Molecule has"):
             break
-    # pylint: disable= W0631
     imaginary_freq = int(line.split()[3])
     vib_energy = float(next(lit).split()[-2])
     next(lit)
@@ -431,7 +430,7 @@ def _helper_thermo(lit: LineIterator) -> tuple:
     return enthalpy_dict, entropy_dict
 
 
-def _helper_eda2(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
+def _helper_eda2(lit: LineIterator) -> dict:
     """Load Energy decomposition information."""
     next(lit)
     eda2 = {}
