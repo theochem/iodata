@@ -24,6 +24,7 @@ from fnmatch import fnmatch
 from importlib import import_module
 from pkgutil import iter_modules
 from types import ModuleType
+from typing import Optional
 
 from .iodata import IOData
 from .utils import LineIterator
@@ -45,7 +46,7 @@ def _find_format_modules():
 FORMAT_MODULES = _find_format_modules()
 
 
-def _select_format_module(filename: str, attrname: str, fmt: str = None) -> ModuleType:
+def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = None) -> ModuleType:
     """Find a file format module with the requested attribute name.
 
     Parameters
@@ -110,7 +111,7 @@ def _select_input_module(fmt: str) -> ModuleType:
     raise ValueError(f"Could not find input format {fmt}!")
 
 
-def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
+def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
     """Load data from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -142,7 +143,7 @@ def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
     return iodata
 
 
-def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
+def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IOData]:
     """Load multiple IOData instances from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -174,7 +175,7 @@ def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
             return
 
 
-def dump_one(iodata: IOData, filename: str, fmt: str = None, **kwargs):
+def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs):
     """Write data to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -199,7 +200,7 @@ def dump_one(iodata: IOData, filename: str, fmt: str = None, **kwargs):
         format_module.dump_one(f, iodata, **kwargs)
 
 
-def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None, **kwargs):
+def dump_many(iodatas: Iterator[IOData], filename: str, fmt: Optional[str] = None, **kwargs):
     """Write multiple IOData instances to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -223,7 +224,7 @@ def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None, **kwarg
         format_module.dump_many(f, iodatas, **kwargs)
 
 
-def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, **kwargs):
+def write_input(iodata: IOData, filename: str, fmt: str, template: Optional[str] = None, **kwargs):
     """Write input file using an instance of IOData for the specified software format.
 
     Parameters

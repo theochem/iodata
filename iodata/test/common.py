@@ -20,6 +20,7 @@
 
 import os
 from contextlib import contextmanager
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -170,7 +171,9 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
     assert_allclose(mo_overlap, np.eye(mo_count), rtol=0.0, atol=atol, err_msg=message)
 
 
-def load_one_warning(filename: str, fmt: str = None, match: str = None, **kwargs):
+def load_one_warning(
+    filename: str, fmt: Optional[str] = None, match: Optional[str] = None, **kwargs
+):
     """Call load_one, catching expected FileFormatWarning.
 
     Parameters

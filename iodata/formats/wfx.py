@@ -23,7 +23,7 @@ See http://aim.tkgristmill.com/wfxformat.html
 
 import warnings
 from collections.abc import Iterator
-from typing import TextIO
+from typing import Optional, TextIO
 
 import numpy as np
 
@@ -165,7 +165,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
     return result
 
 
-def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
+def parse_wfx(lit: LineIterator, required_tags: Optional[list] = None) -> dict:
     """Load data in all sections existing in the given WFX file LineIterator."""
     data = {}
     mo_start = "<Molecular Orbital Primitive Coefficients>"

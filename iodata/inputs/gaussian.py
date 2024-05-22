@@ -18,7 +18,7 @@
 # --
 """Gaussian Input Module."""
 
-from typing import TextIO
+from typing import Optional, TextIO
 
 from ..docstrings import document_write_input
 from ..iodata import IOData
@@ -44,7 +44,7 @@ default_template = """\
     ["atnums", "atcoords"],
     ["title", "run_type", "lot", "obasis_name", "spinmult", "charge"],
 )
-def write_input(f: TextIO, data: IOData, template: str = None, **kwargs):
+def write_input(f: TextIO, data: IOData, template: Optional[str] = None, **kwargs):
     """Do not edit this docstring. It will be overwritten."""
     # initialize a dictionary with fields to replace in the template
     fields = populate_fields(data)

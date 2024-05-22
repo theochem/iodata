@@ -25,6 +25,8 @@ post-processing less efficient compared to formats that do support contractions 
 Gaussian functions.
 """
 
+import functools
+import operator
 from typing import TextIO
 
 import numpy as np
@@ -118,7 +120,9 @@ CONVENTIONS = {
 
 # Definition of primitives in the WFN format. This is the order of the primitive
 # types as documented by aimall, used in the field TYPE ASSIGNMENTS.
-PRIMITIVE_NAMES = sum([CONVENTIONS[(angmom, "c")] for angmom in range(6)], [])
+PRIMITIVE_NAMES = functools.reduce(
+    operator.iadd, [CONVENTIONS[(angmom, "c")] for angmom in range(6)], []
+)
 
 
 def _load_helper_num(lit: LineIterator) -> list[int]:

@@ -20,6 +20,7 @@
 
 import os
 import warnings
+from typing import Optional
 
 from numpy.testing import assert_allclose, assert_equal
 
@@ -55,7 +56,7 @@ def compare_mols_diff_formats(mol1, mol2):
     assert_allclose(charges1, charges2, rtol=0.0, atol=1.0e-6)
 
 
-def check_load_dump_consistency(fn: str, tmpdir: str, match: str = None):
+def check_load_dump_consistency(fn: str, tmpdir: str, match: Optional[str] = None):
     """Check if data is preserved after dumping and loading a Molekel file.
 
     Parameters

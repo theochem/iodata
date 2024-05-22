@@ -172,7 +172,7 @@ class IOData:
 
     """
 
-    atcharges: dict = {}
+    atcharges: dict = attr.ib(factory=dict)
     atcoords: np.ndarray = attr.ib(
         default=None,
         converter=convert_array_to(float),
@@ -183,7 +183,7 @@ class IOData:
         converter=convert_array_to(float),
         validator=attr.validators.optional(validate_shape("natom")),
     )
-    atffparams: dict = {}
+    atffparams: dict = attr.ib(factory=dict)
     atfrozen: np.ndarray = attr.ib(
         default=None,
         converter=convert_array_to(bool),
@@ -229,21 +229,21 @@ class IOData:
         converter=convert_array_to(float),
         validator=attr.validators.optional(validate_shape(None, 4)),
     )
-    extra: dict = {}
+    extra: dict = attr.ib(factory=dict)
     g_rot: float = None
     lot: str = None
     mo: MolecularOrbitals = None
-    moments: dict = {}
+    moments: dict = attr.ib(factory=dict)
     _nelec: float = None
     obasis: MolecularBasis = None
     obasis_name: str = None
-    one_ints: dict = {}
-    one_rdms: dict = {}
+    one_ints: dict = attr.ib(factory=dict)
+    one_rdms: dict = attr.ib(factory=dict)
     run_type: str = None
     _spinpol: float = None
     title: str = None
-    two_ints: dict = {}
-    two_rdms: dict = {}
+    two_ints: dict = attr.ib(factory=dict)
+    two_rdms: dict = attr.ib(factory=dict)
 
     def __attrs_post_init__(self):
         # Trigger setter to acchieve consistency in properties

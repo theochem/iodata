@@ -146,7 +146,7 @@ class Cube:
 
     @property
     def shape(self):
-        """Shape of the rectangular grid."""  # noqa: D401
+        """Shape of the rectangular grid."""
         return self.data.shape
 
 

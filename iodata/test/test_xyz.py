@@ -64,7 +64,8 @@ def check_water(mol):
     )
 
 
-FCC_ATOM_COLUMNS = DEFAULT_ATOM_COLUMNS + [
+FCC_ATOM_COLUMNS = [
+    *DEFAULT_ATOM_COLUMNS,
     # Storing the atomic numbers as zs in the extras attribute makes sense
     # for testing.
     ("extra", "zs", (), int, int, "{:2d}".format),

@@ -133,7 +133,7 @@ class Shell:
     coeffs: np.ndarray = attr.ib(validator=validate_shape(("exponents", 0), ("kinds", 0)))
 
     @property
-    def nbasis(self) -> int:  # noqa: D401
+    def nbasis(self) -> int:
         """Number of basis functions (e.g. 3 for a P shell and 4 for an SP shell)."""
         result = 0
         for angmom, kind in zip(self.angmoms, self.kinds):
@@ -146,12 +146,12 @@ class Shell:
         return result
 
     @property
-    def nprim(self) -> int:  # noqa: D401
+    def nprim(self) -> int:
         """Number of primitives, also known as the contraction length."""
         return len(self.exponents)
 
     @property
-    def ncon(self) -> int:  # noqa: D401
+    def ncon(self) -> int:
         """Number of contractions. This is usually 1; e.g., it would be 2 for an SP shell."""
         return len(self.angmoms)
 
@@ -210,7 +210,7 @@ class MolecularBasis:
     primitive_normalization: str
 
     @property
-    def nbasis(self) -> int:  # noqa: D401
+    def nbasis(self) -> int:
         """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
 
@@ -369,7 +369,7 @@ def get_default_conventions() -> tuple[dict, dict]:
 
     Kenny, J. P.; Janssen, C. L.; Valeev, E. F.; Windus, T. L. Components for
     Integral Evaluation in Quantum Chemistry: Components for Integral Evaluation
-    in Quantum Chemistry. J. Comput. Chem. 2008, 29 (4), 562–577.
+    in Quantum Chemistry. J. Comput. Chem. 2008, 29 (4), 562-577.
     https://doi.org/10.1002/jcc.20815.
 
     The ordering of the spherical harmonics within one shell is rather vague

@@ -19,6 +19,7 @@
 """Test iodata.formats.fchk module."""
 
 import os
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -543,7 +544,7 @@ def test_load_nbasis_indep(tmpdir):
     assert mol2.mo.coeffs.shape == (38, 37)
 
 
-def check_load_dump_consistency(tmpdir: str, fn: str, match: str = None):
+def check_load_dump_consistency(tmpdir: str, fn: str, match: Optional[str] = None):
     """Check if dumping and loading an FCHK file results in the same data.
 
     Parameters

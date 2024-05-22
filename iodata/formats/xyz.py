@@ -115,7 +115,7 @@ def load_one(lit: LineIterator, atom_columns=None) -> dict:
     data = {"title": title}
     # Initialize the arrays to be loaded from the XYZ file.
     for attrname, keyname, shapesuffix, dtype, _loadword, _dumpword in atom_columns:
-        array = np.zeros((natom,) + shapesuffix, dtype=dtype)
+        array = np.zeros((natom, *shapesuffix), dtype=dtype)
         if keyname is None:
             # Store the initial array as a normal attribute.
             data[attrname] = array

@@ -19,6 +19,7 @@
 """Test iodata.formats.wfn module."""
 
 import os
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -92,7 +93,7 @@ def test_load_dump_consistency_lih_cation_rohf(tmpdir):
 
 
 def compare_mulliken_charges(
-    fname: str, tmpdir: str, rtol: float = 1.0e-7, atol: float = 0.0, match: str = None
+    fname: str, tmpdir: str, rtol: float = 1.0e-7, atol: float = 0.0, match: Optional[str] = None
 ):
     """Check if charges are computed correctly after dumping and loading WFX file format.
 

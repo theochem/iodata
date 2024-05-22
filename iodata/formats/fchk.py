@@ -20,7 +20,7 @@
 
 from collections.abc import Iterator
 from fnmatch import fnmatch
-from typing import TextIO
+from typing import Optional, TextIO
 
 import numpy as np
 
@@ -357,7 +357,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             yield data
 
 
-def _load_fchk_low(lit: LineIterator, label_patterns: list[str] = None) -> dict:
+def _load_fchk_low(lit: LineIterator, label_patterns: Optional[list[str]] = None) -> dict:
     """Read selected fields from a formatted checkpoint file.
 
     Parameters
