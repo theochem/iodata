@@ -70,14 +70,13 @@ def load_one(lit: LineIterator) -> dict:
         "segid": segid,
         "resid": resid,
     }
-    result = {
+    return {
         "atcoords": atcoords,
         "atffparams": atffparams,
         "atmasses": atmasses,
         "extra": extra,
         "title": title,
     }
-    return result
 
 
 def _helper_read_crd(lit: LineIterator) -> tuple:

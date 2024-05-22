@@ -221,8 +221,7 @@ def compute_overlap(
         permutation1, signs1 = permutation0, signs0
     else:
         permutation1, signs1 = convert_conventions(obasis1, OVERLAP_CONVENTIONS, reverse=True)
-    overlap = overlap[:, permutation1] * signs1
-    return overlap
+    return overlap[:, permutation1] * signs1
 
 
 class GaussianOverlap:

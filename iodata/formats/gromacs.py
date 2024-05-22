@@ -56,15 +56,15 @@ def load_one(lit: LineIterator) -> dict:
         cellvecs = data[7]
         atffparams = {"attypes": attypes, "resnames": resnames, "resnums": resnums}
         extra = {"time": time, "velocities": velocities}
-        result = {
+        return {
             "atcoords": atcoords,
             "atffparams": atffparams,
             "cellvecs": cellvecs,
             "extra": extra,
             "title": title,
         }
-        return result
     lit.error("Gromacs gro file could not be read.")
+    return None
 
 
 @document_load_many("GRO", ["atcoords", "atffparams", "cellvecs", "extra", "title"])

@@ -590,8 +590,7 @@ def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Use python standard lib json module to read the file to a dict
     json_in = json.load(lit.f)
-    result = _parse_json(json_in, lit)
-    return result
+    return _parse_json(json_in, lit)
 
 
 def _parse_json(json_in: dict, lit: LineIterator) -> dict:

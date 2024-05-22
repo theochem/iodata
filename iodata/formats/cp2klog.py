@@ -189,6 +189,7 @@ def _read_cp2k_obasis(lit: LineIterator) -> dict:
     ):
         return _read_cp2k_uncontracted_obasis(lit)
     lit.error("Could not find basis set in CP2K ATOM output.")
+    return None
 
 
 def _read_cp2k_occupations_energies(
@@ -506,7 +507,7 @@ def load_one(lit: LineIterator) -> dict:
             np.concatenate((orb_alpha_energies, orb_beta_energies), axis=0),
         )
 
-    result = {
+    return {
         "obasis": obasis,
         "mo": mo,
         "atcoords": np.zeros((1, 3), float),
@@ -514,4 +515,3 @@ def load_one(lit: LineIterator) -> dict:
         "energy": energy,
         "atcorenums": np.array([atcorenum]),
     }
-    return result

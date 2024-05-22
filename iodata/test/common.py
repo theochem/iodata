@@ -48,8 +48,7 @@ __all__ = [
 def compute_1rdm(iodata):
     """Compute 1-RDM."""
     coeffs, occs = iodata.mo.coeffs, iodata.mo.occs
-    dm = np.dot(coeffs * occs, coeffs.T)
-    return dm
+    return np.dot(coeffs * occs, coeffs.T)
 
 
 def compute_mulliken_charges(iodata):
