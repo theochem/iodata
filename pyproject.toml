@@ -54,7 +54,7 @@ line-length = 100
 target-version = "py39"
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "UP", "B", "PL", "RUF", "C4"]
+select = ["E", "W", "F", "I", "N", "UP", "B", "PL", "RUF", "C4"]
 ignore = [
     "PLR0904",  # https://docs.astral.sh/ruff/rules/too-many-public-methods/
     "PLR0911",  # https://docs.astral.sh/ruff/rules/too-many-return-statements/
