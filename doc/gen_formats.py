@@ -22,7 +22,6 @@
 
 from iodata.api import FORMAT_MODULES
 
-
 __all__ = []
 
 

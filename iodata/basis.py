@@ -26,13 +26,12 @@ Basis set conventions and terminology are documented in :ref:`basis_conventions`
 
 from functools import wraps
 from numbers import Integral
-from typing import List, Dict, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import attr
 import numpy as np
 
 from .attrutils import validate_shape
-
 
 __all__ = [
     "angmom_sti",

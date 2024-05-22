@@ -25,27 +25,26 @@ in mind that several of these write incorrect versions of the file format, but t
 errors are corrected when loading them with IOData.
 """
 
-from typing import Tuple, Union, TextIO
 import copy
+from typing import TextIO, Tuple, Union
 
 import attr
 import numpy as np
 
 from ..basis import (
-    angmom_its,
-    angmom_sti,
+    HORTON2_CONVENTIONS,
     MolecularBasis,
     Shell,
+    angmom_its,
+    angmom_sti,
     convert_conventions,
-    HORTON2_CONVENTIONS,
 )
-from ..docstrings import document_load_one, document_dump_one
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
-from ..utils import angstrom, LineIterator
-
+from ..periodic import num2sym, sym2num
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 

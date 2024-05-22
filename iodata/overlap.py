@@ -24,10 +24,9 @@ import attr
 import numpy as np
 import scipy.special
 
-from .overlap_cartpure import tfs
-from .basis import convert_conventions, iter_cart_alphabet, MolecularBasis, Shell
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
-
+from .basis import MolecularBasis, Shell, convert_conventions, iter_cart_alphabet
+from .overlap_cartpure import tfs
 
 __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
 

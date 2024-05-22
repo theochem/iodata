@@ -19,11 +19,10 @@
 # pylint: disable=unsubscriptable-object
 """Test iodata.formats.orcalog module."""
 
-from numpy.testing import assert_equal, assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
-
-from ..utils import angstrom, amu
+from ..utils import amu, angstrom
 
 try:
     from importlib_resources import as_file, files

@@ -23,17 +23,16 @@ This format is used by two programs:
 `Orca <https://sites.google.com/site/orcainputlibrary/>`_.
 """
 
-from typing import Tuple, List, TextIO
+from typing import List, TextIO, Tuple
 
 import numpy as np
 
-from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
-from ..basis import angmom_sti, angmom_its, convert_conventions, MolecularBasis, Shell
-from ..docstrings import document_load_one, document_dump_one
+from ..basis import MolecularBasis, Shell, angmom_its, angmom_sti, convert_conventions
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import angstrom, LineIterator
-
+from ..utils import LineIterator, angstrom
+from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 
 __all__ = []
 

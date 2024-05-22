@@ -19,11 +19,12 @@
 """Test iodata.inputs module."""
 
 import os
+
 import numpy as np
 
+from ..api import load_one, write_input
 from ..iodata import IOData
 from ..utils import angstrom
-from ..api import load_one, write_input
 
 try:
     from importlib_resources import as_file, files

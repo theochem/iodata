@@ -29,20 +29,19 @@ This format is one of the chemical table file formats:
 https://en.wikipedia.org/wiki/Chemical_table_file
 """
 
-from typing import TextIO, Iterator
+from typing import Iterator, TextIO
 
 import numpy as np
 
 from ..docstrings import (
-    document_load_one,
-    document_load_many,
-    document_dump_one,
     document_dump_many,
+    document_dump_one,
+    document_load_many,
+    document_load_one,
 )
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym
-from ..utils import angstrom, LineIterator
-
+from ..periodic import num2sym, sym2num
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 

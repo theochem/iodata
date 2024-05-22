@@ -19,12 +19,11 @@
 """Test iodata.formats.cp2klog module."""
 
 import pytest
-from numpy.testing import assert_equal, assert_allclose
-
-from .common import truncated_file, check_orthonormal
+from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
 from ..overlap import compute_overlap
+from .common import check_orthonormal, truncated_file
 
 try:
     from importlib_resources import as_file, files

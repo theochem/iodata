@@ -34,8 +34,7 @@ from typing import Tuple
 import numpy as np
 
 from ..docstrings import document_load_one
-
-from ..utils import angstrom, amu, LineIterator
+from ..utils import LineIterator, amu, angstrom
 
 __all__ = []
 

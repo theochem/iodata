@@ -26,12 +26,11 @@ from typing import TextIO
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_dump_one
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..periodic import num2sym
-from ..utils import angstrom, LineIterator
+from ..utils import LineIterator, angstrom
 from .chgcar import _load_vasp_header
-
 
 __all__ = []
 

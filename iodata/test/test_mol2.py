@@ -19,13 +19,14 @@
 """Test iodata.formats.mol2 module."""
 
 import os
-import pytest
-from numpy.testing import assert_equal, assert_allclose
 
-from .common import truncated_file
-from ..api import load_one, load_many, dump_one, dump_many
-from ..utils import angstrom
+import pytest
+from numpy.testing import assert_allclose, assert_equal
+
+from ..api import dump_many, dump_one, load_many, load_one
 from ..periodic import bond2num
+from ..utils import angstrom
+from .common import truncated_file
 
 try:
     from importlib_resources import as_file, files

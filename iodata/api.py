@@ -19,15 +19,14 @@
 """Functions to be used by end users."""
 
 import os
-from typing import Iterator
-from types import ModuleType
 from fnmatch import fnmatch
-from pkgutil import iter_modules
 from importlib import import_module
+from pkgutil import iter_modules
+from types import ModuleType
+from typing import Iterator
 
 from .iodata import IOData
 from .utils import LineIterator
-
 
 __all__ = ["load_one", "load_many", "dump_one", "dump_many", "write_input"]
 

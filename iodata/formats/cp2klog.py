@@ -18,16 +18,15 @@
 # --
 """CP2K ATOM output file format."""
 
-from typing import Dict, Union, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 from scipy.special import factorialk
 
-from ..basis import angmom_sti, MolecularBasis, Shell, HORTON2_CONVENTIONS
+from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, angmom_sti
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator
-
 
 __all__ = []
 

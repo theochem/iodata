@@ -25,13 +25,12 @@ http://manual.gromacs.org/current/reference-manual/file-formats.html#gro
 
 """
 
-from typing import Tuple, Iterator
+from typing import Iterator, Tuple
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_load_many
-from ..utils import nanometer, picosecond, LineIterator
-
+from ..docstrings import document_load_many, document_load_one
+from ..utils import LineIterator, nanometer, picosecond
 
 __all__ = []
 

@@ -30,13 +30,12 @@ from typing import List, TextIO, Tuple
 import numpy as np
 
 from ..basis import MolecularBasis, Shell, convert_conventions
-from ..docstrings import document_load_one, document_dump_one
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
-from ..overlap import gob_cart_normalization
 from ..orbitals import MolecularOrbitals
+from ..overlap import gob_cart_normalization
 from ..periodic import num2sym, sym2num
 from ..utils import LineIterator
-
 
 __all__ = []
 

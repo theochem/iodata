@@ -25,7 +25,6 @@ import numpy as np
 from ..docstrings import document_load_one
 from ..utils import LineIterator
 
-
 __all__ = []
 
 

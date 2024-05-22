@@ -20,7 +20,6 @@
 
 import numpy as np
 
-
 __all__ = ["convert_array_to", "validate_shape"]
 
 

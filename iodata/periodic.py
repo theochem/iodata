@@ -20,7 +20,6 @@
 
 from typing import Dict
 
-
 __all__ = ["num2sym", "sym2num"]
 
 

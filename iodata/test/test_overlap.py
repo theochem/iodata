@@ -19,14 +19,15 @@
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
 import itertools
+
 import attr
 import numpy as np
-from numpy.testing import assert_allclose
 import pytest
+from numpy.testing import assert_allclose
 
 from ..api import load_one
 from ..basis import MolecularBasis, Shell, convert_conventions
-from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
+from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
 
 try:
     from importlib_resources import as_file, files

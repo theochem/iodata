@@ -28,7 +28,7 @@ import numpy as np
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
-from ..utils import LineIterator, angstrom, kcalmol, calmol, kjmol, strtobool
+from ..utils import LineIterator, angstrom, calmol, kcalmol, kjmol, strtobool
 
 __all__ = []
 

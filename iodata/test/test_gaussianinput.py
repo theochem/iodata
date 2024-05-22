@@ -19,7 +19,7 @@
 """Test iodata.formats.gaussianinput module."""
 
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose, assert_raises
+from numpy.testing import assert_allclose, assert_equal, assert_raises
 
 from ..api import load_one
 from ..utils import angstrom

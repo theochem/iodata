@@ -22,8 +22,7 @@ import numpy as np
 
 from ..docstrings import document_load_one
 from ..periodic import sym2num
-from ..utils import angstrom, LineIterator
-
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 

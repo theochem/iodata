@@ -19,8 +19,7 @@
 # pylint: disable=dangerous-default-value
 """Docstring decorators for file format implementations."""
 
-from typing import List, Dict
-
+from typing import Dict, List
 
 __all__ = [
     "document_load_one",

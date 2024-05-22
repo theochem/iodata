@@ -19,7 +19,7 @@
 """Test iodata.formats.mwfn module."""
 
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
 from ..overlap import compute_overlap

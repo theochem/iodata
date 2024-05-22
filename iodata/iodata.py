@@ -26,7 +26,6 @@ from .basis import MolecularBasis
 from .orbitals import MolecularOrbitals
 from .utils import Cube
 
-
 __all__ = ["IOData"]
 
 

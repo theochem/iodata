@@ -20,16 +20,15 @@
 """Test iodata.formats.fchk module."""
 
 import os
+
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose
-
 import pytest
+from numpy.testing import assert_allclose, assert_equal
 
-from ..api import load_one, load_many, dump_one
+from ..api import dump_one, load_many, load_one
 from ..overlap import compute_overlap
 from ..utils import check_dm
-
-from .common import check_orthonormal, compare_mols, load_one_warning, compute_1rdm
+from .common import check_orthonormal, compare_mols, compute_1rdm, load_one_warning
 from .test_molekel import compare_mols_diff_formats
 
 try:

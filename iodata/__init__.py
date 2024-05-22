@@ -25,8 +25,7 @@ except ImportError:
     __version_tuple__ = (0, 0, 0, "a-dev")
 
 
+from .api import dump_many, dump_one, load_many, load_one, write_input
 from .iodata import IOData
-from .api import load_one, load_many, dump_one, dump_many, write_input
-
 
 __all__ = ("IOData", "load_one", "load_many", "dump_one", "dump_many", "write_input")

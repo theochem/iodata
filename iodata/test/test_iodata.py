@@ -19,12 +19,12 @@
 """Test iodata.iodata module."""
 
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
 import pytest
+from numpy.testing import assert_allclose, assert_equal
 
-from .common import compute_1rdm
-from ..api import load_one, IOData
+from ..api import IOData, load_one
 from ..overlap import compute_overlap
+from .common import compute_1rdm
 
 try:
     from importlib_resources import as_file, files

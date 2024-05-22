@@ -19,14 +19,15 @@
 """Test iodata.formats.wfn module."""
 
 import os
-import numpy as np
-from numpy.testing import assert_equal, assert_allclose
 
-from .common import compute_mulliken_charges, check_orthonormal, compare_mols
-from ..api import load_one, dump_one
+import numpy as np
+from numpy.testing import assert_allclose, assert_equal
+
+from ..api import dump_one, load_one
 from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
 from ..utils import LineIterator
+from .common import check_orthonormal, compare_mols, compute_mulliken_charges
 
 try:
     from importlib_resources import as_file, files

@@ -26,14 +26,13 @@ Note that the second column in the geometry specification of the cube file is in
 as the effective core charges.
 """
 
-from typing import TextIO, Dict, Tuple
+from typing import Dict, TextIO, Tuple
 
 import numpy as np
 
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
-from ..docstrings import document_load_one, document_dump_one
-from ..utils import LineIterator, Cube
-
+from ..utils import Cube, LineIterator
 
 __all__ = []
 

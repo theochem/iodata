@@ -19,10 +19,11 @@
 """Test iodata.formats.fcidump module."""
 
 import os
-import numpy as np
-from numpy.testing import assert_equal, assert_allclose
 
-from ..api import load_one, dump_one
+import numpy as np
+from numpy.testing import assert_allclose, assert_equal
+
+from ..api import dump_one, load_one
 
 try:
     from importlib_resources import as_file, files

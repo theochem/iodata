@@ -19,12 +19,13 @@
 """Test iodata.formats.sdf module."""
 
 import os
-import pytest
-from numpy.testing import assert_equal, assert_allclose
 
+import pytest
+from numpy.testing import assert_allclose, assert_equal
+
+from ..api import dump_many, dump_one, load_many, load_one
+from ..utils import FileFormatError, angstrom
 from .common import truncated_file
-from ..api import load_one, load_many, dump_one, dump_many
-from ..utils import angstrom, FileFormatError
 
 try:
     from importlib_resources import as_file, files

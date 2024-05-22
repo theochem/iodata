@@ -20,13 +20,14 @@
 
 import os
 from contextlib import contextmanager
+
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose
 import pytest
+from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
-from ..overlap import compute_overlap
 from ..basis import convert_conventions
+from ..overlap import compute_overlap
 from ..utils import FileFormatWarning
 
 try:

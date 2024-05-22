@@ -23,7 +23,6 @@ import numpy as np
 
 from .attrutils import convert_array_to, validate_shape
 
-
 __all__ = ["MolecularOrbitals"]
 
 

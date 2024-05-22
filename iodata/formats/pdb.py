@@ -23,20 +23,19 @@ last updated one and is described in this link:
 http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html
 """
 
-from typing import TextIO, Iterator
+from typing import Iterator, TextIO
 
 import numpy as np
 
 from ..docstrings import (
-    document_load_one,
-    document_load_many,
-    document_dump_one,
     document_dump_many,
+    document_dump_one,
+    document_load_many,
+    document_load_one,
 )
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym, bond2num
-from ..utils import angstrom, LineIterator
-
+from ..periodic import bond2num, num2sym, sym2num
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 

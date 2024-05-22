@@ -18,8 +18,8 @@
 # --
 """Utility functions module."""
 
-from typing import Tuple
 import warnings
+from typing import Tuple
 
 import attr
 import numpy as np
@@ -27,7 +27,6 @@ import scipy.constants as spc
 from scipy.linalg import eigh
 
 from .attrutils import validate_shape
-
 
 __all__ = [
     "LineIterator",

@@ -22,13 +22,13 @@
 import os
 import warnings
 
-from numpy.testing import assert_equal, assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
-from .common import check_orthonormal, compare_mols, compute_mulliken_charges, load_one_warning
+from ..api import dump_one, load_one
 from ..basis import convert_conventions
-from ..api import load_one, dump_one
 from ..overlap import compute_overlap
 from ..utils import angstrom
+from .common import check_orthonormal, compare_mols, compute_mulliken_charges, load_one_warning
 
 try:
     from importlib_resources import as_file, files

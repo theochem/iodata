@@ -30,8 +30,7 @@ you need to use the following Gaussian command line:
 import numpy as np
 
 from ..docstrings import document_load_one
-from ..utils import set_four_index_element, LineIterator
-
+from ..utils import LineIterator, set_four_index_element
 
 __all__ = []
 

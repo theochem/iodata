@@ -20,19 +20,19 @@
 
 import attr
 import numpy as np
-from numpy.testing import assert_equal
 import pytest
+from numpy.testing import assert_equal
 
 from ..basis import (
-    angmom_sti,
-    angmom_its,
-    Shell,
+    CCA_CONVENTIONS,
+    HORTON2_CONVENTIONS,
     MolecularBasis,
+    Shell,
+    angmom_its,
+    angmom_sti,
     convert_convention_shell,
     convert_conventions,
     iter_cart_alphabet,
-    HORTON2_CONVENTIONS,
-    CCA_CONVENTIONS,
 )
 from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 

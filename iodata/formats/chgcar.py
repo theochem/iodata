@@ -31,8 +31,7 @@ import numpy as np
 
 from ..docstrings import document_load_one
 from ..periodic import sym2num
-from ..utils import angstrom, volume, LineIterator, Cube
-
+from ..utils import Cube, LineIterator, angstrom, volume
 
 __all__ = []
 

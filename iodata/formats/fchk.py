@@ -19,17 +19,15 @@
 """Gaussian FCHK file format."""
 
 from fnmatch import fnmatch
-from typing import List, Tuple, Iterator, TextIO
+from typing import Iterator, List, TextIO, Tuple
 
 import numpy as np
 
+from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventions
+from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
-from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS, convert_conventions
-from ..docstrings import document_load_one, document_load_many
-from ..docstrings import document_dump_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, amu
-
 
 __all__ = []
 

@@ -24,15 +24,15 @@ import warnings
 
 import attr
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
 import pytest
+from numpy.testing import assert_allclose, assert_equal
 
-from .common import compute_mulliken_charges, compare_mols, check_orthonormal
-from ..api import load_one, dump_one
+from ..api import dump_one, load_one
 from ..basis import convert_conventions
 from ..formats.molden import _load_low
-from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
-from ..utils import LineIterator, angstrom, FileFormatWarning
+from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
+from ..utils import FileFormatWarning, LineIterator, angstrom
+from .common import check_orthonormal, compare_mols, compute_mulliken_charges
 
 try:
     from importlib_resources import as_file, files

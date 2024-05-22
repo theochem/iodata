@@ -570,12 +570,11 @@ from warnings import warn
 
 import numpy as np
 
+from .. import __version__
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
 from ..utils import FileFormatError, FileFormatWarning, LineIterator
-from .. import __version__
-
 
 __all__ = []
 

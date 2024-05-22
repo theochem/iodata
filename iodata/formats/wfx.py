@@ -21,19 +21,18 @@
 See http://aim.tkgristmill.com/wfxformat.html
 """
 
-from typing import TextIO, Iterator
 import warnings
+from typing import Iterator, TextIO
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_dump_one
+from ..basis import MolecularBasis, Shell, convert_conventions
+from ..docstrings import document_dump_one, document_load_one
+from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
-from ..iodata import IOData
 from ..utils import LineIterator
-from ..basis import MolecularBasis, Shell, convert_conventions
-
-from .wfn import build_obasis, get_mocoeff_scales, CONVENTIONS
+from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
 __all__ = []
 

@@ -21,8 +21,8 @@
 """Generate formats.rst."""
 
 from gen_formats import _format_words, _print_section
-from iodata.api import INPUT_MODULES
 
+from iodata.api import INPUT_MODULES
 
 __all__ = []
 

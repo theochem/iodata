@@ -20,11 +20,10 @@
 
 from typing import TextIO
 
-from .common import populate_fields
-
 from ..docstrings import document_write_input
 from ..iodata import IOData
 from ..periodic import num2sym
+from .common import populate_fields
 
 __all__ = []
 

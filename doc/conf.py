@@ -22,7 +22,6 @@
 import os
 import subprocess
 
-
 # -- Fragile tricks for RTD -----------------------------------------------
 
 # Normally sphinx-build should be called after iodata is installed somehow.

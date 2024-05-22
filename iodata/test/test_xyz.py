@@ -19,12 +19,13 @@
 """Test iodata.formats.xyz module."""
 
 import os
-import numpy as np
-from numpy.testing import assert_equal, assert_allclose
 
-from ..api import load_one, load_many, dump_one, dump_many
-from ..utils import angstrom
+import numpy as np
+from numpy.testing import assert_allclose, assert_equal
+
+from ..api import dump_many, dump_one, load_many, load_one
 from ..formats.xyz import DEFAULT_ATOM_COLUMNS
+from ..utils import angstrom
 
 try:
     from importlib_resources import as_file, files

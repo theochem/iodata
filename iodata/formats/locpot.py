@@ -26,9 +26,8 @@ different conversions to atomic units.
 """
 
 from ..docstrings import document_load_one
-from ..utils import electronvolt, LineIterator
+from ..utils import LineIterator, electronvolt
 from .chgcar import _load_vasp_grid
-
 
 __all__ = []
 

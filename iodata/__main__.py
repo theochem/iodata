@@ -20,9 +20,10 @@
 """CLI for file conversion."""
 
 import argparse
+
 import numpy as np
 
-from .api import load_one, dump_one, load_many, dump_many, FORMAT_MODULES
+from .api import FORMAT_MODULES, dump_many, dump_one, load_many, load_one
 
 try:
     from iodata.version import __version__
