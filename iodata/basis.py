@@ -390,9 +390,7 @@ def get_default_conventions() -> tuple[dict, dict]:
     horton2 = {(0, "c"): ["1"]}
     cca = horton2.copy()
     for angmom in range(1, 25):
-        conv_cart = list(
-            "x" * nx + "y" * ny + "z" * nz for nx, ny, nz in iter_cart_alphabet(angmom)
-        )
+        conv_cart = ["x" * nx + "y" * ny + "z" * nz for nx, ny, nz in iter_cart_alphabet(angmom)]
         key = (angmom, "c")
         horton2[key] = conv_cart
         cca[key] = conv_cart

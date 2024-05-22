@@ -84,10 +84,10 @@ def get_bare_transforms(ellmax: int):
         for _m in range(2 * ell + 1):
             row = []
             poly = sp.Poly(rrsh.pop(0), x, y, z)
-            lookup = dict(
-                ((int(nx), int(ny), int(nz)), coeff)
+            lookup = {
+                (int(nx), int(ny), int(nz)): coeff
                 for (nx, ny, nz), coeff in zip(poly.monoms(), poly.coeffs())
-            )
+            }
             for nx, ny, nz in iter_mononomials(ell):
                 row.append(sp.sympify(lookup.get((nx, ny, nz), 0)))
             tf.append(row)

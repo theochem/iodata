@@ -142,7 +142,7 @@ num2sym: dict[int, str] = {
     118: "Og",
 }
 
-sym2num: dict[str, int] = dict((value, key) for key, value in num2sym.items())
+sym2num: dict[str, int] = {value: key for key, value in num2sym.items()}
 
 
 # Labels used for bond types.
@@ -166,4 +166,4 @@ num2bond = {
     11: "nc",  # not connected
 }
 
-bond2num: dict[str, int] = dict((value, key) for key, value in num2bond.items())
+bond2num: dict[str, int] = {value: key for key, value in num2bond.items()}

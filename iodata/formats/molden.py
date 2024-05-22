@@ -126,7 +126,7 @@ def _load_low(lit: LineIterator) -> dict:
         ``title`` key and its corresponding value as well.
 
     """
-    pure_angmoms = set([])
+    pure_angmoms = set()
     atnums = None
     atcoords = None
     obasis = None
