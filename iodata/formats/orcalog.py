@@ -18,7 +18,7 @@
 # --
 """Orca output file format."""
 
-from typing import TextIO, Tuple
+from typing import TextIO
 
 import numpy as np
 
@@ -87,7 +87,7 @@ def _helper_number_atoms(lit: LineIterator) -> int:
     return natom
 
 
-def _helper_geometry(lit: TextIO, natom: int) -> Tuple[np.ndarray, np.ndarray]:
+def _helper_geometry(lit: TextIO, natom: int) -> tuple[np.ndarray, np.ndarray]:
     """Load coordinates form a ORCA output file format.
 
     Parameters
@@ -119,7 +119,7 @@ def _helper_geometry(lit: TextIO, natom: int) -> Tuple[np.ndarray, np.ndarray]:
     return atnums, atcoords
 
 
-def _helper_scf_energies(lit: TextIO) -> Tuple[np.ndarray, np.ndarray]:
+def _helper_scf_energies(lit: TextIO) -> tuple[np.ndarray, np.ndarray]:
     """Load energies from each SCF cycle from a ORCA output file format.
 
     Parameters

@@ -53,7 +53,8 @@ information loaded from a file can also be written back out when dumping it.
 
 """
 
-from typing import Iterator, TextIO
+from collections.abc import Iterator
+from typing import TextIO
 
 import numpy as np
 
@@ -80,7 +81,7 @@ DEFAULT_ATOM_COLUMNS = [
         (),
         int,
         (lambda word: int(word) if word.isdigit() else sym2num[word.title()]),
-        (lambda atnum: "{:2s}".format(num2sym[atnum])),
+        (lambda atnum: f"{num2sym[atnum]:2s}"),
     ),
     (
         "atcoords",
@@ -88,7 +89,7 @@ DEFAULT_ATOM_COLUMNS = [
         (3,),
         float,
         (lambda word: float(word) * angstrom),
-        (lambda value: "{:15.10f}".format(value / angstrom)),
+        (lambda value: f"{value / angstrom:15.10f}"),
     ),
 ]
 

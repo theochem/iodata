@@ -75,7 +75,7 @@ def parse_args():
         "-V",
         "--version",
         action="version",
-        version="%(prog)s (IOData version {})".format(__version__),
+        version=f"%(prog)s (IOData version {__version__})",
     )
     parser.add_argument(
         "-i", "--infmt", help="Select the input format, overrides automatic detection."

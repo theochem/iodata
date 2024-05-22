@@ -86,16 +86,14 @@ def validate_shape(*shape_requirements: tuple):
                 other_name, other_axis = item
                 other = getattr(obj, other_name)
                 if other is None:
-                    raise TypeError("Other attribute '{}' is not set.".format(other_name))
+                    raise TypeError(f"Other attribute '{other_name}' is not set.")
                 if other_axis == 0:
                     expected_shape.append(len(other))
                 else:
                     if other_axis >= other.ndim or other_axis < 0:
                         raise TypeError(
                             "Cannot get length along axis "
-                            "{} of attribute {} with ndim {}.".format(
-                                other_axis, other_name, other.ndim
-                            )
+                            f"{other_axis} of attribute {other_name} with ndim {other.ndim}."
                         )
                     expected_shape.append(other.shape[other_axis])
             else:
@@ -120,9 +118,8 @@ def validate_shape(*shape_requirements: tuple):
         # Raise TypeError if needed.
         if not match:
             raise TypeError(
-                "Expecting shape {} for attribute {}, got {}".format(
-                    expected_shape, attribute.name, observed_shape
-                )
+                f"Expecting shape {expected_shape} for attribute {attribute.name}, "
+                f"got {observed_shape}"
             )
 
     return validator

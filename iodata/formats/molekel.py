@@ -23,7 +23,7 @@ This format is used by two programs:
 `Orca <https://sites.google.com/site/orcainputlibrary/>`_.
 """
 
-from typing import List, TextIO, Tuple
+from typing import TextIO
 
 import numpy as np
 
@@ -40,8 +40,8 @@ __all__ = []
 PATTERNS = ["*.mkl"]
 
 
-def _load_helper_charge_spinpol(lit: LineIterator) -> List[int]:
-    charge, spinmult = [int(word) for word in next(lit).split()]
+def _load_helper_charge_spinpol(lit: LineIterator) -> list[int]:
+    charge, spinmult = (int(word) for word in next(lit).split())
     spinpol = spinmult - 1
     return charge, spinpol
 
@@ -57,7 +57,7 @@ def _load_helper_charges(lit: LineIterator) -> dict:
     return {"mulliken": np.array(atcharges)}
 
 
-def _load_helper_atoms(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator) -> tuple[np.ndarray, np.ndarray]:
     atnums = []
     atcoords = []
     for line in lit:
@@ -92,9 +92,7 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
         elif nbasis_shell == len(CONVENTIONS[(angmom, "p")]):
             kind = "p"
         else:
-            lit.error(
-                "Cannot interpret angmom={} with nbasis_shell={}".format(angmom, nbasis_shell)
-            )
+            lit.error(f"Cannot interpret angmom={angmom} with nbasis_shell={nbasis_shell}")
         exponents = []
         coeffs = []
         for line in lit:
@@ -108,7 +106,7 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
     return MolecularBasis(shells, CONVENTIONS, "L2")
 
 
-def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.ndarray]:
+def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[np.ndarray, np.ndarray]:
     coeffs = []
     energies = []
     irreps = []
@@ -275,7 +273,7 @@ def dump_one(f: TextIO, data: IOData):
 
     # CHAR_MUL
     f.write("$CHAR_MULT\n")
-    f.write("  {:.0f} {:.0f}\n".format(data.charge, data.spinpol + 1))
+    f.write(f"  {data.charge:.0f} {data.spinpol + 1:.0f}\n")
     f.write("$END\n")
     f.write("\n")
 
@@ -283,7 +281,7 @@ def dump_one(f: TextIO, data: IOData):
     atcoords = data.atcoords / angstrom
     f.write("$COORD\n")
     for n, coord in zip(data.atnums, atcoords):
-        f.write("   {:d}   {: ,.6f}  {: ,.6f}  {: ,.6f}\n".format(n, coord[0], coord[1], coord[2]))
+        f.write(f"   {n:d}   {coord[0]: ,.6f}  {coord[1]: ,.6f}  {coord[2]: ,.6f}\n")
     f.write("$END\n")
     f.write("\n")
 
@@ -291,7 +289,7 @@ def dump_one(f: TextIO, data: IOData):
     if "mulliken" in data.atcharges:
         f.write("$CHARGES\n")
         for charge in data.atcharges["mulliken"]:
-            f.write("  {: ,.6f}\n".format(charge))
+            f.write(f"  {charge: ,.6f}\n")
         f.write("$END\n")
         f.write("\n")
 
@@ -305,9 +303,9 @@ def dump_one(f: TextIO, data: IOData):
         for iangmom, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
             iatom_last = shell.icenter
             nbasis = len(CONVENTIONS[(angmom, kind)])
-            f.write(" {} {:1s} 1.00\n".format(nbasis, angmom_its(angmom).capitalize()))
+            f.write(f" {nbasis} {angmom_its(angmom).capitalize():1s} 1.00\n")
             for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
-                f.write("{:20.10f} {:17.10f}\n".format(exponent, coeff))
+                f.write(f"{exponent:20.10f} {coeff:17.10f}\n")
     f.write("\n")
     f.write("$END\n")
     f.write("\n")
@@ -364,15 +362,15 @@ def _dump_helper_coeffs(f, data, spin=None):
         else:
             irreps = ["a1g"] * norb
     else:
-        raise IOError("A spin must be specified")
+        raise OSError("A spin must be specified")
 
     for j in range(0, norb, 5):
-        en = " ".join(["   {: ,.12f}".format(e) for e in ener[j : j + 5]])
-        irre = " ".join(["{}".format(irr) for irr in irreps[j : j + 5]])
+        en = " ".join([f"   {e: ,.12f}" for e in ener[j : j + 5]])
+        irre = " ".join([f"{irr}" for irr in irreps[j : j + 5]])
         f.write(irre + "\n")
         f.write(en + "\n")
         for orb in coeff[:, j : j + 5]:
-            coeffs = " ".join(["  {: ,.12f}".format(c) for c in orb])
+            coeffs = " ".join([f"  {c: ,.12f}" for c in orb])
             f.write(coeffs + "\n")
 
     f.write(" $END\n")
@@ -390,9 +388,9 @@ def _dump_helper_occ(f, data, spin=None):
         norb = data.mo.norba
         occ = data.mo.occs
     else:
-        raise IOError("A spin must be specified")
+        raise OSError("A spin must be specified")
 
     for j in range(0, norb, 5):
-        occs = " ".join(["  {: ,.7f}".format(o) for o in occ[j : j + 5]])
+        occs = " ".join([f"  {o: ,.7f}" for o in occ[j : j + 5]])
         f.write(occs + "\n")
     f.write(" $END\n")

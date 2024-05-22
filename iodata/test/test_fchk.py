@@ -272,7 +272,7 @@ def test_load_fchk_ch3_rohf_g03():
 
 def check_load_azirine(key, numbers):
     """Perform some basic checks on a azirine fchk file."""
-    mol = load_fchk_helper("2h-azirine-{}.fchk".format(key))
+    mol = load_fchk_helper(f"2h-azirine-{key}.fchk")
     assert mol.obasis.nbasis == 33
     dm = mol.one_rdms["post_scf_ao"]
     assert_equal(dm[0, 0], numbers[0])
@@ -299,7 +299,7 @@ def test_load_azirine_mp3():
 
 def check_load_nitrogen(key, numbers, numbers_spin):
     """Perform some basic checks on a nitrogen fchk file."""
-    mol = load_fchk_helper("nitrogen-{}.fchk".format(key))
+    mol = load_fchk_helper(f"nitrogen-{key}.fchk")
     assert mol.obasis.nbasis == 9
     dm = mol.one_rdms["post_scf_ao"]
     assert_equal(dm[0, 0], numbers[0])
@@ -332,7 +332,7 @@ def test_load_nitrogen_mp3():
 
 def check_normalization_dm_azirine(key):
     """Perform some basic checks on a 2h-azirine fchk file."""
-    mol = load_fchk_helper("2h-azirine-{}.fchk".format(key))
+    mol = load_fchk_helper(f"2h-azirine-{key}.fchk")
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)
     dm = mol.one_rdms["post_scf_ao"]

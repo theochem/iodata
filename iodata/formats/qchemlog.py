@@ -21,8 +21,6 @@
 This module will load Q-Chem log file into IODATA.
 """
 
-from typing import Tuple
-
 import numpy as np
 
 from ..docstrings import document_load_one
@@ -229,7 +227,7 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
     return data
 
 
-def _helper_rem_job(lit: LineIterator) -> Tuple:
+def _helper_rem_job(lit: LineIterator) -> tuple:
     """Load job specifications from Q-Chem output file format."""
     data_rem = {}
     for line in lit:
@@ -286,7 +284,7 @@ def _helper_energy(lit: LineIterator):
     return energy
 
 
-def _helper_orbital_energies_restricted(lit: LineIterator) -> Tuple:
+def _helper_orbital_energies_restricted(lit: LineIterator) -> tuple:
     """Load occupied and virtual orbital energies for restricted calculation."""
     # alpha occupied MOs
     mo_a_occupied = _helper_section("-- Occupied --", "-- Virtual --", lit, backward=True)
@@ -295,7 +293,7 @@ def _helper_orbital_energies_restricted(lit: LineIterator) -> Tuple:
     return mo_a_occupied, mo_a_unoccupied
 
 
-def _helper_orbital_energies_unrestricted(lit: LineIterator) -> Tuple:
+def _helper_orbital_energies_unrestricted(lit: LineIterator) -> tuple:
     """Load occupied and virtual orbital energies for unrestricted calculation."""
     subdata = {}
     # alpha occupied MOs
@@ -342,7 +340,7 @@ def _helper_mulliken(lit: LineIterator) -> np.ndarray:
     return np.array(mulliken_charges, dtype=float)
 
 
-def _helper_dipole_moments(lit: LineIterator) -> Tuple:
+def _helper_dipole_moments(lit: LineIterator) -> tuple:
     """Load cartesian multiple moments."""
     for line in lit:
         if line.strip().startswith("Dipole Moment (Debye)"):
@@ -388,7 +386,7 @@ def _helper_hessian(lit: LineIterator, natom: int) -> np.ndarray:
     return hessian.astype(float)
 
 
-def _helper_vibrational(lit: LineIterator) -> Tuple:
+def _helper_vibrational(lit: LineIterator) -> tuple:
     """Load vibrational analysis."""
     for line in lit:
         if line.strip().startswith("This Molecule has"):
@@ -406,7 +404,7 @@ def _helper_vibrational(lit: LineIterator) -> Tuple:
     return imaginary_freq, vib_energy, atmasses
 
 
-def _helper_thermo(lit: LineIterator) -> Tuple:
+def _helper_thermo(lit: LineIterator) -> tuple:
     """Load thermodynamics properties."""
     enthalpy_dict = {}
     entropy_dict = {}

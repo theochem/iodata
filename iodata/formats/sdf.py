@@ -29,7 +29,8 @@ This format is one of the chemical table file formats:
 https://en.wikipedia.org/wiki/Chemical_table_file
 """
 
-from typing import Iterator, TextIO
+from collections.abc import Iterator
+from typing import TextIO
 
 import numpy as np
 
@@ -112,14 +113,14 @@ def dump_one(f: TextIO, data: IOData):
     print("", file=f)
     print("", file=f)
     nbond = 0 if data.bonds is None else len(data.bonds)
-    print("{:3d}{:3d}  0     0  0  0  0  0  0999 V2000".format(data.natom, nbond), file=f)
+    print(f"{data.natom:3d}{nbond:3d}  0     0  0  0  0  0  0999 V2000", file=f)
     for iatom in range(data.natom):
         n = num2sym[data.atnums[iatom]]
         x, y, z = data.atcoords[iatom] / angstrom
         print(f"{x:10.4f}{y:10.4f}{z:10.4f} {n:<3s} 0  0  0  0  0  0  0  0  0  0  0  0", file=f)
     if data.bonds is not None:
         for iatom, jatom, bondtype in data.bonds:
-            print("{:3d}{:3d}{:3d}  0  0  0  0".format(iatom + 1, jatom + 1, bondtype), file=f)
+            print(f"{iatom + 1:3d}{jatom + 1:3d}{bondtype:3d}  0  0  0  0", file=f)
     print("M  END", file=f)
     print("$$$$", file=f)
 

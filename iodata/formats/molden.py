@@ -26,7 +26,7 @@ errors are corrected when loading them with IOData.
 """
 
 import copy
-from typing import TextIO, Tuple, Union
+from typing import TextIO, Union
 
 import attr
 import numpy as np
@@ -228,7 +228,7 @@ def _load_low(lit: LineIterator) -> dict:
 
 def _load_helper_atoms(
     lit: LineIterator, cunit: float
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Load element numbers and coordinates."""
     atnums = []
     atcorenums = []
@@ -282,7 +282,7 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
     return MolecularBasis(shells, CONVENTIONS, "L2")
 
 
-def _load_helper_coeffs(lit: LineIterator) -> Tuple:
+def _load_helper_coeffs(lit: LineIterator) -> tuple:
     """Load the orbital coefficients."""
     occsa = []
     coeffsa = []
@@ -665,7 +665,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
         coeffsa = result["mo"].coeffsa
         coeffsb = result["mo"].coeffsb
     else:
-        raise ValueError("Molecular orbital kind={0} not recognized".format(result["mo"].kind))
+        raise ValueError("Molecular orbital kind={} not recognized".format(result["mo"].kind))
 
     if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         # The file is good. No need to change obasis.
@@ -757,7 +757,7 @@ def dump_one(f: TextIO, data: IOData):
     f.write("[Molden Format]\n")
     if data.title is not None:
         f.write("[Title]\n")
-        f.write(" {}\n".format(data.title))
+        f.write(f" {data.title}\n")
 
     # Print the elements numbers and the coordinates
     f.write("[Atoms] AU\n")
@@ -766,15 +766,14 @@ def dump_one(f: TextIO, data: IOData):
         atcorenum = data.atcorenums[iatom]
         x, y, z = data.atcoords[iatom]
         f.write(
-            "{:2s} {:3d} {:3.0f}  {:25.18f} {:25.18f} {:25.18f}\n".format(
-                num2sym[atnum].ljust(2), iatom + 1, atcorenum, x, y, z
-            )
+            f"{num2sym[atnum].ljust(2):2s} {iatom + 1:3d} {atcorenum:3.0f}  "
+            f"{x:25.18f} {y:25.18f} {z:25.18f}\n"
         )
     f.write("\n")
 
     # Print the basis set
     if data.obasis is None:
-        raise IOError("A Gaussian orbital basis is required to write a molden file.")
+        raise OSError("A Gaussian orbital basis is required to write a molden file.")
     obasis = data.obasis
 
     # Figure out the pure/Cartesian situation. Note that the Molden
@@ -786,9 +785,8 @@ def dump_one(f: TextIO, data: IOData):
         for angmom, kind in zip(shell.angmoms, shell.kinds):
             if angmom in angmom_kinds:
                 if kind != angmom_kinds[angmom]:
-                    raise IOError(
-                        "Molden format does not support mixed "
-                        "pure+Cartesian functions for one "
+                    raise OSError(
+                        "Molden format does not support mixed pure+Cartesian functions for one "
                         "angular momentum."
                     )
             else:
@@ -824,9 +822,9 @@ def dump_one(f: TextIO, data: IOData):
         # Write out as a segmented basis. Molden format does not support
         # generalized contractions.
         for iangmom, angmom in enumerate(shell.angmoms):
-            f.write(" {:1s}  {:3d} 1.00\n".format(angmom_its(angmom), shell.nprim))
+            f.write(f" {angmom_its(angmom):1s}  {shell.nprim:3d} 1.00\n")
             for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
-                f.write("{:20.10f} {:20.10f}\n".format(exponent, coeff))
+                f.write(f"{exponent:20.10f} {coeff:20.10f}\n")
     f.write("\n")
 
     # Get the permutation to convert the orbital coefficients to Molden conventions.
@@ -885,4 +883,4 @@ def _dump_helper_orb(f, spin, occs, coeffs, energies, irreps):
             # precision. Molden also reads high-precision, so we use this
             # instead.
             # f.write('{:4d} {:10.6f}\n'.format(ibasis + 1, orb_coeffs[ibasis, ifn]))
-            f.write("{:4d} {:.17e}\n".format(ibasis + 1, coeffs[ibasis, ifn]))
+            f.write(f"{ibasis + 1:4d} {coeffs[ibasis, ifn]:.17e}\n")

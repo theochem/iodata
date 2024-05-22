@@ -19,11 +19,11 @@
 """Functions to be used by end users."""
 
 import os
+from collections.abc import Iterator
 from fnmatch import fnmatch
 from importlib import import_module
 from pkgutil import iter_modules
 from types import ModuleType
-from typing import Iterator
 
 from .iodata import IOData
 from .utils import LineIterator
@@ -72,9 +72,7 @@ def _select_format_module(filename: str, attrname: str, fmt: str = None) -> Modu
                     return format_module
     else:
         return FORMAT_MODULES[fmt]
-    raise ValueError(
-        "Could not find file format with feature {} for file {}".format(attrname, filename)
-    )
+    raise ValueError(f"Could not find file format with feature {attrname} for file {filename}")
 
 
 def _find_input_modules():

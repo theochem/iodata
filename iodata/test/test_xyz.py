@@ -76,7 +76,7 @@ FCC_ATOM_COLUMNS = DEFAULT_ATOM_COLUMNS + [
         (3,),
         float,
         (lambda word: -float(word)),
-        (lambda value: "{:15.10f}".format(-value)),
+        (lambda value: f"{-value:15.10f}"),
     ),
 ]
 
@@ -141,7 +141,7 @@ def test_load_many():
         mols = list(load_many(str(fn_xyz)))
     assert len(mols) == 5
     for imol, mol in enumerate(mols):
-        assert mol.title == "Frame {}".format(imol)
+        assert mol.title == f"Frame {imol}"
         assert_equal(mol.atnums, [8, 1, 1])
         assert mol.atcoords.shape == (3, 3)
     assert_allclose(mols[0].atcoords[2] / angstrom, [2.864329, 0.114369, 3.3635])

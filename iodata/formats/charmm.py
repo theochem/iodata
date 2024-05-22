@@ -29,8 +29,6 @@ y-coordinate, z-coordinate, segment identifier, residue identifier and a weighti
 
 """
 
-from typing import Tuple
-
 import numpy as np
 
 from ..docstrings import document_load_one
@@ -82,7 +80,7 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
-def _helper_read_crd(lit: LineIterator) -> Tuple:
+def _helper_read_crd(lit: LineIterator) -> tuple:
     """Read CHARMM crd file."""
     # Read the line for number of atoms.
     natom = next(lit)

@@ -181,7 +181,7 @@ def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
     fn_tmp = os.path.join(tmpdir, "test_qcschema_mol.json")
     dump_one(mol, fn_tmp)
 
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
 
     # Check that prior provenance info is kept
@@ -211,7 +211,7 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     fn_tmp = os.path.join(tmpdir, "test_qcschema_mol.json")
     dump_one(mol, fn_tmp)
 
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
 
     # Extra processing for testing:
@@ -244,7 +244,7 @@ def test_ghost(tmpdir):
     np.testing.assert_allclose(mol.atcorenums, [8, 1, 1, 0, 0, 0, 0, 0, 0])
     fn_tmp = os.path.join(tmpdir, "test_ghost.json")
     dump_one(mol, fn_tmp)
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
     assert mol2["real"] == [True] * 3 + [False] * 6
 
@@ -320,7 +320,7 @@ def test_inout_qcschema_input(tmpdir, filename, nwarn):
     fn_tmp = os.path.join(tmpdir, "test_input_mol.json")
     dump_one(mol, fn_tmp)
 
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
 
     # Check that prior provenance info is kept
@@ -392,7 +392,7 @@ def test_inout_qcschema_output(tmpdir, filename):
     fn_tmp = os.path.join(tmpdir, "test_input_mol.json")
     dump_one(mol, fn_tmp)
 
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
 
     # Check that prior provenance info is kept

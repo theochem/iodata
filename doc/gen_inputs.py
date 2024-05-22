@@ -57,12 +57,12 @@ def main():
         # add labels for cross-referencing format (e.g. in formats table)
         print(f".. _input_{modname}:")
         print()
-        _print_section("{} (``{}``)".format(lines[0][:-1], modname), "=")
+        _print_section(f"{lines[0][:-1]} (``{modname}``)", "=")
         print()
         for line in lines[2:]:
             print(line)
 
-        _print_section(":py:func:`iodata.formats.{}.write_input`".format(modname), "-")
+        _print_section(f":py:func:`iodata.formats.{modname}.write_input`", "-")
         fn = getattr(module, "write_input", None)
         print("- Requires", _format_words(fn.required))
         if fn.optional:

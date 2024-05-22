@@ -22,7 +22,8 @@ There are different formats of mol2 files. Here the compatibility with AMBER sof
 was the main objective to write out files with atomic charges used by antechamber.
 """
 
-from typing import Iterator, TextIO, Tuple
+from collections.abc import Iterator
+from typing import TextIO
 
 import numpy as np
 
@@ -84,7 +85,7 @@ def load_one(lit: LineIterator) -> dict:
 
 def _load_helper_atoms(
     lit: LineIterator, natoms: int
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, tuple]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, tuple]:
     """Load element numbers, coordinates and atomic charges."""
     atnums = np.empty(natoms)
     atcoords = np.empty((natoms, 3))
@@ -111,7 +112,7 @@ def _load_helper_atoms(
     return atnums, atcoords, atchgs, attypes
 
 
-def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
+def _load_helper_bonds(lit: LineIterator, nbonds: int) -> tuple[np.ndarray]:
     """Load bond information.
 
     Each line in a bond definition has the following structure
@@ -146,7 +147,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     while True:
         try:
             yield load_one(lit)
-        except IOError:
+        except OSError:
             return
 
 

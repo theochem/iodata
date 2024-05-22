@@ -39,7 +39,7 @@ FNNAMES = ["load_one", "dump_one", "load_many", "dump_many"]
 
 
 def _format_words(words):
-    return ", ".join("``{}``".format(word) for word in words)
+    return ", ".join(f"``{word}``" for word in words)
 
 
 def _print_section(title, linechar):
@@ -64,7 +64,7 @@ def main():
         # add labels for cross-referencing format (e.g. in formats table)
         print(f".. _format_{modname}:")
         print()
-        _print_section("{} (``{}``)".format(lines[0][:-1], modname), "=")
+        _print_section(f"{lines[0][:-1]} (``{modname}``)", "=")
         print()
         for line in lines[2:]:
             print(line)
@@ -75,7 +75,7 @@ def main():
         for fnname in FNNAMES:
             fn = getattr(module, fnname, None)
             if fn is not None:
-                _print_section(":py:func:`iodata.formats.{}.{}`".format(modname, fnname), "-")
+                _print_section(f":py:func:`iodata.formats.{modname}.{fnname}`", "-")
                 if fnname.startswith("load"):
                     print("- Always loads", _format_words(fn.guaranteed))
                     if fn.ifpresent:

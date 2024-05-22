@@ -215,10 +215,10 @@ def print_latex(tfs):
 
     def iter_pure_labels(ell):
         """Iterate over labels for pure functions."""
-        yield "C_{{{}0}}".format(ell)
+        yield f"C_{{{ell}0}}"
         for m in range(1, ell + 1):
-            yield "C_{{{}{}}}".format(ell, m)
-            yield "S_{{{}{}}}".format(ell, m)
+            yield f"C_{{{ell}{m}}}"
+            yield f"S_{{{ell}{m}}}"
 
     def tostr(v):
         """Format an sympy expression as Latex code."""
@@ -229,7 +229,7 @@ def print_latex(tfs):
     for ell, tf in enumerate(tfs):
         npure, ncart = tf.shape
         print(r"\left(\begin{array}{c}")
-        print("   ", r" \\ ".join(["b({})".format(label) for label in iter_pure_labels(ell)]))
+        print("   ", r" \\ ".join([f"b({label})" for label in iter_pure_labels(ell)]))
         print(r"\end{array}\right)")
         print("    &=")
         print(r"\left(\begin{array}{" + ("c" * ncart) + "}")
@@ -246,7 +246,7 @@ def print_latex(tfs):
             spoly = "x" * nx + "y" * ny + "z" * nz
             if spoly == "":
                 spoly = "1"
-            els.append("b({})".format(spoly))
+            els.append(f"b({spoly})")
         print("   ", r" \\ ".join(els))
         print(r"\end{array}\right)")
         if ell != len(tfs) - 1:
@@ -265,13 +265,13 @@ def print_python(tfs):
 
     for ell, tf in enumerate(tfs):
         npure, ncart = tf.shape
-        print("tf{} = np.array([".format(ell))
+        print(f"tf{ell} = np.array([")
         for ipure in range(npure):
             print(
                 "    [{}],".format(", ".join([tostr(tf[ipure, icart]) for icart in range(ncart)]))
             )
         print("])")
-    print("tfs = [{}]".format(", ".join("tf{}".format(ell) for ell in range(len(tfs)))))
+    print("tfs = [{}]".format(", ".join(f"tf{ell}" for ell in range(len(tfs)))))
 
 
 def test_manual():

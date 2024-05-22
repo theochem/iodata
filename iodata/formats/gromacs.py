@@ -25,7 +25,7 @@ http://manual.gromacs.org/current/reference-manual/file-formats.html#gro
 
 """
 
-from typing import Iterator, Tuple
+from collections.abc import Iterator
 
 import numpy as np
 
@@ -75,11 +75,11 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     while True:
         try:
             yield load_one(lit)
-        except IOError:
+        except OSError:
             return
 
 
-def _helper_read_frame(lit: LineIterator) -> Tuple:
+def _helper_read_frame(lit: LineIterator) -> tuple:
     """Read one frame."""
     # Read the first line, get the title and try to get the time.
     # Time field is optional.

@@ -25,8 +25,6 @@ Note that even though the ``CHGCAR`` and ``LOCPOT`` files look very similar, the
 different conversions to atomic units.
 """
 
-from typing import Tuple
-
 import numpy as np
 
 from ..docstrings import document_load_one
@@ -39,7 +37,7 @@ __all__ = []
 PATTERNS = ["CHGCAR*", "AECCAR*"]
 
 
-def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray]:
+def _load_vasp_header(lit: LineIterator) -> tuple[str, np.ndarray, np.ndarray, np.ndarray]:
     """Load the cell and atoms from a VASP file format.
 
     Parameters

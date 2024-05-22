@@ -43,9 +43,9 @@ def check_load_input_and_compare(fname: str, fname_expected: str):
         Path to expected input file to load.
 
     """
-    with open(fname, "r") as ifn:
+    with open(fname) as ifn:
         content = "".join(ifn.readlines())
-    with open(fname_expected, "r") as efn:
+    with open(fname_expected) as efn:
         expected = "".join(efn.readlines())
     assert content == expected
 

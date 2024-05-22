@@ -18,7 +18,7 @@
 # --
 """CP2K ATOM output file format."""
 
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 import numpy as np
 from scipy.special import factorialk
@@ -194,7 +194,7 @@ def _read_cp2k_obasis(lit: LineIterator) -> dict:
 
 def _read_cp2k_occupations_energies(
     lit: LineIterator, restricted: bool
-) -> List[Tuple[int, int, float, float]]:
+) -> list[tuple[int, int, float, float]]:
     """Read orbital occupation numbers and energies from a CP2K ATOM file object.
 
     Parameters
@@ -235,8 +235,8 @@ def _read_cp2k_occupations_energies(
 
 
 def _read_cp2k_orbital_coeffs(
-    lit: LineIterator, oe: List[Tuple[int, int, float, float]]
-) -> Dict[Tuple[int, int], np.ndarray]:
+    lit: LineIterator, oe: list[tuple[int, int, float, float]]
+) -> dict[tuple[int, int], np.ndarray]:
     """Read the expansion coefficients of the orbital from an open CP2K ATOM output.
 
     Parameters
@@ -270,7 +270,7 @@ def _read_cp2k_orbital_coeffs(
     return allcoeffs
 
 
-def _get_norb_nel(oe: List[Tuple[int, int, float, float]]) -> Tuple[int, float]:
+def _get_norb_nel(oe: list[tuple[int, int, float, float]]) -> tuple[int, float]:
     """Return number of orbitals and electrons.
 
     Parameters
@@ -297,8 +297,8 @@ def _fill_orbitals(
     orb_coeffs: np.ndarray,
     orb_energies: np.ndarray,
     orb_occupations: np.ndarray,
-    oe: List[Tuple[int, int, float, float]],
-    coeffs: Dict[Tuple[int, int], np.ndarray],
+    oe: list[tuple[int, int, float, float]],
+    coeffs: dict[tuple[int, int], np.ndarray],
     obasis: MolecularBasis,
     restricted: bool,
 ):

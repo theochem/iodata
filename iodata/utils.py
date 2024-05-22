@@ -19,7 +19,6 @@
 """Utility functions module."""
 
 import warnings
-from typing import Tuple
 
 import attr
 import numpy as np
@@ -105,7 +104,7 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        raise FileFormatError("{}:{} {}".format(self.filename, self.lineno, msg))
+        raise FileFormatError(f"{self.filename}:{self.lineno} {msg}")
 
     def warn(self, msg: str):
         """Raise a warning while reading a file.
@@ -116,7 +115,7 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        warnings.warn("{}:{} {}".format(self.filename, self.lineno, msg), FileFormatWarning, 2)
+        warnings.warn(f"{self.filename}:{self.lineno} {msg}", FileFormatWarning, 2)
 
     def back(self, line):
         """Go one line back and decrease the lineno attribute by one."""
@@ -205,7 +204,7 @@ def volume(cellvecs: np.ndarray) -> float:
     raise ValueError("Argument cellvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
-def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Derive natural orbitals from a given density matrix.
 
     Parameters
@@ -264,7 +263,7 @@ def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: fl
     if occupations.min() < -eps:
         raise ValueError(
             "The density matrix has eigenvalues considerably smaller than "
-            "zero. error=%e" % (occupations.min())
+            f"zero. error={occupations.min():e}"
         )
     if occupations.max() > occ_max + eps:
         raise ValueError(

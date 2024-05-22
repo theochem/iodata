@@ -25,7 +25,7 @@ post-processing less efficient compared to formats that do support contractions 
 Gaussian functions.
 """
 
-from typing import List, TextIO, Tuple
+from typing import TextIO
 
 import numpy as np
 
@@ -121,7 +121,7 @@ CONVENTIONS = {
 PRIMITIVE_NAMES = sum([CONVENTIONS[(angmom, "c")] for angmom in range(6)], [])
 
 
-def _load_helper_num(lit: LineIterator) -> List[int]:
+def _load_helper_num(lit: LineIterator) -> list[int]:
     """Read number of orbitals, primitives and atoms."""
     line = next(lit)
     if not line.startswith("G"):
@@ -133,7 +133,7 @@ def _load_helper_num(lit: LineIterator) -> List[int]:
     return num_mo, nprim, num_atoms
 
 
-def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> tuple[np.ndarray, np.ndarray]:
     """Read the coordinates of the atoms."""
     atnums = np.empty(num_atoms, int)
     atcoords = np.empty((num_atoms, 3), float)
@@ -170,7 +170,7 @@ def _load_helper_section(
     return np.array(section, dtype=dtype)
 
 
-def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[int, float, float, np.ndarray]:
+def _load_helper_mo(lit: LineIterator, nprim: int) -> tuple[int, float, float, np.ndarray]:
     """Read one section of MO information."""
     line = next(lit)
     if not line.startswith("MO"):
@@ -206,7 +206,7 @@ def _load_helper_multiwfn(lit: LineIterator, num_mo: int) -> np.ndarray:
     return np.empty((0,), dtype=int)
 
 
-def load_wfn_low(lit: LineIterator) -> Tuple:
+def load_wfn_low(lit: LineIterator) -> tuple:
     """Load data from a WFN file into arrays.
 
     Parameters
@@ -256,7 +256,7 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
 # pylint: disable=too-many-branches
 def build_obasis(
     icenters: np.ndarray, type_assignments: np.ndarray, exponents: np.ndarray, lit: LineIterator
-) -> Tuple[MolecularBasis, np.ndarray]:
+) -> tuple[MolecularBasis, np.ndarray]:
     """Construct a basis set using the arrays read from a WFN or WFX file.
 
     Parameters
@@ -454,7 +454,7 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
-def _format_helper_section(header: str, skip: int, spec: str, nline: int) -> Tuple[str, int]:
+def _format_helper_section(header: str, skip: int, spec: str, nline: int) -> tuple[str, int]:
     """Return a format string for CENTRE_ASSIGMENTS, TYPE_ASSIGNMENTS, EXPONENTS lines."""
     return f"{header[:skip].ljust(skip)}{spec * nline}", len(spec)
 

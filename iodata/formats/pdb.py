@@ -23,7 +23,8 @@ last updated one and is described in this link:
 http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html
 """
 
-from typing import Iterator, TextIO
+from collections.abc import Iterator
+from typing import TextIO
 
 import numpy as np
 
@@ -239,7 +240,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     while True:
         try:
             yield load_one(lit)
-        except IOError:
+        except OSError:
             return
 
 
@@ -300,8 +301,7 @@ def dump_one(f: TextIO, data: IOData):
                 # Write connection in groups of max 4
                 for ichunk in range(len(iatoms1) // 4 + 1):
                     other_atoms_str = "".join(
-                        "{:5d}".format(iatom1 + 1)
-                        for iatom1 in iatoms1[ichunk * 4 : ichunk * 4 + 4]
+                        f"{iatom1 + 1:5d}" for iatom1 in iatoms1[ichunk * 4 : ichunk * 4 + 4]
                     )
                     conect_line = f"CONECT{iatom0 + 1:5d}{other_atoms_str}"
                     print(conect_line, file=f)
