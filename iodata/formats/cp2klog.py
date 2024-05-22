@@ -181,11 +181,11 @@ def _read_cp2k_obasis(lit: LineIterator) -> dict:
     next(lit)  # Skip empty line
     line = next(lit)  # Check for contracted versus uncontracted
     if line == (
-        " ********************** Contracted Gaussian Type Orbitals " "**********************\n"
+        " ********************** Contracted Gaussian Type Orbitals **********************\n"
     ):
         return _read_cp2k_contracted_obasis(lit)
     if line == (
-        " ********************* Uncontracted Gaussian Type Orbitals " "*********************\n"
+        " ********************* Uncontracted Gaussian Type Orbitals *********************\n"
     ):
         return _read_cp2k_uncontracted_obasis(lit)
     lit.error("Could not find basis set in CP2K ATOM output.")

@@ -228,7 +228,7 @@ def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
     else:
         if occsb is None:
             lit.error(
-                "Beta occupation numbers not found in mkl file while " "beta orbitals were present."
+                "Beta occupation numbers not found in mkl file while beta orbitals were present."
             )
         nalpha = int(np.round(occsa.sum()))
         nbeta = int(np.round(occsb.sum()))

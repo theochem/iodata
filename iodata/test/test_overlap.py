@@ -118,7 +118,7 @@ def test_overlap_two_basis_same(fn):
     assert_allclose(olp_a, olp_b, rtol=0, atol=1e-14)
 
 
-@pytest.mark.parametrize("fn0,fn1", itertools.combinations_with_replacement(FNS_TWO_BASIS, 2))
+@pytest.mark.parametrize(("fn0", "fn1"), itertools.combinations_with_replacement(FNS_TWO_BASIS, 2))
 def test_overlap_two_basis_different(fn0, fn1):
     with as_file(files("iodata.test.data").joinpath(fn0)) as pth0:
         mol0 = load_one(pth0)

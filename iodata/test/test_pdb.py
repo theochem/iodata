@@ -67,7 +67,7 @@ def check_water(mol):
 
 
 @pytest.mark.parametrize(
-    "fn_base,should_warn",
+    ("fn_base", "should_warn"),
     [
         ("water_single.pdb", False),
         ("water_single_model.pdb", False),

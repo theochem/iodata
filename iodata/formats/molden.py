@@ -153,7 +153,7 @@ def _load_low(lit: LineIterator) -> dict:
             # than reaching the end of the file.
             break
         # settings for pure or Cartesian shells.
-        if line.startswith("[5d]") or line.startswith("[5d7f]"):
+        if line.startswith(("[5d]", "[5d7f]")):
             pure_angmoms.add(2)
             pure_angmoms.add(3)
         elif line.lower().startswith("[7f]"):

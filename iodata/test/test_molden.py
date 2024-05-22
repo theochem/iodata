@@ -516,7 +516,7 @@ def test_load_molden_f():
 
 
 @pytest.mark.parametrize(
-    "fn,match",
+    ("fn", "match"),
     [
         ("h2o.molden.input", "ORCA"),
         ("li2.molden.input", "ORCA"),

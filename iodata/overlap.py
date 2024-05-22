@@ -89,7 +89,7 @@ def compute_overlap(
 
     """
     if obasis0.primitive_normalization != "L2":
-        raise ValueError("The overlap integrals are only implemented for L2 " "normalization.")
+        raise ValueError("The overlap integrals are only implemented for L2 normalization.")
 
     # Get a segmented basis, for simplicity
     obasis0 = obasis0.get_segmented()
@@ -106,7 +106,7 @@ def compute_overlap(
         identical = True
     else:
         if obasis1.primitive_normalization != "L2":
-            raise ValueError("The overlap integrals are only implemented for L2 " "normalization.")
+            raise ValueError("The overlap integrals are only implemented for L2 normalization.")
         if atcoords1 is None:
             raise TypeError(
                 "When a second basis is given, a second second "

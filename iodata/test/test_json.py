@@ -61,7 +61,9 @@ MOL_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, atnums, charge, spinpol, geometry, nwarn", MOL_FILES)
+@pytest.mark.parametrize(
+    ("filename", "atnums", "charge", "spinpol", "geometry", "nwarn"), MOL_FILES
+)
 def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry, nwarn):
     """Test qcschema_molecule parsing using manually generated files."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
@@ -105,7 +107,7 @@ MOLSSI_MOL_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, atnums, charge, spinpol, nwarn", MOLSSI_MOL_FILES)
+@pytest.mark.parametrize(("filename", "atnums", "charge", "spinpol", "nwarn"), MOLSSI_MOL_FILES)
 def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, nwarn):
     """Test qcschema_molecule parsing using MolSSI-sourced files."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
@@ -133,7 +135,7 @@ PASSTHROUGH_MOL_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, unparsed_dict", PASSTHROUGH_MOL_FILES)
+@pytest.mark.parametrize(("filename", "unparsed_dict"), PASSTHROUGH_MOL_FILES)
 def test_passthrough_qcschema_molecule(filename, unparsed_dict):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
@@ -166,7 +168,7 @@ INOUT_MOL_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, nwarn", INOUT_MOL_FILES)
+@pytest.mark.parametrize(("filename", "nwarn"), INOUT_MOL_FILES)
 def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
@@ -260,7 +262,7 @@ INPUT_FILES = [
 
 
 @pytest.mark.parametrize(
-    "filename, explicit_basis, lot, obasis_name, run_type, geometry", INPUT_FILES
+    ("filename", "explicit_basis", "lot", "obasis_name", "run_type", "geometry"), INPUT_FILES
 )
 def test_qcschema_input(filename, explicit_basis, lot, obasis_name, run_type, geometry):
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
@@ -286,7 +288,7 @@ PASSTHROUGH_INPUT_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, unparsed_dict, location", PASSTHROUGH_INPUT_FILES)
+@pytest.mark.parametrize(("filename", "unparsed_dict", "location"), PASSTHROUGH_INPUT_FILES)
 def test_passthrough_qcschema_input(filename, unparsed_dict, location):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
@@ -305,7 +307,7 @@ INOUT_INPUT_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, nwarn", INOUT_INPUT_FILES)
+@pytest.mark.parametrize(("filename", "nwarn"), INOUT_INPUT_FILES)
 def test_inout_qcschema_input(tmpdir, filename, nwarn):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
@@ -344,7 +346,7 @@ OUTPUT_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, lot, obasis_name, run_type, nwarn", OUTPUT_FILES)
+@pytest.mark.parametrize(("filename", "lot", "obasis_name", "run_type", "nwarn"), OUTPUT_FILES)
 def test_qcschema_output(filename, lot, obasis_name, run_type, nwarn):
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_output:
         if nwarn == 0:
@@ -368,7 +370,7 @@ BAD_OUTPUT_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, error", BAD_OUTPUT_FILES)
+@pytest.mark.parametrize(("filename", "error"), BAD_OUTPUT_FILES)
 def test_bad_qcschema_files(filename, error):
     # FIXME: these will move
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:

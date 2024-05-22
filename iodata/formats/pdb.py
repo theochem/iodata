@@ -168,7 +168,7 @@ def load_one(lit: LineIterator) -> dict:
             title_lines.append(line[10:].strip())
         if line.startswith("COMPND"):
             compnd_lines.append(line[10:].strip())
-        if line.startswith("ATOM") or line.startswith("HETATM"):
+        if line.startswith(("ATOM", "HETATM")):
             (atnum, attype, restype, chainid, resnum, atcoord, occupancy, bfactor) = (
                 _parse_pdb_atom_line(line, lit)
             )
