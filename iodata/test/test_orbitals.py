@@ -78,7 +78,8 @@ def test_restricted_occs():
 
 
 def test_restricted_coeffs():
-    coeffs = np.random.uniform(-1, 1, (7, 5))
+    rng = np.random.default_rng(1)
+    coeffs = rng.uniform(-1, 1, (7, 5))
     with pytest.raises(TypeError):
         MolecularOrbitals("restricted", 3, 3, coeffs=coeffs)
     mo = MolecularOrbitals("restricted", 5, 5, coeffs=coeffs)
@@ -99,7 +100,8 @@ def test_restricted_coeffs():
 
 
 def test_restricted_energies():
-    energies = np.random.uniform(-1, 1, 5)
+    rng = np.random.default_rng(1)
+    energies = rng.uniform(-1, 1, 5)
     with pytest.raises(TypeError):
         MolecularOrbitals("restricted", 3, 3, energies=energies)
     mo = MolecularOrbitals("restricted", 5, 5, energies=energies)
@@ -186,7 +188,8 @@ def test_unrestricted_occs():
 
 
 def test_unrestricted_coeffs():
-    coeffs = np.random.uniform(-1, 1, (7, 8))
+    rng = np.random.default_rng(1)
+    coeffs = rng.uniform(-1, 1, (7, 8))
     with pytest.raises(TypeError):
         MolecularOrbitals("unrestricted", 3, 2, coeffs=coeffs)
     mo = MolecularOrbitals("unrestricted", 5, 3, coeffs=coeffs)
@@ -207,7 +210,8 @@ def test_unrestricted_coeffs():
 
 
 def test_unrestricted_energies():
-    energies = np.random.uniform(-1, 1, 8)
+    rng = np.random.default_rng(1)
+    energies = rng.uniform(-1, 1, 8)
     with pytest.raises(TypeError):
         MolecularOrbitals("unrestricted", 3, 2, energies=energies)
     mo = MolecularOrbitals("unrestricted", 5, 3, energies=energies)
@@ -310,7 +314,8 @@ def test_generalized_occs():
 
 
 def test_generalized_coeffs():
-    coeffs = np.random.uniform(-1, 1, (10, 7))
+    rng = np.random.default_rng(1)
+    coeffs = rng.uniform(-1, 1, (10, 7))
     mo = MolecularOrbitals("generalized", None, None, coeffs=coeffs)
     assert mo.norba is None
     assert mo.norbb is None
@@ -338,7 +343,8 @@ def test_generalized_coeffs():
 
 
 def test_generalized_energies():
-    energies = np.random.uniform(-1, 1, 7)
+    rng = np.random.default_rng(1)
+    energies = rng.uniform(-1, 1, 7)
     mo = MolecularOrbitals("generalized", None, None, energies=energies)
     assert mo.norba is None
     assert mo.norbb is None
