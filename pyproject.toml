@@ -55,8 +55,8 @@ target-version = "py39"
 
 [tool.ruff.lint]
 select = [
-    "E", "W", "F", "I", "N", "UP", "B", "BLE", "A", "EXE", "ISC", "ICN", "PIE", "PYI", "PT",
-    "PL", "RUF", "C4", "RSE", "RET", "SLF", "NPY", "SIM", "PERF", "TRY"
+    "A", "B", "BLE", "C4", "E", "EXE", "F", "I", "ICN", "ISC", "N", "NPY", "PERF", "PIE",
+    "PL", "PT", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TRY", "UP", "W"
 ]
 ignore = [
     "PLR0904",  # https://docs.astral.sh/ruff/rules/too-many-public-methods/
