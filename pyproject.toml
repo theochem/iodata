@@ -56,7 +56,7 @@ target-version = "py39"
 [tool.ruff.lint]
 select = [
     "E", "W", "F", "I", "N", "UP", "B", "BLE", "A", "EXE", "ISC", "ICN", "PIE", "PYI", "PT",
-    "PL", "RUF", "C4", "RSE", "RET", "SLF", "NPY", "SIM", "PERF"
+    "PL", "RUF", "C4", "RSE", "RET", "SLF", "NPY", "SIM", "PERF", "TRY"
 ]
 ignore = [
     "PLR0904",  # https://docs.astral.sh/ruff/rules/too-many-public-methods/
@@ -69,4 +69,5 @@ ignore = [
     "PLR0917",  # https://docs.astral.sh/ruff/rules/too-many-positional/
     "PLR2004",  # https://docs.astral.sh/ruff/rules/magic-value-comparison/
     "PT011",  # https://docs.astral.sh/ruff/rules/pytest-raises-too-broad/
+    "TRY003",  # https://docs.astral.sh/ruff/rules/raise-vanilla-args/
 ]
