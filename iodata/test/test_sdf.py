@@ -53,10 +53,12 @@ def test_sdf_load_one_formamide():
 
 def test_sdf_formaterror(tmpdir):
     # test if sdf file has the wrong ending without $$$$
-    with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_test:
-        with truncated_file(fn_test, 36, 0, tmpdir) as fn:
-            with pytest.raises(IOError):
-                load_one(str(fn))
+    with (
+        as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_test,
+        truncated_file(fn_test, 36, 0, tmpdir) as fn,
+        pytest.raises(IOError),
+    ):
+        load_one(str(fn))
 
 
 def check_example(mol):
@@ -127,6 +129,8 @@ def test_load_dump_many_consistency(tmpdir):
 
 
 def test_v2000_check():
-    with as_file(files("iodata.test.data").joinpath("molv3000.sdf")) as fn_sdf:
-        with pytest.raises(FileFormatError):
-            load_one(fn_sdf)
+    with (
+        as_file(files("iodata.test.data").joinpath("molv3000.sdf")) as fn_sdf,
+        pytest.raises(FileFormatError),
+    ):
+        load_one(fn_sdf)

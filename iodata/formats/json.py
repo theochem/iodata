@@ -660,10 +660,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
         elif "center_data" in result:
             schema_name = "qcschema_basis"
         elif "driver" in result:
-            if "return_result" in result:
-                schema_name = "qcschema_output"
-            else:
-                schema_name = "qcschema_input"
+            schema_name = "qcschema_output" if "return_result" in result else "qcschema_input"
         else:
             raise FileFormatError(f"{lit.filename}: Could not determine `schema_name`.")
     if "schema_version" not in result:

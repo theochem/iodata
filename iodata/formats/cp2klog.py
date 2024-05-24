@@ -417,10 +417,7 @@ def load_one(lit: LineIterator) -> dict:
             break
 
     # Select the correct basis
-    if atcorenum == atnum:
-        obasis = ae_obasis
-    else:
-        obasis = pp_obasis
+    obasis = ae_obasis if atcorenum == atnum else pp_obasis
 
     # Search for energy
     for line in lit:

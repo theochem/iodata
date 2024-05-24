@@ -43,10 +43,12 @@ def test_mol2_load_one():
 
 def test_mol2_formaterror(tmpdir):
     # test if mol2 file has the wrong ending
-    with as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_test:
-        with truncated_file(fn_test, 2, 0, tmpdir) as fn:
-            with pytest.raises(IOError):
-                load_one(str(fn))
+    with (
+        as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_test,
+        truncated_file(fn_test, 2, 0, tmpdir) as fn,
+        pytest.raises(IOError),
+    ):
+        load_one(str(fn))
 
 
 def test_mol2_symbol():

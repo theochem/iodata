@@ -68,9 +68,10 @@ def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = Non
     basename = os.path.basename(filename)
     if fmt is None:
         for format_module in FORMAT_MODULES.values():
-            if any(fnmatch(basename, pattern) for pattern in format_module.PATTERNS):
-                if hasattr(format_module, attrname):
-                    return format_module
+            if any(fnmatch(basename, pattern) for pattern in format_module.PATTERNS) and hasattr(
+                format_module, attrname
+            ):
+                return format_module
     else:
         return FORMAT_MODULES[fmt]
     raise ValueError(f"Could not find file format with feature {attrname} for file {filename}")

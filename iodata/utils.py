@@ -76,7 +76,7 @@ class LineIterator:
 
         """
         self.filename = filename
-        self.f = open(filename)
+        self.f = open(filename)  # noqa
         self.lineno = 0
         self.stack = []
 
@@ -88,12 +88,8 @@ class LineIterator:
 
     def __next__(self):
         """Return the next line and increase the lineno attribute by one."""
-        if self.stack:
-            line = self.stack.pop()
-        else:
-            line = next(self.f)
         self.lineno += 1
-        return line
+        return self.stack.pop() if self.stack else next(self.f)
 
     def error(self, msg: str):
         """Raise an error while reading a file.

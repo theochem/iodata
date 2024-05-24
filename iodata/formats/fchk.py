@@ -241,10 +241,9 @@ def load_one(lit: LineIterator) -> dict:
         mo_occs = np.zeros(norba)
         mo_occs[:nalpha] = 1.0
         mo_occs[:nbeta] = 2.0
-        if nalpha != nbeta and "one_rdms" in result:
-            # delete dm_full_scf because it is known to be buggy
-            if "scf" in result["one_rdms"]:
-                result["one_rdms"].pop("scf")
+        # delete dm_full_scf because it is known to be buggy
+        if nalpha != nbeta and "one_rdms" in result and "scf" in result["one_rdms"]:
+            result["one_rdms"].pop("scf")
         mo = MolecularOrbitals("restricted", norba, norba, mo_occs, mo_coeffs, mo_energies)
     result["mo"] = mo
 

@@ -99,10 +99,7 @@ def validate_shape(*shape_requirements: tuple):
                 raise ValueError(f"Cannot interpret item in shape_requirements: {item}")
         expected_shape = tuple(expected_shape)
         # Get the actual shape
-        if isinstance(value, np.ndarray):
-            observed_shape = value.shape
-        else:
-            observed_shape = (len(value),)
+        observed_shape = value.shape if isinstance(value, np.ndarray) else (len(value),)
         # Compare
         match = True
         if len(expected_shape) != len(observed_shape):

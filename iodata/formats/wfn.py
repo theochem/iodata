@@ -284,12 +284,9 @@ def build_obasis(
     while ibasis < nbasis:
         # Determine the angular moment of the shell
         type_assignment = type_assignments[ibasis]
-        if type_assignment == 0:
-            angmom = 0
-        else:
-            # multiple different type assignments (codes for individual basis
-            # functions) can match one angular momentum.
-            angmom = len(PRIMITIVE_NAMES[type_assignments[ibasis]])
+        # multiple different type assignments (codes for individual basis
+        # functions) can match one angular momentum.
+        angmom = 0 if type_assignment == 0 else len(PRIMITIVE_NAMES[type_assignments[ibasis]])
         # The number of cartesian functions for the current angular momentum
         ncart = len(CONVENTIONS[(angmom, "c")])
         # Determine how many shells are to be read in one batch. E.g. for a

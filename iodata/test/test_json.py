@@ -110,9 +110,11 @@ MOLSSI_MOL_FILES = [
 @pytest.mark.parametrize(("filename", "atnums", "charge", "spinpol", "nwarn"), MOLSSI_MOL_FILES)
 def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, nwarn):
     """Test qcschema_molecule parsing using MolSSI-sourced files."""
-    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(qcschema_molecule))
+    with (
+        as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(qcschema_molecule))
 
     np.testing.assert_equal(mol.atnums, atnums)
     assert mol.charge == charge
@@ -138,9 +140,11 @@ PASSTHROUGH_MOL_FILES = [
 @pytest.mark.parametrize(("filename", "unparsed_dict"), PASSTHROUGH_MOL_FILES)
 def test_passthrough_qcschema_molecule(filename, unparsed_dict):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
-    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(qcschema_molecule))
+    with (
+        as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(qcschema_molecule))
 
     assert mol.extra["molecule"]["unparsed"] == unparsed_dict
     assert len(record) == 1
@@ -373,9 +377,11 @@ BAD_OUTPUT_FILES = [
 @pytest.mark.parametrize(("filename", "error"), BAD_OUTPUT_FILES)
 def test_bad_qcschema_files(filename, error):
     # FIXME: these will move
-    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
-        with pytest.raises(error):
-            load_one(str(qcschema_input))
+    with (
+        as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input,
+        pytest.raises(error),
+    ):
+        load_one(str(qcschema_input))
 
 
 INOUT_OUTPUT_FILES = [

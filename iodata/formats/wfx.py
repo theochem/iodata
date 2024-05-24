@@ -158,7 +158,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
     perturbation_check = {"GTO": 0, "GIAO": 3, "CGST": 6}
     key = result["keywords"]
     num = result["num_perturbations"]
-    if key not in perturbation_check.keys():
+    if key not in perturbation_check:
         lit.error(f"The keywords is {key}, but it should be either GTO, GIAO or CGST")
     if num != perturbation_check[key]:
         lit.error(f"Number of perturbations of {key} is {num}, expected {perturbation_check[key]}")
@@ -181,7 +181,7 @@ def parse_wfx(lit: LineIterator, required_tags: Optional[list] = None) -> dict:
         if section_start is None and line.startswith("<"):
             # set start & end of the section and add it to data dictionary
             section_start = line
-            if section_start in data.keys():
+            if section_start in data:
                 lit.error(f"Section with tag={section_start} is repeated!")
             data[section_start] = []
             section_end = line[:1] + "/" + line[1:]
@@ -211,7 +211,7 @@ def parse_wfx(lit: LineIterator, required_tags: Optional[list] = None) -> dict:
     # check required section tags
     if required_tags is not None:
         for section_tag in required_tags:
-            if section_tag not in data.keys():
+            if section_tag not in data:
                 lit.error(f"Section {section_tag} is missing from loaded WFX data.")
     return data
 

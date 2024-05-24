@@ -697,10 +697,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
     cfour_coeff_correction = _fix_mo_coeffs_cfour(obasis)
     if cfour_coeff_correction is not None:
         coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
-        if coeffsb is None:
-            coeffsb_cfour = None
-        else:
-            coeffsb_cfour = coeffsb / cfour_coeff_correction[:, np.newaxis]
+        coeffsb_cfour = None if coeffsb is None else coeffsb / cfour_coeff_correction[:, np.newaxis]
         if _is_normalized_properly(obasis, atcoords, coeffsa_cfour, coeffsb_cfour, norm_threshold):
             lit.warn("Corrected for CFOUR 2.1 errors in Molden/MKL file.")
             result["obasis"] = obasis
@@ -722,10 +719,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
     psi4_coeff_correction = _fix_mo_coeffs_psi4(obasis)
     if psi4_coeff_correction is not None:
         coeffsa_psi4 = coeffsa / psi4_coeff_correction[:, np.newaxis]
-        if coeffsb is None:
-            coeffsb_psi4 = None
-        else:
-            coeffsb_psi4 = coeffsb / psi4_coeff_correction[:, np.newaxis]
+        coeffsb_psi4 = None if coeffsb is None else coeffsb / psi4_coeff_correction[:, np.newaxis]
         if _is_normalized_properly(
             normed_obasis, atcoords, coeffsa_psi4, coeffsb_psi4, norm_threshold
         ):

@@ -345,18 +345,12 @@ def _dump_helper_coeffs(f, data, spin=None):
         norb = data.mo.norba
         coeff = data.mo.coeffsa[permutation] * signs.reshape(-1, 1)
         ener = data.mo.energiesa
-        if data.mo.irreps is not None:
-            irreps = data.mo.irreps[:norb]
-        else:
-            irreps = ["a1g"] * norb
+        irreps = data.mo.irreps[:norb] if data.mo.irreps is not None else ["a1g"] * norb
     elif spin == "b":
         norb = data.mo.norbb
         coeff = data.mo.coeffsb[permutation] * signs.reshape(-1, 1)
         ener = data.mo.energiesb
-        if data.mo.irreps is not None:
-            irreps = data.mo.irreps[norb:]
-        else:
-            irreps = ["a1g"] * norb
+        irreps = data.mo.irreps[norb:] if data.mo.irreps is not None else ["a1g"] * norb
     else:
         raise OSError("A spin must be specified")
 

@@ -38,9 +38,11 @@ except ImportError:
 
 
 def test_load_fchk_nonexistent():
-    with pytest.raises(IOError):
-        with as_file(files("iodata.test.data").joinpath("fubar_crap.fchk")) as fn:
-            load_one(str(fn))
+    with (
+        pytest.raises(IOError),
+        as_file(files("iodata.test.data").joinpath("fubar_crap.fchk")) as fn,
+    ):
+        load_one(str(fn))
 
 
 def load_fchk_helper(fn_fchk):

@@ -67,9 +67,11 @@ def test_load_multi_title():
 
 def test_load_error():
     # test error raises when loading .com with z-matrix
-    with assert_raises(ValueError):
-        with as_file(files("iodata.test.data").joinpath("water_z.com")) as fn:
-            load_one(str(fn))
+    with (
+        assert_raises(ValueError),
+        as_file(files("iodata.test.data").joinpath("water_z.com")) as fn,
+    ):
+        load_one(str(fn))
 
 
 def check_water(mol, title):

@@ -136,14 +136,11 @@ def _parse_properties(properties: str):
         # If 'Z' is not present, use 'species'
         atom_column_map["species"] = atnum_column
     for name, dtype, shape in zip(names, dtypes, shapes):
-        if name in atom_column_map.keys():
+        if name in atom_column_map:
             atom_columns.append(atom_column_map[name])
         else:
             # Use the 'extra' attribute to store values which are not predefined in iodata
-            if shape == "1":
-                shape_suffix = ()
-            else:
-                shape_suffix = (int(shape),)
+            shape_suffix = () if shape == "1" else (int(shape),)
             atom_columns.append(("extra", name, shape_suffix, *dtype_map[dtype]))
     return atom_columns
 
@@ -167,7 +164,7 @@ def _parse_title(title: str):
             key, value = key_value_pair.split("=", 1)
             if key == "Properties":
                 atom_columns = _parse_properties(value)
-            elif key in iodata_attrs.keys():
+            elif key in iodata_attrs:
                 data[iodata_attrs[key][0]] = iodata_attrs[key][1](value)
             else:
                 data.setdefault("extra", {})[key] = _convert_title_value(value)
@@ -192,7 +189,7 @@ def load_one(lit: LineIterator) -> dict:
     lit.back(atom_line)
     xyz_data = load_one_xyz(lit, atom_columns)
     # If the extra attribute is present, prevent it from overwriting itself
-    if "extra" in title_data.keys() and "extra" in xyz_data.keys():
+    if "extra" in title_data and "extra" in xyz_data:
         xyz_data["extra"].update(title_data["extra"])
     title_data.update(xyz_data)
     return title_data

@@ -146,10 +146,7 @@ def compute_overlap(
 
         # Loop over shell1 (lower triangular only, including diagonal)
         begin1 = 0
-        if identical:
-            nshell1 = i0 + 1
-        else:
-            nshell1 = len(obasis1.shells)
+        nshell1 = i0 + 1 if identical else len(obasis1.shells)
         for i1, shell1 in enumerate(obasis1.shells[:nshell1]):
             r1 = atcoords1[shell1.icenter]
             end1 = begin1 + shell1.nbasis
