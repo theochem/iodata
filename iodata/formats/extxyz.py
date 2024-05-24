@@ -204,13 +204,13 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # XYZ Trajectory files are a simple concatenation of individual XYZ files,'
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             # Check for and skip empty lines at the end of file
             line = next(lit)
             if line.strip() == "":
                 return
             lit.back(line)
             yield load_one(lit)
-        except StopIteration:
-            return
+    except StopIteration:
+        return

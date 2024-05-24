@@ -340,8 +340,10 @@ def build_obasis(
         # WFN uses non-normalized primitives, which will be corrected for
         # when processing the MO coefficients. Normalized primitives will
         # be used here. No attempt is made here to reconstruct the contraction.
-        for exponent in batch_exponents:
-            shells.append(Shell(icenter, [angmom], ["c"], np.array([exponent]), np.array([[1.0]])))
+        shells.extend(
+            Shell(icenter, [angmom], ["c"], np.array([exponent]), np.array([[1.0]]))
+            for exponent in batch_exponents
+        )
         # Move on to the next contraction
         ibasis += ncart * ncon
     obasis = MolecularBasis(shells, CONVENTIONS, "L2")

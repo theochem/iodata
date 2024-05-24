@@ -147,16 +147,16 @@ def load_many(lit: LineIterator, atom_columns=None) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # XYZ Trajectory files are a simple concatenation of individual XYZ files,'
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             # Check for and skip empty lines at the end of file
             line = next(lit)
             if line.strip() == "":
                 return
             lit.back(line)
             yield load_one(lit, atom_columns)
-        except StopIteration:
-            return
+    except StopIteration:
+        return
 
 
 @document_dump_one("XYZ", ["atcoords", "atnums"], ["title"], {"atom_columns": ATOM_COLUMNS_DOC})
@@ -175,8 +175,7 @@ def dump_one(f: TextIO, data: IOData, atom_columns=None):
             if keyname is not None:
                 # The data to be written is a value of a dictionary attribute.
                 values = values[keyname]
-            for value in values[iatom].flat:
-                words.append(dumpword(value))
+            words.extend(dumpword(value) for value in values[iatom].flat)
         print(" ".join(words), file=f)
 
 

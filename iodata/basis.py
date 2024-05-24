@@ -334,8 +334,7 @@ def convert_conventions(
             conv2 = new_conventions[key]
             shell_permutation, shell_signs = convert_convention_shell(conv1, conv2, reverse)
             offset = len(permutation)
-            for i in shell_permutation:
-                permutation.append(i + offset)
+            permutation.extend(i + offset for i in shell_permutation)
             signs.extend(shell_signs)
     return np.array(permutation), np.array(signs)
 

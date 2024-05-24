@@ -119,16 +119,14 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[np.ndarray, np.
             words = line.split()
             ncol = len(words)
             assert ncol > 0
-            for word in words:
-                irreps.append(word)
+            irreps.extend(words)
             cols = [np.zeros((nbasis, 1), float) for _ in range(ncol)]
             in_orb = 1
         elif in_orb == 1:
             # read energies
             words = line.split()
             assert len(words) == ncol
-            for word in words:
-                energies.append(float(word))
+            energies.extend(float(word) for word in words)
             in_orb = 2
             ibasis = 0
         elif in_orb == 2:
@@ -150,8 +148,7 @@ def _load_helper_occ(lit: LineIterator) -> np.ndarray:
     for line in lit:
         if line.strip() == "$END":
             break
-        for word in line.split():
-            occs.append(float(word))
+        occs.extend(float(word) for word in line.split())
     return np.array(occs)
 
 

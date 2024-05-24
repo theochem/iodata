@@ -237,11 +237,11 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # PDB files with more molecules are a simple concatenation of individual PDB files,'
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             yield load_one(lit)
-        except OSError:
-            return
+    except OSError:
+        return
 
 
 def _dump_multiline_str(f: TextIO, key: str, value: str):

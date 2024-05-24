@@ -72,11 +72,11 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # gro files can be used as trajectory by simply concatenating files,
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             yield load_one(lit)
-        except OSError:
-            return
+    except OSError:
+        return
 
 
 def _helper_read_frame(lit: LineIterator) -> tuple:

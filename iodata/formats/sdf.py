@@ -99,11 +99,11 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # SDF files with more molecules are a simple concatenation of individual SDF files,'
     # making it travial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             yield load_one(lit)
-        except StopIteration:
-            return
+    except StopIteration:
+        return
 
 
 @document_dump_one("SDF", ["atcoords", "atnums"], ["title", "bonds"])

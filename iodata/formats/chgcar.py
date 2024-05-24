@@ -62,10 +62,8 @@ def _load_vasp_header(lit: LineIterator) -> tuple[str, np.ndarray, np.ndarray, n
 
     # read cell parameters in angstrom, without the universal scaling factor.
     # each row is one cell vector
-    cellvecs = []
-    for _i in range(3):
-        cellvecs.append([float(w) for w in next(lit).split()])
-    cellvecs = np.array(cellvecs) * angstrom * scaling
+    cellvecs = np.array([[float(w) for w in next(lit).split()] for _ in range(3)])
+    cellvecs *= angstrom * scaling
 
     # note that in older VASP version the following line might be absent
     vasp_atnums = [sym2num[w] for w in next(lit).split()]

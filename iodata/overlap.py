@@ -272,9 +272,7 @@ def _compute_cart_shell_normalizations(shell: Shell) -> np.ndarray:
     result = []
     for angmom in shell.angmoms:
         for exponent in shell.exponents:
-            row = []
-            for n in iter_cart_alphabet(angmom):
-                row.append(gob_cart_normalization(exponent, n))
+            row = [gob_cart_normalization(exponent, n) for n in iter_cart_alphabet(angmom)]
             result.append(row)
     return np.array(result)
 

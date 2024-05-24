@@ -169,11 +169,11 @@ def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IO
     """
     format_module = _select_format_module(filename, "load_many", fmt)
     lit = LineIterator(filename)
-    for data in format_module.load_many(lit, **kwargs):
-        try:
+    try:
+        for data in format_module.load_many(lit, **kwargs):
             yield IOData(**data)
-        except StopIteration:
-            return
+    except StopIteration:
+        return
 
 
 def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs):
