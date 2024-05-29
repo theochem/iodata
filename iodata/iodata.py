@@ -26,11 +26,9 @@ from .basis import MolecularBasis
 from .orbitals import MolecularOrbitals
 from .utils import Cube
 
-
 __all__ = ["IOData"]
 
 
-# pylint: disable=too-many-instance-attributes
 @attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
 class IOData:
     """A container class for data loaded from (or to be written to) a file.
@@ -174,7 +172,7 @@ class IOData:
 
     """
 
-    atcharges: dict = {}
+    atcharges: dict = attr.ib(factory=dict)
     atcoords: np.ndarray = attr.ib(
         default=None,
         converter=convert_array_to(float),
@@ -185,7 +183,7 @@ class IOData:
         converter=convert_array_to(float),
         validator=attr.validators.optional(validate_shape("natom")),
     )
-    atffparams: dict = {}
+    atffparams: dict = attr.ib(factory=dict)
     atfrozen: np.ndarray = attr.ib(
         default=None,
         converter=convert_array_to(bool),
@@ -231,21 +229,21 @@ class IOData:
         converter=convert_array_to(float),
         validator=attr.validators.optional(validate_shape(None, 4)),
     )
-    extra: dict = {}
+    extra: dict = attr.ib(factory=dict)
     g_rot: float = None
     lot: str = None
     mo: MolecularOrbitals = None
-    moments: dict = {}
+    moments: dict = attr.ib(factory=dict)
     _nelec: float = None
     obasis: MolecularBasis = None
     obasis_name: str = None
-    one_ints: dict = {}
-    one_rdms: dict = {}
+    one_ints: dict = attr.ib(factory=dict)
+    one_rdms: dict = attr.ib(factory=dict)
     run_type: str = None
     _spinpol: float = None
     title: str = None
-    two_ints: dict = {}
-    two_rdms: dict = {}
+    two_ints: dict = attr.ib(factory=dict)
+    two_rdms: dict = attr.ib(factory=dict)
 
     def __attrs_post_init__(self):
         # Trigger setter to acchieve consistency in properties
@@ -267,10 +265,6 @@ class IOData:
     def atcorenums(self) -> np.ndarray:
         """Return effective core charges."""
         if self._atcorenums is None and self.atnums is not None:
-            # Known bug in pylint. See
-            # https://stackoverflow.com/questions/47972143/using-attr-with-pylint
-            # https://github.com/PyCQA/pylint/issues/1694
-            # pylint: disable=no-member
             self.atcorenums = self.atnums.astype(float)
         return self._atcorenums
 

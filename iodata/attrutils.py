@@ -20,7 +20,6 @@
 
 import numpy as np
 
-
 __all__ = ["convert_array_to", "validate_shape"]
 
 
@@ -35,7 +34,6 @@ def convert_array_to(dtype):
     return converter
 
 
-# pylint: disable=too-many-branches
 def validate_shape(*shape_requirements: tuple):
     """Return a validator for the shape of an array or the length of an iterable.
 
@@ -87,26 +85,21 @@ def validate_shape(*shape_requirements: tuple):
                 other_name, other_axis = item
                 other = getattr(obj, other_name)
                 if other is None:
-                    raise TypeError("Other attribute '{}' is not set.".format(other_name))
+                    raise TypeError(f"Other attribute '{other_name}' is not set.")
                 if other_axis == 0:
                     expected_shape.append(len(other))
                 else:
                     if other_axis >= other.ndim or other_axis < 0:
                         raise TypeError(
                             "Cannot get length along axis "
-                            "{} of attribute {} with ndim {}.".format(
-                                other_axis, other_name, other.ndim
-                            )
+                            f"{other_axis} of attribute {other_name} with ndim {other.ndim}."
                         )
                     expected_shape.append(other.shape[other_axis])
             else:
                 raise ValueError(f"Cannot interpret item in shape_requirements: {item}")
         expected_shape = tuple(expected_shape)
         # Get the actual shape
-        if isinstance(value, np.ndarray):
-            observed_shape = value.shape
-        else:
-            observed_shape = (len(value),)
+        observed_shape = value.shape if isinstance(value, np.ndarray) else (len(value),)
         # Compare
         match = True
         if len(expected_shape) != len(observed_shape):
@@ -121,9 +114,8 @@ def validate_shape(*shape_requirements: tuple):
         # Raise TypeError if needed.
         if not match:
             raise TypeError(
-                "Expecting shape {} for attribute {}, got {}".format(
-                    expected_shape, attribute.name, observed_shape
-                )
+                f"Expecting shape {expected_shape} for attribute {attribute.name}, "
+                f"got {observed_shape}"
             )
 
     return validator

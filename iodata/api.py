@@ -19,15 +19,15 @@
 """Functions to be used by end users."""
 
 import os
-from typing import Iterator
-from types import ModuleType
+from collections.abc import Iterator
 from fnmatch import fnmatch
-from pkgutil import iter_modules
 from importlib import import_module
+from pkgutil import iter_modules
+from types import ModuleType
+from typing import Optional
 
 from .iodata import IOData
 from .utils import LineIterator
-
 
 __all__ = ["load_one", "load_many", "dump_one", "dump_many", "write_input"]
 
@@ -46,7 +46,7 @@ def _find_format_modules():
 FORMAT_MODULES = _find_format_modules()
 
 
-def _select_format_module(filename: str, attrname: str, fmt: str = None) -> ModuleType:
+def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = None) -> ModuleType:
     """Find a file format module with the requested attribute name.
 
     Parameters
@@ -68,14 +68,13 @@ def _select_format_module(filename: str, attrname: str, fmt: str = None) -> Modu
     basename = os.path.basename(filename)
     if fmt is None:
         for format_module in FORMAT_MODULES.values():
-            if any(fnmatch(basename, pattern) for pattern in format_module.PATTERNS):
-                if hasattr(format_module, attrname):
-                    return format_module
+            if any(fnmatch(basename, pattern) for pattern in format_module.PATTERNS) and hasattr(
+                format_module, attrname
+            ):
+                return format_module
     else:
         return FORMAT_MODULES[fmt]
-    raise ValueError(
-        "Could not find file format with feature {} for file {}".format(attrname, filename)
-    )
+    raise ValueError(f"Could not find file format with feature {attrname} for file {filename}")
 
 
 def _find_input_modules():
@@ -113,7 +112,7 @@ def _select_input_module(fmt: str) -> ModuleType:
     raise ValueError(f"Could not find input format {fmt}!")
 
 
-def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
+def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
     """Load data from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -145,7 +144,7 @@ def load_one(filename: str, fmt: str = None, **kwargs) -> IOData:
     return iodata
 
 
-def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
+def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IOData]:
     """Load multiple IOData instances from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -170,14 +169,14 @@ def load_many(filename: str, fmt: str = None, **kwargs) -> Iterator[IOData]:
     """
     format_module = _select_format_module(filename, "load_many", fmt)
     lit = LineIterator(filename)
-    for data in format_module.load_many(lit, **kwargs):
-        try:
+    try:
+        for data in format_module.load_many(lit, **kwargs):
             yield IOData(**data)
-        except StopIteration:
-            return
+    except StopIteration:
+        return
 
 
-def dump_one(iodata: IOData, filename: str, fmt: str = None, **kwargs):
+def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs):
     """Write data to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -202,7 +201,7 @@ def dump_one(iodata: IOData, filename: str, fmt: str = None, **kwargs):
         format_module.dump_one(f, iodata, **kwargs)
 
 
-def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None, **kwargs):
+def dump_many(iodatas: Iterator[IOData], filename: str, fmt: Optional[str] = None, **kwargs):
     """Write multiple IOData instances to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -226,7 +225,7 @@ def dump_many(iodatas: Iterator[IOData], filename: str, fmt: str = None, **kwarg
         format_module.dump_many(f, iodatas, **kwargs)
 
 
-def write_input(iodata: IOData, filename: str, fmt: str, template: str = None, **kwargs):
+def write_input(iodata: IOData, filename: str, fmt: str, template: Optional[str] = None, **kwargs):
     """Write input file using an instance of IOData for the specified software format.
 
     Parameters

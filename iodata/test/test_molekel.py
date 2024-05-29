@@ -16,19 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=unsubscriptable-object,no-member
 """Test iodata.formats.molekel module."""
 
 import os
 import warnings
+from typing import Optional
 
-from numpy.testing import assert_equal, assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
-from .common import check_orthonormal, compare_mols, compute_mulliken_charges, load_one_warning
+from ..api import dump_one, load_one
 from ..basis import convert_conventions
-from ..api import load_one, dump_one
 from ..overlap import compute_overlap
 from ..utils import angstrom
+from .common import check_orthonormal, compare_mols, compute_mulliken_charges, load_one_warning
 
 try:
     from importlib_resources import as_file, files
@@ -56,7 +56,7 @@ def compare_mols_diff_formats(mol1, mol2):
     assert_allclose(charges1, charges2, rtol=0.0, atol=1.0e-6)
 
 
-def check_load_dump_consistency(fn: str, tmpdir: str, match: str = None):
+def check_load_dump_consistency(fn: str, tmpdir: str, match: Optional[str] = None):
     """Check if data is preserved after dumping and loading a Molekel file.
 
     Parameters
@@ -75,9 +75,7 @@ def check_load_dump_consistency(fn: str, tmpdir: str, match: str = None):
     dump_one(mol1, fn_tmp, fmt="molekel")
     mol2 = load_one(fn_tmp, fmt="molekel")
     form = fn.split(".")
-    if "molden" in form:
-        compare_mols_diff_formats(mol1, mol2)
-    elif "fchk" in form:
+    if "molden" in form or "fchk" in form:
         compare_mols_diff_formats(mol1, mol2)
     else:
         compare_mols(mol1, mol2)
@@ -160,8 +158,10 @@ def test_load_mkl_h2():
 
 
 def test_load_mkl_h2_huge_threshold():
-    with as_file(files("iodata.test.data").joinpath("h2_sto3g.mkl")) as fn_molekel:
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")
-            # The threshold is set very high, which skip a correction for ORCA.
-            load_one(str(fn_molekel), norm_threshold=1e4)
+    with (
+        as_file(files("iodata.test.data").joinpath("h2_sto3g.mkl")) as fn_molekel,
+        warnings.catch_warnings(),
+    ):
+        warnings.simplefilter("error")
+        # The threshold is set very high, which skip a correction for ORCA.
+        load_one(str(fn_molekel), norm_threshold=1e4)

@@ -18,13 +18,10 @@
 # --
 """Periodic table module."""
 
-from typing import Dict
-
-
 __all__ = ["num2sym", "sym2num"]
 
 
-num2sym: Dict[int, str] = {
+num2sym: dict[int, str] = {
     1: "H",
     2: "He",
     3: "Li",
@@ -145,7 +142,7 @@ num2sym: Dict[int, str] = {
     118: "Og",
 }
 
-sym2num: Dict[str, int] = dict((value, key) for key, value in num2sym.items())
+sym2num: dict[str, int] = {value: key for key, value in num2sym.items()}
 
 
 # Labels used for bond types.
@@ -169,4 +166,4 @@ num2bond = {
     11: "nc",  # not connected
 }
 
-bond2num: Dict[str, int] = dict((value, key) for key, value in num2bond.items())
+bond2num: dict[str, int] = {value: key for key, value in num2bond.items()}

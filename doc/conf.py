@@ -22,7 +22,6 @@
 import os
 import subprocess
 
-
 # -- Fragile tricks for RTD -----------------------------------------------
 
 # Normally sphinx-build should be called after iodata is installed somehow.
@@ -86,7 +85,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "IOData"
-copyright = "2019, The IODATA Development Team"
+copyright = "2019, The IODATA Development Team"  # noqa: A001
 author = "The IODATA Development Team"
 
 # The version info for the project yo're documenting, acts as replacement for

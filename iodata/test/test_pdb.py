@@ -19,12 +19,13 @@
 """Test iodata.formats.pdb module."""
 
 import os
-import numpy as np
-from numpy.testing import assert_equal, assert_allclose
-import pytest
 
-from ..api import load_one, load_many, dump_one, dump_many
-from ..utils import angstrom, FileFormatWarning
+import numpy as np
+import pytest
+from numpy.testing import assert_allclose, assert_equal
+
+from ..api import dump_many, dump_one, load_many, load_one
+from ..utils import FileFormatWarning, angstrom
 
 try:
     from importlib_resources import as_file, files
@@ -42,9 +43,11 @@ def test_load_water(case):
 
 def test_load_water_no_end():
     # test pdb of water
-    with as_file(files("iodata.test.data").joinpath("water_single_no_end.pdb")) as fn_pdb:
-        with pytest.warns(FileFormatWarning, match="The END is not found"):
-            mol = load_one(str(fn_pdb))
+    with (
+        as_file(files("iodata.test.data").joinpath("water_single_no_end.pdb")) as fn_pdb,
+        pytest.warns(FileFormatWarning, match="The END is not found"),
+    ):
+        mol = load_one(str(fn_pdb))
     check_water(mol)
 
 
@@ -66,7 +69,7 @@ def check_water(mol):
 
 
 @pytest.mark.parametrize(
-    "fn_base,should_warn",
+    ("fn_base", "should_warn"),
     [
         ("water_single.pdb", False),
         ("water_single_model.pdb", False),
@@ -133,9 +136,11 @@ def test_load_dump_xyz_consistency(tmpdir):
 
 def test_load_peptide_2luv():
     # test pdb of small peptide
-    with as_file(files("iodata.test.data").joinpath("2luv.pdb")) as fn_pdb:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_pdb))
+    with (
+        as_file(files("iodata.test.data").joinpath("2luv.pdb")) as fn_pdb,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(fn_pdb))
     assert len(record) == 271
     assert mol.title.startswith("INTEGRIN")
     assert_equal(len(mol.atnums), 547)
@@ -232,9 +237,11 @@ def test_load_ch5plus_bonds():
 
 
 def test_indomethacin_dimer():
-    with as_file(files("iodata.test.data").joinpath("indomethacin-dimer.pdb")) as fn_pdb:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(fn_pdb)
+    with (
+        as_file(files("iodata.test.data").joinpath("indomethacin-dimer.pdb")) as fn_pdb,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(fn_pdb)
     assert len(record) == 82
     for item in record:
         assert "Using the atom name in the PDB" in item.message.args[0]

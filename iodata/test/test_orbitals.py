@@ -16,11 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=pointless-statement
 """Unit tests for iodata.orbitals."""
 
-import pytest
 import numpy as np
+import pytest
 from numpy.testing import assert_equal
 
 from ..orbitals import MolecularOrbitals
@@ -79,7 +78,8 @@ def test_restricted_occs():
 
 
 def test_restricted_coeffs():
-    coeffs = np.random.uniform(-1, 1, (7, 5))
+    rng = np.random.default_rng(1)
+    coeffs = rng.uniform(-1, 1, (7, 5))
     with pytest.raises(TypeError):
         MolecularOrbitals("restricted", 3, 3, coeffs=coeffs)
     mo = MolecularOrbitals("restricted", 5, 5, coeffs=coeffs)
@@ -100,7 +100,8 @@ def test_restricted_coeffs():
 
 
 def test_restricted_energies():
-    energies = np.random.uniform(-1, 1, 5)
+    rng = np.random.default_rng(1)
+    energies = rng.uniform(-1, 1, 5)
     with pytest.raises(TypeError):
         MolecularOrbitals("restricted", 3, 3, energies=energies)
     mo = MolecularOrbitals("restricted", 5, 5, energies=energies)
@@ -187,7 +188,8 @@ def test_unrestricted_occs():
 
 
 def test_unrestricted_coeffs():
-    coeffs = np.random.uniform(-1, 1, (7, 8))
+    rng = np.random.default_rng(1)
+    coeffs = rng.uniform(-1, 1, (7, 8))
     with pytest.raises(TypeError):
         MolecularOrbitals("unrestricted", 3, 2, coeffs=coeffs)
     mo = MolecularOrbitals("unrestricted", 5, 3, coeffs=coeffs)
@@ -208,7 +210,8 @@ def test_unrestricted_coeffs():
 
 
 def test_unrestricted_energies():
-    energies = np.random.uniform(-1, 1, 8)
+    rng = np.random.default_rng(1)
+    energies = rng.uniform(-1, 1, 8)
     with pytest.raises(TypeError):
         MolecularOrbitals("unrestricted", 3, 2, energies=energies)
     mo = MolecularOrbitals("unrestricted", 5, 3, energies=energies)
@@ -264,23 +267,23 @@ def test_generalized_empty():
     assert mo.nbasis is None
     assert mo.norb is None
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb
 
 
 def test_generalized_occs():
@@ -291,27 +294,28 @@ def test_generalized_occs():
     assert mo.nbasis is None
     assert mo.norb == 7
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb
 
 
 def test_generalized_coeffs():
-    coeffs = np.random.uniform(-1, 1, (10, 7))
+    rng = np.random.default_rng(1)
+    coeffs = rng.uniform(-1, 1, (10, 7))
     mo = MolecularOrbitals("generalized", None, None, coeffs=coeffs)
     assert mo.norba is None
     assert mo.norbb is None
@@ -319,27 +323,28 @@ def test_generalized_coeffs():
     assert mo.nbasis == 5  # 5 *spatial* basis functions!
     assert mo.norb == 7
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb
 
 
 def test_generalized_energies():
-    energies = np.random.uniform(-1, 1, 7)
+    rng = np.random.default_rng(1)
+    energies = rng.uniform(-1, 1, 7)
     mo = MolecularOrbitals("generalized", None, None, energies=energies)
     assert mo.norba is None
     assert mo.norbb is None
@@ -347,23 +352,23 @@ def test_generalized_energies():
     assert mo.nbasis is None
     assert mo.norb == 7
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb
 
 
 def test_generalized_irreps():
@@ -375,20 +380,20 @@ def test_generalized_irreps():
     assert mo.nbasis is None
     assert mo.norb == 7
     with pytest.raises(NotImplementedError):
-        mo.spinpol
+        _ = mo.spinpol
     with pytest.raises(NotImplementedError):
-        mo.occsa
+        _ = mo.occsa
     with pytest.raises(NotImplementedError):
-        mo.occsb
+        _ = mo.occsb
     with pytest.raises(NotImplementedError):
-        mo.coeffsa
+        _ = mo.coeffsa
     with pytest.raises(NotImplementedError):
-        mo.coeffsb
+        _ = mo.coeffsb
     with pytest.raises(NotImplementedError):
-        mo.energiesa
+        _ = mo.energiesa
     with pytest.raises(NotImplementedError):
-        mo.energiesb
+        _ = mo.energiesb
     with pytest.raises(NotImplementedError):
-        mo.irrepsa
+        _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
-        mo.irrepsb
+        _ = mo.irrepsb

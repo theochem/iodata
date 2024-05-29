@@ -20,11 +20,10 @@
 # pylint: disable=unused-argument,redefined-builtin
 """Generate formats.rst."""
 
-from collections import defaultdict
 import inspect
+from collections import defaultdict
 
 import iodata
-
 
 __all__ = []
 

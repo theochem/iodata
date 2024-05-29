@@ -22,20 +22,20 @@ There are different formats of mol2 files. Here the compatibility with AMBER sof
 was the main objective to write out files with atomic charges used by antechamber.
 """
 
-from typing import TextIO, Iterator, Tuple
+from collections.abc import Iterator
+from typing import TextIO
 
 import numpy as np
 
 from ..docstrings import (
-    document_load_one,
-    document_load_many,
-    document_dump_one,
     document_dump_many,
+    document_dump_one,
+    document_load_many,
+    document_load_one,
 )
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym, bond2num, num2bond
-from ..utils import angstrom, LineIterator
-
+from ..periodic import bond2num, num2bond, num2sym, sym2num
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 
@@ -85,7 +85,7 @@ def load_one(lit: LineIterator) -> dict:
 
 def _load_helper_atoms(
     lit: LineIterator, natoms: int
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, tuple]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, tuple]:
     """Load element numbers, coordinates and atomic charges."""
     atnums = np.empty(natoms)
     atcoords = np.empty((natoms, 3))
@@ -112,7 +112,7 @@ def _load_helper_atoms(
     return atnums, atcoords, atchgs, attypes
 
 
-def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
+def _load_helper_bonds(lit: LineIterator, nbonds: int) -> tuple[np.ndarray]:
     """Load bond information.
 
     Each line in a bond definition has the following structure
@@ -144,11 +144,11 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # MOL2 files with more molecules are a simple concatenation of individual MOL2 files,'
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             yield load_one(lit)
-        except IOError:
-            return
+    except OSError:
+        return
 
 
 @document_dump_one("MOL2", ["atcoords", "atnums"], ["atcharges", "atffparams", "title"])

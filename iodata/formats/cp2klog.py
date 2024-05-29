@@ -18,16 +18,15 @@
 # --
 """CP2K ATOM output file format."""
 
-from typing import Dict, Union, List, Tuple
+from typing import Union
 
 import numpy as np
 from scipy.special import factorialk
 
-from ..basis import angmom_sti, MolecularBasis, Shell, HORTON2_CONVENTIONS
+from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, angmom_sti
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator
-
 
 __all__ = []
 
@@ -44,7 +43,7 @@ CONVENTIONS = {
 
 
 def _get_cp2k_norm_corrections(
-    l: int, alphas: Union[float, np.ndarray]
+    ell: int, alphas: Union[float, np.ndarray]
 ) -> Union[float, np.ndarray]:
     """Compute the corrections for the normalization of the basis functions.
 
@@ -54,7 +53,7 @@ def _get_cp2k_norm_corrections(
 
     Parameters
     ----------
-    l
+    ell
         The angular momentum of the (pure) basis function. (s=0, p=1, ...)
     alphas
         The exponent or exponents of the Gaussian primitives for which the correction
@@ -68,8 +67,8 @@ def _get_cp2k_norm_corrections(
         applied to the contraction coefficients.
 
     """
-    expzet = 0.25 * (2 * l + 3)
-    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (l + 2) * factorialk(2 * l + 1, 2))
+    expzet = 0.25 * (2 * ell + 3)
+    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (ell + 2) * factorialk(2 * ell + 1, 2))
     zeta = 2.0 * alphas
     return zeta**expzet / prefac
 
@@ -164,7 +163,6 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> MolecularBasis:
     return MolecularBasis(shells, CONVENTIONS, "L2")
 
 
-# pylint: disable=inconsistent-return-statements
 def _read_cp2k_obasis(lit: LineIterator) -> dict:
     """Read atomic orbital basis set from a CP2K ATOM file object.
 
@@ -183,19 +181,20 @@ def _read_cp2k_obasis(lit: LineIterator) -> dict:
     next(lit)  # Skip empty line
     line = next(lit)  # Check for contracted versus uncontracted
     if line == (
-        " ********************** Contracted Gaussian Type Orbitals " "**********************\n"
+        " ********************** Contracted Gaussian Type Orbitals **********************\n"
     ):
         return _read_cp2k_contracted_obasis(lit)
     if line == (
-        " ********************* Uncontracted Gaussian Type Orbitals " "*********************\n"
+        " ********************* Uncontracted Gaussian Type Orbitals *********************\n"
     ):
         return _read_cp2k_uncontracted_obasis(lit)
     lit.error("Could not find basis set in CP2K ATOM output.")
+    return None
 
 
 def _read_cp2k_occupations_energies(
     lit: LineIterator, restricted: bool
-) -> List[Tuple[int, int, float, float]]:
+) -> list[tuple[int, int, float, float]]:
     """Read orbital occupation numbers and energies from a CP2K ATOM file object.
 
     Parameters
@@ -225,19 +224,19 @@ def _read_cp2k_occupations_energies(
             continue
         empty = 0
         s = int(words[0])
-        l = int(words[2 - restricted])
+        ell = int(words[2 - restricted])
         occ = float(words[3 - restricted])
         ener = float(words[4 - restricted])
         if restricted or words[1] == "alpha":
-            oe_alpha.append((l, s, occ, ener))
+            oe_alpha.append((ell, s, occ, ener))
         else:
-            oe_beta.append((l, s, occ, ener))
+            oe_beta.append((ell, s, occ, ener))
     return oe_alpha, oe_beta
 
 
 def _read_cp2k_orbital_coeffs(
-    lit: LineIterator, oe: List[Tuple[int, int, float, float]]
-) -> Dict[Tuple[int, int], np.ndarray]:
+    lit: LineIterator, oe: list[tuple[int, int, float, float]]
+) -> dict[tuple[int, int], np.ndarray]:
     """Read the expansion coefficients of the orbital from an open CP2K ATOM output.
 
     Parameters
@@ -271,7 +270,7 @@ def _read_cp2k_orbital_coeffs(
     return allcoeffs
 
 
-def _get_norb_nel(oe: List[Tuple[int, int, float, float]]) -> Tuple[int, float]:
+def _get_norb_nel(oe: list[tuple[int, int, float, float]]) -> tuple[int, float]:
     """Return number of orbitals and electrons.
 
     Parameters
@@ -298,8 +297,8 @@ def _fill_orbitals(
     orb_coeffs: np.ndarray,
     orb_energies: np.ndarray,
     orb_occupations: np.ndarray,
-    oe: List[Tuple[int, int, float, float]],
-    coeffs: Dict[Tuple[int, int], np.ndarray],
+    oe: list[tuple[int, int, float, float]],
+    coeffs: dict[tuple[int, int], np.ndarray],
     obasis: MolecularBasis,
     restricted: bool,
 ):
@@ -330,21 +329,21 @@ def _fill_orbitals(
     offset = 0
     offsets = []
     ls = np.concatenate([shell.angmoms for shell in obasis.shells])
-    for l in sorted(set(ls)):
+    for ell in sorted(set(ls)):
         offsets.append(offset)
-        offset += (2 * l + 1) * (l == ls).sum()
+        offset += (2 * ell + 1) * (ell == ls).sum()
     del offset
 
     # Fill in the coefficients
     iorb = 0
-    for l, state, occ, ener in oe:
-        cs = coeffs.get((l, state))
-        stride = 2 * l + 1
-        for im in range(2 * l + 1):
+    for ell, state, occ, ener in oe:
+        cs = coeffs.get((ell, state))
+        stride = 2 * ell + 1
+        for im in range(2 * ell + 1):
             orb_energies[iorb] = ener
-            orb_occupations[iorb] = occ / float((restricted + 1) * (2 * l + 1))
+            orb_occupations[iorb] = occ / float((restricted + 1) * (2 * ell + 1))
             for ic, c in enumerate(cs):
-                orb_coeffs[offsets[l] + stride * ic + im, iorb] = c
+                orb_coeffs[offsets[ell] + stride * ic + im, iorb] = c
             iorb += 1
 
 
@@ -367,7 +366,6 @@ ATOM input file, in the section ``ATOM%PRINT``:
 """
 
 
-# pylint: disable=too-many-branches,too-many-statements
 @document_load_one(
     "CP2K ATOM outupt",
     ["atcoords", "atcorenums", "atnums", "energy", "mo", "obasis"],
@@ -419,10 +417,7 @@ def load_one(lit: LineIterator) -> dict:
             break
 
     # Select the correct basis
-    if atcorenum == atnum:
-        obasis = ae_obasis
-    else:
-        obasis = pp_obasis
+    obasis = ae_obasis if atcorenum == atnum else pp_obasis
 
     # Search for energy
     for line in lit:
@@ -509,7 +504,7 @@ def load_one(lit: LineIterator) -> dict:
             np.concatenate((orb_alpha_energies, orb_beta_energies), axis=0),
         )
 
-    result = {
+    return {
         "obasis": obasis,
         "mo": mo,
         "atcoords": np.zeros((1, 3), float),
@@ -517,4 +512,3 @@ def load_one(lit: LineIterator) -> dict:
         "energy": energy,
         "atcorenums": np.array([atcorenum]),
     }
-    return result

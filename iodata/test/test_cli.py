@@ -18,13 +18,14 @@
 # --
 """Unit tests for iodata.__main__."""
 
-import os
 import functools
+import os
 import subprocess
-from numpy.testing import assert_equal, assert_allclose
+
+from numpy.testing import assert_allclose, assert_equal
 
 from ..__main__ import convert
-from ..api import load_one, load_many
+from ..api import load_many, load_one
 
 try:
     from importlib_resources import as_file, files

@@ -25,14 +25,11 @@ Note that even though the ``CHGCAR`` and ``LOCPOT`` files look very similar, the
 different conversions to atomic units.
 """
 
-from typing import Tuple
-
 import numpy as np
 
 from ..docstrings import document_load_one
 from ..periodic import sym2num
-from ..utils import angstrom, volume, LineIterator, Cube
-
+from ..utils import Cube, LineIterator, angstrom, volume
 
 __all__ = []
 
@@ -40,7 +37,7 @@ __all__ = []
 PATTERNS = ["CHGCAR*", "AECCAR*"]
 
 
-def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray]:
+def _load_vasp_header(lit: LineIterator) -> tuple[str, np.ndarray, np.ndarray, np.ndarray]:
     """Load the cell and atoms from a VASP file format.
 
     Parameters
@@ -65,10 +62,8 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
 
     # read cell parameters in angstrom, without the universal scaling factor.
     # each row is one cell vector
-    cellvecs = []
-    for _i in range(3):
-        cellvecs.append([float(w) for w in next(lit).split()])
-    cellvecs = np.array(cellvecs) * angstrom * scaling
+    cellvecs = np.array([[float(w) for w in next(lit).split()] for _ in range(3)])
+    cellvecs *= angstrom * scaling
 
     # note that in older VASP version the following line might be absent
     vasp_atnums = [sym2num[w] for w in next(lit).split()]

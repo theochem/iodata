@@ -32,10 +32,9 @@ from typing import TextIO
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_dump_one
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
-from ..utils import set_four_index_element, LineIterator
-
+from ..utils import LineIterator, set_four_index_element
 
 __all__ = []
 
@@ -134,18 +133,21 @@ def dump_one(f: TextIO, data: IOData):
 
     # Write integrals and core energy
     two_mo = data.two_ints["two_mo"]
-    for i in range(nactive):  # pylint: disable=too-many-nested-blocks
-        for j in range(i + 1):
-            for k in range(nactive):
-                for l in range(k + 1):
-                    if (i * (i + 1)) / 2 + j >= (k * (k + 1)) / 2 + l:
-                        value = two_mo[i, k, j, l]
+    for i0 in range(nactive):
+        for i1 in range(i0 + 1):
+            for i2 in range(nactive):
+                for i3 in range(i2 + 1):
+                    if (i0 * (i0 + 1)) / 2 + i1 >= (i2 * (i2 + 1)) / 2 + i3:
+                        value = two_mo[i0, i2, i1, i3]
                         if value != 0.0:
-                            print(f"{value:23.16e} {i+1:4d} {j+1:4d} {k+1:4d} {l+1:4d}", file=f)
-    for i in range(nactive):
-        for j in range(i + 1):
-            value = one_mo[i, j]
+                            print(
+                                f"{value:23.16e} {i0 + 1:4d} {i1 + 1:4d} {i2 + 1:4d} {i3 + 1:4d}",
+                                file=f,
+                            )
+    for i0 in range(nactive):
+        for i1 in range(i0 + 1):
+            value = one_mo[i0, i1]
             if value != 0.0:
-                print(f"{value:23.16e} {i+1:4d} {j+1:4d} {0:4d} {0:4d}", file=f)
+                print(f"{value:23.16e} {i0 + 1:4d} {i1 + 1:4d} {0:4d} {0:4d}", file=f)
     if data.core_energy is not None:
         print(f"{data.core_energy:23.16e} {0:4d} {0:4d} {0:4d} {0:4d}", file=f)

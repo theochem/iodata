@@ -19,7 +19,6 @@
 """Utilities for writing input files."""
 
 import attr
-
 import numpy as np
 
 from ..iodata import IOData

@@ -61,7 +61,9 @@ MOL_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, atnums, charge, spinpol, geometry, nwarn", MOL_FILES)
+@pytest.mark.parametrize(
+    ("filename", "atnums", "charge", "spinpol", "geometry", "nwarn"), MOL_FILES
+)
 def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry, nwarn):
     """Test qcschema_molecule parsing using manually generated files."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
@@ -105,12 +107,14 @@ MOLSSI_MOL_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, atnums, charge, spinpol, nwarn", MOLSSI_MOL_FILES)
+@pytest.mark.parametrize(("filename", "atnums", "charge", "spinpol", "nwarn"), MOLSSI_MOL_FILES)
 def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, nwarn):
     """Test qcschema_molecule parsing using MolSSI-sourced files."""
-    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(qcschema_molecule))
+    with (
+        as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(qcschema_molecule))
 
     np.testing.assert_equal(mol.atnums, atnums)
     assert mol.charge == charge
@@ -133,12 +137,14 @@ PASSTHROUGH_MOL_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, unparsed_dict", PASSTHROUGH_MOL_FILES)
+@pytest.mark.parametrize(("filename", "unparsed_dict"), PASSTHROUGH_MOL_FILES)
 def test_passthrough_qcschema_molecule(filename, unparsed_dict):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
-    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(qcschema_molecule))
+    with (
+        as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(qcschema_molecule))
 
     assert mol.extra["molecule"]["unparsed"] == unparsed_dict
     assert len(record) == 1
@@ -166,7 +172,7 @@ INOUT_MOL_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, nwarn", INOUT_MOL_FILES)
+@pytest.mark.parametrize(("filename", "nwarn"), INOUT_MOL_FILES)
 def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
@@ -181,7 +187,7 @@ def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
     fn_tmp = os.path.join(tmpdir, "test_qcschema_mol.json")
     dump_one(mol, fn_tmp)
 
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
 
     # Check that prior provenance info is kept
@@ -211,7 +217,7 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     fn_tmp = os.path.join(tmpdir, "test_qcschema_mol.json")
     dump_one(mol, fn_tmp)
 
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
 
     # Extra processing for testing:
@@ -244,7 +250,7 @@ def test_ghost(tmpdir):
     np.testing.assert_allclose(mol.atcorenums, [8, 1, 1, 0, 0, 0, 0, 0, 0])
     fn_tmp = os.path.join(tmpdir, "test_ghost.json")
     dump_one(mol, fn_tmp)
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
     assert mol2["real"] == [True] * 3 + [False] * 6
 
@@ -260,7 +266,7 @@ INPUT_FILES = [
 
 
 @pytest.mark.parametrize(
-    "filename, explicit_basis, lot, obasis_name, run_type, geometry", INPUT_FILES
+    ("filename", "explicit_basis", "lot", "obasis_name", "run_type", "geometry"), INPUT_FILES
 )
 def test_qcschema_input(filename, explicit_basis, lot, obasis_name, run_type, geometry):
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
@@ -286,7 +292,7 @@ PASSTHROUGH_INPUT_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, unparsed_dict, location", PASSTHROUGH_INPUT_FILES)
+@pytest.mark.parametrize(("filename", "unparsed_dict", "location"), PASSTHROUGH_INPUT_FILES)
 def test_passthrough_qcschema_input(filename, unparsed_dict, location):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
@@ -305,7 +311,7 @@ INOUT_INPUT_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, nwarn", INOUT_INPUT_FILES)
+@pytest.mark.parametrize(("filename", "nwarn"), INOUT_INPUT_FILES)
 def test_inout_qcschema_input(tmpdir, filename, nwarn):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
@@ -320,7 +326,7 @@ def test_inout_qcschema_input(tmpdir, filename, nwarn):
     fn_tmp = os.path.join(tmpdir, "test_input_mol.json")
     dump_one(mol, fn_tmp)
 
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
 
     # Check that prior provenance info is kept
@@ -344,7 +350,7 @@ OUTPUT_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, lot, obasis_name, run_type, nwarn", OUTPUT_FILES)
+@pytest.mark.parametrize(("filename", "lot", "obasis_name", "run_type", "nwarn"), OUTPUT_FILES)
 def test_qcschema_output(filename, lot, obasis_name, run_type, nwarn):
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_output:
         if nwarn == 0:
@@ -368,12 +374,14 @@ BAD_OUTPUT_FILES = [
 ]
 
 
-@pytest.mark.parametrize("filename, error", BAD_OUTPUT_FILES)
+@pytest.mark.parametrize(("filename", "error"), BAD_OUTPUT_FILES)
 def test_bad_qcschema_files(filename, error):
     # FIXME: these will move
-    with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
-        with pytest.raises(error):
-            load_one(str(qcschema_input))
+    with (
+        as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input,
+        pytest.raises(error),
+    ):
+        load_one(str(qcschema_input))
 
 
 INOUT_OUTPUT_FILES = [
@@ -392,7 +400,7 @@ def test_inout_qcschema_output(tmpdir, filename):
     fn_tmp = os.path.join(tmpdir, "test_input_mol.json")
     dump_one(mol, fn_tmp)
 
-    with open(fn_tmp, "r") as mol2_in:
+    with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
 
     # Check that prior provenance info is kept

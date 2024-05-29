@@ -24,9 +24,9 @@ import attr
 import numpy as np
 import scipy.special
 
-from .overlap_cartpure import tfs
-from .basis import convert_conventions, iter_cart_alphabet, MolecularBasis
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
+from .basis import MolecularBasis, Shell, convert_conventions, iter_cart_alphabet
+from .overlap_cartpure import tfs
 
 __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
 
@@ -51,7 +51,6 @@ def factorial2(n, exact=False):
     return out
 
 
-# pylint: disable=too-many-nested-blocks,too-many-statements,too-many-branches
 def compute_overlap(
     obasis0: MolecularBasis,
     atcoords0: np.ndarray,
@@ -90,7 +89,7 @@ def compute_overlap(
 
     """
     if obasis0.primitive_normalization != "L2":
-        raise ValueError("The overlap integrals are only implemented for L2 " "normalization.")
+        raise ValueError("The overlap integrals are only implemented for L2 normalization.")
 
     # Get a segmented basis, for simplicity
     obasis0 = obasis0.get_segmented()
@@ -107,7 +106,7 @@ def compute_overlap(
         identical = True
     else:
         if obasis1.primitive_normalization != "L2":
-            raise ValueError("The overlap integrals are only implemented for L2 " "normalization.")
+            raise ValueError("The overlap integrals are only implemented for L2 normalization.")
         if atcoords1 is None:
             raise TypeError(
                 "When a second basis is given, a second second "
@@ -132,7 +131,7 @@ def compute_overlap(
 
     n_max = max(np.max(shell.angmoms) for shell in obasis0.shells)
     if not identical:
-        n_max = max(n_max, max(np.max(shell.angmoms) for shell in obasis1.shells))
+        n_max = max(n_max, *(np.max(shell.angmoms) for shell in obasis1.shells))
     go = GaussianOverlap(n_max)
 
     # define a python ufunc (numpy function) for broadcasted calling over angular momentums
@@ -141,17 +140,13 @@ def compute_overlap(
     # Loop over shell0
     begin0 = 0
 
-    # pylint: disable=too-many-nested-blocks
     for i0, shell0 in enumerate(obasis0.shells):
         r0 = atcoords0[shell0.icenter]
         end0 = begin0 + shell0.nbasis
 
         # Loop over shell1 (lower triangular only, including diagonal)
         begin1 = 0
-        if identical:
-            nshell1 = i0 + 1
-        else:
-            nshell1 = len(obasis1.shells)
+        nshell1 = i0 + 1 if identical else len(obasis1.shells)
         for i1, shell1 in enumerate(obasis1.shells[:nshell1]):
             r1 = atcoords1[shell1.icenter]
             end1 = begin1 + shell1.nbasis
@@ -223,8 +218,7 @@ def compute_overlap(
         permutation1, signs1 = permutation0, signs0
     else:
         permutation1, signs1 = convert_conventions(obasis1, OVERLAP_CONVENTIONS, reverse=True)
-    overlap = overlap[:, permutation1] * signs1
-    return overlap
+    return overlap[:, permutation1] * signs1
 
 
 class GaussianOverlap:
@@ -259,7 +253,7 @@ class GaussianOverlap:
         return value
 
 
-def _compute_cart_shell_normalizations(shell: "Shell") -> np.ndarray:
+def _compute_cart_shell_normalizations(shell: Shell) -> np.ndarray:
     """Return normalization constants for the primitives in a given shell.
 
     Parameters
@@ -278,9 +272,7 @@ def _compute_cart_shell_normalizations(shell: "Shell") -> np.ndarray:
     result = []
     for angmom in shell.angmoms:
         for exponent in shell.exponents:
-            row = []
-            for n in iter_cart_alphabet(angmom):
-                row.append(gob_cart_normalization(exponent, n))
+            row = [gob_cart_normalization(exponent, n) for n in iter_cart_alphabet(angmom)]
             result.append(row)
     return np.array(result)
 

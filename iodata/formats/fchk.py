@@ -18,18 +18,17 @@
 # --
 """Gaussian FCHK file format."""
 
+from collections.abc import Iterator
 from fnmatch import fnmatch
-from typing import List, Tuple, Iterator, TextIO
+from typing import Optional, TextIO
 
 import numpy as np
 
+from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventions
+from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
-from ..basis import MolecularBasis, Shell, HORTON2_CONVENTIONS, convert_conventions
-from ..docstrings import document_load_one, document_load_many
-from ..docstrings import document_dump_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, amu
-
 
 __all__ = []
 
@@ -59,7 +58,6 @@ CONVENTIONS = {
 }
 
 
-# pylint: disable=too-many-branches,too-many-statements
 @document_load_one(
     "Gaussian Formatted Checkpoint",
     [
@@ -209,8 +207,8 @@ def load_one(lit: LineIterator) -> dict:
     _load_dm("Spin SCF Density", fchk, one_rdms, "scf_spin")
     # only one of the lots should be present, hence using the same key
     for lot in "MP2", "MP3", "CC", "CI":
-        _load_dm("Total {} Density".format(lot), fchk, one_rdms, "post_scf_ao")
-        _load_dm("Spin {} Density".format(lot), fchk, one_rdms, "post_scf_spin_ao")
+        _load_dm(f"Total {lot} Density", fchk, one_rdms, "post_scf_ao")
+        _load_dm(f"Spin {lot} Density", fchk, one_rdms, "post_scf_spin_ao")
     if one_rdms:
         result["one_rdms"] = one_rdms
 
@@ -222,7 +220,7 @@ def load_one(lit: LineIterator) -> dict:
     if nalpha < 0 or nbeta < 0 or nalpha + nbeta <= 0:
         lit.error("The number of electrons is not positive.")
     if nalpha < nbeta:
-        raise ValueError("n_alpha={0} < n_beta={1} is not valid!".format(nalpha, nbeta))
+        raise ValueError(f"n_alpha={nalpha} < n_beta={nbeta} is not valid!")
 
     norba = fchk["Alpha Orbital Energies"].shape[0]
     mo_coeffs = np.copy(fchk["Alpha MO coefficients"].reshape(norba, nbasis).T)
@@ -243,10 +241,9 @@ def load_one(lit: LineIterator) -> dict:
         mo_occs = np.zeros(norba)
         mo_occs[:nalpha] = 1.0
         mo_occs[:nbeta] = 2.0
-        if nalpha != nbeta and "one_rdms" in result:
-            # delete dm_full_scf because it is known to be buggy
-            if "scf" in result["one_rdms"]:
-                result["one_rdms"].pop("scf")
+        # delete dm_full_scf because it is known to be buggy
+        if nalpha != nbeta and "one_rdms" in result and "scf" in result["one_rdms"]:
+            result["one_rdms"].pop("scf")
         mo = MolecularOrbitals("restricted", norba, norba, mo_occs, mo_coeffs, mo_energies)
     result["mo"] = mo
 
@@ -329,15 +326,13 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
 
     natom = fchk["Atomic numbers"].size
     for ipoint, nstep in enumerate(nsteps):
-        results_geoms = fchk["{} {:7d} Results for each geome".format(prefix, ipoint + 1)]
+        results_geoms = fchk[f"{prefix} {ipoint + 1:7d} Results for each geome"]
         trajectory = list(
             zip(
                 results_geoms[::2],
                 results_geoms[1::2],
-                fchk["{} {:7d} Geometries".format(prefix, ipoint + 1)].reshape(-1, natom, 3),
-                fchk["{} {:7d} Gradient at each geome".format(prefix, ipoint + 1)].reshape(
-                    -1, natom, 3
-                ),
+                fchk[f"{prefix} {ipoint + 1:7d} Geometries"].reshape(-1, natom, 3),
+                fchk[f"{prefix} {ipoint + 1:7d} Gradient at each geome"].reshape(-1, natom, 3),
             )
         )
         assert len(trajectory) == nstep
@@ -361,7 +356,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             yield data
 
 
-def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
+def _load_fchk_low(lit: LineIterator, label_patterns: Optional[list[str]] = None) -> dict:
     """Read selected fields from a formatted checkpoint file.
 
     Parameters
@@ -398,8 +393,7 @@ def _load_fchk_low(lit: LineIterator, label_patterns: List[str] = None) -> dict:
     return result
 
 
-# pylint: disable=too-many-branches
-def _load_fchk_field(lit: LineIterator, label_patterns: List[str]) -> Tuple[str, object]:
+def _load_fchk_field(lit: LineIterator, label_patterns: list[str]) -> tuple[str, object]:
     """Read a single field matching one of the given label_patterns.
 
     Parameters
@@ -440,7 +434,7 @@ def _load_fchk_field(lit: LineIterator, label_patterns: List[str]) -> Tuple[str,
             try:
                 return label, datatype(words[1])
             except ValueError:
-                lit.error("Could not interpret: {}".format(words[1]))
+                lit.error(f"Could not interpret: {words[1]}")
         elif len(words) == 3:
             if words[1] != "N=":
                 lit.error("Expected N= not found.")
@@ -455,7 +449,7 @@ def _load_fchk_field(lit: LineIterator, label_patterns: List[str]) -> Tuple[str,
                 try:
                     value[counter] = datatype(word)
                 except (ValueError, OverflowError):
-                    lit.error("Could not interpret: {}".format(word))
+                    lit.error(f"Could not interpret: {word}")
                 counter += 1
             return label, value
 
@@ -510,12 +504,12 @@ def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
 # theses functions, both scalars and arrays, integer and real(float) variables
 def _dump_integer_scalars(name: str, val: int, f: TextIO):
     """Dumper for a scalar integer."""
-    print("{0:40}   I     {1:12d}".format(name, int(val)), file=f)
+    print(f"{name:40}   I     {int(val):12d}", file=f)
 
 
 def _dump_real_scalars(name: str, val: float, f: TextIO):
     """Dumper for a scalar float."""
-    print("{0:40}   R     {1: 16.8E}".format(name, float(val)), file=f)
+    print(f"{name:40}   R     {float(val): 16.8E}", file=f)
 
 
 def _dump_integer_arrays(name: str, val: np.ndarray, f: TextIO):
@@ -523,10 +517,10 @@ def _dump_integer_arrays(name: str, val: np.ndarray, f: TextIO):
     nval = val.size
     if nval != 0:
         np.reshape(val, nval)
-        print("{0:40}   I   N={1:12}".format(name, nval), file=f)
+        print(f"{name:40}   I   N={nval:12}", file=f)
         k = 0
         for i in range(nval):
-            print("{0:12}".format(int(val[i])), file=f, end="")
+            print(f"{int(val[i]):12}", file=f, end="")
             k += 1
             if k == 6 or i == nval - 1:
                 print("", file=f)
@@ -538,10 +532,10 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
     nval = val.size
     if nval != 0:
         np.reshape(val, nval)
-        print("{0:40}   R   N={1:12}".format(name, nval), file=f)
+        print(f"{name:40}   R   N={nval:12}", file=f)
         k = 0
         for i in range(nval):
-            print("{0: 16.8E}".format(val[i]), file=f, end="")
+            print(f"{val[i]: 16.8E}", file=f, end="")
             k += 1
             if k == 5 or i == nval - 1:
                 print("", file=f)
@@ -571,7 +565,7 @@ def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     # write title
-    print("{0:72}".format(data.title or "FCHK generated by IOData"), file=f)
+    print("{:72}".format(data.title or "FCHK generated by IOData"), file=f)
 
     # write run type, level of theory, and basis set name (all in uppercase)
     items = [getattr(data, item) or "NA" for item in ["run_type", "lot", "obasis_name"]]
@@ -696,9 +690,9 @@ def dump_one(f: TextIO, data: IOData):
         elif key == "scf_spin":
             title = "Spin SCF Density"
         elif key == "post_scf_ao":
-            title = "Total {0} Density".format(level)
+            title = f"Total {level} Density"
         elif key == "post_scf_spin_ao":
-            title = "Spin {0} Density".format(level)
+            title = f"Spin {level} Density"
         else:
             title = "Total SCF Density"
         _dump_real_arrays(title, mat, f)

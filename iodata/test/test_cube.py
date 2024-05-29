@@ -16,13 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=unsubscriptable-object
 """Test iodata.formats.cube module."""
 
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
-from ..api import load_one, dump_one
+from ..api import dump_one, load_one
 
 try:
     from importlib_resources import as_file, files
@@ -59,20 +58,18 @@ def test_load_dump_load_aelta(tmpdir):
     with as_file(files("iodata.test.data").joinpath("aelta.cube")) as fn_cube1:
         mol1 = load_one(str(fn_cube1))
 
-    fn_cube2 = "%s/%s" % (tmpdir, "aelta.cube")
+    fn_cube2 = "{}/{}".format(tmpdir, "aelta.cube")
     dump_one(mol1, fn_cube2)
     mol2 = load_one(fn_cube2)
 
     with open(fn_cube2) as f:
-        line_counter = 0
         block_counter = 0
-        for line in f:
-            line_counter += 1
-            if line_counter > 6 + len(mol2.atnums):
+        for iline, line in enumerate(f):
+            if iline > 6 + len(mol2.atnums):
                 if mol2.cube.shape[2] % 6 == 0:
                     assert len(line.split()) == 6
                 if mol2.cube.shape[2] % 6 != 0:
-                    block_line_counter = line_counter - (
+                    block_line_counter = iline - (
                         6 + len(mol2.atnums) + block_counter * (mol2.cube.shape[2] // 6 + 1)
                     )
                     if 1 <= block_line_counter <= mol2.cube.shape[2] // 6:
@@ -99,7 +96,7 @@ def test_load_dump_h2o_5points(tmpdir):
     fn_cube2 = tmpdir.join("iodata_h2o_5points.cube")
     dump_one(mol1, fn_cube2)
     # read the contents as string (skip the first 2 lines) & compare
-    with open(fn_cube1, "r") as f:
+    with open(fn_cube1) as f:
         content1 = f.read().split("\n", 2)[-1]
     content2 = fn_cube2.read().split("\n", 2)[-1]
     assert content1 == content2
@@ -113,7 +110,7 @@ def test_load_dump_ch4_6points(tmpdir):
     fn_cube2 = tmpdir.join("iodata_ch4_6points.cube")
     dump_one(mol1, fn_cube2)
     # read the contents as string (skip the first 2 lines) & compare
-    with open(fn_cube1, "r") as f:
+    with open(fn_cube1) as f:
         content1 = f.read().split("\n", 2)[-1]
     content2 = fn_cube2.read().split("\n", 2)[-1]
     assert content1 == content2
@@ -127,7 +124,7 @@ def test_load_dump_nh3_7points(tmpdir):
     fn_cube2 = tmpdir.join("iodata_nh3_7points.cube")
     dump_one(mol1, fn_cube2)
     # read the contents as string (skip the first 2 lines) & compare
-    with open(fn_cube1, "r") as f:
+    with open(fn_cube1) as f:
         content1 = f.read().split("\n", 2)[-1]
     content2 = fn_cube2.read().split("\n", 2)[-1]
     assert content1 == content2

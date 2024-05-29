@@ -20,9 +20,10 @@
 """CLI for file conversion."""
 
 import argparse
+
 import numpy as np
 
-from .api import load_one, dump_one, load_many, dump_many, FORMAT_MODULES
+from .api import FORMAT_MODULES, dump_many, dump_one, load_many, load_one
 
 try:
     from iodata.version import __version__
@@ -74,7 +75,7 @@ def parse_args():
         "-V",
         "--version",
         action="version",
-        version="%(prog)s (IOData version {})".format(__version__),
+        version=f"%(prog)s (IOData version {__version__})",
     )
     parser.add_argument(
         "-i", "--infmt", help="Select the input format, overrides automatic detection."

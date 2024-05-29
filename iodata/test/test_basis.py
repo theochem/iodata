@@ -20,19 +20,19 @@
 
 import attr
 import numpy as np
-from numpy.testing import assert_equal
 import pytest
+from numpy.testing import assert_equal
 
 from ..basis import (
-    angmom_sti,
-    angmom_its,
-    Shell,
+    CCA_CONVENTIONS,
+    HORTON2_CONVENTIONS,
     MolecularBasis,
+    Shell,
+    angmom_its,
+    angmom_sti,
     convert_convention_shell,
     convert_conventions,
     iter_cart_alphabet,
-    HORTON2_CONVENTIONS,
-    CCA_CONVENTIONS,
 )
 from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 
@@ -171,14 +171,11 @@ def test_nbasis1():
 
 
 def test_get_segmented():
+    rng = np.random.default_rng(1)
     obasis0 = MolecularBasis(
         [
-            Shell(
-                0, [0, 1], ["c", "c"], np.random.uniform(0, 1, 5), np.random.uniform(-1, 1, (5, 2))
-            ),
-            Shell(
-                1, [2, 3], ["p", "p"], np.random.uniform(0, 1, 7), np.random.uniform(-1, 1, (7, 2))
-            ),
+            Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 5), rng.uniform(-1, 1, (5, 2))),
+            Shell(1, [2, 3], ["p", "p"], rng.uniform(0, 1, 7), rng.uniform(-1, 1, (7, 2))),
         ],
         CP2K_CONVENTIONS,
         "L2",
@@ -279,7 +276,8 @@ def test_convert_convention_obasis():
     permutation, signs = convert_conventions(obasis, new_convention)
     assert_equal(permutation, [0, 1, 2, 4, 3, 5, 6, 8, 7, 12, 10, 9, 11, 13])
     assert_equal(signs, [-1, -1, 1, -1, 1, -1, 1, -1, 1, 1, 1, 1, -1, -1])
-    vec1 = np.random.uniform(-1, 1, obasis.nbasis)
+    rng = np.random.default_rng(1)
+    vec1 = rng.uniform(-1, 1, obasis.nbasis)
     vec2 = vec1[permutation] * signs
     permutation, signs = convert_conventions(obasis, new_convention, reverse=True)
     vec3 = vec2[permutation] * signs

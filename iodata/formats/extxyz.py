@@ -28,16 +28,14 @@ handle an XYZ with different molecules, e.g. a molecular database.
 """
 
 import shlex
-from typing import Iterator
+from collections.abc import Iterator
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_load_many
-from ..periodic import sym2num, num2sym
-from ..utils import angstrom, amu, LineIterator, strtobool
-
+from ..docstrings import document_load_many, document_load_one
+from ..periodic import num2sym, sym2num
+from ..utils import LineIterator, amu, angstrom, strtobool
 from .xyz import load_one as load_one_xyz
-
 
 __all__ = []
 
@@ -98,7 +96,7 @@ def _parse_properties(properties: str):
             (3,),
             float,
             (lambda word: float(word) * angstrom),
-            (lambda value: "{:15.10f}".format(value / angstrom)),
+            (lambda value: f"{value / angstrom:15.10f}"),
         ),
         "masses": (
             "atmasses",
@@ -106,7 +104,7 @@ def _parse_properties(properties: str):
             (),
             float,
             (lambda word: float(word) * amu),
-            (lambda value: "{:15.10f}".format(value / amu)),
+            (lambda value: f"{value / amu:15.10f}"),
         ),
         "force": (
             "atgradient",
@@ -114,7 +112,7 @@ def _parse_properties(properties: str):
             (3,),
             float,
             (lambda word: -float(word)),
-            (lambda value: "{:15.10f}".format(-value)),
+            (lambda value: f"{-value:15.10f}"),
         ),
     }
     atnum_column = (
@@ -123,7 +121,7 @@ def _parse_properties(properties: str):
         (),
         int,
         (lambda word: int(word) if word.isdigit() else sym2num[word.title()]),
-        (lambda atnum: "{:2s}".format(num2sym[atnum])),
+        (lambda atnum: f"{num2sym[atnum]:2s}"),
     )
     splitted_properties = properties.split(":")
     assert len(splitted_properties) % 3 == 0
@@ -138,14 +136,11 @@ def _parse_properties(properties: str):
         # If 'Z' is not present, use 'species'
         atom_column_map["species"] = atnum_column
     for name, dtype, shape in zip(names, dtypes, shapes):
-        if name in atom_column_map.keys():
+        if name in atom_column_map:
             atom_columns.append(atom_column_map[name])
         else:
             # Use the 'extra' attribute to store values which are not predefined in iodata
-            if shape == "1":
-                shape_suffix = ()
-            else:
-                shape_suffix = (int(shape),)
+            shape_suffix = () if shape == "1" else (int(shape),)
             atom_columns.append(("extra", name, shape_suffix, *dtype_map[dtype]))
     return atom_columns
 
@@ -169,7 +164,7 @@ def _parse_title(title: str):
             key, value = key_value_pair.split("=", 1)
             if key == "Properties":
                 atom_columns = _parse_properties(value)
-            elif key in iodata_attrs.keys():
+            elif key in iodata_attrs:
                 data[iodata_attrs[key][0]] = iodata_attrs[key][1](value)
             else:
                 data.setdefault("extra", {})[key] = _convert_title_value(value)
@@ -194,7 +189,7 @@ def load_one(lit: LineIterator) -> dict:
     lit.back(atom_line)
     xyz_data = load_one_xyz(lit, atom_columns)
     # If the extra attribute is present, prevent it from overwriting itself
-    if "extra" in title_data.keys() and "extra" in xyz_data.keys():
+    if "extra" in title_data and "extra" in xyz_data:
         xyz_data["extra"].update(title_data["extra"])
     title_data.update(xyz_data)
     return title_data
@@ -209,13 +204,13 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # XYZ Trajectory files are a simple concatenation of individual XYZ files,'
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             # Check for and skip empty lines at the end of file
             line = next(lit)
             if line.strip() == "":
                 return
             lit.back(line)
             yield load_one(lit)
-        except StopIteration:
-            return
+    except StopIteration:
+        return

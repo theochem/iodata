@@ -20,13 +20,15 @@
 
 import os
 from contextlib import contextmanager
+from typing import Optional
+
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose
 import pytest
+from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
-from ..overlap import compute_overlap
 from ..basis import convert_conventions
+from ..overlap import compute_overlap
 from ..utils import FileFormatWarning
 
 try:
@@ -46,8 +48,7 @@ __all__ = [
 def compute_1rdm(iodata):
     """Compute 1-RDM."""
     coeffs, occs = iodata.mo.coeffs, iodata.mo.occs
-    dm = np.dot(coeffs * occs, coeffs.T)
-    return dm
+    return np.dot(coeffs * occs, coeffs.T)
 
 
 def compute_mulliken_charges(iodata):
@@ -169,7 +170,9 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
     assert_allclose(mo_overlap, np.eye(mo_count), rtol=0.0, atol=atol, err_msg=message)
 
 
-def load_one_warning(filename: str, fmt: str = None, match: str = None, **kwargs):
+def load_one_warning(
+    filename: str, fmt: Optional[str] = None, match: Optional[str] = None, **kwargs
+):
     """Call load_one, catching expected FileFormatWarning.
 
     Parameters

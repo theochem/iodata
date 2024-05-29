@@ -21,14 +21,12 @@
 This module will load Q-Chem log file into IODATA.
 """
 
-from typing import Tuple
-
 import numpy as np
 
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
-from ..utils import LineIterator, angstrom, kcalmol, calmol, kjmol, strtobool
+from ..utils import LineIterator, angstrom, calmol, kcalmol, kjmol, strtobool
 
 __all__ = []
 
@@ -148,7 +146,7 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
-def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
+def load_qchemlog_low(lit: LineIterator) -> dict:
     """Load the information from Q-Chem log file."""
     data = {}
     while True:
@@ -229,24 +227,24 @@ def load_qchemlog_low(lit: LineIterator) -> dict:  # pylint: disable=too-many-br
     return data
 
 
-def _helper_rem_job(lit: LineIterator) -> Tuple:
+def _helper_rem_job(lit: LineIterator) -> dict:
     """Load job specifications from Q-Chem output file format."""
     data_rem = {}
     for line in lit:
-        if line.strip() == "$end":
+        words = line.strip().lower().split(maxsplit=1)
+        if words[0] == "$end":
             break
-        line = line.strip()
         # parse job type section; some sections might not be available
-        if line.lower().startswith("jobtype"):
-            data_rem["run_type"] = line.split()[1].lower()
-        elif line.lower().startswith("method"):
-            data_rem["lot"] = line.split()[1].lower()
-        elif line.lower().startswith("unrestricted"):
-            data_rem["unrestricted"] = bool(strtobool(line.split()[1]))
-        elif line.split()[0].lower() == "basis":
-            data_rem["obasis_name"] = line.split()[1].lower()
-        elif line.lower().startswith("symmetry"):
-            data_rem["symm"] = bool(strtobool(line.split()[1]))
+        if words[0] == "jobtype":
+            data_rem["run_type"] = words[1]
+        elif words[0] == "method":
+            data_rem["lot"] = words[1]
+        elif words[0] == "unrestricted":
+            data_rem["unrestricted"] = strtobool(words[1])
+        elif words[0] == "basis":
+            data_rem["obasis_name"] = words[1]
+        elif words[0] == "symmetry":
+            data_rem["symm"] = strtobool(words[1])
     return data_rem
 
 
@@ -286,7 +284,7 @@ def _helper_energy(lit: LineIterator):
     return energy
 
 
-def _helper_orbital_energies_restricted(lit: LineIterator) -> Tuple:
+def _helper_orbital_energies_restricted(lit: LineIterator) -> tuple:
     """Load occupied and virtual orbital energies for restricted calculation."""
     # alpha occupied MOs
     mo_a_occupied = _helper_section("-- Occupied --", "-- Virtual --", lit, backward=True)
@@ -295,7 +293,7 @@ def _helper_orbital_energies_restricted(lit: LineIterator) -> Tuple:
     return mo_a_occupied, mo_a_unoccupied
 
 
-def _helper_orbital_energies_unrestricted(lit: LineIterator) -> Tuple:
+def _helper_orbital_energies_unrestricted(lit: LineIterator) -> tuple:
     """Load occupied and virtual orbital energies for unrestricted calculation."""
     subdata = {}
     # alpha occupied MOs
@@ -342,7 +340,7 @@ def _helper_mulliken(lit: LineIterator) -> np.ndarray:
     return np.array(mulliken_charges, dtype=float)
 
 
-def _helper_dipole_moments(lit: LineIterator) -> Tuple:
+def _helper_dipole_moments(lit: LineIterator) -> tuple:
     """Load cartesian multiple moments."""
     for line in lit:
         if line.strip().startswith("Dipole Moment (Debye)"):
@@ -388,12 +386,11 @@ def _helper_hessian(lit: LineIterator, natom: int) -> np.ndarray:
     return hessian.astype(float)
 
 
-def _helper_vibrational(lit: LineIterator) -> Tuple:
+def _helper_vibrational(lit: LineIterator) -> tuple:
     """Load vibrational analysis."""
     for line in lit:
         if line.strip().startswith("This Molecule has"):
             break
-    # pylint: disable= W0631
     imaginary_freq = int(line.split()[3])
     vib_energy = float(next(lit).split()[-2])
     next(lit)
@@ -406,7 +403,7 @@ def _helper_vibrational(lit: LineIterator) -> Tuple:
     return imaginary_freq, vib_energy, atmasses
 
 
-def _helper_thermo(lit: LineIterator) -> Tuple:
+def _helper_thermo(lit: LineIterator) -> tuple:
     """Load thermodynamics properties."""
     enthalpy_dict = {}
     entropy_dict = {}
@@ -433,7 +430,7 @@ def _helper_thermo(lit: LineIterator) -> Tuple:
     return enthalpy_dict, entropy_dict
 
 
-def _helper_eda2(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches
+def _helper_eda2(lit: LineIterator) -> dict:
     """Load Energy decomposition information."""
     next(lit)
     eda2 = {}

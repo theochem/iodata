@@ -23,20 +23,20 @@ last updated one and is described in this link:
 http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html
 """
 
-from typing import TextIO, Iterator
+from collections.abc import Iterator
+from typing import TextIO
 
 import numpy as np
 
 from ..docstrings import (
-    document_load_one,
-    document_load_many,
-    document_dump_one,
     document_dump_many,
+    document_dump_one,
+    document_load_many,
+    document_load_one,
 )
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym, bond2num
-from ..utils import angstrom, LineIterator
-
+from ..periodic import bond2num, num2sym, sym2num
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 
@@ -143,7 +143,7 @@ def _parse_pdb_conect_line(line):
 
 
 @document_load_one("PDB", ["atcoords", "atnums", "atffparams", "extra"], ["title", "bonds"])
-def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, too-many-statements
+def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     title_lines = []
     compnd_lines = []
@@ -168,7 +168,7 @@ def load_one(lit: LineIterator) -> dict:  # pylint: disable=too-many-branches, t
             title_lines.append(line[10:].strip())
         if line.startswith("COMPND"):
             compnd_lines.append(line[10:].strip())
-        if line.startswith("ATOM") or line.startswith("HETATM"):
+        if line.startswith(("ATOM", "HETATM")):
             (atnum, attype, restype, chainid, resnum, atcoord, occupancy, bfactor) = (
                 _parse_pdb_atom_line(line, lit)
             )
@@ -237,11 +237,11 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # PDB files with more molecules are a simple concatenation of individual PDB files,'
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             yield load_one(lit)
-        except IOError:
-            return
+    except OSError:
+        return
 
 
 def _dump_multiline_str(f: TextIO, key: str, value: str):
@@ -301,8 +301,7 @@ def dump_one(f: TextIO, data: IOData):
                 # Write connection in groups of max 4
                 for ichunk in range(len(iatoms1) // 4 + 1):
                     other_atoms_str = "".join(
-                        "{:5d}".format(iatom1 + 1)
-                        for iatom1 in iatoms1[ichunk * 4 : ichunk * 4 + 4]
+                        f"{iatom1 + 1:5d}" for iatom1 in iatoms1[ichunk * 4 : ichunk * 4 + 4]
                     )
                     conect_line = f"CONECT{iatom0 + 1:5d}{other_atoms_str}"
                     print(conect_line, file=f)

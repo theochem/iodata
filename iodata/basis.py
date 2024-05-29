@@ -26,13 +26,12 @@ Basis set conventions and terminology are documented in :ref:`basis_conventions`
 
 from functools import wraps
 from numbers import Integral
-from typing import List, Dict, Tuple, Union
+from typing import Union
 
 import attr
 import numpy as np
 
 from .attrutils import validate_shape
-
 
 __all__ = [
     "angmom_sti",
@@ -62,7 +61,7 @@ def _alsolist(f):
 
 
 @_alsolist
-def angmom_sti(char: Union[str, List[str]]) -> Union[int, List[int]]:
+def angmom_sti(char: Union[str, list[str]]) -> Union[int, list[int]]:
     """Convert an angular momentum from string to integer format.
 
     Parameters
@@ -81,7 +80,7 @@ def angmom_sti(char: Union[str, List[str]]) -> Union[int, List[int]]:
 
 
 @_alsolist
-def angmom_its(angmom: Union[int, List[int]]) -> Union[str, List[str]]:
+def angmom_its(angmom: Union[int, list[int]]) -> Union[str, list[str]]:
     """Convert an angular momentum from integer to string representation.
 
     Parameters
@@ -128,13 +127,13 @@ class Shell:
     """
 
     icenter: int
-    angmoms: List[int] = attr.ib(validator=validate_shape(("coeffs", 1)))
-    kinds: List[str] = attr.ib(validator=validate_shape(("coeffs", 1)))
+    angmoms: list[int] = attr.ib(validator=validate_shape(("coeffs", 1)))
+    kinds: list[str] = attr.ib(validator=validate_shape(("coeffs", 1)))
     exponents: np.ndarray = attr.ib(validator=validate_shape(("coeffs", 0)))
     coeffs: np.ndarray = attr.ib(validator=validate_shape(("exponents", 0), ("kinds", 0)))
 
     @property
-    def nbasis(self) -> int:  # noqa: D401
+    def nbasis(self) -> int:
         """Number of basis functions (e.g. 3 for a P shell and 4 for an SP shell)."""
         result = 0
         for angmom, kind in zip(self.angmoms, self.kinds):
@@ -143,16 +142,16 @@ class Shell:
             elif kind == "p" and angmom >= 2:
                 result += 2 * angmom + 1
             else:
-                raise TypeError("Unknown shell kind '{}'; expected 'c' or 'p'.".format(kind))
+                raise TypeError(f"Unknown shell kind '{kind}'; expected 'c' or 'p'.")
         return result
 
     @property
-    def nprim(self) -> int:  # noqa: D401
+    def nprim(self) -> int:
         """Number of primitives, also known as the contraction length."""
         return len(self.exponents)
 
     @property
-    def ncon(self) -> int:  # noqa: D401
+    def ncon(self) -> int:
         """Number of contractions. This is usually 1; e.g., it would be 2 for an SP shell."""
         return len(self.angmoms)
 
@@ -206,12 +205,12 @@ class MolecularBasis:
 
     """
 
-    shells: List[Shell]
-    conventions: Dict[str, str]
+    shells: list[Shell]
+    conventions: dict[str, str]
     primitive_normalization: str
 
     @property
-    def nbasis(self) -> int:  # noqa: D401
+    def nbasis(self) -> int:
         """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
 
@@ -223,13 +222,12 @@ class MolecularBasis:
                 shells.append(
                     Shell(shell.icenter, [angmom], [kind], shell.exponents, coeffs.reshape(-1, 1))
                 )
-        # pylint: disable=no-member
         return attr.evolve(self, shells=shells)
 
 
 def convert_convention_shell(
-    conv1: List[str], conv2: List[str], reverse=False
-) -> Tuple[np.ndarray, np.ndarray]:
+    conv1: list[str], conv2: list[str], reverse=False
+) -> tuple[np.ndarray, np.ndarray]:
     """Return a permutation vector and sign changes to convert from 1 to 2.
 
     The transformation from convention 1 to convention 2 can be done applying
@@ -277,7 +275,7 @@ def convert_convention_shell(
     if set(conv1) != set(conv2):
         raise TypeError(
             "Without the minus signs, conv1 and conv2 must contain "
-            "the same elements. Got {} and {}.".format(conv1, conv2)
+            f"the same elements. Got {conv1} and {conv2}."
         )
     # Get the permutation
     if reverse:
@@ -290,8 +288,8 @@ def convert_convention_shell(
 
 
 def convert_conventions(
-    molbasis: MolecularBasis, new_conventions: Dict[str, List[str]], reverse=False
-) -> Tuple[np.ndarray, np.ndarray]:
+    molbasis: MolecularBasis, new_conventions: dict[str, list[str]], reverse=False
+) -> tuple[np.ndarray, np.ndarray]:
     """Return a permutation vector and sign changes to convert from 1 to 2.
 
     The transformation from molbasis.convention to the new convention can be done
@@ -336,8 +334,7 @@ def convert_conventions(
             conv2 = new_conventions[key]
             shell_permutation, shell_signs = convert_convention_shell(conv1, conv2, reverse)
             offset = len(permutation)
-            for i in shell_permutation:
-                permutation.append(i + offset)
+            permutation.extend(i + offset for i in shell_permutation)
             signs.extend(shell_signs)
     return np.array(permutation), np.array(signs)
 
@@ -360,7 +357,7 @@ def iter_cart_alphabet(n: int) -> np.ndarray:
             yield np.array((nx, ny, nz), dtype=int)
 
 
-def get_default_conventions() -> Tuple[Dict, Dict]:
+def get_default_conventions() -> tuple[dict, dict]:
     """Produce conventions dictionaries compatible with HORTON2 and CCA.
 
     Do not change this! Both conventions are also used by several file formats
@@ -371,7 +368,7 @@ def get_default_conventions() -> Tuple[Dict, Dict]:
 
     Kenny, J. P.; Janssen, C. L.; Valeev, E. F.; Windus, T. L. Components for
     Integral Evaluation in Quantum Chemistry: Components for Integral Evaluation
-    in Quantum Chemistry. J. Comput. Chem. 2008, 29 (4), 562–577.
+    in Quantum Chemistry. J. Comput. Chem. 2008, 29 (4), 562-577.
     https://doi.org/10.1002/jcc.20815.
 
     The ordering of the spherical harmonics within one shell is rather vague
@@ -392,17 +389,15 @@ def get_default_conventions() -> Tuple[Dict, Dict]:
     horton2 = {(0, "c"): ["1"]}
     cca = horton2.copy()
     for angmom in range(1, 25):
-        conv_cart = list(
-            "x" * nx + "y" * ny + "z" * nz for nx, ny, nz in iter_cart_alphabet(angmom)
-        )
+        conv_cart = ["x" * nx + "y" * ny + "z" * nz for nx, ny, nz in iter_cart_alphabet(angmom)]
         key = (angmom, "c")
         horton2[key] = conv_cart
         cca[key] = conv_cart
         if angmom > 1:
             conv_pure = ["c0"]
             for absm in range(1, angmom + 1):
-                conv_pure.append("c{}".format(absm))
-                conv_pure.append("s{}".format(absm))
+                conv_pure.append(f"c{absm}")
+                conv_pure.append(f"s{absm}")
             key = (angmom, "p")
             horton2[key] = conv_pure
             cca[key] = conv_pure[:1:-2] + conv_pure[:1] + conv_pure[1::2]

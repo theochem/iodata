@@ -25,18 +25,19 @@ post-processing less efficient compared to formats that do support contractions 
 Gaussian functions.
 """
 
-from typing import List, TextIO, Tuple
+import functools
+import operator
+from typing import TextIO
 
 import numpy as np
 
 from ..basis import MolecularBasis, Shell, convert_conventions
-from ..docstrings import document_load_one, document_dump_one
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
-from ..overlap import gob_cart_normalization
 from ..orbitals import MolecularOrbitals
+from ..overlap import gob_cart_normalization
 from ..periodic import num2sym, sym2num
 from ..utils import LineIterator
-
 
 __all__ = []
 
@@ -119,10 +120,12 @@ CONVENTIONS = {
 
 # Definition of primitives in the WFN format. This is the order of the primitive
 # types as documented by aimall, used in the field TYPE ASSIGNMENTS.
-PRIMITIVE_NAMES = sum([CONVENTIONS[(angmom, "c")] for angmom in range(6)], [])
+PRIMITIVE_NAMES = functools.reduce(
+    operator.iadd, [CONVENTIONS[(angmom, "c")] for angmom in range(6)], []
+)
 
 
-def _load_helper_num(lit: LineIterator) -> List[int]:
+def _load_helper_num(lit: LineIterator) -> list[int]:
     """Read number of orbitals, primitives and atoms."""
     line = next(lit)
     if not line.startswith("G"):
@@ -134,7 +137,7 @@ def _load_helper_num(lit: LineIterator) -> List[int]:
     return num_mo, nprim, num_atoms
 
 
-def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> Tuple[np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> tuple[np.ndarray, np.ndarray]:
     """Read the coordinates of the atoms."""
     atnums = np.empty(num_atoms, int)
     atcoords = np.empty((num_atoms, 3), float)
@@ -171,7 +174,7 @@ def _load_helper_section(
     return np.array(section, dtype=dtype)
 
 
-def _load_helper_mo(lit: LineIterator, nprim: int) -> Tuple[int, float, float, np.ndarray]:
+def _load_helper_mo(lit: LineIterator, nprim: int) -> tuple[int, float, float, np.ndarray]:
     """Read one section of MO information."""
     line = next(lit)
     if not line.startswith("MO"):
@@ -207,7 +210,7 @@ def _load_helper_multiwfn(lit: LineIterator, num_mo: int) -> np.ndarray:
     return np.empty((0,), dtype=int)
 
 
-def load_wfn_low(lit: LineIterator) -> Tuple:
+def load_wfn_low(lit: LineIterator) -> tuple:
     """Load data from a WFN file into arrays.
 
     Parameters
@@ -254,10 +257,9 @@ def load_wfn_low(lit: LineIterator) -> Tuple:
     )
 
 
-# pylint: disable=too-many-branches
 def build_obasis(
     icenters: np.ndarray, type_assignments: np.ndarray, exponents: np.ndarray, lit: LineIterator
-) -> Tuple[MolecularBasis, np.ndarray]:
+) -> tuple[MolecularBasis, np.ndarray]:
     """Construct a basis set using the arrays read from a WFN or WFX file.
 
     Parameters
@@ -282,12 +284,9 @@ def build_obasis(
     while ibasis < nbasis:
         # Determine the angular moment of the shell
         type_assignment = type_assignments[ibasis]
-        if type_assignment == 0:
-            angmom = 0
-        else:
-            # multiple different type assignments (codes for individual basis
-            # functions) can match one angular momentum.
-            angmom = len(PRIMITIVE_NAMES[type_assignments[ibasis]])
+        # multiple different type assignments (codes for individual basis
+        # functions) can match one angular momentum.
+        angmom = 0 if type_assignment == 0 else len(PRIMITIVE_NAMES[type_assignments[ibasis]])
         # The number of cartesian functions for the current angular momentum
         ncart = len(CONVENTIONS[(angmom, "c")])
         # Determine how many shells are to be read in one batch. E.g. for a
@@ -341,8 +340,10 @@ def build_obasis(
         # WFN uses non-normalized primitives, which will be corrected for
         # when processing the MO coefficients. Normalized primitives will
         # be used here. No attempt is made here to reconstruct the contraction.
-        for exponent in batch_exponents:
-            shells.append(Shell(icenter, [angmom], ["c"], np.array([exponent]), np.array([[1.0]])))
+        shells.extend(
+            Shell(icenter, [angmom], ["c"], np.array([exponent]), np.array([[1.0]]))
+            for exponent in batch_exponents
+        )
         # Move on to the next contraction
         ibasis += ncart * ncon
     obasis = MolecularBasis(shells, CONVENTIONS, "L2")
@@ -455,7 +456,7 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
-def _format_helper_section(header: str, skip: int, spec: str, nline: int) -> Tuple[str, int]:
+def _format_helper_section(header: str, skip: int, spec: str, nline: int) -> tuple[str, int]:
     """Return a format string for CENTRE_ASSIGMENTS, TYPE_ASSIGNMENTS, EXPONENTS lines."""
     return f"{header[:skip].ljust(skip)}{spec * nline}", len(spec)
 

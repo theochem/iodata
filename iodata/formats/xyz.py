@@ -53,20 +53,20 @@ information loaded from a file can also be written back out when dumping it.
 
 """
 
-from typing import TextIO, Iterator
+from collections.abc import Iterator
+from typing import TextIO
 
 import numpy as np
 
 from ..docstrings import (
-    document_load_one,
-    document_load_many,
-    document_dump_one,
     document_dump_many,
+    document_dump_one,
+    document_load_many,
+    document_load_one,
 )
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym
-from ..utils import angstrom, LineIterator
-
+from ..periodic import num2sym, sym2num
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 
@@ -81,7 +81,7 @@ DEFAULT_ATOM_COLUMNS = [
         (),
         int,
         (lambda word: int(word) if word.isdigit() else sym2num[word.title()]),
-        (lambda atnum: "{:2s}".format(num2sym[atnum])),
+        (lambda atnum: f"{num2sym[atnum]:2s}"),
     ),
     (
         "atcoords",
@@ -89,7 +89,7 @@ DEFAULT_ATOM_COLUMNS = [
         (3,),
         float,
         (lambda word: float(word) * angstrom),
-        (lambda value: "{:15.10f}".format(value / angstrom)),
+        (lambda value: f"{value / angstrom:15.10f}"),
     ),
 ]
 
@@ -115,7 +115,7 @@ def load_one(lit: LineIterator, atom_columns=None) -> dict:
     data = {"title": title}
     # Initialize the arrays to be loaded from the XYZ file.
     for attrname, keyname, shapesuffix, dtype, _loadword, _dumpword in atom_columns:
-        array = np.zeros((natom,) + shapesuffix, dtype=dtype)
+        array = np.zeros((natom, *shapesuffix), dtype=dtype)
         if keyname is None:
             # Store the initial array as a normal attribute.
             data[attrname] = array
@@ -147,16 +147,16 @@ def load_many(lit: LineIterator, atom_columns=None) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # XYZ Trajectory files are a simple concatenation of individual XYZ files,'
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             # Check for and skip empty lines at the end of file
             line = next(lit)
             if line.strip() == "":
                 return
             lit.back(line)
             yield load_one(lit, atom_columns)
-        except StopIteration:
-            return
+    except StopIteration:
+        return
 
 
 @document_dump_one("XYZ", ["atcoords", "atnums"], ["title"], {"atom_columns": ATOM_COLUMNS_DOC})
@@ -175,8 +175,7 @@ def dump_one(f: TextIO, data: IOData, atom_columns=None):
             if keyname is not None:
                 # The data to be written is a value of a dictionary attribute.
                 values = values[keyname]
-            for value in values[iatom].flat:
-                words.append(dumpword(value))
+            words.extend(dumpword(value) for value in values[iatom].flat)
         print(" ".join(words), file=f)
 
 

@@ -18,7 +18,6 @@
 # --
 """Utility functions module."""
 
-from typing import Tuple
 import warnings
 
 import attr
@@ -27,7 +26,6 @@ import scipy.constants as spc
 from scipy.linalg import eigh
 
 from .attrutils import validate_shape
-
 
 __all__ = [
     "LineIterator",
@@ -78,7 +76,7 @@ class LineIterator:
 
         """
         self.filename = filename
-        self.f = open(filename)  # pylint: disable=consider-using-with
+        self.f = open(filename)  # noqa
         self.lineno = 0
         self.stack = []
 
@@ -90,12 +88,8 @@ class LineIterator:
 
     def __next__(self):
         """Return the next line and increase the lineno attribute by one."""
-        if self.stack:
-            line = self.stack.pop()
-        else:
-            line = next(self.f)
         self.lineno += 1
-        return line
+        return self.stack.pop() if self.stack else next(self.f)
 
     def error(self, msg: str):
         """Raise an error while reading a file.
@@ -106,7 +100,7 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        raise FileFormatError("{}:{} {}".format(self.filename, self.lineno, msg))
+        raise FileFormatError(f"{self.filename}:{self.lineno} {msg}")
 
     def warn(self, msg: str):
         """Raise a warning while reading a file.
@@ -117,7 +111,7 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        warnings.warn("{}:{} {}".format(self.filename, self.lineno, msg), FileFormatWarning, 2)
+        warnings.warn(f"{self.filename}:{self.lineno} {msg}", FileFormatWarning, stacklevel=2)
 
     def back(self, line):
         """Go one line back and decrease the lineno attribute by one."""
@@ -148,12 +142,12 @@ class Cube:
 
     @property
     def shape(self):
-        """Shape of the rectangular grid."""  # noqa: D401
+        """Shape of the rectangular grid."""
         return self.data.shape
 
 
 def set_four_index_element(
-    four_index_object: np.ndarray, i: int, j: int, k: int, l: int, value: float
+    four_index_object: np.ndarray, i0: int, i1: int, i2: int, i3: int, value: float
 ):
     """Assign values to a four index object, account for 8-fold index symmetry.
 
@@ -164,20 +158,20 @@ def set_four_index_element(
     four_index_object
         The four-index object. It will be written to.
         shape=(nbasis, nbasis, nbasis, nbasis), dtype=float
-    i, j, k, l
+    i0, i1, i2, i3
         The indices to assign to.
     value
         The value of the matrix element to store.
 
     """
-    four_index_object[i, j, k, l] = value
-    four_index_object[j, i, l, k] = value
-    four_index_object[k, j, i, l] = value
-    four_index_object[i, l, k, j] = value
-    four_index_object[k, l, i, j] = value
-    four_index_object[l, k, j, i] = value
-    four_index_object[j, k, l, i] = value
-    four_index_object[l, i, j, k] = value
+    four_index_object[i0, i1, i2, i3] = value
+    four_index_object[i1, i0, i3, i2] = value
+    four_index_object[i2, i1, i0, i3] = value
+    four_index_object[i0, i3, i2, i1] = value
+    four_index_object[i2, i3, i0, i1] = value
+    four_index_object[i3, i2, i1, i0] = value
+    four_index_object[i1, i2, i3, i0] = value
+    four_index_object[i3, i0, i1, i2] = value
 
 
 def volume(cellvecs: np.ndarray) -> float:
@@ -206,7 +200,7 @@ def volume(cellvecs: np.ndarray) -> float:
     raise ValueError("Argument cellvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
-def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Derive natural orbitals from a given density matrix.
 
     Parameters
@@ -265,7 +259,7 @@ def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: fl
     if occupations.min() < -eps:
         raise ValueError(
             "The density matrix has eigenvalues considerably smaller than "
-            "zero. error=%e" % (occupations.min())
+            f"zero. error={occupations.min():e}"
         )
     if occupations.max() > occ_max + eps:
         raise ValueError(

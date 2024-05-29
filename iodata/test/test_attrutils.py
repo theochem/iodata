@@ -20,8 +20,8 @@
 
 import attr
 import numpy as np
-from numpy.testing import assert_allclose
 import pytest
+from numpy.testing import assert_allclose
 
 from ..attrutils import convert_array_to, validate_shape
 

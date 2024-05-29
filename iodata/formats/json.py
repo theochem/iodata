@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=too-many-branches, too-many-statements
 """QCSchema JSON file format.
 
 QCSchema defines four different subschema:
@@ -565,17 +564,16 @@ occupations_b                            Keyword for the primary return beta-spi
 """
 
 import json
-from typing import List, TextIO, Union
+from typing import TextIO, Union
 from warnings import warn
 
 import numpy as np
 
+from .. import __version__
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
 from ..utils import FileFormatError, FileFormatWarning, LineIterator
-from .. import __version__
-
 
 __all__ = []
 
@@ -592,8 +590,7 @@ def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Use python standard lib json module to read the file to a dict
     json_in = json.load(lit.f)
-    result = _parse_json(json_in, lit)
-    return result
+    return _parse_json(json_in, lit)
 
 
 def _parse_json(json_in: dict, lit: LineIterator) -> dict:
@@ -646,10 +643,10 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
     if "schema_name" not in result:
         # Attempt to determine schema type, since some QCElemental files omit this
         warn(
-            "{}: QCSchema files should have a `schema_name` key."
-            "Attempting to determine schema type...".format(lit.filename),
+            f"{lit.filename}: QCSchema files should have a `schema_name` key."
+            "Attempting to determine schema type...",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         # Geometry is required in any molecule schema
         if "geometry" in result:
@@ -657,24 +654,21 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
         # Check if BSE file, which is too different
         elif "molssi_bse_schema" in result:
             raise FileFormatError(
-                "{}: IOData does not currently support MolSSI BSE Basis JSON.".format(lit.filename)
+                f"{lit.filename}: IOData does not currently support MolSSI BSE Basis JSON."
             )
         # Center_data is required in any basis schema
         elif "center_data" in result:
             schema_name = "qcschema_basis"
         elif "driver" in result:
-            if "return_result" in result:
-                schema_name = "qcschema_output"
-            else:
-                schema_name = "qcschema_input"
+            schema_name = "qcschema_output" if "return_result" in result else "qcschema_input"
         else:
-            raise FileFormatError("{}: Could not determine `schema_name`.".format(lit.filename))
+            raise FileFormatError(f"{lit.filename}: Could not determine `schema_name`.")
     if "schema_version" not in result:
         warn(
-            "{}: QCSchema files should have a `schema_version` key."
-            "Attempting to load without version number.".format(lit.filename),
+            f"{lit.filename}: QCSchema files should have a `schema_version` key."
+            "Attempting to load without version number.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
 
     if schema_name == "qcschema_molecule":
@@ -762,15 +756,13 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     for key in should_be_required_keys:
         if key not in mol:
             warn(
-                "{}: QCSchema files should have a '{}' key.".format(lit.filename, key),
+                f"{lit.filename}: QCSchema files should have a '{key}' key.",
                 FileFormatWarning,
-                2,
+                stacklevel=2,
             )
     for key in topology_keys:
         if key not in mol:
-            raise FileFormatError(
-                "{}: QCSchema topology requires '{}' key".format(lit.filename, key)
-            )
+            raise FileFormatError(f"{lit.filename}: QCSchema topology requires '{key}' key")
 
     topology_dict = {}
     extra_dict = {}
@@ -792,7 +784,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
             "Some QCSchema writers omit this key for default value 0.0,"
             "Ensure this value is correct.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         formal_charge = 0.0
     else:
@@ -807,7 +799,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
             "Some QCSchema writers omit this key for default value 1,"
             "Ensure this value is correct.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         topology_dict["spinpol"] = 0
     else:
@@ -830,7 +822,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
             "{}: Both `masses` and `mass_numbers` given. "
             "Both values will be written to `extra` dict.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         extra_dict["mass_numbers"] = np.array(mol["mass_numbers"])
         extra_dict["masses"] = np.array(mol["masses"])
@@ -943,7 +935,7 @@ def _version_check(result: dict, max_version: float, schema_name: str, lit: Line
             f"{lit.filename}: Unknown {schema_name} version {version}, "
             "loading may produce invalid results",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
     return version
 
@@ -1050,7 +1042,7 @@ def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
     extra_dict["input"] = input_dict["extra"]
 
     if "molecule" not in result:
-        raise FileFormatError("{}: QCSchema Input requires 'molecule' key".format(lit.filename))
+        raise FileFormatError(f"{lit.filename}: QCSchema Input requires 'molecule' key")
     molecule_dict = _parse_topology_keys(result["molecule"], lit)
     input_dict.update(molecule_dict)
     extra_dict["molecule"] = molecule_dict["extra"]
@@ -1084,14 +1076,14 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
     for key in should_be_required_keys:
         if key not in result:
             warn(
-                "{}: QCSchema files should have a '{}' key.".format(lit.filename, key),
+                f"{lit.filename}: QCSchema files should have a '{key}' key.",
                 FileFormatWarning,
-                2,
+                stacklevel=2,
             )
     for key in input_keys:
         if key not in result:
             raise FileFormatError(
-                "{}: QCSchema `qcschema_input` file requires '{}' key".format(lit.filename, key)
+                f"{lit.filename}: QCSchema `qcschema_input` file requires '{key}' key"
             )
     # Store all extra keys in extra_dict and gather at end
     input_dict = {}
@@ -1187,8 +1179,8 @@ def _parse_driver(driver: str, lit: LineIterator) -> str:
     """
     if driver not in ["energy", "gradient", "hessian", "properties"]:
         raise FileFormatError(
-            "{}: QCSchema driver must be one of `energy`, `gradient`, `hessian`, "
-            "or `properties`".format(lit.filename)
+            f"{lit.filename}: QCSchema driver must be one of `energy`, `gradient`, `hessian`, "
+            "or `properties`"
         )
     return driver
 
@@ -1214,22 +1206,21 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
     extra_dict = {}
 
     if "method" not in model:
-        raise FileFormatError("{}: QCSchema `model` requires a `method`".format(lit.filename))
+        raise FileFormatError(f"{lit.filename}: QCSchema `model` requires a `method`")
     model_dict["lot"] = model["method"]
     # QCEngineRecords doesn't give an empty string for basis-free methods, omits req'd key instead
     if "basis" not in model:
         warn(
-            "{}: Model `basis` key should be given. Assuming basis-free method.".format(
-                lit.filename
-            )
+            f"{lit.filename}: Model `basis` key should be given. Assuming basis-free method.",
+            stacklevel=2,
         )
     elif isinstance(model["basis"], str):
         if model["basis"] == "":
             warn(
-                "{}: QCSchema `basis` could not be read and will be omitted."
-                "Unless model is for a basis-free method, check input file.".format(lit.filename),
+                f"{lit.filename}: QCSchema `basis` could not be read and will be omitted."
+                "Unless model is for a basis-free method, check input file.",
                 FileFormatWarning,
-                2,
+                stacklevel=2,
             )
         else:
             model_dict["obasis_name"] = model["basis"]
@@ -1263,21 +1254,23 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
         warn(
             "{}: Protocols `wavefunction` key not specified, no properties will be kept.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
         wavefunction = "none"
     else:
         wavefunction = protocols["wavefunction"]
     if "stdout" not in protocols:
-        warn("{}: Protocols `stdout` key not specified, stdout will be kept.", FileFormatWarning, 2)
+        warn(
+            "{}: Protocols `stdout` key not specified, stdout will be kept.",
+            FileFormatWarning,
+            stacklevel=2,
+        )
         keep_stdout = True
     else:
         keep_stdout = protocols["stdout"]
     protocols_dict = {}
     if wavefunction not in {"all", "orbitals_and_eigenvalues", "return_results", "none"}:
-        raise FileFormatError(
-            "{}: Invalid `protocols` `wavefunction` keyword.".format(lit.filename)
-        )
+        raise FileFormatError(f"{lit.filename}: Invalid `protocols` `wavefunction` keyword.")
     protocols_dict["keep_wavefunction"] = wavefunction
     if not isinstance(keep_stdout, bool):
         raise FileFormatError("{}: `protocols` `stdout` option must be a boolean.")
@@ -1309,7 +1302,7 @@ def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
     extra_dict["output"] = output_dict["extra"]
 
     if "molecule" not in result:
-        raise FileFormatError("{}: QCSchema Input requires 'molecule' key".format(lit.filename))
+        raise FileFormatError(f"{lit.filename}: QCSchema Input requires 'molecule' key")
     molecule_dict = _parse_topology_keys(result["molecule"], lit)
     output_dict.update(molecule_dict)
     extra_dict["molecule"] = molecule_dict["extra"]
@@ -1345,14 +1338,14 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
     for key in should_be_required_keys:
         if key not in result:
             warn(
-                "{}: QCSchema files should have a '{}' key.".format(lit.filename, key),
+                f"{lit.filename}: QCSchema files should have a '{key}' key.",
                 FileFormatWarning,
-                2,
+                stacklevel=2,
             )
     for key in output_keys:
         if key not in result:
             raise FileFormatError(
-                "{}: QCSchema `qcschema_output` file requires '{}' key".format(lit.filename, key)
+                f"{lit.filename}: QCSchema `qcschema_output` file requires '{key}' key"
             )
 
     # Store all extra keys in extra_dict and gather at end
@@ -1405,8 +1398,8 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
 
 
 def _parse_provenance(
-    provenance: Union[List[dict], dict], lit: LineIterator, source: str, append=True
-) -> Union[List[dict], dict]:
+    provenance: Union[list[dict], dict], lit: LineIterator, source: str, append=True
+) -> Union[list[dict], dict]:
     """Load :ref:`provenance <json_schema_provenance>` properties from QCSchema.
 
     Parameters
@@ -1428,9 +1421,7 @@ def _parse_provenance(
     """
     if isinstance(provenance, dict):
         if "creator" not in provenance:
-            raise FileFormatError(
-                "{}: `{}` provenance requires `creator` key".format(lit.filename, source)
-            )
+            raise FileFormatError(f"{lit.filename}: `{source}` provenance requires `creator` key")
         if append:
             base_provenance = [provenance]
         else:
@@ -1441,7 +1432,7 @@ def _parse_provenance(
                 raise FileFormatError("{}: `{}` provenance requires `creator` key")
         base_provenance = provenance
     else:
-        raise FileFormatError("{}: Invalid `{}` provenance type".format(lit.filename, source))
+        raise FileFormatError(f"{lit.filename}: Invalid `{source}` provenance type")
     if append:
         base_provenance.append(
             {"creator": "IOData", "version": __version__, "routine": "iodata.formats.json.load_one"}
@@ -1463,7 +1454,7 @@ def dump_one(f: TextIO, data: IOData):
     if schema_name == "qcschema_molecule":
         return_dict = _dump_qcschema_molecule(data)
     elif schema_name == "qcschema_basis":
-        raise NotImplementedError("{} not yet implemented in IOData.".format(schema_name))
+        raise NotImplementedError(f"{schema_name} not yet implemented in IOData.")
         # return_dict = _dump_qcschema_basis(data)
     elif schema_name == "qcschema_input":
         return_dict = _dump_qcschema_input(data)
@@ -1505,7 +1496,7 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
             "`charge` and `spinpol` should be given to write qcschema_molecule file:"
             "QCSchema defaults to charge = 0 and multiplicity = 1 if no values given.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
     if data.charge is not None:
         molecule_dict["molecular_charge"] = data.charge
@@ -1568,7 +1559,7 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     return molecule_dict
 
 
-def _dump_provenance(data: IOData, source: str) -> Union[List[dict], dict]:
+def _dump_provenance(data: IOData, source: str) -> Union[list[dict], dict]:
     """Generate the :ref:`provenance <json_schema_provenance>` information.
 
     This is used when dumping an IOData instance to QCSchema.
@@ -1702,7 +1693,7 @@ def _dump_qcschema_output(data: IOData) -> dict:
             "No basis name given. QCSchema assumes this signifies a basis-free method; to"
             "avoid this warning, specify `obasis_name` as an empty string.",
             FileFormatWarning,
-            2,
+            stacklevel=2,
         )
     if "basis" in data.extra["input"]["model"]:
         raise NotImplementedError("qcschema_basis is not yet supported in IOData.")

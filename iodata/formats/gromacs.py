@@ -25,13 +25,12 @@ http://manual.gromacs.org/current/reference-manual/file-formats.html#gro
 
 """
 
-from typing import Tuple, Iterator
+from collections.abc import Iterator
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_load_many
-from ..utils import nanometer, picosecond, LineIterator
-
+from ..docstrings import document_load_many, document_load_one
+from ..utils import LineIterator, nanometer, picosecond
 
 __all__ = []
 
@@ -57,15 +56,15 @@ def load_one(lit: LineIterator) -> dict:
         cellvecs = data[7]
         atffparams = {"attypes": attypes, "resnames": resnames, "resnums": resnums}
         extra = {"time": time, "velocities": velocities}
-        result = {
+        return {
             "atcoords": atcoords,
             "atffparams": atffparams,
             "cellvecs": cellvecs,
             "extra": extra,
             "title": title,
         }
-        return result
     lit.error("Gromacs gro file could not be read.")
+    return None
 
 
 @document_load_many("GRO", ["atcoords", "atffparams", "cellvecs", "extra", "title"])
@@ -73,14 +72,14 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # gro files can be used as trajectory by simply concatenating files,
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             yield load_one(lit)
-        except IOError:
-            return
+    except OSError:
+        return
 
 
-def _helper_read_frame(lit: LineIterator) -> Tuple:
+def _helper_read_frame(lit: LineIterator) -> tuple:
     """Read one frame."""
     # Read the first line, get the title and try to get the time.
     # Time field is optional.

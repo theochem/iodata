@@ -19,21 +19,22 @@
 """Test iodata.formats.wfn module."""
 
 import os
-import pytest
-import numpy as np
-from numpy.testing import assert_equal, assert_allclose
+from typing import Optional
 
-from ..api import load_one, dump_one
+import numpy as np
+import pytest
+from numpy.testing import assert_allclose, assert_equal
+
+from ..api import dump_one, load_one
 from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
 from ..utils import LineIterator
-
 from .common import (
     check_orthonormal,
-    truncated_file,
     compare_mols,
     compute_mulliken_charges,
     load_one_warning,
+    truncated_file,
 )
 
 try:
@@ -92,7 +93,7 @@ def test_load_dump_consistency_lih_cation_rohf(tmpdir):
 
 
 def compare_mulliken_charges(
-    fname: str, tmpdir: str, rtol: float = 1.0e-7, atol: float = 0.0, match: str = None
+    fname: str, tmpdir: str, rtol: float = 1.0e-7, atol: float = 0.0, match: Optional[str] = None
 ):
     """Check if charges are computed correctly after dumping and loading WFX file format.
 
@@ -610,9 +611,11 @@ def test_parse_wfx_missing_tag_h2o():
 
 def test_load_data_wfx_h2o_error():
     """Check that sections without a closing tag result in an exception."""
-    with as_file(files("iodata.test.data").joinpath("h2o_error.wfx")) as fn_wfx:
-        with pytest.raises(IOError) as error:
-            load_one(str(fn_wfx))
+    with (
+        as_file(files("iodata.test.data").joinpath("h2o_error.wfx")) as fn_wfx,
+        pytest.raises(IOError) as error,
+    ):
+        load_one(str(fn_wfx))
     assert str(error.value).endswith(
         "Expecting line </Number of Nuclei> but got </Number of Primitives>."
     )
@@ -620,10 +623,12 @@ def test_load_data_wfx_h2o_error():
 
 def test_load_truncated_h2o(tmpdir):
     """Check that a truncated file raises an exception."""
-    with as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as fn_wfx:
-        with truncated_file(str(fn_wfx), 152, 0, tmpdir) as fn_truncated:
-            with pytest.raises(IOError) as error:
-                load_one(str(fn_truncated))
+    with (
+        as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as fn_wfx,
+        truncated_file(str(fn_wfx), 152, 0, tmpdir) as fn_truncated,
+        pytest.raises(IOError) as error,
+    ):
+        load_one(str(fn_truncated))
     assert str(error.value).endswith(
         "Section <Full Virial Ratio, -(V - W)/T> is not closed at end of file."
     )

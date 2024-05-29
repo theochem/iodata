@@ -19,12 +19,13 @@
 """Test iodata.formats.xyz module."""
 
 import os
-import numpy as np
-from numpy.testing import assert_equal, assert_allclose
 
-from ..api import load_one, load_many, dump_one, dump_many
-from ..utils import angstrom
+import numpy as np
+from numpy.testing import assert_allclose, assert_equal
+
+from ..api import dump_many, dump_one, load_many, load_one
 from ..formats.xyz import DEFAULT_ATOM_COLUMNS
+from ..utils import angstrom
 
 try:
     from importlib_resources import as_file, files
@@ -63,7 +64,8 @@ def check_water(mol):
     )
 
 
-FCC_ATOM_COLUMNS = DEFAULT_ATOM_COLUMNS + [
+FCC_ATOM_COLUMNS = [
+    *DEFAULT_ATOM_COLUMNS,
     # Storing the atomic numbers as zs in the extras attribute makes sense
     # for testing.
     ("extra", "zs", (), int, int, "{:2d}".format),
@@ -75,7 +77,7 @@ FCC_ATOM_COLUMNS = DEFAULT_ATOM_COLUMNS + [
         (3,),
         float,
         (lambda word: -float(word)),
-        (lambda value: "{:15.10f}".format(-value)),
+        (lambda value: f"{-value:15.10f}"),
     ),
 ]
 
@@ -140,7 +142,7 @@ def test_load_many():
         mols = list(load_many(str(fn_xyz)))
     assert len(mols) == 5
     for imol, mol in enumerate(mols):
-        assert mol.title == "Frame {}".format(imol)
+        assert mol.title == f"Frame {imol}"
         assert_equal(mol.atnums, [8, 1, 1])
         assert mol.atcoords.shape == (3, 3)
     assert_allclose(mols[0].atcoords[2] / angstrom, [2.864329, 0.114369, 3.3635])

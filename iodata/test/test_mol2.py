@@ -19,13 +19,14 @@
 """Test iodata.formats.mol2 module."""
 
 import os
-import pytest
-from numpy.testing import assert_equal, assert_allclose
 
-from .common import truncated_file
-from ..api import load_one, load_many, dump_one, dump_many
-from ..utils import angstrom
+import pytest
+from numpy.testing import assert_allclose, assert_equal
+
+from ..api import dump_many, dump_one, load_many, load_one
 from ..periodic import bond2num
+from ..utils import angstrom
+from .common import truncated_file
 
 try:
     from importlib_resources import as_file, files
@@ -42,10 +43,12 @@ def test_mol2_load_one():
 
 def test_mol2_formaterror(tmpdir):
     # test if mol2 file has the wrong ending
-    with as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_test:
-        with truncated_file(fn_test, 2, 0, tmpdir) as fn:
-            with pytest.raises(IOError):
-                load_one(str(fn))
+    with (
+        as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_test,
+        truncated_file(fn_test, 2, 0, tmpdir) as fn,
+        pytest.raises(IOError),
+    ):
+        load_one(str(fn))
 
 
 def test_mol2_symbol():

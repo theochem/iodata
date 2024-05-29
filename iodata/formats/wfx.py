@@ -21,19 +21,19 @@
 See http://aim.tkgristmill.com/wfxformat.html
 """
 
-from typing import TextIO, Iterator
 import warnings
+from collections.abc import Iterator
+from typing import Optional, TextIO
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_dump_one
+from ..basis import MolecularBasis, Shell, convert_conventions
+from ..docstrings import document_dump_one, document_load_one
+from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
-from ..iodata import IOData
 from ..utils import LineIterator
-from ..basis import MolecularBasis, Shell, convert_conventions
-
-from .wfn import build_obasis, get_mocoeff_scales, CONVENTIONS
+from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
 __all__ = []
 
@@ -142,7 +142,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
         elif key in lbs_other:
             result[lbs_other[key]] = value
         else:
-            warnings.warn("Not recognized section label, skip {0}".format(key))
+            warnings.warn(f"Not recognized section label, skip {key}", stacklevel=2)
 
     # reshape some arrays
     result["atcoords"] = result["atcoords"].reshape(-1, 3)
@@ -150,7 +150,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
     # process nuclear gradient, if present
     if "nuclear_gradient" in result:
         gradient_mix = np.array([i.split() for i in result.pop("nuclear_gradient")]).reshape(-1, 4)
-        gradient_atoms = gradient_mix[:, 0].astype(np.unicode_)
+        gradient_atoms = gradient_mix[:, 0].astype(np.str_)
         index = [result["nuclear_names"].index(atom) for atom in gradient_atoms]
         result["atgradient"] = np.full((len(result["nuclear_names"]), 3), np.nan)
         result["atgradient"][index] = gradient_mix[:, 1:].astype(float)
@@ -158,16 +158,15 @@ def load_data_wfx(lit: LineIterator) -> dict:
     perturbation_check = {"GTO": 0, "GIAO": 3, "CGST": 6}
     key = result["keywords"]
     num = result["num_perturbations"]
-    if key not in perturbation_check.keys():
+    if key not in perturbation_check:
         lit.error(f"The keywords is {key}, but it should be either GTO, GIAO or CGST")
     if num != perturbation_check[key]:
         lit.error(f"Number of perturbations of {key} is {num}, expected {perturbation_check[key]}")
     return result
 
 
-def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
+def parse_wfx(lit: LineIterator, required_tags: Optional[list] = None) -> dict:
     """Load data in all sections existing in the given WFX file LineIterator."""
-    # pylint: disable=too-many-branches
     data = {}
     mo_start = "<Molecular Orbital Primitive Coefficients>"
     section_start = None
@@ -182,8 +181,8 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
         if section_start is None and line.startswith("<"):
             # set start & end of the section and add it to data dictionary
             section_start = line
-            if section_start in data.keys():
-                lit.error("Section with tag={} is repeated!".format(section_start))
+            if section_start in data:
+                lit.error(f"Section with tag={section_start} is repeated!")
             data[section_start] = []
             section_end = line[:1] + "/" + line[1:]
             # special handling of <Molecular Orbital Primitive Coefficients> section
@@ -193,7 +192,7 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
         elif section_start is not None and line.startswith("</"):
             # In some cases, closing tags have a different number of spaces. 8-[
             if line.replace(" ", "") != section_end.replace(" ", ""):
-                lit.error("Expecting line {} but got {}.".format(section_end, line))
+                lit.error(f"Expecting line {section_end} but got {line}.")
             # reset section_start variable to signal that section ended
             section_start = None
         # handle <MO Number> line under <Molecular Orbital Primitive Coefficients> section
@@ -208,11 +207,11 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
 
     # check if last section was closed
     if section_start is not None:
-        lit.error("Section {} is not closed at end of file.".format(section_start))
+        lit.error(f"Section {section_start} is not closed at end of file.")
     # check required section tags
     if required_tags is not None:
         for section_tag in required_tags:
-            if section_tag not in data.keys():
+            if section_tag not in data:
                 lit.error(f"Section {section_tag} is missing from loaded WFX data.")
     return data
 
@@ -335,7 +334,6 @@ def load_one(lit: LineIterator) -> dict:
 )
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    # pylint: disable=too-many-branches,too-many-statements
     # get all tags/labels that can be written into a WFX file
     lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, _ = _wfx_labels()
     # put all labels in one dictionary and flip key and value for easier use
@@ -372,7 +370,7 @@ def dump_one(f: TextIO, data: IOData):
         for angmom, kind in zip(shell.angmoms, shell.kinds):
             n = len(data.obasis.conventions[angmom, kind])
             c = raw_coeffs[index_mo_old : index_mo_old + n]
-            for j in range(shell.nprim):
+            for _j in range(shell.nprim):
                 mo_coeffs[index_mo_new : index_mo_new + n] = c
                 index_mo_new += n
             index_mo_old += n
@@ -420,7 +418,7 @@ def dump_one(f: TextIO, data: IOData):
     # write nuclear cartesian coordinates
     print("<Nuclear Cartesian Coordinates>", file=f)
     for item in data.atcoords:
-        print("{: ,.14E} {: ,.14E} {: ,.14E}".format(item[0], item[1], item[2]), file=f)
+        print(f"{item[0]: ,.14E} {item[1]: ,.14E} {item[2]: ,.14E}", file=f)
     print("</Nuclear Cartesian Coordinates>", file=f)
 
     # write net charge, number of electrons, number of alpha electrons, and number beta electrons
@@ -441,7 +439,7 @@ def dump_one(f: TextIO, data: IOData):
     prim_centers = [shell.icenter + 1 for shell in obasis.shells for _ in range(shell.nbasis)]
     print("<Primitive Centers>", file=f)
     for j in range(0, len(prim_centers), 10):
-        print(" ".join(["{:d}".format(c) for c in prim_centers[j : j + 10]]), file=f)
+        print(" ".join([f"{c:d}" for c in prim_centers[j : j + 10]]), file=f)
     print("</Primitive Centers>", file=f)
 
     # write primitive types
@@ -453,14 +451,14 @@ def dump_one(f: TextIO, data: IOData):
     prim_types = [item for shell in obasis.shells for item in angmom_prim[shell.angmoms[0]]]
     print("<Primitive Types>", file=f)
     for j in range(0, len(prim_types), 10):
-        print(" ".join(["{:d}".format(c) for c in prim_types[j : j + 10]]), file=f)
+        print(" ".join([f"{c:d}" for c in prim_types[j : j + 10]]), file=f)
     print("</Primitive Types>", file=f)
 
     # write primitive exponents
     exponents = [shell.exponents[0] for shell in obasis.shells for _ in range(shell.nbasis)]
     print("<Primitive Exponents>", file=f)
     for j in range(0, len(exponents), 4):
-        print(" ".join(["{: ,.14E}".format(e) for e in exponents[j : j + 4]]), file=f)
+        print(" ".join([f"{e: ,.14E}" for e in exponents[j : j + 4]]), file=f)
     print("</Primitive Exponents>", file=f)
 
     # write molecular orbital occupation numbers
@@ -483,7 +481,7 @@ def dump_one(f: TextIO, data: IOData):
         print(str(mo + 1), file=f)
         print("</MO Number>", file=f)
         for j in range(0, obasis.nbasis, 4):
-            print(" ".join(["{: ,.14E}".format(c) for c in mo_coeffs.T[mo][j : j + 4]]), file=f)
+            print(" ".join([f"{c: ,.14E}" for c in mo_coeffs.T[mo][j : j + 4]]), file=f)
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
     # write energy and virial ratio; use ' NAN' when None (not available)
@@ -497,7 +495,7 @@ def dump_one(f: TextIO, data: IOData):
         for atom in nuc_cart_energy_grad:
             print(
                 atom[0],
-                "{: ,.14E} {: ,.14E} {: ,.14E}".format(atom[1][0], atom[1][1], atom[1][2]),
+                f"{atom[1][0]: ,.14E} {atom[1][1]: ,.14E} {atom[1][2]: ,.14E}",
                 file=f,
             )
         print("</Nuclear Cartesian Energy Gradients>", file=f)
@@ -525,7 +523,7 @@ def _write_xml_single(tag: str, info: [str, int], file: TextIO) -> None:
 def _write_xml_single_scientific(tag: str, info: float, file: TextIO) -> None:
     """Write header, tail and the data between them into the file."""
     print(tag, file=file)
-    print("{: ,.14E}".format(info), file=file)
+    print(f"{info: ,.14E}", file=file)
     print("</" + tag.lstrip("<"), file=file)
 
 
@@ -541,5 +539,5 @@ def _write_xml_iterator_scientific(tag: str, info: Iterator, file: TextIO) -> No
     """Write list of arrays to file."""
     print(tag, file=file)
     for info_line in info:
-        print("{: ,.14E}".format(info_line), file=file)
+        print(f"{info_line: ,.14E}", file=file)
     print("</" + tag.lstrip("<"), file=file)

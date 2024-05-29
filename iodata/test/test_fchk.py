@@ -16,20 +16,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=unsubscriptable-object,no-member
 """Test iodata.formats.fchk module."""
 
 import os
+from typing import Optional
+
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose
-
 import pytest
+from numpy.testing import assert_allclose, assert_equal
 
-from ..api import load_one, load_many, dump_one
+from ..api import dump_one, load_many, load_one
 from ..overlap import compute_overlap
 from ..utils import check_dm
-
-from .common import check_orthonormal, compare_mols, load_one_warning, compute_1rdm
+from .common import check_orthonormal, compare_mols, compute_1rdm, load_one_warning
 from .test_molekel import compare_mols_diff_formats
 
 try:
@@ -39,9 +38,11 @@ except ImportError:
 
 
 def test_load_fchk_nonexistent():
-    with pytest.raises(IOError):
-        with as_file(files("iodata.test.data").joinpath("fubar_crap.fchk")) as fn:
-            load_one(str(fn))
+    with (
+        pytest.raises(IOError),
+        as_file(files("iodata.test.data").joinpath("fubar_crap.fchk")) as fn,
+    ):
+        load_one(str(fn))
 
 
 def load_fchk_helper(fn_fchk):
@@ -273,7 +274,7 @@ def test_load_fchk_ch3_rohf_g03():
 
 def check_load_azirine(key, numbers):
     """Perform some basic checks on a azirine fchk file."""
-    mol = load_fchk_helper("2h-azirine-{}.fchk".format(key))
+    mol = load_fchk_helper(f"2h-azirine-{key}.fchk")
     assert mol.obasis.nbasis == 33
     dm = mol.one_rdms["post_scf_ao"]
     assert_equal(dm[0, 0], numbers[0])
@@ -300,7 +301,7 @@ def test_load_azirine_mp3():
 
 def check_load_nitrogen(key, numbers, numbers_spin):
     """Perform some basic checks on a nitrogen fchk file."""
-    mol = load_fchk_helper("nitrogen-{}.fchk".format(key))
+    mol = load_fchk_helper(f"nitrogen-{key}.fchk")
     assert mol.obasis.nbasis == 9
     dm = mol.one_rdms["post_scf_ao"]
     assert_equal(dm[0, 0], numbers[0])
@@ -333,7 +334,7 @@ def test_load_nitrogen_mp3():
 
 def check_normalization_dm_azirine(key):
     """Perform some basic checks on a 2h-azirine fchk file."""
-    mol = load_fchk_helper("2h-azirine-{}.fchk".format(key))
+    mol = load_fchk_helper(f"2h-azirine-{key}.fchk")
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)
     dm = mol.one_rdms["post_scf_ao"]
@@ -545,7 +546,7 @@ def test_load_nbasis_indep(tmpdir):
     assert mol2.mo.coeffs.shape == (38, 37)
 
 
-def check_load_dump_consistency(tmpdir: str, fn: str, match: str = None):
+def check_load_dump_consistency(tmpdir: str, fn: str, match: Optional[str] = None):
     """Check if dumping and loading an FCHK file results in the same data.
 
     Parameters

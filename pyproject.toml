@@ -51,4 +51,23 @@ local_scheme = "no-local-version"
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py39"
+
+[tool.ruff.lint]
+select = [
+    "A", "B", "BLE", "C4", "E", "EXE", "F", "I", "ICN", "ISC", "N", "NPY", "PERF", "PIE",
+    "PL", "PT", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TRY", "UP", "W"
+]
+ignore = [
+    "PLR0904",  # https://docs.astral.sh/ruff/rules/too-many-public-methods/
+    "PLR0911",  # https://docs.astral.sh/ruff/rules/too-many-return-statements/
+    "PLR0912",  # https://docs.astral.sh/ruff/rules/too-many-branches/
+    "PLR0913",  # https://docs.astral.sh/ruff/rules/too-many-arguments/
+    "PLR0914",  # https://docs.astral.sh/ruff/rules/too-many-locals/
+    "PLR0915",  # https://docs.astral.sh/ruff/rules/too-many-statements/
+    "PLR0916",  # https://docs.astral.sh/ruff/rules/too-many-boolean-expressions/
+    "PLR0917",  # https://docs.astral.sh/ruff/rules/too-many-positional/
+    "PLR2004",  # https://docs.astral.sh/ruff/rules/magic-value-comparison/
+    "PT011",  # https://docs.astral.sh/ruff/rules/pytest-raises-too-broad/
+    "TRY003",  # https://docs.astral.sh/ruff/rules/raise-vanilla-args/
+]
