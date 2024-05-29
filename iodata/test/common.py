@@ -155,9 +155,9 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
 
     Parameters
     ----------
-    mo_coeffs : np.ndarray, shape=(nbasis, mo_count)
+    mo_coeffs : NDArray, shape=(nbasis, mo_count)
         Molecular orbital coefficients.
-    ao_overlap : np.ndarray, shape=(nbasis, nbasis)
+    ao_overlap : NDArray, shape=(nbasis, nbasis)
         Atomic orbital overlap matrix.
     atol : float
         Absolute tolerance in deviation from identity matrix.

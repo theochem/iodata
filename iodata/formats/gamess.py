@@ -19,6 +19,7 @@
 """GAMESS punch file format."""
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..docstrings import document_load_one
 from ..utils import LineIterator, angstrom
@@ -81,7 +82,7 @@ def _read_energy(lit: LineIterator, result: dict) -> tuple:
     return energy, gradient
 
 
-def _read_hessian(lit: LineIterator, result: dict) -> np.ndarray:
+def _read_hessian(lit: LineIterator, result: dict) -> NDArray:
     """Extract ``hessian`` from the punch file."""
     # check that $HESS is not already parsed
     if "athessian" in result:
@@ -102,7 +103,7 @@ def _read_hessian(lit: LineIterator, result: dict) -> np.ndarray:
     return hessian
 
 
-def _read_masses(lit: LineIterator, result: dict) -> np.ndarray:
+def _read_masses(lit: LineIterator, result: dict) -> NDArray:
     """Extract ``masses`` from the punch file."""
     natom = len(result["symbols"])
     masses = np.zeros(natom, float)

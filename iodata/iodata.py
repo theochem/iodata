@@ -18,8 +18,9 @@
 # --
 """Module for handling input/output from different file formats."""
 
-import attr
+import attrs
 import numpy as np
+from numpy.typing import NDArray
 
 from .attrutils import convert_array_to, validate_shape
 from .basis import MolecularBasis
@@ -29,7 +30,7 @@ from .utils import Cube
 __all__ = ["IOData"]
 
 
-@attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
+@attrs.define
 class IOData:
     """A container class for data loaded from (or to be written to) a file.
 
@@ -172,78 +173,78 @@ class IOData:
 
     """
 
-    atcharges: dict = attr.ib(factory=dict)
-    atcoords: np.ndarray = attr.ib(
+    atcharges: dict = attrs.field(factory=dict)
+    atcoords: NDArray | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("natom", 3)),
+        validator=attrs.validators.optional(validate_shape("natom", 3)),
     )
-    _atcorenums: np.ndarray = attr.ib(
+    _atcorenums: NDArray | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("natom")),
+        validator=attrs.validators.optional(validate_shape("natom")),
     )
-    atffparams: dict = attr.ib(factory=dict)
-    atfrozen: np.ndarray = attr.ib(
+    atffparams: dict = attrs.field(factory=dict)
+    atfrozen: NDArray | None = attrs.field(
         default=None,
         converter=convert_array_to(bool),
-        validator=attr.validators.optional(validate_shape("natom")),
+        validator=attrs.validators.optional(validate_shape("natom")),
     )
-    atgradient: np.ndarray = attr.ib(
+    atgradient: NDArray | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("natom", 3)),
+        validator=attrs.validators.optional(validate_shape("natom", 3)),
     )
-    athessian: np.ndarray = attr.ib(
+    athessian: NDArray | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape(None, None)),
+        validator=attrs.validators.optional(validate_shape(None, None)),
     )
-    atmasses: np.ndarray = attr.ib(
+    atmasses: NDArray | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("natom")),
+        validator=attrs.validators.optional(validate_shape("natom")),
     )
-    atnums: np.ndarray = attr.ib(
+    atnums: NDArray | None = attrs.field(
         default=None,
         converter=convert_array_to(int),
-        validator=attr.validators.optional(validate_shape("natom")),
+        validator=attrs.validators.optional(validate_shape("natom")),
     )
-    basisdef: str = None
-    bonds: np.ndarray = attr.ib(
+    basisdef: str | None = attrs.field(default=None)
+    bonds: NDArray | None = attrs.field(
         default=None,
         converter=convert_array_to(int),
-        validator=attr.validators.optional(validate_shape(None, 3)),
+        validator=attrs.validators.optional(validate_shape(None, 3)),
     )
-    cellvecs: np.ndarray = attr.ib(
+    cellvecs: NDArray | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape(None, 3)),
+        validator=attrs.validators.optional(validate_shape(None, 3)),
     )
-    _charge: float = None
-    core_energy: float = None
-    cube: Cube = None
-    energy: float = None
-    extcharges: np.ndarray = attr.ib(
+    _charge: float | None = attrs.field(default=None)
+    core_energy: float | None = attrs.field(default=None)
+    cube: Cube | None = attrs.field(default=None)
+    energy: float | None = attrs.field(default=None)
+    extcharges: NDArray = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape(None, 4)),
+        validator=attrs.validators.optional(validate_shape(None, 4)),
     )
-    extra: dict = attr.ib(factory=dict)
-    g_rot: float = None
-    lot: str = None
-    mo: MolecularOrbitals = None
-    moments: dict = attr.ib(factory=dict)
-    _nelec: float = None
-    obasis: MolecularBasis = None
-    obasis_name: str = None
-    one_ints: dict = attr.ib(factory=dict)
-    one_rdms: dict = attr.ib(factory=dict)
-    run_type: str = None
-    _spinpol: float = None
-    title: str = None
-    two_ints: dict = attr.ib(factory=dict)
-    two_rdms: dict = attr.ib(factory=dict)
+    extra: dict = attrs.field(factory=dict)
+    g_rot: float | None = attrs.field(default=None)
+    lot: str | None = attrs.field(default=None)
+    mo: MolecularOrbitals | None = attrs.field(default=None)
+    moments: dict = attrs.field(factory=dict)
+    _nelec: float | None = attrs.field(default=None)
+    obasis: MolecularBasis | None = attrs.field(default=None)
+    obasis_name: str | None = attrs.field(default=None)
+    one_ints: dict = attrs.field(factory=dict)
+    one_rdms: dict = attrs.field(factory=dict)
+    run_type: str | None = attrs.field(default=None)
+    _spinpol: float | None = attrs.field(default=None)
+    title: str | None = attrs.field(default=None)
+    two_ints: dict = attrs.field(factory=dict)
+    two_rdms: dict = attrs.field(factory=dict)
 
     def __attrs_post_init__(self):
         # Trigger setter to acchieve consistency in properties
@@ -262,7 +263,7 @@ class IOData:
     # Public interfaces to private attributes
 
     @property
-    def atcorenums(self) -> np.ndarray:
+    def atcorenums(self) -> NDArray:
         """Return effective core charges."""
         if self._atcorenums is None and self.atnums is not None:
             self.atcorenums = self.atnums.astype(float)

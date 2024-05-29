@@ -18,7 +18,7 @@
 # --
 """Utilities for writing input files."""
 
-import attr
+import attrs
 import numpy as np
 
 from ..iodata import IOData
@@ -30,7 +30,7 @@ __all__ = ["populate_fields"]
 def populate_fields(data: IOData) -> dict:
     """Generate a dictionary with fields to replace in the template."""
     # load IOData dict using attr.asdict because the IOData class uses __slots__
-    fields = attr.asdict(data, recurse=False)
+    fields = attrs.asdict(data, recurse=False)
     # store atomic coordinates in angstrom
     fields["atcoords"] = data.atcoords / angstrom
     # set general defaults

@@ -28,8 +28,9 @@ from functools import wraps
 from numbers import Integral
 from typing import Union
 
-import attr
+import attrs
 import numpy as np
+from numpy.typing import NDArray
 
 from .attrutils import validate_shape
 
@@ -100,7 +101,7 @@ def angmom_its(angmom: Union[int, list[int]]) -> Union[str, list[str]]:
     return ANGMOM_CHARS[angmom]
 
 
-@attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
+@attrs.define
 class Shell:
     """A shell in a molecular basis representing (generalized) contractions with the same exponents.
 
@@ -126,11 +127,11 @@ class Shell:
 
     """
 
-    icenter: int
-    angmoms: list[int] = attr.ib(validator=validate_shape(("coeffs", 1)))
-    kinds: list[str] = attr.ib(validator=validate_shape(("coeffs", 1)))
-    exponents: np.ndarray = attr.ib(validator=validate_shape(("coeffs", 0)))
-    coeffs: np.ndarray = attr.ib(validator=validate_shape(("exponents", 0), ("kinds", 0)))
+    icenter: int = attrs.field()
+    angmoms: list[int] = attrs.field(validator=validate_shape(("coeffs", 1)))
+    kinds: list[str] = attrs.field(validator=validate_shape(("coeffs", 1)))
+    exponents: NDArray = attrs.field(validator=validate_shape(("coeffs", 0)))
+    coeffs: NDArray = attrs.field(validator=validate_shape(("exponents", 0), ("kinds", 0)))
 
     @property
     def nbasis(self) -> int:
@@ -156,7 +157,7 @@ class Shell:
         return len(self.angmoms)
 
 
-@attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
+@attrs.define
 class MolecularBasis:
     """A complete molecular orbital or density basis set.
 
@@ -205,9 +206,9 @@ class MolecularBasis:
 
     """
 
-    shells: list[Shell]
-    conventions: dict[str, str]
-    primitive_normalization: str
+    shells: list[Shell] = attrs.field()
+    conventions: dict[str, str] = attrs.field()
+    primitive_normalization: str = attrs.field()
 
     @property
     def nbasis(self) -> int:
@@ -222,12 +223,12 @@ class MolecularBasis:
                 shells.append(
                     Shell(shell.icenter, [angmom], [kind], shell.exponents, coeffs.reshape(-1, 1))
                 )
-        return attr.evolve(self, shells=shells)
+        return attrs.evolve(self, shells=shells)
 
 
 def convert_convention_shell(
     conv1: list[str], conv2: list[str], reverse=False
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[NDArray, NDArray]:
     """Return a permutation vector and sign changes to convert from 1 to 2.
 
     The transformation from convention 1 to convention 2 can be done applying
@@ -289,7 +290,7 @@ def convert_convention_shell(
 
 def convert_conventions(
     molbasis: MolecularBasis, new_conventions: dict[str, list[str]], reverse=False
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[NDArray, NDArray]:
     """Return a permutation vector and sign changes to convert from 1 to 2.
 
     The transformation from molbasis.convention to the new convention can be done
@@ -339,7 +340,7 @@ def convert_conventions(
     return np.array(permutation), np.array(signs)
 
 
-def iter_cart_alphabet(n: int) -> np.ndarray:
+def iter_cart_alphabet(n: int) -> NDArray:
     """Loop over powers of Cartesian basis functions in alphabetical order.
 
     See https://theochem.github.io/horton/2.1.1/tech_ref_gaussian_basis.html

@@ -20,9 +20,10 @@
 
 from typing import Optional
 
-import attr
+import attrs
 import numpy as np
 import scipy.special
+from numpy.typing import NDArray
 
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
 from .basis import MolecularBasis, Shell, convert_conventions, iter_cart_alphabet
@@ -39,7 +40,7 @@ def factorial2(n, exact=False):
 
     Parameters
     ----------
-    n : int or np.ndarray
+    n : int or NDArray
         Values to calculate n!! for. If n={0, -1}, the return value is 1.
         For n < -1, the return value is 0.
     """
@@ -53,10 +54,10 @@ def factorial2(n, exact=False):
 
 def compute_overlap(
     obasis0: MolecularBasis,
-    atcoords0: np.ndarray,
+    atcoords0: NDArray,
     obasis1: Optional[MolecularBasis] = None,
-    atcoords1: Optional[np.ndarray] = None,
-) -> np.ndarray:
+    atcoords1: Optional[NDArray] = None,
+) -> NDArray:
     r"""Compute overlap matrix for the given molecular basis set(s).
 
     .. math::
@@ -253,7 +254,7 @@ class GaussianOverlap:
         return value
 
 
-def _compute_cart_shell_normalizations(shell: Shell) -> np.ndarray:
+def _compute_cart_shell_normalizations(shell: Shell) -> NDArray:
     """Return normalization constants for the primitives in a given shell.
 
     Parameters
@@ -263,12 +264,12 @@ def _compute_cart_shell_normalizations(shell: Shell) -> np.ndarray:
 
     Returns
     -------
-    np.ndarray
+    NDArray
         The normalization constants, always for Cartesian functions, even when
         shell is pure.
 
     """
-    shell = attr.evolve(shell, kinds=["c"] * shell.ncon)
+    shell = attrs.evolve(shell, kinds=["c"] * shell.ncon)
     result = []
     for angmom in shell.angmoms:
         for exponent in shell.exponents:
@@ -277,7 +278,7 @@ def _compute_cart_shell_normalizations(shell: Shell) -> np.ndarray:
     return np.array(result)
 
 
-def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:
+def gob_cart_normalization(alpha: NDArray, n: NDArray) -> NDArray:
     """Compute normalization of exponent.
 
     Parameters
@@ -289,7 +290,7 @@ def gob_cart_normalization(alpha: np.ndarray, n: np.ndarray) -> np.ndarray:
 
     Returns
     -------
-    np.ndarray
+    NDArray
         The normalization constant for the gaussian cartesian basis.
 
     """

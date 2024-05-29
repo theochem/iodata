@@ -29,6 +29,7 @@ as the effective core charges.
 from typing import TextIO
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
@@ -42,7 +43,7 @@ PATTERNS = ["*.cube", "*.cub"]
 
 def _read_cube_header(
     lit: LineIterator,
-) -> tuple[str, np.ndarray, np.ndarray, np.ndarray, dict[str, np.ndarray], np.ndarray]:
+) -> tuple[str, NDArray, NDArray, NDArray, dict[str, NDArray], NDArray]:
     """Load header data from a CUBE file object.
 
     Parameters
@@ -62,7 +63,7 @@ def _read_cube_header(
     # skip the second line
     next(lit)
 
-    def read_grid_line(line: str) -> tuple[int, np.ndarray]:
+    def read_grid_line(line: str) -> tuple[int, NDArray]:
         """Read a grid line from the cube file."""
         words = line.split()
         return (
@@ -83,7 +84,7 @@ def _read_cube_header(
     cellvecs = axes * shape.reshape(-1, 1)
     cube = {"origin": origin, "axes": axes, "shape": shape}
 
-    def read_atom_line(line: str) -> tuple[int, float, np.ndarray]:
+    def read_atom_line(line: str) -> tuple[int, float, NDArray]:
         """Read an atomic number and coordinate from the cube file."""
         words = line.split()
         return (
@@ -106,7 +107,7 @@ def _read_cube_header(
     return title, atcoords, atnums, cellvecs, cube, atcorenums
 
 
-def _read_cube_data(lit: LineIterator, cube: dict[str, np.ndarray]):
+def _read_cube_data(lit: LineIterator, cube: dict[str, NDArray]):
     """Load cube data from a CUBE file object.
 
     Parameters
@@ -150,10 +151,10 @@ def load_one(lit: LineIterator) -> dict:
 def _write_cube_header(
     f: TextIO,
     title: str,
-    atcoords: np.ndarray,
-    atnums: np.ndarray,
-    cube: dict[str, np.ndarray],
-    atcorenums: np.ndarray,
+    atcoords: NDArray,
+    atnums: NDArray,
+    cube: dict[str, NDArray],
+    atcorenums: NDArray,
 ):
     print(title, file=f)
     print("OUTER LOOP: X, MIDDLE LOOP: Y, INNER LOOP: Z", file=f)
@@ -169,7 +170,7 @@ def _write_cube_header(
         print(f"{atnums[i]:5d} {q: 11.6f} {x: 11.6f} {y: 11.6f} {z: 11.6f}", file=f)
 
 
-def _write_cube_data(f: TextIO, cube_data: np.ndarray, block_size: int):
+def _write_cube_data(f: TextIO, cube_data: NDArray, block_size: int):
     counter = 0
     for value in cube_data.flat:
         f.write(f" {value: 12.5E}")

@@ -20,9 +20,10 @@
 
 import warnings
 
-import attr
+import attrs
 import numpy as np
 import scipy.constants as spc
+from numpy.typing import NDArray
 from scipy.linalg import eigh
 
 from .attrutils import validate_shape
@@ -119,7 +120,7 @@ class LineIterator:
         self.lineno -= 1
 
 
-@attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
+@attrs.define
 class Cube:
     """The volumetric data from a cube (or similar) file.
 
@@ -136,9 +137,9 @@ class Cube:
 
     """
 
-    origin: np.ndarray = attr.ib(validator=validate_shape(3))
-    axes: np.ndarray = attr.ib(validator=validate_shape(3, 3))
-    data: np.ndarray = attr.ib(validator=validate_shape(None, None, None))
+    origin: NDArray = attrs.field(validator=validate_shape(3))
+    axes: NDArray = attrs.field(validator=validate_shape(3, 3))
+    data: NDArray = attrs.field(validator=validate_shape(None, None, None))
 
     @property
     def shape(self):
@@ -147,7 +148,7 @@ class Cube:
 
 
 def set_four_index_element(
-    four_index_object: np.ndarray, i0: int, i1: int, i2: int, i3: int, value: float
+    four_index_object: NDArray, i0: int, i1: int, i2: int, i3: int, value: float
 ):
     """Assign values to a four index object, account for 8-fold index symmetry.
 
@@ -174,7 +175,7 @@ def set_four_index_element(
     four_index_object[i3, i0, i1, i2] = value
 
 
-def volume(cellvecs: np.ndarray) -> float:
+def volume(cellvecs: NDArray) -> float:
     """Calculate the (generalized) cell volume.
 
     Parameters
@@ -200,7 +201,7 @@ def volume(cellvecs: np.ndarray) -> float:
     raise ValueError("Argument cellvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
-def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def derive_naturals(dm: NDArray, overlap: NDArray) -> tuple[NDArray, NDArray]:
     """Derive natural orbitals from a given density matrix.
 
     Parameters
@@ -232,7 +233,7 @@ def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> tuple[np.ndarray, np
     return coeffs, occs
 
 
-def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: float = 1.0):
+def check_dm(dm: NDArray, overlap: NDArray, eps: float = 1e-4, occ_max: float = 1.0):
     """Check if the density matrix has eigenvalues in the proper range.
 
     Parameters

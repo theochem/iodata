@@ -23,6 +23,7 @@ from fnmatch import fnmatch
 from typing import Optional, TextIO
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventions
 from ..docstrings import document_dump_one, document_load_many, document_load_one
@@ -473,7 +474,7 @@ def _load_dm(label: str, fchk: dict, result: dict, key: str):
         result[key] = _triangle_to_dense(fchk[label])
 
 
-def _triangle_to_dense(triangle: np.ndarray) -> np.ndarray:
+def _triangle_to_dense(triangle: NDArray) -> NDArray:
     """Convert a symmetric matrix in triangular storage to a dense square matrix.
 
     Parameters
@@ -512,7 +513,7 @@ def _dump_real_scalars(name: str, val: float, f: TextIO):
     print(f"{name:40}   R     {float(val): 16.8E}", file=f)
 
 
-def _dump_integer_arrays(name: str, val: np.ndarray, f: TextIO):
+def _dump_integer_arrays(name: str, val: NDArray, f: TextIO):
     """Dumper for a array of integers."""
     nval = val.size
     if nval != 0:
@@ -527,7 +528,7 @@ def _dump_integer_arrays(name: str, val: np.ndarray, f: TextIO):
                 k = 0
 
 
-def _dump_real_arrays(name: str, val: np.ndarray, f: TextIO):
+def _dump_real_arrays(name: str, val: NDArray, f: TextIO):
     """Dumper for a array of float."""
     nval = val.size
     if nval != 0:

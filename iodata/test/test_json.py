@@ -34,7 +34,7 @@ except ImportError:
 
 
 # Tests for qcschema_molecule
-# GEOMS: dict of str: np.ndarray(N, 3)
+# GEOMS: dict of str: NDArray(N, 3)
 GEOMS = {
     "LiCl": np.array([[0.000000, 0.000000, -1.631761], [0.000000, 0.000000, 0.287958]]),
     "OHr": np.array([[0.0, 0.0, -0.12947694], [0.0, -1.49418734, 1.02744651]]),

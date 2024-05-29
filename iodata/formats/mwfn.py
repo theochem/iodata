@@ -19,6 +19,7 @@
 """Multiwfn MWFN file format."""
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell
 from ..docstrings import document_load_one
@@ -175,7 +176,7 @@ def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
 
 def _load_helper_section(
     lit: LineIterator, nprim: int, start: str, skip: int, dtype: np.dtype
-) -> np.ndarray:
+) -> NDArray:
     """Read single or multiple line(s) section."""
     section = []
     while len(section) < nprim:

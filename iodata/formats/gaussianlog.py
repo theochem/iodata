@@ -28,6 +28,7 @@ you need to use the following Gaussian command line:
 """
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..docstrings import document_load_one
 from ..utils import LineIterator, set_four_index_element
@@ -73,7 +74,7 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
-def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
+def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> NDArray:
     """Load a two-index operator from a GAUSSIAN LOG file format.
 
     Parameters
@@ -106,7 +107,7 @@ def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
     return result
 
 
-def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> np.ndarray:
+def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> NDArray:
     """Load a four-index operator from a GAUSSIAN LOG file.
 
     Parameters
