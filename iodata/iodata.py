@@ -18,6 +18,8 @@
 # --
 """Module for handling input/output from different file formats."""
 
+from typing import Optional
+
 import attrs
 import numpy as np
 from numpy.typing import NDArray
@@ -174,75 +176,75 @@ class IOData:
     """
 
     atcharges: dict = attrs.field(factory=dict)
-    atcoords: NDArray | None = attrs.field(
+    atcoords: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom", 3)),
     )
-    _atcorenums: NDArray | None = attrs.field(
+    _atcorenums: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
     atffparams: dict = attrs.field(factory=dict)
-    atfrozen: NDArray | None = attrs.field(
+    atfrozen: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(bool),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
-    atgradient: NDArray | None = attrs.field(
+    atgradient: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom", 3)),
     )
-    athessian: NDArray | None = attrs.field(
+    athessian: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, None)),
     )
-    atmasses: NDArray | None = attrs.field(
+    atmasses: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
-    atnums: NDArray | None = attrs.field(
+    atnums: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(int),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
-    basisdef: str | None = attrs.field(default=None)
-    bonds: NDArray | None = attrs.field(
+    basisdef: Optional[str] = attrs.field(default=None)
+    bonds: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(int),
         validator=attrs.validators.optional(validate_shape(None, 3)),
     )
-    cellvecs: NDArray | None = attrs.field(
+    cellvecs: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, 3)),
     )
-    _charge: float | None = attrs.field(default=None)
-    core_energy: float | None = attrs.field(default=None)
-    cube: Cube | None = attrs.field(default=None)
-    energy: float | None = attrs.field(default=None)
+    _charge: Optional[float] = attrs.field(default=None)
+    core_energy: Optional[float] = attrs.field(default=None)
+    cube: Optional[Cube] = attrs.field(default=None)
+    energy: Optional[float] = attrs.field(default=None)
     extcharges: NDArray = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, 4)),
     )
     extra: dict = attrs.field(factory=dict)
-    g_rot: float | None = attrs.field(default=None)
-    lot: str | None = attrs.field(default=None)
-    mo: MolecularOrbitals | None = attrs.field(default=None)
+    g_rot: Optional[float] = attrs.field(default=None)
+    lot: Optional[str] = attrs.field(default=None)
+    mo: Optional[MolecularOrbitals] = attrs.field(default=None)
     moments: dict = attrs.field(factory=dict)
-    _nelec: float | None = attrs.field(default=None)
-    obasis: MolecularBasis | None = attrs.field(default=None)
-    obasis_name: str | None = attrs.field(default=None)
+    _nelec: Optional[float] = attrs.field(default=None)
+    obasis: Optional[MolecularBasis] = attrs.field(default=None)
+    obasis_name: Optional[str] = attrs.field(default=None)
     one_ints: dict = attrs.field(factory=dict)
     one_rdms: dict = attrs.field(factory=dict)
-    run_type: str | None = attrs.field(default=None)
-    _spinpol: float | None = attrs.field(default=None)
-    title: str | None = attrs.field(default=None)
+    run_type: Optional[str] = attrs.field(default=None)
+    _spinpol: Optional[float] = attrs.field(default=None)
+    title: Optional[str] = attrs.field(default=None)
     two_ints: dict = attrs.field(factory=dict)
     two_rdms: dict = attrs.field(factory=dict)
 

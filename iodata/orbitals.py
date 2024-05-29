@@ -18,6 +18,8 @@
 # --
 """Data structure for molecular orbitals."""
 
+from typing import Optional
+
 import attrs
 import numpy as np
 from numpy.typing import NDArray
@@ -98,22 +100,22 @@ class MolecularOrbitals:
     )
     norba: int = attrs.field(validator=validate_norbab)
     norbb: int = attrs.field(validator=validate_norbab)
-    occs: NDArray | None = attrs.field(
+    occs: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("norb")),
     )
-    coeffs: NDArray | None = attrs.field(
+    coeffs: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, "norb")),
     )
-    energies: NDArray | None = attrs.field(
+    energies: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("norb")),
     )
-    irreps: NDArray | None = attrs.field(
+    irreps: Optional[NDArray] = attrs.field(
         default=None, validator=attrs.validators.optional(validate_shape("norb"))
     )
 
