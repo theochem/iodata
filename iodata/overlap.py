@@ -32,23 +32,46 @@ __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
 
 
 def factorial2(n, exact=False):
-    """Wrap scipy.special.factorial2 to return 1.0 when the input is -1.
+    """Wrap scipy.special.factorial2 to return 1.0 when the input is -1 and handle float arrays.
 
     This is a temporary workaround while we wait for Scipy's update.
     To learn more, see https://github.com/scipy/scipy/issues/18409.
 
     Parameters
     ----------
-    n : int or np.ndarray
+    n : int, float, or np.ndarray
         Values to calculate n!! for. If n={0, -1}, the return value is 1.
         For n < -1, the return value is 0.
     """
-    # Scipy  1.11.x returns an integer when n is an integer, but 1.10.x returns an array,
-    # so np.array(n) is passed to make sure the output is always an array.
-    out = scipy.special.factorial2(np.array(n), exact=exact)
-    out[out <= 0] = 1.0
-    out[out <= -2] = 0.0
-    return out
+    # Handle integer inputs
+    if isinstance(n, (int, np.integer)):
+        if n == -1 or n == 0:
+            return 1.0
+        elif n < -1:
+            return 0.0
+        else:
+            return scipy.special.factorial2(n, exact=exact)
+
+    # Handle float inputs
+    elif isinstance(n, float):
+        if n == -1.0 or n == 0.0:
+            return 1.0
+        elif n < -1.0:
+            return 0.0
+        else:
+            return scipy.special.factorial2(int(n), exact=exact)
+
+    # Handle array inputs
+    elif isinstance(n, np.ndarray):
+        result = np.zeros_like(n, dtype=float)
+        for i, val in np.ndenumerate(n):
+            if val == -1.0 or val == 0.0:
+                result[i] = 1.0
+            elif val < -1.0:
+                result[i] = 0.0
+            else:
+                result[i] = scipy.special.factorial2(int(val), exact=exact)
+        return result
 
 
 def compute_overlap(
