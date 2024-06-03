@@ -50,19 +50,13 @@ def factorial2(n: Union[int, NDArray[int]]) -> Union[int, NDArray[int]]:
     """
     # Handle integer inputs
     if isinstance(n, (int, np.integer)):
-        if n == -1:
-            return 1
-        return scipy.special.factorial2(n, exact=True)
+        return 1 if n == -1 else scipy.special.factorial2(n, exact=True)
 
     # Handle integer array inputs
     if isinstance(n, np.ndarray):
         if issubclass(n.dtype.type, (int, np.integer)):
-            result = np.zeros_like(n)
-            for i, val in np.ndenumerate(n):
-                if val == -1:
-                    result[i] = 1
-                else:
-                    result[i] = scipy.special.factorial2(val, exact=True)
+            result = scipy.special.factorial2(n, exact=True)
+            result[n == -1] = 1
             return result
         raise TypeError(f"Unsupported dtype of array n: {n.dtype}")
 
