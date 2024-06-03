@@ -18,11 +18,12 @@
 # --
 """Module for computing overlap of atomic orbital basis functions."""
 
-from typing import Optional
+from typing import Optional, Union
 
 import attr
 import numpy as np
 import scipy.special
+from numpy.typing import NDArray
 
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
 from .basis import MolecularBasis, Shell, convert_conventions, iter_cart_alphabet
@@ -31,47 +32,41 @@ from .overlap_cartpure import tfs
 __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
 
 
-def factorial2(n, exact=False):
-    """Wrap scipy.special.factorial2 to return 1.0 when the input is -1 and handle float arrays.
+def factorial2(n: Union[int, NDArray[int]]) -> Union[int, NDArray[int]]:
+    """Modifcied scipy.special.factorial2 to return 1 when the input is -1.
 
     This is a temporary workaround while we wait for Scipy's update.
     To learn more, see https://github.com/scipy/scipy/issues/18409.
 
+    This function only supports integer (array) arguments,
+    because this is the only relevant use case in IOData.
+
     Parameters
     ----------
-    n : int, float, or np.ndarray
-        Values to calculate n!! for. If n={0, -1}, the return value is 1.
+    n
+        Values to calculate n!! for. If n==-1, the return value is 1.
         For n < -1, the return value is 0.
+
     """
     # Handle integer inputs
     if isinstance(n, (int, np.integer)):
         if n == -1:
-            return 1.0
-        if n < -1:
-            return 0.0
-        return scipy.special.factorial2(n, exact=exact)
+            return 1
+        return scipy.special.factorial2(n, exact=True)
 
-    # Handle float inputs
-    if isinstance(n, float):
-        if n == -1.0:
-            return 1.0
-        if n < -1.0:
-            return 0.0
-        return scipy.special.factorial2(int(n), exact=exact)
-
-    # Handle array inputs
+    # Handle integer array inputs
     if isinstance(n, np.ndarray):
-        result = np.zeros_like(n, dtype=float)
-        for i, val in np.ndenumerate(n):
-            if val == -1.0:
-                result[i] = 1.0
-            elif val < -1.0:
-                result[i] = 0.0
-            else:
-                result[i] = scipy.special.factorial2(int(val), exact=exact)
-        return result
+        if issubclass(n.dtype.type, (int, np.integer)):
+            result = np.zeros_like(n)
+            for i, val in np.ndenumerate(n):
+                if val == -1:
+                    result[i] = 1
+                else:
+                    result[i] = scipy.special.factorial2(val, exact=True)
+            return result
+        raise TypeError(f"Unsupported dtype of array n: {n.dtype}")
 
-    return None
+    raise TypeError(f"Unsupported type of argument n: {type(n)}")
 
 
 # pylint: disable=too-many-nested-blocks,too-many-statements,too-many-branches
@@ -261,7 +256,7 @@ class GaussianOverlap:
         self.binomials = [
             [scipy.special.binom(n, i) for i in range(n + 1)] for n in range(n_max + 1)
         ]
-        facts = [factorial2(m, 2) for m in range(2 * n_max)]
+        facts = [factorial2(m) for m in range(2 * n_max)]
         facts.insert(0, 1)
         self.facts = np.array(facts)
 
