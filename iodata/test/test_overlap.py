@@ -35,32 +35,28 @@ except ImportError:
     from importlib.resources import as_file, files
 
 
-def test_integer_arguments():
-    assert factorial2(0) == 1
-    assert factorial2(1) == 1
-    assert factorial2(2) == 2
-    assert factorial2(3) == 3
-    assert factorial2(-1) == 1
-    assert factorial2(-2) == 0
+@pytest.mark.parametrize(
+    ("inp", "out"), [(0, 1), (1, 1), (2, 2), (3, 3), (4, 8), (5, 15), (-1, 1), (-2, 0)]
+)
+def test_factorial2_integer_arguments(inp, out):
+    assert factorial2(inp) == out
+    assert isinstance(factorial2(inp), int)
 
 
-def test_float_arguments():
+def test_factorial2_float_arguments():
     with pytest.raises(TypeError):
         factorial2(1.0)
 
 
-def test_integer_array_argument():
-    assert (factorial2(np.array([0, 1, 2, 3])) == np.array([1, 1, 2, 3])).all()
+def test_factorial2_integer_array_argument():
+    assert (factorial2(np.array([-2, -1, 4, 5])) == np.array([0, 1, 8, 15])).all()
+    assert (factorial2(np.array([[-2, -1], [4, 5]])) == np.array([[0, 1], [8, 15]])).all()
+    assert issubclass(factorial2(np.array([-2, -1, 4, 5])).dtype.type, np.integer)
 
 
-def test_float_array_argument():
+def test_factorial2_float_array_argument():
     with pytest.raises(TypeError):
         factorial2(np.array([0.0, 1.0, 2.0, 3.0]))
-
-
-def test_special_cases_exact():
-    assert factorial2(-1) == pytest.approx(1)
-    assert factorial2(-2) == pytest.approx(0)
 
 
 def test_normalization_basics_segmented():
