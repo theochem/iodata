@@ -25,7 +25,7 @@ import numpy as np
 import scipy.special
 
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
-from .basis import MolecularBasis, convert_conventions, iter_cart_alphabet
+from .basis import MolecularBasis, Shell, convert_conventions, iter_cart_alphabet
 from .overlap_cartpure import tfs
 
 __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
@@ -155,7 +155,7 @@ def compute_overlap(
 
     n_max = max(np.max(shell.angmoms) for shell in obasis0.shells)
     if not identical:
-        n_max = max(n_max, max(np.max(shell.angmoms) for shell in obasis1.shells))
+        n_max = max(n_max, *(np.max(shell.angmoms) for shell in obasis1.shells))
     go = GaussianOverlap(n_max)
 
     # define a python ufunc (numpy function) for broadcasted calling over angular momentums
@@ -171,10 +171,7 @@ def compute_overlap(
 
         # Loop over shell1 (lower triangular only, including diagonal)
         begin1 = 0
-        if identical:
-            nshell1 = i0 + 1
-        else:
-            nshell1 = len(obasis1.shells)
+        nshell1 = i0 + 1 if identical else len(obasis1.shells)
         for i1, shell1 in enumerate(obasis1.shells[:nshell1]):
             r1 = atcoords1[shell1.icenter]
             end1 = begin1 + shell1.nbasis
@@ -246,8 +243,7 @@ def compute_overlap(
         permutation1, signs1 = permutation0, signs0
     else:
         permutation1, signs1 = convert_conventions(obasis1, OVERLAP_CONVENTIONS, reverse=True)
-    overlap = overlap[:, permutation1] * signs1
-    return overlap
+    return overlap[:, permutation1] * signs1
 
 
 class GaussianOverlap:
@@ -301,9 +297,7 @@ def _compute_cart_shell_normalizations(shell: "Shell") -> np.ndarray:
     result = []
     for angmom in shell.angmoms:
         for exponent in shell.exponents:
-            row = []
-            for n in iter_cart_alphabet(angmom):
-                row.append(gob_cart_normalization(exponent, n))
+            row = [gob_cart_normalization(exponent, n) for n in iter_cart_alphabet(angmom)]
             result.append(row)
     return np.array(result)
 
