@@ -21,6 +21,7 @@
 import functools
 import os
 import subprocess
+import sys
 
 from numpy.testing import assert_allclose, assert_equal
 
@@ -55,7 +56,7 @@ def test_convert_one_manfmt(tmpdir):
 
 def test_script_one_autofmt(tmpdir):
     def myconvert(infn, outfn):
-        subprocess.run(["python", "-m", "iodata.__main__", infn, outfn], check=True)
+        subprocess.run([sys.executable, "-m", "iodata.__main__", infn, outfn], check=True)
 
     _check_convert_one(myconvert, tmpdir)
 
@@ -63,7 +64,8 @@ def test_script_one_autofmt(tmpdir):
 def test_script_one_manfmt(tmpdir):
     def myconvert(infn, outfn):
         subprocess.run(
-            ["python", "-m", "iodata.__main__", infn, outfn, "-i", "fchk", "-o", "xyz"], check=True
+            [sys.executable, "-m", "iodata.__main__", infn, outfn, "-i", "fchk", "-o", "xyz"],
+            check=True,
         )
 
     _check_convert_one(myconvert, tmpdir)
@@ -94,7 +96,7 @@ def test_convert_many_manfmt(tmpdir):
 
 def test_script_many_autofmt(tmpdir):
     def myconvert(infn, outfn):
-        subprocess.run(["python", "-m", "iodata.__main__", infn, outfn, "-m"], check=True)
+        subprocess.run([sys.executable, "-m", "iodata.__main__", infn, outfn, "-m"], check=True)
 
     _check_convert_many(myconvert, tmpdir)
 
@@ -102,7 +104,7 @@ def test_script_many_autofmt(tmpdir):
 def test_script_many_manfmt(tmpdir):
     def myconvert(infn, outfn):
         subprocess.run(
-            ["python", "-m", "iodata.__main__", infn, outfn, "-m", "-i", "fchk", "-o", "xyz"],
+            [sys.executable, "-m", "iodata.__main__", infn, outfn, "-m", "-i", "fchk", "-o", "xyz"],
             check=True,
         )
 
