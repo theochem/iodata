@@ -33,7 +33,7 @@ __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
 
 
 def factorial2(n: Union[int, NDArray[int]]) -> Union[int, NDArray[int]]:
-    """Modifcied scipy.special.factorial2 to return 1 when the input is -1.
+    """Modifcied scipy.special.factorial2 that returns 1 when the input is -1.
 
     This is a temporary workaround while we wait for Scipy's update.
     To learn more, see https://github.com/scipy/scipy/issues/18409.
