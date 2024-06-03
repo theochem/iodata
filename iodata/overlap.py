@@ -18,11 +18,12 @@
 # --
 """Module for computing overlap of atomic orbital basis functions."""
 
-from typing import Optional
+from typing import Optional, Union
 
 import attr
 import numpy as np
 import scipy.special
+from numpy.typing import NDArray
 
 from .basis import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
 from .basis import MolecularBasis, Shell, convert_conventions, iter_cart_alphabet
@@ -31,24 +32,35 @@ from .overlap_cartpure import tfs
 __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
 
 
-def factorial2(n, exact=False):
-    """Wrap scipy.special.factorial2 to return 1.0 when the input is -1.
+def factorial2(n: Union[int, NDArray[int]]) -> Union[int, NDArray[int]]:
+    """Modifcied scipy.special.factorial2 that returns 1 when the input is -1.
 
     This is a temporary workaround while we wait for Scipy's update.
     To learn more, see https://github.com/scipy/scipy/issues/18409.
 
+    This function only supports integer (array) arguments,
+    because this is the only relevant use case in IOData.
+
     Parameters
     ----------
-    n : int or np.ndarray
-        Values to calculate n!! for. If n={0, -1}, the return value is 1.
+    n
+        Values to calculate n!! for. If n==-1, the return value is 1.
         For n < -1, the return value is 0.
+
     """
-    # Scipy  1.11.x returns an integer when n is an integer, but 1.10.x returns an array,
-    # so np.array(n) is passed to make sure the output is always an array.
-    out = scipy.special.factorial2(np.array(n), exact=exact)
-    out[out <= 0] = 1.0
-    out[out <= -2] = 0.0
-    return out
+    # Handle integer inputs
+    if isinstance(n, (int, np.integer)):
+        return 1 if n == -1 else scipy.special.factorial2(n, exact=True)
+
+    # Handle integer array inputs
+    if isinstance(n, np.ndarray):
+        if issubclass(n.dtype.type, (int, np.integer)):
+            result = scipy.special.factorial2(n, exact=True)
+            result[n == -1] = 1
+            return result
+        raise TypeError(f"Unsupported dtype of array n: {n.dtype}")
+
+    raise TypeError(f"Unsupported type of argument n: {type(n)}")
 
 
 def compute_overlap(
@@ -236,7 +248,7 @@ class GaussianOverlap:
         self.binomials = [
             [scipy.special.binom(n, i) for i in range(n + 1)] for n in range(n_max + 1)
         ]
-        facts = [factorial2(m, 2) for m in range(2 * n_max)]
+        facts = [factorial2(m) for m in range(2 * n_max)]
         facts.insert(0, 1)
         self.facts = np.array(facts)
 

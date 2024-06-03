@@ -27,12 +27,36 @@ from numpy.testing import assert_allclose
 
 from ..api import load_one
 from ..basis import MolecularBasis, Shell, convert_conventions
-from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
+from ..overlap import OVERLAP_CONVENTIONS, compute_overlap, factorial2
 
 try:
     from importlib_resources import as_file, files
 except ImportError:
     from importlib.resources import as_file, files
+
+
+@pytest.mark.parametrize(
+    ("inp", "out"), [(0, 1), (1, 1), (2, 2), (3, 3), (4, 8), (5, 15), (-1, 1), (-2, 0)]
+)
+def test_factorial2_integer_arguments(inp, out):
+    assert factorial2(inp) == out
+    assert isinstance(factorial2(inp), int)
+
+
+def test_factorial2_float_arguments():
+    with pytest.raises(TypeError):
+        factorial2(1.0)
+
+
+def test_factorial2_integer_array_argument():
+    assert (factorial2(np.array([-2, -1, 4, 5])) == np.array([0, 1, 8, 15])).all()
+    assert (factorial2(np.array([[-2, -1], [4, 5]])) == np.array([[0, 1], [8, 15]])).all()
+    assert issubclass(factorial2(np.array([-2, -1, 4, 5])).dtype.type, np.integer)
+
+
+def test_factorial2_float_array_argument():
+    with pytest.raises(TypeError):
+        factorial2(np.array([0.0, 1.0, 2.0, 3.0]))
 
 
 def test_normalization_basics_segmented():
