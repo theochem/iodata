@@ -45,7 +45,7 @@ def factorial2(n, exact=False):
     """
     # Handle integer inputs
     if isinstance(n, (int, np.integer)):
-        if n in {-1, 0}:
+        if n == -1:
             return 1.0
         if n < -1:
             return 0.0
@@ -53,7 +53,7 @@ def factorial2(n, exact=False):
 
     # Handle float inputs
     if isinstance(n, float):
-        if n in {-1.0, 0.0}:
+        if n == -1.0:
             return 1.0
         if n < -1.0:
             return 0.0
@@ -63,7 +63,7 @@ def factorial2(n, exact=False):
     if isinstance(n, np.ndarray):
         result = np.zeros_like(n, dtype=float)
         for i, val in np.ndenumerate(n):
-            if val in {-1.0, 0.0}:
+            if val == -1.0:
                 result[i] = 1.0
             elif val < -1.0:
                 result[i] = 0.0
