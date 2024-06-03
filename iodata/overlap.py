@@ -271,7 +271,7 @@ class GaussianOverlap:
         return value
 
 
-def _compute_cart_shell_normalizations(shell: "Shell") -> np.ndarray:
+def _compute_cart_shell_normalizations(shell: Shell) -> np.ndarray:
     """Return normalization constants for the primitives in a given shell.
 
     Parameters
