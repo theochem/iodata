@@ -46,7 +46,7 @@ def test_integer_arguments():
 
 def test_float_arguments():
     with pytest.raises(TypeError):
-        assert factorial2(1.0)
+        factorial2(1.0)
 
 
 def test_integer_array_argument():
