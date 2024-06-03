@@ -69,7 +69,6 @@ def factorial2(n: Union[int, NDArray[int]]) -> Union[int, NDArray[int]]:
     raise TypeError(f"Unsupported type of argument n: {type(n)}")
 
 
-# pylint: disable=too-many-nested-blocks,too-many-statements,too-many-branches
 def compute_overlap(
     obasis0: MolecularBasis,
     atcoords0: np.ndarray,
@@ -159,7 +158,6 @@ def compute_overlap(
     # Loop over shell0
     begin0 = 0
 
-    # pylint: disable=too-many-nested-blocks
     for i0, shell0 in enumerate(obasis0.shells):
         r0 = atcoords0[shell0.icenter]
         end0 = begin0 + shell0.nbasis
