@@ -18,15 +18,12 @@
 # --
 """Test iodata.formats.locpot module."""
 
+from importlib.resources import as_file, files
+
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
 from ..utils import angstrom, electronvolt, volume
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def test_load_locpot_oxygen():

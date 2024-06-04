@@ -19,6 +19,7 @@
 """Test iodata.formats.pdb module."""
 
 import os
+from importlib.resources import as_file, files
 
 import numpy as np
 import pytest
@@ -26,11 +27,6 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_many, dump_one, load_many, load_one
 from ..utils import FileFormatWarning, angstrom
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 @pytest.mark.parametrize("case", ["single", "single_model"])

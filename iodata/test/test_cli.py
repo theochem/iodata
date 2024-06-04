@@ -22,16 +22,12 @@ import functools
 import os
 import subprocess
 import sys
+from importlib.resources import as_file, files
 
 from numpy.testing import assert_allclose, assert_equal
 
 from ..__main__ import convert
 from ..api import load_many, load_one
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def _check_convert_one(myconvert, tmpdir):

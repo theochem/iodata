@@ -19,6 +19,7 @@
 """Test iodata.overlap & iodata.overlap_accel modules."""
 
 import itertools
+from importlib.resources import as_file, files
 
 import attrs
 import numpy as np
@@ -28,11 +29,6 @@ from numpy.testing import assert_allclose
 from ..api import load_one
 from ..basis import MolecularBasis, Shell, convert_conventions
 from ..overlap import OVERLAP_CONVENTIONS, compute_overlap, factorial2
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 @pytest.mark.parametrize(

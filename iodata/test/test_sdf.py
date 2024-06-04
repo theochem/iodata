@@ -19,6 +19,7 @@
 """Test iodata.formats.sdf module."""
 
 import os
+from importlib.resources import as_file, files
 
 import pytest
 from numpy.testing import assert_allclose, assert_equal
@@ -26,11 +27,6 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_many, dump_one, load_many, load_one
 from ..utils import FileFormatError, angstrom
 from .common import truncated_file
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def test_sdf_load_one_example():

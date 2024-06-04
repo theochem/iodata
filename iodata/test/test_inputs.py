@@ -19,17 +19,13 @@
 """Test iodata.inputs module."""
 
 import os
+from importlib.resources import as_file, files
 
 import numpy as np
 
 from ..api import load_one, write_input
 from ..iodata import IOData
 from ..utils import angstrom
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def check_load_input_and_compare(fname: str, fname_expected: str):

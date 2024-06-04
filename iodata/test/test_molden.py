@@ -20,6 +20,7 @@
 
 import os
 import warnings
+from importlib.resources import as_file, files
 
 import attrs
 import numpy as np
@@ -32,11 +33,6 @@ from ..formats.molden import _load_low
 from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
 from ..utils import FileFormatWarning, LineIterator, angstrom
 from .common import check_orthonormal, compare_mols, compute_mulliken_charges
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def test_load_molden_li2_orca():

@@ -20,6 +20,7 @@
 
 import os
 import warnings
+from importlib.resources import as_file, files
 from typing import Optional
 
 from numpy.testing import assert_allclose, assert_equal
@@ -29,11 +30,6 @@ from ..basis import convert_conventions
 from ..overlap import compute_overlap
 from ..utils import angstrom
 from .common import check_orthonormal, compare_mols, compute_mulliken_charges, load_one_warning
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def compare_mols_diff_formats(mol1, mol2):

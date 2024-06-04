@@ -19,6 +19,8 @@
 # ruff: noqa: SLF001
 """Test iodata.iodata module."""
 
+from importlib.resources import as_file, files
+
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
@@ -26,11 +28,6 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import IOData, load_one
 from ..overlap import compute_overlap
 from .common import compute_1rdm
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def test_typecheck():

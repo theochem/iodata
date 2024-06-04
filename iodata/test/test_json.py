@@ -20,18 +20,13 @@
 
 import json
 import os
+from importlib.resources import as_file, files
 
 import numpy as np
 import pytest
 
 from ..api import dump_one, load_one
 from ..utils import FileFormatError, FileFormatWarning
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
-
 
 # Tests for qcschema_molecule
 # GEOMS: dict of str: NDArray(N, 3)

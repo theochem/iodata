@@ -19,6 +19,7 @@
 """Test iodata.formats.wfn module."""
 
 import os
+from importlib.resources import as_file, files
 from typing import Optional
 
 import numpy as np
@@ -36,11 +37,6 @@ from .common import (
     load_one_warning,
     truncated_file,
 )
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def helper_load_data_wfx(fn_wfx):
