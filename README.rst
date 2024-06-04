@@ -84,10 +84,10 @@ environment. Note that there may be API changes between subsequent revisions.
 
 See https://iodata.readthedocs.io/en/latest/install.html for full details.
 
-.. |pytest| image:: https://github.com/theochem/iodata/actions/workflows/pytest.yml/badge.svg
-    :target: https://github.com/theochem/iodata/actions/workflows/pytest.yml
-.. |release| image:: https://github.com/theochem/iodata/actions/workflows/release.yml/badge.svg
-    :target: https://github.com/theochem/iodata/actions/workflows/release.yml
+.. |pytest| image:: https://github.com/theochem/iodata/actions/workflows/pytest.yaml/badge.svg
+    :target: https://github.com/theochem/iodata/actions/workflows/pytest.yaml
+.. |release| image:: https://github.com/theochem/iodata/actions/workflows/release.yaml/badge.svg
+    :target: https://github.com/theochem/iodata/actions/workflows/release.yaml
 .. |CodeFactor| image:: https://www.codefactor.io/repository/github/tovrstra/stepup-core/badge
     :target: https://www.codefactor.io/repository/github/tovrstra/stepup-core
 .. |Version| image:: https://img.shields.io/pypi/pyversions/qc-iodata.svg
