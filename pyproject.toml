@@ -28,7 +28,7 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-xdist"]
+dev = ["pytest", "pytest-xdist", "sphinx", "sphinx_autodoc_typehints", "sphinx-rtd-theme"]
 
 [project.urls]
 Documentation = "https://iodata.readthedocs.io/en/latest/"
