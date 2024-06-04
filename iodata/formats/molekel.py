@@ -26,6 +26,7 @@ This format is used by two programs:
 from typing import TextIO
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..basis import MolecularBasis, Shell, angmom_its, angmom_sti, convert_conventions
 from ..docstrings import document_dump_one, document_load_one
@@ -56,7 +57,7 @@ def _load_helper_charges(lit: LineIterator) -> dict:
     return {"mulliken": np.array(atcharges)}
 
 
-def _load_helper_atoms(lit: LineIterator) -> tuple[np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator) -> tuple[NDArray, NDArray]:
     atnums = []
     atcoords = []
     for line in lit:
@@ -105,7 +106,7 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
     return MolecularBasis(shells, CONVENTIONS, "L2")
 
 
-def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[np.ndarray, np.ndarray]:
+def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[NDArray, NDArray]:
     coeffs = []
     energies = []
     irreps = []
@@ -143,7 +144,7 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[np.ndarray, np.
     return np.hstack(coeffs), np.array(energies), irreps
 
 
-def _load_helper_occ(lit: LineIterator) -> np.ndarray:
+def _load_helper_occ(lit: LineIterator) -> NDArray:
     occs = []
     for line in lit:
         if line.strip() == "$END":

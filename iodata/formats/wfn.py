@@ -30,6 +30,7 @@ import operator
 from typing import TextIO
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..basis import MolecularBasis, Shell, convert_conventions
 from ..docstrings import document_dump_one, document_load_one
@@ -137,7 +138,7 @@ def _load_helper_num(lit: LineIterator) -> list[int]:
     return num_mo, nprim, num_atoms
 
 
-def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> tuple[np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> tuple[NDArray, NDArray]:
     """Read the coordinates of the atoms."""
     atnums = np.empty(num_atoms, int)
     atcoords = np.empty((num_atoms, 3), float)
@@ -158,7 +159,7 @@ def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> tuple[np.ndarray, n
 
 def _load_helper_section(
     lit: LineIterator, n: int, start: str, skip: int, step: int, dtype: np.dtype
-) -> np.ndarray:
+) -> NDArray:
     """Read CENTRE ASSIGNMENTS, TYPE ASSIGNMENTS, and EXPONENTS sections."""
     section = []
     while len(section) < n:
@@ -174,7 +175,7 @@ def _load_helper_section(
     return np.array(section, dtype=dtype)
 
 
-def _load_helper_mo(lit: LineIterator, nprim: int) -> tuple[int, float, float, np.ndarray]:
+def _load_helper_mo(lit: LineIterator, nprim: int) -> tuple[int, float, float, NDArray]:
     """Read one section of MO information."""
     line = next(lit)
     if not line.startswith("MO"):
@@ -201,7 +202,7 @@ def _load_helper_energy(lit: LineIterator) -> float:
     return energy, virial
 
 
-def _load_helper_multiwfn(lit: LineIterator, num_mo: int) -> np.ndarray:
+def _load_helper_multiwfn(lit: LineIterator, num_mo: int) -> NDArray:
     """Read MO spin information from MULTIWFN extension."""
     for line in lit:
         if "$MOSPIN $END" in line:
@@ -258,8 +259,8 @@ def load_wfn_low(lit: LineIterator) -> tuple:
 
 
 def build_obasis(
-    icenters: np.ndarray, type_assignments: np.ndarray, exponents: np.ndarray, lit: LineIterator
-) -> tuple[MolecularBasis, np.ndarray]:
+    icenters: NDArray, type_assignments: NDArray, exponents: NDArray, lit: LineIterator
+) -> tuple[MolecularBasis, NDArray]:
     """Construct a basis set using the arrays read from a WFN or WFX file.
 
     Parameters
@@ -351,7 +352,7 @@ def build_obasis(
     return obasis, permutation
 
 
-def get_mocoeff_scales(obasis: MolecularBasis) -> np.ndarray:
+def get_mocoeff_scales(obasis: MolecularBasis) -> NDArray:
     """Get the L2-normalization of the un-normalized Cartesian basis functions.
 
     Parameters
@@ -461,7 +462,7 @@ def _format_helper_section(header: str, skip: int, spec: str, nline: int) -> tup
     return f"{header[:skip].ljust(skip)}{spec * nline}", len(spec)
 
 
-def _dump_helper_section(f: TextIO, data: np.ndarray, fmt: str, skip: int, step: int, nline: int):
+def _dump_helper_section(f: TextIO, data: NDArray, fmt: str, skip: int, step: int, nline: int):
     """Write a CENTRE_ASSIGNMENTS, TYPE_ASSIGNMENTS, or EXPONENTS section to file ``f``."""
     while len(data) > 0:
         chunk = data[:nline]

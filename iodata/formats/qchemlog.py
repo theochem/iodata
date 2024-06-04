@@ -22,6 +22,7 @@ This module will load Q-Chem log file into IODATA.
 """
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
@@ -307,7 +308,7 @@ def _helper_orbital_energies_unrestricted(lit: LineIterator) -> tuple:
     return subdata
 
 
-def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = False) -> np.ndarray:
+def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = False) -> NDArray:
     """Load data between starting and ending strings."""
     data = []
     for line in lit:
@@ -324,7 +325,7 @@ def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = Fa
     return np.array(data, dtype=float)
 
 
-def _helper_mulliken(lit: LineIterator) -> np.ndarray:
+def _helper_mulliken(lit: LineIterator) -> NDArray:
     """Load mulliken net atomic charges."""
     # skip line between 'Ground-State Mulliken Net Atomic Charges' line & atomic charge entries
     while True:
@@ -358,7 +359,7 @@ def _helper_dipole_moments(lit: LineIterator) -> tuple:
     return dipole, quadrupole, dipole_tol
 
 
-def _helper_polar(lit: LineIterator) -> np.ndarray:
+def _helper_polar(lit: LineIterator) -> NDArray:
     """Load polarizability matrix."""
     next(lit)
     polarizability_tensor = []
@@ -369,7 +370,7 @@ def _helper_polar(lit: LineIterator) -> np.ndarray:
     return np.array(polarizability_tensor, dtype=float)
 
 
-def _helper_hessian(lit: LineIterator, natom: int) -> np.ndarray:
+def _helper_hessian(lit: LineIterator, natom: int) -> NDArray:
     """Load hessian matrix."""
     # hessian in Cartesian coordinates, shape(3 * natom, 3 * natom)
     col_idx = [int(i) for i in next(lit).split()]

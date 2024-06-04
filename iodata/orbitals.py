@@ -18,8 +18,11 @@
 # --
 """Data structure for molecular orbitals."""
 
-import attr
+from typing import Optional
+
+import attrs
 import numpy as np
+from numpy.typing import NDArray
 
 from .attrutils import convert_array_to, validate_shape
 
@@ -55,7 +58,7 @@ def validate_norbab(mo, attribute, value):
             raise ValueError("In case of restricted orbitals, norba must be equal to norbb.")
 
 
-@attr.s(auto_attribs=True, slots=True, on_setattr=[attr.setters.validate, attr.setters.convert])
+@attrs.define
 class MolecularOrbitals:
     """Class of Orthonormal Molecular Orbitals.
 
@@ -92,28 +95,28 @@ class MolecularOrbitals:
 
     """
 
-    kind: str = attr.ib(
-        validator=attr.validators.in_(["restricted", "unrestricted", "generalized"])
+    kind: str = attrs.field(
+        validator=attrs.validators.in_(["restricted", "unrestricted", "generalized"])
     )
-    norba: int = attr.ib(validator=validate_norbab)
-    norbb: int = attr.ib(validator=validate_norbab)
-    occs: np.ndarray = attr.ib(
+    norba: int = attrs.field(validator=validate_norbab)
+    norbb: int = attrs.field(validator=validate_norbab)
+    occs: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("norb")),
+        validator=attrs.validators.optional(validate_shape("norb")),
     )
-    coeffs: np.ndarray = attr.ib(
+    coeffs: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape(None, "norb")),
+        validator=attrs.validators.optional(validate_shape(None, "norb")),
     )
-    energies: np.ndarray = attr.ib(
+    energies: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("norb")),
+        validator=attrs.validators.optional(validate_shape("norb")),
     )
-    irreps: np.ndarray = attr.ib(
-        default=None, validator=attr.validators.optional(validate_shape("norb"))
+    irreps: Optional[NDArray] = attrs.field(
+        default=None, validator=attrs.validators.optional(validate_shape("norb"))
     )
 
     @property

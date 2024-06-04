@@ -20,7 +20,7 @@
 
 import itertools
 
-import attr
+import attrs
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose
@@ -102,7 +102,7 @@ def test_load_fchk_o2_cc_pvtz_cart_num():
         ref = np.load(str(fn_npy))
     with as_file(files("iodata.test.data").joinpath("o2_cc_pvtz_cart.fchk")) as fn_fchk:
         data = load_one(fn_fchk)
-    obasis = attr.evolve(data.obasis, conventions=OVERLAP_CONVENTIONS)
+    obasis = attrs.evolve(data.obasis, conventions=OVERLAP_CONVENTIONS)
     assert_allclose(ref, compute_overlap(obasis, data.atcoords), rtol=1.0e-5, atol=1.0e-8)
 
 
@@ -154,7 +154,7 @@ def test_overlap_two_basis_different(fn0, fn1):
     # overlap matrix.
     atcoords = np.concatenate([mol0.atcoords, mol1.atcoords])
     shells = mol0.obasis.shells + [
-        attr.evolve(shell, icenter=shell.icenter + mol0.natom) for shell in mol1.obasis.shells
+        attrs.evolve(shell, icenter=shell.icenter + mol0.natom) for shell in mol1.obasis.shells
     ]
     obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, "L2")
     olp_big = compute_overlap(obasis, atcoords)

@@ -28,8 +28,9 @@ errors are corrected when loading them with IOData.
 import copy
 from typing import TextIO, Union
 
-import attr
+import attrs
 import numpy as np
+from numpy.typing import NDArray
 
 from ..basis import (
     HORTON2_CONVENTIONS,
@@ -225,9 +226,7 @@ def _load_low(lit: LineIterator) -> dict:
     return result
 
 
-def _load_helper_atoms(
-    lit: LineIterator, cunit: float
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator, cunit: float) -> tuple[NDArray, NDArray, NDArray]:
     """Load element numbers and coordinates."""
     atnums = []
     atcorenums = []
@@ -357,9 +356,9 @@ def _load_helper_coeffs(lit: LineIterator) -> tuple:
 
 def _is_normalized_properly(
     obasis: MolecularBasis,
-    atcoords: np.ndarray,
-    orb_alpha: np.ndarray,
-    orb_beta: np.ndarray,
+    atcoords: NDArray,
+    orb_alpha: NDArray,
+    orb_beta: NDArray,
     norm_threshold: float = 1e-4,
 ) -> bool:
     """Test the normalization of the occupied and virtual orbitals.
@@ -551,7 +550,7 @@ def _fix_obasis_normalize_contractions(obasis: MolecularBasis) -> MolecularBasis
     fixed_shells = []
     for shell in obasis.shells:
         shell_obasis = MolecularBasis(
-            [attr.evolve(shell, icenter=0)], obasis.conventions, obasis.primitive_normalization
+            [attrs.evolve(shell, icenter=0)], obasis.conventions, obasis.primitive_normalization
         )
         # 2) Get the first diagonal element of the overlap matrix
         olpdiag = compute_overlap(shell_obasis, np.zeros((1, 3), float))[0, 0]

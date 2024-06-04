@@ -21,6 +21,7 @@
 from typing import Union
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.special import factorialk
 
 from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, angmom_sti
@@ -42,9 +43,7 @@ CONVENTIONS = {
 }
 
 
-def _get_cp2k_norm_corrections(
-    ell: int, alphas: Union[float, np.ndarray]
-) -> Union[float, np.ndarray]:
+def _get_cp2k_norm_corrections(ell: int, alphas: Union[float, NDArray]) -> Union[float, NDArray]:
     """Compute the corrections for the normalization of the basis functions.
 
     This correction is needed because the CP2K atom code works with a different
@@ -236,7 +235,7 @@ def _read_cp2k_occupations_energies(
 
 def _read_cp2k_orbital_coeffs(
     lit: LineIterator, oe: list[tuple[int, int, float, float]]
-) -> dict[tuple[int, int], np.ndarray]:
+) -> dict[tuple[int, int], NDArray]:
     """Read the expansion coefficients of the orbital from an open CP2K ATOM output.
 
     Parameters
@@ -294,11 +293,11 @@ def _get_norb_nel(oe: list[tuple[int, int, float, float]]) -> tuple[int, float]:
 
 
 def _fill_orbitals(
-    orb_coeffs: np.ndarray,
-    orb_energies: np.ndarray,
-    orb_occupations: np.ndarray,
+    orb_coeffs: NDArray,
+    orb_energies: NDArray,
+    orb_occupations: NDArray,
     oe: list[tuple[int, int, float, float]],
-    coeffs: dict[tuple[int, int], np.ndarray],
+    coeffs: dict[tuple[int, int], NDArray],
     obasis: MolecularBasis,
     restricted: bool,
 ):

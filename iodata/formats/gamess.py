@@ -19,6 +19,7 @@
 """GAMESS punch file format."""
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..docstrings import document_load_one
 from ..utils import LineIterator, angstrom
@@ -29,7 +30,7 @@ __all__ = []
 PATTERNS = ["*.dat"]
 
 
-def _read_data(lit: LineIterator) -> tuple:
+def _read_data(lit: LineIterator) -> tuple[str, str, list[str]]:
     """Extract ``title``, ``symmetry`` and ``symbols`` from the punch file."""
     title = next(lit).strip()
     symmetry = next(lit).split()[0]
@@ -46,7 +47,7 @@ def _read_data(lit: LineIterator) -> tuple:
     return title, symmetry, symbols
 
 
-def _read_coordinates(lit: LineIterator, result: dict) -> tuple:
+def _read_coordinates(lit: LineIterator, result: dict[str]) -> tuple[NDArray, NDArray]:
     """Extract ``numbers`` and ``coordinates`` from the punch file."""
     for _ in range(2):
         next(lit)
@@ -67,7 +68,7 @@ def _read_coordinates(lit: LineIterator, result: dict) -> tuple:
     return numbers, coordinates
 
 
-def _read_energy(lit: LineIterator, result: dict) -> tuple:
+def _read_energy(lit: LineIterator, result: dict[str]) -> tuple[float, NDArray]:
     """Extract ``energy`` and ``gradient`` from the punch file."""
     energy = float(next(lit).split()[1])
     natom = len(result["symbols"])
@@ -81,7 +82,7 @@ def _read_energy(lit: LineIterator, result: dict) -> tuple:
     return energy, gradient
 
 
-def _read_hessian(lit: LineIterator, result: dict) -> np.ndarray:
+def _read_hessian(lit: LineIterator, result: dict[str]) -> NDArray:
     """Extract ``hessian`` from the punch file."""
     # check that $HESS is not already parsed
     if "athessian" in result:
@@ -102,7 +103,7 @@ def _read_hessian(lit: LineIterator, result: dict) -> np.ndarray:
     return hessian
 
 
-def _read_masses(lit: LineIterator, result: dict) -> np.ndarray:
+def _read_masses(lit: LineIterator, result: dict[str]) -> NDArray:
     """Extract ``masses`` from the punch file."""
     natom = len(result["symbols"])
     masses = np.zeros(natom, float)
@@ -119,7 +120,7 @@ def _read_masses(lit: LineIterator, result: dict) -> np.ndarray:
     "PUNCH",
     ["title", "energy", "grot", "atgradient", "athessian", "atmasses", "atnums", "atcoords"],
 )
-def load_one(lit: LineIterator) -> dict:
+def load_one(lit: LineIterator) -> dict[str]:
     """Do not edit this docstring. It will be overwritten."""
     result = {}
     while True:

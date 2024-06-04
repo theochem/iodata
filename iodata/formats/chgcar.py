@@ -26,6 +26,7 @@ different conversions to atomic units.
 """
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..docstrings import document_load_one
 from ..periodic import sym2num
@@ -37,7 +38,7 @@ __all__ = []
 PATTERNS = ["CHGCAR*", "AECCAR*"]
 
 
-def _load_vasp_header(lit: LineIterator) -> tuple[str, np.ndarray, np.ndarray, np.ndarray]:
+def _load_vasp_header(lit: LineIterator) -> tuple[str, NDArray, NDArray, NDArray]:
     """Load the cell and atoms from a VASP file format.
 
     Parameters
