@@ -104,7 +104,7 @@ jobs:
 
   publish-to-testpypi:
     name: Publish Python distribution to TestPyPI
-    if: ${{ github.ref == 'refs/heads/main' &&  github.repository_owner == 'reproducible-reporting'}}
+    if: ${{ github.ref == 'refs/heads/main' &&  github.repository_owner == 'theochem'}}
     needs:
     - build
     runs-on: ubuntu-latest
