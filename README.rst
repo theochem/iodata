@@ -22,12 +22,11 @@
 
 IOData
 ======
-|GithubActions|
-|Conda|
-|Pypi|
-|Codecov|
+|pytest|
+|release|
+|CodeFactor|
+|PyPI|
 |Version|
-|CondaVersion|
 |License|
 
 
@@ -85,17 +84,14 @@ environment. Note that there may be API changes between subsequent revisions.
 
 See https://iodata.readthedocs.io/en/latest/install.html for full details.
 
-
-.. |GithubActions| image:: https://github.com/theochem/iodata/actions/workflows/ci.yml/badge.svg?branch=master
-    :target: https://github.com/theochem/iodata/actions/workflows/ci.yml
-.. |Version| image:: https://img.shields.io/pypi/pyversions/iodata.svg
+.. |pytest| image:: https://github.com/theochem/iodata/actions/workflows/pytest.yml/badge.svg
+    :target: https://github.com/theochem/iodata/actions/workflows/pytest.yml
+.. |release| image:: https://github.com/theochem/iodata/actions/workflows/release.yml/badge.svg
+    :target: https://github.com/theochem/iodata/actions/workflows/release.yml
+.. |CodeFactor| image:: https://www.codefactor.io/repository/github/tovrstra/stepup-core/badge
+    :target: https://www.codefactor.io/repository/github/tovrstra/stepup-core
+.. |Version| image:: https://img.shields.io/pypi/pyversions/qc-iodata.svg
 .. |License| image:: https://img.shields.io/github/license/theochem/iodata
-.. |Pypi| image:: https://img.shields.io/pypi/v/iodata.svg
-    :target: https://pypi.python.org/pypi/iodata/0.1.3
-.. |Codecov| image:: https://img.shields.io/codecov/c/github/theochem/iodata/master.svg
-    :target: https://codecov.io/gh/theochem/iodata
-.. |Conda| image:: https://img.shields.io/conda/v/theochem/iodata.svg
-    :target: https://anaconda.org/theochem/iodata
-.. |CondaVersion| image:: https://img.shields.io/conda/pn/theochem/iodata.svg
-    :target: https://anaconda.org/theochem/iodata
+.. |PyPI| image:: https://img.shields.io/pypi/v/qc-iodata.svg
+    :target: https://pypi.python.org/pypi/qc-iodata/
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html
