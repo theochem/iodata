@@ -50,37 +50,14 @@ Please use the following citation in any publication using IOData library:
 Installation
 ------------
 
-..
-    : To install IOData using the conda package management system, install
-    : `miniconda <https://conda.io/miniconda.html>`__ or
-    : `anaconda <https://www.anaconda.com/download>`__ first, and then:
-    :
-    : .. code-block:: bash
-    :
-    :     # Create a horton3 conda environment. (optional, recommended)
-    :     conda create -n horton3
-    :     source activate horton3
-    :
-    :     # Install the stable release.
-    :     conda install -c theochem iodata
-    :
-    : To install IOData with pip, you may want to create a `virtual environment`_,
-    : and then:
-    :
-    : .. code-block:: bash
-    :
-    :     # Install the stable release.
-    :     pip install qc-iodata
-
-In anticipation of the 1.0 release of IOData, install the latest git revision
-as follows:
+In anticipation of the 1.0 release of IOData, install the latest pre-release as follows:
 
 .. code-block:: bash
 
-    python -m pip install git+https://github.com/theochem/iodata.git
+    python -m pip install qc-iodata
 
-Add the ``--user`` argument if you are not working in a virtual or conda
-environment. Note that there may be API changes between subsequent revisions.
+Note that there may still be a few API changes between the pre-release 1.0.0a3
+and the upcoming stable release 1.0.0.
 
 See https://iodata.readthedocs.io/en/latest/install.html for full details.
 

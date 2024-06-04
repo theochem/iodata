@@ -21,9 +21,9 @@ classifiers = [
     "Intended Audience :: Science/Research",
 ]
 dependencies = [
-    "numpy>=1.0",
-    "scipy",
-    "attrs>=20.1.0",
+    "numpy>=1.22",
+    "scipy>=1.8",
+    "attrs>=21.3.0",
 ]
 dynamic = ["version"]
 
