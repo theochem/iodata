@@ -12,13 +12,21 @@ readme = "README.rst"
 license = {file = "LICENSE"}
 requires-python = ">=3.9"
 classifiers = [
+    "Development Status :: 3 - Alpha",
     "Environment :: Console",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Chemistry",
-    "Intended Audience :: Science/Research",
 ]
 dependencies = [
     "numpy>=1.0",
