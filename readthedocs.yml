@@ -1,5 +1,0 @@
-build:
-  image: latest
-
-conda:
-  file: environment.yml
