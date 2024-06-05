@@ -20,11 +20,19 @@
     :
     : --
 
-IOData Changelog
-=================
+Changelog
+#########
 
+All notable changes to this project will be documented in this file.
 
-**Version 1.0.0**
+The format is based on `Keep a Changelog <https://keepachangelog.com/en/1.1.0/>`_,
+and this project adheres to `Semantic Versioning <https://semver.org/spec/v2.0.0.html>`_.
+
+`Unreleased`_
+=============
+
+Changed
+-------
 
 Originally, IOData was a subpackage of HORTON2. It is currently factored out,
 modernized and ported to Python 3. In this process, the API was seriously
@@ -64,3 +72,6 @@ contains the following API-breaking changes:
 In addition, several new attributes were added to the ``IOData`` class, and
 several of them can also be read from file formats we already supported
 previously. This work will be expanded upon in future releases.
+
+
+.. _Unreleased: https://github.com/theochem/iodata
