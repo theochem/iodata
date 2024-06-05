@@ -24,7 +24,7 @@ from fnmatch import fnmatch
 from importlib import import_module
 from pkgutil import iter_modules
 from types import ModuleType
-from typing import Optional
+from typing import Callable, Optional
 
 from .iodata import IOData
 from .utils import LineIterator
@@ -225,7 +225,14 @@ def dump_many(iodatas: Iterator[IOData], filename: str, fmt: Optional[str] = Non
         format_module.dump_many(f, iodatas, **kwargs)
 
 
-def write_input(iodata: IOData, filename: str, fmt: str, template: Optional[str] = None, **kwargs):
+def write_input(
+    iodata: IOData,
+    filename: str,
+    fmt: str,
+    template: Optional[str] = None,
+    atom_line: Optional[Callable] = None,
+    **kwargs,
+):
     """Write input file using an instance of IOData for the specified software format.
 
     Parameters
@@ -238,10 +245,16 @@ def write_input(iodata: IOData, filename: str, fmt: str, template: Optional[str]
         The name of the software for which input file is generated.
     template
         The template input string.
+        If not given, a default template for the selected software is used.
+    atom_line
+        A function taking two arguments: an IOData instance, and an index of
+        the atom. This function returns a formatted line for the corresponding
+        atom. When omitted, a default atom_line function for the selected
+        input format is used.
     **kwargs
         Keyword arguments are passed on to the input-specific write_input function.
 
     """
     input_module = _select_input_module(fmt)
-    with open(filename, "w") as f:
-        input_module.write_input(f, iodata, template=template, **kwargs)
+    with open(filename, "w") as fh:
+        input_module.write_input(fh, iodata, template, atom_line, **kwargs)

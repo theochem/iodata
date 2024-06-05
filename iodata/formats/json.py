@@ -57,13 +57,13 @@ Provenance Information
 The provenance field contains information about how the associated QCSchema object and its
 attributes were generated, provided, and manipulated. A provenance entry expects these fields:
 
-======= ===========
-Field   Description
-======= ===========
-creator **Required**. The program that generated, provided, or manipulated this file.
-version The version of the creator.
-routine The routine of the creator.
-======= ===========
+========= ===========
+Field     Description
+========= ===========
+creator   **Required**. The program that generated, provided, or manipulated this file.
+version   The version of the creator.
+routine   The routine of the creator.
+========= ===========
 
 In QCElemental, only a single provenance entry is permitted. When generating a QCSchema file for use
 with QCElemental, the easiest way to ensure compliance is to leave the provenance field blank, to
