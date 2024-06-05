@@ -16,28 +16,32 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
+# ruff: noqa: SLF001
 """Test iodata.iodata module."""
 
-
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
 import pytest
+from numpy.testing import assert_allclose, assert_equal
 
-from .common import compute_1rdm
-from ..api import load_one, IOData
+from ..api import IOData, load_one
 from ..overlap import compute_overlap
+from .common import compute_1rdm
+
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_typecheck():
     m = IOData(atcoords=np.array([[1, 2, 3], [2, 3, 1]]))
     assert np.issubdtype(m.atcoords.dtype, np.floating)
     assert m.atnums is None
-    m = IOData(atnums=np.array([2.0, 3.0]), atcorenums=np.array([1, 1]),
-               atcoords=np.array([[1, 2, 3], [2, 3, 1]]))
+    m = IOData(
+        atnums=np.array([2.0, 3.0]),
+        atcorenums=np.array([1, 1]),
+        atcoords=np.array([[1, 2, 3], [2, 3, 1]]),
+    )
     assert np.issubdtype(m.atnums.dtype, np.integer)
     assert np.issubdtype(m.atcorenums.dtype, np.floating)
     assert m.atnums is not None
@@ -50,53 +54,50 @@ def test_typecheck_raises():
     pytest.raises(TypeError, IOData, atcoords=np.array([[1, 2], [2, 3]]))
     pytest.raises(TypeError, IOData, atnums=np.array([[1, 2], [2, 3]]))
     # check inconsistency between various attributes
-    atnums, atcorenums, atcoords = np.array(
-        [2, 3]), np.array([1]), np.array([[1, 2, 3]])
-    pytest.raises(TypeError, IOData, atnums=atnums,
-                  atcorenums=atcorenums)
+    atnums, atcorenums, atcoords = np.array([2, 3]), np.array([1]), np.array([[1, 2, 3]])
+    pytest.raises(TypeError, IOData, atnums=atnums, atcorenums=atcorenums)
     pytest.raises(TypeError, IOData, atnums=atnums, atcoords=atcoords)
 
 
 def test_unknown_format():
-    pytest.raises(ValueError, load_one, 'foo.unknown_file_extension')
+    pytest.raises(ValueError, load_one, "foo.unknown_file_extension")
 
 
 def test_dm_water_sto3g_hf():
-    with path('iodata.test.data', 'water_sto3g_hf_g03.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("water_sto3g_hf_g03.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
-    dm = mol.one_rdms['scf']
-    assert_allclose(dm[0, 0], 2.10503807, atol=1.e-7)
-    assert_allclose(dm[0, 1], -0.439115917, atol=1.e-7)
-    assert_allclose(dm[1, 1], 1.93312061, atol=1.e-7)
+    dm = mol.one_rdms["scf"]
+    assert_allclose(dm[0, 0], 2.10503807, atol=1.0e-7)
+    assert_allclose(dm[0, 1], -0.439115917, atol=1.0e-7)
+    assert_allclose(dm[1, 1], 1.93312061, atol=1.0e-7)
 
 
 def test_dm_lih_sto3g_hf():
-    with path('iodata.test.data', 'li_h_3-21G_hf_g09.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("li_h_3-21G_hf_g09.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
 
-    dm = mol.one_rdms['scf']
-    assert_allclose(dm[0, 0], 1.96589709, atol=1.e-7)
-    assert_allclose(dm[0, 1], 0.122114249, atol=1.e-7)
-    assert_allclose(dm[1, 1], 0.0133112081, atol=1.e-7)
-    assert_allclose(dm[10, 10], 4.23924688E-01, atol=1.e-7)
+    dm = mol.one_rdms["scf"]
+    assert_allclose(dm[0, 0], 1.96589709, atol=1.0e-7)
+    assert_allclose(dm[0, 1], 0.122114249, atol=1.0e-7)
+    assert_allclose(dm[1, 1], 0.0133112081, atol=1.0e-7)
+    assert_allclose(dm[10, 10], 4.23924688e-01, atol=1.0e-7)
 
-    dm_spin = mol.one_rdms['scf_spin']
-    assert_allclose(dm_spin[0, 0], 1.40210760E-03, atol=1.e-9)
-    assert_allclose(dm_spin[0, 1], -2.65370873E-03, atol=1.e-9)
-    assert_allclose(dm_spin[1, 1], 5.38701212E-03, atol=1.e-9)
-    assert_allclose(dm_spin[10, 10], 4.23889148E-01, atol=1.e-7)
+    dm_spin = mol.one_rdms["scf_spin"]
+    assert_allclose(dm_spin[0, 0], 1.40210760e-03, atol=1.0e-9)
+    assert_allclose(dm_spin[0, 1], -2.65370873e-03, atol=1.0e-9)
+    assert_allclose(dm_spin[1, 1], 5.38701212e-03, atol=1.0e-9)
+    assert_allclose(dm_spin[10, 10], 4.23889148e-01, atol=1.0e-7)
 
 
 def test_dm_ch3_rohf_g03():
-    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("ch3_rohf_sto3g_g03.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
     olp = compute_overlap(mol.obasis, mol.atcoords)
     dm = compute_1rdm(mol)
-    assert_allclose(np.einsum('ab,ba', olp, dm), 9, atol=1.e-6)
+    assert_allclose(np.einsum("ab,ba", olp, dm), 9, atol=1.0e-6)
 
 
 def test_charge_nelec1():
-    # pylint: disable=protected-access
     # One a blank IOData object, charge and nelec can be set independently.
     mol = IOData()
     mol.nelec = 4
@@ -109,7 +110,6 @@ def test_charge_nelec1():
 
 
 def test_charge_nelec2():
-    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atcorenums = np.array([6.0, 1.0, 1.0, 1.0, 1.0])
@@ -123,7 +123,6 @@ def test_charge_nelec2():
 
 
 def test_charge_nelec3():
-    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atnums = np.array([6, 1, 1, 1, 1])
@@ -141,7 +140,6 @@ def test_charge_nelec3():
 
 
 def test_charge_nelec4():
-    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.atnums = np.array([6, 1, 1, 1, 1])
@@ -154,7 +152,6 @@ def test_charge_nelec4():
 
 
 def test_charge_nelec5():
-    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.charge = 1
@@ -169,7 +166,6 @@ def test_charge_nelec5():
 
 
 def test_charge_nelec6():
-    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.nelec = 8
@@ -184,7 +180,6 @@ def test_charge_nelec6():
 
 
 def test_charge_nelec7():
-    # pylint: disable=protected-access
     # When atcorenums is set, nelec and charge become coupled.
     mol = IOData()
     mol.nelec = 8
@@ -209,7 +204,6 @@ def test_charge_nelec8():
 
 
 def test_charge_nelec9():
-    # pylint: disable=protected-access
     mol = IOData()
     mol.charge = 1.0
     mol.atcorenums = np.array([8.0, 1.0, 1.0])
@@ -222,7 +216,6 @@ def test_charge_nelec9():
 
 
 def test_charge_nelec10():
-    # pylint: disable=protected-access
     mol = IOData()
     mol.charge = 1.0
     mol.atnums = np.array([8, 1, 1])
@@ -263,7 +256,6 @@ def test_charge_nelec13():
 
 
 def test_charge_nelec14():
-    # pylint: disable=protected-access
     mol = IOData()
     mol.nelec = 8
     mol.atcorenums = None
@@ -313,10 +305,9 @@ def test_spinpol2():
 
 
 def test_derived1():
-    # pylint: disable=protected-access
     # When loading a file with molecular orbitals, nelec, charge and spinpol are
     # derived from the mo object:
-    with path('iodata.test.data', 'ch3_rohf_sto3g_g03.fchk') as fn_fchk:
+    with as_file(files("iodata.test.data").joinpath("ch3_rohf_sto3g_g03.fchk")) as fn_fchk:
         mol = load_one(str(fn_fchk))
     assert mol.nelec == mol.mo.nelec
     assert mol.charge == mol.atcorenums.sum() - mol.mo.nelec
@@ -333,7 +324,6 @@ def test_derived1():
 
 
 def test_derived2():
-    # pylint: disable=protected-access
     mol = IOData(atnums=[1, 1, 8], charge=1)
     assert mol._charge is None
     assert mol._nelec == mol.atcorenums.sum() - 1

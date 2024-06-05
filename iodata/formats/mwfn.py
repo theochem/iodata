@@ -18,19 +18,18 @@
 # --
 """Multiwfn MWFN file format."""
 
-
 import numpy as np
+from numpy.typing import NDArray
 
 from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, angstrom
 
-
 __all__ = []
 
 
-PATTERNS = ['*.mwfn']
+PATTERNS = ["*.mwfn"]
 
 
 # From the MWFN chemrxiv paper
@@ -49,6 +48,8 @@ PATTERNS = ['*.mwfn']
 # F shell: F 0, F+1, F-1, F+2, F-2, F+3, F-3
 # G shell: G 0, G+1, G-1, G+2, G-2, G+3, G-3, G+4, G-4
 
+
+# fmt: off
 CONVENTIONS = {
     (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
     (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
@@ -63,12 +64,20 @@ CONVENTIONS = {
                'xyyzz', 'xyyyz', 'xyyyy', 'xxzzz', 'xxyzz', 'xxyyz', 'xxyyy', 'xxxzz',
                'xxxyz', 'xxxyy', 'xxxxz', 'xxxxy', 'xxxxx'],
 }
+# fmt: on
 
 
 def _load_helper_opener(lit: LineIterator) -> dict:
     """Read initial variables at the beginning of a MWFN file."""
-    keys = {"Wfntype": int, "Charge": float, "Naelec": float, "Nbelec": float, "E_tot": float,
-            "VT_ratio": float, "Ncenter": int}
+    keys = {
+        "Wfntype": int,
+        "Charge": float,
+        "Naelec": float,
+        "Nbelec": float,
+        "E_tot": float,
+        "VT_ratio": float,
+        "Ncenter": int,
+    }
     max_count = len(keys)
     count = 0
     data = {}
@@ -76,7 +85,7 @@ def _load_helper_opener(lit: LineIterator) -> dict:
         line = next(lit)
         for name, ftype in keys.items():
             if name in line:
-                data[name] = ftype(line.split('=')[1].strip())
+                data[name] = ftype(line.split("=")[1].strip())
                 count += 1
 
     # check values parsed
@@ -111,7 +120,7 @@ def _load_helper_basis(lit: LineIterator) -> dict:
         line = next(lit)
         for name in keys:
             if name in line:
-                data[name] = int(line.split('=')[1].strip())
+                data[name] = int(line.split("=")[1].strip())
                 count += 1
                 break
     return data
@@ -127,7 +136,7 @@ def _load_helper_atoms(lit: LineIterator, natom: int) -> dict:
 
     # skip lines until "$Centers" section is reached
     line = next(lit)
-    while '$Centers' not in line and line is not None:
+    while "$Centers" not in line and line is not None:
         line = next(lit)
 
     for atom in range(natom):
@@ -159,14 +168,15 @@ def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
     for section, name in zip(sections, var_name):
         if not line.startswith(section):
             lit.error(f"Expected line to start with {section}, but got line={line}.")
-        data[name] = _load_helper_section(lit, nshell, ' ', 0, int)
+        data[name] = _load_helper_section(lit, nshell, " ", 0, int)
         line = next(lit)
     lit.back(line)
     return data
 
 
-def _load_helper_section(lit: LineIterator, nprim: int, start: str, skip: int,
-                         dtype: np.dtype) -> np.ndarray:
+def _load_helper_section(
+    lit: LineIterator, nprim: int, start: str, skip: int, dtype: np.dtype
+) -> NDArray:
     """Read single or multiple line(s) section."""
     section = []
     while len(section) < nprim:
@@ -190,9 +200,9 @@ def _load_helper_mo(lit: LineIterator, n_basis: int, n_mo: int) -> dict:
 
     for index in range(n_mo):
         line = next(lit)
-        while 'Index' not in line:
+        while "Index" not in line:
             line = next(lit)
-        assert line.startswith('Index')
+        assert line.startswith("Index")
         data["mo_numbers"][index] = line.split()[1]
         data["mo_type"][index] = next(lit).split()[1]
         data["mo_energies"][index] = next(lit).split()[1]
@@ -200,7 +210,7 @@ def _load_helper_mo(lit: LineIterator, n_basis: int, n_mo: int) -> dict:
         data["mo_sym"][index] = next(lit).split()[1]
         # skip "$Coeff line
         next(lit)
-        data["mo_coeffs"][:, index] = _load_helper_section(lit, n_basis, '', 0, float)
+        data["mo_coeffs"][:, index] = _load_helper_section(lit, n_basis, "", 0, float)
 
     return data
 
@@ -241,10 +251,10 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # load primitive exponents & coefficients
     if not next(lit).startswith("$Primitive exponents"):
         lit.error("Expected '$Primitive exponents' section!")
-    data["exponents"] = _load_helper_section(lit, data["Nprimshell"], '', 0, float)
+    data["exponents"] = _load_helper_section(lit, data["Nprimshell"], "", 0, float)
     if not next(lit).startswith("$Contraction coefficients"):
         lit.error("Expected '$Contraction coefficients' section!")
-    data["coeffs"] = _load_helper_section(lit, data["Nprimshell"], '', 0, float)
+    data["coeffs"] = _load_helper_section(lit, data["Nprimshell"], "", 0, float)
 
     # get number of basis & molecular orbitals (MO)
     # Note: MWFN includes virtual orbitals, so num_mo equals number independent basis functions
@@ -258,36 +268,43 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     return data
 
 
-@document_load_one("MWFN", ['atcoords', 'atnums', 'atcorenums', 'energy',
-                            'mo', 'obasis', 'extra', 'title'])
+@document_load_one(
+    "MWFN", ["atcoords", "atnums", "atcorenums", "energy", "mo", "obasis", "extra", "title"]
+)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     inp = _load_mwfn_low(lit)
 
     # store certain information loaded from MWFN in extra dictionary
-    extra = {'wfntype': inp['Wfntype'],
-             'nindbasis': inp['Nindbasis'],
-             'mo_sym': inp['mo_sym'],
-             'full_virial_ratio': inp['VT_ratio']}
+    extra = {
+        "wfntype": inp["Wfntype"],
+        "nindbasis": inp["Nindbasis"],
+        "mo_sym": inp["mo_sym"],
+        "full_virial_ratio": inp["VT_ratio"],
+    }
 
     # Build MolecularBasis instance
     # Unlike WFN, MWFN does include orbital expansion coefficients.
     shells = []
     counter = 0
-    for center, stype, ncon in zip(inp['shell_centers'], inp['shell_types'], inp['shell_ncons']):
-        shells.append(Shell(
-            center,
-            [abs(stype)],
-            ['p' if stype < 0 else 'c'],
-            inp['exponents'][counter:counter + ncon],
-            inp['coeffs'][counter:counter + ncon][:, np.newaxis]
-        ))
+    for center, stype, ncon in zip(inp["shell_centers"], inp["shell_types"], inp["shell_ncons"]):
+        shells.append(
+            Shell(
+                center,
+                [abs(stype)],
+                ["p" if stype < 0 else "c"],
+                inp["exponents"][counter : counter + ncon],
+                inp["coeffs"][counter : counter + ncon][:, np.newaxis],
+            )
+        )
         counter += ncon
-    obasis = MolecularBasis(shells, CONVENTIONS, 'L2')
+    obasis = MolecularBasis(shells, CONVENTIONS, "L2")
     # check number of basis functions
     if obasis.nbasis != inp["Nbasis"]:
-        raise ValueError(f"Number of basis in MolecularBasis is not equal to the 'Nbasis'. "
-                         f"{obasis.nbasis} != {inp['Nbasis']}")
+        raise ValueError(
+            f"Number of basis in MolecularBasis is not equal to the 'Nbasis'. "
+            f"{obasis.nbasis} != {inp['Nbasis']}"
+        )
 
     # Determine number of orbitals of each kind.
     if inp["mo_kind"] == "restricted":
@@ -303,27 +320,32 @@ def load_one(lit: LineIterator) -> dict:
         assert (inp["mo_type"] == 0).sum() == 0
     # Build MolecularOrbitals instance
     mo = MolecularOrbitals(
-        inp["mo_kind"], norba, norbb, inp['mo_occs'], inp['mo_coeffs'],
-        inp['mo_energies'], None
+        inp["mo_kind"], norba, norbb, inp["mo_occs"], inp["mo_coeffs"], inp["mo_energies"], None
     )
     # check number of electrons
-    if mo.nelec != inp['Naelec'] + inp['Nbelec']:
-        raise ValueError(f"Number of electrons in MolecularOrbitals is not equal to the sum of "
-                         f"'Naelec' and 'Nbelec'. {mo.nelec} != {inp['Naelec']} + {inp['Nbelec']}")
-    if mo.occsa.sum() != inp['Naelec']:
-        raise ValueError(f"Number of alpha electrons in MolecularOrbitals is not equal to the "
-                         f"'Naelec'. {mo.occsa.sum()} != {inp['Naelec']}")
-    if mo.occsb.sum() != inp['Nbelec']:
-        raise ValueError(f"Number of beta electrons in MolecularOrbitals is not equal to the "
-                         f"'Nbelec'. {mo.occsb.sum()} != {inp['Nbelec']}")
+    if mo.nelec != inp["Naelec"] + inp["Nbelec"]:
+        raise ValueError(
+            f"Number of electrons in MolecularOrbitals is not equal to the sum of "
+            f"'Naelec' and 'Nbelec'. {mo.nelec} != {inp['Naelec']} + {inp['Nbelec']}"
+        )
+    if mo.occsa.sum() != inp["Naelec"]:
+        raise ValueError(
+            f"Number of alpha electrons in MolecularOrbitals is not equal to the "
+            f"'Naelec'. {mo.occsa.sum()} != {inp['Naelec']}"
+        )
+    if mo.occsb.sum() != inp["Nbelec"]:
+        raise ValueError(
+            f"Number of beta electrons in MolecularOrbitals is not equal to the "
+            f"'Nbelec'. {mo.occsb.sum()} != {inp['Nbelec']}"
+        )
 
     return {
-        'title': inp['title'],
-        'atcoords': inp['atcoords'],
-        'atnums': inp['atnums'],
-        'atcorenums': inp['atcorenums'],
-        'obasis': obasis,
-        'mo': mo,
-        'energy': inp['E_tot'],
-        'extra': extra,
+        "title": inp["title"],
+        "atcoords": inp["atcoords"],
+        "atnums": inp["atnums"],
+        "atcorenums": inp["atcorenums"],
+        "obasis": obasis,
+        "mo": mo,
+        "energy": inp["E_tot"],
+        "extra": extra,
     }

@@ -20,31 +20,35 @@
 
 import os
 from contextlib import contextmanager
+from typing import Optional
 
 import numpy as np
-from numpy.testing import assert_equal, assert_allclose
 import pytest
+from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
-from ..overlap import compute_overlap
 from ..basis import convert_conventions
+from ..overlap import compute_overlap
 from ..utils import FileFormatWarning
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
-
-__all__ = ['compute_mulliken_charges', 'compute_1rdm',
-           'compare_mols', 'check_orthonormal', 'load_one_warning']
+__all__ = [
+    "compute_mulliken_charges",
+    "compute_1rdm",
+    "compare_mols",
+    "check_orthonormal",
+    "load_one_warning",
+]
 
 
 def compute_1rdm(iodata):
     """Compute 1-RDM."""
     coeffs, occs = iodata.mo.coeffs, iodata.mo.occs
-    dm = np.dot(coeffs * occs, coeffs.T)
-    return dm
+    return np.dot(coeffs * occs, coeffs.T)
 
 
 def compute_mulliken_charges(iodata):
@@ -59,8 +63,7 @@ def compute_mulliken_charges(iodata):
         basis_center.extend([shell.icenter] * shell.nbasis)
     basis_center = np.array(basis_center)
     # compute atomic populations
-    populations = np.array([np.sum(bp[basis_center == index])
-                            for index in range(iodata.natom)])
+    populations = np.array([np.sum(bp[basis_center == index]) for index in range(iodata.natom)])
     return iodata.atcorenums - np.array(populations)
 
 
@@ -80,15 +83,14 @@ def truncated_file(fn_orig, nline, nadd, tmpdir):
         A temporary directory where the truncated file is stored.
 
     """
-    fn_truncated = '%s/truncated_%i_%s' % (
-        tmpdir, nline, os.path.basename(fn_orig))
-    with open(fn_orig) as f_orig, open(fn_truncated, 'w') as f_truncated:
+    fn_truncated = "%s/truncated_%i_%s" % (tmpdir, nline, os.path.basename(fn_orig))
+    with open(fn_orig) as f_orig, open(fn_truncated, "w") as f_truncated:
         for counter, line in enumerate(f_orig):
             if counter >= nline:
                 break
             f_truncated.write(line)
         for _ in range(nadd):
-            f_truncated.write('\n')
+            f_truncated.write("\n")
     yield fn_truncated
 
 
@@ -129,9 +131,9 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
     assert_equal(mol1.mo.irreps, mol2.mo.irreps)
     # operators and density matrices
     cases = [
-        ('one_ints', ['olp', 'kin_ao', 'na_ao']),
-        ('two_ints', ['er_ao']),
-        ('one_rdms', ['scf', 'scf_spin', 'post_scf', 'post_scf_spin']),
+        ("one_ints", ["olp", "kin_ao", "na_ao"]),
+        ("two_ints", ["er_ao"]),
+        ("one_rdms", ["scf", "scf_spin", "post_scf_ao", "post_scf_spin_ao"]),
     ]
     for attrname, keys in cases:
         d1 = getattr(mol1, attrname)
@@ -153,9 +155,9 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
 
     Parameters
     ----------
-    mo_coeffs : np.ndarray, shape=(nbasis, mo_count)
+    mo_coeffs : NDArray, shape=(nbasis, mo_count)
         Molecular orbital coefficients.
-    ao_overlap : np.ndarray, shape=(nbasis, nbasis)
+    ao_overlap : NDArray, shape=(nbasis, nbasis)
         Atomic orbital overlap matrix.
     atol : float
         Absolute tolerance in deviation from identity matrix.
@@ -164,12 +166,13 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
     # compute MO overlap & number of MO orbitals
     mo_overlap = np.dot(mo_coeffs.T, np.dot(ao_overlap, mo_coeffs))
     mo_count = mo_coeffs.shape[1]
-    message = 'Molecular orbitals are not orthonormal!'
-    assert_allclose(mo_overlap, np.eye(mo_count),
-                    rtol=0., atol=atol, err_msg=message)
+    message = "Molecular orbitals are not orthonormal!"
+    assert_allclose(mo_overlap, np.eye(mo_count), rtol=0.0, atol=atol, err_msg=message)
 
 
-def load_one_warning(filename: str, fmt: str = None, match: str = None, **kwargs):
+def load_one_warning(
+    filename: str, fmt: Optional[str] = None, match: Optional[str] = None, **kwargs
+):
     """Call load_one, catching expected FileFormatWarning.
 
     Parameters
@@ -191,7 +194,7 @@ def load_one_warning(filename: str, fmt: str = None, match: str = None, **kwargs
         The instance of IOData with data loaded from the input files.
 
     """
-    with path('iodata.test.data', filename) as fn:
+    with as_file(files("iodata.test.data").joinpath(filename)) as fn:
         if match is None:
             return load_one(str(fn), fmt, **kwargs)
         with pytest.warns(FileFormatWarning, match=match):

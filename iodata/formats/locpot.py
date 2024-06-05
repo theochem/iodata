@@ -25,22 +25,20 @@ Note that even though the ``CHGCAR`` and ``LOCPOT`` files look very similar, the
 different conversions to atomic units.
 """
 
-
 from ..docstrings import document_load_one
-from ..utils import electronvolt, LineIterator
+from ..utils import LineIterator, electronvolt
 from .chgcar import _load_vasp_grid
-
 
 __all__ = []
 
 
-PATTERNS = ['LOCPOT*']
+PATTERNS = ["LOCPOT*"]
 
 
-@document_load_one("VASP 5 LOCPOT", ['atcoords', 'atnums', 'cellvecs', 'cube', 'title'])
+@document_load_one("VASP 5 LOCPOT", ["atcoords", "atnums", "cellvecs", "cube", "title"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     result = _load_vasp_grid(lit)
     # convert locpot to atomic units
-    result['cube'].data[:] *= electronvolt
+    result["cube"].data[:] *= electronvolt
     return result

@@ -18,20 +18,20 @@
 # --
 """Unit tests for iodata.attrutils."""
 
-
-import attr
+import attrs
 import numpy as np
-from numpy.testing import assert_allclose
 import pytest
+from numpy.testing import assert_allclose
+from numpy.typing import NDArray
 
 from ..attrutils import convert_array_to, validate_shape
 
 
-@attr.s(auto_attribs=True, slots=True, on_setattr=attr.setters.convert)
+@attrs.define
 class FooBar:
     """Just a silly class for testing convert_array_to."""
 
-    spam: np.ndarray = attr.ib(converter=convert_array_to(float))
+    spam: NDArray = attrs.field(converter=convert_array_to(float))
 
 
 def test_convert_array_to_init():
@@ -60,24 +60,22 @@ def test_convert_array_to_assign():
     assert fb.spam is None
 
 
-@attr.s(auto_attribs=True, slots=True, on_setattr=attr.setters.validate)
+@attrs.define
 class Spam:
     """Just a silly class for testing validate_shape."""
 
-    egg0: np.ndarray = attr.ib(validator=validate_shape(1, None, None))
-    egg1: np.ndarray = attr.ib(validator=validate_shape(("egg0", 2), ("egg2", 1)))
-    egg2: np.ndarray = attr.ib(validator=validate_shape(2, ("egg1", 1)))
-    egg3: np.ndarray = attr.ib(validator=validate_shape(("leg", 0)))
-    leg: str = attr.ib(validator=validate_shape(("egg3", 0)))
+    egg0: NDArray = attrs.field(validator=validate_shape(1, None, None))
+    egg1: NDArray = attrs.field(validator=validate_shape(("egg0", 2), ("egg2", 1)))
+    egg2: NDArray = attrs.field(validator=validate_shape(2, ("egg1", 1)))
+    egg3: NDArray = attrs.field(validator=validate_shape(("leg", 0)))
+    leg: str = attrs.field(validator=validate_shape(("egg3", 0)))
 
 
 def test_validate_shape_init():
     # Construct a Spam instance with valid arguments. This should just work
-    spam = Spam(
-        np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde"
-    )
+    spam = Spam(np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde")
     # Double check
-    attr.validate(spam)
+    attrs.validate(spam)
     # Call constructor with invalid arguments
     with pytest.raises(TypeError):
         _ = Spam(
@@ -132,11 +130,9 @@ def test_validate_shape_init():
 
 def test_validate_shape_assign():
     # Construct a Spam instance with valid arguments. This should just work
-    spam = Spam(
-        np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde"
-    )
+    spam = Spam(np.zeros((1, 7, 4)), np.zeros((4, 3)), np.zeros((2, 3)), np.zeros(5), "abcde")
     # Double check
-    attr.validate(spam)
+    attrs.validate(spam)
     # assign invalid attributes
     with pytest.raises(TypeError):
         spam.egg0 = np.zeros((2, 7, 4))
@@ -150,33 +146,33 @@ def test_validate_shape_assign():
         spam.leg = "abcd"
 
 
-@attr.s(slots=True)
+@attrs.define
 class NoName0:
     """Test exception in validate_shape: unsupported item in shape_requirements."""
 
-    xxx: str = attr.ib(validator=validate_shape(["asdfsa", 3]))
+    xxx: str = attrs.field(validator=validate_shape(["asdfsa", 3]))
 
 
-@attr.s(slots=True)
+@attrs.define
 class NoName1:
     """Test exception in validate_shape: unsupported item in shape_requirements."""
 
-    xxx: str = attr.ib(validator=validate_shape(("asdfsa",)))
+    xxx: str = attrs.field(validator=validate_shape(("asdfsa",)))
 
 
-@attr.s(slots=True)
+@attrs.define
 class NoName2:
     """Test exception in validate_shape: other doest not exist."""
 
-    xxx: str = attr.ib(validator=validate_shape("other"))
+    xxx: str = attrs.field(validator=validate_shape("other"))
 
 
-@attr.s(slots=True)
+@attrs.define
 class NoName3:
     """Test exception in validate_shape: other is not an array."""
 
-    xxx: str = attr.ib(validator=validate_shape(("other", 1)))
-    other = attr.ib()
+    xxx: str = attrs.field(validator=validate_shape(("other", 1)))
+    other = attrs.field()
 
 
 def test_validate_shape_exceptions():

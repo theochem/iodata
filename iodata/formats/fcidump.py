@@ -28,41 +28,40 @@ Notes
 
 """
 
-
 from typing import TextIO
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_dump_one
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
-from ..utils import set_four_index_element, LineIterator
-
+from ..utils import LineIterator, set_four_index_element
 
 __all__ = []
 
 
-PATTERNS = ['*FCIDUMP*']
+PATTERNS = ["*FCIDUMP*"]
 
 
-@document_load_one("Molpro 2012 FCIDUMP", ['core_energy', 'one_ints', 'nelec', 'spinpol',
-                                           'two_ints'])
+@document_load_one(
+    "Molpro 2012 FCIDUMP", ["core_energy", "one_ints", "nelec", "spinpol", "two_ints"]
+)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # check header
     line = next(lit)
-    if not line.startswith(' &FCI NORB='):
-        lit.error('Incorrect file header')
+    if not line.startswith(" &FCI NORB="):
+        lit.error("Incorrect file header")
 
     # read info from header
-    words = line[5:].split(',')
+    words = line[5:].split(",")
     header_info = {}
     for word in words:
-        if word.count('=') == 1:
-            key, value = word.split('=')
+        if word.count("=") == 1:
+            key, value = word.split("=")
             header_info[key.strip()] = value.strip()
-    nbasis = int(header_info['NORB'])
-    nelec = int(header_info['NELEC'])
-    spinpol = int(header_info['MS2'])
+    nbasis = int(header_info["NORB"])
+    nelec = int(header_info["NELEC"])
+    spinpol = int(header_info["MS2"])
 
     # skip rest of header
     for line in lit:
@@ -78,9 +77,9 @@ def load_one(lit: LineIterator) -> dict:
     for line in lit:
         words = line.split()
         if len(words) != 5:
-            lit.error('Expecting 5 fields on each data line in FCIDUMP')
+            lit.error("Expecting 5 fields on each data line in FCIDUMP")
         value = float(words[0])
-        if words[3] != '0':
+        if words[3] != "0":
             ii = int(words[1]) - 1
             ij = int(words[2]) - 1
             ik = int(words[3]) - 1
@@ -89,7 +88,7 @@ def load_one(lit: LineIterator) -> dict:
             # FCIDUMP file does not contain duplicate 4-index entries.
             # assert two_mo.get_element(ii,ik,ij,il) == 0.0
             set_four_index_element(two_mo, ii, ik, ij, il, value)
-        elif words[1] != '0':
+        elif words[1] != "0":
             ii = int(words[1]) - 1
             ij = int(words[2]) - 1
             one_mo[ii, ij] = value
@@ -98,11 +97,11 @@ def load_one(lit: LineIterator) -> dict:
             core_energy = value
 
     return {
-        'nelec': nelec,
-        'spinpol': spinpol,
-        'one_ints': {'core_mo': one_mo},
-        'two_ints': {'two_mo': two_mo},
-        'core_energy': core_energy,
+        "nelec": nelec,
+        "spinpol": spinpol,
+        "one_ints": {"core_mo": one_mo},
+        "two_ints": {"two_mo": two_mo},
+        "core_energy": core_energy,
     }
 
 
@@ -112,35 +111,43 @@ contain ``two_mo``.
 """
 
 
-@document_dump_one("Molpro 2012 FCIDUMP", ['one_ints', 'two_ints'],
-                   ['core_energy', 'nelec', 'spinpol'], {}, LOAD_ONE_NOTES)
+@document_dump_one(
+    "Molpro 2012 FCIDUMP",
+    ["one_ints", "two_ints"],
+    ["core_energy", "nelec", "spinpol"],
+    {},
+    LOAD_ONE_NOTES,
+)
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    one_mo = data.one_ints['core_mo']
+    one_mo = data.one_ints["core_mo"]
 
     # Write header
     nactive = one_mo.shape[0]
     nelec = data.nelec or 0
     spinpol = data.spinpol or 0
-    print(f' &FCI NORB={nactive:d},NELEC={nelec:d},MS2={spinpol:d},', file=f)
+    print(f" &FCI NORB={nactive:d},NELEC={nelec:d},MS2={spinpol:d},", file=f)
     print(f"  ORBSYM= {','.join('1' for v in range(nactive))},", file=f)
-    print('  ISYM=1', file=f)
-    print(' &END', file=f)
+    print("  ISYM=1", file=f)
+    print(" &END", file=f)
 
     # Write integrals and core energy
-    two_mo = data.two_ints['two_mo']
-    for i in range(nactive):  # pylint: disable=too-many-nested-blocks
-        for j in range(i + 1):
-            for k in range(nactive):
-                for l in range(k + 1):
-                    if (i * (i + 1)) / 2 + j >= (k * (k + 1)) / 2 + l:
-                        value = two_mo[i, k, j, l]
+    two_mo = data.two_ints["two_mo"]
+    for i0 in range(nactive):
+        for i1 in range(i0 + 1):
+            for i2 in range(nactive):
+                for i3 in range(i2 + 1):
+                    if (i0 * (i0 + 1)) / 2 + i1 >= (i2 * (i2 + 1)) / 2 + i3:
+                        value = two_mo[i0, i2, i1, i3]
                         if value != 0.0:
-                            print(f'{value:23.16e} {i+1:4d} {j+1:4d} {k+1:4d} {l+1:4d}', file=f)
-    for i in range(nactive):
-        for j in range(i + 1):
-            value = one_mo[i, j]
+                            print(
+                                f"{value:23.16e} {i0 + 1:4d} {i1 + 1:4d} {i2 + 1:4d} {i3 + 1:4d}",
+                                file=f,
+                            )
+    for i0 in range(nactive):
+        for i1 in range(i0 + 1):
+            value = one_mo[i0, i1]
             if value != 0.0:
-                print(f'{value:23.16e} {i+1:4d} {j+1:4d} {0:4d} {0:4d}', file=f)
+                print(f"{value:23.16e} {i0 + 1:4d} {i1 + 1:4d} {0:4d} {0:4d}", file=f)
     if data.core_energy is not None:
-        print(f'{data.core_energy:23.16e} {0:4d} {0:4d} {0:4d} {0:4d}', file=f)
+        print(f"{data.core_energy:23.16e} {0:4d} {0:4d} {0:4d} {0:4d}", file=f)

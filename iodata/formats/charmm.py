@@ -29,26 +29,22 @@ y-coordinate, z-coordinate, segment identifier, residue identifier and a weighti
 
 """
 
-
-from typing import Tuple
-
 import numpy as np
 
 from ..docstrings import document_load_one
-
-from ..utils import angstrom, amu, LineIterator
+from ..utils import LineIterator, amu, angstrom
 
 __all__ = []
 
 
-PATTERNS = ['*.crd']
+PATTERNS = ["*.crd"]
 
 
-@document_load_one('CRD', ['atcoords', 'atffparams', 'atmasses', 'extra'], ['title'])
+@document_load_one("CRD", ["atcoords", "atffparams", "atmasses", "extra"], ["title"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Read title section
-    title = ''
+    title = ""
     while True:
         try:
             line = next(lit)
@@ -69,31 +65,26 @@ def load_one(lit: LineIterator) -> dict:
     segid = np.array(data[4])
     resid = np.array(data[5])
     atmasses = np.array(data[6])
-    atffparams = {
-        'attypes': attypes,
-        'resnames': resnames,
-        'resnums': resnums
-    }
+    atffparams = {"attypes": attypes, "resnames": resnames, "resnums": resnums}
     extra = {
-        'segid': segid,
-        'resid': resid,
+        "segid": segid,
+        "resid": resid,
     }
-    result = {
-        'atcoords': atcoords,
-        'atffparams': atffparams,
-        'atmasses': atmasses,
-        'extra': extra,
-        'title': title,
+    return {
+        "atcoords": atcoords,
+        "atffparams": atffparams,
+        "atmasses": atmasses,
+        "extra": extra,
+        "title": title,
     }
-    return result
 
 
-def _helper_read_crd(lit: LineIterator) -> Tuple:
+def _helper_read_crd(lit: LineIterator) -> tuple:
     """Read CHARMM crd file."""
     # Read the line for number of atoms.
     natom = next(lit)
     if natom is None or not natom.strip().isdigit():
-        lit.error('The number of atoms must be an integer.')
+        lit.error("The number of atoms must be an integer.")
     natom = int(natom)
     # Read the atom lines
     resnums = []

@@ -25,27 +25,32 @@ in mind that several of these write incorrect versions of the file format, but t
 errors are corrected when loading them with IOData.
 """
 
-
-from typing import Tuple, Union, TextIO
 import copy
+from typing import TextIO, Union
 
-import attr
+import attrs
 import numpy as np
+from numpy.typing import NDArray
 
-from ..basis import (angmom_its, angmom_sti, MolecularBasis, Shell,
-                     convert_conventions, HORTON2_CONVENTIONS)
-from ..docstrings import document_load_one, document_dump_one
+from ..basis import (
+    HORTON2_CONVENTIONS,
+    MolecularBasis,
+    Shell,
+    angmom_its,
+    angmom_sti,
+    convert_conventions,
+)
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
-from ..utils import angstrom, LineIterator
-
+from ..periodic import num2sym, sym2num
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 
 
-PATTERNS = ['*.molden.input', '*.molden']
+PATTERNS = ["*.molden.input", "*.molden"]
 
 # From the Molden format documentation:
 #    5D: D 0, D+1, D-1, D+2, D-2
@@ -59,30 +64,53 @@ PATTERNS = ['*.molden.input', '*.molden']
 #        xxyy xxzz yyzz xxyz yyxz zzxy
 
 CONVENTIONS = {
-    (0, 'c'): ['1'],
-    (1, 'c'): ['x', 'y', 'z'],
-    (2, 'p'): HORTON2_CONVENTIONS[(2, 'p')],
-    (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-    (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
-    (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-    (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
-    (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
-               'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
+    (0, "c"): ["1"],
+    (1, "c"): ["x", "y", "z"],
+    (2, "p"): HORTON2_CONVENTIONS[(2, "p")],
+    (2, "c"): ["xx", "yy", "zz", "xy", "xz", "yz"],
+    (3, "p"): HORTON2_CONVENTIONS[(3, "p")],
+    (3, "c"): ["xxx", "yyy", "zzz", "xyy", "xxy", "xxz", "xzz", "yzz", "yyz", "xyz"],
+    (4, "p"): HORTON2_CONVENTIONS[(4, "p")],
+    (4, "c"): [
+        "xxxx",
+        "yyyy",
+        "zzzz",
+        "xxxy",
+        "xxxz",
+        "xyyy",
+        "yyyz",
+        "xzzz",
+        "yzzz",
+        "xxyy",
+        "xxzz",
+        "yyzz",
+        "xxyz",
+        "xyyz",
+        "xyzz",
+    ],
     # H fubnctions are not officially supported by the Molden format but PSI4
     # and ORCA write out such files anyway.
-    (5, 'p'): HORTON2_CONVENTIONS[(5, 'p')],
+    (5, "p"): HORTON2_CONVENTIONS[(5, "p")],
 }
 
 
-@document_load_one("Molden", ['atcoords', 'atnums', 'atcorenums', 'mo', 'obasis'], ['title'])
-def load_one(lit: LineIterator) -> dict:
+@document_load_one(
+    "Molden",
+    ["atcoords", "atnums", "atcorenums", "mo", "obasis"],
+    ["title"],
+    {
+        "norm_threshold": "When the normalization of one of the orbitals exceeds "
+        "norm_threshold, a correction is attempted or an error "
+        "is raised when no suitable correction can be found."
+    },
+)
+def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     result = _load_low(lit)
-    _fix_molden_from_buggy_codes(result, lit)
+    _fix_molden_from_buggy_codes(result, lit, norm_threshold)
     return result
 
 
-# pylint: disable=too-many-branches,too-many-statements
 def _load_low(lit: LineIterator) -> dict:
     """Load data from a MOLDEN input file format, without trying to fix errors.
 
@@ -99,7 +127,7 @@ def _load_low(lit: LineIterator) -> dict:
         ``title`` key and its corresponding value as well.
 
     """
-    pure_angmoms = set([])
+    pure_angmoms = set()
     atnums = None
     atcoords = None
     obasis = None
@@ -112,8 +140,8 @@ def _load_low(lit: LineIterator) -> dict:
     title = None
 
     line = next(lit)
-    if line != '[Molden Format]\n':
-        lit.error('Molden header not found')
+    if line.strip() != "[Molden Format]":
+        lit.error("Molden header not found")
     # The order of sections, denoted by "[...]", is not fixed in the Molden
     # format, so we need a loop that checks for all possible sections at
     # each iteration. If needed, the contents of the section is read.
@@ -126,36 +154,36 @@ def _load_low(lit: LineIterator) -> dict:
             # than reaching the end of the file.
             break
         # settings for pure or Cartesian shells.
-        if line.startswith('[5d]') or line.startswith('[5d7f]'):
+        if line.startswith(("[5d]", "[5d7f]")):
             pure_angmoms.add(2)
             pure_angmoms.add(3)
-        elif line.lower().startswith('[7f]'):
+        elif line.lower().startswith("[7f]"):
             pure_angmoms.add(3)
-        elif line.lower().startswith('[5d10f]'):
+        elif line.lower().startswith("[5d10f]"):
             pure_angmoms.add(2)
-        elif line.lower().startswith('[9g]'):
+        elif line.lower().startswith("[9g]"):
             pure_angmoms.add(4)
             # H functions are not part of the Molden standard but the
             # following line is compatible with files containing H functions
             # writen by PSI4 and ORCA.
             pure_angmoms.add(5)
         # title
-        elif line == '[title]':
+        elif line == "[title]":
             title = next(lit).strip()
         # atoms
-        elif line.startswith('[atoms]'):
-            if 'au' in line:
+        elif line.startswith("[atoms]"):
+            if "au" in line:
                 cunit = 1.0
-            elif 'angs' in line:
+            elif "angs" in line:
                 cunit = angstrom
             atnums, atcorenums, atcoords = _load_helper_atoms(lit, cunit)
         # we only support Gaussian-type orbitals (gto's)
-        elif line == '[gto]':
+        elif line == "[gto]":
             obasis = _load_helper_obasis(lit)
-        elif line == '[sto]':
-            lit.error('Slater-type orbitals are not supported by IODATA.')
+        elif line == "[sto]":
+            lit.error("Slater-type orbitals are not supported by IODATA.")
         # molecular-orbital coefficients.
-        elif line == '[mo]':
+        elif line == "[mo]":
             data_alpha, data_beta = _load_helper_coeffs(lit)
             occsa, coeffsa, energiesa, irrepsa = data_alpha
             occsb, coeffsb, energiesb, irrepsb = data_beta
@@ -165,38 +193,40 @@ def _load_low(lit: LineIterator) -> dict:
     for shell in obasis.shells:
         # Code only has to work for segmented contractions
         if shell.angmoms[0] in pure_angmoms:
-            shell.kinds[0] = 'p'
+            shell.kinds[0] = "p"
 
     if coeffsb is None:
         if coeffsa.shape[0] != obasis.nbasis:
             lit.error("Number of alpha orbital coefficients does not match the size of the basis.")
         mo = MolecularOrbitals(
-            'restricted', coeffsa.shape[1], coeffsa.shape[1],
-            occsa, coeffsa, energiesa, irrepsa)
+            "restricted", coeffsa.shape[1], coeffsa.shape[1], occsa, coeffsa, energiesa, irrepsa
+        )
     else:
         if coeffsb.shape[0] != obasis.nbasis:
             lit.error("Number of beta orbital coefficients does not match the size of the basis.")
         mo = MolecularOrbitals(
-            'unrestricted', coeffsa.shape[1], coeffsb.shape[1],
+            "unrestricted",
+            coeffsa.shape[1],
+            coeffsb.shape[1],
             np.concatenate((occsa, occsb), axis=0),
             np.concatenate((coeffsa, coeffsb), axis=1),
             np.concatenate((energiesa, energiesb), axis=0),
-            irrepsa + irrepsb)
+            irrepsa + irrepsb,
+        )
 
     result = {
-        'atcoords': atcoords,
-        'atnums': atnums,
-        'obasis': obasis,
-        'mo': mo,
-        'atcorenums': atcorenums,
+        "atcoords": atcoords,
+        "atnums": atnums,
+        "obasis": obasis,
+        "mo": mo,
+        "atcorenums": atcorenums,
     }
     if title is not None:
-        result['title'] = title
+        result["title"] = title
     return result
 
 
-def _load_helper_atoms(lit: LineIterator, cunit: float) -> \
-        Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator, cunit: float) -> tuple[NDArray, NDArray, NDArray]:
     """Load element numbers and coordinates."""
     atnums = []
     atcorenums = []
@@ -243,14 +273,14 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
             coeffs = np.zeros((nprim, 1))
             for iprim in range(nprim):
                 words = next(lit).split()
-                exponents[iprim] = float(words[0].replace('D', 'E'))
-                coeffs[iprim, 0] = float(words[1].replace('D', 'E'))
+                exponents[iprim] = float(words[0].replace("D", "E"))
+                coeffs[iprim, 0] = float(words[1].replace("D", "E"))
             # Unless changed later, all shells are assumed to be Cartesian.
-            shells.append(Shell(icenter, [angmom], ['c'], exponents, coeffs))
-    return MolecularBasis(shells, CONVENTIONS, 'L2')
+            shells.append(Shell(icenter, [angmom], ["c"], exponents, coeffs))
+    return MolecularBasis(shells, CONVENTIONS, "L2")
 
 
-def _load_helper_coeffs(lit: LineIterator) -> Tuple:
+def _load_helper_coeffs(lit: LineIterator) -> tuple:
     """Load the orbital coefficients."""
     occsa = []
     coeffsa = []
@@ -274,24 +304,24 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
         # An bracket also means we are done and a new section has started.
         # Other parts of the parser may need this section line, so we push it
         # back.
-        if '[' in line:
+        if "[" in line:
             lit.back(line)
             break
         # prepare array with orbital coefficients
         info = {}
         lit.back(line)
         for line in lit:
-            if line.count('=') != 1:
+            if line.count("=") != 1:
                 lit.back(line)
                 break
-            key, value = line.split('=')
+            key, value = line.split("=")
             info[key.strip().lower()] = value
-        occ = float(info['occup'])
+        occ = float(info["occup"])
         col = []
-        energy = float(info['ene'])
-        irrep = info.get('sym', '??').strip()
+        energy = float(info["ene"])
+        irrep = info.get("sym", "??").strip()
         # store column of coefficients, i.e. one orbital, energy and occ
-        if info['spin'].strip().lower() == 'alpha':
+        if info["spin"].strip().lower() == "alpha":
             occsa.append(occ)
             coeffsa.append(col)
             energiesa.append(energy)
@@ -324,9 +354,13 @@ def _load_helper_coeffs(lit: LineIterator) -> Tuple:
     return (occsa, coeffsa, energiesa, irrepsa), (occsb, coeffsb, energiesb, irrepsb)
 
 
-def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
-                            orb_alpha: np.ndarray, orb_beta: np.ndarray,
-                            threshold: float = 1e-4) -> bool:
+def _is_normalized_properly(
+    obasis: MolecularBasis,
+    atcoords: NDArray,
+    orb_alpha: NDArray,
+    orb_beta: NDArray,
+    norm_threshold: float = 1e-4,
+) -> bool:
     """Test the normalization of the occupied and virtual orbitals.
 
     Parameters
@@ -339,8 +373,8 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
         The alpha orbitals coefficients
     orb_beta
         The beta orbitals (may be None).
-    threshold
-        When the maximal error on the norm is large than the threshold,
+    norm_threshold
+        When the error on one of the orbitals norm exceeds norm_threshold,
         the function returns False. True is returned otherwise.
 
     """
@@ -348,7 +382,6 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
     # every attempt because also the primitive normalization may differ in
     # different cases.
     olp = compute_overlap(obasis, atcoords)
-
     # Convenient code for debugging files coming from crappy QC codes.
     # np.set_printoptions(linewidth=5000, precision=2, suppress=True, threshold=100000)
     # coeffs = orb_alpha._coeffs
@@ -375,7 +408,7 @@ def _is_normalized_properly(obasis: MolecularBasis, atcoords: np.ndarray,
             error_max = max(error_max, abs(norm - 1))
 
     # final judgement
-    return error_max <= threshold
+    return error_max <= norm_threshold
 
 
 def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
@@ -385,18 +418,33 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
     different sign conventions for some of the pure functions.
     """
     orca_conventions = {
-        (0, 'c'): ['1'],
-        (1, 'c'): ['x', 'y', 'z'],
-        (2, 'p'): ['c0', 'c1', 's1', 'c2', 's2'],
-        (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-        (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
-        (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-        (4, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4'],
-        (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
-                   'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
+        (0, "c"): ["1"],
+        (1, "c"): ["x", "y", "z"],
+        (2, "p"): ["c0", "c1", "s1", "c2", "s2"],
+        (2, "c"): ["xx", "yy", "zz", "xy", "xz", "yz"],
+        (3, "p"): ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3"],
+        (3, "c"): ["xxx", "yyy", "zzz", "xyy", "xxy", "xxz", "xzz", "yzz", "yyz", "xyz"],
+        (4, "p"): ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3", "-c4", "-s4"],
+        (4, "c"): [
+            "xxxx",
+            "yyyy",
+            "zzzz",
+            "xxxy",
+            "xxxz",
+            "xyyy",
+            "yyyz",
+            "xzzz",
+            "yzzz",
+            "xxyy",
+            "xxzz",
+            "yyzz",
+            "xxyz",
+            "xyyz",
+            "xyzz",
+        ],
         # H functions are not officialy supported by Molden, but this is how
         # ORCA writes Molden files anyway:
-        (5, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3', '-c4', '-s4', 'c5', 's5'],
+        (5, "p"): ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3", "-c4", "-s4", "c5", "s5"],
     }
     fixed_shells = []
     for shell in obasis.shells:
@@ -412,17 +460,16 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
                 correction = gob_cart_normalization(exponent, np.array([0, 0, 0]))
             elif angmom == 1:
                 correction = gob_cart_normalization(exponent, np.array([1, 0, 0]))
-            elif angmom == 2 and kind == 'p':
+            elif angmom == 2 and kind == "p":
                 correction = gob_cart_normalization(exponent, np.array([1, 1, 0]))
-            elif angmom == 3 and kind == 'p':
+            elif angmom == 3 and kind == "p":
                 correction = gob_cart_normalization(exponent, np.array([1, 1, 1]))
-            elif angmom == 4 and kind == 'p':
+            elif angmom == 4 and kind == "p":
                 correction = gob_cart_normalization(exponent, np.array([2, 1, 1]))
-            elif angmom == 5 and kind == 'p':
+            elif angmom == 5 and kind == "p":
                 correction = gob_cart_normalization(exponent, np.array([5, 0, 0]))
             if correction != 1.0:
                 fixed_shell.coeffs[iprim, 0] /= correction
-            iprim += 1
     return MolecularBasis(fixed_shells, orca_conventions, obasis.primitive_normalization)
 
 
@@ -446,9 +493,9 @@ def _fix_obasis_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
                 correction = gob_cart_normalization(exponent, np.array([0, 0, 0]))
             elif angmom == 1:
                 correction = gob_cart_normalization(exponent, np.array([1, 0, 0]))
-            elif angmom == 2 and kind == 'p':
+            elif angmom == 2 and kind == "p":
                 correction = gob_cart_normalization(exponent, np.array([1, 1, 0])) / np.sqrt(3.0)
-            elif angmom == 3 and kind == 'p':
+            elif angmom == 3 and kind == "p":
                 correction = gob_cart_normalization(exponent, np.array([1, 1, 1])) / np.sqrt(15.0)
             # elif angmom == 4 and kind == 'p': ##  ! Not tested
             #     correction = gob_cart_normalization(exponent, np.array([2, 1, 1]))/np.sqrt(105.0)
@@ -476,11 +523,11 @@ def _fix_obasis_turbomole(obasis: MolecularBasis) -> Union[MolecularBasis, None]
         for iprim in range(shell.nprim):
             # Default 1.0: do not to correct anything, unless we know how to correct.
             correction = 1.0
-            if angmom == 2 and kind == 'c':
+            if angmom == 2 and kind == "c":
                 correction = 1.0 / np.sqrt(3.0)
-            elif angmom == 3 and kind == 'c':
+            elif angmom == 3 and kind == "c":
                 correction = 1.0 / np.sqrt(15.0)
-            elif angmom == 4 and kind == 'c':
+            elif angmom == 4 and kind == "c":
                 correction = 1.0 / np.sqrt(105.0)
             if correction != 1.0:
                 corrected = True
@@ -503,9 +550,7 @@ def _fix_obasis_normalize_contractions(obasis: MolecularBasis) -> MolecularBasis
     fixed_shells = []
     for shell in obasis.shells:
         shell_obasis = MolecularBasis(
-            [attr.evolve(shell, icenter=0)],
-            obasis.conventions,
-            obasis.primitive_normalization
+            [attrs.evolve(shell, icenter=0)], obasis.conventions, obasis.primitive_normalization
         )
         # 2) Get the first diagonal element of the overlap matrix
         olpdiag = compute_overlap(shell_obasis, np.zeros((1, 3), float))[0, 0]
@@ -549,7 +594,45 @@ def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     return None
 
 
-def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
+def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
+    """Return correction values for the MO coefficients.
+
+    CFOUR (up to current 2.1) uses different normalization conventions for Cartesian
+    AO basis functions. The coefficients need to be divided by the returned
+    correction factor.
+    """
+    correction = []
+    corrected = False
+    for shell in obasis.shells:
+        # We can safely assume segmented shells.
+        assert shell.ncon == 1
+        angmom = shell.angmoms[0]
+        kind = shell.kinds[0]
+        factors = None
+        if kind == "c":
+            if angmom == 2:
+                factors = np.array([1.0 / np.sqrt(3.0)] * 3 + [1.0] * 3)
+            elif angmom == 3:
+                factors = np.array([1.0 / np.sqrt(15.0)] * 3 + [1.0 / (np.sqrt(3.0))] * 6 + [1.0])
+            elif angmom == 4:
+                factors = np.array(
+                    [1.0 / np.sqrt(105.0)] * 3
+                    + [1.0 / (np.sqrt(15.0))] * 6
+                    + [1.0 / 3.0] * 3
+                    + [1.0 / (np.sqrt(3.0))] * 3
+                )
+        if factors is None:
+            factors = np.ones(shell.nbasis)
+        else:
+            assert len(factors) == shell.nbasis
+            corrected = True
+        correction.append(factors)
+    if corrected:
+        return np.concatenate(correction)
+    return None
+
+
+def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold: float = 1e-4):
     """Detect errors in the data loaded from a molden or mkl file and correct.
 
     This function can recognize erroneous files created by PSI4, ORCA and
@@ -561,80 +644,103 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator):
         A dictionary with the data loaded in the ``load_molden`` function.
     lit
         The line iterator to read the data from, used for warnings.
+    norm_threshold
+        When the error on one of the orbitals norm exceeds norm_threshold,
+        the (corrected) data loaded from the Molden file is considered to be
+        incorrect, in which case other corrections are tested or an exception
+        is raised when no more corrections can be applied.
 
     """
-    obasis = result['obasis']
-    atcoords = result['atcoords']
-    if result['mo'].kind == 'restricted':
-        coeffsa = result['mo'].coeffs
+    obasis = result["obasis"]
+    atcoords = result["atcoords"]
+    if result["mo"].kind == "restricted":
+        coeffsa = result["mo"].coeffs
         # Skip testing coeffsb if it is the same array as coeffsa.
         coeffsb = None
-    elif result['mo'].kind == 'unrestricted':
-        coeffsa = result['mo'].coeffsa
-        coeffsb = result['mo'].coeffsb
+    elif result["mo"].kind == "unrestricted":
+        coeffsa = result["mo"].coeffsa
+        coeffsb = result["mo"].coeffsb
     else:
-        raise ValueError('Molecular orbital kind={0} not recognized'.format(result['mo'].kind))
+        raise ValueError("Molecular orbital kind={} not recognized".format(result["mo"].kind))
 
-    if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb):
+    if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         # The file is good. No need to change obasis.
         return
 
     # --- ORCA
     orca_obasis = _fix_obasis_orca(obasis)
-    if _is_normalized_properly(orca_obasis, atcoords, coeffsa, coeffsb):
-        lit.warn('Corrected for typical ORCA errors in Molden/MKL file.')
-        result['obasis'] = orca_obasis
+    if _is_normalized_properly(orca_obasis, atcoords, coeffsa, coeffsb, norm_threshold):
+        lit.warn("Corrected for typical ORCA errors in Molden/MKL file.")
+        result["obasis"] = orca_obasis
         return
 
     # --- PSI4 < 1.0
     psi4_obasis = _fix_obasis_psi4(obasis)
-    if psi4_obasis is not None and \
-       _is_normalized_properly(psi4_obasis, atcoords, coeffsa, coeffsb):
-        lit.warn('Corrected for PSI4 < 1.0 errors in Molden/MKL file.')
-        result['obasis'] = psi4_obasis
+    if psi4_obasis is not None and _is_normalized_properly(
+        psi4_obasis, atcoords, coeffsa, coeffsb, norm_threshold
+    ):
+        lit.warn("Corrected for PSI4 < 1.0 errors in Molden/MKL file.")
+        result["obasis"] = psi4_obasis
         return
 
     # -- Turbomole
     turbom_obasis = _fix_obasis_turbomole(obasis)
-    if turbom_obasis is not None and \
-       _is_normalized_properly(turbom_obasis, atcoords, coeffsa, coeffsb):
-        lit.warn('Corrected for Turbomole errors in Molden/MKL file.')
-        result['obasis'] = turbom_obasis
+    if turbom_obasis is not None and _is_normalized_properly(
+        turbom_obasis, atcoords, coeffsa, coeffsb, norm_threshold
+    ):
+        lit.warn("Corrected for Turbomole errors in Molden/MKL file.")
+        result["obasis"] = turbom_obasis
         return
+
+    # --- CFOUR 2.1
+    cfour_coeff_correction = _fix_mo_coeffs_cfour(obasis)
+    if cfour_coeff_correction is not None:
+        coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
+        coeffsb_cfour = None if coeffsb is None else coeffsb / cfour_coeff_correction[:, np.newaxis]
+        if _is_normalized_properly(obasis, atcoords, coeffsa_cfour, coeffsb_cfour, norm_threshold):
+            lit.warn("Corrected for CFOUR 2.1 errors in Molden/MKL file.")
+            result["obasis"] = obasis
+            if result["mo"].kind == "restricted":
+                result["mo"].coeffs[:] = coeffsa_cfour
+            else:
+                result["mo"].coeffsa[:] = coeffsa_cfour
+                result["mo"].coeffsb[:] = coeffsb_cfour
+            return
 
     # --- Renormalized contractions
     normed_obasis = _fix_obasis_normalize_contractions(obasis)
-    if _is_normalized_properly(normed_obasis, atcoords, coeffsa, coeffsb):
-        lit.warn('Corrected for unnormalized contractions in Molden/MKL file.')
-        result['obasis'] = normed_obasis
+    if _is_normalized_properly(normed_obasis, atcoords, coeffsa, coeffsb, norm_threshold):
+        lit.warn("Corrected for unnormalized contractions in Molden/MKL file.")
+        result["obasis"] = normed_obasis
         return
 
     # --- PSI4 <= 1.3.2
     psi4_coeff_correction = _fix_mo_coeffs_psi4(obasis)
     if psi4_coeff_correction is not None:
         coeffsa_psi4 = coeffsa / psi4_coeff_correction[:, np.newaxis]
-        if coeffsb is None:
-            coeffsb_psi4 = None
-        else:
-            coeffsb_psi4 = coeffsb / psi4_coeff_correction[:, np.newaxis]
-        if _is_normalized_properly(normed_obasis, atcoords, coeffsa_psi4, coeffsb_psi4):
-            lit.warn('Corrected for PSI4 <= 1.3.2 errors in Molden/MKL file.')
-            result['obasis'] = normed_obasis
-            if result['mo'].kind == 'restricted':
-                result['mo'].coeffs[:] = coeffsa_psi4
+        coeffsb_psi4 = None if coeffsb is None else coeffsb / psi4_coeff_correction[:, np.newaxis]
+        if _is_normalized_properly(
+            normed_obasis, atcoords, coeffsa_psi4, coeffsb_psi4, norm_threshold
+        ):
+            lit.warn("Corrected for PSI4 <= 1.3.2 errors in Molden/MKL file.")
+            result["obasis"] = normed_obasis
+            if result["mo"].kind == "restricted":
+                result["mo"].coeffs[:] = coeffsa_psi4
             else:
-                result['mo'].coeffsa[:] = coeffsa_psi4
-                result['mo'].coeffsb[:] = coeffsb_psi4
+                result["mo"].coeffsa[:] = coeffsa_psi4
+                result["mo"].coeffsb[:] = coeffsb_psi4
             return
 
-    lit.error('Could not correct the data read from {}. The molden or mkl file '
-              'you are trying to load contains errors. Please make an issue '
-              'here: https://github.com/theochem/iodata/issues, and attach '
-              'this file. Please provide one or more small files causing this '
-              'error. Thanks!')
+    lit.error(
+        "Could not correct the data read from {}. The molden or mkl file "
+        "you are trying to load contains errors. Please make an issue "
+        "here: https://github.com/theochem/iodata/issues, and attach "
+        "this file. Please provide one or more small files causing this "
+        "error. Thanks!"
+    )
 
 
-@document_dump_one("Molden", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcorenums', 'title'])
+@document_dump_one("Molden", ["atcoords", "atnums", "mo", "obasis"], ["atcorenums", "title"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     # occs_aminusb is not supported
@@ -642,25 +748,26 @@ def dump_one(f: TextIO, data: IOData):
         raise ValueError("Cannot write Molden file when mo.occs_aminusb is set.")
 
     # Print the header
-    f.write('[Molden Format]\n')
+    f.write("[Molden Format]\n")
     if data.title is not None:
-        f.write('[Title]\n')
-        f.write(' {}\n'.format(data.title))
+        f.write("[Title]\n")
+        f.write(f" {data.title}\n")
 
     # Print the elements numbers and the coordinates
-    f.write('[Atoms] AU\n')
+    f.write("[Atoms] AU\n")
     for iatom in range(data.natom):
         atnum = data.atnums[iatom]
         atcorenum = data.atcorenums[iatom]
         x, y, z = data.atcoords[iatom]
-        f.write('{:2s} {:3d} {:3.0f}  {:25.18f} {:25.18f} {:25.18f}\n'.format(
-            num2sym[atnum].ljust(2), iatom + 1, atcorenum, x, y, z
-        ))
-    f.write('\n')
+        f.write(
+            f"{num2sym[atnum].ljust(2):2s} {iatom + 1:3d} {atcorenum:3.0f}  "
+            f"{x:25.18f} {y:25.18f} {z:25.18f}\n"
+        )
+    f.write("\n")
 
     # Print the basis set
     if data.obasis is None:
-        raise IOError('A Gaussian orbital basis is required to write a molden file.')
+        raise OSError("A Gaussian orbital basis is required to write a molden file.")
     obasis = data.obasis
 
     # Figure out the pure/Cartesian situation. Note that the Molden
@@ -672,31 +779,31 @@ def dump_one(f: TextIO, data: IOData):
         for angmom, kind in zip(shell.angmoms, shell.kinds):
             if angmom in angmom_kinds:
                 if kind != angmom_kinds[angmom]:
-                    raise IOError('Molden format does not support mixed '
-                                  'pure+Cartesian functions for one '
-                                  'angular momentum.')
+                    raise OSError(
+                        "Molden format does not support mixed pure+Cartesian functions for one "
+                        "angular momentum."
+                    )
             else:
                 angmom_kinds[angmom] = kind
 
     # Fill in some defaults (Cartesian) for angmom kinds if needed.
-    angmom_kinds.setdefault(2, 'c')
-    angmom_kinds.setdefault(3, 'c')
-    angmom_kinds.setdefault(4, 'c')
-    angmom_kinds.setdefault(5, 'c')
+    angmom_kinds.setdefault(2, "c")
+    angmom_kinds.setdefault(3, "c")
+    angmom_kinds.setdefault(4, "c")
+    angmom_kinds.setdefault(5, "c")
 
     # Write out the Cartesian/Pure conventions. What a messy format...
-    if angmom_kinds[2] == 'p':
-        if angmom_kinds[3] == 'p':
-            f.write('[5D]\n')
+    if angmom_kinds[2] == "p":
+        if angmom_kinds[3] == "p":
+            f.write("[5D]\n")
         else:
-            f.write('[5D10F]\n')
-    else:
-        if angmom_kinds[3] == 'p':
-            f.write('[7F]\n')
-    if angmom_kinds[4] == 'p':
-        f.write('[9G]\n')
+            f.write("[5D10F]\n")
+    elif angmom_kinds[3] == "p":
+        f.write("[7F]\n")
+    if angmom_kinds[4] == "p":
+        f.write("[9G]\n")
 
-    f.write('[GTO]\n')
+    f.write("[GTO]\n")
     last_icenter = -1
     # The shells must be sorted by center.
     for shell in sorted(obasis.shells, key=(lambda s: s.icenter)):
@@ -704,54 +811,69 @@ def dump_one(f: TextIO, data: IOData):
             if last_icenter != -1:
                 f.write("\n")
             last_icenter = shell.icenter
-            f.write('%3i 0\n' % (shell.icenter + 1))
+            f.write("%3i 0\n" % (shell.icenter + 1))
         # Write out as a segmented basis. Molden format does not support
         # generalized contractions.
         for iangmom, angmom in enumerate(shell.angmoms):
-            f.write(' {:1s}  {:3d} 1.00\n'.format(angmom_its(angmom), shell.nprim))
+            f.write(f" {angmom_its(angmom):1s}  {shell.nprim:3d} 1.00\n")
             for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
-                f.write('{:20.10f} {:20.10f}\n'.format(exponent, coeff))
+                f.write(f"{exponent:20.10f} {coeff:20.10f}\n")
     f.write("\n")
 
     # Get the permutation to convert the orbital coefficients to Molden conventions.
     permutation, signs = convert_conventions(obasis, CONVENTIONS)
 
     # Print the mean-field orbitals
-    if data.mo.kind == 'unrestricted':
-        f.write('[MO]\n')
+    if data.mo.kind == "unrestricted":
+        f.write("[MO]\n")
         irrepsa = data.mo.irrepsa
         if irrepsa is None:
-            irrepsa = ['1a'] * data.mo.norba
-        _dump_helper_orb(f, 'Alpha', data.mo.occsa,
-                         data.mo.coeffsa[permutation] * signs.reshape(-1, 1),
-                         data.mo.energiesa, irrepsa)
+            irrepsa = ["1a"] * data.mo.norba
+        _dump_helper_orb(
+            f,
+            "Alpha",
+            data.mo.occsa,
+            data.mo.coeffsa[permutation] * signs.reshape(-1, 1),
+            data.mo.energiesa,
+            irrepsa,
+        )
         irrepsb = data.mo.irrepsb
         if irrepsb is None:
-            irrepsb = ['1a'] * data.mo.norbb
-        _dump_helper_orb(f, 'Beta', data.mo.occsb,
-                         data.mo.coeffsb[permutation] * signs.reshape(-1, 1),
-                         data.mo.energiesb, irrepsb)
-    elif data.mo.kind == 'restricted':
-        f.write('[MO]\n')
+            irrepsb = ["1a"] * data.mo.norbb
+        _dump_helper_orb(
+            f,
+            "Beta",
+            data.mo.occsb,
+            data.mo.coeffsb[permutation] * signs.reshape(-1, 1),
+            data.mo.energiesb,
+            irrepsb,
+        )
+    elif data.mo.kind == "restricted":
+        f.write("[MO]\n")
         irreps = data.mo.irreps
         if irreps is None:
-            irreps = ['1a'] * data.mo.norb
-        _dump_helper_orb(f, 'Alpha', data.mo.occs,
-                         data.mo.coeffs[permutation] * signs.reshape(-1, 1),
-                         data.mo.energies, irreps)
+            irreps = ["1a"] * data.mo.norb
+        _dump_helper_orb(
+            f,
+            "Alpha",
+            data.mo.occs,
+            data.mo.coeffs[permutation] * signs.reshape(-1, 1),
+            data.mo.energies,
+            irreps,
+        )
     else:
         raise NotImplementedError
 
 
 def _dump_helper_orb(f, spin, occs, coeffs, energies, irreps):
     for ifn in range(coeffs.shape[1]):
-        f.write(f' Ene= {energies[ifn]:.17e}\n')
-        f.write(f' Sym= {irreps[ifn]}\n')
-        f.write(f' Spin= {spin}\n')
-        f.write(f' Occup= {occs[ifn]:.17e}\n')
+        f.write(f" Ene= {energies[ifn]:.17e}\n")
+        f.write(f" Sym= {irreps[ifn]}\n")
+        f.write(f" Spin= {spin}\n")
+        f.write(f" Occup= {occs[ifn]:.17e}\n")
         for ibasis in range(coeffs.shape[0]):
             # The original molden floating-point formatting is too low
             # precision. Molden also reads high-precision, so we use this
             # instead.
             # f.write('{:4d} {:10.6f}\n'.format(ibasis + 1, orb_coeffs[ibasis, ifn]))
-            f.write('{:4d} {:.17e}\n'.format(ibasis + 1, coeffs[ibasis, ifn]))
+            f.write(f"{ibasis + 1:4d} {coeffs[ibasis, ifn]:.17e}\n")

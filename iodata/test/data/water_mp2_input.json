@@ -1,0 +1,22 @@
+{
+  "schema_name": "qc_schema_input",
+  "schema_version": 1,
+  "molecule": {
+    "geometry": [
+      0.0,  0.0,    -0.1294,
+      0.0, -1.4941,  1.0274,
+      0.0,  1.4941,  1.0274
+    ],
+    "symbols": ["O", "H", "H"]
+  },
+  "driver": "energy",
+  "model": {
+    "method": "MP2",
+    "basis": "cc-pVDZ"
+  },
+  "keywords": {},
+  "provenance": {
+    "creator": "HORTON3",
+    "routine": "Copied from QCSchema docs' Water MP2 example"
+  }
+}

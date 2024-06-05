@@ -18,14 +18,13 @@
 # --
 """Orca Input Module."""
 
-
-from typing import TextIO
-
-from .common import populate_fields
+from typing import Callable, Optional, TextIO
 
 from ..docstrings import document_write_input
 from ..iodata import IOData
 from ..periodic import num2sym
+from ..utils import angstrom
+from .common import write_input_base
 
 __all__ = []
 
@@ -38,30 +37,38 @@ default_template = """\
 *"""
 
 
-@document_write_input("ORCA", ['atnums', 'atcoords'],
-                      ['title', 'run_type', 'lot', 'obasis_name', 'spinmult', 'charge'])
-def write_input(f: TextIO, data: IOData, template: str = None, **kwargs):
+def default_atom_line(data: IOData, iatom: int):
+    """Format atom line for ORCA input."""
+    symbol = num2sym[data.atnums[iatom]]
+    atcoord = data.atcoords[iatom] / angstrom
+    return f"{symbol:3s} {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
+
+
+@document_write_input(
+    "ORCA",
+    ["atnums", "atcoords"],
+    ["title", "run_type", "lot", "obasis_name", "spinmult", "charge"],
+)
+def write_input(
+    fh: TextIO,
+    data: IOData,
+    template: Optional[str] = None,
+    atom_line: Optional[Callable] = None,
+    **kwargs,
+):
     """Do not edit this docstring. It will be overwritten."""
-    # initialize a dictionary with fields to replace in the template
-    fields = populate_fields(data)
-    # set format-specific defaults
-    fields["lot"] = data.lot if data.lot is not None else 'HF'
-    fields["obasis_name"] = data.obasis_name if data.obasis_name is not None else 'STO-3G'
-    # convert run type to Orca keywords
-    run_types = {"energy": "Energy", "freq": "Freq", "opt": "Opt"}
-    fields["run_type"] = run_types[fields["run_type"].lower()]
-    # generate geometry (in angstrom)
-    geometry = []
-    for num, coord in zip(fields["atnums"], fields["atcoords"]):
-        sym = f"{num2sym[num]:3}"
-        # check if template has a %coords block
-        if template is not None and "%coords" in template:
-            sym = f"{sym:>11}"  # adding an appropiate indentation
-        geometry.append(f"{sym} {coord[0]:10.6f} {coord[1]:10.6f} {coord[2]:10.6f}")
-    fields["geometry"] = "\n".join(geometry)
-    # get template
+    # Fill in some ORCA-specific defaults and field names.
     if template is None:
         template = default_template
-    # populate files & write input
+    if atom_line is None:
+        atom_line = default_atom_line
+    orca_keywords = {"energy": "Energy", "freq": "Freq", "opt": "Opt"}
+    # Set format-specific defaults.
+    fields = {
+        "lot": data.lot or "HF",
+        "obasis_name": data.obasis_name or "STO-3G",
+        "run_type": orca_keywords[(data.run_type or "energy").lower()],
+    }
+    # User-specifield fields have priority, may overwrite default ones.
     fields.update(kwargs)
-    print(template.format(**fields), file=f)
+    write_input_base(fh, data, template, atom_line, fields)

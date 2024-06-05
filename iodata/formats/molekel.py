@@ -23,26 +23,26 @@ This format is used by two programs:
 `Orca <https://sites.google.com/site/orcainputlibrary/>`_.
 """
 
-from typing import Tuple, List, TextIO
+from typing import TextIO
 
 import numpy as np
+from numpy.typing import NDArray
 
-from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
-from ..basis import angmom_sti, angmom_its, convert_conventions, MolecularBasis, Shell
-from ..docstrings import document_load_one, document_dump_one
+from ..basis import MolecularBasis, Shell, angmom_its, angmom_sti, convert_conventions
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import angstrom, LineIterator
-
+from ..utils import LineIterator, angstrom
+from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 
 __all__ = []
 
 
-PATTERNS = ['*.mkl']
+PATTERNS = ["*.mkl"]
 
 
-def _load_helper_charge_spinpol(lit: LineIterator) -> List[int]:
-    charge, spinmult = [int(word) for word in next(lit).split()]
+def _load_helper_charge_spinpol(lit: LineIterator) -> list[int]:
+    charge, spinmult = (int(word) for word in next(lit).split())
     spinpol = spinmult - 1
     return charge, spinpol
 
@@ -50,19 +50,18 @@ def _load_helper_charge_spinpol(lit: LineIterator) -> List[int]:
 def _load_helper_charges(lit: LineIterator) -> dict:
     atcharges = []
     for line in lit:
-        line = line.strip()
-        if line == '$END':
+        if line.strip() == "$END":
             break
         atcharges.append(float(line))
 
-    return {'mulliken': np.array(atcharges)}
+    return {"mulliken": np.array(atcharges)}
 
 
-def _load_helper_atoms(lit: LineIterator) -> Tuple[np.ndarray, np.ndarray]:
+def _load_helper_atoms(lit: LineIterator) -> tuple[NDArray, NDArray]:
     atnums = []
     atcoords = []
     for line in lit:
-        if line.strip() == '$END':
+        if line.strip() == "$END":
             break
         words = line.split()
         atnums.append(int(words[0]))
@@ -77,24 +76,23 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
     icenter = 0
     while True:
         line = next(lit).strip()
-        if line == '$END':
+        if line == "$END":
             break
         if line == "":
             continue
-        if line == '$$':
+        if line == "$$":
             icenter += 1
             continue
         # Shell header, always assuming pure functions
         words = line.split()
         angmom = angmom_sti(words[1])
         nbasis_shell = int(words[0])
-        if nbasis_shell == len(CONVENTIONS[(angmom, 'c')]):
-            kind = 'c'
-        elif nbasis_shell == len(CONVENTIONS[(angmom, 'p')]):
-            kind = 'p'
+        if nbasis_shell == len(CONVENTIONS[(angmom, "c")]):
+            kind = "c"
+        elif nbasis_shell == len(CONVENTIONS[(angmom, "p")]):
+            kind = "p"
         else:
-            lit.error('Cannot interpret angmom={} with nbasis_shell={}'.format(
-                angmom, nbasis_shell))
+            lit.error(f"Cannot interpret angmom={angmom} with nbasis_shell={nbasis_shell}")
         exponents = []
         coeffs = []
         for line in lit:
@@ -105,34 +103,31 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
             exponents.append(float(words[0]))
             coeffs.append([float(words[1])])
         shells.append(Shell(icenter, [angmom], [kind], np.array(exponents), np.array(coeffs)))
-    return MolecularBasis(shells, CONVENTIONS, 'L2')
+    return MolecularBasis(shells, CONVENTIONS, "L2")
 
 
-def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.ndarray]:
+def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[NDArray, NDArray]:
     coeffs = []
     energies = []
     irreps = []
 
     in_orb = 0
     for line in lit:
-        line = line.strip()
-        if line == '$END':
+        if line.strip() == "$END":
             break
         if in_orb == 0:
             # read a1g line
             words = line.split()
             ncol = len(words)
             assert ncol > 0
-            for word in words:
-                irreps.append(word)
+            irreps.extend(words)
             cols = [np.zeros((nbasis, 1), float) for _ in range(ncol)]
             in_orb = 1
         elif in_orb == 1:
             # read energies
             words = line.split()
             assert len(words) == ncol
-            for word in words:
-                energies.append(float(word))
+            energies.extend(float(word) for word in words)
             in_orb = 2
             ibasis = 0
         elif in_orb == 2:
@@ -149,20 +144,26 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> Tuple[np.ndarray, np.
     return np.hstack(coeffs), np.array(energies), irreps
 
 
-def _load_helper_occ(lit: LineIterator) -> np.ndarray:
+def _load_helper_occ(lit: LineIterator) -> NDArray:
     occs = []
     for line in lit:
-        line = line.strip()
-        if line == '$END':
+        if line.strip() == "$END":
             break
-        for word in line.split():
-            occs.append(float(word))
+        occs.extend(float(word) for word in line.split())
     return np.array(occs)
 
 
-# pylint: disable=too-many-branches,too-many-statements
-@document_load_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcharges'])
-def load_one(lit: LineIterator) -> dict:
+@document_load_one(
+    "Molekel",
+    ["atcoords", "atnums", "mo", "obasis"],
+    ["atcharges"],
+    {
+        "norm_threshold": "When the normalization of one of the orbitals exceeds "
+        "norm_threshold, a correction is attempted or an error "
+        "is raised when no suitable correction can be found."
+    },
+)
+def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     charge = None
     atnums = None
@@ -186,33 +187,33 @@ def load_one(lit: LineIterator) -> dict:
             # There is no file-end marker we can use, so we only stop when
             # reaching the end of the file.
             break
-        if line == '$CHAR_MULT':
+        if line == "$CHAR_MULT":
             charge, spinpol = _load_helper_charge_spinpol(lit)
-        elif line == '$CHARGES':
+        elif line == "$CHARGES":
             atcharges = _load_helper_charges(lit)
-        elif line == '$COORD':
+        elif line == "$COORD":
             atnums, atcoords = _load_helper_atoms(lit)
-        elif line == '$BASIS':
+        elif line == "$BASIS":
             obasis = _load_helper_obasis(lit)
-        elif line == '$COEFF_ALPHA':
+        elif line == "$COEFF_ALPHA":
             coeffsa, energiesa, irrepsa = _load_helper_coeffs(lit, obasis.nbasis)
-        elif line == '$OCC_ALPHA':
+        elif line == "$OCC_ALPHA":
             occsa = _load_helper_occ(lit)
-        elif line == '$COEFF_BETA':
+        elif line == "$COEFF_BETA":
             coeffsb, energiesb, irrepsb = _load_helper_coeffs(lit, obasis.nbasis)
-        elif line == '$OCC_BETA':
+        elif line == "$OCC_BETA":
             occsb = _load_helper_occ(lit)
 
     if charge is None:
-        lit.error('Charge and spin polarization not found.')
+        lit.error("Charge and spin polarization not found.")
     if atcoords is None:
-        lit.error('Coordinates not found.')
+        lit.error("Coordinates not found.")
     if obasis is None:
-        lit.error('Orbital basis not found.')
+        lit.error("Orbital basis not found.")
     if coeffsa is None:
-        lit.error('Alpha orbitals not found.')
+        lit.error("Alpha orbitals not found.")
     if occsa is None:
-        lit.error('Alpha occupation numbers not found.')
+        lit.error("Alpha occupation numbers not found.")
 
     nelec = atnums.sum() - charge
     if coeffsb is None:
@@ -220,12 +221,13 @@ def load_one(lit: LineIterator) -> dict:
         assert nelec % 2 == 0
         assert abs(occsa.sum() - nelec) < 1e-7
         mo = MolecularOrbitals(
-            'restricted', coeffsa.shape[1], coeffsa.shape[1],
-            occsa, coeffsa, energiesa, irrepsa)
+            "restricted", coeffsa.shape[1], coeffsa.shape[1], occsa, coeffsa, energiesa, irrepsa
+        )
     else:
         if occsb is None:
-            lit.error('Beta occupation numbers not found in mkl file while '
-                      'beta orbitals were present.')
+            lit.error(
+                "Beta occupation numbers not found in mkl file while beta orbitals were present."
+            )
         nalpha = int(np.round(occsa.sum()))
         nbeta = int(np.round(occsb.sum()))
         assert abs(spinpol - abs(nalpha - nbeta)) < 1e-7
@@ -234,26 +236,27 @@ def load_one(lit: LineIterator) -> dict:
         assert energiesa.shape == energiesb.shape
         assert occsa.shape == occsb.shape
         mo = MolecularOrbitals(
-            'unrestricted',
+            "unrestricted",
             coeffsa.shape[1],
             coeffsb.shape[1],
             np.concatenate((occsa, occsb), axis=0),
             np.concatenate((coeffsa, coeffsb), axis=1),
             np.concatenate((energiesa, energiesb), axis=0),
-            irrepsa + irrepsb)
+            irrepsa + irrepsb,
+        )
 
     result = {
-        'atcoords': atcoords,
-        'atnums': atnums,
-        'obasis': obasis,
-        'mo': mo,
-        'atcharges': atcharges,
+        "atcoords": atcoords,
+        "atnums": atnums,
+        "obasis": obasis,
+        "mo": mo,
+        "atcharges": atcharges,
     }
-    _fix_molden_from_buggy_codes(result, lit)
+    _fix_molden_from_buggy_codes(result, lit, norm_threshold)
     return result
 
 
-@document_dump_one("Molekel", ['atcoords', 'atnums', 'mo', 'obasis'], ['atcharges'])
+@document_dump_one("Molekel", ["atcoords", "atnums", "mo", "obasis"], ["atcharges"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     # occs_aminusb is not supported
@@ -261,77 +264,77 @@ def dump_one(f: TextIO, data: IOData):
         raise ValueError("Cannot write Molekel file when mo.occs_aminusb is set.")
 
     # Header
-    f.write('$MKL\n')
-    f.write('#\n')
-    f.write('# MKL format file produced by IOData\n')
-    f.write('#\n')
+    f.write("$MKL\n")
+    f.write("#\n")
+    f.write("# MKL format file produced by IOData\n")
+    f.write("#\n")
 
     # CHAR_MUL
-    f.write('$CHAR_MULT\n')
-    f.write('  {:.0f} {:.0f}\n'.format(data.charge, data.spinpol + 1))
-    f.write('$END\n')
-    f.write('\n')
+    f.write("$CHAR_MULT\n")
+    f.write(f"  {data.charge:.0f} {data.spinpol + 1:.0f}\n")
+    f.write("$END\n")
+    f.write("\n")
 
     # COORD
     atcoords = data.atcoords / angstrom
-    f.write('$COORD\n')
+    f.write("$COORD\n")
     for n, coord in zip(data.atnums, atcoords):
-        f.write('   {:d}   {: ,.6f}  {: ,.6f}  {: ,.6f}\n'.format(n, coord[0], coord[1], coord[2]))
-    f.write('$END\n')
-    f.write('\n')
+        f.write(f"   {n:d}   {coord[0]: ,.6f}  {coord[1]: ,.6f}  {coord[2]: ,.6f}\n")
+    f.write("$END\n")
+    f.write("\n")
 
     # CHARGES
-    if 'mulliken' in data.atcharges:
-        f.write('$CHARGES\n')
-        for charge in data.atcharges['mulliken']:
-            f.write('  {: ,.6f}\n'.format(charge))
-        f.write('$END\n')
-        f.write('\n')
+    if "mulliken" in data.atcharges:
+        f.write("$CHARGES\n")
+        for charge in data.atcharges["mulliken"]:
+            f.write(f"  {charge: ,.6f}\n")
+        f.write("$END\n")
+        f.write("\n")
 
     # BASIS
-    f.write('$BASIS\n')
+    f.write("$BASIS\n")
     iatom_last = 0
     for shell in data.obasis.shells:
         iatom_new = shell.icenter
         if iatom_new != iatom_last:
-            f.write('$$\n')
+            f.write("$$\n")
         for iangmom, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
             iatom_last = shell.icenter
             nbasis = len(CONVENTIONS[(angmom, kind)])
-            f.write(' {} {:1s} 1.00\n'.format(nbasis, angmom_its(angmom).capitalize()))
+            f.write(f" {nbasis} {angmom_its(angmom).capitalize():1s} 1.00\n")
             for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
-                f.write('{:20.10f} {:17.10f}\n'.format(exponent, coeff))
-    f.write('\n')
-    f.write('$END\n')
-    f.write('\n')
+                f.write(f"{exponent:20.10f} {coeff:17.10f}\n")
+    f.write("\n")
+    f.write("$END\n")
+    f.write("\n")
 
-    if data.mo.kind == 'restricted':
+    if data.mo.kind == "restricted":
         # COEFF_ALPHA
-        f.write('$COEFF_ALPHA\n')
-        _dump_helper_coeffs(f, data, spin='a')
+        f.write("$COEFF_ALPHA\n")
+        _dump_helper_coeffs(f, data, spin="a")
 
         # OCC_ALPHA
-        f.write('$OCC_ALPHA\n')
-        _dump_helper_occ(f, data, spin='ab')
+        f.write("$OCC_ALPHA\n")
+        _dump_helper_occ(f, data, spin="ab")
 
     # Not taking into account generalized.
-    elif data.mo.kind == 'unrestricted':
+    elif data.mo.kind == "unrestricted":
         # COEFF_ALPHA
-        f.write('$COEFF_ALPHA\n')
-        _dump_helper_coeffs(f, data, spin='a')
+        f.write("$COEFF_ALPHA\n")
+        _dump_helper_coeffs(f, data, spin="a")
 
         # OCC_ALPHA
-        f.write('$OCC_ALPHA\n')
-        _dump_helper_occ(f, data, spin='a')
-        f.write('\n')
+        f.write("$OCC_ALPHA\n")
+        _dump_helper_occ(f, data, spin="a")
+        f.write("\n")
 
         # COEFF_BETA
-        f.write('$COEFF_BETA\n')
-        _dump_helper_coeffs(f, data, spin='b')
+        f.write("$COEFF_BETA\n")
+        _dump_helper_coeffs(f, data, spin="b")
 
         # OCC_BETA
-        f.write('$OCC_BETA\n')
-        _dump_helper_occ(f, data, spin='b')
+        f.write("$OCC_BETA\n")
+        _dump_helper_occ(f, data, spin="b")
 
     else:
         raise ValueError(f"The MKL format does not support {data.mo.kind} orbitals.")
@@ -340,52 +343,46 @@ def dump_one(f: TextIO, data: IOData):
 # Defining help dumping functions
 def _dump_helper_coeffs(f, data, spin=None):
     permutation, signs = convert_conventions(data.obasis, CONVENTIONS)
-    if spin == 'a':
+    if spin == "a":
         norb = data.mo.norba
         coeff = data.mo.coeffsa[permutation] * signs.reshape(-1, 1)
         ener = data.mo.energiesa
-        if data.mo.irreps is not None:
-            irreps = data.mo.irreps[:norb]
-        else:
-            irreps = ['a1g'] * norb
-    elif spin == 'b':
+        irreps = data.mo.irreps[:norb] if data.mo.irreps is not None else ["a1g"] * norb
+    elif spin == "b":
         norb = data.mo.norbb
         coeff = data.mo.coeffsb[permutation] * signs.reshape(-1, 1)
         ener = data.mo.energiesb
-        if data.mo.irreps is not None:
-            irreps = data.mo.irreps[norb:]
-        else:
-            irreps = ['a1g'] * norb
+        irreps = data.mo.irreps[norb:] if data.mo.irreps is not None else ["a1g"] * norb
     else:
-        raise IOError('A spin must be specified')
+        raise OSError("A spin must be specified")
 
     for j in range(0, norb, 5):
-        en = ' '.join(['   {: ,.12f}'.format(e) for e in ener[j:j + 5]])
-        irre = ' '.join(['{}'.format(irr) for irr in irreps[j:j + 5]])
-        f.write(irre + '\n')
-        f.write(en + '\n')
-        for orb in coeff[:, j:j + 5]:
-            coeffs = ' '.join(['  {: ,.12f}'.format(c) for c in orb])
-            f.write(coeffs + '\n')
+        en = " ".join([f"   {e: ,.12f}" for e in ener[j : j + 5]])
+        irre = " ".join([f"{irr}" for irr in irreps[j : j + 5]])
+        f.write(irre + "\n")
+        f.write(en + "\n")
+        for orb in coeff[:, j : j + 5]:
+            coeffs = " ".join([f"  {c: ,.12f}" for c in orb])
+            f.write(coeffs + "\n")
 
-    f.write(' $END\n')
-    f.write('\n')
+    f.write(" $END\n")
+    f.write("\n")
 
 
 def _dump_helper_occ(f, data, spin=None):
-    if spin == 'a':
+    if spin == "a":
         norb = data.mo.norba
         occ = data.mo.occsa
-    elif spin == 'b':
+    elif spin == "b":
         norb = data.mo.norbb
         occ = data.mo.occsb
-    elif spin == 'ab':
+    elif spin == "ab":
         norb = data.mo.norba
         occ = data.mo.occs
     else:
-        raise IOError('A spin must be specified')
+        raise OSError("A spin must be specified")
 
     for j in range(0, norb, 5):
-        occs = ' '.join(['  {: ,.7f}'.format(o) for o in occ[j:j + 5]])
-        f.write(occs + '\n')
-    f.write(' $END\n')
+        occs = " ".join([f"  {o: ,.7f}" for o in occ[j : j + 5]])
+        f.write(occs + "\n")
+    f.write(" $END\n")

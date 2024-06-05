@@ -18,22 +18,21 @@
 # --
 """Orca output file format."""
 
-
-from typing import TextIO, Tuple
+from typing import TextIO
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..docstrings import document_load_one
 from ..utils import LineIterator
 
-
 __all__ = []
 
 
-PATTERNS = ['*.out']
+PATTERNS = ["*.out"]
 
 
-@document_load_one("Orca output", ['atcoords', 'atnums', 'energy', 'moments', 'extra'])
+@document_load_one("Orca output", ["atcoords", "atnums", "energy", "moments", "extra"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     result = {}
@@ -44,25 +43,25 @@ def load_one(lit: LineIterator) -> dict:
             # Read until the end of the file.
             break
         # Get the total number of atoms
-        if line.startswith('CARTESIAN COORDINATES (ANGSTROEM)'):
+        if line.startswith("CARTESIAN COORDINATES (ANGSTROEM)"):
             natom = _helper_number_atoms(lit)
         # Every Cartesian coordinates found are replaced with the old ones
         # to maintain the ones from the final SCF iteration in e.g. optimization run
-        if line.startswith('CARTESIAN COORDINATES (A.U.)'):
-            result['atnums'], result['atcoords'] = _helper_geometry(lit, natom)
+        if line.startswith("CARTESIAN COORDINATES (A.U.)"):
+            result["atnums"], result["atcoords"] = _helper_geometry(lit, natom)
         # Read the energies of each SCF cycle in iodata.extra
-        if line.startswith('SCF ITERATIONS'):
+        if line.startswith("SCF ITERATIONS"):
             scf_energies = _helper_scf_energies(lit)
-            result['extra'] = {'scf_energies': scf_energies}
+            result["extra"] = {"scf_energies": scf_energies}
         # The final SCF energy is obtained
-        if line.startswith('FINAL SINGLE POINT ENERGY'):
+        if line.startswith("FINAL SINGLE POINT ENERGY"):
             words = line.split()
-            result['energy'] = float(words[4])
+            result["energy"] = float(words[4])
         # Read also the dipole moment
-        if line.startswith('Total Dipole Moment'):
+        if line.startswith("Total Dipole Moment"):
             words = line.split()
             dipole = np.array([float(words[4]), float(words[5]), float(words[6])])
-            result['moments'] = {(1, 'c'): dipole}
+            result["moments"] = {(1, "c"): dipole}
     return result
 
 
@@ -84,12 +83,12 @@ def _helper_number_atoms(lit: LineIterator) -> int:
     next(lit)
     natom = 0
     # Add until an empty line is found
-    while next(lit).strip() != '':
+    while next(lit).strip() != "":
         natom += 1
     return natom
 
 
-def _helper_geometry(lit: TextIO, natom: int) -> Tuple[np.ndarray, np.ndarray]:
+def _helper_geometry(lit: TextIO, natom: int) -> tuple[NDArray, NDArray]:
     """Load coordinates form a ORCA output file format.
 
     Parameters
@@ -121,7 +120,7 @@ def _helper_geometry(lit: TextIO, natom: int) -> Tuple[np.ndarray, np.ndarray]:
     return atnums, atcoords
 
 
-def _helper_scf_energies(lit: TextIO) -> Tuple[np.ndarray, np.ndarray]:
+def _helper_scf_energies(lit: TextIO) -> tuple[NDArray, NDArray]:
     """Load energies from each SCF cycle from a ORCA output file format.
 
     Parameters
@@ -138,7 +137,7 @@ def _helper_scf_energies(lit: TextIO) -> Tuple[np.ndarray, np.ndarray]:
     energies = []
     line = next(lit)
     # read the next line until blank line
-    while line.strip() != '':
+    while line.strip() != "":
         words = line.split()
         if words[0].isdigit():
             energies.append(float(words[1]))

@@ -16,47 +16,48 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=unsubscriptable-object
 """Test iodata.formats.molden module."""
 
 import os
+import warnings
 
-import attr
+import attrs
 import numpy as np
-from numpy.testing import assert_allclose, assert_equal
 import pytest
+from numpy.testing import assert_allclose, assert_equal
 
-from .common import compute_mulliken_charges, compare_mols, check_orthonormal
-from ..api import load_one, dump_one
+from ..api import dump_one, load_one
 from ..basis import convert_conventions
 from ..formats.molden import _load_low
-from ..overlap import compute_overlap, OVERLAP_CONVENTIONS
-from ..utils import LineIterator, angstrom, FileFormatWarning
-
+from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
+from ..utils import FileFormatWarning, LineIterator, angstrom
+from .common import check_orthonormal, compare_mols, compute_mulliken_charges
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_molden_li2_orca():
-    with path('iodata.test.data', 'li2.molden.input') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    with (
+        as_file(files("iodata.test.data").joinpath("li2.molden.input")) as fn_molden,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "ORCA" in record[0].message.args[0]
 
     # Checkt title
-    assert mol.title == 'Molden file created by orca_2mkl for BaseName=li2'
+    assert mol.title == "Molden file created by orca_2mkl for BaseName=li2"
 
     # Check geometry
     assert_equal(mol.atnums, [3, 3])
     assert_allclose(mol.mo.occsa[:4], [1, 1, 1, 0])
     assert_allclose(mol.mo.occsb[:4], [1, 1, 0, 0])
-    assert_equal(mol.mo.irreps, ['1a'] * mol.mo.norb)
-    assert_equal(mol.mo.irrepsa, ['1a'] * mol.mo.norba)
-    assert_equal(mol.mo.irrepsb, ['1a'] * mol.mo.norbb)
+    assert_equal(mol.mo.irreps, ["1a"] * mol.mo.norb)
+    assert_equal(mol.mo.irrepsa, ["1a"] * mol.mo.norba)
+    assert_equal(mol.mo.irrepsb, ["1a"] * mol.mo.norbb)
     assert_allclose(mol.atcoords[1], [5.2912331750, 0.0, 0.0])
 
     # Check normalization
@@ -67,23 +68,35 @@ def test_load_molden_li2_orca():
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
     expected_charges = np.array([0.5, 0.5])
-    assert_allclose(charges, expected_charges, atol=1.e-5)
+    assert_allclose(charges, expected_charges, atol=1.0e-5)
+
+
+def test_load_molden_li2_orca_huge_threshold():
+    with (
+        as_file(files("iodata.test.data").joinpath("li2.molden.input")) as fn_molden,
+        warnings.catch_warnings(),
+    ):
+        warnings.simplefilter("error")
+        # The threshold is set very high, which skip a correction for ORCA.
+        load_one(str(fn_molden), norm_threshold=1e4)
 
 
 def test_load_molden_h2o_orca():
-    with path('iodata.test.data', 'h2o.molden.input') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    with (
+        as_file(files("iodata.test.data").joinpath("h2o.molden.input")) as fn_molden,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "ORCA" in record[0].message.args[0]
 
     # Checkt title
-    assert mol.title == 'Molden file created by orca_2mkl for BaseName=h2o'
+    assert mol.title == "Molden file created by orca_2mkl for BaseName=h2o"
 
     # Check geometry
     assert_equal(mol.atnums, [8, 1, 1])
     assert_allclose(mol.mo.occs[:6], [2, 2, 2, 2, 2, 0])
-    assert_equal(mol.mo.irreps, ['1a'] * mol.mo.norb)
+    assert_equal(mol.mo.irreps, ["1a"] * mol.mo.norb)
     assert_allclose(mol.atcoords[2], [0.0, -0.1808833432, 1.9123825806])
 
     # Check normalization
@@ -93,13 +106,13 @@ def test_load_molden_h2o_orca():
     # Check Mulliken charges
     charges = compute_mulliken_charges(mol)
     expected_charges = np.array([-0.816308, 0.408154, 0.408154])
-    assert_allclose(charges, expected_charges, atol=1.e-5)
+    assert_allclose(charges, expected_charges, atol=1.0e-5)
 
 
 def test_load_molden_nh3_molden_pure():
     # The file tested here is created with molden. It should be read in
     # properly without altering normalization and sign conventions.
-    with path('iodata.test.data', 'nh3_molden_pure.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_molden_pure.molden")) as fn_molden:
         mol = load_one(str(fn_molden))
     # Check geometry
     assert_equal(mol.atnums, [7, 1, 1, 1])
@@ -114,18 +127,18 @@ def test_load_molden_nh3_molden_pure():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_low_nh3_molden_cart():
-    with path('iodata.test.data', 'nh3_molden_cart.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_molden_cart.molden")) as fn_molden:
         lit = LineIterator(str(fn_molden))
         data = _load_low(lit)
-    obasis = data['obasis']
+    obasis = data["obasis"]
     assert obasis.nbasis == 52
     assert len(obasis.shells) == 24
     for shell in obasis.shells:
-        assert shell.kinds == ['c']
+        assert shell.kinds == ["c"]
         assert shell.ncon == 1
     for ishell in [0, 1, 2, 3, 9, 10, 11, 14, 15, 16, 19, 20, 21]:
         shell = obasis.shells[ishell]
@@ -147,46 +160,97 @@ def test_load_molden_low_nh3_molden_cart():
 
     shell0 = obasis.shells[0]
     assert shell0.nprim == 8
-    assert shell0.exponents.shape == (8, )
-    assert_allclose(shell0.exponents[4], 0.2856000000E+02)
+    assert shell0.exponents.shape == (8,)
+    assert_allclose(shell0.exponents[4], 0.2856000000e02)
     assert shell0.coeffs.shape == (8, 1)
-    assert_allclose(shell0.coeffs[4, 0], 0.2785706633E+00)
+    assert_allclose(shell0.coeffs[4, 0], 0.2785706633e00)
     shell7 = obasis.shells[7]
     assert shell7.nprim == 1
-    assert shell7.exponents.shape == (1, )
-    assert_allclose(shell7.exponents, [0.8170000000E+00])
+    assert shell7.exponents.shape == (1,)
+    assert_allclose(shell7.exponents, [0.8170000000e00])
     assert_allclose(shell7.coeffs, [[1.0]])
     assert shell7.coeffs.shape == (1, 1)
     shell19 = obasis.shells[19]
     assert shell19.nprim == 3
-    assert shell19.exponents.shape == (3, )
-    assert_allclose(shell19.exponents, [
-        0.1301000000E+02, 0.1962000000E+01, 0.4446000000E+00])
-    assert_allclose(shell19.coeffs, [
-        [0.3349872639E-01], [0.2348008012E+00], [0.8136829579E+00]])
+    assert shell19.exponents.shape == (3,)
+    assert_allclose(shell19.exponents, [0.1301000000e02, 0.1962000000e01, 0.4446000000e00])
+    assert_allclose(shell19.coeffs, [[0.3349872639e-01], [0.2348008012e00], [0.8136829579e00]])
     assert shell19.coeffs.shape == (3, 1)
 
-    assert data['mo'].coeffs.shape == (52, 52)
-    assert_allclose(data['mo'].coeffs[:2, 0], [1.002730, 0.005420])
-    assert_allclose(data['mo'].coeffs[-2:, 1], [0.003310, -0.011620])
-    assert_allclose(data['mo'].coeffs[-4:-2, -1], [-0.116400, 0.098220])
+    assert data["mo"].coeffs.shape == (52, 52)
+    assert_allclose(data["mo"].coeffs[:2, 0], [1.002730, 0.005420])
+    assert_allclose(data["mo"].coeffs[-2:, 1], [0.003310, -0.011620])
+    assert_allclose(data["mo"].coeffs[-4:-2, -1], [-0.116400, 0.098220])
 
     permutation, signs = convert_conventions(obasis, OVERLAP_CONVENTIONS)
-    assert_equal(permutation, [
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 14, 18, 15, 19,
-        22, 23, 20, 24, 21, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
-        38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51])
+    assert_equal(
+        permutation,
+        [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            16,
+            17,
+            14,
+            18,
+            15,
+            19,
+            22,
+            23,
+            20,
+            24,
+            21,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+        ],
+    )
     assert_equal(signs, [1] * 52)
 
     # Check normalization
-    olp = compute_overlap(obasis, data['atcoords'])
-    check_orthonormal(data['mo'].coeffs, olp, atol=1e-4)  # low precision in file
+    olp = compute_overlap(obasis, data["atcoords"])
+    check_orthonormal(data["mo"].coeffs, olp, atol=1e-4)  # low precision in file
 
 
 def test_load_molden_nh3_molden_cart():
     # The file tested here is created with molden. It should be read in
     # properly without altering normalization and sign conventions.
-    with path('iodata.test.data', 'nh3_molden_cart.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_molden_cart.molden")) as fn_molden:
         mol = load_one(str(fn_molden))
 
     # Check normalization
@@ -197,15 +261,43 @@ def test_load_molden_nh3_molden_cart():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.3138, -0.4300, -0.0667, 0.1829])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
+
+
+def test_load_molden_cfour():
+    # The file tested here is created with CFOUR 2.1.
+    file_list = [
+        "h_sonly_sph_cfour.molden",
+        "h_ponly_sph_cfour.molden",
+        "h_donly_sph_cfour.molden",
+        "h_fonly_sph_cfour.molden",
+        "h_gonly_sph_cfour.molden",
+        "h_sonly_cart_cfour.molden",
+        "h_ponly_cart_cfour.molden",
+        "h_donly_cart_cfour.molden",
+        "h_fonly_cart_cfour.molden",
+        "h_gonly_cart_cfour.molden",
+        "h2o_ccpvdz_cfour.molden",
+    ]
+
+    for i in file_list:
+        with as_file(files("iodata.test.data").joinpath(i)) as fn_molden:
+            print(str(fn_molden))
+            mol = load_one(str(fn_molden))
+            # Check normalization
+            olp = compute_overlap(mol.obasis, mol.atcoords)
+            check_orthonormal(mol.mo.coeffsa, olp)
+            check_orthonormal(mol.mo.coeffsb, olp)
 
 
 def test_load_molden_nh3_orca():
     # The file tested here is created with ORCA. It should be read in
     # properly by altering normalization and sign conventions.
-    with path('iodata.test.data', 'nh3_orca.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    with (
+        as_file(files("iodata.test.data").joinpath("nh3_orca.molden")) as fn_molden,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "ORCA" in record[0].message.args[0]
 
@@ -217,15 +309,17 @@ def test_load_molden_nh3_orca():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_nh3_psi4():
     # The file tested here is created with PSI4 (pre 1.0). It should be read in
     # properly by altering normalization conventions.
-    with path('iodata.test.data', 'nh3_psi4.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    with (
+        as_file(files("iodata.test.data").joinpath("nh3_psi4.molden")) as fn_molden,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "PSI4 < 1.0" in record[0].message.args[0]
 
@@ -237,15 +331,17 @@ def test_load_molden_nh3_psi4():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_nh3_psi4_1():
     # The file tested here is created with PSI4 (version 1.0).
     # It should be read in properly by renormalizing the contractions.
-    with path('iodata.test.data', 'nh3_psi4_1.0.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    with (
+        as_file(files("iodata.test.data").joinpath("nh3_psi4_1.0.molden")) as fn_molden,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "unnormalized" in record[0].message.args[0]
 
@@ -257,7 +353,7 @@ def test_load_molden_nh3_psi4_1():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 @pytest.mark.parametrize("case", ["zn", "mn", "cuh"])
@@ -265,9 +361,9 @@ def test_load_molden_high_am_psi4(case):
     # The file tested here is created with PSI4 1.3.2.
     # This is a special case because it contains higher angular momenta than
     # officially supported by the Molden format. Most virtual orbitals were removed.
-    with path('iodata.test.data', f'psi4_{case}_cc_pvqz_pure.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    source = files("iodata.test.data").joinpath(f"psi4_{case}_cc_pvqz_pure.molden")
+    with as_file(source) as fn_molden, pytest.warns(FileFormatWarning) as record:
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "unnormalized" in record[0].message.args[0]
     # Check normalization
@@ -286,9 +382,9 @@ def test_load_molden_high_am_orca(case):
     # The file tested here is created with ORCA.
     # This is a special case because it contains higher angular momenta than
     # officially supported by the Molden format. Most virtual orbitals were removed.
-    with path('iodata.test.data', f'orca_{case}_cc_pvqz_pure.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    source = files("iodata.test.data").joinpath(f"orca_{case}_cc_pvqz_pure.molden")
+    with as_file(source) as fn_molden, pytest.warns(FileFormatWarning) as record:
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "ORCA" in record[0].message.args[0]
     # Check normalization
@@ -299,7 +395,7 @@ def test_load_molden_high_am_orca(case):
 
 def test_load_molden_he2_ghost_psi4_1():
     # The file tested here is created with PSI4 (version 1.0).
-    with path('iodata.test.data', 'he2_ghost_psi4_1.0.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("he2_ghost_psi4_1.0.molden")) as fn_molden:
         mol = load_one(str(fn_molden))
     np.testing.assert_equal(mol.atcorenums, np.array([0.0, 2.0]))
 
@@ -317,9 +413,9 @@ def test_load_molden_he2_ghost_psi4_1():
 def test_load_molden_h2o_6_31g_d_cart_psi4():
     # The file tested here is created with PSI4 1.3.2. It should be read in
     # properly after fixing for errors in AO normalization conventions.
-    with path('iodata.test.data', 'h2o_psi4_1.3.2_6-31G_d_cart.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    source = files("iodata.test.data").joinpath("h2o_psi4_1.3.2_6-31G_d_cart.molden")
+    with as_file(source) as fn_molden, pytest.warns(FileFormatWarning) as record:
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "PSI4 <= 1.3.2" in record[0].message.args[0]
 
@@ -331,15 +427,15 @@ def test_load_molden_h2o_6_31g_d_cart_psi4():
     # Comparison with numbers from PSI4 output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([-0.86514, 0.43227, 0.43288])
-    assert_allclose(charges, molden_charges, atol=1.e-5)
+    assert_allclose(charges, molden_charges, atol=1.0e-5)
 
 
 def test_load_molden_nh3_aug_cc_pvqz_cart_psi4():
     # The file tested here is created with PSI4 1.3.2. It should be read in
     # properly after fixing for errors in AO normalization conventions.
-    with path('iodata.test.data', 'nh3_psi4_1.3.2_aug_cc_pvqz_cart.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    source = files("iodata.test.data").joinpath("nh3_psi4_1.3.2_aug_cc_pvqz_cart.molden")
+    with as_file(source) as fn_molden, pytest.warns(FileFormatWarning) as record:
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "PSI4 <= 1.3.2" in record[0].message.args[0]
 
@@ -351,12 +447,14 @@ def test_load_molden_nh3_aug_cc_pvqz_cart_psi4():
     # Comparison with numbers from PSI4 output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([-0.74507, 0.35743, 0.24197, 0.14567])
-    assert_allclose(charges, molden_charges, atol=1.e-5)
+    assert_allclose(charges, molden_charges, atol=1.0e-5)
 
 
 def test_load_be_cisd_321g_psi4():
     # CISD singlet calculation on Beryllium
-    with path('iodata.test.data', 'be_cisd_321g_psi4_singlet.molden') as fn_molden:
+    with as_file(
+        files("iodata.test.data").joinpath("be_cisd_321g_psi4_singlet.molden")
+    ) as fn_molden:
         mol = load_one(str(fn_molden))
 
     # Check normalization
@@ -366,17 +464,17 @@ def test_load_be_cisd_321g_psi4():
     # Check Mulliken charges.
     # Comparison with numbers from PSI4 output.
     charges = compute_mulliken_charges(mol)
-    assert_allclose(charges, [0.0], atol=1.e-5)
+    assert_allclose(charges, [0.0], atol=1.0e-5)
 
     # Check things related to occupation numbers
     assert_allclose(mol.nelec, 4.0)
     assert mol.spinpol == 0.0
     assert_allclose(mol.mo.nelec, 4.0)
     assert mol.mo.spinpol == 0.0
-    assert_allclose(mol.mo.occsa[-4:], [
-        0.03164123603158929, 0.031641236031589526, 0.9041716124281225,
-        0.9999438368325004
-    ])
+    assert_allclose(
+        mol.mo.occsa[-4:],
+        [0.03164123603158929, 0.031641236031589526, 0.9041716124281225, 0.9999438368325004],
+    )
     assert_allclose(mol.mo.occsa, mol.mo.occsb)
     assert mol.mo.occs_aminusb is None
     assert_allclose(mol.mo.occs, 2 * mol.mo.occsa)
@@ -384,7 +482,7 @@ def test_load_be_cisd_321g_psi4():
 
 def test_load_molden_nh3_molpro2012():
     # The file tested here is created with MOLPRO2012.
-    with path('iodata.test.data', 'nh3_molpro2012.molden') as fn_molden:
+    with as_file(files("iodata.test.data").joinpath("nh3_molpro2012.molden")) as fn_molden:
         mol = load_one(str(fn_molden))
 
     # Check normalization
@@ -395,14 +493,14 @@ def test_load_molden_nh3_molpro2012():
     # Comparison with numbers from the Molden program output.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.0381, -0.2742, 0.0121, 0.2242])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_neon_turbomole():
     # The file tested here is created with Turbomole 7.1.
-    with path('iodata.test.data', 'neon_turbomole_def2-qzvp.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    source = files("iodata.test.data").joinpath("neon_turbomole_def2-qzvp.molden")
+    with as_file(source) as fn_molden, pytest.warns(FileFormatWarning) as record:
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "Turbomole" in record[0].message.args[0]
 
@@ -417,9 +515,11 @@ def test_load_molden_neon_turbomole():
 
 def test_load_molden_nh3_turbomole():
     # The file tested here is created with Turbomole 7.1
-    with path('iodata.test.data', 'nh3_turbomole.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    with (
+        as_file(files("iodata.test.data").joinpath("nh3_turbomole.molden")) as fn_molden,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "Turbomole" in record[0].message.args[0]
 
@@ -433,13 +533,15 @@ def test_load_molden_nh3_turbomole():
     # Cartesian functions.
     charges = compute_mulliken_charges(mol)
     molden_charges = np.array([0.03801, -0.27428, 0.01206, 0.22421])
-    assert_allclose(charges, molden_charges, atol=1.e-3)
+    assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
 def test_load_molden_f():
-    with path('iodata.test.data', 'F.molden') as fn_molden:
-        with pytest.warns(FileFormatWarning) as record:
-            mol = load_one(str(fn_molden))
+    with (
+        as_file(files("iodata.test.data").joinpath("F.molden")) as fn_molden,
+        pytest.warns(FileFormatWarning) as record,
+    ):
+        mol = load_one(str(fn_molden))
     assert len(record) == 1
     assert "PSI4" in record[0].message.args[0]
 
@@ -450,39 +552,42 @@ def test_load_molden_f():
 
     assert_allclose(mol.mo.occsa[:6], [1, 1, 1, 1, 1, 0])
     assert_allclose(mol.mo.occsb[:6], [1, 1, 1, 1, 0, 0])
-    assert_equal(mol.mo.irrepsa[:6], ['Ag', 'Ag', 'B3u', 'B2u', 'B1u', 'B3u'])
-    assert_equal(mol.mo.irrepsb[:6], ['Ag', 'Ag', 'B3u', 'B2u', 'B1u', 'B3u'])
+    assert_equal(mol.mo.irrepsa[:6], ["Ag", "Ag", "B3u", "B2u", "B1u", "B3u"])
+    assert_equal(mol.mo.irrepsb[:6], ["Ag", "Ag", "B3u", "B2u", "B1u", "B3u"])
 
 
-@pytest.mark.parametrize("fn,match", [
-    ("h2o.molden.input", "ORCA"),
-    ("li2.molden.input", "ORCA"),
-    ("F.molden", "PSI4"),
-    ("nh3_molden_pure.molden", None),
-    ("nh3_molden_cart.molden", None),
-    ("he2_ghost_psi4_1.0.molden", None),
-    ("psi4_cuh_cc_pvqz_pure.molden", "unnormalized"),
-    ("hf_sto3g.fchk", None),
-    ("h_sto3g.fchk", None),
-    ("ch3_rohf_sto3g_g03.fchk", None),
-])
+@pytest.mark.parametrize(
+    ("fn", "match"),
+    [
+        ("h2o.molden.input", "ORCA"),
+        ("li2.molden.input", "ORCA"),
+        ("F.molden", "PSI4"),
+        ("nh3_molden_pure.molden", None),
+        ("nh3_molden_cart.molden", None),
+        ("he2_ghost_psi4_1.0.molden", None),
+        ("psi4_cuh_cc_pvqz_pure.molden", "unnormalized"),
+        ("hf_sto3g.fchk", None),
+        ("h_sto3g.fchk", None),
+        ("ch3_rohf_sto3g_g03.fchk", None),
+    ],
+)
 def test_load_dump_consistency(tmpdir, fn, match):
-    with path('iodata.test.data', fn) as file_name:
+    with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
         if match is None:
             mol1 = load_one(str(file_name))
         else:
             with pytest.warns(FileFormatWarning, match=match):
                 mol1 = load_one(str(file_name))
-    fn_tmp = os.path.join(tmpdir, 'foo.bar')
-    dump_one(mol1, fn_tmp, fmt='molden')
-    mol2 = load_one(fn_tmp, fmt='molden')
+    fn_tmp = os.path.join(tmpdir, "foo.bar")
+    dump_one(mol1, fn_tmp, fmt="molden")
+    mol2 = load_one(fn_tmp, fmt="molden")
     # Remove and or fix some things in mol1 to make it compatible with what
     # can be read from a Molden file:
     # - Change basis of mol1 to segmented.
     mol1.obasis = mol1.obasis.get_segmented()
     # - Set default irreps in mol1, if not present.
     if mol1.mo.irreps is None:
-        mol1.mo = attr.evolve(mol1.mo, irreps=['1a'] * mol1.mo.norb)
+        mol1.mo = attrs.evolve(mol1.mo, irreps=["1a"] * mol1.mo.norb)
     # - Remove the one_rdms from mol1.
     mol1.one_rdms = {}
     compare_mols(mol1, mol2)

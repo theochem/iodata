@@ -18,14 +18,15 @@
 # --
 """Data structure for molecular orbitals."""
 
+from typing import Optional
 
-import attr
+import attrs
 import numpy as np
+from numpy.typing import NDArray
 
 from .attrutils import convert_array_to, validate_shape
 
-
-__all__ = ['MolecularOrbitals']
+__all__ = ["MolecularOrbitals"]
 
 
 def validate_norbab(mo, attribute, value):
@@ -44,11 +45,13 @@ def validate_norbab(mo, attribute, value):
     if mo.kind == "generalized":
         if value is not None:
             raise ValueError(
-                f"Attribute {attribute.name} must be None in case of generalized orbitals.")
+                f"Attribute {attribute.name} must be None in case of generalized orbitals."
+            )
         return
     if value is None:
         raise ValueError(
-            f"Attribute {attribute.name} cannot be None in case of (un)restricted orbitals.")
+            f"Attribute {attribute.name} cannot be None in case of (un)restricted orbitals."
+        )
     if mo.kind == "restricted":
         norb_other = mo.norbb if (attribute.name == "norba") else mo.norba
         if value != norb_other:
@@ -61,9 +64,8 @@ def validate_occs_aminusb(mo, _attribtue, value):
         raise ValueError("Attribute occs_aminusb can only be set for restricted wavefunctions.")
 
 
-@attr.s(auto_attribs=True, slots=True,
-        on_setattr=[attr.setters.validate, attr.setters.convert])
-class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
+@attrs.define
+class MolecularOrbitals:
     """Class of Orthonormal Molecular Orbitals.
 
     Attributes
@@ -120,27 +122,36 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
 
     """
 
-    kind: str = attr.ib(
-        validator=attr.validators.in_(["restricted", "unrestricted", "generalized"]))
-    norba: int = attr.ib(validator=validate_norbab)
-    norbb: int = attr.ib(validator=validate_norbab)
-    occs: np.ndarray = attr.ib(
-        default=None, converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("norb")))
-    coeffs: np.ndarray = attr.ib(
-        default=None, converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape(None, "norb")))
-    energies: np.ndarray = attr.ib(
-        default=None, converter=convert_array_to(float),
-        validator=attr.validators.optional(validate_shape("norb")))
-    irreps: np.ndarray = attr.ib(
+    kind: str = attrs.field(
+        validator=attrs.validators.in_(["restricted", "unrestricted", "generalized"])
+    )
+    norba: int = attrs.field(validator=validate_norbab)
+    norbb: int = attrs.field(validator=validate_norbab)
+    occs: Optional[NDArray] = attrs.field(
         default=None,
-        validator=attr.validators.optional(validate_shape("norb")))
-    occs_aminusb: np.ndarray = attr.ib(
-        default=None, converter=convert_array_to(float),
-        validator=attr.validators.and_(
-            attr.validators.optional(validate_shape("norb")),
-            validate_occs_aminusb))
+        converter=convert_array_to(float),
+        validator=attrs.validators.optional(validate_shape("norb")),
+    )
+    coeffs: Optional[NDArray] = attrs.field(
+        default=None,
+        converter=convert_array_to(float),
+        validator=attrs.validators.optional(validate_shape(None, "norb")),
+    )
+    energies: Optional[NDArray] = attrs.field(
+        default=None,
+        converter=convert_array_to(float),
+        validator=attrs.validators.optional(validate_shape("norb")),
+    )
+    irreps: Optional[NDArray] = attrs.field(
+        default=None, validator=attrs.validators.optional(validate_shape("norb"))
+    )
+    occs_aminusb: Optional[NDArray] = attrs.field(
+        default=None,
+        converter=convert_array_to(float),
+        validator=attrs.validators.and_(
+            attrs.validators.optional(validate_shape("norb")), validate_occs_aminusb
+        ),
+    )
 
     @property
     def nelec(self) -> float:
@@ -154,12 +165,12 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
         """Return the number of spatial basis functions."""
         if self.coeffs is None:
             return None
-        if self.kind == 'generalized':
+        if self.kind == "generalized":
             return self.coeffs.shape[0] // 2
         return self.coeffs.shape[0]
 
     @property
-    def norb(self):  # pylint: disable=too-many-return-statements
+    def norb(self):
         """Return the number of spatially distinct orbitals.
 
         Notes
@@ -190,7 +201,7 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError
         if self.occs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             if self.occs_aminusb is None:
                 # heuristics ...
                 if (self.occs == self.occs.astype(int)).all():
@@ -220,7 +231,7 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError
         if self.occs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             if self.occs_aminusb is None:
                 # heuristics ...
                 if (self.occs == self.occs.astype(int)).all():
@@ -233,13 +244,13 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
                 result = (self.occs + self.occs_aminusb) / 2
             result.flags.writeable = False
             return result
-        return self.occs[:self.norba]
+        return self.occs[: self.norba]
 
     @occsa.setter
     def occsa(self, occsa):
         if self.kind == "generalized":
             raise NotImplementedError
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             occsa = np.array(occsa)
             if self.occs is None:
                 self.occs = occsa
@@ -249,7 +260,7 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
                 self.occs = occsa + occsb
                 self.occs_aminusb = occsa - occsb
         else:
-            self.occs[:self.norba] = occsa
+            self.occs[: self.norba] = occsa
 
     @property
     def occsb(self):
@@ -269,7 +280,7 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError
         if self.occs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             if self.occs_aminusb is None:
                 # heuristics ...
                 if (self.occs == self.occs.astype(int)).all():
@@ -282,13 +293,13 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
                 result = (self.occs - self.occs_aminusb) / 2
             result.flags.writeable = False
             return result
-        return self.occs[self.norba:]
+        return self.occs[self.norba :]
 
     @occsb.setter
     def occsb(self, occsb):
         if self.kind == "generalized":
             raise NotImplementedError
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             occsb = np.array(occsb)
             if self.occs is None:
                 self.occs = occsb
@@ -298,7 +309,7 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
                 self.occs = occsa + occsb
                 self.occs_aminusb = occsa - occsb
         else:
-            self.occs[self.norba:] = occsb
+            self.occs[self.norba :] = occsb
 
     @property
     def coeffsa(self):
@@ -307,9 +318,9 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError
         if self.coeffs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.coeffs
-        return self.coeffs[:, :self.norba]
+        return self.coeffs[:, : self.norba]
 
     @property
     def coeffsb(self):
@@ -318,9 +329,9 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError
         if self.coeffs is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.coeffs
-        return self.coeffs[:, self.norba:]
+        return self.coeffs[:, self.norba :]
 
     @property
     def energiesa(self):
@@ -329,9 +340,9 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError
         if self.energies is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.energies
-        return self.energies[:self.norba]
+        return self.energies[: self.norba]
 
     @property
     def energiesb(self):
@@ -340,9 +351,9 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError
         if self.energies is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.energies
-        return self.energies[self.norba:]
+        return self.energies[self.norba :]
 
     @property
     def irrepsa(self):
@@ -351,9 +362,9 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError
         if self.irreps is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.irreps
-        return self.irreps[:self.norba]
+        return self.irreps[: self.norba]
 
     @property
     def irrepsb(self):
@@ -362,6 +373,6 @@ class MolecularOrbitals:  # pylint: disable=too-many-instance-attributes
             raise NotImplementedError
         if self.irreps is None:
             return None
-        if self.kind == 'restricted':
+        if self.kind == "restricted":
             return self.irreps
-        return self.irreps[self.norba:]
+        return self.irreps[self.norba :]

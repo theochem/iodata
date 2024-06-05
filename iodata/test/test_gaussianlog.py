@@ -18,30 +18,30 @@
 # --
 """Test iodata.formats.log module."""
 
-from numpy.testing import assert_equal, assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
 
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def load_log_helper(fn_log):
     """Load a testing Gaussian log file with iodata.load_one."""
-    with path('iodata.test.data', fn_log) as fn:
+    with as_file(files("iodata.test.data").joinpath(fn_log)) as fn:
         return load_one(fn)
 
 
 def test_load_operators_water_sto3g_hf_g03():
     eps = 1e-5
-    mol = load_log_helper('water_sto3g_hf_g03.log')
+    mol = load_log_helper("water_sto3g_hf_g03.log")
 
-    olp = mol.one_ints['olp']
-    kin_ao = mol.one_ints['kin_ao']
-    na_ao = mol.one_ints['na_ao']
-    er_ao = mol.two_ints['er_ao']
+    olp = mol.one_ints["olp"]
+    kin_ao = mol.one_ints["kin_ao"]
+    na_ao = mol.one_ints["na_ao"]
+    er_ao = mol.two_ints["er_ao"]
 
     assert_equal(olp.shape, (7, 7))
     assert_equal(kin_ao.shape, (7, 7))
@@ -71,12 +71,12 @@ def test_load_operators_water_sto3g_hf_g03():
 
 def test_load_operators_water_ccpvdz_pure_hf_g03():
     eps = 1e-5
-    mol = load_log_helper('water_ccpvdz_pure_hf_g03.log')
+    mol = load_log_helper("water_ccpvdz_pure_hf_g03.log")
 
-    olp = mol.one_ints['olp']
-    kin_ao = mol.one_ints['kin_ao']
-    na_ao = mol.one_ints['na_ao']
-    er_ao = mol.two_ints['er_ao']
+    olp = mol.one_ints["olp"]
+    kin_ao = mol.one_ints["kin_ao"]
+    na_ao = mol.one_ints["na_ao"]
+    er_ao = mol.two_ints["er_ao"]
 
     assert_equal(olp.shape, (24, 24))
     assert_equal(kin_ao.shape, (24, 24))

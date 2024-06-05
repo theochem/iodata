@@ -30,6 +30,7 @@ import numpy as np
 
 __all__ = ["tfs"]
 
+# fmt: off
 tf0 = np.array([
     [1.0],
 ])
@@ -203,5 +204,6 @@ tf7 = np.array([
      0, 1.96875, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.64725984928774935, 0, 0,
      0, 0, 0, 0, 0],
 ])
+# fmt: on
 
 tfs = [tf0, tf1, tf2, tf3, tf4, tf5, tf6, tf7]

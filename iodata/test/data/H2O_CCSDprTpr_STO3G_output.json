@@ -1,0 +1,70 @@
+{
+  "molecule": {
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2.0,
+    "symbols": [
+      "O",
+      "H",
+      "H"
+    ],
+    "geometry": [
+      0.0,
+      0.0,
+      -0.12947694,
+      0.0,
+      -1.49418734,
+      1.02744651,
+      0.0,
+      1.49418734,
+      1.02744651
+    ],
+    "molecular_charge": 0.0,
+    "molecular_multiplicity": 1,
+    "connectivity": [
+      [0, 1, 1],
+      [0, 2, 1]
+    ],
+    "fix_orientation": true,
+    "fix_symmetry": "c1",
+    "provenance": {
+      "creator": "HORTON3",
+      "routine": "Extracted from molpro_ccsd_prt_pr_water_energy_output.json"
+    },
+    "real": [true, true, true]
+  },
+  "driver": "energy",
+  "model": {
+    "method": "CCSD(T)",
+    "basis": "sto-3g"
+  },
+  "id": "1",
+  "schema_name": "qcschema_output",
+  "schema_version": 2.0,
+  "provenance": [
+    {
+    "creator": "QCElemental",
+    "version": "v0.2.6",
+    "routine": "qcelemental.models.results"
+    },
+    {
+      "creator": "HORTON3",
+      "routine": "Manual validation"
+    }
+  ],
+  "success": true,
+  "return_result": -75.0197177197499,
+  "properties": {
+    "nuclear_repulsion_energy": 8.80146205625184,
+    "scf_dipole_moment": [0.0, 0.0, 0.65662910269302],
+    "scf_total_energy": -74.9646625166939,
+    "ccsd_same_spin_correlation_energy": -0.0019035720854254133,
+    "ccsd_opposite_spin_correlation_energy": -0.0530757170419502,
+    "ccsd_correlation_energy": -0.0549792917918461,
+    "ccsd_total_energy": -75.0196418084857,
+    "ccsd_prt_pr_correlation_energy": -0.0550552030560323,
+    "ccsd_prt_pr_total_energy": -75.0197177197499,
+    "calcinfo_nalpha": 5,
+    "calcinfo_nbeta": 5,
+    "calcinfo_nbasis": 7
+  }
+}

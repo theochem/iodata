@@ -20,10 +20,9 @@
 # pylint: disable=unused-argument,redefined-builtin
 """Generate formats.rst."""
 
-
 from gen_formats import _format_words, _print_section
-from iodata.api import INPUT_MODULES
 
+from iodata.api import INPUT_MODULES
 
 __all__ = []
 
@@ -54,16 +53,16 @@ def main():
     for modname, module in sorted(INPUT_MODULES.items()):
         if not hasattr(module, "write_input"):
             continue
-        lines = module.__doc__.split('\n')
+        lines = module.__doc__.split("\n")
         # add labels for cross-referencing format (e.g. in formats table)
         print(f".. _input_{modname}:")
         print()
-        _print_section('{} (``{}``)'.format(lines[0][:-1], modname), "=")
+        _print_section(f"{lines[0][:-1]} (``{modname}``)", "=")
         print()
         for line in lines[2:]:
             print(line)
 
-        _print_section(":py:func:`iodata.formats.{}.write_input`".format(modname), "-")
+        _print_section(f":py:func:`iodata.formats.{modname}.write_input`", "-")
         fn = getattr(module, "write_input", None)
         print("- Requires", _format_words(fn.required))
         if fn.optional:
@@ -76,11 +75,11 @@ def main():
         print()
         template = getattr(module, "default_template", None)
         if template:
-            code_block_lines = ["    " + l for l in template.split("\n")]
+            code_block_lines = ["    " + ell for ell in template.split("\n")]
             print(TEMPLATE.format(code_block_lines="\n".join(code_block_lines)))
         print()
         print()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

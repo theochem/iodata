@@ -18,15 +18,13 @@
 # --
 """Gaussian Input Module."""
 
-
-from typing import TextIO
-
-from .common import populate_fields
+from typing import Callable, Optional, TextIO
 
 from ..docstrings import document_write_input
 from ..iodata import IOData
 from ..periodic import num2sym
-
+from ..utils import angstrom
+from .common import write_input_base
 
 __all__ = []
 
@@ -42,27 +40,43 @@ default_template = """\
 """
 
 
-@document_write_input("GAUSSIAN", ['atnums', 'atcoords'],
-                      ['title', 'run_type', 'lot', 'obasis_name', 'spinmult', 'charge'])
-def write_input(f: TextIO, data: IOData, template: str = None, **kwargs):
+def default_atom_line(data: IOData, iatom: int):
+    """Format atom line for Gaussian input."""
+    symbol = num2sym[data.atnums[iatom]]
+    atcoord = data.atcoords[iatom] / angstrom
+    return f"{symbol:3s} {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
+
+
+@document_write_input(
+    "GAUSSIAN",
+    ["atnums", "atcoords"],
+    ["title", "run_type", "lot", "obasis_name", "spinmult", "charge"],
+)
+def write_input(
+    fh: TextIO,
+    data: IOData,
+    template: Optional[str] = None,
+    atom_line: Optional[Callable] = None,
+    **kwargs,
+):
     """Do not edit this docstring. It will be overwritten."""
-    # initialize a dictionary with fields to replace in the template
-    fields = populate_fields(data)
-    # set format-specific defaults
-    fields["lot"] = data.lot if data.lot is not None else 'hf'
-    fields["obasis_name"] = data.obasis_name if data.obasis_name is not None else 'sto-3g'
-    # convert run type to Gaussian keywords
-    run_types = {"energy": "sp", "energy_force": "force", "opt": "opt", "scan": "scan",
-                 "freq": "freq"}
-    fields["run_type"] = run_types[fields["run_type"].lower()]
-    # generate geometry (in angstrom)
-    geometry = []
-    for num, coord in zip(fields["atnums"], fields["atcoords"]):
-        geometry.append(f"{num2sym[num]:3} {coord[0]:10.6f} {coord[1]:10.6f} {coord[2]:10.6f}")
-    fields["geometry"] = "\n".join(geometry)
-    # get template
+    # Fill in some Gaussian-specific defaults and field names.
     if template is None:
         template = default_template
-    # populate files & write input
+    if atom_line is None:
+        atom_line = default_atom_line
+    gaussian_keywords = {
+        "energy": "sp",
+        "energy_force": "force",
+        "opt": "opt",
+        "scan": "scan",
+        "freq": "freq",
+    }
+    fields = {
+        "lot": data.lot or "hf",
+        "obasis_name": data.obasis_name or "sto-3g",
+        "run_type": gaussian_keywords[(data.run_type or "energy").lower()],
+    }
+    # User-specifield fields have priority, may overwrite default ones.
     fields.update(kwargs)
-    print(template.format(**fields), file=f)
+    write_input_base(fh, data, template, atom_line, fields)

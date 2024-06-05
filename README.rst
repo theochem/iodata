@@ -22,12 +22,11 @@
 
 IOData
 ======
-|GithubActions|
-|Conda|
-|Pypi|
-|Codecov|
+|pytest|
+|release|
+|CodeFactor|
+|PyPI|
 |Version|
-|CondaVersion|
 |License|
 
 
@@ -51,39 +50,48 @@ Please use the following citation in any publication using IOData library:
 Installation
 ------------
 
-To install IOData using the conda package management system, install
-`miniconda <https://conda.io/miniconda.html>`__ or
-`anaconda <https://www.anaconda.com/download>`__ first, and then:
+..
+    : To install IOData using the conda package management system, install
+    : `miniconda <https://conda.io/miniconda.html>`__ or
+    : `anaconda <https://www.anaconda.com/download>`__ first, and then:
+    :
+    : .. code-block:: bash
+    :
+    :     # Create a horton3 conda environment. (optional, recommended)
+    :     conda create -n horton3
+    :     source activate horton3
+    :
+    :     # Install the stable release.
+    :     conda install -c theochem iodata
+    :
+    : To install IOData with pip, you may want to create a `virtual environment`_,
+    : and then:
+    :
+    : .. code-block:: bash
+    :
+    :     # Install the stable release.
+    :     pip install qc-iodata
+
+In anticipation of the 1.0 release of IOData, install the latest git revision
+as follows:
 
 .. code-block:: bash
 
-    # Create a horton3 conda environment. (optional, recommended)
-    conda create -n horton3
-    source activate horton3
+    python -m pip install git+https://github.com/theochem/iodata.git
 
-    # Install the stable release.
-    conda install -c theochem iodata
-
-To install IOData with pip, you may want to create a `virtual environment`_,
-and then:
-
-.. code-block:: bash
-
-    # Install the stable release.
-    pip install qc-iodata
+Add the ``--user`` argument if you are not working in a virtual or conda
+environment. Note that there may be API changes between subsequent revisions.
 
 See https://iodata.readthedocs.io/en/latest/install.html for full details.
 
-.. |GithubActions| image:: https://github.com/theochem/iodata/actions/workflows/ci.yml/badge.svg?branch=master
-    :target: https://github.com/theochem/iodata/actions/workflows/ci.yml
-.. |Version| image:: https://img.shields.io/pypi/pyversions/iodata.svg
+.. |pytest| image:: https://github.com/theochem/iodata/actions/workflows/pytest.yaml/badge.svg
+    :target: https://github.com/theochem/iodata/actions/workflows/pytest.yaml
+.. |release| image:: https://github.com/theochem/iodata/actions/workflows/release.yaml/badge.svg
+    :target: https://github.com/theochem/iodata/actions/workflows/release.yaml
+.. |CodeFactor| image:: https://www.codefactor.io/repository/github/tovrstra/stepup-core/badge
+    :target: https://www.codefactor.io/repository/github/tovrstra/stepup-core
+.. |Version| image:: https://img.shields.io/pypi/pyversions/qc-iodata.svg
 .. |License| image:: https://img.shields.io/github/license/theochem/iodata
-.. |Pypi| image:: https://img.shields.io/pypi/v/iodata.svg
-    :target: https://pypi.python.org/pypi/iodata/0.1.3
-.. |Codecov| image:: https://img.shields.io/codecov/c/github/theochem/iodata/master.svg
-    :target: https://codecov.io/gh/theochem/iodata
-.. |Conda| image:: https://img.shields.io/conda/v/theochem/iodata.svg
-    :target: https://anaconda.org/theochem/iodata
-.. |CondaVersion| image:: https://img.shields.io/conda/pn/theochem/iodata.svg
-    :target: https://anaconda.org/theochem/iodata
+.. |PyPI| image:: https://img.shields.io/pypi/v/qc-iodata.svg
+    :target: https://pypi.python.org/pypi/qc-iodata/
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html

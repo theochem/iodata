@@ -22,25 +22,29 @@ There are different formats of mol2 files. Here the compatibility with AMBER sof
 was the main objective to write out files with atomic charges used by antechamber.
 """
 
-
-from typing import TextIO, Iterator, Tuple
+from collections.abc import Iterator
+from typing import TextIO
 
 import numpy as np
+from numpy.typing import NDArray
 
-from ..docstrings import (document_load_one, document_load_many, document_dump_one,
-                          document_dump_many)
+from ..docstrings import (
+    document_dump_many,
+    document_dump_one,
+    document_load_many,
+    document_load_one,
+)
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym, bond2num, num2bond
-from ..utils import angstrom, LineIterator
-
+from ..periodic import bond2num, num2bond, num2sym, sym2num
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 
 
-PATTERNS = ['*.mol2']
+PATTERNS = ["*.mol2"]
 
 
-@document_load_one("MOL2", ['atcoords', 'atnums', 'atcharges', 'atffparams'], ['title'])
+@document_load_one("MOL2", ["atcoords", "atnums", "atcharges", "atffparams"], ["title"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     molecule_found = False
@@ -65,23 +69,22 @@ def load_one(lit: LineIterator) -> dict:
                 atcharges = {"mol2charges": atchgs}
                 atffparams = {"attypes": attypes}
                 result = {
-                    'atcoords': atcoords,
-                    'atnums': atnums,
-                    'atcharges': atcharges,
-                    'atffparams': atffparams,
-                    'title': title
+                    "atcoords": atcoords,
+                    "atnums": atnums,
+                    "atcharges": atcharges,
+                    "atffparams": atffparams,
+                    "title": title,
                 }
                 molecule_found = True
             if words[0] == "@<TRIPOS>BOND":
                 bonds = _load_helper_bonds(lit, nbonds)
-                result['bonds'] = bonds
+                result["bonds"] = bonds
     if not molecule_found:
         raise lit.error("Molecule could not be read")
     return result
 
 
-def _load_helper_atoms(lit: LineIterator, natoms: int)\
-        -> Tuple[np.ndarray, np.ndarray, np.ndarray, tuple]:
+def _load_helper_atoms(lit: LineIterator, natoms: int) -> tuple[NDArray, NDArray, NDArray, tuple]:
     """Load element numbers, coordinates and atomic charges."""
     atnums = np.empty(natoms)
     atcoords = np.empty((natoms, 3))
@@ -95,7 +98,7 @@ def _load_helper_atoms(lit: LineIterator, natoms: int)\
         atnum = sym2num.get(symbol, sym2num.get(symbol[0], None))
         if atnum is None:
             atnum = 0
-            lit.warn(f'Can not convert {words[1][:2]} to elements')
+            lit.warn(f"Can not convert {words[1][:2]} to elements")
         atnums[i] = atnum
         attypes.append(words[5])
         atcoords[i] = [float(words[2]), float(words[3]), float(words[4])]
@@ -108,7 +111,7 @@ def _load_helper_atoms(lit: LineIterator, natoms: int)\
     return atnums, atcoords, atchgs, attypes
 
 
-def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
+def _load_helper_bonds(lit: LineIterator, nbonds: int) -> NDArray:
     """Load bond information.
 
     Each line in a bond definition has the following structure
@@ -126,60 +129,59 @@ def _load_helper_bonds(lit: LineIterator, nbonds: int) -> Tuple[np.ndarray]:
             int(words[1]) - 1,
             int(words[2]) - 1,
             # convert mol2 bond type to integer
-            bond2num.get(words[3], bond2num["un"])
+            bond2num.get(words[3], bond2num["un"]),
         ]
         if bond is None:
             bond = [0, 0, 0]
-            lit.warn(f'Something wrong in the bond section: {bond}')
+            lit.warn(f"Something wrong in the bond section: {bond}")
         bonds[i] = bond
     return bonds
 
 
-@document_load_many("MOL2", ['atcoords', 'atnums', 'atcharges', 'atffparams'], ['title'])
+@document_load_many("MOL2", ["atcoords", "atnums", "atcharges", "atffparams"], ["title"])
 def load_many(lit: LineIterator) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # MOL2 files with more molecules are a simple concatenation of individual MOL2 files,'
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             yield load_one(lit)
-        except IOError:
-            return
+    except OSError:
+        return
 
 
-@document_dump_one("MOL2", ['atcoords', 'atnums'], ['atcharges', 'atffparams', 'title'])
+@document_dump_one("MOL2", ["atcoords", "atnums"], ["atcharges", "atffparams", "title"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     # The first six lines are reserved for comments
     print("# Mol2 file created with Iodata", file=f)
     print("\n\n\n\n\n", file=f)
     print("@<TRIPOS>MOLECULE", file=f)
-    print(data.title or 'Created with IOData', file=f)
+    print(data.title or "Created with IOData", file=f)
     if data.bonds is not None:
         bonds = len(data.bonds)
-        print(f'{data.natom:5d} {bonds:6d} {0:6d} {0:6d}', file=f)
+        print(f"{data.natom:5d} {bonds:6d} {0:6d} {0:6d}", file=f)
     else:
-        print(f'{data.natom:5d} {0:6d} {0:6d} {0:6d}', file=f)
+        print(f"{data.natom:5d} {0:6d} {0:6d} {0:6d}", file=f)
     print("@<TRIPOS>ATOM", file=f)
-    atcharges = data.atcharges.get('mol2charges')
-    attypes = data.atffparams.get('attypes')
+    atcharges = data.atcharges.get("mol2charges")
+    attypes = data.atffparams.get("attypes")
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         x, y, z = data.atcoords[i] / angstrom
-        out1 = f'{i+1:7d} {n:2s} {x:15.4f} {y:9.4f} {z:9.4f} '
+        out1 = f"{i+1:7d} {n:2s} {x:15.4f} {y:9.4f} {z:9.4f} "
         atcharge = 0.0 if atcharges is None else atcharges[i]
         attype = n if attypes is None else attypes[i]
-        out2 = f'{attype:6s} {1:4d} XXX {atcharge:14.4f}'
+        out2 = f"{attype:6s} {1:4d} XXX {atcharge:14.4f}"
         print(out1 + out2, file=f)
     if data.bonds is not None:
         print("@<TRIPOS>BOND", file=f)
         for i, bond in enumerate(data.bonds):
             bondtype = num2bond.get(bond[2], "un")
-            print(f'{i+1:6d} {bond[0]+1:4d} {bond[1]+1:4d} {bondtype:2s}',
-                  file=f)
+            print(f"{i+1:6d} {bond[0]+1:4d} {bond[1]+1:4d} {bondtype:2s}", file=f)
 
 
-@document_dump_many("MOL2", ['atcoords', 'atnums', 'atcharges'], ['title'])
+@document_dump_many("MOL2", ["atcoords", "atnums", "atcharges"], ["title"])
 def dump_many(f: TextIO, datas: Iterator[IOData]):
     """Do not edit this docstring. It will be overwritten."""
     # Similar to load_many, this is relatively easy.
