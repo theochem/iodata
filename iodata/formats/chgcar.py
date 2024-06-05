@@ -25,23 +25,20 @@ Note that even though the ``CHGCAR`` and ``LOCPOT`` files look very similar, the
 different conversions to atomic units.
 """
 
-
-from typing import Tuple
-
 import numpy as np
+from numpy.typing import NDArray
 
 from ..docstrings import document_load_one
 from ..periodic import sym2num
-from ..utils import angstrom, volume, LineIterator, Cube
-
+from ..utils import Cube, LineIterator, angstrom, volume
 
 __all__ = []
 
 
-PATTERNS = ['CHGCAR*', 'AECCAR*']
+PATTERNS = ["CHGCAR*", "AECCAR*"]
 
 
-def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray]:
+def _load_vasp_header(lit: LineIterator) -> tuple[str, NDArray, NDArray, NDArray]:
     """Load the cell and atoms from a VASP file format.
 
     Parameters
@@ -66,10 +63,8 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
 
     # read cell parameters in angstrom, without the universal scaling factor.
     # each row is one cell vector
-    cellvecs = []
-    for _i in range(3):
-        cellvecs.append([float(w) for w in next(lit).split()])
-    cellvecs = np.array(cellvecs) * angstrom * scaling
+    cellvecs = np.array([[float(w) for w in next(lit).split()] for _ in range(3)])
+    cellvecs *= angstrom * scaling
 
     # note that in older VASP version the following line might be absent
     vasp_atnums = [sym2num[w] for w in next(lit).split()]
@@ -81,10 +76,10 @@ def _load_vasp_header(lit: LineIterator) -> Tuple[str, np.ndarray, np.ndarray, n
 
     line = next(lit)
     # the 7th line can optionally indicate selective dynamics
-    if line[0].lower() in ['s']:
+    if line[0].lower() in ["s"]:
         line = next(lit)
     # parse direct/cartesian switch
-    cartesian = line[0].lower() in ['c', 'k']
+    cartesian = line[0].lower() in ["c", "k"]
 
     # read the coordinates
     atcoords = []
@@ -133,22 +128,21 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
                     words = next(lit).split()
                 cube_data[i0, i1, i2] = float(words.pop(0))
 
-    cube = Cube(origin=np.zeros(3), axes=cellvecs / shape.reshape(-1, 1),
-                data=cube_data)
+    cube = Cube(origin=np.zeros(3), axes=cellvecs / shape.reshape(-1, 1), data=cube_data)
 
     return {
-        'title': title,
-        'atcoords': atcoords,
-        'atnums': atnums,
-        'cellvecs': cellvecs,
-        'cube': cube,
+        "title": title,
+        "atcoords": atcoords,
+        "atnums": atnums,
+        "cellvecs": cellvecs,
+        "cube": cube,
     }
 
 
-@document_load_one("VASP 5 CHGCAR", ['atcoords', 'atnums', 'cellvecs', 'cube', 'title'])
+@document_load_one("VASP 5 CHGCAR", ["atcoords", "atnums", "cellvecs", "cube", "title"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     result = _load_vasp_grid(lit)
     # renormalize electron density
-    result['cube'].data[:] /= volume(result['cellvecs'])
+    result["cube"].data[:] /= volume(result["cellvecs"])
     return result

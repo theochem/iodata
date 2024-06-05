@@ -18,15 +18,13 @@
 # --
 """Orca Input Module."""
 
-
-from typing import TextIO, Callable
-
-from .common import write_input_base
+from typing import Callable, Optional, TextIO
 
 from ..docstrings import document_write_input
 from ..iodata import IOData
 from ..periodic import num2sym
 from ..utils import angstrom
+from .common import write_input_base
 
 __all__ = []
 
@@ -46,10 +44,18 @@ def default_atom_line(data: IOData, iatom: int):
     return f"{symbol:3s} {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
 
 
-@document_write_input("ORCA", ['atnums', 'atcoords'],
-                      ['title', 'run_type', 'lot', 'obasis_name', 'spinmult', 'charge'])
-def write_input(f: TextIO, data: IOData, template: str = None,
-                atom_line: Callable = None, **kwargs):
+@document_write_input(
+    "ORCA",
+    ["atnums", "atcoords"],
+    ["title", "run_type", "lot", "obasis_name", "spinmult", "charge"],
+)
+def write_input(
+    fh: TextIO,
+    data: IOData,
+    template: Optional[str] = None,
+    atom_line: Optional[Callable] = None,
+    **kwargs,
+):
     """Do not edit this docstring. It will be overwritten."""
     # Fill in some ORCA-specific defaults and field names.
     if template is None:
@@ -59,10 +65,10 @@ def write_input(f: TextIO, data: IOData, template: str = None,
     orca_keywords = {"energy": "Energy", "freq": "Freq", "opt": "Opt"}
     # Set format-specific defaults.
     fields = {
-        "lot": data.lot or 'HF',
-        "obasis_name": data.obasis_name or 'STO-3G',
+        "lot": data.lot or "HF",
+        "obasis_name": data.obasis_name or "STO-3G",
         "run_type": orca_keywords[(data.run_type or "energy").lower()],
     }
     # User-specifield fields have priority, may overwrite default ones.
     fields.update(kwargs)
-    write_input_base(f, data, template, atom_line, fields)
+    write_input_base(fh, data, template, atom_line, fields)

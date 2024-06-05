@@ -19,16 +19,16 @@
 # --
 """CLI for file conversion."""
 
-
 import argparse
+
 import numpy as np
 
-from .api import load_one, dump_one, load_many, dump_many, FORMAT_MODULES
+from .api import FORMAT_MODULES, dump_many, dump_one, load_many, load_one
 
 try:
     from iodata.version import __version__
 except ImportError:
-    __version__ = '0.0.0.post0'
+    __version__ = "0.0.0.post0"
 
 
 __all__ = []
@@ -49,36 +49,49 @@ load_many
 dump_many
     {dump_many}
 """.format(
-    load_one=' '.join(name for name, module in sorted(FORMAT_MODULES.items())
-                      if hasattr(module, 'load_one')),
-    dump_one=' '.join(name for name, module in sorted(FORMAT_MODULES.items())
-                      if hasattr(module, 'dump_one')),
-    load_many=' '.join(name for name, module in sorted(FORMAT_MODULES.items())
-                       if hasattr(module, 'load_many')),
-    dump_many=' '.join(name for name, module in sorted(FORMAT_MODULES.items())
-                       if hasattr(module, 'dump_many')),
+    load_one=" ".join(
+        name for name, module in sorted(FORMAT_MODULES.items()) if hasattr(module, "load_one")
+    ),
+    dump_one=" ".join(
+        name for name, module in sorted(FORMAT_MODULES.items()) if hasattr(module, "dump_one")
+    ),
+    load_many=" ".join(
+        name for name, module in sorted(FORMAT_MODULES.items()) if hasattr(module, "load_many")
+    ),
+    dump_many=" ".join(
+        name for name, module in sorted(FORMAT_MODULES.items()) if hasattr(module, "dump_many")
+    ),
 )
 
 
 def parse_args():
     """Use argparse to to parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        prog='iodata-convert', formatter_class=argparse.RawTextHelpFormatter,
-        description=DESCRIPTION)
+        prog="iodata-convert",
+        formatter_class=argparse.RawTextHelpFormatter,
+        description=DESCRIPTION,
+    )
     parser.add_argument(
-        '-V', '--version', action='version',
-        version="%(prog)s (IOData version {})".format(__version__))
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s (IOData version {__version__})",
+    )
     parser.add_argument(
-        '-i', '--infmt',
-        help='Select the input format, overrides automatic detection.')
+        "-i", "--infmt", help="Select the input format, overrides automatic detection."
+    )
     parser.add_argument(
-        '-o', '--outfmt',
-        help='Select the output format, overrides automatic detection.')
+        "-o", "--outfmt", help="Select the output format, overrides automatic detection."
+    )
     parser.add_argument(
-        '-m', '--many', default=False, action='store_true',
-        help='Convert many frames, e.g. for trajectories.')
-    parser.add_argument('input', help='The input file.')
-    parser.add_argument('output', help='The output file.')
+        "-m",
+        "--many",
+        default=False,
+        action="store_true",
+        help="Convert many frames, e.g. for trajectories.",
+    )
+    parser.add_argument("input", help="The input file.")
+    parser.add_argument("output", help="The output file.")
     return parser.parse_args()
 
 
@@ -108,11 +121,11 @@ def convert(infn, outfn, many, infmt, outfmt):
 def main():
     """Convert files between two formats using command-line arguments."""
     # All, except underflows, is *not* fine.
-    np.seterr(divide='raise', over='raise', invalid='raise')
+    np.seterr(divide="raise", over="raise", invalid="raise")
 
     args = parse_args()
     convert(args.input, args.output, args.many, args.infmt, args.outfmt)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

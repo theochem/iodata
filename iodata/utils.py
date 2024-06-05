@@ -18,37 +18,42 @@
 # --
 """Utility functions module."""
 
-
-from typing import Tuple
 import warnings
 
-import attr
+import attrs
 import numpy as np
 import scipy.constants as spc
+from numpy.typing import NDArray
 from scipy.linalg import eigh
 
 from .attrutils import validate_shape
 
-
-__all__ = ['LineIterator', 'Cube', 'set_four_index_element', 'volume',
-           'derive_naturals', 'check_dm']
+__all__ = [
+    "LineIterator",
+    "Cube",
+    "set_four_index_element",
+    "volume",
+    "derive_naturals",
+    "check_dm",
+    "strtobool",
+]
 
 
 # The unit conversion factors below can be used as follows:
 # - Conversion to atomic units: distance = 5*angstrom
 # - Conversion from atomic units: print(distance/angstrom)
-angstrom: float = spc.angstrom / spc.value(u'atomic unit of length')
-electronvolt: float = 1 / spc.value(u'hartree-electron volt relationship')
+angstrom: float = spc.angstrom / spc.value("atomic unit of length")
+electronvolt: float = 1 / spc.value("hartree-electron volt relationship")
 # Unit conversion for Gromacs gro files
-meter: float = 1 / spc.value(u'Bohr radius')
+meter: float = 1 / spc.value("Bohr radius")
 nanometer: float = 1e-9 * meter
-second: float = 1 / spc.value(u'atomic unit of time')
+second: float = 1 / spc.value("atomic unit of time")
 picosecond: float = 1e-12 * second
 # atomic mass unit (not atomic unit of mass!)
-amu: float = 1e-3 / (spc.value(u'electron mass') * spc.value(u'Avogadro constant'))
-kcalmol: float = 1e3 * spc.calorie / spc.value('Avogadro constant') / spc.value('Hartree energy')
-calmol: float = spc.calorie / spc.value('Avogadro constant') / spc.value('Hartree energy')
-kjmol: float = 1e3 / spc.value('Avogadro constant') / spc.value('Hartree energy')
+amu: float = 1e-3 / (spc.value("electron mass") * spc.value("Avogadro constant"))
+kcalmol: float = 1e3 * spc.calorie / spc.value("Avogadro constant") / spc.value("Hartree energy")
+calmol: float = spc.calorie / spc.value("Avogadro constant") / spc.value("Hartree energy")
+kjmol: float = 1e3 / spc.value("Avogadro constant") / spc.value("Hartree energy")
 
 
 class FileFormatError(IOError):
@@ -72,7 +77,7 @@ class LineIterator:
 
         """
         self.filename = filename
-        self.f = open(filename)
+        self.f = open(filename)  # noqa
         self.lineno = 0
         self.stack = []
 
@@ -84,12 +89,8 @@ class LineIterator:
 
     def __next__(self):
         """Return the next line and increase the lineno attribute by one."""
-        if self.stack:
-            line = self.stack.pop()
-        else:
-            line = next(self.f)
         self.lineno += 1
-        return line
+        return self.stack.pop() if self.stack else next(self.f)
 
     def error(self, msg: str):
         """Raise an error while reading a file.
@@ -100,7 +101,7 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        raise FileFormatError("{}:{} {}".format(self.filename, self.lineno, msg))
+        raise FileFormatError(f"{self.filename}:{self.lineno} {msg}")
 
     def warn(self, msg: str):
         """Raise a warning while reading a file.
@@ -111,8 +112,7 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        warnings.warn("{}:{} {}".format(self.filename, self.lineno, msg),
-                      FileFormatWarning, 2)
+        warnings.warn(f"{self.filename}:{self.lineno} {msg}", FileFormatWarning, stacklevel=2)
 
     def back(self, line):
         """Go one line back and decrease the lineno attribute by one."""
@@ -120,8 +120,7 @@ class LineIterator:
         self.lineno -= 1
 
 
-@attr.s(auto_attribs=True, slots=True,
-        on_setattr=[attr.setters.validate, attr.setters.convert])
+@attrs.define
 class Cube:
     """The volumetric data from a cube (or similar) file.
 
@@ -138,18 +137,19 @@ class Cube:
 
     """
 
-    origin: np.ndarray = attr.ib(validator=validate_shape(3))
-    axes: np.ndarray = attr.ib(validator=validate_shape(3, 3))
-    data: np.ndarray = attr.ib(validator=validate_shape(None, None, None))
+    origin: NDArray = attrs.field(validator=validate_shape(3))
+    axes: NDArray = attrs.field(validator=validate_shape(3, 3))
+    data: NDArray = attrs.field(validator=validate_shape(None, None, None))
 
     @property
     def shape(self):
-        """Shape of the rectangular grid."""  # noqa: D401
+        """Shape of the rectangular grid."""
         return self.data.shape
 
 
-def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int, l: int,
-                           value: float):
+def set_four_index_element(
+    four_index_object: NDArray, i0: int, i1: int, i2: int, i3: int, value: float
+):
     """Assign values to a four index object, account for 8-fold index symmetry.
 
     This function assumes physicists' notation.
@@ -159,23 +159,23 @@ def set_four_index_element(four_index_object: np.ndarray, i: int, j: int, k: int
     four_index_object
         The four-index object. It will be written to.
         shape=(nbasis, nbasis, nbasis, nbasis), dtype=float
-    i, j, k, l
+    i0, i1, i2, i3
         The indices to assign to.
     value
         The value of the matrix element to store.
 
     """
-    four_index_object[i, j, k, l] = value
-    four_index_object[j, i, l, k] = value
-    four_index_object[k, j, i, l] = value
-    four_index_object[i, l, k, j] = value
-    four_index_object[k, l, i, j] = value
-    four_index_object[l, k, j, i] = value
-    four_index_object[j, k, l, i] = value
-    four_index_object[l, i, j, k] = value
+    four_index_object[i0, i1, i2, i3] = value
+    four_index_object[i1, i0, i3, i2] = value
+    four_index_object[i2, i1, i0, i3] = value
+    four_index_object[i0, i3, i2, i1] = value
+    four_index_object[i2, i3, i0, i1] = value
+    four_index_object[i3, i2, i1, i0] = value
+    four_index_object[i1, i2, i3, i0] = value
+    four_index_object[i3, i0, i1, i2] = value
 
 
-def volume(cellvecs: np.ndarray) -> float:
+def volume(cellvecs: NDArray) -> float:
     """Calculate the (generalized) cell volume.
 
     Parameters
@@ -201,7 +201,7 @@ def volume(cellvecs: np.ndarray) -> float:
     raise ValueError("Argument cellvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
-def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def derive_naturals(dm: NDArray, overlap: NDArray) -> tuple[NDArray, NDArray]:
     """Derive natural orbitals from a given density matrix.
 
     Parameters
@@ -228,12 +228,12 @@ def derive_naturals(dm: np.ndarray, overlap: np.ndarray) -> Tuple[np.ndarray, np
     # Diagonalize and compute eigenvalues
     evals, evecs = eigh(sds, overlap)
     coeffs = np.zeros_like(overlap)
-    coeffs = evecs[:, :coeffs.shape[1]]
+    coeffs = evecs[:, : coeffs.shape[1]]
     occs = evals
     return coeffs, occs
 
 
-def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: float = 1.0):
+def check_dm(dm: NDArray, overlap: NDArray, eps: float = 1e-4, occ_max: float = 1.0):
     """Check if the density matrix has eigenvalues in the proper range.
 
     Parameters
@@ -258,8 +258,36 @@ def check_dm(dm: np.ndarray, overlap: np.ndarray, eps: float = 1e-4, occ_max: fl
     # construct natural orbitals
     occupations = derive_naturals(dm, overlap)[1]
     if occupations.min() < -eps:
-        raise ValueError('The density matrix has eigenvalues considerably smaller than '
-                         'zero. error=%e' % (occupations.min()))
+        raise ValueError(
+            "The density matrix has eigenvalues considerably smaller than "
+            f"zero. error={occupations.min():e}"
+        )
     if occupations.max() > occ_max + eps:
-        raise ValueError('The density matrix has eigenvalues considerably larger than '
-                         'max. error=%e' % (occupations.max() - 1))
+        raise ValueError(
+            "The density matrix has eigenvalues considerably larger than "
+            "max. error=%e" % (occupations.max() - 1)
+        )
+
+
+STRTOBOOL = {
+    "y": True,
+    "yes": True,
+    "t": True,
+    "true": True,
+    "on": True,
+    "1": True,
+    "n": False,
+    "no": False,
+    "f": False,
+    "false": False,
+    "off": False,
+    "0": False,
+}
+
+
+def strtobool(value: str) -> bool:
+    """Interpret string as a boolean."""
+    result = STRTOBOOL.get(value.lower())
+    if result is None:
+        raise ValueError(f"'{value}' cannot be converted to boolean")
+    return result

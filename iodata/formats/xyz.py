@@ -53,30 +53,44 @@ information loaded from a file can also be written back out when dumping it.
 
 """
 
-from typing import TextIO, Iterator
+from collections.abc import Iterator
+from typing import TextIO
 
 import numpy as np
 
-from ..docstrings import (document_load_one, document_load_many, document_dump_one,
-                          document_dump_many)
+from ..docstrings import (
+    document_dump_many,
+    document_dump_one,
+    document_load_many,
+    document_load_one,
+)
 from ..iodata import IOData
-from ..periodic import sym2num, num2sym
-from ..utils import angstrom, LineIterator
-
+from ..periodic import num2sym, sym2num
+from ..utils import LineIterator, angstrom
 
 __all__ = []
 
 
-PATTERNS = ['*.xyz']
+PATTERNS = ["*.xyz"]
 
 
 DEFAULT_ATOM_COLUMNS = [
-    ("atnums", None, (), int,
-     (lambda word: int(word) if word.isdigit() else sym2num[word.title()]),
-     (lambda atnum: "{:2s}".format(num2sym[atnum]))),
-    ("atcoords", None, (3,), float,
-     (lambda word: float(word) * angstrom),
-     (lambda value: "{:15.10f}".format(value / angstrom)))
+    (
+        "atnums",
+        None,
+        (),
+        int,
+        (lambda word: int(word) if word.isdigit() else sym2num[word.title()]),
+        (lambda atnum: f"{num2sym[atnum]:2s}"),
+    ),
+    (
+        "atcoords",
+        None,
+        (3,),
+        float,
+        (lambda word: float(word) * angstrom),
+        (lambda value: f"{value / angstrom:15.10f}"),
+    ),
 ]
 
 
@@ -90,8 +104,7 @@ string).
 """
 
 
-@document_load_one("XYZ", ['atcoords', 'atnums', 'title'],
-                   [], {"atom_columns": ATOM_COLUMNS_DOC})
+@document_load_one("XYZ", ["atcoords", "atnums", "title"], [], {"atom_columns": ATOM_COLUMNS_DOC})
 def load_one(lit: LineIterator, atom_columns=None) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Load the header.
@@ -99,10 +112,10 @@ def load_one(lit: LineIterator, atom_columns=None) -> dict:
     title = next(lit).strip()
     if atom_columns is None:
         atom_columns = DEFAULT_ATOM_COLUMNS
-    data = {'title': title}
+    data = {"title": title}
     # Initialize the arrays to be loaded from the XYZ file.
     for attrname, keyname, shapesuffix, dtype, _loadword, _dumpword in atom_columns:
-        array = np.zeros((natom,) + shapesuffix, dtype=dtype)
+        array = np.zeros((natom, *shapesuffix), dtype=dtype)
         if keyname is None:
             # Store the initial array as a normal attribute.
             data[attrname] = array
@@ -117,10 +130,10 @@ def load_one(lit: LineIterator, atom_columns=None) -> dict:
             # must be stored.
             if keyname is None:
                 # The array is a normal attribute.
-                atom_array = data[attrname][iatom: iatom + 1]
+                atom_array = data[attrname][iatom : iatom + 1]
             else:
                 # The array is a value of a dictionary attribute.
-                atom_array = data[attrname][keyname][iatom: iatom + 1]
+                atom_array = data[attrname][keyname][iatom : iatom + 1]
             # Fill in array elements with atomic properties. For each new value
             # to be loaded, the first element of the list words is consumed and
             # converted to the right format for IOData.
@@ -129,33 +142,31 @@ def load_one(lit: LineIterator, atom_columns=None) -> dict:
     return data
 
 
-@document_load_many("XYZ", ['atcoords', 'atnums', 'title'],
-                    [], {"atom_columns": ATOM_COLUMNS_DOC})
+@document_load_many("XYZ", ["atcoords", "atnums", "title"], [], {"atom_columns": ATOM_COLUMNS_DOC})
 def load_many(lit: LineIterator, atom_columns=None) -> Iterator[dict]:
     """Do not edit this docstring. It will be overwritten."""
     # XYZ Trajectory files are a simple concatenation of individual XYZ files,'
     # making it trivial to load many frames.
-    while True:
-        try:
+    try:
+        while True:
             # Check for and skip empty lines at the end of file
             line = next(lit)
             if line.strip() == "":
                 return
             lit.back(line)
             yield load_one(lit, atom_columns)
-        except StopIteration:
-            return
+    except StopIteration:
+        return
 
 
-@document_dump_one("XYZ", ['atcoords', 'atnums'], ['title'],
-                   {"atom_columns": ATOM_COLUMNS_DOC})
+@document_dump_one("XYZ", ["atcoords", "atnums"], ["title"], {"atom_columns": ATOM_COLUMNS_DOC})
 def dump_one(f: TextIO, data: IOData, atom_columns=None):
     """Do not edit this docstring. It will be overwritten."""
     if atom_columns is None:
         atom_columns = DEFAULT_ATOM_COLUMNS
     # Write the header
     print(data.natom, file=f)
-    print(data.title or 'Created with IOData', file=f)
+    print(data.title or "Created with IOData", file=f)
     # Write the atom lines
     for iatom in range(data.natom):
         words = []
@@ -164,13 +175,11 @@ def dump_one(f: TextIO, data: IOData, atom_columns=None):
             if keyname is not None:
                 # The data to be written is a value of a dictionary attribute.
                 values = values[keyname]
-            for value in values[iatom].flat:
-                words.append(dumpword(value))
+            words.extend(dumpword(value) for value in values[iatom].flat)
         print(" ".join(words), file=f)
 
 
-@document_dump_many("XYZ", ['atcoords', 'atnums'], ['title'],
-                    {"atom_columns": ATOM_COLUMNS_DOC})
+@document_dump_many("XYZ", ["atcoords", "atnums"], ["title"], {"atom_columns": ATOM_COLUMNS_DOC})
 def dump_many(f: TextIO, datas: Iterator[IOData], atom_columns=None):
     """Do not edit this docstring. It will be overwritten."""
     # Similar to load_many, this is relatively easy.

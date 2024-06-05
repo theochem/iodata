@@ -22,56 +22,54 @@ This format is used by `VASP 5.X <https://www.vasp.at/>`_ and
 `VESTA <http://jp-minerals.org/vesta/en/>`_.
 """
 
-
 from typing import TextIO
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_dump_one
+from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..periodic import num2sym
-from ..utils import angstrom, LineIterator
+from ..utils import LineIterator, angstrom
 from .chgcar import _load_vasp_header
-
 
 __all__ = []
 
 
-PATTERNS = ['POSCAR*']
+PATTERNS = ["POSCAR*"]
 
 
-@document_load_one("VASP 5 POSCAR", ['atcoords', 'atnums', 'cellvecs', 'title'])
+@document_load_one("VASP 5 POSCAR", ["atcoords", "atnums", "cellvecs", "title"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Load header
     title, cellvecs, atnums, atcoords = _load_vasp_header(lit)
     return {
-        'title': title,
-        'atcoords': atcoords,
-        'atnums': atnums,
-        'cellvecs': cellvecs,
+        "title": title,
+        "atcoords": atcoords,
+        "atnums": atnums,
+        "cellvecs": cellvecs,
     }
 
 
-@document_dump_one("VASP 5 POSCAR", ['atcoords', 'atnums', 'cellvecs'], ['title'])
+@document_dump_one("VASP 5 POSCAR", ["atcoords", "atnums", "cellvecs"], ["title"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    print(data.title or 'Created with IOData', file=f)
-    print('   1.00000000000000', file=f)
+    print(data.title or "Created with IOData", file=f)
+    print("   1.00000000000000", file=f)
 
     # Write cell vectors, each row is one vector in angstrom:
     cellvecs = data.cellvecs
     for rvec in cellvecs:
         r = rvec / angstrom
-        print(f'{r[0]: 21.16f} {r[1]: 21.16f} {r[2]: 21.16f}', file=f)
+        print(f"{r[0]: 21.16f} {r[1]: 21.16f} {r[2]: 21.16f}", file=f)
 
     # Construct list of elements to make sure the coordinates get written
     # in this order. Heaviest elements are put furst.
     uatnums = sorted(np.unique(data.atnums))[::-1]
-    print(' '.join(f'{num2sym[uatnum]:5s}' for uatnum in uatnums), file=f)
-    print(' '.join(f'{(data.atnums == uatnum).sum():5d}' for uatnum in uatnums), file=f)
-    print('Selective dynamics', file=f)
-    print('Direct', file=f)
+    print(" ".join(f"{num2sym[uatnum]:5s}" for uatnum in uatnums), file=f)
+    print(" ".join(f"{(data.atnums == uatnum).sum():5d}" for uatnum in uatnums), file=f)
+    print("Selective dynamics", file=f)
+    print("Direct", file=f)
 
     # Write the coordinates
     gvecs = np.linalg.inv(data.cellvecs).T
@@ -79,4 +77,4 @@ def dump_one(f: TextIO, data: IOData):
         indexes = (data.atnums == uatnum).nonzero()[0]
         for index in indexes:
             row = np.dot(gvecs, data.atcoords[index])
-            print(f'  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F', file=f)
+            print(f"  {row[0]: 21.16f} {row[1]: 21.16f} {row[2]: 21.16f}   F   F   F", file=f)

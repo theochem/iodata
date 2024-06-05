@@ -16,30 +16,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=unsubscriptable-object
 """Test iodata.formats.locpot module."""
 
-from numpy.testing import assert_equal, assert_allclose
+from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
 from ..utils import angstrom, electronvolt, volume
+
 try:
-    from importlib_resources import path
+    from importlib_resources import as_file, files
 except ImportError:
-    from importlib.resources import path
+    from importlib.resources import as_file, files
 
 
 def test_load_locpot_oxygen():
-    with path('iodata.test.data', 'LOCPOT.oxygen') as fn:
+    with as_file(files("iodata.test.data").joinpath("LOCPOT.oxygen")) as fn:
         mol = load_one(str(fn))
-    assert mol.title == 'O atom in a box'
+    assert mol.title == "O atom in a box"
     assert_equal(mol.atnums[0], 8)
-    assert_allclose(volume(mol.cellvecs), (10 * angstrom) ** 3, atol=1.e-10)
+    assert_allclose(volume(mol.cellvecs), (10 * angstrom) ** 3, atol=1.0e-10)
     assert_equal(len(mol.cube.shape), 3)
     assert_equal(mol.cube.shape, [1, 4, 2])
     assert abs(mol.cube.origin).max() < 1e-10
     d = mol.cube.data
-    assert_allclose(d[0, 0, 0] / electronvolt, 0.35046350435E+01, 1.e-10)
-    assert_allclose(d[0, 1, 0] / electronvolt, 0.213732132354E+01, 1.e-10)
-    assert_allclose(d[0, 2, 0] / electronvolt, -.65465465497E+01, 1.e-10)
-    assert_allclose(d[0, 2, 1] / electronvolt, -.546876467887E+01, 1.e-10)
+    assert_allclose(d[0, 0, 0] / electronvolt, 0.35046350435e01, 1.0e-10)
+    assert_allclose(d[0, 1, 0] / electronvolt, 0.213732132354e01, 1.0e-10)
+    assert_allclose(d[0, 2, 0] / electronvolt, -0.65465465497e01, 1.0e-10)
+    assert_allclose(d[0, 2, 1] / electronvolt, -0.546876467887e01, 1.0e-10)

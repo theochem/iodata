@@ -1,0 +1,36 @@
+{
+  "schema_name": "qcschema_input",
+  "schema_version": 2.0,
+  "molecule": {
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2.0,
+    "symbols":  ["O", "H", "H"],
+    "geometry": [0.0, 0.0, -0.1295, 0.0, -1.4942, 1.0274, 0.0, 1.4942, 1.0274],
+    "molecular_charge": 0,
+    "molecular_multiplicity": 1,
+    "real": [true, true, true],
+    "provenance": [
+      {
+        "creator": "Gaussian 16",
+        "version": "ES64L-G16RevC.01"
+      }
+    ]
+  },
+  "driver": "energy",
+  "model": {
+    "method": "HF",
+    "basis": "STO-3G"
+  },
+  "keywords": {
+    "program": "Gaussian",
+    "verbose": "normal",
+    "run_type": "energy"
+  },
+  "provenance": [
+    {
+      "creator": "IOData",
+      "version": "X.X.X",
+      "routine": "iodata.dump_one.com"
+    }
+  ]
+}

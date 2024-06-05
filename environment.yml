@@ -1,9 +1,0 @@
-name: rtd-iodata
-dependencies:
-  - python=3.7
-  - numpy
-  - scipy
-  - attrs >=20.1.0
-  - pip:
-      - sphinx-autodoc-typehints
-      - sphinxcontrib-napoleon

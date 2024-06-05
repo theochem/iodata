@@ -46,17 +46,17 @@ For the list of file formats that can be loaded or dumped by IOData, see
 :ref:`file_formats`. The two tables below summarize the file formats and
 features supported by IOData.
 
-======= ==========
-Code    Definition
-======= ==========
-**L**   loading is supported
-**D**   dumping is supported
-*(d)*   attribute may be derived from other attributes
-R       attribute is always read
-r       attribute is read if present
-W       attribute is always written
-w       attribute is is written if present
-======= ==========
+========= ==========
+Code      Definition
+========= ==========
+**L**     loading is supported
+**D**     dumping is supported
+*(d)*     attribute may be derived from other attributes
+R         attribute is always read
+r         attribute is read if present
+W         attribute is always written
+w         attribute is is written if present
+========= ==========
 
 .. include:: formats_tab.inc
 

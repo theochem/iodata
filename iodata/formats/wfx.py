@@ -21,23 +21,23 @@
 See http://aim.tkgristmill.com/wfxformat.html
 """
 
-from typing import TextIO, Iterator
 import warnings
+from collections.abc import Iterator
+from typing import Optional, TextIO
 
 import numpy as np
 
-from ..docstrings import document_load_one, document_dump_one
+from ..basis import MolecularBasis, Shell, convert_conventions
+from ..docstrings import document_dump_one, document_load_one
+from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
-from ..iodata import IOData
 from ..utils import LineIterator
-from ..basis import MolecularBasis, Shell, convert_conventions
-
-from .wfn import build_obasis, get_mocoeff_scales, CONVENTIONS
+from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
 __all__ = []
 
-PATTERNS = ['*.wfx']
+PATTERNS = ["*.wfx"]
 
 
 def _wfx_labels() -> tuple:
@@ -46,67 +46,74 @@ def _wfx_labels() -> tuple:
 
     # section labels with string data types
     labels_str = {
-        '<Title>': 'title',
-        '<Keywords>': 'keywords',
-        '<Model>': 'model_name',
+        "<Title>": "title",
+        "<Keywords>": "keywords",
+        "<Model>": "model_name",
     }
     # section labels with integer number data types
     labels_int = {
-        '<Number of Nuclei>': 'num_atoms',
-        '<Number of Occupied Molecular Orbitals>': 'num_occ_mo',
-        '<Number of Perturbations>': 'num_perturbations',
-        '<Number of Electrons>': 'num_electrons',
-        '<Number of Core Electrons>': 'num_core_electrons',
-        '<Number of Alpha Electrons>': 'num_alpha_electron',
-        '<Number of Beta Electrons>': 'num_beta_electron',
-        '<Number of Primitives>': 'num_primitives',
-        '<Electronic Spin Multiplicity>': 'spin_multi',
+        "<Number of Nuclei>": "num_atoms",
+        "<Number of Occupied Molecular Orbitals>": "num_occ_mo",
+        "<Number of Perturbations>": "num_perturbations",
+        "<Number of Electrons>": "num_electrons",
+        "<Number of Core Electrons>": "num_core_electrons",
+        "<Number of Alpha Electrons>": "num_alpha_electron",
+        "<Number of Beta Electrons>": "num_beta_electron",
+        "<Number of Primitives>": "num_primitives",
+        "<Electronic Spin Multiplicity>": "spin_multi",
     }
     # section labels with float number data types
     labels_float = {
-        '<Net Charge>': 'charge',
-        '<Energy = T + Vne + Vee + Vnn>': 'energy',
-        '<Virial Ratio (-V/T)>': 'virial_ratio',
-        '<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>': 'nuc_viral',
-        '<Full Virial Ratio, -(V - W)/T>': 'full_virial_ratio',
+        "<Net Charge>": "charge",
+        "<Energy = T + Vne + Vee + Vnn>": "energy",
+        "<Virial Ratio (-V/T)>": "virial_ratio",
+        "<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>": "nuc_viral",
+        "<Full Virial Ratio, -(V - W)/T>": "full_virial_ratio",
     }
     # section labels with array of integer data types
     labels_array_int = {
-        '<Atomic Numbers>': 'atnums',
-        '<Primitive Centers>': 'centers',
-        '<Primitive Types>': 'types',
-        '<MO Numbers>': 'mo_numbers',  # This is constructed in parse_wfx.
+        "<Atomic Numbers>": "atnums",
+        "<Primitive Centers>": "centers",
+        "<Primitive Types>": "types",
+        "<MO Numbers>": "mo_numbers",  # This is constructed in parse_wfx.
     }
     # section labels with array of float data types
     labels_array_float = {
-        '<Nuclear Cartesian Coordinates>': 'atcoords',
-        '<Nuclear Charges>': 'nuclear_charge',
-        '<Primitive Exponents>': 'exponents',
-        '<Molecular Orbital Energies>': 'mo_energies',
-        '<Molecular Orbital Occupation Numbers>': 'mo_occs',
-        '<Molecular Orbital Primitive Coefficients>': 'mo_coeffs',
+        "<Nuclear Cartesian Coordinates>": "atcoords",
+        "<Nuclear Charges>": "nuclear_charge",
+        "<Primitive Exponents>": "exponents",
+        "<Molecular Orbital Energies>": "mo_energies",
+        "<Molecular Orbital Occupation Numbers>": "mo_occs",
+        "<Molecular Orbital Primitive Coefficients>": "mo_coeffs",
     }
     # section labels with other data types
     labels_other = {
-        '<Nuclear Names>': 'nuclear_names',
-        '<Molecular Orbital Spin Types>': 'mo_spins',
-        '<Nuclear Cartesian Energy Gradients>': 'nuclear_gradient',
+        "<Nuclear Names>": "nuclear_names",
+        "<Molecular Orbital Spin Types>": "mo_spins",
+        "<Nuclear Cartesian Energy Gradients>": "nuclear_gradient",
     }
 
     # list of tags corresponding to required sections based on WFX format specifications
     required_tags = list(labels_str) + list(labels_int) + list(labels_float)
     required_tags += list(labels_array_float) + list(labels_array_int) + list(labels_other)
     # remove tags corresponding to optional sections
-    required_tags.remove('<Model>')
-    required_tags.remove('<Number of Core Electrons>')
-    required_tags.remove('<Electronic Spin Multiplicity>')
-    required_tags.remove('<Atomic Numbers>')
-    required_tags.remove('<Full Virial Ratio, -(V - W)/T>')
-    required_tags.remove('<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>')
-    required_tags.remove('<Nuclear Cartesian Energy Gradients>')
+    required_tags.remove("<Model>")
+    required_tags.remove("<Number of Core Electrons>")
+    required_tags.remove("<Electronic Spin Multiplicity>")
+    required_tags.remove("<Atomic Numbers>")
+    required_tags.remove("<Full Virial Ratio, -(V - W)/T>")
+    required_tags.remove("<Nuclear Virial of Energy-Gradient-Based Forces on Nuclei, W>")
+    required_tags.remove("<Nuclear Cartesian Energy Gradients>")
 
-    return (labels_str, labels_int, labels_float, labels_array_int, labels_array_float,
-            labels_other, required_tags)
+    return (
+        labels_str,
+        labels_int,
+        labels_float,
+        labels_array_int,
+        labels_array_float,
+        labels_other,
+        required_tags,
+    )
 
 
 def load_data_wfx(lit: LineIterator) -> dict:
@@ -129,38 +136,37 @@ def load_data_wfx(lit: LineIterator) -> dict:
             assert len(value) == 1
             result[lbs_float[key]] = float(value[0])
         elif key in lbs_afloat:
-            result[lbs_afloat[key]] = np.fromstring(" ".join(value), dtype=np.float, sep=" ")
+            result[lbs_afloat[key]] = np.fromstring(" ".join(value), dtype=float, sep=" ")
         elif key in lbs_aint:
-            result[lbs_aint[key]] = np.fromstring(" ".join(value), dtype=np.int, sep=" ")
+            result[lbs_aint[key]] = np.fromstring(" ".join(value), dtype=int, sep=" ")
         elif key in lbs_other:
             result[lbs_other[key]] = value
         else:
-            warnings.warn("Not recognized section label, skip {0}".format(key))
+            warnings.warn(f"Not recognized section label, skip {key}", stacklevel=2)
 
     # reshape some arrays
-    result['atcoords'] = result['atcoords'].reshape(-1, 3)
-    result['mo_coeffs'] = result['mo_coeffs'].reshape(result['num_primitives'], -1, order='F')
+    result["atcoords"] = result["atcoords"].reshape(-1, 3)
+    result["mo_coeffs"] = result["mo_coeffs"].reshape(result["num_primitives"], -1, order="F")
     # process nuclear gradient, if present
-    if 'nuclear_gradient' in result:
-        gradient_mix = np.array([i.split() for i in result.pop('nuclear_gradient')]).reshape(-1, 4)
-        gradient_atoms = gradient_mix[:, 0].astype(np.unicode_)
-        index = [result['nuclear_names'].index(atom) for atom in gradient_atoms]
-        result['atgradient'] = np.full((len(result['nuclear_names']), 3), np.nan)
-        result['atgradient'][index] = gradient_mix[:, 1:].astype(float)
+    if "nuclear_gradient" in result:
+        gradient_mix = np.array([i.split() for i in result.pop("nuclear_gradient")]).reshape(-1, 4)
+        gradient_atoms = gradient_mix[:, 0].astype(np.str_)
+        index = [result["nuclear_names"].index(atom) for atom in gradient_atoms]
+        result["atgradient"] = np.full((len(result["nuclear_names"]), 3), np.nan)
+        result["atgradient"][index] = gradient_mix[:, 1:].astype(float)
     # check keywords & number of perturbations
-    perturbation_check = {'GTO': 0, 'GIAO': 3, 'CGST': 6}
-    key = result['keywords']
-    num = result['num_perturbations']
-    if key not in perturbation_check.keys():
+    perturbation_check = {"GTO": 0, "GIAO": 3, "CGST": 6}
+    key = result["keywords"]
+    num = result["num_perturbations"]
+    if key not in perturbation_check:
         lit.error(f"The keywords is {key}, but it should be either GTO, GIAO or CGST")
     if num != perturbation_check[key]:
         lit.error(f"Number of perturbations of {key} is {num}, expected {perturbation_check[key]}")
     return result
 
 
-def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
+def parse_wfx(lit: LineIterator, required_tags: Optional[list] = None) -> dict:
     """Load data in all sections existing in the given WFX file LineIterator."""
-    # pylint: disable=too-many-branches
     data = {}
     mo_start = "<Molecular Orbital Primitive Coefficients>"
     section_start = None
@@ -175,24 +181,24 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
         if section_start is None and line.startswith("<"):
             # set start & end of the section and add it to data dictionary
             section_start = line
-            if section_start in data.keys():
-                lit.error("Section with tag={} is repeated!".format(section_start))
+            if section_start in data:
+                lit.error(f"Section with tag={section_start} is repeated!")
             data[section_start] = []
             section_end = line[:1] + "/" + line[1:]
             # special handling of <Molecular Orbital Primitive Coefficients> section
             if section_start == mo_start:
-                data['<MO Numbers>'] = []
+                data["<MO Numbers>"] = []
         # check whether line is the (correct) end of the section
         elif section_start is not None and line.startswith("</"):
             # In some cases, closing tags have a different number of spaces. 8-[
             if line.replace(" ", "") != section_end.replace(" ", ""):
-                lit.error("Expecting line {} but got {}.".format(section_end, line))
+                lit.error(f"Expecting line {section_end} but got {line}.")
             # reset section_start variable to signal that section ended
             section_start = None
         # handle <MO Number> line under <Molecular Orbital Primitive Coefficients> section
-        elif section_start == mo_start and line == '<MO Number>':
+        elif section_start == mo_start and line == "<MO Number>":
             # add MO Number to list
-            data['<MO Numbers>'].append(next(lit).strip())
+            data["<MO Numbers>"].append(next(lit).strip())
             # skip '</MO Number>' line
             next(lit)
         # add section content to the corresponding list in data dictionary
@@ -201,17 +207,18 @@ def parse_wfx(lit: LineIterator, required_tags: list = None) -> dict:
 
     # check if last section was closed
     if section_start is not None:
-        lit.error("Section {} is not closed at end of file.".format(section_start))
+        lit.error(f"Section {section_start} is not closed at end of file.")
     # check required section tags
     if required_tags is not None:
         for section_tag in required_tags:
-            if section_tag not in data.keys():
-                lit.error(f'Section {section_tag} is missing from loaded WFX data.')
+            if section_tag not in data:
+                lit.error(f"Section {section_tag} is missing from loaded WFX data.")
     return data
 
 
-@document_load_one("WFX", ['atcoords', 'atgradient', 'atnums', 'energy',
-                           'extra', 'mo', 'obasis', 'title'])
+@document_load_one(
+    "WFX", ["atcoords", "atgradient", "atnums", "energy", "extra", "mo", "obasis", "title"]
+)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # get data contained in WFX file with the proper type & shape
@@ -221,7 +228,8 @@ def load_one(lit: LineIterator) -> dict:
     # ---------------------
     # build molecular basis and permutation needed to regroup shells
     obasis, permutation = build_obasis(
-        data['centers'] - 1, data['types'] - 1, data['exponents'], lit)
+        data["centers"] - 1, data["types"] - 1, data["exponents"], lit
+    )
 
     # Build molecular orbitals
     # ------------------------
@@ -233,7 +241,7 @@ def load_one(lit: LineIterator) -> dict:
     # the px, py, pz basis functions. These shells are used by MolecularBasis (obasis) in
     # constructing the basis function. If that is the case for the loaded MO coefficients from WFX,
     # they need to be permuted to match obasis expansion of basis set (i.e. to appear in shells).
-    data['mo_coeffs'] = data['mo_coeffs'][permutation]
+    data["mo_coeffs"] = data["mo_coeffs"][permutation]
     # fix normalization because the loaded expansion coefficients from WFX corresponds to
     # un-normalized primitives for each normalized MO (which means the primitive normalization
     # constants has been included in the MO coefficients). However, IOData expects normalized
@@ -242,20 +250,20 @@ def load_one(lit: LineIterator) -> dict:
     # to expansion coefficients for normalized primitives. Here, we assume primitives are
     # L2-normalized (as stored in obasis.primitive_normalization) which is used in scaling MO
     # coefficients to be stored in MolecularOrbitals instance.
-    data['mo_coeffs'] /= get_mocoeff_scales(obasis).reshape(-1, 1)
+    data["mo_coeffs"] /= get_mocoeff_scales(obasis).reshape(-1, 1)
 
     # process mo_spins and convert it into restricted or unrestricted & count alpha/beta orbitals
     # we do not using the <Model> section for this because it is not guaranteed to be present
 
     # check whether restricted case with "Alpha and Beta" in mo_spins
-    if any("and" in word for word in data['mo_spins']):
+    if any("and" in word for word in data["mo_spins"]):
         # count number of alpha & beta molecular orbitals
-        norbb = data['mo_spins'].count("Alpha and Beta")
-        norba = norbb + data['mo_spins'].count("Alpha")
+        norbb = data["mo_spins"].count("Alpha and Beta")
+        norba = norbb + data["mo_spins"].count("Alpha")
         # check that mo_spin list contains no surprises
-        if data['mo_spins'] != ["Alpha and Beta"] * norbb + ["Alpha"] * (norba - norbb):
+        if data["mo_spins"] != ["Alpha and Beta"] * norbb + ["Alpha"] * (norba - norbb):
             lit.error("Unsupported <Molecular Orbital Spin Types> values.")
-        if norba != data['mo_coeffs'].shape[1]:
+        if norba != data["mo_coeffs"].shape[1]:
             lit.error("Number of orbitals inconsistent with orbital spin types.")
         # create molecular orbitals, which requires knowing the number of alpha and beta molecular
         # orbitals. These are expected to be the same for 'restricted' case, however, the number of
@@ -267,49 +275,65 @@ def load_one(lit: LineIterator) -> dict:
         # occupation numbers to identify the spin types. IOData also has different
         # conventions for norba and norbb, see orbitals.py for details.
         mo = MolecularOrbitals(
-            "restricted", norba, norba,  # This is not a typo!
-            data['mo_occs'], data['mo_coeffs'], data['mo_energies'])
+            "restricted",
+            norba,
+            norba,  # This is not a typo!
+            data["mo_occs"],
+            data["mo_coeffs"],
+            data["mo_energies"],
+        )
 
     # unrestricted case with "Alpha" and "Beta" in mo_spins
     else:
-        norba = data['mo_spins'].count("Alpha")
-        norbb = data['mo_spins'].count("Beta")
+        norba = data["mo_spins"].count("Alpha")
+        norbb = data["mo_spins"].count("Beta")
         # check that mo_spin list contains no surprises
-        if data['mo_spins'] != ["Alpha"] * norba + ["Beta"] * norbb:
+        if data["mo_spins"] != ["Alpha"] * norba + ["Beta"] * norbb:
             lit.error("Unsupported molecular orbital spin types.")
         # check that number of orbitals match number of MO coefficients
-        if norba + norbb != data['mo_coeffs'].shape[1]:
+        if norba + norbb != data["mo_coeffs"].shape[1]:
             lit.error("Number of orbitals inconsistent with orbital spin types.")
         # Create orbitals. For unrestricted wavefunctions, IOData uses the same
         # conventions as WFX.
         mo = MolecularOrbitals(
-            "unrestricted", norba, norbb,
-            data['mo_occs'], data['mo_coeffs'], data['mo_energies'])
+            "unrestricted", norba, norbb, data["mo_occs"], data["mo_coeffs"], data["mo_energies"]
+        )
 
     # prepare WFX-specific data for IOData
-    extra_labels = ['keywords', 'model_name', 'num_perturbations', 'num_core_electrons',
-                    'spin_multi', 'virial_ratio', 'nuc_viral', 'full_virial_ratio', 'mo_spin']
+    extra_labels = [
+        "keywords",
+        "model_name",
+        "num_perturbations",
+        "num_core_electrons",
+        "spin_multi",
+        "virial_ratio",
+        "nuc_viral",
+        "full_virial_ratio",
+        "mo_spin",
+    ]
     extra = {label: data.get(label, None) for label in extra_labels}
     extra["permutations"] = permutation
 
     return {
-        'atcoords': data['atcoords'],
-        'atgradient': data.get('atgradient'),
-        'atnums': data['atnums'],
-        'atcorenums': data['nuclear_charge'],
-        'energy': data['energy'],
-        'extra': extra,
-        'mo': mo,
-        'obasis': obasis,
-        'title': data['title'],
+        "atcoords": data["atcoords"],
+        "atgradient": data.get("atgradient"),
+        "atnums": data["atnums"],
+        "atcorenums": data["nuclear_charge"],
+        "energy": data["energy"],
+        "extra": extra,
+        "mo": mo,
+        "obasis": obasis,
+        "title": data["title"],
     }
 
 
-@document_dump_one("WFX", ['atcoords', 'atnums', 'atcorenums', 'mo', 'obasis', 'charge'],
-                   ['title', 'energy', 'spinpol', 'lot', 'atgradient', 'extra'])
+@document_dump_one(
+    "WFX",
+    ["atcoords", "atnums", "atcorenums", "mo", "obasis", "charge"],
+    ["title", "energy", "spinpol", "lot", "atgradient", "extra"],
+)
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    # pylint: disable=too-many-branches,too-many-statements
     # get all tags/labels that can be written into a WFX file
     lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, _ = _wfx_labels()
     # put all labels in one dictionary and flip key and value for easier use
@@ -323,10 +347,13 @@ def dump_one(f: TextIO, data: IOData):
     for shell in data.obasis.shells:
         for i, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
             for exponent, coeff in zip(shell.exponents, shell.coeffs.T[i]):
-                if kind != 'c':
+                if kind != "c":
                     raise ValueError("WFX can be generated only for Cartesian MolecularBasis!")
-                shells.append(Shell(shell.icenter, [angmom], [kind], np.array([exponent]),
-                                    coeff.reshape(-1, 1)))
+                shells.append(
+                    Shell(
+                        shell.icenter, [angmom], [kind], np.array([exponent]), coeff.reshape(-1, 1)
+                    )
+                )
     # make a new instance of MolecularBasis with de-contracted basis shells; ideally for WFX we
     # want the primitive basis set, but IOData only supports shells.
     obasis = MolecularBasis(shells, data.obasis.conventions, data.obasis.primitive_normalization)
@@ -342,9 +369,9 @@ def dump_one(f: TextIO, data: IOData):
     for shell in data.obasis.shells:
         for angmom, kind in zip(shell.angmoms, shell.kinds):
             n = len(data.obasis.conventions[angmom, kind])
-            c = raw_coeffs[index_mo_old: index_mo_old + n]
-            for j in range(shell.nprim):
-                mo_coeffs[index_mo_new: index_mo_new + n] = c
+            c = raw_coeffs[index_mo_old : index_mo_old + n]
+            for _j in range(shell.nprim):
+                mo_coeffs[index_mo_new : index_mo_new + n] = c
                 index_mo_new += n
             index_mo_old += n
     # fix MO coefficients
@@ -364,7 +391,7 @@ def dump_one(f: TextIO, data: IOData):
         mo_coeffs[:, index] *= contractions * scales
 
     # write title & keywords
-    _write_xml_single(tag=lbs["title"], info=data.title or '<Created with IOData>', file=f)
+    _write_xml_single(tag=lbs["title"], info=data.title or "<Created with IOData>", file=f)
     _write_xml_single(tag=lbs["keywords"], info=data.extra.get("keywords", "GTO"), file=f)
 
     # write number of nuclei & number of primitives
@@ -382,8 +409,8 @@ def dump_one(f: TextIO, data: IOData):
 
     # write nuclear names, atomic numbers, and nuclear charges
     # add ghost atom, represented by Bq and atomic number 0
-    num2sym.update({0: 'Bq'})
-    nuclear_names = [f' {num2sym[num]}{index + 1}' for index, num in enumerate(data.atcorenums)]
+    num2sym.update({0: "Bq"})
+    nuclear_names = [f" {num2sym[num]}{index + 1}" for index, num in enumerate(data.atcorenums)]
     _write_xml_iterator(tag=lbs["nuclear_names"], info=nuclear_names, file=f)
     _write_xml_iterator(tag=lbs["atnums"], info=data.atnums, file=f)
     _write_xml_iterator_scientific(tag=lbs["nuclear_charge"], info=data.atcorenums, file=f)
@@ -391,7 +418,7 @@ def dump_one(f: TextIO, data: IOData):
     # write nuclear cartesian coordinates
     print("<Nuclear Cartesian Coordinates>", file=f)
     for item in data.atcoords:
-        print('{: ,.14E} {: ,.14E} {: ,.14E}'.format(item[0], item[1], item[2]), file=f)
+        print(f"{item[0]: ,.14E} {item[1]: ,.14E} {item[2]: ,.14E}", file=f)
     print("</Nuclear Cartesian Coordinates>", file=f)
 
     # write net charge, number of electrons, number of alpha electrons, and number beta electrons
@@ -412,26 +439,26 @@ def dump_one(f: TextIO, data: IOData):
     prim_centers = [shell.icenter + 1 for shell in obasis.shells for _ in range(shell.nbasis)]
     print("<Primitive Centers>", file=f)
     for j in range(0, len(prim_centers), 10):
-        print(' '.join(['{:d}'.format(c) for c in prim_centers[j:j + 10]]), file=f)
+        print(" ".join([f"{c:d}" for c in prim_centers[j : j + 10]]), file=f)
     print("</Primitive Centers>", file=f)
 
     # write primitive types
     angmom_prim = {}
     count = 1
     for angmom in range(max([shell.angmoms[0] for shell in obasis.shells]) + 1):
-        angmom_prim[angmom] = [count + i for i in range(len(obasis.conventions[angmom, 'c']))]
-        count += len(obasis.conventions[angmom, 'c'])
+        angmom_prim[angmom] = [count + i for i in range(len(obasis.conventions[angmom, "c"]))]
+        count += len(obasis.conventions[angmom, "c"])
     prim_types = [item for shell in obasis.shells for item in angmom_prim[shell.angmoms[0]]]
     print("<Primitive Types>", file=f)
     for j in range(0, len(prim_types), 10):
-        print(' '.join(['{:d}'.format(c) for c in prim_types[j:j + 10]]), file=f)
+        print(" ".join([f"{c:d}" for c in prim_types[j : j + 10]]), file=f)
     print("</Primitive Types>", file=f)
 
     # write primitive exponents
     exponents = [shell.exponents[0] for shell in obasis.shells for _ in range(shell.nbasis)]
     print("<Primitive Exponents>", file=f)
     for j in range(0, len(exponents), 4):
-        print(' '.join(['{: ,.14E}'.format(e) for e in exponents[j:j + 4]]), file=f)
+        print(" ".join([f"{e: ,.14E}" for e in exponents[j : j + 4]]), file=f)
     print("</Primitive Exponents>", file=f)
 
     # write molecular orbital occupation numbers
@@ -441,10 +468,10 @@ def dump_one(f: TextIO, data: IOData):
     _write_xml_iterator_scientific(tag=lbs["mo_energies"], info=data.mo.energies, file=f)
 
     # write molecular orbital spin types
-    if data.mo.kind == 'restricted':
-        mo_spin = ['Alpha and Beta '] * len(data.mo.occs)
+    if data.mo.kind == "restricted":
+        mo_spin = ["Alpha and Beta "] * len(data.mo.occs)
     else:
-        mo_spin = ['Alpha'] * len(data.mo.occsa) + ['Beta'] * len(data.mo.occsb)
+        mo_spin = ["Alpha"] * len(data.mo.occsa) + ["Beta"] * len(data.mo.occsb)
     _write_xml_iterator(tag=lbs["mo_spins"], info=mo_spin, file=f)
 
     # write MO primitive coefficients
@@ -454,7 +481,7 @@ def dump_one(f: TextIO, data: IOData):
         print(str(mo + 1), file=f)
         print("</MO Number>", file=f)
         for j in range(0, obasis.nbasis, 4):
-            print(' '.join(['{: ,.14E}'.format(c) for c in mo_coeffs.T[mo][j:j + 4]]), file=f)
+            print(" ".join([f"{c: ,.14E}" for c in mo_coeffs.T[mo][j : j + 4]]), file=f)
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
     # write energy and virial ratio; use ' NAN' when None (not available)
@@ -466,8 +493,11 @@ def dump_one(f: TextIO, data: IOData):
         nuc_cart_energy_grad = list(zip(nuclear_names, data.atgradient))
         print("<Nuclear Cartesian Energy Gradients>", file=f)
         for atom in nuc_cart_energy_grad:
-            print(atom[0], '{: ,.14E} {: ,.14E} {: ,.14E}'.format(atom[1][0], atom[1][1],
-                                                                  atom[1][2]), file=f)
+            print(
+                atom[0],
+                f"{atom[1][0]: ,.14E} {atom[1][1]: ,.14E} {atom[1][2]: ,.14E}",
+                file=f,
+            )
         print("</Nuclear Cartesian Energy Gradients>", file=f)
 
     # nuclear virial of energy-gradient-based forces on nuclei (optional)
@@ -487,14 +517,14 @@ def _write_xml_single(tag: str, info: [str, int], file: TextIO) -> None:
     """Write header, tail and the data between them into the file."""
     print(tag, file=file)
     print(info, file=file)
-    print('</' + tag.lstrip('<'), file=file)
+    print("</" + tag.lstrip("<"), file=file)
 
 
 def _write_xml_single_scientific(tag: str, info: float, file: TextIO) -> None:
     """Write header, tail and the data between them into the file."""
     print(tag, file=file)
-    print('{: ,.14E}'.format(info), file=file)
-    print('</' + tag.lstrip('<'), file=file)
+    print(f"{info: ,.14E}", file=file)
+    print("</" + tag.lstrip("<"), file=file)
 
 
 def _write_xml_iterator(tag: str, info: Iterator, file: TextIO) -> None:
@@ -502,12 +532,12 @@ def _write_xml_iterator(tag: str, info: Iterator, file: TextIO) -> None:
     print(tag, file=file)
     for info_line in info:
         print(info_line, file=file)
-    print('</' + tag.lstrip('<'), file=file)
+    print("</" + tag.lstrip("<"), file=file)
 
 
 def _write_xml_iterator_scientific(tag: str, info: Iterator, file: TextIO) -> None:
     """Write list of arrays to file."""
     print(tag, file=file)
     for info_line in info:
-        print('{: ,.14E}'.format(info_line), file=file)
-    print('</' + tag.lstrip('<'), file=file)
+        print(f"{info_line: ,.14E}", file=file)
+    print("</" + tag.lstrip("<"), file=file)
