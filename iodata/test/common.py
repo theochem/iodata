@@ -20,6 +20,7 @@
 
 import os
 from contextlib import contextmanager
+from importlib.resources import as_file, files
 from typing import Optional
 
 import numpy as np
@@ -30,11 +31,6 @@ from ..api import load_one
 from ..basis import convert_conventions
 from ..overlap import compute_overlap
 from ..utils import FileFormatWarning
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 __all__ = [
     "compute_mulliken_charges",

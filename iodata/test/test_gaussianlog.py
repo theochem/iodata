@@ -18,14 +18,11 @@
 # --
 """Test iodata.formats.log module."""
 
+from importlib.resources import as_file, files
+
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def load_log_helper(fn_log):

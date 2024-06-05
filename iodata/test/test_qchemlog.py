@@ -18,17 +18,14 @@
 # --
 """Test iodata.formats.qchemlog module."""
 
+from importlib.resources import as_file, files
+
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
 from ..formats.qchemlog import load_qchemlog_low
 from ..utils import LineIterator, angstrom, kjmol
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def test_load_qchemlog_low_h2o():

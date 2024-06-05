@@ -19,6 +19,7 @@
 """Test iodata.formats.mol2 module."""
 
 import os
+from importlib.resources import as_file, files
 
 import pytest
 from numpy.testing import assert_allclose, assert_equal
@@ -27,11 +28,6 @@ from ..api import dump_many, dump_one, load_many, load_one
 from ..periodic import bond2num
 from ..utils import angstrom
 from .common import truncated_file
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def test_mol2_load_one():

@@ -19,6 +19,7 @@
 """Test iodata.inputs module."""
 
 import os
+from importlib.resources import as_file, files
 
 import numpy as np
 import pytest
@@ -27,11 +28,6 @@ from ..api import load_one, write_input
 from ..iodata import IOData
 from ..periodic import num2sym
 from ..utils import FileFormatWarning, angstrom
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def check_load_input_and_compare(fname: str, fname_expected: str):

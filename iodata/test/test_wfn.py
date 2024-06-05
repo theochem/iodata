@@ -19,6 +19,7 @@
 """Test iodata.formats.wfn module."""
 
 import os
+from importlib.resources import as_file, files
 
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -28,12 +29,6 @@ from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
 from ..utils import LineIterator
 from .common import check_orthonormal, compare_mols, compute_mulliken_charges
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
-
 
 # TODO: removed density, kin, nucnuc checks
 

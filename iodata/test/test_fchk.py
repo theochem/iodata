@@ -19,6 +19,7 @@
 """Test iodata.formats.fchk module."""
 
 import os
+from importlib.resources import as_file, files
 from typing import Optional
 
 import numpy as np
@@ -30,11 +31,6 @@ from ..overlap import compute_overlap
 from ..utils import check_dm
 from .common import check_orthonormal, compare_mols, compute_1rdm, load_one_warning
 from .test_molekel import compare_mols_diff_formats
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def test_load_fchk_nonexistent():

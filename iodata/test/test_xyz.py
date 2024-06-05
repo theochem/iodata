@@ -19,6 +19,7 @@
 """Test iodata.formats.xyz module."""
 
 import os
+from importlib.resources import as_file, files
 
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal
@@ -26,11 +27,6 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_many, dump_one, load_many, load_one
 from ..formats.xyz import DEFAULT_ATOM_COLUMNS
 from ..utils import angstrom
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def test_load_water_number():

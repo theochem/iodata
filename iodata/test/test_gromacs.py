@@ -18,15 +18,12 @@
 # --
 """Test iodata.formats.gromacs module."""
 
+from importlib.resources import as_file, files
+
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_many, load_one
 from ..utils import nanometer, picosecond
-
-try:
-    from importlib_resources import as_file, files
-except ImportError:
-    from importlib.resources import as_file, files
 
 
 def test_load_water():
