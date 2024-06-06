@@ -743,6 +743,10 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
 @document_dump_one("Molden", ["atcoords", "atnums", "mo", "obasis"], ["atcorenums", "title"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
+    # occs_aminusb is not supported
+    if data.mo.occs_aminusb is not None:
+        raise ValueError("Cannot write Molden file when mo.occs_aminusb is set.")
+
     # Print the header
     f.write("[Molden Format]\n")
     if data.title is not None:

@@ -20,7 +20,7 @@
 
 import numpy as np
 import pytest
-from numpy.testing import assert_equal
+from numpy.testing import assert_allclose, assert_equal
 
 from ..orbitals import MolecularOrbitals
 
@@ -54,6 +54,22 @@ def test_restricted_empty():
     assert mo.energiesb is None
     assert mo.irrepsa is None
     assert mo.irrepsb is None
+    # Test setters for occsa
+    occsa = np.array([1, 1, 0.5, 0.5, 0.0])
+    mo.occsa = occsa
+    assert_allclose(mo.occsa, occsa)
+    assert_allclose(mo.occsb, 0.0)
+    assert_allclose(mo.occs, occsa)
+    assert_allclose(mo.occs_aminusb, occsa)
+    # Test setters for occsb
+    mo.occs = None
+    mo.occs_aminusb = None
+    occsb = np.array([0.5, 1, 1, 0.5, 0.0])
+    mo.occsb = occsb
+    assert_allclose(mo.occsa, 0.0)
+    assert_allclose(mo.occsb, occsb)
+    assert_allclose(mo.occs, occsb)
+    assert_allclose(mo.occs_aminusb, -occsb)
 
 
 def test_restricted_occs():
@@ -67,6 +83,7 @@ def test_restricted_occs():
     assert mo.nbasis is None
     assert mo.norb == 5
     assert mo.spinpol == 0
+    # Test heuristics for ROHF or ROKS
     assert_equal(mo.occsa, [1, 1, 0, 0, 0])
     assert_equal(mo.occsb, [1, 1, 0, 0, 0])
     assert mo.coeffsa is None
@@ -75,6 +92,76 @@ def test_restricted_occs():
     assert mo.energiesb is None
     assert mo.irrepsa is None
     assert mo.irrepsb is None
+    # Test setters
+    mo.occsa = [1, 0.3, 0.7, 0, 0]
+    assert_allclose(mo.occsa, [1, 0.3, 0.7, 0, 0])
+    assert_allclose(mo.occsb, [1, 1, 0, 0, 0])
+    assert_allclose(mo.occs_aminusb, [0, -0.7, 0.7, 0, 0])
+    mo.occs_aminusb = None
+    mo.occs = occs
+    assert_equal(mo.occsa, [1, 1, 0, 0, 0])
+    assert_equal(mo.occsb, [1, 1, 0, 0, 0])
+    mo.occsb = [0.2, 0.8, 0, 0, 0]
+    assert_allclose(mo.occsa, [1, 1, 0, 0, 0])
+    assert_allclose(mo.occsb, [0.2, 0.8, 0, 0, 0])
+    assert_allclose(mo.occs_aminusb, [0.8, 0.2, 0, 0, 0])
+    # Test heuristics for closed-shell natural orbitals
+    mo.occs = [2, 1.8, 0.2, 0, 0]
+    mo.occs_aminusb = None
+    assert_allclose(mo.occsa, [1, 0.9, 0.1, 0, 0])
+    assert_allclose(mo.occsb, [1, 0.9, 0.1, 0, 0])
+    assert_allclose(mo.spinpol, 0.0)
+
+
+def test_restricted_occs_aminusb():
+    occs = [2.0, 1.3, 0.7]
+    occs_aminusb = [0.0, 0.7, 0.1]
+    with pytest.raises(TypeError):
+        MolecularOrbitals("restricted", 2, 2, occs=occs, occs_aminusb=occs_aminusb)
+    mo = MolecularOrbitals("restricted", 3, 3, occs=occs, occs_aminusb=occs_aminusb)
+    assert mo.norba == 3
+    assert mo.norbb == 3
+    assert_allclose(mo.nelec, 4.0)
+    assert mo.nbasis is None
+    assert mo.norb == 3
+    assert_allclose(mo.occsa, [1.0, 1.0, 0.4])
+    assert_allclose(mo.occsb, [1.0, 0.3, 0.3])
+    assert_allclose(mo.spinpol, 0.8)
+    assert mo.coeffsa is None
+    assert mo.coeffsb is None
+    assert mo.energiesa is None
+    assert mo.energiesb is None
+    assert mo.irrepsa is None
+    assert mo.irrepsb is None
+    # Verify that in-place modification of occsa and occsb does not work.
+    with pytest.raises(ValueError):
+        mo.occsa[1] = 0.5
+    assert_allclose(mo.occsa, [1.0, 1.0, 0.4])
+    with pytest.raises(ValueError):
+        mo.occsb[1] = 0.5
+    assert_allclose(mo.occsb, [1.0, 0.3, 0.3])
+    # Verify that shooting in one's own foot is still an option.
+    occsa_foo = mo.occsa
+    occsa_foo.flags.writeable = True
+    occsa_foo[1] = 0.5
+    assert_allclose(mo.occsa, [1.0, 1.0, 0.4])
+    # Test setters
+    mo.occsa = [1.0, 0.3, 0.7]
+    assert_allclose(mo.occsa, [1.0, 0.3, 0.7])
+    assert_allclose(mo.occsb, [1.0, 0.3, 0.3])
+    assert_allclose(mo.occs_aminusb, [0, 0.0, 0.4], atol=1e-10)
+    assert_allclose(mo.spinpol, 0.4)
+    mo.occsb = [0.2, 0.8, 0.0]
+    assert_allclose(mo.occsa, [1.0, 0.3, 0.7])
+    assert_allclose(mo.occsb, [0.2, 0.8, 0.0])
+    assert_allclose(mo.occs_aminusb, [0.8, -0.5, 0.7])
+    assert_allclose(mo.spinpol, 1.0)
+    # Test reverting back to heuristics
+    assert_allclose(mo.occs, [1.2, 1.1, 0.7])
+    mo.occs_aminusb = None
+    assert_allclose(mo.occsa, [0.6, 0.55, 0.35])
+    assert_allclose(mo.occsb, [0.6, 0.55, 0.35])
+    assert_allclose(mo.spinpol, 0.0)
 
 
 def test_restricted_coeffs():
@@ -185,6 +272,29 @@ def test_unrestricted_occs():
     assert mo.energiesb is None
     assert mo.irrepsa is None
     assert mo.irrepsb is None
+    # Test setters for occsa and occsb
+    occsa = np.array([1, 1, 0.5, 0.5, 0.0])
+    mo.occsa = occsa
+    assert_allclose(mo.occsa, occsa)
+    occsb = np.array([1, 0.7, 0.3])
+    mo.occsb = occsb
+    assert_allclose(mo.occsb, occsb)
+    assert_allclose(mo.occs, np.concatenate([occsa, occsb]))
+    # Test in-place modification of occsa and occsb, which should just work.
+    mo.occs = occs
+    mo.occsa[:] = occsa
+    assert_allclose(mo.occsa, occsa)
+    occsb = np.array([1, 0.7, 0.3])
+    mo.occsb[:] = occsb
+    assert_allclose(mo.occsb, occsb)
+    assert_allclose(mo.occs, np.concatenate([occsa, occsb]))
+
+
+def test_unrestricted_occs_aminusb():
+    occs = [2, 1, 0]
+    occs_aminusb = [0, 1, 0]
+    with pytest.raises(ValueError):
+        MolecularOrbitals("unrestricted", 2, 1, occs=occs, occs_aminusb=occs_aminusb)
 
 
 def test_unrestricted_coeffs():
@@ -313,6 +423,13 @@ def test_generalized_occs():
         _ = mo.irrepsb
 
 
+def test_generalized_occs_aminusb():
+    occs = [2, 1, 0]
+    occs_aminusb = [0, 1, 0]
+    with pytest.raises(ValueError):
+        MolecularOrbitals("generalized", None, None, occs=occs, occs_aminusb=occs_aminusb)
+
+
 def test_generalized_coeffs():
     rng = np.random.default_rng(1)
     coeffs = rng.uniform(-1, 1, (10, 7))
@@ -385,6 +502,10 @@ def test_generalized_irreps():
         _ = mo.occsa
     with pytest.raises(NotImplementedError):
         _ = mo.occsb
+    with pytest.raises(NotImplementedError):
+        mo.occsa = [1, 1, 1, 0, 0, 0, 0]
+    with pytest.raises(NotImplementedError):
+        mo.occsb = [1, 1, 1, 0, 0, 0, 0]
     with pytest.raises(NotImplementedError):
         _ = mo.coeffsa
     with pytest.raises(NotImplementedError):

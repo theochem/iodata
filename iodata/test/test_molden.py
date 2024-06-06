@@ -446,6 +446,36 @@ def test_load_molden_nh3_aug_cc_pvqz_cart_psi4():
     assert_allclose(charges, molden_charges, atol=1.0e-5)
 
 
+def test_load_be_cisd_321g_psi4():
+    # CISD singlet calculation on Beryllium
+    with as_file(
+        files("iodata.test.data").joinpath("be_cisd_321g_psi4_singlet.molden")
+    ) as fn_molden:
+        mol = load_one(str(fn_molden))
+
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffs, olp)
+
+    # Check Mulliken charges.
+    # Comparison with numbers from PSI4 output.
+    charges = compute_mulliken_charges(mol)
+    assert_allclose(charges, [0.0], atol=1.0e-5)
+
+    # Check things related to occupation numbers
+    assert_allclose(mol.nelec, 4.0)
+    assert mol.spinpol == 0.0
+    assert_allclose(mol.mo.nelec, 4.0)
+    assert mol.mo.spinpol == 0.0
+    assert_allclose(
+        mol.mo.occsa[-4:],
+        [0.03164123603158929, 0.031641236031589526, 0.9041716124281225, 0.9999438368325004],
+    )
+    assert_allclose(mol.mo.occsa, mol.mo.occsb)
+    assert mol.mo.occs_aminusb is None
+    assert_allclose(mol.mo.occs, 2 * mol.mo.occsa)
+
+
 def test_load_molden_nh3_molpro2012():
     # The file tested here is created with MOLPRO2012.
     with as_file(files("iodata.test.data").joinpath("nh3_molpro2012.molden")) as fn_molden:

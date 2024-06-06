@@ -334,6 +334,10 @@ def load_one(lit: LineIterator) -> dict:
 )
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
+    # occs_aminusb is not supported
+    if data.mo.occs_aminusb is not None:
+        raise ValueError("Cannot write WFX file when mo.occs_aminusb is set.")
+
     # get all tags/labels that can be written into a WFX file
     lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, _ = _wfx_labels()
     # put all labels in one dictionary and flip key and value for easier use

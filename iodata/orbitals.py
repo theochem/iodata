@@ -58,6 +58,12 @@ def validate_norbab(mo, attribute, value):
             raise ValueError("In case of restricted orbitals, norba must be equal to norbb.")
 
 
+def validate_occs_aminusb(mo, _attribtue, value):
+    """Validate the occs_aminusb attribute."""
+    if mo.kind != "restricted" and value is not None:
+        raise ValueError("Attribute occs_aminusb can only be set for restricted wavefunctions.")
+
+
 @attrs.define
 class MolecularOrbitals:
     """Class of Orthonormal Molecular Orbitals.
@@ -74,24 +80,45 @@ class MolecularOrbitals:
         Set to `None` in case of type=='generalized'.
         This is expected to be equal to `norba` for the `restricted` kind.
     occs
-        Molecular orbital occupation numbers. The length equals the number of columns of coeffs.
+        Molecular orbital occupation numbers. The length equals the number of
+        columns of coeffs. (optional)
     coeffs
         Molecular orbital coefficients.
         In case of restricted: shape = (nbasis, norba) = (nbasis, norbb).
         In case of unrestricted: shape = (nbasis, norba + norbb).
         In case of generalized: shape = (2 * nbasis, norb), where norb is the
-        total number of orbitals.
+        total number of orbitals. (optional)
     energies
-        Molecular orbital energies. The length equals the number of columns of coeffs.
+        Molecular orbital energies. The length equals the number of columns of
+        coeffs. (optional)
     irreps
-        Irreducible representation. The length equals the number of columns of coeffs.
+        Irreducible representation. The length equals the number of columns of
+        coeffs. (optional)
+    occs_aminusb
+        The difference between alpha and beta occupation numbers. The length
+        equals the number of columns of coeffs. (optional and only allowed
+        to be not None for restricted wavefunctions)
 
-    Warning: the interpretation of the occupation numbers may only be suitable
-    for single-reference orbitals (not fractionally occupied natural orbitals.)
-    When an occupation number is in ]0, 1], it is assumed that an alpha orbital
-    is (fractionally) occupied. When an occupation number is in ]1, 2], it is
-    assumed that the alpha orbital is fully occupied and the beta orbital is
-    (fractionally) occupied.
+    Notes
+    -----
+    For restricted wavefunctions, the occupation numbers are spin-summed values
+    and several rules are used to deduce the alpha and beta occupation
+    numbers:
+
+    - When ``occs_aminusb`` is set, alpha and beta occupation numbers are
+      derived trivially as ``(occs + occs_aminusb) / 2`` and
+      ``(occs - occs_aminusb) / 2``, respectively.
+
+    - When ``occs_aminusb`` is not set, there are two possibilities. When the
+      occupation numbers are integers, it is assumed that the orbitals represent
+      a restricted open-shell HF or KS wavefunction. An occupation number of 1
+      is then interpreted as an occupied alpha orbital and a virtual beta
+      orbital. When the occupation numbers are fractional, it is assumed that
+      the orbitals are closed-shell natural orbitals.
+
+    One can always describe all cases by setting ``occs_aminusb``. While this
+    seems appealing, keep in mind that most wavefunction file formats (FCHK,
+    Molden, Molekel, WFN and WFX) do not support it.
 
     """
 
@@ -117,6 +144,13 @@ class MolecularOrbitals:
     )
     irreps: Optional[NDArray] = attrs.field(
         default=None, validator=attrs.validators.optional(validate_shape("norb"))
+    )
+    occs_aminusb: Optional[NDArray] = attrs.field(
+        default=None,
+        converter=convert_array_to(float),
+        validator=attrs.validators.and_(
+            attrs.validators.optional(validate_shape("norb")), validate_occs_aminusb
+        ),
     )
 
     @property
@@ -168,31 +202,114 @@ class MolecularOrbitals:
         if self.occs is None:
             return None
         if self.kind == "restricted":
-            nbeta = np.clip(self.occs, 0, 1).sum()
-            return abs(self.nelec - 2 * nbeta)
+            if self.occs_aminusb is None:
+                # heuristics ...
+                if (self.occs == self.occs.astype(int)).all():
+                    # restricted open-shell HF/KS
+                    nbeta = np.clip(self.occs, 0, 1).sum()
+                    return abs(self.nelec - 2 * nbeta)
+                # restricted closed-shell natural orbitals
+                return 0.0
+            return self.occs_aminusb.sum()
         return abs(self.occsa.sum() - self.occsb.sum())
 
     @property
     def occsa(self):
-        """Return alpha occupation numbers."""
+        """Return alpha occupation numbers.
+
+        Notes
+        -----
+        For restricted wavefunctions, in-place assignment to occsa will not
+        work. In this case, the array is derived from ``mo.occs`` and optionally
+        ``mo.occs_aminusb``. To avoid that in-place assignment of occsa is
+        silently ignored, it is returned as a non-writeable array. To change
+        occsa, one can assign a whole new array, e.g. ``mo.occsa = new_occsa``
+        will work, while ``mo.occsa[1] = 0.3`` will not.
+
+        """
         if self.kind == "generalized":
             raise NotImplementedError
         if self.occs is None:
             return None
         if self.kind == "restricted":
-            return np.clip(self.occs, 0, 1)
+            if self.occs_aminusb is None:
+                # heuristics ...
+                if (self.occs == self.occs.astype(int)).all():
+                    # restricted open-shell HF/KS
+                    result = np.clip(self.occs, 0, 1)
+                else:
+                    # restricted closed-shell natural orbitals
+                    result = self.occs / 2
+            else:
+                result = (self.occs + self.occs_aminusb) / 2
+            result.flags.writeable = False
+            return result
         return self.occs[: self.norba]
+
+    @occsa.setter
+    def occsa(self, occsa):
+        if self.kind == "generalized":
+            raise NotImplementedError
+        if self.kind == "restricted":
+            occsa = np.array(occsa)
+            if self.occs is None:
+                self.occs = occsa
+                self.occs_aminusb = occsa.copy()
+            else:
+                occsb = np.array(self.occsb)
+                self.occs = occsa + occsb
+                self.occs_aminusb = occsa - occsb
+        else:
+            self.occs[: self.norba] = occsa
 
     @property
     def occsb(self):
-        """Return beta occupation numbers."""
+        """Return beta occupation numbers.
+
+        Notes
+        -----
+        For restricted wavefunctions, in-place assignment to occsb will not
+        work. In this case, the array is derived from ``mo.occs`` and optionally
+        ``mo.occs_aminusb``. To avoid that in-place assignment of occsb is
+        silently ignored, it is returned as a non-writeable array. To change
+        occsb, one can assign a whole new array, e.g. ``mo.occsb = new_occsb``
+        will work, while ``mo.occsb[1] = 0.3`` will not.
+
+        """
         if self.kind == "generalized":
             raise NotImplementedError
         if self.occs is None:
             return None
         if self.kind == "restricted":
-            return self.occs - np.clip(self.occs, 0, 1)
+            if self.occs_aminusb is None:
+                # heuristics ...
+                if (self.occs == self.occs.astype(int)).all():
+                    # restricted open-shell HF/KS
+                    result = self.occs - np.clip(self.occs, 0, 1)
+                else:
+                    # restricted closed-shell natural orbitals
+                    result = self.occs / 2
+            else:
+                result = (self.occs - self.occs_aminusb) / 2
+            result.flags.writeable = False
+            return result
         return self.occs[self.norba :]
+
+    @occsb.setter
+    def occsb(self, occsb):
+        if self.kind == "generalized":
+            raise NotImplementedError
+        if self.kind == "restricted":
+            occsb = np.array(occsb)
+            if self.occs is None:
+                self.occs = occsb
+                self.occs_aminusb = -occsb
+            else:
+                occsa = np.array(self.occsa)
+                self.occs = occsa + occsb
+                self.occs_aminusb = occsa - occsb
+        else:
+            self.occs[self.norba :] = occsb
 
     @property
     def coeffsa(self):
