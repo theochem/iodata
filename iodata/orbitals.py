@@ -221,7 +221,7 @@ class MolecularOrbitals:
         -----
         For restricted wavefunctions, in-place assignment to occsa will not
         work. In this case, the array is derived from ``mo.occs`` and optionally
-        ``mo.occs_aminub``. To avoid that in-place assignment of occsa is
+        ``mo.occs_aminusb``. To avoid that in-place assignment of occsa is
         silently ignored, it is returned as a non-writeable array. To change
         occsa, one can assign a whole new array, e.g. ``mo.occsa = new_occsa``
         will work, while ``mo.occsa[1] = 0.3`` will not.
@@ -270,7 +270,7 @@ class MolecularOrbitals:
         -----
         For restricted wavefunctions, in-place assignment to occsb will not
         work. In this case, the array is derived from ``mo.occs`` and optionally
-        ``mo.occs_aminub``. To avoid that in-place assignment of occsb is
+        ``mo.occs_aminusb``. To avoid that in-place assignment of occsb is
         silently ignored, it is returned as a non-writeable array. To change
         occsb, one can assign a whole new array, e.g. ``mo.occsb = new_occsb``
         will work, while ``mo.occsb[1] = 0.3`` will not.
