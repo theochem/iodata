@@ -20,6 +20,7 @@
 
 import os
 import warnings
+from contextlib import ExitStack
 from importlib.resources import as_file, files
 
 import attrs
@@ -260,30 +261,33 @@ def test_load_molden_nh3_molden_cart():
     assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
-def test_load_molden_cfour():
-    # The file tested here is created with CFOUR 2.1.
-    file_list = [
-        "h_sonly_sph_cfour.molden",
-        "h_ponly_sph_cfour.molden",
-        "h_donly_sph_cfour.molden",
-        "h_fonly_sph_cfour.molden",
-        "h_gonly_sph_cfour.molden",
-        "h_sonly_cart_cfour.molden",
-        "h_ponly_cart_cfour.molden",
-        "h_donly_cart_cfour.molden",
-        "h_fonly_cart_cfour.molden",
-        "h_gonly_cart_cfour.molden",
-        "h2o_ccpvdz_cfour.molden",
-    ]
-
-    for i in file_list:
-        with as_file(files("iodata.test.data").joinpath(i)) as fn_molden:
-            print(str(fn_molden))
-            mol = load_one(str(fn_molden))
-            # Check normalization
-            olp = compute_overlap(mol.obasis, mol.atcoords)
-            check_orthonormal(mol.mo.coeffsa, olp)
-            check_orthonormal(mol.mo.coeffsb, olp)
+# The file tested here is created with CFOUR 2.1.
+@pytest.mark.parametrize(
+    ("path", "should_warn"),
+    [
+        ("h_sonly_sph_cfour.molden", False),
+        ("h_ponly_sph_cfour.molden", False),
+        ("h_donly_sph_cfour.molden", True),
+        ("h_fonly_sph_cfour.molden", True),
+        ("h_gonly_sph_cfour.molden", True),
+        ("h_sonly_cart_cfour.molden", False),
+        ("h_ponly_cart_cfour.molden", False),
+        ("h_donly_cart_cfour.molden", True),
+        ("h_fonly_cart_cfour.molden", True),
+        ("h_gonly_cart_cfour.molden", True),
+        ("h2o_ccpvdz_cfour.molden", True),
+    ],
+)
+def test_load_molden_cfour(path, should_warn):
+    with ExitStack() as stack:
+        fn_molden = stack.enter_context(as_file(files("iodata.test.data").joinpath(path)))
+        if should_warn:
+            stack.enter_context(pytest.warns(FileFormatWarning))
+        mol = load_one(str(fn_molden))
+    # Check normalization
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp)
+    check_orthonormal(mol.mo.coeffsb, olp)
 
 
 def test_load_molden_nh3_orca():
