@@ -20,6 +20,7 @@
 
 import os
 import warnings
+from contextlib import nullcontext
 from importlib.resources import as_file, files
 
 import attrs
@@ -278,12 +279,11 @@ def test_load_molden_nh3_molden_cart():
     ],
 )
 def test_load_molden_cfour(path, should_warn):
-    with as_file(files("iodata.test.data").joinpath(path)) as fn_molden:
-        if should_warn:
-            with pytest.warns(FileFormatWarning):
-                mol = load_one(str(fn_molden))
-        else:
-            mol = load_one(str(fn_molden))
+    with (
+        as_file(files("iodata.test.data").joinpath(path)) as fn_molden,
+        pytest.warns(FileFormatWarning) if should_warn else nullcontext(),
+    ):
+        mol = load_one(str(fn_molden))
     # Check normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp)
