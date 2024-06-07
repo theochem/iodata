@@ -41,8 +41,7 @@ from .common import (
 
 def helper_load_data_wfx(fn_wfx):
     """Load a testing WFX file with iodata.formats.wfx.load_data_wfx."""
-    with as_file(files("iodata.test.data").joinpath(fn_wfx)) as fx:
-        lit = LineIterator(str(fx))
+    with as_file(files("iodata.test.data").joinpath(fn_wfx)) as fx, LineIterator(str(fx)) as lit:
         return load_data_wfx(lit)
 
 
@@ -598,10 +597,12 @@ def test_load_data_wfx_water():
 
 def test_parse_wfx_missing_tag_h2o():
     """Check that missing sections result in an exception."""
-    with as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as fn_wfx:
-        lit = LineIterator(fn_wfx)
-        with pytest.raises(IOError) as error:
-            parse_wfx(lit, required_tags=["<Foo Bar>"])
+    with (
+        as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as fn_wfx,
+        LineIterator(fn_wfx) as lit,
+        pytest.raises(IOError) as error,
+    ):
+        parse_wfx(lit, required_tags=["<Foo Bar>"])
     assert str(error.value).endswith("Section <Foo Bar> is missing from loaded WFX data.")
 
 

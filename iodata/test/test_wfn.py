@@ -35,8 +35,7 @@ from .common import check_orthonormal, compare_mols, compute_mulliken_charges
 
 def helper_load_wfn_low(fn_wfn):
     """Load a testing Gaussian log file with iodata.formats.wfn.load_wfn_low."""
-    with as_file(files("iodata.test.data").joinpath(fn_wfn)) as fn:
-        lit = LineIterator(str(fn))
+    with as_file(files("iodata.test.data").joinpath(fn_wfn)) as fn, LineIterator(str(fn)) as lit:
         return load_wfn_low(lit)
 
 

@@ -127,8 +127,10 @@ def test_load_molden_nh3_molden_pure():
 
 
 def test_load_molden_low_nh3_molden_cart():
-    with as_file(files("iodata.test.data").joinpath("nh3_molden_cart.molden")) as fn_molden:
-        lit = LineIterator(str(fn_molden))
+    with (
+        as_file(files("iodata.test.data").joinpath("nh3_molden_cart.molden")) as fn_molden,
+        LineIterator(str(fn_molden)) as lit,
+    ):
         data = _load_low(lit)
     obasis = data["obasis"]
     assert obasis.nbasis == 52

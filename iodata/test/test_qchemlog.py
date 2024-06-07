@@ -30,8 +30,11 @@ from ..utils import LineIterator, angstrom, kjmol
 
 def test_load_qchemlog_low_h2o():
     """Test load_qchemlog_low with water_hf_ccpvtz_freq_qchem.out."""
-    with as_file(files("iodata.test.data").joinpath("water_hf_ccpvtz_freq_qchem.out")) as fq:
-        data = load_qchemlog_low(LineIterator(str(fq)))
+    with (
+        as_file(files("iodata.test.data").joinpath("water_hf_ccpvtz_freq_qchem.out")) as fq,
+        LineIterator(str(fq)) as lit,
+    ):
+        data = load_qchemlog_low(lit)
 
     # check loaded data
     assert data["run_type"] == "freq"
@@ -535,8 +538,11 @@ def test_load_one_qchemlog_freq():
 
 def test_load_qchemlog_low_qchemlog_h2o_dimer_eda2():
     """Test load_qchemlog_low with h2o_dimer_eda_qchem5.3.out."""
-    with as_file(files("iodata.test.data").joinpath("h2o_dimer_eda_qchem5.3.out")) as fq:
-        data = load_qchemlog_low(LineIterator(str(fq)))
+    with (
+        as_file(files("iodata.test.data").joinpath("h2o_dimer_eda_qchem5.3.out")) as fq,
+        LineIterator(str(fq)) as lit,
+    ):
+        data = load_qchemlog_low(lit)
 
     # check loaded data
     assert data["run_type"] == "eda"
