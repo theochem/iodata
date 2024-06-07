@@ -22,11 +22,11 @@ from typing import Union
 
 import numpy as np
 from numpy.typing import NDArray
-from scipy.special import factorialk
 
 from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, angmom_sti
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
+from ..overlap import factorial2
 from ..utils import LineIterator
 
 __all__ = []
@@ -67,7 +67,7 @@ def _get_cp2k_norm_corrections(ell: int, alphas: Union[float, NDArray]) -> Union
 
     """
     expzet = 0.25 * (2 * ell + 3)
-    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (ell + 2) * factorialk(2 * ell + 1, 2))
+    prefac = np.sqrt(np.sqrt(np.pi) / 2.0 ** (ell + 2) * factorial2(2 * ell + 1))
     zeta = 2.0 * alphas
     return zeta**expzet / prefac
 
