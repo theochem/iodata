@@ -589,7 +589,7 @@ PATTERNS = ["*.json"]
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # Use python standard lib json module to read the file to a dict
-    json_in = json.load(lit.f)
+    json_in = json.load(lit.fh)
     return _parse_json(json_in, lit)
 
 

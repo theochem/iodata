@@ -136,11 +136,11 @@ def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
 
     """
     format_module = _select_format_module(filename, "load_one", fmt)
-    lit = LineIterator(filename)
-    try:
-        iodata = IOData(**format_module.load_one(lit, **kwargs))
-    except StopIteration:
-        lit.error("File ended before all data was read.")
+    with LineIterator(filename) as lit:
+        try:
+            iodata = IOData(**format_module.load_one(lit, **kwargs))
+        except StopIteration:
+            lit.error("File ended before all data was read.")
     return iodata
 
 
@@ -168,12 +168,12 @@ def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IO
 
     """
     format_module = _select_format_module(filename, "load_many", fmt)
-    lit = LineIterator(filename)
-    try:
-        for data in format_module.load_many(lit, **kwargs):
-            yield IOData(**data)
-    except StopIteration:
-        return
+    with LineIterator(filename) as lit:
+        try:
+            for data in format_module.load_many(lit, **kwargs):
+                yield IOData(**data)
+        except StopIteration:
+            return
 
 
 def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs):

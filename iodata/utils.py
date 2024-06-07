@@ -65,7 +65,17 @@ class FileFormatWarning(Warning):
 
 
 class LineIterator:
-    """Iterator class for looping over lines and keeping track of the line number."""
+    """Iterator class for looping over lines and keeping track of the line number.
+
+    Use this class as a context manager, similar to the built-in ``open`` function:
+
+    .. code-block:: python
+
+        with LineIterator("filename.ext") as lit:
+            for line in lit:
+                ...
+
+    """
 
     def __init__(self, filename: str):
         """Initialize a LineIterator.
@@ -77,12 +87,16 @@ class LineIterator:
 
         """
         self.filename = filename
-        self.f = open(filename)  # noqa
+        self.fh = None
         self.lineno = 0
         self.stack = []
 
-    def __del__(self):
-        self.f.close()
+    def __enter__(self):
+        self.fh = open(self.filename)  # noqa
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.fh.close()
 
     def __iter__(self):
         return self
@@ -90,7 +104,7 @@ class LineIterator:
     def __next__(self):
         """Return the next line and increase the lineno attribute by one."""
         self.lineno += 1
-        return self.stack.pop() if self.stack else next(self.f)
+        return self.stack.pop() if self.stack else next(self.fh)
 
     def error(self, msg: str):
         """Raise an error while reading a file.
@@ -115,7 +129,7 @@ class LineIterator:
         warnings.warn(f"{self.filename}:{self.lineno} {msg}", FileFormatWarning, stacklevel=2)
 
     def back(self, line):
-        """Go one line back and decrease the lineno attribute by one."""
+        """Go back one line in the file and decrease the lineno attribute by one."""
         self.stack.append(line)
         self.lineno -= 1
 
