@@ -34,11 +34,7 @@ __all__ = ["IOData"]
 
 @attrs.define
 class IOData:
-    """A container class for data loaded from (or to be written to) a file.
-
-    All attributes are optional.
-    Attributes can be set are removed after the IOData instance is constructed.
-    """
+    """A container class for data loaded from (or to be written to) a file."""
 
     atcharges: dict = attrs.field(factory=dict)
     """

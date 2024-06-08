@@ -2,17 +2,15 @@
 #
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
+
 import os
+import runpy
 import sys
 
 from packaging.version import Version
 from sphinx.ext.apidoc import main as main_api_doc
 
-sys.path.append(os.getcwd())
-
-from gen_formats import main as main_gen_formats
-from gen_formats_tab import main as main_gen_formats_tab
-from gen_inputs import main as main_gen_inputs
+sys.path.append(os.path.dirname(__file__))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -63,7 +61,7 @@ autodoc_default_options = {
 add_module_names = False
 
 
-def autodoc_skip_member(app, what, name, obj, skip, options):
+def autodoc_skip_member(_app, _what, name, _obj, skip, _options):
     """Decide which parts to skip when building the API doc."""
     if name == "__init__":
         return False
@@ -102,15 +100,15 @@ def _get_version_info():
     from setuptools_scm._get_version_impl import _get_version
 
     config = Configuration.from_file("../pyproject.toml", "./")
-    version = Version(_get_version(config, force_write_version_files=False))
-    return f"{version.major}.{version.minor}", str(version)
+    verinfo = Version(_get_version(config, force_write_version_files=False))
+    return f"{verinfo.major}.{verinfo.minor}", str(verinfo)
 
 
 def _pre_build():
     """Things to be executed before Sphinx builds the documentation"""
-    main_gen_formats()
-    main_gen_formats_tab()
-    main_gen_inputs()
+    runpy.run_path("gen_formats.py", run_name="__main__")
+    runpy.run_path("gen_formats_tab.py", run_name="__main__")
+    runpy.run_path("gen_inputs.py", run_name="__main__")
     os.environ["SPHINX_APIDOC_OPTIONS"] = ",".join(
         key for key, value in autodoc_default_options.items() if value is True
     )
