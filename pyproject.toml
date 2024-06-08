@@ -32,7 +32,7 @@ dependencies = [
     # Ensure changes to these dependencies are reflected
     # in .github/workfloews/pytest.yaml and docs/install.rst
     "numpy>=1.22",
-    "scipy>=1.8",
+    "scipy>=1.10",
     "attrs>=21.3.0",
 ]
 dynamic = ["version"]
