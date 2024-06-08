@@ -132,15 +132,13 @@ def generate_table_rst() -> list[list[str]]:
     return table
 
 
-def write_rst_table(table: list[list[str]], path: str, nhead: int = 1):
-    """Print an RST table.
+def write_rst_table(table: list[list[str]], nhead: int = 1):
+    """Write an RST table to ``formats_tab.inc``.
 
     Parameters
     ----------
     table
         A list of rows. Each row must be a list of cells containing strings
-    path
-        The path to write the table to.
     nhead
         The number of header rows
 
@@ -168,7 +166,7 @@ def write_rst_table(table: list[list[str]], path: str, nhead: int = 1):
     # construct the column markers
     markers = format_row(["=" * widths[icell] for icell in range(len(widths))], "=")
 
-    with open(path, "w") as file:
+    with open("formats_tab.inc", "w") as file:
         # top markers
         print(markers, file=file)
 
@@ -189,7 +187,7 @@ def write_rst_table(table: list[list[str]], path: str, nhead: int = 1):
 def main():
     """Write the table to formats_tab.inc."""
     content_table = generate_table_rst()
-    write_rst_table(content_table, "formats_tab.inc")
+    write_rst_table(content_table)
 
 
 if __name__ == "__main__":

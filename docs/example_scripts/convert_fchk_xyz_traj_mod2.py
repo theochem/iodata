@@ -3,8 +3,8 @@
 from iodata import dump_many, load_many
 
 
-# Read and modify the trajectory
 def iter_data():
+    """Read and modify the trajectory."""
     for i, data in enumerate(load_many("peroxide_opt.fchk")):
         data.title = f"Frame {i}"
         yield data

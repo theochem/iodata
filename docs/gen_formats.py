@@ -38,6 +38,7 @@ FNNAMES = ["load_one", "dump_one", "load_many", "dump_many"]
 
 
 def format_words(words):
+    """Apply code formatting to words."""
     return ", ".join(f"``{word}``" for word in words)
 
 
