@@ -31,7 +31,7 @@ Python 3 (>=3.9) must be installed before you can install IOData.
 In addition, IOData has the following dependencies:
 
 ..
-    Changes to these dependencies must be updated
+    Ensure changes to these dependencies are reflected
     in pyproject.toml and .github/workfloews/pytest.yaml
 
 - numpy >= 1.22: https://numpy.org/
