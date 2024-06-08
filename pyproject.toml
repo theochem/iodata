@@ -36,7 +36,16 @@ dependencies = [
 dynamic = ["version"]
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-xdist", "sphinx", "sphinx_autodoc_typehints", "sphinx-rtd-theme"]
+dev = [
+    "furo",
+    "packaging",
+    "pytest",
+    "pytest-xdist",
+    "setuptools_scm",
+    "sphinx",
+    "sphinx_autodoc_typehints",
+    "sphinx-copybutton",
+]
 
 [project.urls]
 Documentation = "https://iodata.readthedocs.io/en/latest/"
@@ -67,6 +76,7 @@ select = [
     "PL", "PT", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TRY", "UP", "W"
 ]
 ignore = [
+    "ISC001",  # https://docs.astral.sh/ruff/rules/single-line-implicit-string-concatenation/
     "PLR0904",  # https://docs.astral.sh/ruff/rules/too-many-public-methods/
     "PLR0911",  # https://docs.astral.sh/ruff/rules/too-many-return-statements/
     "PLR0912",  # https://docs.astral.sh/ruff/rules/too-many-branches/

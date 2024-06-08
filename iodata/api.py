@@ -19,7 +19,7 @@
 """Functions to be used by end users."""
 
 import os
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from fnmatch import fnmatch
 from importlib import import_module
 from pkgutil import iter_modules
@@ -201,7 +201,7 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
         format_module.dump_one(f, iodata, **kwargs)
 
 
-def dump_many(iodatas: Iterator[IOData], filename: str, fmt: Optional[str] = None, **kwargs):
+def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = None, **kwargs):
     """Write multiple IOData instances to a file.
 
     This routine uses the extension or prefix of the filename to determine

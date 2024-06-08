@@ -29,11 +29,11 @@ IOData can be used to read and write different quantum chemistry file formats.
 Script usage
 ------------
 
-The simplest way to use IOData, without writing any code is to use the ``iodata-convert`` script.
+The simplest way to use IOData, without writing any code, is to use the ``iodata-convert`` script.
 
 .. code-block:: bash
 
-    iodata-convert in.fchk out.molden
+    iodata-convert input.fchk output.molden
 
 See the :code:`--help` option for more details on usage.
 
@@ -50,12 +50,10 @@ Reading
 
 To read a file, use something like this:
 
-.. code-block:: python
-
-    from iodata import load_one
-
-    mol = load_one('water.xyz')  # XYZ files contain atomic coordinates in Angstrom
-    print(mol.atcoords)  # print coordinates in Bohr.
+.. literalinclude:: example_scripts/load_water.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
 **Note that IOData will automatically convert units from the file format's
 official specification to atomic units (which is the format used throughout
@@ -64,83 +62,61 @@ HORTON3).**
 The file format is inferred from the extension, but one can override the
 detection mechanism by manually specifying the format:
 
-.. code-block:: python
-
-    from iodata import load_one
-
-    mol = load_one('water.foo', 'xyz')  # XYZ file with unusual extension
-    print(mol.atcoords)
+.. literalinclude:: example_scripts/load_water_foo.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
 IOData also has basic support for loading databases of molecules. For example,
 the following will iterate over all frames in an XYZ file:
 
-.. code-block:: python
+.. literalinclude:: example_scripts/load_trajectory.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
-    from iodata import load_many
-
-    # print the title line from each frame in the trajectory.
-    for mol in load_many('trajectory.xyz'):
-        print(mol.title)
-
-
+More details can be found in the API documentation of
+:py:func:`iodata.api.load_one` and :py:func:`iodata.api.load_many`.
 
 Writing
 ^^^^^^^
 
 IOData can also be used to write different file formats:
 
-.. code-block:: python
-
-    from iodata import load_one, dump_one
-
-    mol = load_one('water.fchk')
-    # Here you may put some code to manipulate mol before writing it the data
-    # to a different file.
-    dump_one(mol, 'water.molden')
-
+.. literalinclude:: example_scripts/convert_fchk_molden.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
 One could also convert (and manipulate) an entire trajectory. The following
 example converts a geometry optimization trajectory from a Gaussian FCHK file
 to an XYZ file:
 
-.. code-block:: python
-
-    from iodata import load_many, dump_many
-
-    # Conversion without manipulation.
-    dump_many((mol for mol in load_many('water_opt.fchk')), 'water_opt.xyz')
+.. literalinclude:: example_scripts/convert_fchk_xyz_traj.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
 If you wish to perform some manipulations before writing the trajectory, the
 simplest way is to load the entire trajectory in a list of IOData objects and
 dump it later:
 
-.. code-block:: python
-
-    from iodata import load_many, dump_many
-
-    # Read the trajectory
-    trj = list(load_many('water_opt.fchk'))
-    # Manipulate if desired
-    # ...
-    # Write the trajectory
-    dump_many(trj, 'water_opt.xyz')
-
+.. literalinclude:: example_scripts/convert_fchk_xyz_traj_mod1.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
 For very large trajectories, you may want to avoid loading it as a whole in
 memory. For this, one should avoid making the ``list`` object in the above
 example. The following approach would be more memory efficient.
 
-.. code-block:: python
+.. literalinclude:: example_scripts/convert_fchk_xyz_traj_mod2.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
-    from iodata import load_many, dump_many
-
-    def itermols():
-        for mol in load_many("traj1.xyz"):
-            # Do some manipulations
-            yield modified_mol
-
-    dump_many(itermols(), "traj2.xyz")
-
+More details can be found in the API documentation of
+:py:func:`iodata.api.dump_one` and :py:func:`iodata.api.dump_many`.
 
 Input files
 ^^^^^^^^^^^
@@ -150,24 +126,18 @@ default minimal settings are used, which can be changed if needed. For example,
 the following will prepare a Gaussian input for a HF/STO-3G calculation from
 a PDB file:
 
-.. code-block:: python
-
-    from iodata import load_one, write_input
-
-    write_input(load_one("water.pdb"), "water.com", fmt="gaussian")
+.. literalinclude:: example_scripts/write_gaussian_com.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
 The level of theory and other settings can be modified by setting corresponding
 attributes in the IOData object:
 
-.. code-block:: python
-
-    from iodata import load_one, write_input
-
-    mol = load_one("water.pdb")
-    mol.lot = "B3LYP"
-    mol.obasis_name = "6-31g*"
-    mol.run_type = "opt"
-    write_input(mol, "water.com", fmt="gaussian")
+.. literalinclude:: example_scripts/write_gaussian_com_lot.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
 The run types can be any of the following: ``energy``, ``energy_force``,
 ``opt``, ``scan`` or ``freq``. These are translated into program-specific
@@ -177,87 +147,43 @@ It is possible to define a custom input file template to allow for specialized
 commands. This is done by passing a template string using the optional ``template`` keyword,
 placing each IOData attribute (or additional keyword, as shown below) in curly brackets:
 
-.. code-block:: python
-
-    from iodata import load_one, write_input
-
-    mol = load_one("water.pdb")
-    mol.lot = "B3LYP"
-    mol.obasis_name = "Def2QZVP"
-    mol.run_type = "opt"
-    custom_template = """\
-    %NProcShared=4
-    %mem=16GB
-    %chk=B3LYP_def2qzvp_H2O
-    #n {lot}/{obasis_name} scf=(maxcycle=900,verytightlineq,xqc) integral=(grid=ultrafinegrid) pop=(cm5, hlygat, mbs, npa, esp)
-
-    {title}
-
-    {charge} {spinmult}
-    {geometry}
-
-    """
-    write_input(mol, "water.com", fmt="gaussian", template=custom_template)
+.. literalinclude:: example_scripts/write_gaussian_com_template.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
 The input file template may also include keywords that are not part of the IOData
 object:
 
-.. code-block:: python
-
-    from iodata import load_one, write_input
-
-    mol = load_one("water.pdb")
-    mol.lot = "B3LYP"
-    mol.obasis_name = "Def2QZVP"
-    mol.run_type = "opt"
-    custom_template = """\
-    %chk={chk_name}
-    #n {lot}/{obasis_name} {run_type}
-
-    {title}
-
-    {charge} {spinmult}
-    {geometry}
-
-    """
-    # Custom keywords as arguments (best for few extra arguments)
-    write_input(mol, "water.com", fmt="gaussian", template=custom_template, chk_name="B3LYP_def2qzvp_water")
-
-    # Custom keywords from a dict (in cases with many extra arguments)
-    custom_keywords = {"chk_name": "B3LYP_def2qzvp_waters"}
-    write_input(mol, "water.com", fmt="gaussian", template=custom_template, **custom_keywords)
+.. literalinclude:: example_scripts/write_gaussian_com_custom.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
 In some cases, it may be preferable to load the template from file, instead of
 defining it in the script:
 
-.. code-block:: python
+.. literalinclude:: example_scripts/write_gaussian_com_file.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
-    from iodata import load_one, write_input
+More details can be found in the API documentation of
+:py:func:`iodata.api.write_input`.
 
-    mol = load_one("water.pdb")
-    mol.lot = "B3LYP"
-    mol.obasis_name = "6-31g*"
-    mol.run_type = "opt"
-    write_input(mol, "water.com", fmt="gaussian", template=open("my_template.com", "r").read())
+Data representation
+^^^^^^^^^^^^^^^^^^^
 
+IOData can be used to represent data in a consistent format for writing at a future point.
 
-Data storage
-^^^^^^^^^^^^
+.. literalinclude:: example_scripts/data_representation.py
+    :language: python
+    :linenos:
+    :lines: 3-
 
-IOData can be used to store data in a consistent format for writing at a future point.
-
-.. code-block:: python
-
-    import numpy as np
-    from iodata import IOData
-
-    mol = IOData(title="water")
-    mol.atnums = np.array([8, 1, 1])
-    mol.atcoords = np.array([[0, 0, 0,], [0, 1, 0,], [0, -1, 0,]])  # in Bohr
-
+All supported attributes can be found in the API documentation of the :py:class:`iodata.iodata.IOData` class.
 
 .. _units:
-
 
 Unit conversion
 ^^^^^^^^^^^^^^^
@@ -274,5 +200,3 @@ remembered with the following examples:
   For example. a bond length in angstrom is printed as "Bond length / Å".
   Expressing this with IOData's conventions gives
   ``print("Bond length in Angstrom:", bond_length /  angstrom)``
-
-(This is rather different from the ASE conventions.)

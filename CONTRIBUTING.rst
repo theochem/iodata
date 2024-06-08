@@ -341,7 +341,7 @@ classes.)
 The following ``attrs`` functions could be convenient when working with these
 classes:
 
-- The data can be turned into plain Python data types with the ``attr.asdict``
+- The data can be turned into plain Python data types with the ``attrs.asdict``
   function. Make sure you add the ``retain_collection_types=True`` option, to
   avoid the following issue: https://github.com/python-attrs/attrs/issues/646
   For example.
@@ -349,21 +349,21 @@ classes:
   .. code-block:: python
 
       from iodata import load_one
-      import attr
+      import attrs
       iodata = load_one("example.xyz")
-      fields = attr.asdict(iodata, retain_collection_types=True)
+      fields = attrs.asdict(iodata, retain_collection_types=True)
 
   A similar ``astuple`` function works as you would expect.
 
 - A `shallow copy`_ with a few modified attributes can be created with the
-  evolve method, which is a wrapper for ``attr.evolve``:
+  evolve method, which is a wrapper for ``attrs.evolve``:
 
   .. code-block:: python
 
       from iodata import load_one
-      import attr
+      import attrs
       iodata1 = load_one("example.xyz")
-      iodata2 = attr.evolve(iodata1, title="another title")
+      iodata2 = attrs.evolve(iodata1, title="another title")
 
   The usage of evolve becomes mandatory when you want to change two or more
   attributes whose shape need to be consistent. For example, the following
@@ -383,9 +383,9 @@ classes:
   .. code-block:: python
 
       from iodata import IOData
-      import attr
+      import attrs
       iodata1 = IOData(atnums=[7, 7], atcoords=[[0, 0, 0], [2, 0, 0]])
-      iodata2 = attr.evolve(
+      iodata2 = attrs.evolve(
           iodata1,
           atnums=[8, 8, 8],
           atcoords=[[0, 0, 0], [2, 0, 1], [4, 0, 0]],

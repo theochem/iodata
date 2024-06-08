@@ -1,3 +1,7 @@
 # Requirements for building documentation on RTD
+furo
+packaging
+setuptools_scm
 sphinx_autodoc_typehints
-sphinx_rtd_theme
+sphinx-copybutton
+-e ../

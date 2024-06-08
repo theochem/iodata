@@ -68,39 +68,9 @@ def validate_occs_aminusb(mo, _attribtue, value):
 class MolecularOrbitals:
     """Class of Orthonormal Molecular Orbitals.
 
-    Attributes
-    ----------
-    kind
-        Type of molecular orbitals, which can be 'restricted', 'unrestricted', or 'generalized'.
-    norba
-        Number of (occupied and virtual) alpha molecular orbitals.
-        Set to `None` in case oftype=='generalized'.
-    norbb
-        Number of (occupied and virtual) beta molecular orbitals.
-        Set to `None` in case of type=='generalized'.
-        This is expected to be equal to `norba` for the `restricted` kind.
-    occs
-        Molecular orbital occupation numbers. The length equals the number of
-        columns of coeffs. (optional)
-    coeffs
-        Molecular orbital coefficients.
-        In case of restricted: shape = (nbasis, norba) = (nbasis, norbb).
-        In case of unrestricted: shape = (nbasis, norba + norbb).
-        In case of generalized: shape = (2 * nbasis, norb), where norb is the
-        total number of orbitals. (optional)
-    energies
-        Molecular orbital energies. The length equals the number of columns of
-        coeffs. (optional)
-    irreps
-        Irreducible representation. The length equals the number of columns of
-        coeffs. (optional)
-    occs_aminusb
-        The difference between alpha and beta occupation numbers. The length
-        equals the number of columns of coeffs. (optional and only allowed
-        to be not None for restricted wavefunctions)
-
     Notes
     -----
+
     For restricted wavefunctions, the occupation numbers are spin-summed values
     and several rules are used to deduce the alpha and beta occupation
     numbers:
@@ -125,26 +95,56 @@ class MolecularOrbitals:
     kind: str = attrs.field(
         validator=attrs.validators.in_(["restricted", "unrestricted", "generalized"])
     )
+    """Type of molecular orbitals, which can be 'restricted', 'unrestricted', or 'generalized'."""
+
     norba: int = attrs.field(validator=validate_norbab)
+    """
+    Number of (occupied and virtual) alpha molecular orbitals.
+    Set to `None` in case oftype=='generalized'.
+    """
+
     norbb: int = attrs.field(validator=validate_norbab)
+    """
+    Number of (occupied and virtual) beta molecular orbitals.
+    Set to `None` in case of type=='generalized'.
+    This is expected to be equal to `norba` for the `restricted` kind.
+    """
+
     occs: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("norb")),
     )
+    """
+    Molecular orbital occupation numbers.
+    The length equals the number of columns of coeffs. (optional)
+    """
+
     coeffs: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, "norb")),
     )
+    """
+    Molecular orbital coefficients.
+    In case of restricted: shape = (nbasis, norba) = (nbasis, norbb).
+    In case of unrestricted: shape = (nbasis, norba + norbb).
+    In case of generalized: shape = (2 * nbasis, norb), where norb is the
+    total number of orbitals. (optional)
+    """
+
     energies: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("norb")),
     )
+    """Molecular orbital energies. The length equals the number of columns of coeffs. (optional)"""
+
     irreps: Optional[NDArray] = attrs.field(
         default=None, validator=attrs.validators.optional(validate_shape("norb"))
     )
+    """Irreducible representation. The length equals the number of columns of coeffs. (optional)"""
+
     occs_aminusb: Optional[NDArray] = attrs.field(
         default=None,
         converter=convert_array_to(float),
@@ -152,6 +152,11 @@ class MolecularOrbitals:
             attrs.validators.optional(validate_shape("norb")), validate_occs_aminusb
         ),
     )
+    """
+    The difference between alpha and beta occupation numbers.
+    The length equals the number of columns of coeffs.
+    (optional and only allowed to be not None for restricted wavefunctions)
+    """
 
     @property
     def nelec(self) -> float:
