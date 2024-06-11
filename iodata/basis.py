@@ -103,35 +103,32 @@ def angmom_its(angmom: Union[int, list[int]]) -> Union[str, list[str]]:
 
 @attrs.define
 class Shell:
-    """A shell in a molecular basis representing (generalized) contractions with the same exponents.
-
-    Attributes
-    ----------
-    icenter
-        An integer index specifying the row in the atcoords array of IOData object.
-    angmoms
-        An integer array of angular momentum quantum numbers, non-negative, with
-        shape (ncon,).
-    kinds
-        List of strings describing the kind of contractions: 'c' for Cartesian
-        and 'p' for pure. Pure functions are only allowed for angmom>1.
-        The length equals the number of contractions: len(angmoms)=ncon.
-    exponents
-        The array containing the exponents of the primitives, with shape (nprim,).
-    coeffs
-        The array containing the coefficients of the normalized primitives in each contraction;
-        shape = (nprim, ncon).
-        These coefficients assume that the primitives are L2 (orbitals) or L1
-        (densities) normalized, but contractions are not necessarily normalized.
-        (This depends on the code which generated the contractions.)
-
-    """
+    """A shell in a molecular basis representing (generalized) contractions."""
 
     icenter: int = attrs.field()
+    """An integer index specifying the row in the atcoords array of IOData object."""
+
     angmoms: list[int] = attrs.field(validator=validate_shape(("coeffs", 1)))
+    """An integer array of angular momentum quantum numbers, non-negative, with shape (ncon,)."""
+
     kinds: list[str] = attrs.field(validator=validate_shape(("coeffs", 1)))
+    """
+    List of strings describing the kind of contractions: 'c' for Cartesian
+    and 'p' for pure. Pure functions are only allowed for angmom>1.
+    The length equals the number of contractions: len(angmoms)=ncon.
+    """
+
     exponents: NDArray = attrs.field(validator=validate_shape(("coeffs", 0)))
+    """The array containing the exponents of the primitives, with shape (nprim,)."""
+
     coeffs: NDArray = attrs.field(validator=validate_shape(("exponents", 0), ("kinds", 0)))
+    """
+    The array containing the coefficients of the normalized primitives in each contraction;
+    shape = (nprim, ncon).
+    These coefficients assume that the primitives are L2 (orbitals) or L1
+    (densities) normalized, but contractions are not necessarily normalized.
+    (This depends on the code which generated the contractions.)
+    """
 
     @property
     def nbasis(self) -> int:
@@ -159,56 +156,53 @@ class Shell:
 
 @attrs.define
 class MolecularBasis:
-    """A complete molecular orbital or density basis set.
-
-    Attributes
-    ----------
-    shells
-        A list of objects of type Shell which can support generalized contractions.
-    conventions
-        A dictionary specifying the ordered basis functions for a given angular momentum and kind.
-        The key is a tuple of angular momentum integer and kind character ('c' for Cartesian
-        and 'p' for pure/spherical) and the value is a list of basis function strings.
-        For example,
-
-        .. code-block:: python
-
-            {
-                ### Conventions for Cartesian functions
-                # E.g., alphabetically ordered Cartesian functions.
-                (0, 'c'): ['1'],
-                (1, 'c'): ['x', 'y', 'z'],
-                (2, 'c'): ['xx', 'xy', 'xz', 'yy', 'yz', 'zz'],
-                ### Conventions for pure functions.
-                # The notation is referring to real solid spherical harmonics.
-                # See https://en.wikipedia.org/wiki/Solid_harmonics#Real_form
-                # 'c{m}' = solid harmonic containing cos(m phi)
-                # 's{m}' = solid harmonic containing sin(m phi)
-                # where m is the magnetic quantum number and phi is the
-                # azimuthal angle.
-                # For example, wikipedia-ordered real spherical harmonics,
-                # see https://en.wikipedia.org/wiki/Spherical_harmonics#Real_form
-                (2, 'p'): ['s2', 's1', 'c0', 'c1', 'c2'],
-                # Different quantum-chemistry codes may use incompatible
-                # orderings and sign conventions. E.g. Molden files written
-                # by ORCA use the following convention for pure f functions:
-                (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
-                # Note that the minus sign in the last two basis functions
-                # denotes that the signs of these harmonics have been changed.
-            }
-
-        The basis function strings in the conventions dictionary are documented
-        in :ref:`basis_conventions`.
-
-    primitive_normalization
-        The normalization convention of primitives, which can be 'L2' (orbitals) or 'L1'
-        (densities) normalized.
-
-    """
+    """A complete molecular orbital or density basis set."""
 
     shells: list[Shell] = attrs.field()
+    """A list of objects of type Shell which can support generalized contractions."""
+
     conventions: dict[str, str] = attrs.field()
+    """
+    A dictionary specifying the ordered basis functions for a given angular momentum and kind.
+    The key is a tuple of angular momentum integer and kind character ('c' for Cartesian
+    and 'p' for pure/spherical) and the value is a list of basis function strings.
+    For example,
+
+    .. code-block:: python
+
+        {
+            ### Conventions for Cartesian functions
+            # E.g., alphabetically ordered Cartesian functions.
+            (0, 'c'): ['1'],
+            (1, 'c'): ['x', 'y', 'z'],
+            (2, 'c'): ['xx', 'xy', 'xz', 'yy', 'yz', 'zz'],
+            ### Conventions for pure functions.
+            # The notation is referring to real solid spherical harmonics.
+            # See https://en.wikipedia.org/wiki/Solid_harmonics#Real_form
+            # 'c{m}' = solid harmonic containing cos(m phi)
+            # 's{m}' = solid harmonic containing sin(m phi)
+            # where m is the magnetic quantum number and phi is the
+            # azimuthal angle.
+            # For example, wikipedia-ordered real spherical harmonics,
+            # see https://en.wikipedia.org/wiki/Spherical_harmonics#Real_form
+            (2, 'p'): ['s2', 's1', 'c0', 'c1', 'c2'],
+            # Different quantum-chemistry codes may use incompatible
+            # orderings and sign conventions. E.g. Molden files written
+            # by ORCA use the following convention for pure f functions:
+            (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
+            # Note that the minus sign in the last two basis functions
+            # denotes that the signs of these harmonics have been changed.
+        }
+
+    The basis function strings in the conventions dictionary are documented
+    in :ref:`basis_conventions`.
+    """
+
     primitive_normalization: str = attrs.field()
+    """
+    The normalization convention of primitives,
+    which can be 'L2' (orbitals) or 'L1' (densities) normalized.
+    """
 
     @property
     def nbasis(self) -> int:

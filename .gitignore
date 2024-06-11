@@ -16,11 +16,11 @@ iodata/_version.py
 iodata/overlap_accel.c
 
 # Documentation files
-doc/_build
-doc/pyapi
-doc/formats.rst
-doc/inputs.rst
-doc/formats_tab.inc
+docs/_build
+docs/pyapi
+docs/formats.rst
+docs/inputs.rst
+docs/formats_tab.inc
 
 # Distribution / packaging
 .Python

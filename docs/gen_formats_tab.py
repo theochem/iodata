@@ -17,23 +17,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-# pylint: disable=unused-argument,redefined-builtin
-"""Generate formats.rst."""
+"""Generate formats_tab.inc."""
 
 import inspect
 from collections import defaultdict
+from typing import Optional, Union
 
 import iodata
 
-__all__ = []
+__all__ = ("main",)
 
 
-def _generate_all_format_parser():
+def _generate_all_format_parser() -> tuple[list, set, dict, dict, set, dict, dict]:
     """Parse supported functionality from each module.
 
     Returns
     -------
-    tuple(list, set, dict, dict, set, dict, dict)
+    tuple[list, set, dict, dict, set, dict, dict]
         list[fmt_name]
         set{fmt_names_with_load_one}
         dict{attr_name: fmt_names_guaranteed}
@@ -75,7 +75,7 @@ def _generate_all_format_parser():
     return fmt_names, has_load, guaranteed, ifpresent, has_dump, required, optional
 
 
-def generate_table_rst():
+def generate_table_rst() -> list[list[str]]:
     """Construct table contents.
 
     Returns
@@ -103,10 +103,9 @@ def generate_table_rst():
     # Construct header with cross-referencing columns.
     header = ["Attribute"]
     for fmt_name in cols:
-        col_name = f":ref:`{fmt_name} <format_{fmt_name}>`"
-        col_name += ": {}{}".format(
-            "L" if fmt_name in has_load else "", "D" if fmt_name in has_dump else ""
-        )
+        col_name = f":ref:`{fmt_name} <format_{fmt_name}>`: "
+        col_name += "L" if fmt_name in has_load else ""
+        col_name += "D" if fmt_name in has_dump else ""
         header.append(col_name)
     table = [header]
     for attr_name in rows:
@@ -133,19 +132,20 @@ def generate_table_rst():
     return table
 
 
-def print_rst_table(table, nhead=1):
-    """Print an RST table.
+def write_rst_table(table: list[list[str]], nhead: int = 1):
+    """Write an RST table to ``formats_tab.inc``.
 
     Parameters
     ----------
-    table : list[list[]]
+    table
         A list of rows. Each row must be a list of cells containing strings
-    nhead : int, optional
+    nhead
         The number of header rows
 
     """
 
-    def format_cell(cell):
+    def format_cell(cell: Optional[str]) -> str:
+        """Format a single cell."""
         if cell is None or len(cell.strip()) == 0:
             return "\\ "
         return str(cell)
@@ -156,7 +156,8 @@ def print_rst_table(table, nhead=1):
         for icell, cell in enumerate(row):
             widths[icell] = max(widths.get(icell, 2), len(format_cell(cell)))
 
-    def format_row(cells, margin):
+    def format_row(cells: list[Union[str, None]], margin: str) -> str:
+        """Format a row of cells."""
         return " ".join(
             margin + format_cell(cell).rjust(widths[icell]) + margin
             for icell, cell in enumerate(cells)
@@ -165,23 +166,29 @@ def print_rst_table(table, nhead=1):
     # construct the column markers
     markers = format_row(["=" * widths[icell] for icell in range(len(widths))], "=")
 
-    # top markers
-    print(markers)
+    with open("formats_tab.inc", "w") as file:
+        # top markers
+        print(markers, file=file)
 
-    # heading rows (if any)
-    for irow in range(nhead):
-        print(format_row(table[irow], " "))
-    if nhead > 0:
-        print(markers)
+        # heading rows (if any)
+        for irow in range(nhead):
+            print(format_row(table[irow], " "), file=file)
+        if nhead > 0:
+            print(markers, file=file)
 
-    # table body
-    for irow in range(nhead, len(table)):
-        print(format_row(table[irow], " "))
+        # table body
+        for irow in range(nhead, len(table)):
+            print(format_row(table[irow], " "), file=file)
 
-    # bottom markers
-    print(markers)
+        # bottom markers
+        print(markers, file=file)
+
+
+def main():
+    """Write the table to formats_tab.inc."""
+    content_table = generate_table_rst()
+    write_rst_table(content_table)
 
 
 if __name__ == "__main__":
-    content_table = generate_table_rst()
-    print_rst_table(content_table)
+    main()

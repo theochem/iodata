@@ -1,0 +1,12 @@
+th.head {
+    position: sticky;
+    top: 0px;
+    z-index: 2;
+    background-color: white;
+    border-bottom-color: black !important;
+}
+
+div.table-wrapper {
+    padding: 0px;
+    max-height: 80vh;
+}

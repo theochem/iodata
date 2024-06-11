@@ -519,16 +519,14 @@ The wavefunction subschema contains the wavefunction properties of a QC computat
 appear in column-major order. The current QCSchema standard provides names for the following
 wavefunction properties:
 
-.. CCA_convention_source:
-https://github.com/evaleev/libint/wiki/using-modern-CPlusPlus-API#solid-harmonic-gaussians-ordering-and-normalization
+.. _libint: https://github.com/evaleev/libint/wiki/using-modern-CPlusPlus-API#solid-harmonic-gaussians-ordering-and-normalization
 
 ======================================== ===========================================================
 Field                                    Description
 ======================================== ===========================================================
 basis                                    A ``qcschema_basis`` instance for the one-electron AO basis
                                          set. AO basis functions are ordered according to the CCA
-                                         standard as implemented in
-                                         :ref:`libint <CCA_convention_source>`.
+                                         standard as implemented in `libint`_.
 restricted                               An indicator for a restricted calculation (alpha == beta).
                                          When true, all beta quantites are omitted, since quantity_b
                                          == quantity_a

@@ -136,24 +136,19 @@ class LineIterator:
 
 @attrs.define
 class Cube:
-    """The volumetric data from a cube (or similar) file.
-
-    Attributes
-    ----------
-    origin
-        A 3D vector with the origin of the axes frame.
-    axes
-        A (3, 3) array where each row represents the spacing between two
-        neighboring grid points along the first, second and third axis,
-        respectively.
-    data
-        A (K, L, M) array of data on a uniform grid
-
-    """
+    """The volumetric data from a cube (or similar) file."""
 
     origin: NDArray = attrs.field(validator=validate_shape(3))
+    """A 3D vector with the origin of the axes frame."""
+
     axes: NDArray = attrs.field(validator=validate_shape(3, 3))
+    """
+    A (3, 3) array where each row represents the spacing between two neighboring grid points
+    along the first, second and third axis, respectively.
+    """
+
     data: NDArray = attrs.field(validator=validate_shape(None, None, None))
+    """A (K, L, M) array of data on a uniform grid"""
 
     @property
     def shape(self):
