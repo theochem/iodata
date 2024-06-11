@@ -30,8 +30,12 @@ Latest PyPI version
 Python 3 (>=3.9) must be installed before you can install IOData.
 In addition, IOData has the following dependencies:
 
+..
+    Ensure changes to these dependencies are reflected
+    in pyproject.toml and .github/workfloews/pytest.yaml
+
 - numpy >= 1.22: https://numpy.org/
-- scipy >= 1.8: https://scipy.org/
+- scipy >= 1.11: https://scipy.org/
 - attrs >= 21.3.0: https://www.attrs.org/en/stable/index.html
 
 Normally, you don't need to install these dependencies manually. They will be

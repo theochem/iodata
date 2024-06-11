@@ -29,8 +29,10 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Chemistry",
 ]
 dependencies = [
+    # Ensure changes to these dependencies are reflected
+    # in .github/workfloews/pytest.yaml and docs/install.rst
     "numpy>=1.22",
-    "scipy>=1.8",
+    "scipy>=1.11",
     "attrs>=21.3.0",
 ]
 dynamic = ["version"]
@@ -56,7 +58,7 @@ Source = "https://github.com/theochem/iodata/"
 iodata-convert = "iodata.__main__:main"
 
 [tool.pytest.ini_options]
-addopts = "-n auto"
+addopts = "-n auto -W error"
 
 [tool.setuptools]
 packages = ["iodata"]
