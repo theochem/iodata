@@ -35,7 +35,8 @@ __all__ = ["OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization"]
 def factorial2(n: Union[int, NDArray[int]]) -> Union[int, NDArray[int]]:
     """Modifcied scipy.special.factorial2 that returns 1 when the input is -1.
 
-    This is a temporary workaround while we wait for Scipy's update.
+    The future implementation of factorial2 in SciPy will not return
+    the correct result for n=-1 (for our purposes).
     To learn more, see https://github.com/scipy/scipy/issues/18409.
 
     This function only supports integer (array) arguments,
