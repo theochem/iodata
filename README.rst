@@ -34,7 +34,7 @@ About
 -----
 
 IOData is a HORTON 3 module for input/output of quantum chemistry file formats.
-Documentation is here: https://iodata.readthedocs.io/en/latest/index.html
+Documentation is here: https://iodata.readthedocs.io/ or https://iodata.qcdevs.org/
 
 Citation
 --------
