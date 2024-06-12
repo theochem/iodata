@@ -41,6 +41,7 @@ dynamic = ["version"]
 dev = [
     "furo",
     "packaging",
+    "pre-commit",
     "pytest",
     "pytest-xdist",
     "setuptools_scm",
