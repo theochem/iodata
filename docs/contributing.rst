@@ -22,7 +22,7 @@
 
 .. _contributing:
 
-Contributing
-============
+Contributing Guide
+==================
 
 .. include:: ../CONTRIBUTING.rst

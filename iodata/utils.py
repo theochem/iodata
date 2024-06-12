@@ -92,7 +92,7 @@ class LineIterator:
         self.stack = []
 
     def __enter__(self):
-        self.fh = open(self.filename)  # noqa
+        self.fh = open(self.filename)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
