@@ -5,7 +5,6 @@
 # - Update some actions to more recent versions
 
 name: release
-
 on: push
 
 env:

@@ -32,7 +32,7 @@ In addition, IOData has the following dependencies:
 
 ..
     Ensure changes to these dependencies are reflected
-    in pyproject.toml and .github/workfloews/pytest.yaml
+    in pyproject.toml and .github/workflows/pytest.yaml
 
 - numpy >= 1.22: https://numpy.org/
 - scipy >= 1.11: https://scipy.org/
