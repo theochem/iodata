@@ -18,7 +18,7 @@
 # --
 """Docstring decorators for file format implementations."""
 
-from typing import Optional
+from typing import Callable, Optional
 
 __all__ = [
     "document_load_one",
@@ -36,7 +36,7 @@ def _document_load(
     ifpresent: Optional[list[str]] = None,
     kwdocs: Optional[dict[str, str]] = None,
     notes: Optional[str] = None,
-):
+) -> Callable:
     if kwdocs is None:
         kwdocs = {}
     ifpresent = ifpresent or []
@@ -76,6 +76,7 @@ Parameters
 lit
     The line iterator to read the data from.
 {kwdocs}
+
 Returns
 -------
 result: dict
@@ -84,7 +85,6 @@ result: dict
 
 Notes
 -----
-
 {notes}
 
 """
@@ -96,7 +96,7 @@ def document_load_one(
     ifpresent: Optional[list[str]] = None,
     kwdocs: Optional[dict[str, str]] = None,
     notes: Optional[str] = None,
-):
+) -> Callable:
     """Decorate a load_one function to generate a docstring.
 
     Parameters
@@ -116,8 +116,7 @@ def document_load_one(
 
     Returns
     -------
-    decorator
-        A decorator function.
+    A decorator function.
 
     """
     if kwdocs is None:
@@ -133,6 +132,7 @@ Parameters
 lit
     The line iterator to read the data from.
 {kwdocs}
+
 Yields
 ------
 result: dict
@@ -141,7 +141,6 @@ result: dict
 
 Notes
 -----
-
 {notes}
 
 """
@@ -153,7 +152,7 @@ def document_load_many(
     ifpresent: Optional[list[str]] = None,
     kwdocs: Optional[dict[str, str]] = None,
     notes: Optional[str] = None,
-):
+) -> Callable:
     """Decorate a load_many function to generate a docstring.
 
     Parameters
@@ -173,8 +172,7 @@ def document_load_many(
 
     Returns
     -------
-    decorator
-        A decorator function.
+    A decorator function.
 
     """
     if kwdocs is None:
@@ -189,7 +187,7 @@ def _document_dump(
     optional: Optional[list[str]] = None,
     kwdocs: Optional[dict[str, str]] = None,
     notes: Optional[str] = None,
-):
+) -> Callable:
     if kwdocs is None:
         kwdocs = {}
     optional = optional or []
@@ -233,9 +231,9 @@ data
     An IOData instance which must have the following attributes initialized:
     {required}.{optional}
 {kwdocs}
+
 Notes
 -----
-
 {notes}
 
 """
@@ -247,7 +245,7 @@ def document_dump_one(
     optional: Optional[list[str]] = None,
     kwdocs: Optional[dict[str, str]] = None,
     notes: Optional[str] = None,
-):
+) -> Callable:
     """Decorate a dump_one function to generate a docstring.
 
     Parameters
@@ -267,8 +265,7 @@ def document_dump_one(
 
     Returns
     -------
-    decorator
-        A decorator function.
+    A decorator function.
 
     """
     if kwdocs is None:
@@ -287,9 +284,9 @@ datas
     An iterator over IOData instances which must have the following attributes initialized:
     {required}.{optional}
 {kwdocs}
+
 Notes
 -----
-
 {notes}
 
 """
@@ -301,7 +298,7 @@ def document_dump_many(
     optional: Optional[list[str]] = None,
     kwdocs: Optional[dict[str, str]] = None,
     notes: Optional[str] = None,
-):
+) -> Callable:
     """Decorate a dump_many function to generate a docstring.
 
     Parameters
@@ -321,8 +318,7 @@ def document_dump_many(
 
     Returns
     -------
-    decorator
-        A decorator function.
+    A decorator function.
 
     """
     if kwdocs is None:
@@ -336,7 +332,7 @@ def _document_write(
     required: list[str],
     optional: Optional[list[str]] = None,
     notes: Optional[str] = None,
-):
+) -> Callable:
     if optional is None:
         optional = []
 
@@ -383,6 +379,7 @@ atom_line
     input format is used.
 **kwargs
     Keyword arguments are passed on to the input-specific write_input function.
+
 Notes
 -----
 
@@ -396,7 +393,7 @@ def document_write_input(
     required: list[str],
     optional: Optional[list[str]] = None,
     notes: Optional[str] = None,
-):
+) -> Callable:
     """Decorate a write_input function to generate a docstring.
 
     Parameters
@@ -412,8 +409,7 @@ def document_write_input(
 
     Returns
     -------
-    decorator
-        A decorator function.
+    A decorator function.
 
     """
     return _document_write(WRITE_INPUT_DOC_TEMPLATE, fmt, required, optional, notes)

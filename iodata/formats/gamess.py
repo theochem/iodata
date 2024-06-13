@@ -47,7 +47,7 @@ def _read_data(lit: LineIterator) -> tuple[str, str, list[str]]:
     return title, symmetry, symbols
 
 
-def _read_coordinates(lit: LineIterator, result: dict[str]) -> tuple[NDArray, NDArray]:
+def _read_coordinates(lit: LineIterator, result: dict[str]) -> tuple[NDArray[int], NDArray[float]]:
     """Extract ``numbers`` and ``coordinates`` from the punch file."""
     for _ in range(2):
         next(lit)
@@ -68,7 +68,7 @@ def _read_coordinates(lit: LineIterator, result: dict[str]) -> tuple[NDArray, ND
     return numbers, coordinates
 
 
-def _read_energy(lit: LineIterator, result: dict[str]) -> tuple[float, NDArray]:
+def _read_energy(lit: LineIterator, result: dict[str]) -> tuple[float, NDArray[float]]:
     """Extract ``energy`` and ``gradient`` from the punch file."""
     energy = float(next(lit).split()[1])
     natom = len(result["symbols"])
@@ -82,7 +82,7 @@ def _read_energy(lit: LineIterator, result: dict[str]) -> tuple[float, NDArray]:
     return energy, gradient
 
 
-def _read_hessian(lit: LineIterator, result: dict[str]) -> NDArray:
+def _read_hessian(lit: LineIterator, result: dict[str]) -> NDArray[float]:
     """Extract ``hessian`` from the punch file."""
     # check that $HESS is not already parsed
     if "athessian" in result:
@@ -103,7 +103,7 @@ def _read_hessian(lit: LineIterator, result: dict[str]) -> NDArray:
     return hessian
 
 
-def _read_masses(lit: LineIterator, result: dict[str]) -> NDArray:
+def _read_masses(lit: LineIterator, result: dict[str]) -> NDArray[float]:
     """Extract ``masses`` from the punch file."""
     natom = len(result["symbols"])
     masses = np.zeros(natom, float)

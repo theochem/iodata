@@ -308,7 +308,9 @@ def _helper_orbital_energies_unrestricted(lit: LineIterator) -> tuple:
     return subdata
 
 
-def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = False) -> NDArray:
+def _helper_section(
+    start: str, end: str, lit: LineIterator, backward: bool = False
+) -> NDArray[float]:
     """Load data between starting and ending strings."""
     data = []
     for line in lit:
@@ -325,7 +327,7 @@ def _helper_section(start: str, end: str, lit: LineIterator, backward: bool = Fa
     return np.array(data, dtype=float)
 
 
-def _helper_mulliken(lit: LineIterator) -> NDArray:
+def _helper_mulliken(lit: LineIterator) -> NDArray[float]:
     """Load mulliken net atomic charges."""
     # skip line between 'Ground-State Mulliken Net Atomic Charges' line & atomic charge entries
     while True:
@@ -359,7 +361,7 @@ def _helper_dipole_moments(lit: LineIterator) -> tuple:
     return dipole, quadrupole, dipole_tol
 
 
-def _helper_polar(lit: LineIterator) -> NDArray:
+def _helper_polar(lit: LineIterator) -> NDArray[float]:
     """Load polarizability matrix."""
     next(lit)
     polarizability_tensor = []
@@ -370,7 +372,7 @@ def _helper_polar(lit: LineIterator) -> NDArray:
     return np.array(polarizability_tensor, dtype=float)
 
 
-def _helper_hessian(lit: LineIterator, natom: int) -> NDArray:
+def _helper_hessian(lit: LineIterator, natom: int) -> NDArray[float]:
     """Load hessian matrix."""
     # hessian in Cartesian coordinates, shape(3 * natom, 3 * natom)
     col_idx = [int(i) for i in next(lit).split()]

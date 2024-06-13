@@ -61,8 +61,7 @@ def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = Non
 
     Returns
     -------
-    format_module
-        The module implementing the required file format.
+    The module implementing the required file format.
 
     """
     basename = os.path.basename(filename)
@@ -101,8 +100,7 @@ def _select_input_module(fmt: str) -> ModuleType:
 
     Returns
     -------
-    format_module
-        The module implementing the required input format.
+    The module implementing the required input format.
 
     """
     if fmt in INPUT_MODULES:
@@ -131,8 +129,7 @@ def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
 
     Returns
     -------
-    out
-        The instance of IOData with data loaded from the input files.
+    The instance of IOData with data loaded from the input files.
 
     """
     format_module = _select_format_module(filename, "load_one", fmt)
@@ -163,7 +160,7 @@ def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IO
 
     Yields
     ------
-    out
+    IOData
         An instance of IOData with data for one frame loaded for the file.
 
     """

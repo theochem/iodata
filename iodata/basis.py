@@ -72,9 +72,8 @@ def angmom_sti(char: Union[str, list[str]]) -> Union[int, list[int]]:
 
     Returns
     -------
-    angmom
-        An integer representation of the angular momentum. If a list of str
-        char is given, a list of integers in returned.
+    An integer representation of the angular momentum.
+    If a list of str char is given, a list of integers in returned.
 
     """
     return ANGMOM_CHARS.index(char.lower())
@@ -91,9 +90,8 @@ def angmom_its(angmom: Union[int, list[int]]) -> Union[str, list[str]]:
 
     Returns
     -------
-    char
-        The string representation of the angular momentum. If a list of integer
-        angmom is given, a list of str is returned.
+    The string representation of the angular momentum.
+    If a list of integer angmom is given, a list of str is returned.
 
     """
     if angmom < 0:
@@ -113,15 +111,16 @@ class Shell:
 
     kinds: list[str] = attrs.field(validator=validate_shape(("coeffs", 1)))
     """
-    List of strings describing the kind of contractions: 'c' for Cartesian
-    and 'p' for pure. Pure functions are only allowed for angmom>1.
-    The length equals the number of contractions: len(angmoms)=ncon.
+    List of strings describing the kind of contractions:
+    ``'c'`` for Cartesian and ``'p'`` for pure.
+    Pure functions are only allowed for ``angmom > 1``.
+    The length equals the number of contractions (``ncon = len(kinds)``).
     """
 
-    exponents: NDArray = attrs.field(validator=validate_shape(("coeffs", 0)))
+    exponents: NDArray[float] = attrs.field(validator=validate_shape(("coeffs", 0)))
     """The array containing the exponents of the primitives, with shape (nprim,)."""
 
-    coeffs: NDArray = attrs.field(validator=validate_shape(("exponents", 0), ("kinds", 0)))
+    coeffs: NDArray[float] = attrs.field(validator=validate_shape(("exponents", 0), ("kinds", 0)))
     """
     The array containing the coefficients of the normalized primitives in each contraction;
     shape = (nprim, ncon).
@@ -222,7 +221,7 @@ class MolecularBasis:
 
 def convert_convention_shell(
     conv1: list[str], conv2: list[str], reverse=False
-) -> tuple[NDArray, NDArray]:
+) -> tuple[NDArray[int], NDArray[int]]:
     """Return a permutation vector and sign changes to convert from 1 to 2.
 
     The transformation from convention 1 to convention 2 can be done applying
@@ -284,7 +283,7 @@ def convert_convention_shell(
 
 def convert_conventions(
     molbasis: MolecularBasis, new_conventions: dict[str, list[str]], reverse=False
-) -> tuple[NDArray, NDArray]:
+) -> tuple[NDArray[int], NDArray[int]]:
     """Return a permutation vector and sign changes to convert from 1 to 2.
 
     The transformation from molbasis.convention to the new convention can be done
@@ -334,7 +333,7 @@ def convert_conventions(
     return np.array(permutation), np.array(signs)
 
 
-def iter_cart_alphabet(n: int) -> NDArray:
+def iter_cart_alphabet(n: int) -> NDArray[int]:
     """Loop over powers of Cartesian basis functions in alphabetical order.
 
     See https://theochem.github.io/horton/2.1.1/tech_ref_gaussian_basis.html

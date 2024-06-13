@@ -7,6 +7,7 @@ import os
 import runpy
 import sys
 
+from intersphinx_registry import get_intersphinx_mapping
 from packaging.version import Version
 from sphinx.ext.apidoc import main as main_api_doc
 
@@ -38,6 +39,7 @@ extensions = [
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+intersphinx_mapping = get_intersphinx_mapping(packages={"python", "numpy", "scipy"})
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -56,8 +58,7 @@ autodoc_default_options = {
     "inherited-members": True,
     "ignore-module-all": True,
 }
-
-
+napoleon_use_rtype = False
 add_module_names = False
 
 

@@ -84,7 +84,9 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
-def _load_helper_atoms(lit: LineIterator, natoms: int) -> tuple[NDArray, NDArray, NDArray, tuple]:
+def _load_helper_atoms(
+    lit: LineIterator, natoms: int
+) -> tuple[NDArray[int], NDArray[float], NDArray[float], tuple]:
     """Load element numbers, coordinates and atomic charges."""
     atnums = np.empty(natoms)
     atcoords = np.empty((natoms, 3))
@@ -111,7 +113,7 @@ def _load_helper_atoms(lit: LineIterator, natoms: int) -> tuple[NDArray, NDArray
     return atnums, atcoords, atchgs, attypes
 
 
-def _load_helper_bonds(lit: LineIterator, nbonds: int) -> NDArray:
+def _load_helper_bonds(lit: LineIterator, nbonds: int) -> NDArray[int]:
     """Load bond information.
 
     Each line in a bond definition has the following structure

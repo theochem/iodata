@@ -38,7 +38,9 @@ __all__ = []
 PATTERNS = ["CHGCAR*", "AECCAR*"]
 
 
-def _load_vasp_header(lit: LineIterator) -> tuple[str, NDArray, NDArray, NDArray]:
+def _load_vasp_header(
+    lit: LineIterator,
+) -> tuple[str, NDArray[float], NDArray[int], NDArray[float]]:
     """Load the cell and atoms from a VASP file format.
 
     Parameters
@@ -48,8 +50,7 @@ def _load_vasp_header(lit: LineIterator) -> tuple[str, NDArray, NDArray, NDArray
 
     Returns
     -------
-    out
-        Output Contains ``title``, ``cellvecs``, ``atnums``, ``atcoords``.
+    Tuple with ``title``, ``cellvecs``, ``atnums``, ``atcoords``.
 
     Notes
     -----
@@ -104,9 +105,8 @@ def _load_vasp_grid(lit: LineIterator) -> dict:
 
     Returns
     -------
-    out
-        Output dictionary containing ``title``, ``atcoords``, ``atnums``,
-        ``cellvecs`` & ``cube`` keys and their corresponding values.
+    oDictionary containing ``title``, ``atcoords``, ``atnums``, ``cellvecs`` & ``cube``
+    keys and their corresponding values.
 
     """
     # Load header

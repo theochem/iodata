@@ -226,7 +226,9 @@ def _load_low(lit: LineIterator) -> dict:
     return result
 
 
-def _load_helper_atoms(lit: LineIterator, cunit: float) -> tuple[NDArray, NDArray, NDArray]:
+def _load_helper_atoms(
+    lit: LineIterator, cunit: float
+) -> tuple[NDArray[int], NDArray[float], NDArray[float]]:
     """Load element numbers and coordinates."""
     atnums = []
     atcorenums = []
@@ -356,9 +358,9 @@ def _load_helper_coeffs(lit: LineIterator) -> tuple:
 
 def _is_normalized_properly(
     obasis: MolecularBasis,
-    atcoords: NDArray,
-    orb_alpha: NDArray,
-    orb_beta: NDArray,
+    atcoords: NDArray[float],
+    orb_alpha: NDArray[float],
+    orb_beta: NDArray[float],
     norm_threshold: float = 1e-4,
 ) -> bool:
     """Test the normalization of the occupied and virtual orbitals.

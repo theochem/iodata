@@ -110,7 +110,7 @@ class MolecularOrbitals:
     This is expected to be equal to `norba` for the `restricted` kind.
     """
 
-    occs: Optional[NDArray] = attrs.field(
+    occs: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("norb")),
@@ -120,7 +120,7 @@ class MolecularOrbitals:
     The length equals the number of columns of coeffs. (optional)
     """
 
-    coeffs: Optional[NDArray] = attrs.field(
+    coeffs: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, "norb")),
@@ -133,7 +133,7 @@ class MolecularOrbitals:
     total number of orbitals. (optional)
     """
 
-    energies: Optional[NDArray] = attrs.field(
+    energies: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("norb")),
@@ -145,7 +145,7 @@ class MolecularOrbitals:
     )
     """Irreducible representation. The length equals the number of columns of coeffs. (optional)"""
 
-    occs_aminusb: Optional[NDArray] = attrs.field(
+    occs_aminusb: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.and_(

@@ -26,9 +26,11 @@ from typing import Optional
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
+from numpy.typing import NDArray
 
 from ..api import load_one
 from ..basis import convert_conventions
+from ..iodata import IOData
 from ..overlap import compute_overlap
 from ..utils import FileFormatWarning
 
@@ -64,18 +66,18 @@ def compute_mulliken_charges(iodata):
 
 
 @contextmanager
-def truncated_file(fn_orig, nline, nadd, tmpdir):
+def truncated_file(fn_orig: str, nline: int, nadd: int, tmpdir: str):
     """Make a temporary truncated copy of a file.
 
     Parameters
     ----------
-    fn_orig : str
+    fn_orig
         The file to be truncated.
-    nline : int
+    nline
         The number of lines to retain.
-    nadd : int
+    nadd
         The number of empty lines to add.
-    tmpdir : str
+    tmpdir
         A temporary directory where the truncated file is stored.
 
     """
@@ -146,16 +148,16 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
                 assert key not in d2
 
 
-def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
+def check_orthonormal(mo_coeffs: NDArray[float], ao_overlap: NDArray[float], atol: float = 1e-5):
     """Check that molecular orbitals are orthogonal and normalized.
 
     Parameters
     ----------
-    mo_coeffs : NDArray, shape=(nbasis, mo_count)
+    mo_coeffs
         Molecular orbital coefficients.
-    ao_overlap : NDArray, shape=(nbasis, nbasis)
+    ao_overlap
         Atomic orbital overlap matrix.
-    atol : float
+    atol
         Absolute tolerance in deviation from identity matrix.
 
     """
@@ -168,7 +170,7 @@ def check_orthonormal(mo_coeffs, ao_overlap, atol=1e-5):
 
 def load_one_warning(
     filename: str, fmt: Optional[str] = None, match: Optional[str] = None, **kwargs
-):
+) -> IOData:
     """Call load_one, catching expected FileFormatWarning.
 
     Parameters
@@ -186,8 +188,7 @@ def load_one_warning(
 
     Returns
     -------
-    out
-        The instance of IOData with data loaded from the input files.
+    The instance of IOData with data loaded from the input files.
 
     """
     with as_file(files("iodata.test.data").joinpath(filename)) as fn:

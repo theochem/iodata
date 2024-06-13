@@ -74,7 +74,7 @@ def load_one(lit: LineIterator) -> dict:
     return result
 
 
-def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> NDArray:
+def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> NDArray[float]:
     """Load a two-index operator from a GAUSSIAN LOG file format.
 
     Parameters
@@ -86,8 +86,7 @@ def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> NDArray:
 
     Returns
     -------
-    out
-        The output (nbasis, nbasis) array of operator.
+    Operator array with shape ``(nbasis, nbasis)``.
 
     """
     result = np.zeros((nbasis, nbasis))
@@ -107,7 +106,7 @@ def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> NDArray:
     return result
 
 
-def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> NDArray:
+def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> NDArray[float]:
     """Load a four-index operator from a GAUSSIAN LOG file.
 
     Parameters
@@ -119,8 +118,7 @@ def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> NDArray:
 
     Returns
     -------
-    out
-        The (nbasis, nbasis, nbasis, nbasis) array of operator.
+    Operator array with shape ``(nbasis, nbasis, nbasis, nbasis)``.
 
     """
     result = np.zeros((nbasis, nbasis, nbasis, nbasis))

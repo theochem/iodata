@@ -18,6 +18,8 @@
 # --
 """Utilities for building attr classes."""
 
+from typing import Callable
+
 import numpy as np
 
 __all__ = ["convert_array_to", "validate_shape"]
@@ -34,7 +36,7 @@ def convert_array_to(dtype):
     return converter
 
 
-def validate_shape(*shape_requirements: tuple):
+def validate_shape(*shape_requirements: tuple) -> Callable:
     """Return a validator for the shape of an array or the length of an iterable.
 
     Parameters
@@ -49,8 +51,7 @@ def validate_shape(*shape_requirements: tuple):
 
     Returns
     -------
-    validator
-        A validator function for the attr library.
+    A validator function for the attr library.
 
     Notes
     -----

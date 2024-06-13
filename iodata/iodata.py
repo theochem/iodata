@@ -42,21 +42,21 @@ class IOData:
     values are arrays with atomic charges (size N).
     """
 
-    atcoords: Optional[NDArray] = attrs.field(
+    atcoords: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom", 3)),
     )
     """A (N, 3) float array with Cartesian coordinates of the atoms."""
 
-    _atcorenums: Optional[NDArray] = attrs.field(
+    _atcorenums: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
     """
-    A (N,) float array with pseudo-potential core charges. The matrix
-    elements corresponding to ghost atoms are zero.
+    A (N,) float array with pseudo-potential core charges.
+    The matrix elements corresponding to ghost atoms are zero.
     """
 
     atffparams: dict = attrs.field(factory=dict)
@@ -68,14 +68,14 @@ class IOData:
     etc. Not all of them have to be present, depending on the use case.
     """
 
-    atfrozen: Optional[NDArray] = attrs.field(
+    atfrozen: Optional[NDArray[bool]] = attrs.field(
         default=None,
         converter=convert_array_to(bool),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
     """A (N,) bool array with frozen atoms. (All atoms are free if thisattribute is not set.)"""
 
-    atgradient: Optional[NDArray] = attrs.field(
+    atgradient: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom", 3)),
@@ -85,21 +85,21 @@ class IOData:
     Cartesian atomic displacements.
     """
 
-    athessian: Optional[NDArray] = attrs.field(
+    athessian: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, None)),
     )
     """A (3*N, 3*N) array containing the energy Hessian w.r.t Cartesian atomic displacements."""
 
-    atmasses: Optional[NDArray] = attrs.field(
+    atmasses: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
     """A (N,) float array with atomic masses."""
 
-    atnums: Optional[NDArray] = attrs.field(
+    atnums: Optional[NDArray[int]] = attrs.field(
         default=None,
         converter=convert_array_to(int),
         validator=attrs.validators.optional(validate_shape("natom")),
@@ -115,7 +115,7 @@ class IOData:
     when implementing a load function for basis set definitions.
     """
 
-    bonds: Optional[NDArray] = attrs.field(
+    bonds: Optional[NDArray[int]] = attrs.field(
         default=None,
         converter=convert_array_to(int),
         validator=attrs.validators.optional(validate_shape(None, 3)),
@@ -127,7 +127,7 @@ class IOData:
     of bond types are defined in ``iodata.periodic``.
     """
 
-    cellvecs: Optional[NDArray] = attrs.field(
+    cellvecs: Optional[NDArray[float]] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, 3)),
@@ -151,7 +151,7 @@ class IOData:
     energy: Optional[float] = attrs.field(default=None)
     """The total energy (electronic + nn)."""
 
-    extcharges: NDArray = attrs.field(
+    extcharges: NDArray[float] = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, 4)),
@@ -282,14 +282,14 @@ class IOData:
     # Public interfaces to private attributes
 
     @property
-    def atcorenums(self) -> NDArray:
-        """Return effective core charges."""
+    def atcorenums(self) -> NDArray[float]:
+        """Effective core charges."""
         if self._atcorenums is None and self.atnums is not None:
             self.atcorenums = self.atnums.astype(float)
         return self._atcorenums
 
     @atcorenums.setter
-    def atcorenums(self, atcorenums):
+    def atcorenums(self, atcorenums: NDArray):
         if atcorenums is None:
             if self.nelec is not None and self._atcorenums is not None:
                 # Set _charge because charge can no longer be derived from
