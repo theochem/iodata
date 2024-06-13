@@ -369,7 +369,7 @@ def _load_fchk_low(lit: LineIterator, label_patterns: Optional[list[str]] = None
 
     Returns
     -------
-    A dictionary with data read from the FCHK file.
+    A dictionary containing data read from the FCHK file.
     Keys are the field names and values are either scalar or array data.
     Arrays are always one-dimensional.
 
