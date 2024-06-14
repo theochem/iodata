@@ -49,6 +49,17 @@ jobs:
         run: |
           curl https://deepsource.io/cli | sh
           ./bin/deepsource report --analyzer test-coverage --key python --value-file ./coverage.xml
+      - name: Upload coverage reports to Codecov
+        if: ${{ matrix.os == 'ubuntu-latest' && env.CODECOV_TOKEN != '' }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          curl -Os https://cli.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov --verbose upload-process --fail-on-error \
+            -t ${{ secrets.CODECOV_TOKEN }} \
+            -n 'fast'-${{ github.run_id }} \
+            -F fast -f coverage.xml
       - name: Run pytest WITHOUT covarage for fast tests
         if: ${{ matrix.os != 'ubuntu-latest'}}
         run: pytest -vv -m "not slow" --timeout=60
