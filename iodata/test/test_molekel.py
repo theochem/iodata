@@ -23,6 +23,7 @@ import warnings
 from importlib.resources import as_file, files
 from typing import Optional
 
+import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
@@ -77,24 +78,18 @@ def check_load_dump_consistency(fn: str, tmpdir: str, match: Optional[str] = Non
         compare_mols(mol1, mol2)
 
 
-def test_load_dump_consistency_h2(tmpdir):
-    check_load_dump_consistency("h2_sto3g.mkl", tmpdir, match="ORCA")
-
-
-def test_load_dump_consistency_ethanol(tmpdir):
-    check_load_dump_consistency("ethanol.mkl", tmpdir, match="ORCA")
-
-
-def test_load_dump_consistency_li2(tmpdir):
-    check_load_dump_consistency("li2.mkl", tmpdir, match="ORCA")
-
-
-def test_load_molden_dump_molekel_li2(tmpdir):
-    check_load_dump_consistency("li2.molden.input", tmpdir, match="ORCA")
-
-
-def test_load_fchk_dump_molekel_li2(tmpdir):
-    check_load_dump_consistency("li2_g09_nbasis_indep.fchk", tmpdir)
+@pytest.mark.parametrize(
+    ("path", "match"),
+    [
+        ("h2_sto3g.mkl", "ORCA"),
+        pytest.param("ethanol.mkl", "ORCA", marks=pytest.mark.slow),
+        pytest.param("li2.mkl", "ORCA", marks=pytest.mark.slow),
+        pytest.param("li2.molden.input", "ORCA", marks=pytest.mark.slow),
+        ("li2_g09_nbasis_indep.fchk", None),
+    ],
+)
+def test_load_dump_consistency(tmpdir, path, match):
+    check_load_dump_consistency(path, tmpdir, match)
 
 
 def test_load_mkl_ethanol():
@@ -134,6 +129,7 @@ def test_load_mkl_ethanol():
     assert_allclose(mol.mo.coeffs[-1, -1], -0.1424743)
 
 
+@pytest.mark.slow()
 def test_load_mkl_li2():
     mol = load_one_warning("li2.mkl", match="ORCA")
     assert_equal(mol.atcharges["mulliken"].shape, (2,))

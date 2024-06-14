@@ -22,6 +22,7 @@ import os
 from importlib.resources import as_file, files
 
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
@@ -278,6 +279,7 @@ def test_load_one_lih_cation_rohf():
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
 
 
+@pytest.mark.slow()
 def test_load_one_cah110_hf_sto3g_g09():
     with as_file(files("iodata.test.data").joinpath("cah110_hf_sto3g_g09.wfn")) as file_wfn:
         mol = load_one(str(file_wfn))
@@ -326,55 +328,34 @@ def check_load_dump_consistency(fn, tmpdir, fmt_from="wfn", fmt_to="wfn", atol=1
         compare_mols(mol1, mol2, atol=atol)
 
 
-def test_load_dump_consistency_lih_cation_cisd(tmpdir):
-    check_load_dump_consistency("lih_cation_cisd.wfn", tmpdir)
-
-
-def test_load_dump_consistency_lih_cation_uhf(tmpdir):
-    check_load_dump_consistency("lih_cation_uhf.wfn", tmpdir)
-
-
-def test_load_dump_consistency_lih_cation_rohf(tmpdir):
-    check_load_dump_consistency("lih_cation_rohf.wfn", tmpdir)
-
-
-def test_load_dump_consistency_h2o(tmpdir):
-    check_load_dump_consistency("h2o_sto3g.wfn", tmpdir)
-    check_load_dump_consistency("h2o_sto3g_decontracted.wfn", tmpdir)
-
-
-def test_load_dump_consistency_lif(tmpdir):
-    check_load_dump_consistency("lif_fci.wfn", tmpdir, atol=1.0e-6)
-
-
-def test_load_dump_consistency_cah110(tmpdir):
-    check_load_dump_consistency("cah110_hf_sto3g_g09.wfn", tmpdir)
-
-
-def test_load_dump_consistency_li(tmpdir):
-    check_load_dump_consistency("li_sp_orbital.wfn", tmpdir)
-    check_load_dump_consistency("li_sp_virtual.wfn", tmpdir)
-
-
-def test_load_dump_consistency_he(tmpdir):
-    check_load_dump_consistency("he_s_orbital.wfn", tmpdir)
-    check_load_dump_consistency("he_s_virtual.wfn", tmpdir)
-    check_load_dump_consistency("he_p_orbital.wfn", tmpdir)
-    check_load_dump_consistency("he_d_orbital.wfn", tmpdir)
-    check_load_dump_consistency("he_sp_orbital.wfn", tmpdir)
-    check_load_dump_consistency("he_spd_orbital.wfn", tmpdir)
-    check_load_dump_consistency("he_spdf_orbital.wfn", tmpdir)
-    check_load_dump_consistency("he_spdfgh_orbital.wfn", tmpdir)
-    check_load_dump_consistency("he_spdfgh_virtual.wfn", tmpdir)
-
-
-def test_load_dump_consistency_h2(tmpdir):
-    check_load_dump_consistency("h2_ccpvqz.wfn", tmpdir)
-
-
-def test_load_dump_consistency_o2(tmpdir):
-    check_load_dump_consistency("o2_uhf.wfn", tmpdir)
-    check_load_dump_consistency("o2_uhf_virtual.wfn", tmpdir)
+@pytest.mark.parametrize(
+    "path",
+    [
+        "lih_cation_cisd.wfn",
+        "lih_cation_uhf.wfn",
+        "lih_cation_rohf.wfn",
+        "h2o_sto3g.wfn",
+        "h2o_sto3g_decontracted.wfn",
+        "lif_fci.wfn",
+        pytest.param("cah110_hf_sto3g_g09.wfn", marks=pytest.mark.slow),
+        "li_sp_orbital.wfn",
+        "li_sp_virtual.wfn",
+        "he_s_orbital.wfn",
+        "he_s_virtual.wfn",
+        "he_p_orbital.wfn",
+        "he_d_orbital.wfn",
+        "he_sp_orbital.wfn",
+        "he_spd_orbital.wfn",
+        "he_spdf_orbital.wfn",
+        "he_spdfgh_orbital.wfn",
+        "he_spdfgh_virtual.wfn",
+        "h2_ccpvqz.wfn",
+        "o2_uhf.wfn",
+        "o2_uhf_virtual.wfn",
+    ],
+)
+def test_load_dump_consistency(path, tmpdir):
+    check_load_dump_consistency(path, tmpdir)
 
 
 def test_load_dump_consistency_from_fchk_h2o(tmpdir):
