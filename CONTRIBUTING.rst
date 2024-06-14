@@ -128,8 +128,12 @@ Github work flow
 
    .. code-block:: bash
 
-     pytest
+     # Run tests excluding those marked as slow.
+     pytest -m "not slow"
+     # Build the documentation.
      (cd docs; make html)
+     # Finally, if the above steps all pass, run the slow tests.
+     pytest -m slow
 
 
 5. Commit your changes using ``git commit``.

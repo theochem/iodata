@@ -36,6 +36,7 @@ from ..utils import FileFormatWarning, LineIterator, angstrom
 from .common import check_orthonormal, compare_mols, compute_mulliken_charges
 
 
+@pytest.mark.slow()
 def test_load_molden_li2_orca():
     with (
         as_file(files("iodata.test.data").joinpath("li2.molden.input")) as fn_molden,
@@ -358,6 +359,7 @@ def test_load_molden_nh3_psi4_1():
     assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
+@pytest.mark.slow()
 @pytest.mark.parametrize("case", ["zn", "mn", "cuh"])
 def test_load_molden_high_am_psi4(case):
     # The file tested here is created with PSI4 1.3.2.
@@ -379,6 +381,7 @@ def test_load_molden_high_am_psi4(case):
         raise NotImplementedError
 
 
+@pytest.mark.slow()
 @pytest.mark.parametrize("case", ["zn", "cuh"])
 def test_load_molden_high_am_orca(case):
     # The file tested here is created with ORCA.
@@ -432,6 +435,7 @@ def test_load_molden_h2o_6_31g_d_cart_psi4():
     assert_allclose(charges, molden_charges, atol=1.0e-5)
 
 
+@pytest.mark.slow()
 def test_load_molden_nh3_aug_cc_pvqz_cart_psi4():
     # The file tested here is created with PSI4 1.3.2. It should be read in
     # properly after fixing for errors in AO normalization conventions.
@@ -498,6 +502,7 @@ def test_load_molden_nh3_molpro2012():
     assert_allclose(charges, molden_charges, atol=1.0e-3)
 
 
+@pytest.mark.slow()
 def test_load_molden_neon_turbomole():
     # The file tested here is created with Turbomole 7.1.
     source = files("iodata.test.data").joinpath("neon_turbomole_def2-qzvp.molden")
@@ -562,12 +567,12 @@ def test_load_molden_f():
     ("fn", "match"),
     [
         ("h2o.molden.input", "ORCA"),
-        ("li2.molden.input", "ORCA"),
+        pytest.param("li2.molden.input", "ORCA", marks=pytest.mark.slow),
         ("F.molden", "PSI4"),
         ("nh3_molden_pure.molden", None),
         ("nh3_molden_cart.molden", None),
         ("he2_ghost_psi4_1.0.molden", None),
-        ("psi4_cuh_cc_pvqz_pure.molden", "unnormalized"),
+        pytest.param("psi4_cuh_cc_pvqz_pure.molden", "unnormalized", marks=pytest.mark.slow),
         ("hf_sto3g.fchk", None),
         ("h_sto3g.fchk", None),
         ("ch3_rohf_sto3g_g03.fchk", None),

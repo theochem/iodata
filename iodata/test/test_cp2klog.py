@@ -89,6 +89,7 @@ def test_carbon_gs_ae_contracted():
     check_orthonormal(mol.mo.coeffsb, olp)
 
 
+@pytest.mark.slow()
 def test_carbon_gs_ae_uncontracted():
     source = files("iodata.test.data").joinpath("carbon_gs_ae_uncontracted.cp2k.out")
     with as_file(source) as fn_out:
@@ -124,6 +125,7 @@ def test_carbon_gs_pp_contracted():
     check_orthonormal(mol.mo.coeffsb, olp)
 
 
+@pytest.mark.slow()
 def test_carbon_gs_pp_uncontracted():
     source = files("iodata.test.data").joinpath("carbon_gs_pp_uncontracted.cp2k.out")
     with as_file(source) as fn_out:
@@ -156,6 +158,7 @@ def test_carbon_sc_ae_contracted():
     check_orthonormal(mol.mo.coeffs, olp)
 
 
+@pytest.mark.slow()
 def test_carbon_sc_ae_uncontracted():
     source = files("iodata.test.data").joinpath("carbon_sc_ae_uncontracted.cp2k.out")
     with as_file(source) as fn_out:
@@ -185,6 +188,7 @@ def test_carbon_sc_pp_contracted():
     check_orthonormal(mol.mo.coeffs, olp)
 
 
+@pytest.mark.slow()
 def test_carbon_sc_pp_uncontracted():
     source = files("iodata.test.data").joinpath("carbon_sc_pp_uncontracted.cp2k.out")
     with as_file(source) as fn_out:

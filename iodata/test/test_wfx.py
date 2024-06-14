@@ -119,83 +119,63 @@ def compare_mulliken_charges(
     assert_allclose(charges1, charges2, rtol=rtol, atol=atol)
 
 
-def test_dump_one_from_fchk_h2o(tmpdir):
-    compare_mulliken_charges("h2o_sto3g.fchk", tmpdir)
-    compare_mulliken_charges("water_hfs_321g.fchk", tmpdir)
-    compare_mulliken_charges("water_sto3g_hf_g03.fchk", tmpdir)
+@pytest.mark.parametrize(
+    "path",
+    [
+        "h2o_sto3g.fchk",
+        "water_hfs_321g.fchk",
+        "water_sto3g_hf_g03.fchk",
+        "ch3_hf_sto3g.fchk",
+        "ch3_rohf_sto3g_g03.fchk",
+        "h2o_sto3g.wfn",
+        "h2o_sto3g_decontracted.wfn",
+        "o2_uhf.wfn",
+        "o2_uhf_virtual.wfn",
+        # Li atom
+        "li_sp_orbital.wfn",
+        "li_sp_virtual.wfn",
+        # He atom
+        "he_s_orbital.wfn",
+        "he_s_virtual.wfn",
+        "he_p_orbital.wfn",
+        "he_d_orbital.wfn",
+        "he_sp_orbital.wfn",
+        "he_spd_orbital.wfn",
+        "he_spdf_orbital.wfn",
+        "he_spdfgh_orbital.wfn",
+        "he_spdfgh_virtual.wfn",
+        "lih_cation_uhf.wfn",
+        "lih_cation_rohf.wfn",
+        "lih_cation_cisd.wfn",
+        "lih_cation_fci.wfn",
+        "lif_fci.wfn",
+        "he2_ghost_psi4_1.0.molden",
+        "nh3_molden_cart.molden",
+        "nh3_molpro2012.molden",
+    ],
+)
+def test_dump_one(path, tmpdir):
+    compare_mulliken_charges(path, tmpdir)
 
 
-def test_dump_one_from_fchk_ch3_restricted(tmpdir):
-    compare_mulliken_charges("ch3_hf_sto3g.fchk", tmpdir)
+@pytest.mark.parametrize(
+    ("path", "match"),
+    [
+        ("h2o.molden.input", "ORCA"),
+        pytest.param("nh3_turbomole.molden", "Turbomole", marks=pytest.mark.slow),
+        ("ethanol.mkl", "ORCA"),
+        ("h2_sto3g.mkl", "ORCA"),
+    ],
+)
+def test_dump_one_match(tmpdir, path, match):
+    compare_mulliken_charges(path, tmpdir, match=match)
 
 
-def test_dump_one_from_fchk_ch3_unrestricted(tmpdir):
-    compare_mulliken_charges("ch3_rohf_sto3g_g03.fchk", tmpdir)
-
-
-def test_dump_one_from_wfn_h2o(tmpdir):
-    compare_mulliken_charges("h2o_sto3g.wfn", tmpdir)
-    compare_mulliken_charges("h2o_sto3g_decontracted.wfn", tmpdir)
-
-
-def test_dump_one_from_wfn_o2(tmpdir):
-    compare_mulliken_charges("o2_uhf.wfn", tmpdir)
-    compare_mulliken_charges("o2_uhf_virtual.wfn", tmpdir)
-
-
-def test_dump_one_from_wfn_atom(tmpdir):
-    # Li atom
-    compare_mulliken_charges("li_sp_orbital.wfn", tmpdir)
-    compare_mulliken_charges("li_sp_virtual.wfn", tmpdir)
-    # He atom
-    compare_mulliken_charges("he_s_orbital.wfn", tmpdir)
-    compare_mulliken_charges("he_s_virtual.wfn", tmpdir)
-    compare_mulliken_charges("he_p_orbital.wfn", tmpdir)
-    compare_mulliken_charges("he_d_orbital.wfn", tmpdir)
-    compare_mulliken_charges("he_sp_orbital.wfn", tmpdir)
-    compare_mulliken_charges("he_spd_orbital.wfn", tmpdir)
-    compare_mulliken_charges("he_spdf_orbital.wfn", tmpdir)
-    compare_mulliken_charges("he_spdfgh_orbital.wfn", tmpdir)
-    compare_mulliken_charges("he_spdfgh_virtual.wfn", tmpdir)
-
-
-def test_dump_one_from_wfn_lih(tmpdir):
-    compare_mulliken_charges("lih_cation_uhf.wfn", tmpdir)
-    compare_mulliken_charges("lih_cation_rohf.wfn", tmpdir)
-    compare_mulliken_charges("lih_cation_cisd.wfn", tmpdir)
-    compare_mulliken_charges("lih_cation_fci.wfn", tmpdir)
-
-
-def test_dump_one_from_wfn_lif(tmpdir):
-    compare_mulliken_charges("lif_fci.wfn", tmpdir)
-
-
-def test_dump_one_from_molden_h2o(tmpdir):
-    compare_mulliken_charges("h2o.molden.input", tmpdir, match="ORCA")
-
-
-def test_dump_one_from_molden_he2(tmpdir):
-    compare_mulliken_charges("he2_ghost_psi4_1.0.molden", tmpdir)
-
-
+@pytest.mark.slow()
 def test_dump_one_from_molden_neon(tmpdir):
     compare_mulliken_charges(
         "neon_turbomole_def2-qzvp.molden", tmpdir, atol=1.0e-10, match="Turbomole"
     )
-
-
-def test_dump_one_from_molden_nh3(tmpdir):
-    compare_mulliken_charges("nh3_molden_cart.molden", tmpdir)
-    compare_mulliken_charges("nh3_molpro2012.molden", tmpdir)
-    compare_mulliken_charges("nh3_turbomole.molden", tmpdir, match="Turbomole")
-
-
-def test_dump_one_from_mkl_methanol(tmpdir):
-    compare_mulliken_charges("ethanol.mkl", tmpdir, match="ORCA")
-
-
-def test_dump_one_from_mkl_h2(tmpdir):
-    compare_mulliken_charges("h2_sto3g.mkl", tmpdir, match="ORCA")
 
 
 # add this test when pure to Cartesian basis set conversion is supported

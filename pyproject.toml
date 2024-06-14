@@ -44,6 +44,8 @@ dev = [
     "packaging",
     "pre-commit",
     "pytest",
+    "pytest-cov",
+    "pytest-timeout",
     "pytest-xdist",
     "setuptools_scm",
     "sphinx",
@@ -60,7 +62,8 @@ Source = "https://github.com/theochem/iodata/"
 iodata-convert = "iodata.__main__:main"
 
 [tool.pytest.ini_options]
-addopts = "-n auto -W error"
+addopts = "-n auto -W error --strict-markers"
+markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 
 [tool.setuptools]
 packages = ["iodata"]
