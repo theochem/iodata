@@ -138,16 +138,16 @@ class LineIterator:
 class Cube:
     """The volumetric data from a cube (or similar) file."""
 
-    origin: NDArray = attrs.field(validator=validate_shape(3))
+    origin: NDArray[float] = attrs.field(validator=validate_shape(3))
     """A 3D vector with the origin of the axes frame."""
 
-    axes: NDArray = attrs.field(validator=validate_shape(3, 3))
+    axes: NDArray[float] = attrs.field(validator=validate_shape(3, 3))
     """
     A (3, 3) array where each row represents the spacing between two neighboring grid points
     along the first, second and third axis, respectively.
     """
 
-    data: NDArray = attrs.field(validator=validate_shape(None, None, None))
+    data: NDArray[float] = attrs.field(validator=validate_shape(None, None, None))
     """A (K, L, M) array of data on a uniform grid"""
 
     @property
@@ -157,7 +157,7 @@ class Cube:
 
 
 def set_four_index_element(
-    four_index_object: NDArray, i0: int, i1: int, i2: int, i3: int, value: float
+    four_index_object: NDArray[float], i0: int, i1: int, i2: int, i3: int, value: float
 ):
     """Assign values to a four index object, account for 8-fold index symmetry.
 
@@ -184,20 +184,20 @@ def set_four_index_element(
     four_index_object[i3, i0, i1, i2] = value
 
 
-def volume(cellvecs: NDArray) -> float:
+def volume(cellvecs: NDArray[float]) -> float:
     """Calculate the (generalized) cell volume.
 
     Parameters
     ----------
     cellvecs
-        A numpy matrix of shape (x,3) where x is in {1,2,3}. Each row is one
-        cellvector.
+        A numpy matrix of shape (x,3) where x is in {1,2,3}.
+        Each row is one cellvector.
 
     Returns
     -------
-    volume
-        In case of 3D, the cell volume. In case of 2D, the cell area. In case of
-        1D, the cell length.
+    In case of 3D, the cell volume.
+    In case of 2D, the cell area.
+    In case of 1D, the cell length.
 
     """
     nvecs = cellvecs.shape[0]
@@ -210,7 +210,9 @@ def volume(cellvecs: NDArray) -> float:
     raise ValueError("Argument cellvecs should be of shape (x, 3), where x is in {1, 2, 3}")
 
 
-def derive_naturals(dm: NDArray, overlap: NDArray) -> tuple[NDArray, NDArray]:
+def derive_naturals(
+    dm: NDArray[float], overlap: NDArray[float]
+) -> tuple[NDArray[float], NDArray[float]]:
     """Derive natural orbitals from a given density matrix.
 
     Parameters
@@ -242,7 +244,7 @@ def derive_naturals(dm: NDArray, overlap: NDArray) -> tuple[NDArray, NDArray]:
     return coeffs, occs
 
 
-def check_dm(dm: NDArray, overlap: NDArray, eps: float = 1e-4, occ_max: float = 1.0):
+def check_dm(dm: NDArray[float], overlap: NDArray[float], eps: float = 1e-4, occ_max: float = 1.0):
     """Check if the density matrix has eigenvalues in the proper range.
 
     Parameters

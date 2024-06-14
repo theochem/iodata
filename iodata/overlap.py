@@ -66,10 +66,10 @@ def factorial2(n: Union[int, NDArray[int]]) -> Union[int, NDArray[int]]:
 
 def compute_overlap(
     obasis0: MolecularBasis,
-    atcoords0: NDArray,
+    atcoords0: NDArray[float],
     obasis1: Optional[MolecularBasis] = None,
-    atcoords1: Optional[NDArray] = None,
-) -> NDArray:
+    atcoords1: Optional[NDArray[float]] = None,
+) -> NDArray[float]:
     r"""Compute overlap matrix for the given molecular basis set(s).
 
     .. math::
@@ -97,8 +97,7 @@ def compute_overlap(
 
     Returns
     -------
-    overlap
-        The matrix with overlap integrals, ``shape=(obasis0.nbasis, obasis1.nbasis)``.
+    The matrix with overlap integrals, ``shape=(obasis0.nbasis, obasis1.nbasis)``.
 
     """
     if obasis0.primitive_normalization != "L2":
@@ -266,7 +265,7 @@ class GaussianOverlap:
         return value
 
 
-def _compute_cart_shell_normalizations(shell: Shell) -> NDArray:
+def _compute_cart_shell_normalizations(shell: Shell) -> NDArray[float]:
     """Return normalization constants for the primitives in a given shell.
 
     Parameters
@@ -276,9 +275,7 @@ def _compute_cart_shell_normalizations(shell: Shell) -> NDArray:
 
     Returns
     -------
-    NDArray
-        The normalization constants, always for Cartesian functions, even when
-        shell is pure.
+    The normalization constants, always for Cartesian functions, even when shell is pure.
 
     """
     shell = attrs.evolve(shell, kinds=["c"] * shell.ncon)
@@ -290,7 +287,7 @@ def _compute_cart_shell_normalizations(shell: Shell) -> NDArray:
     return np.array(result)
 
 
-def gob_cart_normalization(alpha: NDArray, n: NDArray) -> NDArray:
+def gob_cart_normalization(alpha: NDArray, n: NDArray) -> NDArray[float]:
     """Compute normalization of exponent.
 
     Parameters
@@ -302,8 +299,7 @@ def gob_cart_normalization(alpha: NDArray, n: NDArray) -> NDArray:
 
     Returns
     -------
-    NDArray
-        The normalization constant for the gaussian cartesian basis.
+    The normalization constants for the gaussian cartesian basis.
 
     """
     return np.sqrt(

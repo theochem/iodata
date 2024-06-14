@@ -1,5 +1,6 @@
 # Requirements for building documentation on RTD
 furo
+intersphinx-registry
 packaging
 setuptools_scm
 sphinx_autodoc_typehints

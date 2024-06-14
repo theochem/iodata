@@ -4,6 +4,7 @@ pushd %~dp0
 
 REM Command file for Sphinx documentation
 
+set SPHINXOPTS="-W --keep-going --nitpicky"
 if "%SPHINXBUILD%" == "" (
 	set SPHINXBUILD=sphinx-build
 )

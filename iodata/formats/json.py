@@ -609,8 +609,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
 
     Returns
     -------
-    out
-        Dictionary with IOData attributes.
+    Dictionary with IOData attributes.
 
     """
     # Remove all null entries and empty dicts in json
@@ -980,7 +979,6 @@ def _load_qcschema_basis(_result: dict, _lit: LineIterator) -> dict:
     -------
     basis_dict
         ...
-
 
     Raises
     ------

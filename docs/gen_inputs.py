@@ -63,7 +63,7 @@ def main():
             for line in lines[2:]:
                 print(line, file=file)
 
-            print_section(f":py:func:`iodata.formats.{modname}.write_input`", "-", file=file)
+            print_section(f":py:func:`iodata.inputs.{modname}.write_input`", "-", file=file)
             fn = getattr(module, "write_input", None)
             print("- Requires", format_words(fn.required), file=file)
             if fn.optional:

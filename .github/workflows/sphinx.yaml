@@ -45,7 +45,7 @@ jobs:
       - name: Run sphinx
         run: |
           cd docs
-          python -m sphinx -M html . _build -W --keep-going --fresh-env
+          python -m sphinx -M html . _build -W --keep-going --fresh-env --nitpicky
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

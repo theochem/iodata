@@ -31,7 +31,7 @@ from ..attrutils import convert_array_to, validate_shape
 class FooBar:
     """Just a silly class for testing convert_array_to."""
 
-    spam: NDArray = attrs.field(converter=convert_array_to(float))
+    spam: NDArray[float] = attrs.field(converter=convert_array_to(float))
 
 
 def test_convert_array_to_init():

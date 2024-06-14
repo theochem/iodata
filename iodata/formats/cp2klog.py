@@ -43,7 +43,9 @@ CONVENTIONS = {
 }
 
 
-def _get_cp2k_norm_corrections(ell: int, alphas: Union[float, NDArray]) -> Union[float, NDArray]:
+def _get_cp2k_norm_corrections(
+    ell: int, alphas: Union[float, NDArray[float]]
+) -> Union[float, NDArray[float]]:
     """Compute the corrections for the normalization of the basis functions.
 
     This correction is needed because the CP2K atom code works with a different
@@ -82,8 +84,7 @@ def _read_cp2k_contracted_obasis(lit: LineIterator) -> MolecularBasis:
 
     Returns
     -------
-    obasis
-        The orbital basis.
+    The orbital basis.
 
     """
     shells = []
@@ -128,9 +129,8 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> MolecularBasis:
 
     Returns
     -------
-    obasis
-        The orbital basis parameters read from the file. Can be used to
-        initialize a GOBasis object.
+    The orbital basis parameters read from the file.
+    Can be used to initialize a GOBasis object.
 
     """
     # Load the relevant data from the file
@@ -172,9 +172,7 @@ def _read_cp2k_obasis(lit: LineIterator) -> dict:
 
     Returns
     -------
-    out
-        The atomic orbital basis data which can be used to initialize a
-        ``GOBasis`` class.
+    The atomic orbital basis data which can be used to initialize a ``GOBasis`` class.
 
     """
     next(lit)  # Skip empty line
@@ -235,7 +233,7 @@ def _read_cp2k_occupations_energies(
 
 def _read_cp2k_orbital_coeffs(
     lit: LineIterator, oe: list[tuple[int, int, float, float]]
-) -> dict[tuple[int, int], NDArray]:
+) -> dict[tuple[int, int], NDArray[float]]:
     """Read the expansion coefficients of the orbital from an open CP2K ATOM output.
 
     Parameters
@@ -248,8 +246,7 @@ def _read_cp2k_orbital_coeffs(
 
     Returns
     -------
-    result
-        Key is an (l, s) pair and value is an array with orbital coefficients.
+    Dictionary in which keys are an (l, s) pair and values are arrays with orbital coefficients.
 
     """
     allcoeffs = {}
@@ -280,8 +277,10 @@ def _get_norb_nel(oe: list[tuple[int, int, float, float]]) -> tuple[int, float]:
 
     Returns
     -------
-    Tuple
-        Number of orbitals and electrons
+    norb
+        The number of orbitals.
+    nelec
+        The number of electrons.
 
     """
     norb = 0
@@ -293,11 +292,11 @@ def _get_norb_nel(oe: list[tuple[int, int, float, float]]) -> tuple[int, float]:
 
 
 def _fill_orbitals(
-    orb_coeffs: NDArray,
-    orb_energies: NDArray,
-    orb_occupations: NDArray,
+    orb_coeffs: NDArray[float],
+    orb_energies: NDArray[float],
+    orb_occupations: NDArray[float],
     oe: list[tuple[int, int, float, float]],
-    coeffs: dict[tuple[int, int], NDArray],
+    coeffs: dict[tuple[int, int], NDArray[float]],
     obasis: MolecularBasis,
     restricted: bool,
 ):

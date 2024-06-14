@@ -369,9 +369,9 @@ def _load_fchk_low(lit: LineIterator, label_patterns: Optional[list[str]] = None
 
     Returns
     -------
-    fields
-        The data read from the FCHK file. Keys are the field names and values
-        are either scalar or array data. Arrays are always one-dimensional.
+    A dictionary containing data read from the FCHK file.
+    Keys are the field names and values are either scalar or array data.
+    Arrays are always one-dimensional.
 
     """
     # Read the two-line header
@@ -474,7 +474,7 @@ def _load_dm(label: str, fchk: dict, result: dict, key: str):
         result[key] = _triangle_to_dense(fchk[label])
 
 
-def _triangle_to_dense(triangle: NDArray) -> NDArray:
+def _triangle_to_dense(triangle: NDArray[float]) -> NDArray[float]:
     """Convert a symmetric matrix in triangular storage to a dense square matrix.
 
     Parameters
@@ -486,8 +486,7 @@ def _triangle_to_dense(triangle: NDArray) -> NDArray:
 
     Returns
     -------
-    ndarray
-        a square symmetric matrix.
+    A square symmetric matrix.
 
     """
     nrow = int(np.round((np.sqrt(1 + 8 * len(triangle)) - 1) / 2))
@@ -513,7 +512,7 @@ def _dump_real_scalars(name: str, val: float, f: TextIO):
     print(f"{name:40}   R     {float(val): 16.8E}", file=f)
 
 
-def _dump_integer_arrays(name: str, val: NDArray, f: TextIO):
+def _dump_integer_arrays(name: str, val: NDArray[int], f: TextIO):
     """Dumper for a array of integers."""
     nval = val.size
     if nval != 0:
@@ -528,7 +527,7 @@ def _dump_integer_arrays(name: str, val: NDArray, f: TextIO):
                 k = 0
 
 
-def _dump_real_arrays(name: str, val: NDArray, f: TextIO):
+def _dump_real_arrays(name: str, val: NDArray[float], f: TextIO):
     """Dumper for a array of float."""
     nval = val.size
     if nval != 0:

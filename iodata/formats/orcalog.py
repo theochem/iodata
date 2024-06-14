@@ -88,7 +88,7 @@ def _helper_number_atoms(lit: LineIterator) -> int:
     return natom
 
 
-def _helper_geometry(lit: TextIO, natom: int) -> tuple[NDArray, NDArray]:
+def _helper_geometry(lit: TextIO, natom: int) -> tuple[NDArray[int], NDArray[float]]:
     """Load coordinates form a ORCA output file format.
 
     Parameters
@@ -98,10 +98,10 @@ def _helper_geometry(lit: TextIO, natom: int) -> tuple[NDArray, NDArray]:
 
     Returns
     -------
-    atnums: int
+    atnums
         The atomic numbers.
-    atcoords: array_like
-        The atcoords in an array of size (natom, 3).
+    atcoords
+        The atcoords in an array with shape ``(natom, 3)``.
 
     """
     atcoords = np.zeros((natom, 3))
@@ -120,7 +120,7 @@ def _helper_geometry(lit: TextIO, natom: int) -> tuple[NDArray, NDArray]:
     return atnums, atcoords
 
 
-def _helper_scf_energies(lit: TextIO) -> tuple[NDArray, NDArray]:
+def _helper_scf_energies(lit: TextIO) -> NDArray[float]:
     """Load energies from each SCF cycle from a ORCA output file format.
 
     Parameters
@@ -130,7 +130,7 @@ def _helper_scf_energies(lit: TextIO) -> tuple[NDArray, NDArray]:
 
     Returns
     -------
-    energies: array_like
+    energies
         The energies of each scf cycle in 1D-array.
 
     """

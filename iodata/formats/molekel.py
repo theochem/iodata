@@ -57,7 +57,7 @@ def _load_helper_charges(lit: LineIterator) -> dict:
     return {"mulliken": np.array(atcharges)}
 
 
-def _load_helper_atoms(lit: LineIterator) -> tuple[NDArray, NDArray]:
+def _load_helper_atoms(lit: LineIterator) -> tuple[NDArray[int], NDArray[float]]:
     atnums = []
     atcoords = []
     for line in lit:
@@ -106,7 +106,9 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
     return MolecularBasis(shells, CONVENTIONS, "L2")
 
 
-def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[NDArray, NDArray]:
+def _load_helper_coeffs(
+    lit: LineIterator, nbasis: int
+) -> tuple[NDArray[float], NDArray[float], list]:
     coeffs = []
     energies = []
     irreps = []
@@ -144,7 +146,7 @@ def _load_helper_coeffs(lit: LineIterator, nbasis: int) -> tuple[NDArray, NDArra
     return np.hstack(coeffs), np.array(energies), irreps
 
 
-def _load_helper_occ(lit: LineIterator) -> NDArray:
+def _load_helper_occ(lit: LineIterator) -> NDArray[float]:
     occs = []
     for line in lit:
         if line.strip() == "$END":

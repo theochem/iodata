@@ -138,7 +138,7 @@ def _load_helper_num(lit: LineIterator) -> list[int]:
     return num_mo, nprim, num_atoms
 
 
-def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> tuple[NDArray, NDArray]:
+def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> tuple[NDArray[int], NDArray[float]]:
     """Read the coordinates of the atoms."""
     atnums = np.empty(num_atoms, int)
     atcoords = np.empty((num_atoms, 3), float)
@@ -175,7 +175,7 @@ def _load_helper_section(
     return np.array(section, dtype=dtype)
 
 
-def _load_helper_mo(lit: LineIterator, nprim: int) -> tuple[int, float, float, NDArray]:
+def _load_helper_mo(lit: LineIterator, nprim: int) -> tuple[int, float, float, NDArray[float]]:
     """Read one section of MO information."""
     line = next(lit)
     if not line.startswith("MO"):
@@ -202,7 +202,7 @@ def _load_helper_energy(lit: LineIterator) -> float:
     return energy, virial
 
 
-def _load_helper_multiwfn(lit: LineIterator, num_mo: int) -> NDArray:
+def _load_helper_multiwfn(lit: LineIterator, num_mo: int) -> NDArray[int]:
     """Read MO spin information from MULTIWFN extension."""
     for line in lit:
         if "$MOSPIN $END" in line:
@@ -259,8 +259,11 @@ def load_wfn_low(lit: LineIterator) -> tuple:
 
 
 def build_obasis(
-    icenters: NDArray, type_assignments: NDArray, exponents: NDArray, lit: LineIterator
-) -> tuple[MolecularBasis, NDArray]:
+    icenters: NDArray[int],
+    type_assignments: NDArray[int],
+    exponents: NDArray[float],
+    lit: LineIterator,
+) -> tuple[MolecularBasis, NDArray[int]]:
     """Construct a basis set using the arrays read from a WFN or WFX file.
 
     Parameters
@@ -352,7 +355,7 @@ def build_obasis(
     return obasis, permutation
 
 
-def get_mocoeff_scales(obasis: MolecularBasis) -> NDArray:
+def get_mocoeff_scales(obasis: MolecularBasis) -> NDArray[float]:
     """Get the L2-normalization of the un-normalized Cartesian basis functions.
 
     Parameters
@@ -362,9 +365,7 @@ def get_mocoeff_scales(obasis: MolecularBasis) -> NDArray:
 
     Returns
     -------
-    scales
-        Scaling factors to be multiplied into the molecular orbital
-        coefficients.
+    Scaling factors to be multiplied into the molecular orbital coefficients.
 
     """
     scales = []
