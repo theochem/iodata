@@ -130,7 +130,7 @@ Github work flow
 
      # Run tests excluding those marked as slow.
      pytest -m "not slow"
-     # Build docs.
+     # Build the documentation.
      (cd docs; make html)
      # Finally, if the above steps all pass, run the slow tests.
      pytest -m slow
