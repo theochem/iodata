@@ -25,8 +25,9 @@ and focus on the functionality of the API rather than the formats.
 import os
 
 import pytest
+from numpy.testing import assert_allclose, assert_array_equal
 
-from ..api import dump_many, dump_one
+from ..api import dump_many, dump_one, load_many
 from ..iodata import IOData
 from ..utils import FileFormatError
 
@@ -65,3 +66,23 @@ def test_dump_many_missing_attribute_second(tmpdir):
     with pytest.raises(FileFormatError):
         dump_many(iodatas, path_xyz)
     assert os.path.isfile(path_xyz)
+
+
+def test_dump_many_generator(tmpdir):
+    path_xyz = os.path.join(tmpdir, "traj.xyz")
+
+    iodata0 = IOData(atnums=[1, 1], atcoords=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+    iodata1 = IOData(atnums=[2, 2], atcoords=[[0.0, 1.0, 0.0], [0.0, 1.0, 1.0]])
+
+    def iodata_generator():
+        yield iodata0
+        yield iodata1
+
+    dump_many(iodata_generator(), path_xyz)
+    assert os.path.isfile(path_xyz)
+    iodatas = list(load_many(path_xyz))
+    assert len(iodatas) == 2
+    assert_array_equal(iodatas[0].atnums, iodata0.atnums)
+    assert_array_equal(iodatas[1].atnums, iodata1.atnums)
+    assert_allclose(iodatas[0].atcoords, iodata0.atcoords)
+    assert_allclose(iodatas[1].atcoords, iodata1.atcoords)
