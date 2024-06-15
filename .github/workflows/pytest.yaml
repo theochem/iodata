@@ -27,7 +27,7 @@ jobs:
         if: ${{ matrix.python-version == '3.9'}}
         # Ensure changes to these dependencies are reflected
         # in pyproject.toml and docs/install.rst
-        run: pip install numpy==1.22 scipy==1.11 attrs==21.3.0
+        run: pip install numpy==1.22 scipy==1.11.1 attrs==21.3.0
       - name: Install development version
         run: pip install -e .[dev]
       # If some tests are slow against expectations, pytest will abort due to timeout.
