@@ -28,7 +28,9 @@ from scipy.linalg import eigh
 
 from .attrutils import validate_shape
 
-__all__ = [
+__all__ = (
+    "FileFormatError",
+    "FileFormatWarning",
     "LineIterator",
     "Cube",
     "set_four_index_element",
@@ -36,7 +38,7 @@ __all__ = [
     "derive_naturals",
     "check_dm",
     "strtobool",
-]
+)
 
 
 # The unit conversion factors below can be used as follows:
