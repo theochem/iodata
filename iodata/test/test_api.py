@@ -59,13 +59,15 @@ def test_dump_many_missing_attribute_first(tmpdir):
 
 def test_dump_many_missing_attribute_second(tmpdir):
     path_xyz = os.path.join(tmpdir, "missing_atcoords.xyz")
-    iodatas = [
-        IOData(atnums=[1, 1], atcoords=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]]),
-        IOData(atnums=[1, 1]),
-    ]
+    iodata0 = IOData(atnums=[1, 1], atcoords=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+    iodatas = [iodata0, IOData(atnums=[1, 1])]
     with pytest.raises(FileFormatError):
         dump_many(iodatas, path_xyz)
     assert os.path.isfile(path_xyz)
+    iodatas = list(load_many(path_xyz))
+    assert len(iodatas) == 1
+    assert_array_equal(iodatas[0].atnums, iodata0.atnums)
+    assert_allclose(iodatas[0].atcoords, iodata0.atcoords)
 
 
 def test_dump_many_generator(tmpdir):
