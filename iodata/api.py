@@ -214,6 +214,10 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
     **kwargs
         Keyword arguments are passed on to the format-specific dump_one function.
 
+    Raises
+    ------
+    FileFormatError
+        When one of the iodata items does not have the required attributes.
     """
     format_module = _select_format_module(filename, "dump_one", fmt)
     _check_required(iodata, format_module.dump_one)
