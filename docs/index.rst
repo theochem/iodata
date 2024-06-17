@@ -82,6 +82,7 @@ Developer Documentation
    :maxdepth: 2
 
    contributing
+   code_of_conduct
 
 API Reference
 ^^^^^^^^^^^^^
