@@ -31,7 +31,7 @@ def convert_array_to(dtype):
     def converter(array):
         if array is None:
             return None
-        return np.array(array, copy=False, dtype=dtype)
+        return np.asarray(array, dtype=dtype)
 
     return converter
 
