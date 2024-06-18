@@ -49,6 +49,7 @@ html_theme = "furo"
 html_static_path = ["_static"]
 html_css_files = ["css/table.css"]
 # Embedded SVG as recommended in Furo template.
+# See https://pradyunsg.me/furo/customisation/footer/#using-embedded-svgs
 with open("github.svg") as fh:
     GITHUB_ICON_SVG = fh.read().strip()
 html_theme_options = {
