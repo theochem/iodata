@@ -48,6 +48,23 @@ intersphinx_mapping = get_intersphinx_mapping(packages={"python", "numpy", "scip
 html_theme = "furo"
 html_static_path = ["_static"]
 html_css_files = ["css/table.css"]
+# Embedded SVG as recommended in Furo template.
+# See https://pradyunsg.me/furo/customisation/footer/#using-embedded-svgs
+with open("github.svg") as fh:
+    GITHUB_ICON_SVG = fh.read().strip()
+html_theme_options = {
+    "source_repository": "https://github.com/theochem/iodata",
+    "source_branch": "main",
+    "source_directory": "docs/",
+    "footer_icons": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/theochem/iodata",
+            "html": GITHUB_ICON_SVG,
+            "class": "",
+        },
+    ],
+}
 
 # -- Configuration for autodoc extensions ---------------------------------
 

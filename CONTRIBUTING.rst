@@ -1,132 +1,38 @@
+..
+    : IODATA is an input and output module for quantum chemistry.
+    :
+    : Copyright (C) 2011-2019 The IODATA Development Team
+    :
+    : This file is part of IODATA.
+    :
+    : IODATA is free software; you can redistribute it and/or
+    : modify it under the terms of the GNU General Public License
+    : as published by the Free Software Foundation; either version 3
+    : of the License, or (at your option) any later version.
+    :
+    : IODATA is distributed in the hope that it will be useful,
+    : but WITHOUT ANY WARRANTY; without even the implied warranty of
+    : MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    : GNU General Public License for more details.
+    :
+    : You should have received a copy of the GNU General Public License
+    : along with this program; if not, see <http://www.gnu.org/licenses/>
+    :
+    : --
+
+
 We'd love you to contribute.
 Here are some practical tips to help you get started.
 
-This document assumes that you are familiar with `Bash`_ and `Python`_.
-If you are not familiar with git or GitHub,
-we recommend that you take a look at the `GitHub Guides <https://guides.github.com/>`_
-or this `Git Book <https://git-scm.com/book/en/v2>`_.
+For IOData, you can follow the general
+`QC-Devs Contributing Guide <https://github.com/theochem/.github/blob/main/CONTRIBUTING.md>`_.
 
+When following that guide, you only need to take into account these specifics for IOData:
 
-Development setup
------------------
-
-The following instructions will create a local clone of the IOData Git repository
-that is suitable for development.
-It is assumed that you have Python 3.9 or later installed on your system.
-
-The commands below are provided as a guideline to get a working development setup.
-Feel free to adapt them to your personal preferences.
-
-- For Linux or macOS:
+- The repository URL is: git@github.com:theochem/iodata.git
+- To run all tests locally, you can use the following commands:
 
   .. code-block:: bash
-
-    git clone git@github.com:theochem/iodata.git
-    cd iodata
-    python -m venv venv
-    source venv/bin/activate
-    pip install -e .[dev]
-    pre-commit install
-
-  The manual activation of the virtual environment with ``source venv/bin/activate``
-  has to be repeated every time you open a new terminal window, which is impractical.
-  We recommend using `direnv`_ to automate the activation of the virtual environment.
-  After installing and setting up direnv, you can configure it for IOData as follows:
-
-  .. code-block:: bash
-
-    echo 'source venv/bin/activate' > .envrc
-    direnv allow
-
-  Now, the virtual environment is always activated when you change to the ``iodata`` directory.
-
-- For Windows: ...
-
-
-Git and GitHub configuration
-----------------------------
-
-- If you don't already have an SSH key pair, create one using the following terminal command:
-
-  .. code-block:: bash
-
-    ssh-keygen -t rsa -b 4096 -C "your_email@example.com" -f ${HOME}/.ssh/id_rsa_github_com
-
-  An empty passphrase is convenient and should be fine.
-  This will generate a private and a public key in ``${HOME}/.ssh``.
-
-- Upload your *public* SSH key to `<https://github.com/settings/keys>`_.
-  This is a single long line in ``${HOME}/.ssh/id_rsa_github_com.pub``,
-  which you can copy and paste into your browser.
-
-- Configure SSH to use this key pair for authentication when pushing branches to GitHub.
-  Add the following to your ``.ssh/config`` file:
-
-  .. code-block::
-
-    # Do not allow SSH to try all keys, as SSH servers only accept a few attempts.
-    # Keys must be specified for each host.
-    IdentitiesOnly yes
-
-    Host github.com
-        Hostname github.com
-        ForwardX11 no
-        IdentityFile %d/.ssh/id_rsa_github_com
-
-  (Make sure you have the correct path to the private key file.)
-
-- Configure Git to use the name and email address associated with your GitHub account:
-
-  .. code-block:: bash
-
-    git config --global user.name "Your Name"
-    git config --global user.email "youremail@yourdomain.com"
-
-- Create a fork of the project, using the `GitHub Fork feature`_.
-  Add your fork as a second remote to your local repository,
-  for which we will use the short name ``mine`` below, but any short name will do:
-
-  .. code-block:: bash
-
-    git remote add mine git@github.com:<your-github-account>/iodata.git
-
-
-
-Github work flow
-----------------
-
-1. If you want to make changes,
-   please open a GitHub issue first, or search for an existing issue,
-   so we can discuss it before you code:
-
-   - Use the issue to explain what you want to accomplish and why.
-     This often saves a lot of time and effort in the long run.
-   - Also use the issue also to plan your changes.
-     Try to solve only one problem at a time,
-     rather than fixing multiple problems and adding different features at once.
-     Small changes are easier to manage, also for the reviewer in the last step below.
-   - Finally, mention in the corresponding issue when you are working on it.
-     Avoid duplicate efforts by assigning yourself to the issue.
-
-   Once you have determined what changes need to be made to the source code,
-   you can proceed with the following steps.
-   (It is assumed that you have created the development setup above.)
-
-
-2. Create a new branch, with a name that indicates the purpose of your change:
-
-   .. code-block:: bash
-
-     git checkout -b new-feature
-
-
-3. Make changes to the source,
-   for which the following section discusses conventions, recommendations and guidelines.
-
-
-4. Verify that all tests pass and that the documentation still builds without warnings or errors:
-
-   .. code-block:: bash
 
      # Run tests excluding those marked as slow.
      pytest -m "not slow"
@@ -135,117 +41,13 @@ Github work flow
      # Finally, if the above steps all pass, run the slow tests.
      pytest -m slow
 
+  The first command already performs the majority of the tests,
+  but only takes a few seconds to complete.
+  The next two are also useful, but take more time.
+  They are only worth trying if the first one works.
 
-5. Commit your changes using ``git commit``.
-
-   You will notice that ``pre-commit`` checks for and possibly fixes minor problems.
-   If it finds something (even if is automatically fixed), it will abort the commit.
-   This gives you a chance to fix those problems or check the automatic fixes first.
-   When you are happy with all the cleanup, run ``git commit`` again.
-
-   When prompted, write a meaningful commit message.
-   The first line is a short summary, written in the imperative mood.
-   Optionally, this can be followed by  blank line and a longer description.
-   We follow the `Pansini Guide`_ style for commit messages.
-   This makes it easier to generate changelogs and to understand the history of the project.
-
-
-6. Push your branch to your forked repository on GitHub:
-
-   .. code-block:: bash
-
-       git push mine -u new-feature
-
-   A link should appear in the terminal that will take you to the next step.
-
-
-7. Make a pull request from your ``new-feature`` branch in your forked repository
-   to the ``main`` branch in the original repository.
-
-
-8. Wait for the GitHub Actions to complete.
-   These should pass.
-   Typically, someone should review your pull request within a few days or weeks.
-   Ideally, the review will result in minor corrections.
-   We'll do our best to avoid major issues in step 1.
-
-
-General code guidelines
------------------------
-
-Code contributions are the most common type of contribution.
-We welcome all types of contributions,
-including bug fixes, new features, and documentation updates.
-All code contributions should follow the guidelines below.
-
-
-1. Code should be well-written
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In general, we follow the `PEP 8`_ style guide for Python code.
-Most style conventions are taken care off by pre-commit.
-If you have it installed as described above, the basics are covered.
-
-We strive to write compact and elegant Python code
-that is not fully addressed by the linters configured in pre-commit.
-This is one of the points we look for when reviewing a pull request.
-
-
-2. Code should be well-documented
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- All functions and classes (except tests) should have a docstring
-  explaining what they do and how to use them.
-- We encourage the use of mathematical equations in docstrings, using LaTeX notation.
-- We do not encourage the use of example code in docstrings,
-  as it can become outdated and difficult to maintain.
-  Instead, we encourage the use stand-alone examples that can be executed and tested separately.
-- We use `type hinting` to document the types of function (and method) arguments and return values.
-- We use `NumPy's docstring format`_, except that types are documented with type hints.
-- We recommend using `semantic line breaks`_ when writing comments or documentation.
-  This improves the readability of ``git diff`` when reviewing changes.
-- Your code will be read by other developers, so it should be easy to understand.
-  If a part of the code seems complex, it should have comments explaining what it does.
-  (When in doubt, add a comment!)
-  Good comments emphasize the intent of the code, rather than literally describing it.
-
-
-3. Code should be tested
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-- All code should be tested.
-  We use `pytest`_ for testing.
-
-  - When you add new code, you should also add tests for it.
-  - If you fix a bug, you should also add a test that fails without and passes with your fix.
-  - Use ``np.testing.assert_allclose`` and  ``np.testing.assert_equal``
-    to compare floating-point and integer NumPy arrays, respectively.
-    ``np.testing.assert_allclose`` can also be used for  comparing floating point scalars.
-    In all other cases (not involving floating point numbers),
-    the simple ``assert a == b`` works just as well, and is more readable.
-    See `numpy.testing`_ for more details.
-
-- We use `codecov`_ in most of our packages to check the code coverage of our tests.
-  Please make sure that your code is well-tested and that the coverage does not decrease.
-
-
-4. Code should be consistent
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Code needs to be consistent with the rest of the codebase.
-This makes it easier to review and maintain.
-This includes:
-
-- Variable names, function names, and class names should be consistent
-  with the rest of the codebase.
-- Most QC-Devs repositories use `atomic units`_ internally.
-  We ask that you try to preserve this (for consistency), but still document units.
-- Even more, variable names should be consistent across QC-Devs packages.
-  We are in the process of making a glossary, but for now,
-  please take a look at the existing codes on `GitHub <https://github.com/theochem>`_ and try to match them.
-
-We value your contributions and appreciate your efforts to improve QC-Devs packages.
-By following these guidelines, you can ensure smoother collaboration and enhance the overall quality of the project.
+The sections below describe how to contribute to features that are specific to IOData.
+These are not covered in the general QC-Devs Contributing Guide.
 
 
 Adding a new file format
