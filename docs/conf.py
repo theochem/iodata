@@ -49,6 +49,7 @@ html_theme = "furo"
 html_static_path = ["_static"]
 html_css_files = ["css/table.css"]
 # Embedded SVG as recommended in Furo template.
+# For more details, see: https://pradyunsg.me/furo/customisation/icons/#using-different-icons
 GITHUB_ICON_SVG = """\
 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
 <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0\
