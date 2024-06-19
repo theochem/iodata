@@ -27,7 +27,7 @@ from types import ModuleType
 from typing import Callable, Optional
 
 from .iodata import IOData
-from .utils import LineIterator
+from .utils import FileFormatError, LineIterator
 
 __all__ = ["load_one", "load_many", "dump_one", "dump_many", "write_input"]
 
@@ -173,6 +173,28 @@ def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IO
             return
 
 
+def _check_required(iodata: IOData, dump_func: Callable):
+    """Check that required attributes are not None before dumping to a file.
+
+    Parameters
+    ----------
+    iodata
+        The data to be written.
+    dump_func
+        The dump_one or dump_many function that will write the file.
+
+    Raises
+    ------
+    FileFormatError
+        When a required attribute is ``None``.
+    """
+    for attr_name in dump_func.required:
+        if getattr(iodata, attr_name) is None:
+            raise FileFormatError(
+                f"Required attribute {attr_name}, for format {dump_func.fmt}, is None."
+            )
+
+
 def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs):
     """Write data to a file.
 
@@ -192,8 +214,13 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
     **kwargs
         Keyword arguments are passed on to the format-specific dump_one function.
 
+    Raises
+    ------
+    FileFormatError
+        When one of the iodata items does not have the required attributes.
     """
     format_module = _select_format_module(filename, "dump_one", fmt)
+    _check_required(iodata, format_module.dump_one)
     with open(filename, "w") as f:
         format_module.dump_one(f, iodata, **kwargs)
 
@@ -216,10 +243,34 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
     **kwargs
         Keyword arguments are passed on to the format-specific dump_many function.
 
+    Raises
+    ------
+    FileFormatError
+        When iodatas has zero length
+        or when one of the iodata items does not have the required attributes.
     """
     format_module = _select_format_module(filename, "dump_many", fmt)
+
+    # Check the first item before creating the file.
+    # If the file already exists, this may prevent data loss:
+    # The file is not overwritten when it is clear that writing will fail.
+    iter_iodatas = iter(iodatas)
+    try:
+        first = next(iter_iodatas)
+        _check_required(first, format_module.dump_many)
+    except StopIteration as exc:
+        raise FileFormatError("dump_many needs at least one iodata object.") from exc
+
+    def checking_iterator():
+        """Iterate over all iodata items, not checking the first."""
+        # The first one was already checked.
+        yield first
+        for other in iter_iodatas:
+            _check_required(other, format_module.dump_many)
+            yield other
+
     with open(filename, "w") as f:
-        format_module.dump_many(f, iodatas, **kwargs)
+        format_module.dump_many(f, checking_iterator(), **kwargs)
 
 
 def write_input(
