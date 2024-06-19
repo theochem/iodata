@@ -68,7 +68,7 @@ Contributing
 ------------
 
 We welcome contributions of all kinds,
-such as new features, improvements, bug fixes, clarification of documentation, and so on.
+such as new features, improvements, bug fixes, and documentation clarifications.
 Please read our `Contributor Guide`_ and `Code of Conduct`_ for more details.
 
 
