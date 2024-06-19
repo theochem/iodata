@@ -83,5 +83,5 @@ Please read our `Contributor Guide`_ and `Code of Conduct`_ for more details.
 .. |PyPI| image:: https://img.shields.io/pypi/v/qc-iodata.svg
     :target: https://pypi.python.org/pypi/qc-iodata/
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html
-.. _Contributor Guide: https://github.com/theochem/.github/blob/main/CONTRIBUTING.md
+.. _Contributor Guide: https://iodata.qcdevs.org/contributing.html
 .. _Code of Conduct: https://github.com/theochem/.github/blob/main/CODE_OF_CONDUCT.md
