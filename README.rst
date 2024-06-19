@@ -36,6 +36,7 @@ About
 IOData is a HORTON 3 module for input/output of quantum chemistry file formats.
 Documentation is here: https://iodata.readthedocs.io/ or https://iodata.qcdevs.org/
 
+
 Citation
 --------
 
@@ -46,6 +47,7 @@ Please use the following citation in any publication using IOData library:
     Kelly, L. Macaya, F. Meng, M. Richer, R. Hernandez‐Esparza, X. D. Yang, M. Chan, T. D. Kim, M.
     Cools‐Ceuppens, V. Chuiko, E. Vohringer‐Martinez,P. W. Ayers, F. Heidar‐Zadeh,
     `J Comput Chem. 2021; 42: 458– 464 <https://doi.org/10.1002/jcc.26468>`__.
+
 
 Installation
 ------------
@@ -61,6 +63,15 @@ and the upcoming stable release 1.0.0.
 
 See https://iodata.readthedocs.io/en/latest/install.html for full details.
 
+
+Contributing
+------------
+
+We welcome contributions of all kinds,
+such as new features, improvements, bug fixes, clarification of documentation, and so on.
+Please read our `Contributor Guide`_ and `Code of Conduct`_ for more details.
+
+
 .. |pytest| image:: https://github.com/theochem/iodata/actions/workflows/pytest.yaml/badge.svg
     :target: https://github.com/theochem/iodata/actions/workflows/pytest.yaml
 .. |release| image:: https://github.com/theochem/iodata/actions/workflows/release.yaml/badge.svg
@@ -72,3 +83,5 @@ See https://iodata.readthedocs.io/en/latest/install.html for full details.
 .. |PyPI| image:: https://img.shields.io/pypi/v/qc-iodata.svg
     :target: https://pypi.python.org/pypi/qc-iodata/
 .. _virtual environment: https://docs.python.org/3/tutorial/venv.html
+.. _Contributor Guide: https://github.com/theochem/.github/blob/main/CONTRIBUTING.md
+.. _Code of Conduct: https://github.com/theochem/.github/blob/main/CODE_OF_CONDUCT.md

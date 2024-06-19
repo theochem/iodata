@@ -4,15 +4,16 @@ repos:
   rev: v4.6.0
   hooks:
     - id: check-added-large-files
+      args: ["--maxkb=100"]
     - id: check-ast
     - id: check-case-conflict
     - id: check-executables-have-shebangs
     - id: check-json
-    - id: check-yaml
     - id: check-merge-conflict
     - id: check-symlinks
     - id: check-toml
     - id: check-vcs-permalinks
+    - id: check-yaml
     - id: debug-statements
     - id: detect-private-key
     - id: destroyed-symlinks
@@ -26,12 +27,13 @@ repos:
   rev: v1.5.5
   hooks:
     - id: remove-crlf
+      exclude_types: [binary]
 - repo: https://github.com/python-jsonschema/check-jsonschema
   rev: 0.28.5
   hooks:
     - id: check-github-workflows
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.4.8
+  rev: v0.4.9
   hooks:
     - id: ruff-format
     - id: ruff
