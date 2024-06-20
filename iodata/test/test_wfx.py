@@ -820,4 +820,4 @@ def test_generalized():
     # The Molden format does not support generalized MOs
     data = create_generalized()
     with pytest.raises(PrepareDumpError):
-        dump_one(data, "generlized.wfx")
+        dump_one(data, "generalized.wfx")

@@ -345,7 +345,7 @@ def prepare_dump(data: IOData):
         raise PrepareDumpError("Cannot write WFX file when mo.occs_aminusb is set.")
     for shell in data.obasis.shells:
         if any(kind != "c" for kind in shell.kinds):
-            raise PrepareDumpError("The WFX only supports Cartesian MolecularBasis.")
+            raise PrepareDumpError("The WFX format only supports Cartesian MolecularBasis.")
 
 
 @document_dump_one(

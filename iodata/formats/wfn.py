@@ -512,7 +512,7 @@ def prepare_dump(data: IOData):
         raise PrepareDumpError("Cannot write WFN file when mo.occs_aminusb is set.")
     for shell in data.obasis.shells:
         if any(kind != "c" for kind in shell.kinds):
-            raise PrepareDumpError("The WFN only supports Cartesian MolecularBasis.")
+            raise PrepareDumpError("The WFN format only supports Cartesian MolecularBasis.")
 
 
 @document_dump_one(

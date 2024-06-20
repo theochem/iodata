@@ -373,4 +373,4 @@ def test_generalized():
     # The WFN format does not support generalized MOs
     data = create_generalized()
     with pytest.raises(PrepareDumpError):
-        dump_one(data, "generlized.wfn")
+        dump_one(data, "generalized.wfn")

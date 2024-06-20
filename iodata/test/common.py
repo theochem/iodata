@@ -201,7 +201,7 @@ def load_one_warning(
 
 
 def create_generalized() -> IOData:
-    """Create a dummy IOData object with generlized molecular orbitals."""
+    """Create a dummy IOData object with generalized molecular orbitals."""
     rng = np.random.default_rng()
     return IOData(
         atnums=[1, 1],
