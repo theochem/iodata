@@ -29,8 +29,14 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..basis import convert_conventions
 from ..overlap import compute_overlap
-from ..utils import angstrom
-from .common import check_orthonormal, compare_mols, compute_mulliken_charges, load_one_warning
+from ..utils import PrepareDumpError, angstrom
+from .common import (
+    check_orthonormal,
+    compare_mols,
+    compute_mulliken_charges,
+    create_generalized,
+    load_one_warning,
+)
 
 
 def compare_mols_diff_formats(mol1, mol2):
@@ -157,3 +163,10 @@ def test_load_mkl_h2_huge_threshold():
         warnings.simplefilter("error")
         # The threshold is set very high, which skip a correction for ORCA.
         load_one(str(fn_molekel), norm_threshold=1e4)
+
+
+def test_generalized():
+    # The Molden format does not support generalized MOs
+    data = create_generalized()
+    with pytest.raises(PrepareDumpError):
+        dump_one(data, "generlized.mkl")

@@ -27,7 +27,7 @@ from types import ModuleType
 from typing import Callable, Optional
 
 from .iodata import IOData
-from .utils import FileFormatError, LineIterator
+from .utils import FileFormatError, LineIterator, PrepareDumpError
 
 __all__ = ["load_one", "load_many", "dump_one", "dump_many", "write_input"]
 
@@ -185,12 +185,12 @@ def _check_required(iodata: IOData, dump_func: Callable):
 
     Raises
     ------
-    FileFormatError
+    PrepareDumpError
         When a required attribute is ``None``.
     """
     for attr_name in dump_func.required:
         if getattr(iodata, attr_name) is None:
-            raise FileFormatError(
+            raise PrepareDumpError(
                 f"Required attribute {attr_name}, for format {dump_func.fmt}, is None."
             )
 
@@ -216,11 +216,15 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
 
     Raises
     ------
-    FileFormatError
-        When one of the iodata items does not have the required attributes.
+    PrepareDumpError
+        When the iodata object is not compatible with the file format,
+        e.g. due to missing attributes, and not conversion is available or allowed
+        to make it compatible.
     """
     format_module = _select_format_module(filename, "dump_one", fmt)
     _check_required(iodata, format_module.dump_one)
+    if hasattr(format_module, "prepare_dump"):
+        format_module.prepare_dump(iodata)
     with open(filename, "w") as f:
         format_module.dump_one(f, iodata, **kwargs)
 
@@ -245,9 +249,10 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
 
     Raises
     ------
-    FileFormatError
-        When iodatas has zero length
-        or when one of the iodata items does not have the required attributes.
+    PrepareDumpError
+        When the iodata object is not compatible with the file format,
+        e.g. due to missing attributes, and not conversion is available or allowed
+        to make it compatible.
     """
     format_module = _select_format_module(filename, "dump_many", fmt)
 
@@ -267,6 +272,8 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
         yield first
         for other in iter_iodatas:
             _check_required(other, format_module.dump_many)
+            if hasattr(format_module, "prepare_dump"):
+                format_module.prepare_dump(other)
             yield other
 
     with open(filename, "w") as f:

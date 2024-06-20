@@ -32,7 +32,7 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
-from ..utils import LineIterator
+from ..utils import LineIterator, PrepareDumpError
 from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
 __all__ = []
@@ -327,6 +327,27 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
+def prepare_dump(data: IOData):
+    """Check the compatibility of the IOData object with the WFX format.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to be checked.
+    """
+    if data.mo is None:
+        raise PrepareDumpError("The WFX format requires molecular orbitals.")
+    if data.obasis is None:
+        raise PrepareDumpError("The WFX format requires an orbital basis set.")
+    if data.mo.kind == "generalized":
+        raise PrepareDumpError("Cannot write WFX file with generalized orbitals.")
+    if data.mo.occs_aminusb is not None:
+        raise PrepareDumpError("Cannot write WFX file when mo.occs_aminusb is set.")
+    for shell in data.obasis.shells:
+        if any(kind != "c" for kind in shell.kinds):
+            raise PrepareDumpError("The WFX only supports Cartesian MolecularBasis.")
+
+
 @document_dump_one(
     "WFX",
     ["atcoords", "atnums", "atcorenums", "mo", "obasis", "charge"],
@@ -334,10 +355,6 @@ def load_one(lit: LineIterator) -> dict:
 )
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    # occs_aminusb is not supported
-    if data.mo.occs_aminusb is not None:
-        raise ValueError("Cannot write WFX file when mo.occs_aminusb is set.")
-
     # get all tags/labels that can be written into a WFX file
     lbs_str, lbs_int, lbs_float, lbs_aint, lbs_afloat, lbs_other, _ = _wfx_labels()
     # put all labels in one dictionary and flip key and value for easier use
@@ -351,8 +368,6 @@ def dump_one(f: TextIO, data: IOData):
     for shell in data.obasis.shells:
         for i, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
             for exponent, coeff in zip(shell.exponents, shell.coeffs.T[i]):
-                if kind != "c":
-                    raise ValueError("WFX can be generated only for Cartesian MolecularBasis!")
                 shells.append(
                     Shell(
                         shell.icenter, [angmom], [kind], np.array([exponent]), coeff.reshape(-1, 1)

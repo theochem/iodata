@@ -29,11 +29,12 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
-from ..utils import LineIterator
+from ..utils import LineIterator, PrepareDumpError
 from .common import (
     check_orthonormal,
     compare_mols,
     compute_mulliken_charges,
+    create_generalized,
     load_one_warning,
     truncated_file,
 )
@@ -812,3 +813,10 @@ def test_load_one_lih_cation_rohf():
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def test_generalized():
+    # The Molden format does not support generalized MOs
+    data = create_generalized()
+    with pytest.raises(PrepareDumpError):
+        dump_one(data, "generlized.wfx")

@@ -28,8 +28,8 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
-from ..utils import LineIterator
-from .common import check_orthonormal, compare_mols, compute_mulliken_charges
+from ..utils import LineIterator, PrepareDumpError
+from .common import check_orthonormal, compare_mols, compute_mulliken_charges, create_generalized
 
 # TODO: removed density, kin, nucnuc checks
 
@@ -364,3 +364,10 @@ def test_load_dump_consistency_from_fchk_h2o(tmpdir):
 
 def test_load_dump_consistency_from_molden_nh3(tmpdir):
     check_load_dump_consistency("nh3_molden_cart.molden", tmpdir, fmt_from="molden", fmt_to="wfn")
+
+
+def test_generalized():
+    # The Molden format does not support generalized MOs
+    data = create_generalized()
+    with pytest.raises(PrepareDumpError):
+        dump_one(data, "generlized.wfn")

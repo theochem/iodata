@@ -29,8 +29,9 @@ from numpy.testing import assert_allclose, assert_equal
 from numpy.typing import NDArray
 
 from ..api import load_one
-from ..basis import convert_conventions
+from ..basis import MolecularBasis, Shell, convert_conventions
 from ..iodata import IOData
+from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap
 from ..utils import FileFormatWarning
 
@@ -40,6 +41,7 @@ __all__ = [
     "compare_mols",
     "check_orthonormal",
     "load_one_warning",
+    "create_generalized",
 ]
 
 
@@ -196,3 +198,23 @@ def load_one_warning(
             return load_one(str(fn), fmt, **kwargs)
         with pytest.warns(FileFormatWarning, match=match):
             return load_one(str(fn), fmt, **kwargs)
+
+
+def create_generalized() -> IOData:
+    """Create a dummy IOData object with generlized molecular orbitals."""
+    rng = np.random.default_rng()
+    return IOData(
+        atnums=[1, 1],
+        atcoords=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]],
+        mo=MolecularOrbitals(
+            "generalized", None, None, occs=[1.0, 1.0, 0.0, 0.0], coeffs=rng.uniform(0, 1, (10, 4))
+        ),
+        obasis=MolecularBasis(
+            [
+                Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 2), rng.uniform(0, 1, (2, 2))),
+                Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 2), rng.uniform(0, 1, (2, 2))),
+            ],
+            {(0, "c"): ["1"], (1, "c"): ["x", "y", "z"]},
+            "L2",
+        ),
+    )

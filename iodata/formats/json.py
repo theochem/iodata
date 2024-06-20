@@ -571,7 +571,7 @@ from .. import __version__
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
-from ..utils import FileFormatError, FileFormatWarning, LineIterator
+from ..utils import FileFormatError, FileFormatWarning, LineIterator, PrepareDumpError
 
 __all__ = []
 
@@ -1436,6 +1436,22 @@ def _parse_provenance(
     return base_provenance
 
 
+def prepare_dump(data: IOData) -> IOData:
+    """Check the compatibility of the IOData object with QCScheme.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to be checked.
+
+    """
+    if "schema_name" not in data.extra:
+        raise PrepareDumpError("Cannot write qcschema file without 'schema_name' defined.")
+    schema_name = data.extra["schema_name"]
+    if schema_name == "qcschema_basis":
+        raise PrepareDumpError(f"{schema_name} not yet implemented in IOData.")
+
+
 @document_dump_one(
     "QCSchema",
     ["atnums", "atcoords", "charge", "spinpol"],
@@ -1443,8 +1459,6 @@ def _parse_provenance(
 )
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    if "schema_name" not in data.extra:
-        raise FileFormatError("Cannot write qcschema file without 'schema_name' defined.")
     schema_name = data.extra["schema_name"]
 
     if schema_name == "qcschema_molecule":

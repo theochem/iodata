@@ -28,8 +28,14 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_many, load_one
 from ..overlap import compute_overlap
-from ..utils import check_dm
-from .common import check_orthonormal, compare_mols, compute_1rdm, load_one_warning
+from ..utils import PrepareDumpError, check_dm
+from .common import (
+    check_orthonormal,
+    compare_mols,
+    compute_1rdm,
+    create_generalized,
+    load_one_warning,
+)
 from .test_molekel import compare_mols_diff_formats
 
 
@@ -648,14 +654,14 @@ def test_dump_fchk_from_wfn(tmpdir, path):
 def test_dump_fchk_from_wfn_fci_lih_cation(tmpdir):
     # Fractional occupations are not supported in FCHK and we have no
     # alternative for solution for this yet.
-    with pytest.raises(ValueError):
+    with pytest.raises(PrepareDumpError):
         check_load_dump_consistency(tmpdir, "lih_cation_fci.wfn")
 
 
 def test_dump_fchk_from_wfn_fci_lif(tmpdir):
     # Fractional occupations are not supported in FCHK and we have no
     # alternative for solution for this yet.
-    with pytest.raises(ValueError):
+    with pytest.raises(PrepareDumpError):
         check_load_dump_consistency(tmpdir, "lif_fci.wfn")
 
 
@@ -676,7 +682,7 @@ def test_dump_fchk_from_wfx(tmpdir, path):
 def test_dump_fchk_from_wfx_lih_cisd_cation(tmpdir):
     # Fractional occupations are not supported in FCHK and we have no
     # alternative for solution for this yet.
-    with pytest.raises(ValueError):
+    with pytest.raises(PrepareDumpError):
         check_load_dump_consistency(tmpdir, "lih_cation_cisd.wfx")
 
 
@@ -690,3 +696,10 @@ def test_dump_fchk_from_wfx_lih_cisd_cation(tmpdir):
 )
 def test_dump_fchk_from_molekel(tmpdir, path, match):
     check_load_dump_consistency(tmpdir, path, match)
+
+
+def test_generalized():
+    # The FCHK format does not support generalized MOs
+    data = create_generalized()
+    with pytest.raises(PrepareDumpError):
+        dump_one(data, "generlized.fchk")

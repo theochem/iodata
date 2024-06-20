@@ -160,7 +160,7 @@ class MolecularBasis:
     shells: list[Shell] = attrs.field()
     """A list of objects of type Shell which can support generalized contractions."""
 
-    conventions: dict[str, str] = attrs.field()
+    conventions: dict[tuple[int, str], list[str]] = attrs.field()
     """
     A dictionary specifying the ordered basis functions for a given angular momentum and kind.
     The key is a tuple of angular momentum integer and kind character ('c' for Cartesian
