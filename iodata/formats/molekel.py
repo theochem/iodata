@@ -354,7 +354,7 @@ def dump_one(f: TextIO, data: IOData):
         _dump_helper_occ(f, data, spin="b")
 
     else:
-        raise AssertionError("This should not happen because of prepare_dump")
+        raise RuntimeError("This should not happen because of prepare_dump")
 
 
 # Defining help dumping functions
