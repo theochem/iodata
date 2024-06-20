@@ -29,7 +29,7 @@ from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventi
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import LineIterator, amu
+from ..utils import LineIterator, PrepareDumpError, amu
 
 __all__ = []
 
@@ -542,6 +542,31 @@ def _dump_real_arrays(name: str, val: NDArray[float], f: TextIO):
                 k = 0
 
 
+def prepare_dump(data: IOData):
+    """Check the compatibility of the IOData object with the FCHK format.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to be checked.
+    """
+    if data.mo is not None:
+        if data.mo.kind == "generalized":
+            raise PrepareDumpError("Cannot write FCHK file with generalized orbitals.")
+        na = int(np.round(np.sum(data.mo.occsa)))
+        if not ((data.mo.occsa[:na] == 1.0).all() and (data.mo.occsa[na:] == 0.0).all()):
+            raise PrepareDumpError(
+                "Cannot dump FCHK because it does not have fully occupied alpha orbitals "
+                "followed by fully virtual ones."
+            )
+        nb = int(np.round(np.sum(data.mo.occsb)))
+        if not ((data.mo.occsb[:nb] == 1.0).all() and (data.mo.occsb[nb:] == 0.0).all()):
+            raise PrepareDumpError(
+                "Cannot dump FCHK because it does not have fully occupied beta orbitals "
+                "followed by fully virtual ones."
+            )
+
+
 @document_dump_one(
     "Gaussian Formatted Checkpoint",
     ["atnums", "atcorenums"],
@@ -579,16 +604,8 @@ def dump_one(f: TextIO, data: IOData):
     if data.charge is not None:
         _dump_integer_scalars("Charge", int(data.charge), f)
     if data.mo is not None:
-        # check occupied orbitals are followed by virtuals
-        if data.mo.kind == "generalized":
-            raise ValueError("Cannot dump FCHK because given MO kind is generalized!")
-        # check integer occupations b/c FCHK assumes these have a specific order.
         na = int(np.round(np.sum(data.mo.occsa)))
-        if not ((data.mo.occsa[:na] == 1.0).all() and (data.mo.occsa[na:] == 0.0).all()):
-            raise ValueError("Cannot dump FCHK because of fractional alpha occupation numbers.")
         nb = int(np.round(np.sum(data.mo.occsb)))
-        if not ((data.mo.occsb[:nb] == 1.0).all() and (data.mo.occsb[nb:] == 0.0).all()):
-            raise ValueError("Cannot dump FCHK because of fractional beta occupation numbers.")
         # assign number of alpha and beta electrons
         multiplicity = abs(na - nb) + 1
         _dump_integer_scalars("Multiplicity", multiplicity, f)

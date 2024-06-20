@@ -45,7 +45,7 @@ from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
 from ..periodic import num2sym, sym2num
-from ..utils import LineIterator, angstrom
+from ..utils import LineIterator, PrepareDumpError, angstrom
 
 __all__ = []
 
@@ -742,13 +742,27 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
     )
 
 
+def prepare_dump(data: IOData):
+    """Check the compatibility of the IOData object with the Molden format.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to be checked.
+    """
+    if data.mo is None:
+        raise PrepareDumpError("The Molden format requires molecular orbitals.")
+    if data.obasis is None:
+        raise PrepareDumpError("The Molden format requires an orbital basis set.")
+    if data.mo.occs_aminusb is not None:
+        raise PrepareDumpError("Cannot write Molden file when mo.occs_aminusb is set.")
+    if data.mo.kind == "generalized":
+        raise PrepareDumpError("Cannot write Molden file with generalized orbitals.")
+
+
 @document_dump_one("Molden", ["atcoords", "atnums", "mo", "obasis"], ["atcorenums", "title"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    # occs_aminusb is not supported
-    if data.mo.occs_aminusb is not None:
-        raise ValueError("Cannot write Molden file when mo.occs_aminusb is set.")
-
     # Print the header
     f.write("[Molden Format]\n")
     if data.title is not None:
@@ -768,8 +782,6 @@ def dump_one(f: TextIO, data: IOData):
     f.write("\n")
 
     # Print the basis set
-    if data.obasis is None:
-        raise OSError("A Gaussian orbital basis is required to write a molden file.")
     obasis = data.obasis
 
     # Figure out the pure/Cartesian situation. Note that the Molden
@@ -864,7 +876,7 @@ def dump_one(f: TextIO, data: IOData):
             irreps,
         )
     else:
-        raise NotImplementedError
+        raise RuntimeError("This should not happen because of prepare_dump")
 
 
 def _dump_helper_orb(f, spin, occs, coeffs, energies, irreps):

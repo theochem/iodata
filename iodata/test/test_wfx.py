@@ -29,11 +29,12 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
-from ..utils import LineIterator
+from ..utils import LineIterator, PrepareDumpError
 from .common import (
     check_orthonormal,
     compare_mols,
     compute_mulliken_charges,
+    create_generalized,
     load_one_warning,
     truncated_file,
 )
@@ -45,21 +46,21 @@ def helper_load_data_wfx(fn_wfx):
         return load_data_wfx(lit)
 
 
-def check_load_dump_consistency(fn, tmpdir):
+def check_load_dump_consistency(fn: str, tmpdir: str):
     """Check if data is preserved after dumping and loading a Wfx file.
 
     Parameters
     ----------
-    fn : str
+    fn
         The Molekel filename to load
-    tmpdir : str
+    tmpdir
         The temporary directory to dump and load the file.
     """
     with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
-        mol1 = load_one(str(file_name), fmt="wfx")
-    fn_tmp = os.path.join(tmpdir, "foo.bar")
-    dump_one(mol1, fn_tmp, fmt="wfx")
-    mol2 = load_one(fn_tmp, fmt="wfx")
+        mol1 = load_one(str(file_name))
+    fn_tmp = os.path.join(tmpdir, "foo.wfx")
+    dump_one(mol1, fn_tmp)
+    mol2 = load_one(fn_tmp)
     compare_mols(mol1, mol2)
     # compare Mulliken charges
     charges1 = compute_mulliken_charges(mol1)
@@ -178,9 +179,10 @@ def test_dump_one_from_molden_neon(tmpdir):
     )
 
 
-# add this test when pure to Cartesian basis set conversion is supported
-# def test_dump_one_from_mkl_li2(tmpdir):
-#     compare_mulliken_charges('li2.mkl', tmpdir)
+def test_dump_one_pure_functions(tmpdir):
+    # li2.mkl contains pure functions
+    with pytest.raises(PrepareDumpError):
+        check_load_dump_consistency("water_ccpvdz_pure_hf_g03.fchk", tmpdir)
 
 
 def test_load_data_wfx_h2():
@@ -812,3 +814,10 @@ def test_load_one_lih_cation_rohf():
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
+def test_generalized():
+    # The Molden format does not support generalized MOs
+    data = create_generalized()
+    with pytest.raises(PrepareDumpError):
+        dump_one(data, "generalized.wfx")

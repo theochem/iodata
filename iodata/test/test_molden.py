@@ -32,8 +32,8 @@ from ..api import dump_one, load_one
 from ..basis import convert_conventions
 from ..formats.molden import _load_low
 from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
-from ..utils import FileFormatWarning, LineIterator, angstrom
-from .common import check_orthonormal, compare_mols, compute_mulliken_charges
+from ..utils import FileFormatWarning, LineIterator, PrepareDumpError, angstrom
+from .common import check_orthonormal, compare_mols, compute_mulliken_charges, create_generalized
 
 
 @pytest.mark.slow()
@@ -598,3 +598,10 @@ def test_load_dump_consistency(tmpdir, fn, match):
     # - Remove the one_rdms from mol1.
     mol1.one_rdms = {}
     compare_mols(mol1, mol2)
+
+
+def test_generalized():
+    # The Molden format does not support generalized MOs
+    data = create_generalized()
+    with pytest.raises(PrepareDumpError):
+        dump_one(data, "generalized.molden")

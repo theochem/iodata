@@ -29,7 +29,7 @@ from numpy.testing import assert_allclose, assert_array_equal
 
 from ..api import dump_many, dump_one, load_many
 from ..iodata import IOData
-from ..utils import FileFormatError
+from ..utils import FileFormatError, PrepareDumpError
 
 
 def test_empty_dump_many_no_file(tmpdir):
@@ -41,7 +41,7 @@ def test_empty_dump_many_no_file(tmpdir):
 
 def test_dump_one_missing_attribute_no_file(tmpdir):
     path_xyz = os.path.join(tmpdir, "missing_atcoords.xyz")
-    with pytest.raises(FileFormatError):
+    with pytest.raises(PrepareDumpError):
         dump_one(IOData(atnums=[1, 2, 3]), path_xyz)
     assert not os.path.isfile(path_xyz)
 
@@ -52,7 +52,7 @@ def test_dump_many_missing_attribute_first(tmpdir):
         IOData(atnums=[1, 1]),
         IOData(atnums=[1, 1], atcoords=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]]),
     ]
-    with pytest.raises(FileFormatError):
+    with pytest.raises(PrepareDumpError):
         dump_many(iodatas, path_xyz)
     assert not os.path.isfile(path_xyz)
 
@@ -61,7 +61,7 @@ def test_dump_many_missing_attribute_second(tmpdir):
     path_xyz = os.path.join(tmpdir, "missing_atcoords.xyz")
     iodata0 = IOData(atnums=[1, 1], atcoords=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     iodatas = [iodata0, IOData(atnums=[1, 1])]
-    with pytest.raises(FileFormatError):
+    with pytest.raises(PrepareDumpError):
         dump_many(iodatas, path_xyz)
     assert os.path.isfile(path_xyz)
     iodatas = list(load_many(path_xyz))
