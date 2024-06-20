@@ -876,7 +876,7 @@ def dump_one(f: TextIO, data: IOData):
             irreps,
         )
     else:
-        raise AssertionError("This should not happen because of prepare_dump")
+        raise RuntimeError("This should not happen because of prepare_dump")
 
 
 def _dump_helper_orb(f, spin, occs, coeffs, energies, irreps):
