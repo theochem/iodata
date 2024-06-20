@@ -67,7 +67,7 @@ class FileFormatWarning(Warning):
     """Raised when incorrect content is encountered and fixed when loading files."""
 
 
-class PrepareDumpError(IOError):
+class PrepareDumpError(ValueError):
     """Raised when an iodata object is not compatible with an output file format."""
 
 
