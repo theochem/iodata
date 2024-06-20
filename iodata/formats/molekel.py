@@ -279,7 +279,6 @@ def prepare_dump(data: IOData):
 @document_dump_one("Molekel", ["atcoords", "atnums", "mo", "obasis"], ["atcharges"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-
     # Header
     f.write("$MKL\n")
     f.write("#\n")
