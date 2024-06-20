@@ -1436,7 +1436,7 @@ def _parse_provenance(
     return base_provenance
 
 
-def prepare_dump(data: IOData) -> IOData:
+def prepare_dump(data: IOData):
     """Check the compatibility of the IOData object with QCScheme.
 
     Parameters
