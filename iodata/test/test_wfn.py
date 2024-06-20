@@ -300,31 +300,29 @@ def test_load_one_cah110_hf_sto3g_g09():
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
 
 
-def check_load_dump_consistency(fn, tmpdir, fmt_from="wfn", fmt_to="wfn", atol=1.0e-6):
+def check_load_dump_consistency(fn: str, tmpdir: str, atol: float = 1.0e-6):
     """Check if data is preserved after dumping and loading a WFN file.
 
     Parameters
     ----------
-    fn : str
+    fn
         The filename to load
-    tmpdir : str
+    tmpdir
         The temporary directory to dump and load the file.
-    fmt_from : str
-        Format filename to load.
-    fmt_to : str
-        Format of filename to dump and then load again.
+    atol
+        The absolute tolerance on the numerical comparisons.
 
     """
     with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
-        mol1 = load_one(str(file_name), fmt=fmt_from)
-    fn_tmp = os.path.join(tmpdir, "foo.bar")
-    dump_one(mol1, fn_tmp, fmt=fmt_to)
-    mol2 = load_one(fn_tmp, fmt=fmt_to)
+        mol1 = load_one(str(file_name))
+    fn_tmp = os.path.join(tmpdir, "foo.wfn")
+    dump_one(mol1, fn_tmp)
+    mol2 = load_one(fn_tmp)
     # compare Mulliken charges
     charges1 = compute_mulliken_charges(mol1)
     charges2 = compute_mulliken_charges(mol2)
     assert_allclose(charges1, charges2, atol=atol)
-    if fmt_from == fmt_to:
+    if fn.endswith(".wfn"):
         compare_mols(mol1, mol2, atol=atol)
 
 
@@ -359,15 +357,20 @@ def test_load_dump_consistency(path, tmpdir):
 
 
 def test_load_dump_consistency_from_fchk_h2o(tmpdir):
-    check_load_dump_consistency("h2o_sto3g.fchk", tmpdir, fmt_from="fchk", fmt_to="wfn")
+    check_load_dump_consistency("h2o_sto3g.fchk", tmpdir)
 
 
 def test_load_dump_consistency_from_molden_nh3(tmpdir):
-    check_load_dump_consistency("nh3_molden_cart.molden", tmpdir, fmt_from="molden", fmt_to="wfn")
+    check_load_dump_consistency("nh3_molden_cart.molden", tmpdir)
+
+
+def test_dump_one_pure_functions(tmpdir):
+    with pytest.raises(PrepareDumpError):
+        check_load_dump_consistency("water_ccpvdz_pure_hf_g03.fchk", tmpdir)
 
 
 def test_generalized():
-    # The Molden format does not support generalized MOs
+    # The WFN format does not support generalized MOs
     data = create_generalized()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generlized.wfn")
