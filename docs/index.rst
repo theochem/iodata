@@ -40,9 +40,9 @@ Please use the following citation in any publication using IOData library:
     formats and generating input files."**, T. Verstraelen, W. Adams, L. Pujal, A. Tehrani, B. D.
     Kelly, L. Macaya, F. Meng, M. Richer, R. Hernandez‐Esparza, X. D. Yang, M. Chan, T. D. Kim, M.
     Cools‐Ceuppens, V. Chuiko, E. Vohringer‐Martinez,P. W. Ayers, F. Heidar‐Zadeh,
-    `J Comput Chem. 2021; 42: 458–464 <https://doi.org/10.1002/jcc.26468>`__.
+    `J Comput Chem. 2021; 42: 458–464 <https://doi.org/10.1002/jcc.26468>`_.
 
-Copy-pasteable citation records in varous formats are provided in :ref:`how_to_cite`.
+Copy-pasteable citation records in various formats are provided in :ref:`how_to_cite`.
 
 For the list of file formats that can be loaded or dumped by IOData, see
 :ref:`file_formats`. The two tables below summarize the file formats and
