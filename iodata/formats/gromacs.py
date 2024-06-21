@@ -42,10 +42,7 @@ PATTERNS = ["*.gro"]
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     while True:
-        try:
-            data = _helper_read_frame(lit)
-        except StopIteration:
-            break
+        data = _helper_read_frame(lit)
         title = data[0]
         time = data[1]
         resnums = np.array(data[2])
@@ -75,7 +72,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     try:
         while True:
             yield load_one(lit)
-    except OSError:
+    except StopIteration:
         return
 
 

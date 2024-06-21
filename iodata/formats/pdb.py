@@ -36,7 +36,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import bond2num, num2sym, sym2num
-from ..utils import LineIterator, angstrom
+from ..utils import LineIterator, LoadError, angstrom
 
 __all__ = []
 
@@ -188,9 +188,9 @@ def load_one(lit: LineIterator) -> dict:
             end_reached = True
             break
     if not molecule_found:
-        lit.error("Molecule could not be read!")
+        lit.error("Molecule could not be read.")
     if not end_reached:
-        lit.warn("The END is not found, but the parsed data is returned!")
+        lit.warn("The END is not found, but the parsed data is returned.")
 
     # Data related to force fields
     atffparams = {
@@ -240,7 +240,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     try:
         while True:
             yield load_one(lit)
-    except OSError:
+    except (StopIteration, LoadError):
         return
 
 

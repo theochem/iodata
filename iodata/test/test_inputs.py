@@ -27,7 +27,7 @@ import pytest
 from ..api import load_one, write_input
 from ..iodata import IOData
 from ..periodic import num2sym
-from ..utils import FileFormatWarning, angstrom
+from ..utils import LoadWarning, angstrom
 
 
 def check_load_input_and_compare(fname: str, fname_expected: str):
@@ -205,7 +205,7 @@ def test_input_orca_from_molden(tmpdir):
     # load orca molden
     with (
         as_file(files("iodata.test.data").joinpath("nh3_orca.molden")) as fn,
-        pytest.warns(FileFormatWarning),
+        pytest.warns(LoadWarning),
     ):
         mol = load_one(fn)
     # write input in a temporary file

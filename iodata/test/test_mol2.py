@@ -26,7 +26,7 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_many, dump_one, load_many, load_one
 from ..periodic import bond2num
-from ..utils import angstrom
+from ..utils import LoadError, angstrom
 from .common import truncated_file
 
 
@@ -42,7 +42,7 @@ def test_mol2_formaterror(tmpdir):
     with (
         as_file(files("iodata.test.data").joinpath("caffeine.mol2")) as fn_test,
         truncated_file(fn_test, 2, 0, tmpdir) as fn,
-        pytest.raises(IOError),
+        pytest.raises(LoadError),
     ):
         load_one(str(fn))
 

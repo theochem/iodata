@@ -29,12 +29,12 @@ from numpy.testing import assert_allclose, assert_array_equal
 
 from ..api import dump_many, dump_one, load_many
 from ..iodata import IOData
-from ..utils import FileFormatError, PrepareDumpError
+from ..utils import DumpError, PrepareDumpError
 
 
 def test_empty_dump_many_no_file(tmpdir):
     path_xyz = os.path.join(tmpdir, "empty.xyz")
-    with pytest.raises(FileFormatError):
+    with pytest.raises(DumpError):
         dump_many([], path_xyz)
     assert not os.path.isfile(path_xyz)
 

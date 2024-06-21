@@ -37,7 +37,7 @@ def _read_data(lit: LineIterator) -> tuple[str, str, list[str]]:
     # The dat file only contains symmetry-unique atoms, so we would be incapable of
     # supporting non-C1 symmetry without significant additional coding.
     if symmetry != "C1":
-        raise NotImplementedError(f"Only C1 symmetry is supported. Got {symmetry}")
+        lit.error(f"Only C1 symmetry is supported. Got {symmetry}")
     symbols = []
     line = True
     while line != " $END      \n":

@@ -25,6 +25,7 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
 from ..overlap import compute_overlap
+from ..utils import LoadError
 from .common import check_orthonormal, truncated_file
 
 
@@ -207,18 +208,18 @@ def test_carbon_sc_pp_uncontracted():
 def test_errors(tmpdir):
     source = files("iodata.test.data").joinpath("carbon_sc_pp_uncontracted.cp2k.out")
     with as_file(source) as fn_test:
-        with truncated_file(fn_test, 0, 0, tmpdir) as fn, pytest.raises(IOError):
+        with truncated_file(fn_test, 0, 0, tmpdir) as fn, pytest.raises(LoadError):
             load_one(fn)
-        with truncated_file(fn_test, 107, 10, tmpdir) as fn, pytest.raises(IOError):
+        with truncated_file(fn_test, 107, 10, tmpdir) as fn, pytest.raises(LoadError):
             load_one(fn)
-        with truncated_file(fn_test, 357, 10, tmpdir) as fn, pytest.raises(IOError):
+        with truncated_file(fn_test, 357, 10, tmpdir) as fn, pytest.raises(LoadError):
             load_one(fn)
-        with truncated_file(fn_test, 405, 10, tmpdir) as fn, pytest.raises(IOError):
+        with truncated_file(fn_test, 405, 10, tmpdir) as fn, pytest.raises(LoadError):
             load_one(fn)
     source = files("iodata.test.data").joinpath("carbon_gs_pp_uncontracted.cp2k.out")
     with (
         as_file(source) as fn_test,
         truncated_file(fn_test, 456, 10, tmpdir) as fn,
-        pytest.raises(IOError),
+        pytest.raises(LoadError),
     ):
         load_one(fn)

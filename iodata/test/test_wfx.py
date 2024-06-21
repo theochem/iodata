@@ -29,7 +29,7 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
-from ..utils import LineIterator, PrepareDumpError
+from ..utils import LineIterator, LoadError, PrepareDumpError
 from .common import (
     check_orthonormal,
     compare_mols,
@@ -582,7 +582,7 @@ def test_parse_wfx_missing_tag_h2o():
     with (
         as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as fn_wfx,
         LineIterator(fn_wfx) as lit,
-        pytest.raises(IOError) as error,
+        pytest.raises(LoadError) as error,
     ):
         parse_wfx(lit, required_tags=["<Foo Bar>"])
     assert str(error.value).endswith("Section <Foo Bar> is missing from loaded WFX data.")
@@ -592,7 +592,7 @@ def test_load_data_wfx_h2o_error():
     """Check that sections without a closing tag result in an exception."""
     with (
         as_file(files("iodata.test.data").joinpath("h2o_error.wfx")) as fn_wfx,
-        pytest.raises(IOError) as error,
+        pytest.raises(LoadError) as error,
     ):
         load_one(str(fn_wfx))
     assert str(error.value).endswith(
@@ -605,7 +605,7 @@ def test_load_truncated_h2o(tmpdir):
     with (
         as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as fn_wfx,
         truncated_file(str(fn_wfx), 152, 0, tmpdir) as fn_truncated,
-        pytest.raises(IOError) as error,
+        pytest.raises(LoadError) as error,
     ):
         load_one(str(fn_truncated))
     assert str(error.value).endswith(

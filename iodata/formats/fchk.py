@@ -29,7 +29,7 @@ from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventi
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import LineIterator, PrepareDumpError, amu
+from ..utils import DumpError, LineIterator, PrepareDumpError, amu
 
 __all__ = []
 
@@ -221,7 +221,7 @@ def load_one(lit: LineIterator) -> dict:
     if nalpha < 0 or nbeta < 0 or nalpha + nbeta <= 0:
         lit.error("The number of electrons is not positive.")
     if nalpha < nbeta:
-        raise ValueError(f"n_alpha={nalpha} < n_beta={nbeta} is not valid!")
+        lit.error(f"n_alpha={nalpha} < n_beta={nbeta} is not valid!")
 
     norba = fchk["Alpha Orbital Energies"].shape[0]
     mo_coeffs = np.copy(fchk["Alpha MO coefficients"].reshape(norba, nbasis).T)
@@ -643,7 +643,7 @@ def dump_one(f: TextIO, data: IOData):
             elif shell.ncon == 2 and shell.angmoms == [0, 1]:
                 shell_types.append(-1)
             else:
-                raise ValueError("Cannot identify type of shell!")
+                raise DumpError("Cannot identify type of shell!")
 
         num_pure_d_shells = sum([1 for st in shell_types if st == 2])
         num_pure_f_shells = sum([1 for st in shell_types if st == 3])

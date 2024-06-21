@@ -25,7 +25,7 @@ import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_many, dump_one, load_many, load_one
-from ..utils import FileFormatError, angstrom
+from ..utils import LoadError, angstrom
 from .common import truncated_file
 
 
@@ -52,7 +52,7 @@ def test_sdf_formaterror(tmpdir):
     with (
         as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_test,
         truncated_file(fn_test, 36, 0, tmpdir) as fn,
-        pytest.raises(IOError),
+        pytest.raises(LoadError),
     ):
         load_one(str(fn))
 
@@ -127,6 +127,6 @@ def test_load_dump_many_consistency(tmpdir):
 def test_v2000_check():
     with (
         as_file(files("iodata.test.data").joinpath("molv3000.sdf")) as fn_sdf,
-        pytest.raises(FileFormatError),
+        pytest.raises(LoadError),
     ):
         load_one(fn_sdf)

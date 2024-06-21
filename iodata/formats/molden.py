@@ -45,7 +45,7 @@ from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
 from ..periodic import num2sym, sym2num
-from ..utils import LineIterator, PrepareDumpError, angstrom
+from ..utils import DumpError, LineIterator, PrepareDumpError, angstrom
 
 __all__ = []
 
@@ -663,7 +663,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
         coeffsa = result["mo"].coeffsa
         coeffsb = result["mo"].coeffsb
     else:
-        raise ValueError("Molecular orbital kind={} not recognized".format(result["mo"].kind))
+        lit.error("Molecular orbital kind={} not recognized".format(result["mo"].kind))
 
     if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         # The file is good. No need to change obasis.
@@ -793,7 +793,7 @@ def dump_one(f: TextIO, data: IOData):
         for angmom, kind in zip(shell.angmoms, shell.kinds):
             if angmom in angmom_kinds:
                 if kind != angmom_kinds[angmom]:
-                    raise OSError(
+                    raise DumpError(
                         "Molden format does not support mixed pure+Cartesian functions for one "
                         "angular momentum."
                     )
