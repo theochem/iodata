@@ -3,8 +3,10 @@
 How to Cite IOData
 ------------------
 
-Please cite the `IOData paper <https://doi.org/10.1002/jcc.26468>`_.
-The citation is provided in various formats below:
+When you use IOData in your research,
+please cite the `IOData paper <https://doi.org/10.1002/jcc.26468>`_
+in all publications resulting from that research.
+The reference is provided in several formats below:
 
 - BibTeX:
 
