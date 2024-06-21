@@ -242,7 +242,7 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
     ------
     DumpError
         When an error is encountered while dumping to a file.
-        If the output file already existed, it (partially) overwritten.
+        If the output file already existed, it is (partially) overwritten.
     PrepareDumpError
         When the iodata object is not compatible with the file format,
         e.g. due to missing attributes, and not conversion is available or allowed

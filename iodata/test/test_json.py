@@ -65,7 +65,7 @@ def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry, nwarn):
         if nwarn == 0:
             mol = load_one(str(qcschema_molecule))
         else:
-            with pytest.warns() as record:
+            with pytest.warns(LoadWarning) as record:
                 mol = load_one(str(qcschema_molecule))
             assert len(record) == nwarn
 
