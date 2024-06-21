@@ -663,7 +663,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
         coeffsa = result["mo"].coeffsa
         coeffsb = result["mo"].coeffsb
     else:
-        lit.error("Molecular orbital kind={} not recognized".format(result["mo"].kind))
+        lit.error(f"Molecular orbital kind={result['mo'].kind} not recognized")
 
     if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         # The file is good. No need to change obasis.
