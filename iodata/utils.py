@@ -29,9 +29,12 @@ from scipy.linalg import eigh
 from .attrutils import validate_shape
 
 __all__ = (
-    "FileFormatError",
-    "FileFormatWarning",
+    "LoadError",
+    "LoadWarning",
+    "DumpError",
+    "DumpWarning",
     "PrepareDumpError",
+    "WriteInputError",
     "LineIterator",
     "Cube",
     "set_four_index_element",
@@ -59,16 +62,32 @@ calmol: float = spc.calorie / spc.value("Avogadro constant") / spc.value("Hartre
 kjmol: float = 1e3 / spc.value("Avogadro constant") / spc.value("Hartree energy")
 
 
-class FileFormatError(IOError):
-    """Raised when incorrect content is encountered when loading files."""
+class FileFormatError(ValueError):
+    """Raise when a file or input format cannot be identified."""
 
 
-class FileFormatWarning(Warning):
-    """Raised when incorrect content is encountered and fixed when loading files."""
+class LoadError(ValueError):
+    """Raised when an error is encountered while loading from a file."""
+
+
+class LoadWarning(Warning):
+    """Raised when incorrect content is encountered and fixed when loading from a file."""
+
+
+class DumpError(ValueError):
+    """Raised when an error is encountered while dumping to a file."""
+
+
+class DumpWarning(Warning):
+    """Raised when an IOData object is made compatible with a format when dumping to a file."""
 
 
 class PrepareDumpError(ValueError):
-    """Raised when an iodata object is not compatible with an output file format."""
+    """Raised when an IOData object is incompatible with a format before dumping to a file."""
+
+
+class WriteInputError(ValueError):
+    """Raised when an error is encountered while writing an input file."""
 
 
 class LineIterator:
@@ -122,7 +141,7 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        raise FileFormatError(f"{self.filename}:{self.lineno} {msg}")
+        raise LoadError(f"{self.filename}:{self.lineno} {msg}")
 
     def warn(self, msg: str):
         """Raise a warning while reading a file.
@@ -133,7 +152,7 @@ class LineIterator:
             Message to raise alongside filename and line number.
 
         """
-        warnings.warn(f"{self.filename}:{self.lineno} {msg}", FileFormatWarning, stacklevel=2)
+        warnings.warn(f"{self.filename}:{self.lineno} {msg}", LoadWarning, stacklevel=2)
 
     def back(self, line):
         """Go back one line in the file and decrease the lineno attribute by one."""

@@ -36,7 +36,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import bond2num, num2bond, num2sym, sym2num
-from ..utils import LineIterator, angstrom
+from ..utils import LineIterator, LoadError, angstrom
 
 __all__ = []
 
@@ -80,7 +80,7 @@ def load_one(lit: LineIterator) -> dict:
                 bonds = _load_helper_bonds(lit, nbonds)
                 result["bonds"] = bonds
     if not molecule_found:
-        raise lit.error("Molecule could not be read")
+        lit.error("Molecule could not be read")
     return result
 
 
@@ -148,7 +148,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
     try:
         while True:
             yield load_one(lit)
-    except OSError:
+    except (StopIteration, LoadError):
         return
 
 

@@ -32,7 +32,7 @@ from ..basis import MolecularBasis, Shell, angmom_its, angmom_sti, convert_conve
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import LineIterator, PrepareDumpError, angstrom
+from ..utils import DumpError, LineIterator, PrepareDumpError, angstrom
 from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 
 __all__ = []
@@ -370,7 +370,7 @@ def _dump_helper_coeffs(f, data, spin=None):
         ener = data.mo.energiesb
         irreps = data.mo.irreps[norb:] if data.mo.irreps is not None else ["a1g"] * norb
     else:
-        raise ValueError("A spin must be specified")
+        raise DumpError("A spin must be specified")
 
     for j in range(0, norb, 5):
         en = " ".join([f"   {e: ,.12f}" for e in ener[j : j + 5]])
@@ -396,7 +396,7 @@ def _dump_helper_occ(f, data, spin=None):
         norb = data.mo.norba
         occ = data.mo.occs
     else:
-        raise ValueError("A spin must be specified")
+        raise DumpError("A spin must be specified")
 
     for j in range(0, norb, 5):
         occs = " ".join([f"  {o: ,.7f}" for o in occ[j : j + 5]])

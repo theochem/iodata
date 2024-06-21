@@ -24,7 +24,7 @@ from numpy.typing import NDArray
 from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
-from ..utils import LineIterator, angstrom
+from ..utils import LineIterator, LoadError, angstrom
 
 __all__ = []
 
@@ -301,8 +301,8 @@ def load_one(lit: LineIterator) -> dict:
     obasis = MolecularBasis(shells, CONVENTIONS, "L2")
     # check number of basis functions
     if obasis.nbasis != inp["Nbasis"]:
-        raise ValueError(
-            f"Number of basis in MolecularBasis is not equal to the 'Nbasis'. "
+        raise LoadError(
+            f"{lit.filename}: Number of basis in MolecularBasis is not equal to the 'Nbasis'. "
             f"{obasis.nbasis} != {inp['Nbasis']}"
         )
 
@@ -324,18 +324,18 @@ def load_one(lit: LineIterator) -> dict:
     )
     # check number of electrons
     if mo.nelec != inp["Naelec"] + inp["Nbelec"]:
-        raise ValueError(
-            f"Number of electrons in MolecularOrbitals is not equal to the sum of "
+        raise LoadError(
+            f"{lit.filename}: Number of electrons in MolecularOrbitals is not equal to the sum of "
             f"'Naelec' and 'Nbelec'. {mo.nelec} != {inp['Naelec']} + {inp['Nbelec']}"
         )
     if mo.occsa.sum() != inp["Naelec"]:
-        raise ValueError(
-            f"Number of alpha electrons in MolecularOrbitals is not equal to the "
+        raise LoadError(
+            f"{lit.filename}: Number of alpha electrons in MolecularOrbitals is not equal to the "
             f"'Naelec'. {mo.occsa.sum()} != {inp['Naelec']}"
         )
     if mo.occsb.sum() != inp["Nbelec"]:
-        raise ValueError(
-            f"Number of beta electrons in MolecularOrbitals is not equal to the "
+        raise LoadError(
+            f"{lit.filename}: Number of beta electrons in MolecularOrbitals is not equal to the "
             f"'Nbelec'. {mo.occsb.sum()} != {inp['Nbelec']}"
         )
 

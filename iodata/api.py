@@ -27,7 +27,14 @@ from types import ModuleType
 from typing import Callable, Optional
 
 from .iodata import IOData
-from .utils import FileFormatError, LineIterator, PrepareDumpError
+from .utils import (
+    DumpError,
+    FileFormatError,
+    LineIterator,
+    LoadError,
+    PrepareDumpError,
+    WriteInputError,
+)
 
 __all__ = ["load_one", "load_many", "dump_one", "dump_many", "write_input"]
 
@@ -54,7 +61,7 @@ def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = Non
     filename
         The file to load or dump.
     attrname
-        The required atrtibute of the file format module.
+        The required attribute of the file format module.
     fmt
         The name of the file format module to use. When not given, it is guessed
         from the filename.
@@ -63,6 +70,10 @@ def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = Non
     -------
     The module implementing the required file format.
 
+    Raises
+    ------
+    FileFormatError
+        When no file format module can be found that has a member named ``attrname``.
     """
     basename = os.path.basename(filename)
     if fmt is None:
@@ -73,7 +84,7 @@ def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = Non
                 return format_module
     else:
         return FORMAT_MODULES[fmt]
-    raise ValueError(f"Could not find file format with feature {attrname} for file {filename}")
+    raise FileFormatError(f"Could not find file format with feature {attrname} for file {filename}")
 
 
 def _find_input_modules():
@@ -102,12 +113,17 @@ def _select_input_module(fmt: str) -> ModuleType:
     -------
     The module implementing the required input format.
 
+
+    Raises
+    ------
+    FileFormatError
+        When the format ``fmt`` does not exist.
     """
     if fmt in INPUT_MODULES:
         if not hasattr(INPUT_MODULES[fmt], "write_input"):
-            raise ValueError(f"{fmt} input module does not have write_input!")
+            raise FileFormatError(f"{fmt} input module does not have write_input.")
         return INPUT_MODULES[fmt]
-    raise ValueError(f"Could not find input format {fmt}!")
+    raise FileFormatError(f"Could not find input format {fmt}.")
 
 
 def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
@@ -136,8 +152,12 @@ def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
     with LineIterator(filename) as lit:
         try:
             iodata = IOData(**format_module.load_one(lit, **kwargs))
+        except LoadError:
+            raise
         except StopIteration:
             lit.error("File ended before all data was read.")
+        except Exception as exc:
+            raise LoadError(f"{filename}: Uncaught exception while loading file.") from exc
     return iodata
 
 
@@ -171,6 +191,10 @@ def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IO
                 yield IOData(**data)
         except StopIteration:
             return
+        except LoadError:
+            raise
+        except Exception as exc:
+            raise LoadError(f"{filename}: Uncaught exception while loading file.") from exc
 
 
 def _check_required(iodata: IOData, dump_func: Callable):
@@ -216,17 +240,33 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
 
     Raises
     ------
+    DumpError
+        When an error is encountered while dumping to a file.
+        If the output file already existed, it is (partially) overwritten.
     PrepareDumpError
         When the iodata object is not compatible with the file format,
         e.g. due to missing attributes, and not conversion is available or allowed
         to make it compatible.
+        If the output file already existed, it is not overwritten.
     """
     format_module = _select_format_module(filename, "dump_one", fmt)
-    _check_required(iodata, format_module.dump_one)
-    if hasattr(format_module, "prepare_dump"):
-        format_module.prepare_dump(iodata)
+    try:
+        _check_required(iodata, format_module.dump_one)
+        if hasattr(format_module, "prepare_dump"):
+            format_module.prepare_dump(iodata)
+    except PrepareDumpError:
+        raise
+    except Exception as exc:
+        raise PrepareDumpError(
+            f"{filename}: Uncaught exception while preparing for dumping to a file"
+        ) from exc
     with open(filename, "w") as f:
-        format_module.dump_one(f, iodata, **kwargs)
+        try:
+            format_module.dump_one(f, iodata, **kwargs)
+        except DumpError:
+            raise
+        except Exception as exc:
+            raise DumpError(f"{filename}: Uncaught exception while dumping to a file") from exc
 
 
 def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = None, **kwargs):
@@ -249,10 +289,16 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
 
     Raises
     ------
+    DumpError
+        When an error is encountered while dumping to a file.
+        If the output file already existed, it (partially) overwritten.
     PrepareDumpError
         When the iodata object is not compatible with the file format,
         e.g. due to missing attributes, and not conversion is available or allowed
         to make it compatible.
+        If the output file already existed, it is not overwritten when this error
+        is raised while processing the first IOData instance in the ``iodatas`` argument.
+        When the exception is raised in later iterations, any existing file is overwritten.
     """
     format_module = _select_format_module(filename, "dump_many", fmt)
 
@@ -262,9 +308,18 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
     iter_iodatas = iter(iodatas)
     try:
         first = next(iter_iodatas)
-        _check_required(first, format_module.dump_many)
     except StopIteration as exc:
-        raise FileFormatError("dump_many needs at least one iodata object.") from exc
+        raise DumpError(f"{filename}: dump_many needs at least one iodata object.") from exc
+    try:
+        _check_required(first, format_module.dump_many)
+        if hasattr(format_module, "prepare_dump"):
+            format_module.prepare_dump(first)
+    except PrepareDumpError:
+        raise
+    except Exception as exc:
+        raise PrepareDumpError(
+            f"{filename}: Uncaught exception while preparing for dumping to a file"
+        ) from exc
 
     def checking_iterator():
         """Iterate over all iodata items, not checking the first."""
@@ -277,7 +332,12 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
             yield other
 
     with open(filename, "w") as f:
-        format_module.dump_many(f, checking_iterator(), **kwargs)
+        try:
+            format_module.dump_many(f, checking_iterator(), **kwargs)
+        except (PrepareDumpError, DumpError):
+            raise
+        except Exception as exc:
+            raise DumpError(f"{filename}: Uncaught exception while dumping to a file") from exc
 
 
 def write_input(
@@ -312,4 +372,9 @@ def write_input(
     """
     input_module = _select_input_module(fmt)
     with open(filename, "w") as fh:
-        input_module.write_input(fh, iodata, template, atom_line, **kwargs)
+        try:
+            input_module.write_input(fh, iodata, template, atom_line, **kwargs)
+        except Exception as exc:
+            raise WriteInputError(
+                f"{filename}: Uncaught exception while writing an input file"
+            ) from exc

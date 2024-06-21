@@ -26,7 +26,7 @@ import numpy as np
 import pytest
 
 from ..api import dump_one, load_one
-from ..utils import FileFormatError, FileFormatWarning
+from ..utils import LoadError, LoadWarning
 
 # Tests for qcschema_molecule
 # GEOMS: dict of str: NDArray(N, 3)
@@ -65,7 +65,7 @@ def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry, nwarn):
         if nwarn == 0:
             mol = load_one(str(qcschema_molecule))
         else:
-            with pytest.warns(FileFormatWarning) as record:
+            with pytest.warns(LoadWarning) as record:
                 mol = load_one(str(qcschema_molecule))
             assert len(record) == nwarn
 
@@ -107,7 +107,7 @@ def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, nwarn):
     """Test qcschema_molecule parsing using MolSSI-sourced files."""
     with (
         as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule,
-        pytest.warns(FileFormatWarning) as record,
+        pytest.warns(LoadWarning) as record,
     ):
         mol = load_one(str(qcschema_molecule))
 
@@ -137,7 +137,7 @@ def test_passthrough_qcschema_molecule(filename, unparsed_dict):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
     with (
         as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule,
-        pytest.warns(FileFormatWarning) as record,
+        pytest.warns(LoadWarning) as record,
     ):
         mol = load_one(str(qcschema_molecule))
 
@@ -174,7 +174,7 @@ def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
         if nwarn == 0:
             mol = load_one(str(qcschema_molecule))
         else:
-            with pytest.warns(FileFormatWarning) as record:
+            with pytest.warns(LoadWarning) as record:
                 mol = load_one(str(qcschema_molecule))
             assert len(record) == nwarn
         mol1 = json.loads(qcschema_molecule.read_bytes())
@@ -204,7 +204,7 @@ INOUT_MOLSSI_MOL_FILES = [
 def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     """Test that loading and dumping qcschema_molecule files retains all relevant data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
-        with pytest.warns(FileFormatWarning) as record:
+        with pytest.warns(LoadWarning) as record:
             mol = load_one(str(qcschema_molecule))
         mol1_preproc = json.loads(qcschema_molecule.read_bytes())
     assert len(record) == 1
@@ -266,7 +266,7 @@ INPUT_FILES = [
 def test_qcschema_input(filename, explicit_basis, lot, obasis_name, run_type, geometry):
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         try:
-            with pytest.warns(FileFormatWarning):
+            with pytest.warns(LoadWarning):
                 mol = load_one(str(qcschema_input))
             assert mol.lot == lot
             if obasis_name:
@@ -275,7 +275,7 @@ def test_qcschema_input(filename, explicit_basis, lot, obasis_name, run_type, ge
                 assert mol.run_type == run_type
             np.testing.assert_allclose(mol.atcoords, geometry)
         # This will change if QCSchema Basis gets supported
-        except NotImplementedError:
+        except LoadError:
             assert explicit_basis
 
 
@@ -293,7 +293,7 @@ def test_passthrough_qcschema_input(filename, unparsed_dict, location):
     """Test qcschema_molecule parsing for passthrough of unparsed keys."""
     with (
         as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input,
-        pytest.warns(FileFormatWarning),
+        pytest.warns(LoadWarning),
     ):
         mol = load_one(str(qcschema_input))
 
@@ -315,10 +315,10 @@ def test_inout_qcschema_input(tmpdir, filename, nwarn):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         if nwarn == 0:
-            with pytest.warns(FileFormatWarning):
+            with pytest.warns(LoadWarning):
                 mol = load_one(str(qcschema_input))
         else:
-            with pytest.warns(FileFormatWarning) as record:
+            with pytest.warns(LoadWarning) as record:
                 mol = load_one(str(qcschema_input))
             assert len(record) == nwarn
         mol1 = json.loads(qcschema_input.read_bytes())
@@ -354,10 +354,10 @@ OUTPUT_FILES = [
 def test_qcschema_output(filename, lot, obasis_name, run_type, nwarn):
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_output:
         if nwarn == 0:
-            with pytest.warns(FileFormatWarning):
+            with pytest.warns(LoadWarning):
                 mol = load_one(str(qcschema_output))
         else:
-            with pytest.warns(FileFormatWarning) as record:
+            with pytest.warns(LoadWarning) as record:
                 mol = load_one(str(qcschema_output))
             assert len(record) == nwarn
 
@@ -370,8 +370,8 @@ def test_qcschema_output(filename, lot, obasis_name, run_type, nwarn):
 # Some of these files have been manually validated, as reflected in the provenance
 # bad_mol_files: (filename, error)
 BAD_OUTPUT_FILES = [
-    ("turbomole_water_energy_hf_output.json", FileFormatError),
-    ("turbomole_water_gradient_rimp2_output.json", FileFormatError),
+    ("turbomole_water_energy_hf_output.json", LoadError),
+    ("turbomole_water_gradient_rimp2_output.json", LoadError),
 ]
 
 
@@ -395,7 +395,7 @@ INOUT_OUTPUT_FILES = [
 def test_inout_qcschema_output(tmpdir, filename):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
-        with pytest.warns(FileFormatWarning):
+        with pytest.warns(LoadWarning):
             mol = load_one(str(qcschema_input))
         mol1 = json.loads(qcschema_input.read_bytes())
 

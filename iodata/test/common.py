@@ -33,7 +33,7 @@ from ..basis import MolecularBasis, Shell, convert_conventions
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap
-from ..utils import FileFormatWarning
+from ..utils import LoadWarning
 
 __all__ = [
     "compute_mulliken_charges",
@@ -173,7 +173,7 @@ def check_orthonormal(mo_coeffs: NDArray[float], ao_overlap: NDArray[float], ato
 def load_one_warning(
     filename: str, fmt: Optional[str] = None, match: Optional[str] = None, **kwargs
 ) -> IOData:
-    """Call load_one, catching expected FileFormatWarning.
+    """Call load_one, catching expected LoadWarning.
 
     Parameters
     ----------
@@ -196,7 +196,7 @@ def load_one_warning(
     with as_file(files("iodata.test.data").joinpath(filename)) as fn:
         if match is None:
             return load_one(str(fn), fmt, **kwargs)
-        with pytest.warns(FileFormatWarning, match=match):
+        with pytest.warns(LoadWarning, match=match):
             return load_one(str(fn), fmt, **kwargs)
 
 

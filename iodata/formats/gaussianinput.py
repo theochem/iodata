@@ -68,7 +68,7 @@ def load_one(lit: LineIterator):
         if not contents:
             break
         if len(contents) != 4:
-            raise ValueError("No Cartesian Structure is detected")
+            lit.error("No Cartesian Structure is detected")
         numbers.append(sym2num[contents[0]])
         coor = list(map(float, contents[1:]))
         coordinates.append(coor)
