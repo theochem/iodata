@@ -19,7 +19,7 @@
 """Utility functions module."""
 
 import warnings
-from typing import TextIO
+from typing import Optional, TextIO, Union
 
 import attrs
 import numpy as np
@@ -132,8 +132,8 @@ class LoadError(Exception):
     def __init__(
         self,
         message,
-        file: str | LineIterator | TextIO | None = None,
-        lineno: int | None = None,
+        file: Optional[Union[str, LineIterator, TextIO]] = None,
+        lineno: Optional[int] = None,
     ):
         super().__init__(message)
         # Get the extra info
