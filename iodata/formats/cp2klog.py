@@ -186,7 +186,6 @@ def _read_cp2k_obasis(lit: LineIterator) -> dict:
     ):
         return _read_cp2k_uncontracted_obasis(lit)
     raise LoadError("Could not find basis set in CP2K ATOM output.", lit)
-    return None
 
 
 def _read_cp2k_occupations_energies(
