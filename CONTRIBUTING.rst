@@ -163,7 +163,7 @@ When you encounter a file format error while reading the file, raise a ``LoadErr
     def load_one(lit: LineIterator) -> dict:
         ...
         if something_wrong:
-            raise LoadError("Describe problem in a sentence.", lit)
+            raise LoadError("Describe the problem in a sentence.", lit)
 
 The error that appears in the terminal will automatically include the file name and line number.
 
