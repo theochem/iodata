@@ -585,7 +585,7 @@ def test_parse_wfx_missing_tag_h2o():
         pytest.raises(LoadError) as error,
     ):
         parse_wfx(lit, required_tags=["<Foo Bar>"])
-    assert str(error.value).endswith("Section <Foo Bar> is missing from loaded WFX data.")
+    assert "Section <Foo Bar> is missing from loaded WFX data." in str(error)
 
 
 def test_load_data_wfx_h2o_error():
@@ -595,9 +595,7 @@ def test_load_data_wfx_h2o_error():
         pytest.raises(LoadError) as error,
     ):
         load_one(str(fn_wfx))
-    assert str(error.value).endswith(
-        "Expecting line </Number of Nuclei> but got </Number of Primitives>."
-    )
+    assert "Expecting line </Number of Nuclei> but got </Number of Primitives>." in str(error)
 
 
 def test_load_truncated_h2o(tmpdir):
@@ -608,9 +606,7 @@ def test_load_truncated_h2o(tmpdir):
         pytest.raises(LoadError) as error,
     ):
         load_one(str(fn_truncated))
-    assert str(error.value).endswith(
-        "Section <Full Virial Ratio, -(V - W)/T> is not closed at end of file."
-    )
+    assert "Section <Full Virial Ratio, -(V - W)/T> is not closed at end of file." in str(error)
 
 
 def test_load_one_h2o():

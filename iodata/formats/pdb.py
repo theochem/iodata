@@ -188,7 +188,7 @@ def load_one(lit: LineIterator) -> dict:
             end_reached = True
             break
     if not molecule_found:
-        lit.error("Molecule could not be read.")
+        raise LoadError("Molecule could not be read.", lit)
     if not end_reached:
         lit.warn("The END is not found, but the parsed data is returned.")
 

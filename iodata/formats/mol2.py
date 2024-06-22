@@ -80,7 +80,7 @@ def load_one(lit: LineIterator) -> dict:
                 bonds = _load_helper_bonds(lit, nbonds)
                 result["bonds"] = bonds
     if not molecule_found:
-        lit.error("Molecule could not be read")
+        raise LoadError("Molecule could not be read.", lit)
     return result
 
 

@@ -34,7 +34,7 @@ import numpy as np
 
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
-from ..utils import LineIterator, set_four_index_element
+from ..utils import LineIterator, LoadError, set_four_index_element
 
 __all__ = []
 
@@ -50,7 +50,7 @@ def load_one(lit: LineIterator) -> dict:
     # check header
     line = next(lit)
     if not line.startswith(" &FCI NORB="):
-        lit.error("Incorrect file header")
+        raise LoadError(f"Incorrect file header: {line.strip()}", lit)
 
     # read info from header
     words = line[5:].split(",")
@@ -77,7 +77,9 @@ def load_one(lit: LineIterator) -> dict:
     for line in lit:
         words = line.split()
         if len(words) != 5:
-            lit.error("Expecting 5 fields on each data line in FCIDUMP")
+            raise LoadError(
+                f"Expecting 5 fields on each data line in FCIDUMP, got {len(words)}.", lit
+            )
         value = float(words[0])
         if words[3] != "0":
             ii = int(words[1]) - 1

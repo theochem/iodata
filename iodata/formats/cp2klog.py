@@ -27,7 +27,7 @@ from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, angmom_sti
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..overlap import factorial2
-from ..utils import LineIterator
+from ..utils import LineIterator, LoadError
 
 __all__ = []
 
@@ -185,7 +185,7 @@ def _read_cp2k_obasis(lit: LineIterator) -> dict:
         " ********************* Uncontracted Gaussian Type Orbitals *********************\n"
     ):
         return _read_cp2k_uncontracted_obasis(lit)
-    lit.error("Could not find basis set in CP2K ATOM output.")
+    raise LoadError("Could not find basis set in CP2K ATOM output.", lit)
     return None
 
 
@@ -436,13 +436,13 @@ def load_one(lit: LineIterator) -> dict:
         " Atomic orbital expansion coefficients [Alpha]\n",
         " Atomic orbital expansion coefficients []\n",
     ]:
-        lit.error("Could not find orbital coefficients in CP2K ATOM output.")
+        raise LoadError("Could not find orbital coefficients in CP2K ATOM output.", lit)
     coeffs_alpha = _read_cp2k_orbital_coeffs(lit, oe_alpha)
 
     if not restricted:
         line = next(lit)
         if line != " Atomic orbital expansion coefficients [Beta]\n":
-            lit.error("Could not find beta orbital coefficient in CP2K ATOM output.")
+            raise LoadError("Could not find beta orbital coefficient in CP2K ATOM output.", lit)
         coeffs_beta = _read_cp2k_orbital_coeffs(lit, oe_beta)
 
     # Turn orbital data into a MolecularOrbitals object.

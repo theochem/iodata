@@ -32,7 +32,7 @@ y-coordinate, z-coordinate, segment identifier, residue identifier and a weighti
 import numpy as np
 
 from ..docstrings import document_load_one
-from ..utils import LineIterator, amu, angstrom
+from ..utils import LineIterator, LoadError, amu, angstrom
 
 __all__ = []
 
@@ -48,8 +48,10 @@ def load_one(lit: LineIterator) -> dict:
     while True:
         try:
             line = next(lit)
-        except StopIteration:
-            lit.error("Title section of CRD has no ending marker (missing bare *).")
+        except StopIteration as exc:
+            raise LoadError(
+                "Title section of CRD has no ending marker (missing bare *).", lit
+            ) from exc
         # Get title from crd file.
         if line.startswith("*"):
             text = line[1:]
@@ -84,7 +86,7 @@ def _helper_read_crd(lit: LineIterator) -> tuple:
     # Read the line for number of atoms.
     natom = next(lit)
     if natom is None or not natom.strip().isdigit():
-        lit.error("The number of atoms must be an integer.")
+        raise LoadError("The number of atoms must be an integer.", lit)
     natom = int(natom)
     # Read the atom lines
     resnums = []

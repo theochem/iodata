@@ -24,7 +24,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal, assert_raises
 
 from ..api import load_one
-from ..utils import angstrom
+from ..utils import LoadError, angstrom
 
 
 def test_load_water_com():
@@ -65,7 +65,7 @@ def test_load_multi_title():
 def test_load_error():
     # test error raises when loading .com with z-matrix
     with (
-        assert_raises(ValueError),
+        assert_raises(LoadError),
         as_file(files("iodata.test.data").joinpath("water_z.com")) as fn,
     ):
         load_one(str(fn))

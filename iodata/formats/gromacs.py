@@ -41,27 +41,24 @@ PATTERNS = ["*.gro"]
 @document_load_one("GRO", ["atcoords", "atffparams", "cellvecs", "extra", "title"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    while True:
-        data = _helper_read_frame(lit)
-        title = data[0]
-        time = data[1]
-        resnums = np.array(data[2])
-        resnames = np.array(data[3])
-        attypes = np.array(data[4])
-        atcoords = data[5]
-        velocities = data[6]
-        cellvecs = data[7]
-        atffparams = {"attypes": attypes, "resnames": resnames, "resnums": resnums}
-        extra = {"time": time, "velocities": velocities}
-        return {
-            "atcoords": atcoords,
-            "atffparams": atffparams,
-            "cellvecs": cellvecs,
-            "extra": extra,
-            "title": title,
-        }
-    lit.error("Gromacs gro file could not be read.")
-    return None
+    data = _helper_read_frame(lit)
+    title = data[0]
+    time = data[1]
+    resnums = np.array(data[2])
+    resnames = np.array(data[3])
+    attypes = np.array(data[4])
+    atcoords = data[5]
+    velocities = data[6]
+    cellvecs = data[7]
+    atffparams = {"attypes": attypes, "resnames": resnames, "resnums": resnums}
+    extra = {"time": time, "velocities": velocities}
+    return {
+        "atcoords": atcoords,
+        "atffparams": atffparams,
+        "cellvecs": cellvecs,
+        "extra": extra,
+        "title": title,
+    }
 
 
 @document_load_many("GRO", ["atcoords", "atffparams", "cellvecs", "extra", "title"])

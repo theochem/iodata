@@ -19,6 +19,7 @@
 """Utility functions module."""
 
 import warnings
+from typing import TextIO
 
 import attrs
 import numpy as np
@@ -60,34 +61,6 @@ amu: float = 1e-3 / (spc.value("electron mass") * spc.value("Avogadro constant")
 kcalmol: float = 1e3 * spc.calorie / spc.value("Avogadro constant") / spc.value("Hartree energy")
 calmol: float = spc.calorie / spc.value("Avogadro constant") / spc.value("Hartree energy")
 kjmol: float = 1e3 / spc.value("Avogadro constant") / spc.value("Hartree energy")
-
-
-class FileFormatError(ValueError):
-    """Raise when a file or input format cannot be identified."""
-
-
-class LoadError(ValueError):
-    """Raised when an error is encountered while loading from a file."""
-
-
-class LoadWarning(Warning):
-    """Raised when incorrect content is encountered and fixed when loading from a file."""
-
-
-class DumpError(ValueError):
-    """Raised when an error is encountered while dumping to a file."""
-
-
-class DumpWarning(Warning):
-    """Raised when an IOData object is made compatible with a format when dumping to a file."""
-
-
-class PrepareDumpError(ValueError):
-    """Raised when an IOData object is incompatible with a format before dumping to a file."""
-
-
-class WriteInputError(ValueError):
-    """Raised when an error is encountered while writing an input file."""
 
 
 class LineIterator:
@@ -132,17 +105,6 @@ class LineIterator:
         self.lineno += 1
         return self.stack.pop() if self.stack else next(self.fh)
 
-    def error(self, msg: str):
-        """Raise an error while reading a file.
-
-        Parameters
-        ----------
-        msg
-            Message to raise alongside filename and line number.
-
-        """
-        raise LoadError(f"{self.filename}:{self.lineno} {msg}")
-
     def warn(self, msg: str):
         """Raise a warning while reading a file.
 
@@ -158,6 +120,63 @@ class LineIterator:
         """Go back one line in the file and decrease the lineno attribute by one."""
         self.stack.append(line)
         self.lineno -= 1
+
+
+class FileFormatError(ValueError):
+    """Raise when a file or input format cannot be identified."""
+
+
+class LoadError(Exception):
+    """Raised when an error is encountered while loading from a file."""
+
+    def __init__(
+        self,
+        message,
+        file: str | LineIterator | TextIO | None = None,
+        lineno: int | None = None,
+    ):
+        super().__init__(message)
+        # Get the extra info
+        self.filename = None
+        self.lineno = None
+        if isinstance(file, str):
+            self.filename = file
+        elif isinstance(file, LineIterator):
+            self.filename = file.filename
+            if lineno is None:
+                self.lineno = file.lineno
+        elif isinstance(file, TextIO):
+            self.filename = file.name
+
+    def __str__(self):
+        if self.filename is None:
+            location = ""
+        elif self.lineno is None:
+            location = f" ({self.filename})"
+        else:
+            location = f" ({self.filename}:{self.lineno})"
+        message = super().__str__()
+        return f"{message}{location}"
+
+
+class LoadWarning(Warning):
+    """Raised when incorrect content is encountered and fixed when loading from a file."""
+
+
+class DumpError(ValueError):
+    """Raised when an error is encountered while dumping to a file."""
+
+
+class DumpWarning(Warning):
+    """Raised when an IOData object is made compatible with a format when dumping to a file."""
+
+
+class PrepareDumpError(ValueError):
+    """Raised when an IOData object is incompatible with a format before dumping to a file."""
+
+
+class WriteInputError(ValueError):
+    """Raised when an error is encountered while writing an input file."""
 
 
 @attrs.define

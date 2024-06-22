@@ -42,7 +42,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
-from ..utils import LineIterator, angstrom
+from ..utils import LineIterator, LoadError, angstrom
 
 __all__ = []
 
@@ -61,7 +61,7 @@ def load_one(lit: LineIterator) -> dict:
     natom = int(words[0])
     nbond = int(words[1])
     if words[-1].upper() != "V2000":
-        lit.error("Only V2000 SDF files are supported.")
+        raise LoadError("Only V2000 SDF files are supported.", lit)
     atcoords = np.empty((natom, 3), float)
     atnums = np.empty(natom, int)
     for iatom in range(natom):
@@ -82,8 +82,8 @@ def load_one(lit: LineIterator) -> dict:
     while True:
         try:
             words = next(lit)
-        except StopIteration:
-            lit.error("Molecule specification did not end properly with $$$$")
+        except StopIteration as exc:
+            raise LoadError("Molecule specification did not end properly with $$$$.", lit) from exc
         if words == "$$$$\n":
             break
     return {

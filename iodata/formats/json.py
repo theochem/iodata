@@ -651,7 +651,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
         # Check if BSE file, which is too different
         elif "molssi_bse_schema" in result:
             raise LoadError(
-                f"{lit.filename}: IOData does not currently support MolSSI BSE Basis JSON."
+                "IOData does not currently support MolSSI BSE Basis JSON.", lit.filename
             )
         # Center_data is required in any basis schema
         elif "center_data" in result:
@@ -659,7 +659,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
         elif "driver" in result:
             schema_name = "qcschema_output" if "return_result" in result else "qcschema_input"
         else:
-            raise LoadError(f"{lit.filename}: Could not determine `schema_name`.")
+            raise LoadError("Could not determine `schema_name`.", lit.filename)
     if "schema_version" not in result:
         warn(
             f"{lit.filename}: QCSchema files should have a `schema_version` key."
@@ -677,8 +677,9 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
     if schema_name == "qcschema_output":
         return _load_qcschema_output(result, lit)
     raise LoadError(
-        f"{lit.filename}: Invalid QCSchema type {result['schema_name']}, should be one of "
-        "`qcschema_molecule`, `qcschema_basis`, `qcschema_input`, or `qcschema_output`."
+        f"Invalid QCSchema type {result['schema_name']}, should be one of "
+        "`qcschema_molecule`, `qcschema_basis`, `qcschema_input`, or `qcschema_output`.",
+        lit.filename,
     )
 
 
@@ -759,7 +760,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
             )
     for key in topology_keys:
         if key not in mol:
-            raise LoadError(f"{lit.filename}: QCSchema topology requires '{key}' key")
+            raise LoadError(f"QCSchema topology requires '{key}' key", lit.filename)
 
     topology_dict = {}
     extra_dict = {}
@@ -1038,7 +1039,7 @@ def _load_qcschema_input(result: dict, lit: LineIterator) -> dict:
     extra_dict["input"] = input_dict["extra"]
 
     if "molecule" not in result:
-        raise LoadError(f"{lit.filename}: QCSchema Input requires 'molecule' key")
+        raise LoadError("QCSchema Input requires 'molecule' key", lit.filename)
     molecule_dict = _parse_topology_keys(result["molecule"], lit)
     input_dict.update(molecule_dict)
     extra_dict["molecule"] = molecule_dict["extra"]
@@ -1078,7 +1079,7 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
             )
     for key in input_keys:
         if key not in result:
-            raise LoadError(f"{lit.filename}: QCSchema `qcschema_input` file requires '{key}' key")
+            raise LoadError(f"QCSchema `qcschema_input` file requires '{key}' key", lit.filename)
     # Store all extra keys in extra_dict and gather at end
     input_dict = {}
     extra_dict = {}
@@ -1173,8 +1174,8 @@ def _parse_driver(driver: str, lit: LineIterator) -> str:
     """
     if driver not in ["energy", "gradient", "hessian", "properties"]:
         raise LoadError(
-            f"{lit.filename}: QCSchema driver must be one of `energy`, `gradient`, `hessian`, "
-            "or `properties`"
+            "QCSchema driver must be one of `energy`, `gradient`, `hessian`, or `properties`",
+            lit.filename,
         )
     return driver
 
@@ -1200,7 +1201,7 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
     extra_dict = {}
 
     if "method" not in model:
-        raise LoadError(f"{lit.filename}: QCSchema `model` requires a `method`")
+        raise LoadError("QCSchema `model` requires a `method`", lit.filename)
     model_dict["lot"] = model["method"]
     # QCEngineRecords doesn't give an empty string for basis-free methods, omits req'd key instead
     if "basis" not in model:
@@ -1264,10 +1265,10 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
         keep_stdout = protocols["stdout"]
     protocols_dict = {}
     if wavefunction not in {"all", "orbitals_and_eigenvalues", "return_results", "none"}:
-        raise LoadError(f"{lit.filename}: Invalid `protocols` `wavefunction` keyword.")
+        raise LoadError("Invalid `protocols` `wavefunction` keyword.", lit.filename)
     protocols_dict["keep_wavefunction"] = wavefunction
     if not isinstance(keep_stdout, bool):
-        raise LoadError("{}: `protocols` `stdout` option must be a boolean.")
+        raise LoadError("`protocols` `stdout` option must be a boolean.", lit.filename)
     protocols_dict["keep_stdout"] = keep_stdout
     return protocols_dict
 
@@ -1296,7 +1297,7 @@ def _load_qcschema_output(result: dict, lit: LineIterator) -> dict:
     extra_dict["output"] = output_dict["extra"]
 
     if "molecule" not in result:
-        raise LoadError(f"{lit.filename}: QCSchema Input requires 'molecule' key")
+        raise LoadError("QCSchema Input requires 'molecule' key", lit.filename)
     molecule_dict = _parse_topology_keys(result["molecule"], lit)
     output_dict.update(molecule_dict)
     extra_dict["molecule"] = molecule_dict["extra"]
@@ -1338,7 +1339,7 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
             )
     for key in output_keys:
         if key not in result:
-            raise LoadError(f"{lit.filename}: QCSchema `qcschema_output` file requires '{key}' key")
+            raise LoadError(f"QCSchema `qcschema_output` file requires '{key}' key", lit.filenam)
 
     # Store all extra keys in extra_dict and gather at end
     output_dict = {}
@@ -1413,7 +1414,7 @@ def _parse_provenance(
     """
     if isinstance(provenance, dict):
         if "creator" not in provenance:
-            raise LoadError(f"{lit.filename}: `{source}` provenance requires `creator` key")
+            raise LoadError(f"`{source}` provenance requires `creator` key", lit.filename)
         if append:
             base_provenance = [provenance]
         else:
@@ -1421,10 +1422,10 @@ def _parse_provenance(
     elif isinstance(provenance, list):
         for prov in provenance:
             if "creator" not in prov:
-                raise LoadError("{}: `{}` provenance requires `creator` key")
+                raise LoadError(f"`{source}` provenance requires `creator` key", lit.filename)
         base_provenance = provenance
     else:
-        raise LoadError(f"{lit.filename}: Invalid `{source}` provenance type")
+        raise LoadError(f"Invalid `{source}` provenance type", lit.filename)
     if append:
         base_provenance.append(
             {"creator": "IOData", "version": __version__, "routine": "iodata.formats.json.load_one"}

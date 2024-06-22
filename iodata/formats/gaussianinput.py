@@ -22,7 +22,7 @@ import numpy as np
 
 from ..docstrings import document_load_one
 from ..periodic import sym2num
-from ..utils import LineIterator, angstrom
+from ..utils import LineIterator, LoadError, angstrom
 
 __all__ = []
 
@@ -68,7 +68,7 @@ def load_one(lit: LineIterator):
         if not contents:
             break
         if len(contents) != 4:
-            lit.error("No Cartesian Structure is detected")
+            raise LoadError("No Cartesian Structure is detected.", lit)
         numbers.append(sym2num[contents[0]])
         coor = list(map(float, contents[1:]))
         coordinates.append(coor)
