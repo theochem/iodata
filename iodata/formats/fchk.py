@@ -29,7 +29,7 @@ from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventi
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import DumpError, LineIterator, PrepareDumpError, amu
+from ..utils import DumpError, LineIterator, LoadError, PrepareDumpError, amu
 
 __all__ = []
 
@@ -219,9 +219,9 @@ def load_one(lit: LineIterator) -> dict:
     nalpha = fchk["Number of alpha electrons"]
     nbeta = fchk["Number of beta electrons"]
     if nalpha < 0 or nbeta < 0 or nalpha + nbeta <= 0:
-        lit.error("The number of electrons is not positive.")
+        raise LoadError("The number of electrons is not positive.", lit)
     if nalpha < nbeta:
-        lit.error(f"n_alpha={nalpha} < n_beta={nbeta} is not valid!")
+        raise LoadError(f"n_alpha={nalpha} < n_beta={nbeta} is invalid.", lit)
 
     norba = fchk["Alpha Orbital Energies"].shape[0]
     mo_coeffs = np.copy(fchk["Alpha MO coefficients"].reshape(norba, nbasis).T)
@@ -323,7 +323,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
         prefix = "Opt point"
         nsteps = fchk["Optimization Number of geometries"]
     else:
-        lit.error("Could not find IRC or Optimization trajectory in FCHK file.")
+        raise LoadError("Cannot find IRC or Optimization trajectory in FCHK file.", lit)
 
     natom = fchk["Atomic numbers"].size
     for ipoint, nstep in enumerate(nsteps):
@@ -382,7 +382,7 @@ def _load_fchk_low(lit: LineIterator, label_patterns: Optional[list[str]] = None
     elif len(words) == 2:
         result["command"], result["lot"] = words
     else:
-        lit.error("The second line of the FCHK file should contain two or three words.")
+        raise LoadError("The second line of the FCHK file should contain two or three words.", lit)
 
     while True:
         try:
@@ -434,11 +434,11 @@ def _load_fchk_field(lit: LineIterator, label_patterns: list[str]) -> tuple[str,
         if len(words) == 2:
             try:
                 return label, datatype(words[1])
-            except ValueError:
-                lit.error(f"Could not interpret: {words[1]}")
+            except ValueError as exc:
+                raise LoadError(f"Could not interpret as {datatype}: {words[1]}", lit) from exc
         elif len(words) == 3:
             if words[1] != "N=":
-                lit.error("Expected N= not found.")
+                raise LoadError("Expected N= not found.", lit)
             length = int(words[2])
             value = np.zeros(length, datatype)
             counter = 0
@@ -449,8 +449,8 @@ def _load_fchk_field(lit: LineIterator, label_patterns: list[str]) -> tuple[str,
                 word = words.pop(0)
                 try:
                     value[counter] = datatype(word)
-                except (ValueError, OverflowError):
-                    lit.error(f"Could not interpret: {word}")
+                except (ValueError, OverflowError) as exc:
+                    raise LoadError(f"Could not interpret as {datatype}: {word}", lit) from exc
                 counter += 1
             return label, value
 

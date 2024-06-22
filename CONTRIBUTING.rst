@@ -153,9 +153,22 @@ If necessary, you can *push back* the line for later reading with ``lit.back(lin
             lit.back(line)
             break
 
-When you encounter a file format error while reading the file, call ``lit.error(msg)``,
-where ``msg`` is a short message describing the problem.
+When you encounter a file format error while reading the file, raise a ``LoadError`` exception:
+
+.. code-block:: python
+
+    from ..utils import LoadError
+
+    @document_load_one(...)
+    def load_one(lit: LineIterator) -> dict:
+        ...
+        if something_wrong:
+            raise LoadError("Describe the problem in a sentence.", lit)
+
 The error that appears in the terminal will automatically include the file name and line number.
+If your code has already read the full file and encounters an error when processing the data,
+you can use ``raise LoadError("Describe problem in a sentence.", lit.filename)`` instead.
+This way, no line number is included in the error message.
 
 
 ``dump_one`` functions: writing a single IOData object to a file

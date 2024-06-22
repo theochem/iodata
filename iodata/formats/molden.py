@@ -45,7 +45,7 @@ from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
 from ..periodic import num2sym, sym2num
-from ..utils import DumpError, LineIterator, PrepareDumpError, angstrom
+from ..utils import DumpError, LineIterator, LoadError, PrepareDumpError, angstrom
 
 __all__ = []
 
@@ -141,7 +141,7 @@ def _load_low(lit: LineIterator) -> dict:
 
     line = next(lit)
     if line.strip() != "[Molden Format]":
-        lit.error("Molden header not found")
+        raise LoadError("Molden header not found.", lit)
     # The order of sections, denoted by "[...]", is not fixed in the Molden
     # format, so we need a loop that checks for all possible sections at
     # each iteration. If needed, the contents of the section is read.
@@ -181,7 +181,7 @@ def _load_low(lit: LineIterator) -> dict:
         elif line == "[gto]":
             obasis = _load_helper_obasis(lit)
         elif line == "[sto]":
-            lit.error("Slater-type orbitals are not supported by IODATA.")
+            raise LoadError("Slater-type orbitals are not supported by IODATA.", lit)
         # molecular-orbital coefficients.
         elif line == "[mo]":
             data_alpha, data_beta = _load_helper_coeffs(lit)
@@ -197,13 +197,17 @@ def _load_low(lit: LineIterator) -> dict:
 
     if coeffsb is None:
         if coeffsa.shape[0] != obasis.nbasis:
-            lit.error("Number of alpha orbital coefficients does not match the size of the basis.")
+            raise LoadError(
+                "Number of alpha orbital coefficients does not match the size of the basis.", lit
+            )
         mo = MolecularOrbitals(
             "restricted", coeffsa.shape[1], coeffsa.shape[1], occsa, coeffsa, energiesa, irrepsa
         )
     else:
         if coeffsb.shape[0] != obasis.nbasis:
-            lit.error("Number of beta orbital coefficients does not match the size of the basis.")
+            raise LoadError(
+                "Number of beta orbital coefficients does not match the size of the basis.", lit
+            )
         mo = MolecularOrbitals(
             "unrestricted",
             coeffsa.shape[1],
@@ -663,7 +667,7 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
         coeffsa = result["mo"].coeffsa
         coeffsb = result["mo"].coeffsb
     else:
-        lit.error(f"Molecular orbital kind={result['mo'].kind} not recognized")
+        raise LoadError(f"Molecular orbital kind={result['mo'].kind} not recognized.", lit)
 
     if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         # The file is good. No need to change obasis.
@@ -733,12 +737,13 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
                 result["mo"].coeffsb[:] = coeffsb_psi4
             return
 
-    lit.error(
-        "Could not correct the data read from {}. The molden or mkl file "
-        "you are trying to load contains errors. Please make an issue "
-        "here: https://github.com/theochem/iodata/issues, and attach "
-        "this file. Please provide one or more small files causing this "
-        "error. Thanks!"
+    raise LoadError(
+        "The molden or mkl file you are trying to load contains errors. "
+        "Please make an issue here: https://github.com/theochem/iodata/issues, "
+        "and attach this file and explain which program you used to create it. "
+        "Please provide one or more small files causing this error. "
+        "Thanks!",
+        lit,
     )
 
 

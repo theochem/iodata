@@ -32,7 +32,7 @@ from ..basis import MolecularBasis, Shell, angmom_its, angmom_sti, convert_conve
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import DumpError, LineIterator, PrepareDumpError, angstrom
+from ..utils import DumpError, LineIterator, LoadError, PrepareDumpError, angstrom
 from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 
 __all__ = []
@@ -92,7 +92,9 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
         elif nbasis_shell == len(CONVENTIONS[(angmom, "p")]):
             kind = "p"
         else:
-            lit.error(f"Cannot interpret angmom={angmom} with nbasis_shell={nbasis_shell}")
+            raise LoadError(
+                f"Cannot interpret angmom={angmom} with nbasis_shell={nbasis_shell}.", lit
+            )
         exponents = []
         coeffs = []
         for line in lit:
@@ -207,15 +209,15 @@ def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
             occsb = _load_helper_occ(lit)
 
     if charge is None:
-        lit.error("Charge and spin polarization not found.")
+        raise LoadError("Charge and spin polarization not found.", lit)
     if atcoords is None:
-        lit.error("Coordinates not found.")
+        raise LoadError("Coordinates not found.", lit)
     if obasis is None:
-        lit.error("Orbital basis not found.")
+        raise LoadError("Orbital basis not found.", lit)
     if coeffsa is None:
-        lit.error("Alpha orbitals not found.")
+        raise LoadError("Alpha orbitals not found.", lit)
     if occsa is None:
-        lit.error("Alpha occupation numbers not found.")
+        raise LoadError("Alpha occupation numbers not found.", lit)
 
     nelec = atnums.sum() - charge
     if coeffsb is None:
@@ -227,8 +229,9 @@ def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
         )
     else:
         if occsb is None:
-            lit.error(
-                "Beta occupation numbers not found in mkl file while beta orbitals were present."
+            raise LoadError(
+                "Beta occupation numbers not found in mkl file while beta orbitals were present.",
+                lit,
             )
         nalpha = int(np.round(occsa.sum()))
         nbeta = int(np.round(occsb.sum()))

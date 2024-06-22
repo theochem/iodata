@@ -22,7 +22,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from ..docstrings import document_load_one
-from ..utils import LineIterator, angstrom
+from ..utils import LineIterator, LoadError, angstrom
 
 __all__ = []
 
@@ -37,7 +37,7 @@ def _read_data(lit: LineIterator) -> tuple[str, str, list[str]]:
     # The dat file only contains symmetry-unique atoms, so we would be incapable of
     # supporting non-C1 symmetry without significant additional coding.
     if symmetry != "C1":
-        lit.error(f"Only C1 symmetry is supported. Got {symmetry}")
+        raise LoadError(f"Only C1 symmetry is supported, got {symmetry}.", lit)
     symbols = []
     line = True
     while line != " $END      \n":
@@ -86,7 +86,9 @@ def _read_hessian(lit: LineIterator, result: dict[str]) -> NDArray[float]:
     """Extract ``hessian`` from the punch file."""
     # check that $HESS is not already parsed
     if "athessian" in result:
-        lit.error("Cannot parse $HESS twice! Make sure approximate hessian is not being parsed!")
+        raise LoadError(
+            "Cannot parse $HESS twice. Make sure approximate hessian is not being parsed."
+        )
     next(lit)
     natom = len(result["symbols"])
     hessian = np.zeros((3 * natom, 3 * natom), float)

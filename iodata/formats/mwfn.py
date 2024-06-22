@@ -90,7 +90,9 @@ def _load_helper_opener(lit: LineIterator) -> dict:
 
     # check values parsed
     if data["Ncenter"] <= 0:
-        lit.error(f"Ncenter should be a positive integer! Read Ncenter= {data['Ncenter']}")
+        raise LoadError(
+            f"Ncenter should be a positive integer. Read Ncenter= {data['Ncenter']}.", lit
+        )
     # Possible values of Wfntype (wavefunction type):
     #     0: Restricted closed - shell single - determinant wavefunction(e.g.RHF, RKS)
     #     1: Unrestricted open - shell single - determinant wavefunction(e.g.UHF, UKS)
@@ -104,7 +106,9 @@ def _load_helper_opener(lit: LineIterator) -> dict:
         # unrestricted wavefunction
         data["mo_kind"] = "unrestricted"
     else:
-        lit.error(f"Wavefunction type cannot be determined. Read Wfntype= {data['Wfntype']}")
+        raise LoadError(
+            f"Wavefunction type cannot be determined. Read Wfntype= {data['Wfntype']}.", lit
+        )
 
     return data
 
@@ -149,7 +153,9 @@ def _load_helper_atoms(lit: LineIterator, natom: int) -> dict:
 
     # check atomic numbers
     if min(data["atnums"]) <= 0:
-        lit.error(f"Atomic numbers should be positive integers! Read atnums= {data['atnums']}")
+        raise LoadError(
+            f"Atomic numbers should be positive integers. Read atnums= {data['atnums']}.", lit
+        )
 
     return data
 
@@ -167,7 +173,7 @@ def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
     data = {}
     for section, name in zip(sections, var_name):
         if not line.startswith(section):
-            lit.error(f"Expected line to start with {section}, but got line={line}.")
+            raise LoadError(f"Expected line to start with {section}, but got line={line}.", lit)
         data[name] = _load_helper_section(lit, nshell, " ", 0, int)
         line = next(lit)
     lit.back(line)
@@ -182,7 +188,7 @@ def _load_helper_section(
     while len(section) < nprim:
         line = next(lit)
         if not line.startswith(start):
-            lit.error(f"Expected line to start with {start}! Got line={line}")
+            raise LoadError(f"Expected line to start with {start}. Got line={line}.", lit)
         section.extend(line.split()[skip:])
     return np.array(section, dtype)
 
@@ -250,10 +256,10 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
 
     # load primitive exponents & coefficients
     if not next(lit).startswith("$Primitive exponents"):
-        lit.error("Expected '$Primitive exponents' section!")
+        raise LoadError("Expected '$Primitive exponents' section.", lit)
     data["exponents"] = _load_helper_section(lit, data["Nprimshell"], "", 0, float)
     if not next(lit).startswith("$Contraction coefficients"):
-        lit.error("Expected '$Contraction coefficients' section!")
+        raise LoadError("Expected '$Contraction coefficients' section.", lit)
     data["coeffs"] = _load_helper_section(lit, data["Nprimshell"], "", 0, float)
 
     # get number of basis & molecular orbitals (MO)
@@ -302,8 +308,9 @@ def load_one(lit: LineIterator) -> dict:
     # check number of basis functions
     if obasis.nbasis != inp["Nbasis"]:
         raise LoadError(
-            f"{lit.filename}: Number of basis in MolecularBasis is not equal to the 'Nbasis'. "
-            f"{obasis.nbasis} != {inp['Nbasis']}"
+            f"Number of basis functions in MolecularBasis ({obasis.nbasis}) "
+            f"is not equal to the 'Nbasis' ({inp['Nbasis']}).",
+            lit.filename,
         )
 
     # Determine number of orbitals of each kind.
@@ -325,18 +332,21 @@ def load_one(lit: LineIterator) -> dict:
     # check number of electrons
     if mo.nelec != inp["Naelec"] + inp["Nbelec"]:
         raise LoadError(
-            f"{lit.filename}: Number of electrons in MolecularOrbitals is not equal to the sum of "
-            f"'Naelec' and 'Nbelec'. {mo.nelec} != {inp['Naelec']} + {inp['Nbelec']}"
+            f"Number of electrons in MolecularOrbitals ({mo.nelec}) is not equal to "
+            f"the sum of 'Naelec' and 'Nbelec' ({inp['Naelec']} + {inp['Nbelec']}).",
+            lit.filename,
         )
     if mo.occsa.sum() != inp["Naelec"]:
         raise LoadError(
-            f"{lit.filename}: Number of alpha electrons in MolecularOrbitals is not equal to the "
-            f"'Naelec'. {mo.occsa.sum()} != {inp['Naelec']}"
+            f"Number of alpha electrons in MolecularOrbitals ({mo.occsa.sum()}) "
+            f"is not equal to the 'Naelec' ({inp['Naelec']}).",
+            lit.filename,
         )
     if mo.occsb.sum() != inp["Nbelec"]:
         raise LoadError(
-            f"{lit.filename}: Number of beta electrons in MolecularOrbitals is not equal to the "
-            f"'Nbelec'. {mo.occsb.sum()} != {inp['Nbelec']}"
+            f"Number of beta electrons in MolecularOrbitals ({mo.occsb.sum()})"
+            f"is not equal to the 'Nbelec' ({inp['Nbelec']}).",
+            lit.filename,
         )
 
     return {

@@ -32,7 +32,7 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
-from ..utils import LineIterator, PrepareDumpError
+from ..utils import LineIterator, LoadError, PrepareDumpError
 from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
 __all__ = []
@@ -159,9 +159,11 @@ def load_data_wfx(lit: LineIterator) -> dict:
     key = result["keywords"]
     num = result["num_perturbations"]
     if key not in perturbation_check:
-        lit.error(f"The keywords is {key}, but it should be either GTO, GIAO or CGST")
+        raise LoadError(f"The keywords is {key}, but it should be either GTO, GIAO or CGST.", lit)
     if num != perturbation_check[key]:
-        lit.error(f"Number of perturbations of {key} is {num}, expected {perturbation_check[key]}")
+        raise LoadError(
+            f"Number of perturbations of {key} is {num}, expected {perturbation_check[key]}.", lit
+        )
     return result
 
 
@@ -182,7 +184,7 @@ def parse_wfx(lit: LineIterator, required_tags: Optional[list] = None) -> dict:
             # set start & end of the section and add it to data dictionary
             section_start = line
             if section_start in data:
-                lit.error(f"Section with tag={section_start} is repeated!")
+                raise LoadError(f"Section with tag={section_start} is repeated.", lit)
             data[section_start] = []
             section_end = line[:1] + "/" + line[1:]
             # special handling of <Molecular Orbital Primitive Coefficients> section
@@ -192,7 +194,7 @@ def parse_wfx(lit: LineIterator, required_tags: Optional[list] = None) -> dict:
         elif section_start is not None and line.startswith("</"):
             # In some cases, closing tags have a different number of spaces. 8-[
             if line.replace(" ", "") != section_end.replace(" ", ""):
-                lit.error(f"Expecting line {section_end} but got {line}.")
+                raise LoadError(f"Expecting line {section_end} but got {line}.", lit)
             # reset section_start variable to signal that section ended
             section_start = None
         # handle <MO Number> line under <Molecular Orbital Primitive Coefficients> section
@@ -207,12 +209,12 @@ def parse_wfx(lit: LineIterator, required_tags: Optional[list] = None) -> dict:
 
     # check if last section was closed
     if section_start is not None:
-        lit.error(f"Section {section_start} is not closed at end of file.")
+        raise LoadError(f"Section {section_start} is not closed at end of file.", lit)
     # check required section tags
     if required_tags is not None:
         for section_tag in required_tags:
             if section_tag not in data:
-                lit.error(f"Section {section_tag} is missing from loaded WFX data.")
+                raise LoadError(f"Section {section_tag} is missing from loaded WFX data.", lit)
     return data
 
 
@@ -262,9 +264,9 @@ def load_one(lit: LineIterator) -> dict:
         norba = norbb + data["mo_spins"].count("Alpha")
         # check that mo_spin list contains no surprises
         if data["mo_spins"] != ["Alpha and Beta"] * norbb + ["Alpha"] * (norba - norbb):
-            lit.error("Unsupported <Molecular Orbital Spin Types> values.")
+            raise LoadError("Unsupported <Molecular Orbital Spin Types> values.", lit)
         if norba != data["mo_coeffs"].shape[1]:
-            lit.error("Number of orbitals inconsistent with orbital spin types.")
+            raise LoadError("Number of orbitals inconsistent with orbital spin types.", lit)
         # create molecular orbitals, which requires knowing the number of alpha and beta molecular
         # orbitals. These are expected to be the same for 'restricted' case, however, the number of
         # Alpha/Beta counts might not be the same for the restricted WFX (e.g., restricted
@@ -289,10 +291,10 @@ def load_one(lit: LineIterator) -> dict:
         norbb = data["mo_spins"].count("Beta")
         # check that mo_spin list contains no surprises
         if data["mo_spins"] != ["Alpha"] * norba + ["Beta"] * norbb:
-            lit.error("Unsupported molecular orbital spin types.")
+            raise LoadError("Unsupported molecular orbital spin types.", lit)
         # check that number of orbitals match number of MO coefficients
         if norba + norbb != data["mo_coeffs"].shape[1]:
-            lit.error("Number of orbitals inconsistent with orbital spin types.")
+            raise LoadError("Number of orbitals inconsistent with orbital spin types.", lit)
         # Create orbitals. For unrestricted wavefunctions, IOData uses the same
         # conventions as WFX.
         mo = MolecularOrbitals(

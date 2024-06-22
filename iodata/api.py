@@ -154,10 +154,10 @@ def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
             iodata = IOData(**format_module.load_one(lit, **kwargs))
         except LoadError:
             raise
-        except StopIteration:
-            lit.error("File ended before all data was read.")
+        except StopIteration as exc:
+            raise LoadError("File ended before all data was read.", lit) from exc
         except Exception as exc:
-            raise LoadError(f"{filename}: Uncaught exception while loading file.") from exc
+            raise LoadError("Uncaught exception while loading file.", lit) from exc
     return iodata
 
 
@@ -194,7 +194,7 @@ def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IO
         except LoadError:
             raise
         except Exception as exc:
-            raise LoadError(f"{filename}: Uncaught exception while loading file.") from exc
+            raise LoadError("Uncaught exception while loading file.", lit) from exc
 
 
 def _check_required(iodata: IOData, dump_func: Callable):

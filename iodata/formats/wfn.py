@@ -38,7 +38,7 @@ from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import gob_cart_normalization
 from ..periodic import num2sym, sym2num
-from ..utils import LineIterator, PrepareDumpError
+from ..utils import LineIterator, LoadError, PrepareDumpError
 
 __all__ = []
 
@@ -130,7 +130,7 @@ def _load_helper_num(lit: LineIterator) -> list[int]:
     """Read number of orbitals, primitives and atoms."""
     line = next(lit)
     if not line.startswith("G"):
-        lit.error("Expecting line to start with 'G'")
+        raise LoadError("Expecting line to start with 'G'.", lit)
     # FORMAT (16X,I7,13X,I7,11X,I9)
     num_mo = int(line[16:23])
     nprim = int(line[36:43])
@@ -165,13 +165,13 @@ def _load_helper_section(
     while len(section) < n:
         line = next(lit)
         if not line.startswith(start):
-            lit.error(f"Expecting line to start with '{start}'")
+            raise LoadError(f"Expecting line to start with '{start}'.", lit)
         line = line[skip:]
         while len(line) >= step:
             section.append(dtype(line[:step].replace("D", "E")))
             line = line[step:]
     if len(section) != n:
-        lit.error("Number of elements in section do not match 'n'")
+        raise LoadError("Number of elements in section do not match 'n'.", lit)
     return np.array(section, dtype=dtype)
 
 
@@ -179,7 +179,7 @@ def _load_helper_mo(lit: LineIterator, nprim: int) -> tuple[int, float, float, N
     """Read one section of MO information."""
     line = next(lit)
     if not line.startswith("MO"):
-        lit.error("Expecting line to start with 'MO'")
+        raise LoadError("Expecting line to start with 'MO'.", lit)
     # FORMAT (2X,I5,27X,F13.7,15X,F12.6)
     number = int(line[2:7])
     occ = float(line[34:47])
@@ -319,19 +319,21 @@ def build_obasis(
                 type_assignments[ibasis + ncon * ifn : ibasis + ncon * (ifn + 1)]
                 == type_assignments[ibasis + ncon * ifn]
             ).all():
-                lit.error("Inconcsistent type assignments in current batch of shells.")
+                raise LoadError("Inconcsistent type assignments in current batch of shells.", lit)
         # Check if all basis functions in the current batch sit on
         # the same center. If not, IOData cannot read this file.
         icenter = icenters[ibasis]
         if not (icenters[ibasis : ibasis + ncon * ncart] == icenter).all():
-            lit.error("Incomplete shells in WFN file not supported by IOData.")
+            raise LoadError("Incomplete shells in WFN file not supported by IOData.", lit)
         # Check if the same exponent is used for corresponding basis functions.
         batch_exponents = exponents[ibasis : ibasis + ncon]
         for ifn in range(ncart):
             if not (
                 exponents[ibasis + ncon * ifn : ibasis + ncon * (ifn + 1)] == batch_exponents
             ).all():
-                lit.error("Exponents must be the same for corresponding basis functions.")
+                raise LoadError(
+                    "Exponents must be the same for corresponding basis functions.", lit
+                )
         # A permutation is needed because we need to regroup basis functions
         # into shells.
         batch_primitive_names = [
@@ -418,7 +420,7 @@ def load_one(lit: LineIterator) -> dict:
         norb_b = np.sum(mo_spin == 2)
         norb_ab = np.sum(mo_spin == 3)
         if norb_a + norb_b + norb_ab != norb or (norb_b and norb_ab):
-            lit.error("Invalid orbital spin types.")
+            raise LoadError("Invalid orbital spin types.", lit)
         extra["mo_spin"] = mo_spin
     # Determine norb_a,norb_b,norb_ab for restricted wave function by heuristic.
     elif mo_occs.max() > 1.0:
