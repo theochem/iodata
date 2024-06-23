@@ -163,7 +163,7 @@ When you encounter a file format error while reading the file, raise a ``LoadErr
     def load_one(lit: LineIterator) -> dict:
         ...
         if something_wrong:
-            raise LoadError("Describe the problem in a sentence.", lit)
+            raise LoadError("Describe the problem that made it impossible to load the file.", lit)
 
 The error that appears in the terminal will automatically include the file name and line number.
 If your code has already read the full file and encounters an error when processing the data,
@@ -183,7 +183,7 @@ In this case, you should warn the user that the file contains (fixable) errors:
     def load_one(lit: LineIterator) -> dict:
         ...
         if something_fixed:
-            warn(LoadWarning("Describe the problem in a sentence.", lit), stacklevel=2)
+            warn(LoadWarning("Describe the issue that was fixed while loading.", lit), stacklevel=2)
 
 Always use ``stacklevel=2`` when raising warnings.
 

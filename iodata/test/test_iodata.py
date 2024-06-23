@@ -58,7 +58,7 @@ def test_typecheck_raises():
 
 
 def test_unknown_format():
-    with pytest.raises(FileFormatError):
+    with pytest.raises(FileFormatError, match="Cannot find file format with feature"):
         load_one("foo.unknown_file_extension")
 
 

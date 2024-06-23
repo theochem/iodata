@@ -217,8 +217,8 @@ class BaseFileWarning(Warning):
         file: Optional[Union[str, Path, LineIterator, TextIO]] = None,
         lineno: Optional[int] = None,
     ):
-        self.filename, self.lineno = _interpret_file_lineno(file, lineno)
-        super().__init__(_format_file_message(message, self.filename, self.lineno))
+        filename, lineno = _interpret_file_lineno(file, lineno)
+        super().__init__(_format_file_message(message, filename, lineno))
 
 
 class LoadWarning(BaseFileWarning):

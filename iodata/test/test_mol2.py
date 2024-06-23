@@ -144,7 +144,7 @@ def test_load_dump_wrong_bond_num(tmpdir):
 def test_load_water_bonds_warning():
     with (
         as_file(files("iodata.test.data").joinpath("water.mol2")) as fn_mol,
-        pytest.warns(LoadWarning),
+        pytest.warns(LoadWarning, match="Cannot interpret bond type"),
     ):
         mol = load_one(fn_mol)
     assert_equal(mol.bonds, [[0, 1, bond2num["un"]], [0, 2, bond2num["un"]]])
