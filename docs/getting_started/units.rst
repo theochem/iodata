@@ -36,4 +36,4 @@ remembered with the following examples:
 - The conversion from atomic units is similar to axes labels in old papers.
   For example. a bond length in angstrom is printed as "Bond length / Å".
   Expressing this with IOData's conventions gives
-  ``print("Bond length in Angstrom:", bond_length /  angstrom)``
+  ``print("Bond length in Angstrom:", bond_length / angstrom)``
