@@ -137,6 +137,8 @@ def _reissue_warnings(func):
     """
 
     def inner(*args, **kwargs):
+        """Wrapper for func that reissues warnings."""
+        warning_list = []
         try:
             with warnings.catch_warnings(record=True) as warning_list:
                 result = func(*args, **kwargs)
