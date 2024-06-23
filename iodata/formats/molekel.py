@@ -261,22 +261,24 @@ def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
     return result
 
 
-def prepare_dump(data: IOData):
+def prepare_dump(filename: str, data: IOData):
     """Check the compatibility of the IOData object with the Molekel format.
 
     Parameters
     ----------
+    filename
+        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
     """
     if data.mo is None:
-        raise PrepareDumpError("The Molekel format requires molecular orbitals.")
+        raise PrepareDumpError("The Molekel format requires molecular orbitals.", filename)
     if data.obasis is None:
-        raise PrepareDumpError("The Molekel format requires an orbital basis set.")
+        raise PrepareDumpError("The Molekel format requires an orbital basis set.", filename)
     if data.mo.occs_aminusb is not None:
-        raise PrepareDumpError("Cannot write Molekel file when mo.occs_aminusb is set.")
+        raise PrepareDumpError("Cannot write Molekel file when mo.occs_aminusb is set.", filename)
     if data.mo.kind == "generalized":
-        raise PrepareDumpError("Cannot write Molekel file with generalized orbitals.")
+        raise PrepareDumpError("Cannot write Molekel file with generalized orbitals.", filename)
 
 
 @document_dump_one("Molekel", ["atcoords", "atnums", "mo", "obasis"], ["atcharges"])
@@ -373,7 +375,7 @@ def _dump_helper_coeffs(f, data, spin=None):
         ener = data.mo.energiesb
         irreps = data.mo.irreps[norb:] if data.mo.irreps is not None else ["a1g"] * norb
     else:
-        raise DumpError("A spin must be specified")
+        raise DumpError("A spin must be specified", f)
 
     for j in range(0, norb, 5):
         en = " ".join([f"   {e: ,.12f}" for e in ener[j : j + 5]])
@@ -399,7 +401,7 @@ def _dump_helper_occ(f, data, spin=None):
         norb = data.mo.norba
         occ = data.mo.occs
     else:
-        raise DumpError("A spin must be specified")
+        raise DumpError("A spin must be specified", f)
 
     for j in range(0, norb, 5):
         occs = " ".join([f"  {o: ,.7f}" for o in occ[j : j + 5]])

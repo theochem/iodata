@@ -571,7 +571,7 @@ from .. import __version__
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
-from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError
+from ..utils import DumpError, DumpWarning, LineIterator, LoadError, LoadWarning, PrepareDumpError
 
 __all__ = []
 
@@ -640,9 +640,11 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
     if "schema_name" not in result:
         # Attempt to determine schema type, since some QCElemental files omit this
         warn(
-            f"{lit.filename}: QCSchema files should have a `schema_name` key."
-            "Attempting to determine schema type...",
-            LoadWarning,
+            LoadWarning(
+                "QCSchema files should have a `schema_name` key."
+                "Attempting to determine schema type...",
+                lit.filename,
+            ),
             stacklevel=2,
         )
         # Geometry is required in any molecule schema
@@ -662,9 +664,11 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
             raise LoadError("Could not determine `schema_name`.", lit.filename)
     if "schema_version" not in result:
         warn(
-            f"{lit.filename}: QCSchema files should have a `schema_version` key."
-            "Attempting to load without version number.",
-            LoadWarning,
+            LoadWarning(
+                "QCSchema files should have a `schema_version` key."
+                "Attempting to load without version number.",
+                lit.filename,
+            ),
             stacklevel=2,
         )
 
@@ -754,8 +758,7 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     for key in should_be_required_keys:
         if key not in mol:
             warn(
-                f"{lit.filename}: QCSchema files should have a '{key}' key.",
-                LoadWarning,
+                LoadWarning(f"QCSchema files should have a '{key}' key.", lit.filename),
                 stacklevel=2,
             )
     for key in topology_keys:
@@ -778,10 +781,12 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     # Check for missing charge, warn that this is a required field
     if "molecular_charge" not in mol:
         warn(
-            "{}: Missing 'molecular_charge' key."
-            "Some QCSchema writers omit this key for default value 0.0,"
-            "Ensure this value is correct.",
-            LoadWarning,
+            LoadWarning(
+                "Missing 'molecular_charge' key."
+                "Some QCSchema writers omit this key for default value 0.0,"
+                "Ensure this value is correct.",
+                lit.filename,
+            ),
             stacklevel=2,
         )
         formal_charge = 0.0
@@ -793,10 +798,12 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     # Check for missing mult, warn that this is a required field
     if "molecular_multiplicity" not in mol:
         warn(
-            "{}: Missing 'molecular_multiplicity' key."
-            "Some QCSchema writers omit this key for default value 1,"
-            "Ensure this value is correct.",
-            LoadWarning,
+            LoadWarning(
+                "Missing 'molecular_multiplicity' key."
+                "Some QCSchema writers omit this key for default value 1,"
+                "Ensure this value is correct.",
+                lit.filename,
+            ),
             stacklevel=2,
         )
         topology_dict["spinpol"] = 0
@@ -817,9 +824,11 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     # Load atom masses to array, canonical weights assumed if masses not given
     if "masses" in mol and "mass_numbers" in mol:
         warn(
-            "{}: Both `masses` and `mass_numbers` given. "
-            "Both values will be written to `extra` dict.",
-            LoadWarning,
+            LoadWarning(
+                "Both `masses` and `mass_numbers` given. "
+                "Both values will be written to `extra` dict.",
+                lit.filename,
+            ),
             stacklevel=2,
         )
         extra_dict["mass_numbers"] = np.array(mol["mass_numbers"])
@@ -930,9 +939,10 @@ def _version_check(result: dict, max_version: float, schema_name: str, lit: Line
         version = -1
     if float(version) < 0 or float(version) > max_version:
         warn(
-            f"{lit.filename}: Unknown {schema_name} version {version}, "
-            "loading may produce invalid results",
-            LoadWarning,
+            LoadWarning(
+                f"Unknown {schema_name} version {version}, " "loading may produce invalid results",
+                lit.filename,
+            ),
             stacklevel=2,
         )
     return version
@@ -1073,8 +1083,7 @@ def _parse_input_keys(result: dict, lit: LineIterator) -> dict:
     for key in should_be_required_keys:
         if key not in result:
             warn(
-                f"{lit.filename}: QCSchema files should have a '{key}' key.",
-                LoadWarning,
+                LoadWarning(f"QCSchema files should have a '{key}' key.", lit.filename),
                 stacklevel=2,
             )
     for key in input_keys:
@@ -1206,15 +1215,19 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
     # QCEngineRecords doesn't give an empty string for basis-free methods, omits req'd key instead
     if "basis" not in model:
         warn(
-            f"{lit.filename}: Model `basis` key should be given. Assuming basis-free method.",
+            LoadWarning(
+                "Model `basis` key should be given. Assuming basis-free method.", lit.filename
+            ),
             stacklevel=2,
         )
     elif isinstance(model["basis"], str):
         if model["basis"] == "":
             warn(
-                f"{lit.filename}: QCSchema `basis` could not be read and will be omitted."
-                "Unless model is for a basis-free method, check input file.",
-                LoadWarning,
+                LoadWarning(
+                    "QCSchema `basis` could not be read and will be omitted."
+                    "Unless model is for a basis-free method, check input file.",
+                    lit.filename,
+                ),
                 stacklevel=2,
             )
         else:
@@ -1247,8 +1260,10 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
     """
     if "wavefunction" not in protocols:
         warn(
-            "{}: Protocols `wavefunction` key not specified, no properties will be kept.",
-            LoadWarning,
+            LoadWarning(
+                "Protocols `wavefunction` key not specified, no properties will be kept.",
+                lit.filename,
+            ),
             stacklevel=2,
         )
         wavefunction = "none"
@@ -1256,8 +1271,7 @@ def _parse_protocols(protocols: dict, lit: LineIterator) -> dict:
         wavefunction = protocols["wavefunction"]
     if "stdout" not in protocols:
         warn(
-            "{}: Protocols `stdout` key not specified, stdout will be kept.",
-            LoadWarning,
+            LoadWarning("Protocols `stdout` key not specified, stdout will be kept.", lit.filename),
             stacklevel=2,
         )
         keep_stdout = True
@@ -1333,8 +1347,7 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
     for key in should_be_required_keys:
         if key not in result:
             warn(
-                f"{lit.filename}: QCSchema files should have a '{key}' key.",
-                LoadWarning,
+                LoadWarning(f"QCSchema files should have a '{key}' key.", lit.filename),
                 stacklevel=2,
             )
     for key in output_keys:
@@ -1433,20 +1446,24 @@ def _parse_provenance(
     return base_provenance
 
 
-def prepare_dump(data: IOData):
+def prepare_dump(filename: str, data: IOData):
     """Check the compatibility of the IOData object with QCScheme.
 
     Parameters
     ----------
+    filename
+        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
 
     """
     if "schema_name" not in data.extra:
-        raise PrepareDumpError("Cannot write qcschema file without 'schema_name' defined.")
+        raise PrepareDumpError(
+            "Cannot write qcschema file without 'schema_name' defined.", filename
+        )
     schema_name = data.extra["schema_name"]
     if schema_name == "qcschema_basis":
-        raise PrepareDumpError(f"{schema_name} not yet implemented in IOData.")
+        raise PrepareDumpError(f"{schema_name} not yet implemented in IOData.", filename)
 
 
 @document_dump_one(
@@ -1459,27 +1476,30 @@ def dump_one(f: TextIO, data: IOData):
     schema_name = data.extra["schema_name"]
 
     if schema_name == "qcschema_molecule":
-        return_dict = _dump_qcschema_molecule(data)
+        return_dict = _dump_qcschema_molecule(f, data)
     elif schema_name == "qcschema_basis":
         raise NotImplementedError(f"{schema_name} not yet implemented in IOData.")
-        # return_dict = _dump_qcschema_basis(data)
+        # return_dict = _dump_qcschema_basis(f, data)
     elif schema_name == "qcschema_input":
-        return_dict = _dump_qcschema_input(data)
+        return_dict = _dump_qcschema_input(f, data)
     elif schema_name == "qcschema_output":
-        return_dict = _dump_qcschema_output(data)
+        return_dict = _dump_qcschema_output(f, data)
     else:
         raise DumpError(
             "'schema_name' must be one of 'qcschema_molecule', 'qcschema_basis'"
-            "'qcschema_input' or 'qcschema_output'."
+            "'qcschema_input' or 'qcschema_output'.",
+            f,
         )
     json.dump(return_dict, f, indent=4)
 
 
-def _dump_qcschema_molecule(data: IOData) -> dict:
+def _dump_qcschema_molecule(f: TextIO, data: IOData) -> dict:
     """Dump relevant attributes from IOData to :ref:`qcschema_molecule <json_schema_molecule>`.
 
     Parameters
     ----------
+    f
+        The file being written, used for error and warning messages only.
     data
         The IOData instance to dump to file.
 
@@ -1493,16 +1513,18 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
 
     # Gather required field data
     if data.atnums is None or data.atcoords is None:
-        raise DumpError("qcschema_molecule requires `atnums` and `atcoords` fields.")
+        raise DumpError("qcschema_molecule requires `atnums` and `atcoords` fields.", f)
     molecule_dict["symbols"] = [num2sym[num] for num in data.atnums]
     molecule_dict["geometry"] = list(data.atcoords.flatten())
 
     # Should be required field data
     if data.charge is None or data.spinpol is None:
         warn(
-            "`charge` and `spinpol` should be given to write qcschema_molecule file:"
-            "QCSchema defaults to charge = 0 and multiplicity = 1 if no values given.",
-            LoadWarning,
+            DumpWarning(
+                "`charge` and `spinpol` should be given to write qcschema_molecule file:"
+                "QCSchema defaults to charge = 0 and multiplicity = 1 if no values given.",
+                f,
+            ),
             stacklevel=2,
         )
     if data.charge is not None:
@@ -1554,7 +1576,7 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
         molecule_dict["fix_com"] = data.extra["molecule"]["fix_com"]
     if "fix_orientation" in data.extra["molecule"]:
         molecule_dict["fix_orientation"] = data.extra["molecule"]["fix_orientation"]
-    molecule_dict["provenance"] = _dump_provenance(data, "molecule")
+    molecule_dict["provenance"] = _dump_provenance(f, data, "molecule")
     if "id" in data.extra["molecule"]:
         molecule_dict["id"] = data.extra["molecule"]["id"]
     if "extras" in data.extra["molecule"]:
@@ -1566,13 +1588,15 @@ def _dump_qcschema_molecule(data: IOData) -> dict:
     return molecule_dict
 
 
-def _dump_provenance(data: IOData, source: str) -> Union[list[dict], dict]:
+def _dump_provenance(f: TextIO, data: IOData, source: str) -> Union[list[dict], dict]:
     """Generate the :ref:`provenance <json_schema_provenance>` information.
 
     This is used when dumping an IOData instance to QCSchema.
 
     Parameters
     ----------
+    f
+        The file being written, used for error and warning messages only.
     data
         The IOData instance to dump to file.
     source
@@ -1596,11 +1620,11 @@ def _dump_provenance(data: IOData, source: str) -> Union[list[dict], dict]:
         if isinstance(provenance, list):
             provenance.append(new_provenance)
             return provenance
-        raise DumpError("QCSchema provenance must be either a dict or list of dicts.")
+        raise DumpError("QCSchema provenance must be either a dict or list of dicts.", f)
     return new_provenance
 
 
-def _dump_qcschema_input(data: IOData) -> dict:
+def _dump_qcschema_input(f: TextIO, data: IOData) -> dict:
     """Dump relevant attributes from IOData to :ref:`qcschema_input <json_schema_input>`.
 
     Using this function requires keywords to be stored in two locations in the ``extra`` dict:
@@ -1609,6 +1633,8 @@ def _dump_qcschema_input(data: IOData) -> dict:
 
     Parameters
     ----------
+    f
+        The file being written, used for error and warning messages only.
     data
         The IOData instance to dump to file.
 
@@ -1621,19 +1647,19 @@ def _dump_qcschema_input(data: IOData) -> dict:
     input_dict = {"schema_name": "qcschema_input", "schema_version": 2.0}
 
     # Gather required field data
-    input_dict["molecule"] = _dump_qcschema_molecule(data)
+    input_dict["molecule"] = _dump_qcschema_molecule(f, data)
     if "driver" not in data.extra["input"]:
-        raise DumpError("qcschema_input requires `driver` field in extra['input'].")
+        raise DumpError("qcschema_input requires `driver` field in extra['input'].", f)
     if data.extra["input"]["driver"] not in {"energy", "gradient", "hessian", "properties"}:
         raise DumpError(
-            "QCSchema driver must be one of `energy`, `gradient`, `hessian`, or `properties`"
+            "QCSchema driver must be one of `energy`, `gradient`, `hessian`, or `properties`", f
         )
     input_dict["driver"] = data.extra["input"]["driver"]
     if "model" not in data.extra["input"]:
-        raise DumpError("qcschema_input requires `model` field in extra['input'].")
+        raise DumpError("qcschema_input requires `model` field in extra['input'].", f)
     input_dict["model"] = {}
     if data.lot is None:
-        raise DumpError("qcschema_input requires specifed `lot`.")
+        raise DumpError("qcschema_input requires specifed `lot`.", f)
     input_dict["model"]["method"] = data.lot
     if data.obasis_name is None and "basis" not in data.extra["input"]["model"]:
         input_dict["model"]["basis"] = ""
@@ -1651,7 +1677,7 @@ def _dump_qcschema_input(data: IOData) -> dict:
         # Remove 'keep_' from protocols keys (added in IOData for readability)
         for keep in data.extra["input"]["protocols"]:
             input_dict["protocols"][keep[5:]] = data.extra["input"]["protocols"][keep]
-    input_dict["provenance"] = _dump_provenance(data, "input")
+    input_dict["provenance"] = _dump_provenance(f, data, "input")
     if "unparsed" in data.extra["input"]:
         for k in data.extra["input"]["unparsed"]:
             input_dict[k] = data.extra["input"]["unparsed"][k]
@@ -1659,7 +1685,7 @@ def _dump_qcschema_input(data: IOData) -> dict:
     return input_dict
 
 
-def _dump_qcschema_output(data: IOData) -> dict:
+def _dump_qcschema_output(f: TextIO, data: IOData) -> dict:
     """Dump relevant attributes from IOData to :ref:`qcschema_output <json_schema_output>`.
 
     Using this function requires keywords to be stored in three locations in the ``extra`` dict:
@@ -1668,6 +1694,8 @@ def _dump_qcschema_output(data: IOData) -> dict:
 
     Parameters
     ----------
+    f
+        The file being written, used for error and warning messages only.
     data
         The IOData instance to dump to file.
 
@@ -1681,39 +1709,41 @@ def _dump_qcschema_output(data: IOData) -> dict:
 
     # Gather required field data
     # Gather required field data
-    output_dict["molecule"] = _dump_qcschema_molecule(data)
+    output_dict["molecule"] = _dump_qcschema_molecule(f, data)
     if "driver" not in data.extra["input"]:
-        raise DumpError("qcschema_output requires `driver` field in extra['input'].")
+        raise DumpError("qcschema_output requires `driver` field in extra['input'].", f)
     if data.extra["input"]["driver"] not in {"energy", "gradient", "hessian", "properties"}:
         raise DumpError(
-            "QCSchema driver must be one of `energy`, `gradient`, `hessian`, or `properties`"
+            "QCSchema driver must be one of `energy`, `gradient`, `hessian`, or `properties`", f
         )
     output_dict["driver"] = data.extra["input"]["driver"]
     if "model" not in data.extra["input"]:
-        raise DumpError("qcschema_output requires `model` field in extra['input'].")
+        raise DumpError("qcschema_output requires `model` field in extra['input'].", f)
     output_dict["model"] = {}
     if data.lot is None:
-        raise DumpError("qcschema_output requires specifed `lot`.")
+        raise DumpError("qcschema_output requires specifed `lot`.", f)
     output_dict["model"]["method"] = data.lot
     if data.obasis_name is None and "basis" not in data.extra["input"]["model"]:
         warn(
-            "No basis name given. QCSchema assumes this signifies a basis-free method; to"
-            "avoid this warning, specify `obasis_name` as an empty string.",
-            LoadWarning,
+            DumpWarning(
+                "No basis name given. QCSchema assumes this signifies a basis-free method; to"
+                "avoid this warning, specify `obasis_name` as an empty string.",
+                f,
+            ),
             stacklevel=2,
         )
     if "basis" in data.extra["input"]["model"]:
         raise NotImplementedError("qcschema_basis is not yet supported in IOData.")
     output_dict["model"]["basis"] = data.obasis_name
     if "properties" not in data.extra["output"]:
-        raise DumpError("qcschema_output requires `properties` field in extra['output'].")
+        raise DumpError("qcschema_output requires `properties` field in extra['output'].", f)
     output_dict["properties"] = data.extra["output"]["properties"]
     if data.energy is not None:
         output_dict["properties"]["return_energy"] = data.energy
         if output_dict["driver"] == "energy":
             output_dict["return_result"] = data.energy
     if "return_result" not in output_dict and "return_result" not in data.extra["output"]:
-        raise DumpError("qcschema_output requires `return_result` field in extra['output'].")
+        raise DumpError("qcschema_output requires `return_result` field in extra['output'].", f)
     if "return_result" in data.extra["output"]:
         output_dict["return_result"] = data.extra["output"]["return_result"]
     if "keywords" in data.extra["input"]:
@@ -1735,7 +1765,7 @@ def _dump_qcschema_output(data: IOData) -> dict:
         output_dict["stderr"] = data.extra["output"]["stdout"]
     if "wavefunction" in data.extra["output"]:
         output_dict["wavefunction"] = data.extra["output"]["wavefunction"]
-    output_dict["provenance"] = _dump_provenance(data, "input")
+    output_dict["provenance"] = _dump_provenance(f, data, "input")
     if "unparsed" in data.extra["input"]:
         for k in data.extra["input"]["unparsed"]:
             output_dict[k] = data.extra["input"]["unparsed"][k]

@@ -170,6 +170,23 @@ If your code has already read the full file and encounters an error when process
 you can use ``raise LoadError("Describe problem in a sentence.", lit.filename)`` instead.
 This way, no line number is included in the error message.
 
+Sometimes, it is possible to correct errors while reading a file.
+In this case, you should warn the user that the file contains (fixable) errors:
+
+.. code-block:: python
+
+    from warnings import warn
+
+    from ..utils import LoadWarning
+
+    @document_load_one(...)
+    def load_one(lit: LineIterator) -> dict:
+        ...
+        if something_fixed:
+            warn(LoadWarning("Describe the problem in a sentence.", lit), stacklevel=2)
+
+Always use ``stacklevel=2`` when raising warnings.
+
 
 ``dump_one`` functions: writing a single IOData object to a file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

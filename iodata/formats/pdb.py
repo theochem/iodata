@@ -25,6 +25,7 @@ http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html
 
 from collections.abc import Iterator
 from typing import TextIO
+from warnings import warn
 
 import numpy as np
 
@@ -36,7 +37,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import bond2num, num2sym, sym2num
-from ..utils import LineIterator, LoadError, angstrom
+from ..utils import LineIterator, LoadError, LoadWarning, angstrom
 
 __all__ = []
 
@@ -101,10 +102,18 @@ def _parse_pdb_atom_line(line, lit):
         # If not present, guess it from position 13:16 (atom name)
         atname = line[12:16].strip()
         atnum = sym2num.get(atname, sym2num.get(atname[:2].title(), sym2num.get(atname[0], None)))
-        lit.warn("Using the atom name in the PDB file to guess the chemical element.")
+        warn(
+            LoadWarning("Using the atom name in the PDB file to guess the chemical element.", lit),
+            stacklevel=2,
+        )
     if atnum is None:
         atnum = 0
-        lit.warn(f"Failed to determine the atomic number. atname='{atname}' symbol='{symbol}'")
+        warn(
+            LoadWarning(
+                f"Failed to determine the atomic number. atname='{atname}' symbol='{symbol}'", lit
+            ),
+            stacklevel=2,
+        )
 
     # atom name, residue name, chain id, & residue sequence number
     atname = line[12:16].strip()
@@ -190,7 +199,9 @@ def load_one(lit: LineIterator) -> dict:
     if not molecule_found:
         raise LoadError("Molecule could not be read.", lit)
     if not end_reached:
-        lit.warn("The END is not found, but the parsed data is returned.")
+        warn(
+            LoadWarning("The END is not found, but the parsed data is returned.", lit), stacklevel=2
+        )
 
     # Data related to force fields
     atffparams = {

@@ -24,6 +24,7 @@ was the main objective to write out files with atomic charges used by antechambe
 
 from collections.abc import Iterator
 from typing import TextIO
+from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
@@ -36,7 +37,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import bond2num, num2bond, num2sym, sym2num
-from ..utils import LineIterator, LoadError, angstrom
+from ..utils import LineIterator, LoadError, LoadWarning, angstrom
 
 __all__ = []
 
@@ -100,7 +101,7 @@ def _load_helper_atoms(
         atnum = sym2num.get(symbol, sym2num.get(symbol[0], None))
         if atnum is None:
             atnum = 0
-            lit.warn(f"Can not convert {words[1][:2]} to elements")
+            warn(LoadWarning(f"Cannot interpret element symbol {words[1][:2]}", lit), stacklevel=2)
         atnums[i] = atnum
         attypes.append(words[5])
         atcoords[i] = [float(words[2]), float(words[3]), float(words[4])]
@@ -131,11 +132,11 @@ def _load_helper_bonds(lit: LineIterator, nbonds: int) -> NDArray[int]:
             int(words[1]) - 1,
             int(words[2]) - 1,
             # convert mol2 bond type to integer
-            bond2num.get(words[3], bond2num["un"]),
+            bond2num.get(words[3]),
         ]
-        if bond is None:
-            bond = [0, 0, 0]
-            lit.warn(f"Something wrong in the bond section: {bond}")
+        if bond[-1] is None:
+            bond[-1] = bond2num["un"]
+            warn(LoadWarning(f"Cannot interpret bond type {words[3]}", lit), stacklevel=2)
         bonds[i] = bond
     return bonds
 
