@@ -71,7 +71,7 @@ User Documentation
 
    install
    how_to_cite
-   getting_started
+   getting_started/index
    formats
    inputs
    basis
