@@ -23,12 +23,12 @@
 Getting Started
 ===============
 
-IOData can be used to read and write different quantum chemistry file formats.
+IOData can be used to read and write various quantum chemistry file formats.
 
-One may use the ``iodata-convert`` script for simple conversions.
+The ``iodata-convert`` script can be used for simple conversions.
 More complex use cases can be implemented in Python,
-which allow you to access all loaded data as Python objects that can be modified or updated
-before writing to a new file.
+allowing you to access all loaded data as Python objects
+that can be modified or updated before writing to a new file.
 
 
 .. toctree::
