@@ -641,7 +641,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
         # Attempt to determine schema type, since some QCElemental files omit this
         warn(
             LoadWarning(
-                "QCSchema files should have a `schema_name` key."
+                "QCSchema files should have a `schema_name` key. "
                 "Attempting to determine schema type...",
                 lit.filename,
             ),
@@ -665,7 +665,7 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
     if "schema_version" not in result:
         warn(
             LoadWarning(
-                "QCSchema files should have a `schema_version` key."
+                "QCSchema files should have a `schema_version` key. "
                 "Attempting to load without version number.",
                 lit.filename,
             ),
@@ -782,8 +782,8 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     if "molecular_charge" not in mol:
         warn(
             LoadWarning(
-                "Missing 'molecular_charge' key."
-                "Some QCSchema writers omit this key for default value 0.0,"
+                "Missing 'molecular_charge' key. "
+                "Some QCSchema writers omit this key for default value 0.0. "
                 "Ensure this value is correct.",
                 lit.filename,
             ),
@@ -799,8 +799,8 @@ def _parse_topology_keys(mol: dict, lit: LineIterator) -> dict:
     if "molecular_multiplicity" not in mol:
         warn(
             LoadWarning(
-                "Missing 'molecular_multiplicity' key."
-                "Some QCSchema writers omit this key for default value 1,"
+                "Missing 'molecular_multiplicity' key. "
+                "Some QCSchema writers omit this key for default value 1. "
                 "Ensure this value is correct.",
                 lit.filename,
             ),
@@ -940,7 +940,7 @@ def _version_check(result: dict, max_version: float, schema_name: str, lit: Line
     if float(version) < 0 or float(version) > max_version:
         warn(
             LoadWarning(
-                f"Unknown {schema_name} version {version}, " "loading may produce invalid results",
+                f"Unknown {schema_name} version {version}, loading may produce invalid results",
                 lit.filename,
             ),
             stacklevel=2,
@@ -1224,7 +1224,7 @@ def _parse_model(model: dict, lit: LineIterator) -> dict:
         if model["basis"] == "":
             warn(
                 LoadWarning(
-                    "QCSchema `basis` could not be read and will be omitted."
+                    "QCSchema `basis` could not be read and will be omitted. "
                     "Unless model is for a basis-free method, check input file.",
                     lit.filename,
                 ),
@@ -1486,7 +1486,7 @@ def dump_one(f: TextIO, data: IOData):
         return_dict = _dump_qcschema_output(f, data)
     else:
         raise DumpError(
-            "'schema_name' must be one of 'qcschema_molecule', 'qcschema_basis'"
+            "'schema_name' must be one of 'qcschema_molecule', 'qcschema_basis' "
             "'qcschema_input' or 'qcschema_output'.",
             f,
         )
@@ -1521,7 +1521,7 @@ def _dump_qcschema_molecule(f: TextIO, data: IOData) -> dict:
     if data.charge is None or data.spinpol is None:
         warn(
             DumpWarning(
-                "`charge` and `spinpol` should be given to write qcschema_molecule file:"
+                "`charge` and `spinpol` should be given to write qcschema_molecule file: "
                 "QCSchema defaults to charge = 0 and multiplicity = 1 if no values given.",
                 f,
             ),
@@ -1726,8 +1726,8 @@ def _dump_qcschema_output(f: TextIO, data: IOData) -> dict:
     if data.obasis_name is None and "basis" not in data.extra["input"]["model"]:
         warn(
             DumpWarning(
-                "No basis name given. QCSchema assumes this signifies a basis-free method; to"
-                "avoid this warning, specify `obasis_name` as an empty string.",
+                "No basis name given. QCSchema assumes this signifies a basis-free method; "
+                "to avoid this warning, specify `obasis_name` as an empty string.",
                 f,
             ),
             stacklevel=2,
