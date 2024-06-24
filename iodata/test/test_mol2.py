@@ -26,7 +26,7 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_many, dump_one, load_many, load_one
 from ..periodic import bond2num
-from ..utils import LoadError, angstrom
+from ..utils import LoadError, LoadWarning, angstrom
 from .common import truncated_file
 
 
@@ -139,3 +139,12 @@ def test_load_dump_wrong_bond_num(tmpdir):
     dump_one(mol, fn_tmp)
     mol2 = load_one(fn_tmp)
     assert mol2.bonds[0][2] == bond2num["un"]
+
+
+def test_load_water_bonds_warning():
+    with (
+        as_file(files("iodata.test.data").joinpath("water.mol2")) as fn_mol,
+        pytest.warns(LoadWarning, match="Cannot interpret bond type"),
+    ):
+        mol = load_one(fn_mol)
+    assert_equal(mol.bonds, [[0, 1, bond2num["un"]], [0, 2, bond2num["un"]]])

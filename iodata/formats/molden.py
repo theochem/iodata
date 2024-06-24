@@ -27,6 +27,7 @@ errors are corrected when loading them with IOData.
 
 import copy
 from typing import TextIO, Union
+from warnings import warn
 
 import attrs
 import numpy as np
@@ -45,7 +46,7 @@ from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
 from ..periodic import num2sym, sym2num
-from ..utils import DumpError, LineIterator, LoadError, PrepareDumpError, angstrom
+from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, angstrom
 
 __all__ = []
 
@@ -676,7 +677,10 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
     # --- ORCA
     orca_obasis = _fix_obasis_orca(obasis)
     if _is_normalized_properly(orca_obasis, atcoords, coeffsa, coeffsb, norm_threshold):
-        lit.warn("Corrected for typical ORCA errors in Molden/MKL file.")
+        warn(
+            LoadWarning("Corrected for typical ORCA errors in Molden/MKL file.", lit.filename),
+            stacklevel=2,
+        )
         result["obasis"] = orca_obasis
         return
 
@@ -685,7 +689,10 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
     if psi4_obasis is not None and _is_normalized_properly(
         psi4_obasis, atcoords, coeffsa, coeffsb, norm_threshold
     ):
-        lit.warn("Corrected for PSI4 < 1.0 errors in Molden/MKL file.")
+        warn(
+            LoadWarning("Corrected for PSI4 < 1.0 errors in Molden/MKL file.", lit.filename),
+            stacklevel=2,
+        )
         result["obasis"] = psi4_obasis
         return
 
@@ -694,7 +701,10 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
     if turbom_obasis is not None and _is_normalized_properly(
         turbom_obasis, atcoords, coeffsa, coeffsb, norm_threshold
     ):
-        lit.warn("Corrected for Turbomole errors in Molden/MKL file.")
+        warn(
+            LoadWarning("Corrected for Turbomole errors in Molden/MKL file.", lit.filename),
+            stacklevel=2,
+        )
         result["obasis"] = turbom_obasis
         return
 
@@ -704,7 +714,10 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
         coeffsa_cfour = coeffsa / cfour_coeff_correction[:, np.newaxis]
         coeffsb_cfour = None if coeffsb is None else coeffsb / cfour_coeff_correction[:, np.newaxis]
         if _is_normalized_properly(obasis, atcoords, coeffsa_cfour, coeffsb_cfour, norm_threshold):
-            lit.warn("Corrected for CFOUR 2.1 errors in Molden/MKL file.")
+            warn(
+                LoadWarning("Corrected for CFOUR 2.1 errors in Molden/MKL file.", lit.filename),
+                stacklevel=2,
+            )
             result["obasis"] = obasis
             if result["mo"].kind == "restricted":
                 result["mo"].coeffs[:] = coeffsa_cfour
@@ -716,7 +729,12 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
     # --- Renormalized contractions
     normed_obasis = _fix_obasis_normalize_contractions(obasis)
     if _is_normalized_properly(normed_obasis, atcoords, coeffsa, coeffsb, norm_threshold):
-        lit.warn("Corrected for unnormalized contractions in Molden/MKL file.")
+        warn(
+            LoadWarning(
+                "Corrected for unnormalized contractions in Molden/MKL file.", lit.filename
+            ),
+            stacklevel=2,
+        )
         result["obasis"] = normed_obasis
         return
 
@@ -728,7 +746,10 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
         if _is_normalized_properly(
             normed_obasis, atcoords, coeffsa_psi4, coeffsb_psi4, norm_threshold
         ):
-            lit.warn("Corrected for PSI4 <= 1.3.2 errors in Molden/MKL file.")
+            warn(
+                LoadWarning("Corrected for PSI4 <= 1.3.2 errors in Molden/MKL file.", lit.filename),
+                stacklevel=2,
+            )
             result["obasis"] = normed_obasis
             if result["mo"].kind == "restricted":
                 result["mo"].coeffs[:] = coeffsa_psi4
@@ -747,22 +768,24 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
     )
 
 
-def prepare_dump(data: IOData):
+def prepare_dump(filename: str, data: IOData):
     """Check the compatibility of the IOData object with the Molden format.
 
     Parameters
     ----------
+    filename
+        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
     """
     if data.mo is None:
-        raise PrepareDumpError("The Molden format requires molecular orbitals.")
+        raise PrepareDumpError("The Molden format requires molecular orbitals.", filename)
     if data.obasis is None:
-        raise PrepareDumpError("The Molden format requires an orbital basis set.")
+        raise PrepareDumpError("The Molden format requires an orbital basis set.", filename)
     if data.mo.occs_aminusb is not None:
-        raise PrepareDumpError("Cannot write Molden file when mo.occs_aminusb is set.")
+        raise PrepareDumpError("Cannot write Molden file when mo.occs_aminusb is set.", filename)
     if data.mo.kind == "generalized":
-        raise PrepareDumpError("Cannot write Molden file with generalized orbitals.")
+        raise PrepareDumpError("Cannot write Molden file with generalized orbitals.", filename)
 
 
 @document_dump_one("Molden", ["atcoords", "atnums", "mo", "obasis"], ["atcorenums", "title"])
@@ -800,7 +823,8 @@ def dump_one(f: TextIO, data: IOData):
                 if kind != angmom_kinds[angmom]:
                     raise DumpError(
                         "Molden format does not support mixed pure+Cartesian functions for one "
-                        "angular momentum."
+                        "angular momentum.",
+                        f,
                     )
             else:
                 angmom_kinds[angmom] = kind

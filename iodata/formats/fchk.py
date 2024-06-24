@@ -542,28 +542,32 @@ def _dump_real_arrays(name: str, val: NDArray[float], f: TextIO):
                 k = 0
 
 
-def prepare_dump(data: IOData):
+def prepare_dump(filename: str, data: IOData):
     """Check the compatibility of the IOData object with the FCHK format.
 
     Parameters
     ----------
+    filename
+        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
     """
     if data.mo is not None:
         if data.mo.kind == "generalized":
-            raise PrepareDumpError("Cannot write FCHK file with generalized orbitals.")
+            raise PrepareDumpError("Cannot write FCHK file with generalized orbitals.", filename)
         na = int(np.round(np.sum(data.mo.occsa)))
         if not ((data.mo.occsa[:na] == 1.0).all() and (data.mo.occsa[na:] == 0.0).all()):
             raise PrepareDumpError(
                 "Cannot dump FCHK because it does not have fully occupied alpha orbitals "
-                "followed by fully virtual ones."
+                "followed by fully virtual ones.",
+                filename,
             )
         nb = int(np.round(np.sum(data.mo.occsb)))
         if not ((data.mo.occsb[:nb] == 1.0).all() and (data.mo.occsb[nb:] == 0.0).all()):
             raise PrepareDumpError(
                 "Cannot dump FCHK because it does not have fully occupied beta orbitals "
-                "followed by fully virtual ones."
+                "followed by fully virtual ones.",
+                filename,
             )
 
 
@@ -643,7 +647,7 @@ def dump_one(f: TextIO, data: IOData):
             elif shell.ncon == 2 and shell.angmoms == [0, 1]:
                 shell_types.append(-1)
             else:
-                raise DumpError("Cannot identify type of shell!")
+                raise DumpError("Cannot identify type of shell!", f)
 
         num_pure_d_shells = sum([1 for st in shell_types if st == 2])
         num_pure_f_shells = sum([1 for st in shell_types if st == 3])

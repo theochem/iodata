@@ -27,6 +27,7 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import IOData, load_one
 from ..overlap import compute_overlap
+from ..utils import FileFormatError
 from .common import compute_1rdm
 
 
@@ -57,7 +58,8 @@ def test_typecheck_raises():
 
 
 def test_unknown_format():
-    pytest.raises(ValueError, load_one, "foo.unknown_file_extension")
+    with pytest.raises(FileFormatError, match="Cannot find file format with feature"):
+        load_one("foo.unknown_file_extension")
 
 
 def test_dm_water_sto3g_hf():

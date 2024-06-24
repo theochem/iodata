@@ -19,6 +19,7 @@
 """Functions to be used by end users."""
 
 import os
+import warnings
 from collections.abc import Iterable, Iterator
 from fnmatch import fnmatch
 from importlib import import_module
@@ -84,7 +85,7 @@ def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = Non
                 return format_module
     else:
         return FORMAT_MODULES[fmt]
-    raise FileFormatError(f"Could not find file format with feature {attrname} for file {filename}")
+    raise FileFormatError(f"Cannot find file format with feature {attrname}", filename)
 
 
 def _find_input_modules():
@@ -101,11 +102,13 @@ def _find_input_modules():
 INPUT_MODULES = _find_input_modules()
 
 
-def _select_input_module(fmt: str) -> ModuleType:
+def _select_input_module(filename: str, fmt: str) -> ModuleType:
     """Find an input module.
 
     Parameters
     ----------
+    filename
+        The file to be written to, only used for error messages.
     fmt
         The name of the input module to use.
 
@@ -121,11 +124,33 @@ def _select_input_module(fmt: str) -> ModuleType:
     """
     if fmt in INPUT_MODULES:
         if not hasattr(INPUT_MODULES[fmt], "write_input"):
-            raise FileFormatError(f"{fmt} input module does not have write_input.")
+            raise FileFormatError(f"{fmt} input module does not have write_input.", filename)
         return INPUT_MODULES[fmt]
-    raise FileFormatError(f"Could not find input format {fmt}.")
+    raise FileFormatError(f"Cannot find input format {fmt}.", filename)
 
 
+def _reissue_warnings(func):
+    """Correct stacklevel of warnings raised in functions called deeper in IOData.
+
+    This function should be used as a decorator of end-user API functions.
+    Adapted from https://stackoverflow.com/a/71635963/494584
+    """
+
+    def inner(*args, **kwargs):
+        """Wrapper for func that reissues warnings."""
+        warning_list = []
+        try:
+            with warnings.catch_warnings(record=True) as warning_list:
+                result = func(*args, **kwargs)
+        finally:
+            for warning in warning_list:
+                warnings.warn(warning.message, warning.category, stacklevel=2)
+        return result
+
+    return inner
+
+
+@_reissue_warnings
 def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
     """Load data from a file.
 
@@ -151,16 +176,16 @@ def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
     format_module = _select_format_module(filename, "load_one", fmt)
     with LineIterator(filename) as lit:
         try:
-            iodata = IOData(**format_module.load_one(lit, **kwargs))
+            return IOData(**format_module.load_one(lit, **kwargs))
         except LoadError:
             raise
         except StopIteration as exc:
             raise LoadError("File ended before all data was read.", lit) from exc
         except Exception as exc:
             raise LoadError("Uncaught exception while loading file.", lit) from exc
-    return iodata
 
 
+@_reissue_warnings
 def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IOData]:
     """Load multiple IOData instances from a file.
 
@@ -197,11 +222,13 @@ def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IO
             raise LoadError("Uncaught exception while loading file.", lit) from exc
 
 
-def _check_required(iodata: IOData, dump_func: Callable):
+def _check_required(filename: str, iodata: IOData, dump_func: Callable):
     """Check that required attributes are not None before dumping to a file.
 
     Parameters
     ----------
+    filename
+        The file to be dumped to, only used for error messages.
     iodata
         The data to be written.
     dump_func
@@ -215,10 +242,11 @@ def _check_required(iodata: IOData, dump_func: Callable):
     for attr_name in dump_func.required:
         if getattr(iodata, attr_name) is None:
             raise PrepareDumpError(
-                f"Required attribute {attr_name}, for format {dump_func.fmt}, is None."
+                f"Required attribute {attr_name}, for format {dump_func.fmt}, is None.", filename
             )
 
 
+@_reissue_warnings
 def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs):
     """Write data to a file.
 
@@ -251,14 +279,14 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
     """
     format_module = _select_format_module(filename, "dump_one", fmt)
     try:
-        _check_required(iodata, format_module.dump_one)
+        _check_required(filename, iodata, format_module.dump_one)
         if hasattr(format_module, "prepare_dump"):
-            format_module.prepare_dump(iodata)
+            format_module.prepare_dump(filename, iodata)
     except PrepareDumpError:
         raise
     except Exception as exc:
         raise PrepareDumpError(
-            f"{filename}: Uncaught exception while preparing for dumping to a file"
+            "Uncaught exception while preparing for dumping to a file.", filename
         ) from exc
     with open(filename, "w") as f:
         try:
@@ -266,9 +294,10 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
         except DumpError:
             raise
         except Exception as exc:
-            raise DumpError(f"{filename}: Uncaught exception while dumping to a file") from exc
+            raise DumpError("Uncaught exception while dumping to a file", filename) from exc
 
 
+@_reissue_warnings
 def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = None, **kwargs):
     """Write multiple IOData instances to a file.
 
@@ -309,16 +338,16 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
     try:
         first = next(iter_iodatas)
     except StopIteration as exc:
-        raise DumpError(f"{filename}: dump_many needs at least one iodata object.") from exc
+        raise DumpError("dump_many needs at least one iodata object.", filename) from exc
     try:
-        _check_required(first, format_module.dump_many)
+        _check_required(filename, first, format_module.dump_many)
         if hasattr(format_module, "prepare_dump"):
-            format_module.prepare_dump(first)
+            format_module.prepare_dump(filename, first)
     except PrepareDumpError:
         raise
     except Exception as exc:
         raise PrepareDumpError(
-            f"{filename}: Uncaught exception while preparing for dumping to a file"
+            "Uncaught exception while preparing for dumping to a file.", filename
         ) from exc
 
     def checking_iterator():
@@ -326,9 +355,9 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
         # The first one was already checked.
         yield first
         for other in iter_iodatas:
-            _check_required(other, format_module.dump_many)
+            _check_required(filename, other, format_module.dump_many)
             if hasattr(format_module, "prepare_dump"):
-                format_module.prepare_dump(other)
+                format_module.prepare_dump(filename, other)
             yield other
 
     with open(filename, "w") as f:
@@ -337,9 +366,10 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
         except (PrepareDumpError, DumpError):
             raise
         except Exception as exc:
-            raise DumpError(f"{filename}: Uncaught exception while dumping to a file") from exc
+            raise DumpError("Uncaught exception while dumping to a file.", filename) from exc
 
 
+@_reissue_warnings
 def write_input(
     iodata: IOData,
     filename: str,
@@ -370,11 +400,11 @@ def write_input(
         Keyword arguments are passed on to the input-specific write_input function.
 
     """
-    input_module = _select_input_module(fmt)
+    input_module = _select_input_module(filename, fmt)
     with open(filename, "w") as fh:
         try:
             input_module.write_input(fh, iodata, template, atom_line, **kwargs)
         except Exception as exc:
             raise WriteInputError(
-                f"{filename}: Uncaught exception while writing an input file"
+                "Uncaught exception while writing an input file.", filename
             ) from exc

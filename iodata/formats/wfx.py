@@ -21,9 +21,9 @@
 See http://aim.tkgristmill.com/wfxformat.html
 """
 
-import warnings
 from collections.abc import Iterator
 from typing import Optional, TextIO
+from warnings import warn
 
 import numpy as np
 
@@ -32,7 +32,7 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
-from ..utils import LineIterator, LoadError, PrepareDumpError
+from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError
 from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
 __all__ = []
@@ -142,7 +142,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
         elif key in lbs_other:
             result[lbs_other[key]] = value
         else:
-            warnings.warn(f"Not recognized section label, skip {key}", stacklevel=2)
+            warn(LoadWarning(f"Not recognized section label, skip {key}", lit), stacklevel=2)
 
     # reshape some arrays
     result["atcoords"] = result["atcoords"].reshape(-1, 3)
@@ -329,25 +329,29 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
-def prepare_dump(data: IOData):
+def prepare_dump(filename: str, data: IOData):
     """Check the compatibility of the IOData object with the WFX format.
 
     Parameters
     ----------
+    filename
+        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
     """
     if data.mo is None:
-        raise PrepareDumpError("The WFX format requires molecular orbitals.")
+        raise PrepareDumpError("The WFX format requires molecular orbitals.", filename)
     if data.obasis is None:
-        raise PrepareDumpError("The WFX format requires an orbital basis set.")
+        raise PrepareDumpError("The WFX format requires an orbital basis set.", filename)
     if data.mo.kind == "generalized":
-        raise PrepareDumpError("Cannot write WFX file with generalized orbitals.")
+        raise PrepareDumpError("Cannot write WFX file with generalized orbitals.", filename)
     if data.mo.occs_aminusb is not None:
-        raise PrepareDumpError("Cannot write WFX file when mo.occs_aminusb is set.")
+        raise PrepareDumpError("Cannot write WFX file when mo.occs_aminusb is set.", filename)
     for shell in data.obasis.shells:
         if any(kind != "c" for kind in shell.kinds):
-            raise PrepareDumpError("The WFX format only supports Cartesian MolecularBasis.")
+            raise PrepareDumpError(
+                "The WFX format only supports Cartesian MolecularBasis.", filename
+            )
 
 
 @document_dump_one(

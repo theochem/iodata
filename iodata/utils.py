@@ -18,7 +18,7 @@
 # --
 """Utility functions module."""
 
-import warnings
+from pathlib import Path
 from typing import Optional, TextIO, Union
 
 import attrs
@@ -30,13 +30,14 @@ from scipy.linalg import eigh
 from .attrutils import validate_shape
 
 __all__ = (
+    "LineIterator",
+    "FileFormatError",
     "LoadError",
-    "LoadWarning",
     "DumpError",
-    "DumpWarning",
     "PrepareDumpError",
     "WriteInputError",
-    "LineIterator",
+    "LoadWarning",
+    "DumpWarning",
     "Cube",
     "set_four_index_element",
     "volume",
@@ -105,78 +106,127 @@ class LineIterator:
         self.lineno += 1
         return self.stack.pop() if self.stack else next(self.fh)
 
-    def warn(self, msg: str):
-        """Raise a warning while reading a file.
-
-        Parameters
-        ----------
-        msg
-            Message to raise alongside filename and line number.
-
-        """
-        warnings.warn(f"{self.filename}:{self.lineno} {msg}", LoadWarning, stacklevel=2)
-
     def back(self, line):
         """Go back one line in the file and decrease the lineno attribute by one."""
         self.stack.append(line)
         self.lineno -= 1
 
 
-class FileFormatError(ValueError):
-    """Raise when a file or input format cannot be identified."""
+def _interpret_file_lineno(
+    file: Optional[Union[str, Path, LineIterator, TextIO]] = None, lineno: Optional[int] = None
+) -> tuple[Optional[str], Optional[int]]:
+    """Interpret the file and lineno arguments given to Error and Warning constructors.
+
+    Parameters
+    ----------
+    file
+        Object to deduce the filename (and optionally line number) from.
+    lineno
+        Line number, if known and not (correctly) included in the file object.
+
+    Returns
+    -------
+    filename
+        The filename associated with the file object.
+    lineno
+        The line number.
+    """
+    if isinstance(file, str):
+        return file, lineno
+    if isinstance(file, Path):
+        return str(file), lineno
+    if isinstance(file, LineIterator):
+        if lineno is None:
+            lineno = file.lineno
+        return file.filename, lineno
+    if isinstance(file, TextIO):
+        return file.name, lineno
+    if file is None:
+        if lineno is not None:
+            raise TypeError("A line number without a file is not supported.")
+        return None, None
+    raise TypeError(f"Types of file and lineno are not supported: {file}, {lineno}")
 
 
-class LoadError(Exception):
-    """Raised when an error is encountered while loading from a file."""
+def _format_file_message(message: str, filename: Optional[str], lineno: Optional[int]) -> str:
+    """Format the message of an exception.
+
+    Parameters
+    ----------
+    message
+        The actual error or warning message, without filename or line number info.
+    filename
+        The filename to which the error or warning is related.
+    lineno
+        The line number associated with the error or warning.
+
+    Returns
+    -------
+    full_message
+        The error message formated with filename and line number info.
+    """
+    if filename is None:
+        return message
+    if lineno is None:
+        return f"{message} ({filename})"
+    return f"{message} ({filename}:{lineno})"
+
+
+class BaseFileError(Exception):
+    """Base class for all errors related to loading or dumping files."""
 
     def __init__(
         self,
         message,
-        file: Optional[Union[str, LineIterator, TextIO]] = None,
+        file: Optional[Union[str, Path, LineIterator, TextIO]] = None,
         lineno: Optional[int] = None,
     ):
         super().__init__(message)
-        # Get the extra info
-        self.filename = None
-        self.lineno = None
-        if isinstance(file, str):
-            self.filename = file
-        elif isinstance(file, LineIterator):
-            self.filename = file.filename
-            if lineno is None:
-                self.lineno = file.lineno
-        elif isinstance(file, TextIO):
-            self.filename = file.name
+        self.filename, self.lineno = _interpret_file_lineno(file, lineno)
 
     def __str__(self):
-        if self.filename is None:
-            location = ""
-        elif self.lineno is None:
-            location = f" ({self.filename})"
-        else:
-            location = f" ({self.filename}:{self.lineno})"
-        message = super().__str__()
-        return f"{message}{location}"
+        return _format_file_message(super().__str__(), self.filename, self.lineno)
 
 
-class LoadWarning(Warning):
-    """Raised when incorrect content is encountered and fixed when loading from a file."""
+class FileFormatError(BaseFileError):
+    """Raise when a file or input format cannot be identified."""
 
 
-class DumpError(ValueError):
+class LoadError(BaseFileError):
+    """Raised when an error is encountered while loading from a file."""
+
+
+class DumpError(BaseFileError):
     """Raised when an error is encountered while dumping to a file."""
 
 
-class DumpWarning(Warning):
-    """Raised when an IOData object is made compatible with a format when dumping to a file."""
-
-
-class PrepareDumpError(ValueError):
+class PrepareDumpError(BaseFileError):
     """Raised when an IOData object is incompatible with a format before dumping to a file."""
 
 
-class WriteInputError(ValueError):
+class WriteInputError(BaseFileError):
     """Raised when an error is encountered while writing an input file."""
+
+
+class BaseFileWarning(Warning):
+    """Base class for all warnings related to loading or dumping files."""
+
+    def __init__(
+        self,
+        message,
+        file: Optional[Union[str, Path, LineIterator, TextIO]] = None,
+        lineno: Optional[int] = None,
+    ):
+        filename, lineno = _interpret_file_lineno(file, lineno)
+        super().__init__(_format_file_message(message, filename, lineno))
+
+
+class LoadWarning(BaseFileWarning):
+    """Raised when incorrect content is encountered and fixed when loading from a file."""
+
+
+class DumpWarning(BaseFileWarning):
+    """Raised when an IOData object is made compatible with a format when dumping to a file."""
 
 
 @attrs.define
