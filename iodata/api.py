@@ -271,7 +271,7 @@ def dump_one(
         The name of the file format module to use. When not given, it is guessed
         from the filename.
     allow_changes
-        Whether conversion is allowed or not.
+        Whether conversion of the IOData object to a compatible form is allowed or not.
     **kwargs
         Keyword arguments are passed on to the format-specific dump_one function.
 
@@ -339,7 +339,7 @@ def dump_many(
     fmt
         The name of the file format module to use.
     allow_changes
-        Whether conversion is allowed or not.
+        Whether conversion of the IOData object to a compatible form is allowed or not.
     **kwargs
         Keyword arguments are passed on to the format-specific dump_many function.
 

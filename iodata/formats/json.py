@@ -1454,7 +1454,7 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
     data
         The IOData instance to be checked.
     allow_changes
-        Whether conversion is allowed or not.
+        Whether conversion of the IOData object to a compatible form is allowed or not.
         (not relevant for QCSchema JSON, present for API consistency)
     filename
         The file to be written to, only used for error messages.

@@ -45,7 +45,7 @@ def prepare_unrestricted_aminusb(data: IOData, allow_changes: bool, filename: st
     data
         The IOData instance with the molecular orbitals.
     allow_changes
-        Whether conversion is allowed or not.
+        Whether conversion of the IOData object to a compatible form is allowed or not.
     filename
         The file to be written to, only used for error messages.
     fmt
