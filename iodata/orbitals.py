@@ -200,7 +200,7 @@ class MolecularOrbitals:
         return None
 
     @property
-    def spinpol(self) -> float | None:
+    def spinpol(self) -> Optional[float]:
         """Return the spin polarization of the Slater determinant."""
         if self.kind == "generalized":
             raise NotImplementedError
