@@ -98,9 +98,6 @@ def test_dump_occs_aminusb(tmpdir, fmt):
         dump_one(data1, path_foo, fmt=fmt)
     with pytest.warns(PrepareDumpWarning):
         dump_one(data1, path_foo, allow_changes=True, fmt=fmt)
-    import os
-
-    os.system(f"cat {path_foo}")
     data2 = load_one(path_foo, fmt=fmt)
 
     # Check the loaded file
