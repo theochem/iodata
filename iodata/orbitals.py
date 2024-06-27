@@ -26,7 +26,7 @@ from numpy.typing import NDArray
 
 from .attrutils import convert_array_to, validate_shape
 
-__all__ = ["MolecularOrbitals"]
+__all__ = ("MolecularOrbitals", "convert_to_unrestricted")
 
 
 def validate_norbab(mo, attribute, value):
@@ -200,7 +200,7 @@ class MolecularOrbitals:
         return None
 
     @property
-    def spinpol(self) -> float:
+    def spinpol(self) -> float | None:
         """Return the spin polarization of the Slater determinant."""
         if self.kind == "generalized":
             raise NotImplementedError
@@ -381,3 +381,36 @@ class MolecularOrbitals:
         if self.kind == "restricted":
             return self.irreps
         return self.irreps[self.norba :]
+
+
+def convert_to_unrestricted(mo: MolecularOrbitals) -> MolecularOrbitals:
+    """Convert orbitals to ``kind="unrestricted"``.
+
+    Parameters
+    ----------
+    mo
+        Restricted molecular orbitals to be converted.
+
+    Returns
+    -------
+    new_mo
+        The given object if the orbitals were already unrestricted or a new unrestricted copy.
+
+    Raises
+    ------
+    ValueError
+        When the given orbitals are generalized.
+    """
+    if mo.kind == "generalized":
+        raise ValueError("Generalized orbitals cannot be converted to unrestricted.")
+    if mo.kind == "unrestricted":
+        return mo
+    return MolecularOrbitals(
+        "unrestricted",
+        mo.norba,
+        mo.norbb,
+        None if mo.occs is None else np.concatenate([mo.occsa, mo.occsb]),
+        None if mo.coeffs is None else np.concatenate([mo.coeffs, mo.coeffs], axis=1),
+        None if mo.energies is None else np.concatenate([mo.energies, mo.energies]),
+        None if mo.irreps is None else np.concatenate([mo.irreps, mo.irreps]),
+    )

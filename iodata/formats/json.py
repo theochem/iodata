@@ -1446,16 +1446,28 @@ def _parse_provenance(
     return base_provenance
 
 
-def prepare_dump(filename: str, data: IOData):
+def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
     """Check the compatibility of the IOData object with QCScheme.
 
     Parameters
     ----------
-    filename
-        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
+    allow_changes
+        Whether conversion is allowed or not.
+        (not relevant for QCSchema JSON, present for API consistency)
+    filename
+        The file to be written to, only used for error messages.
 
+    Returns
+    -------
+    data
+        The given ``IOData`` object.
+
+    Raises
+    ------
+    PrepareDumpError
+        If the given ``IOData`` instance is not compatible with the WFN format.
     """
     if "schema_name" not in data.extra:
         raise PrepareDumpError(
@@ -1464,6 +1476,7 @@ def prepare_dump(filename: str, data: IOData):
     schema_name = data.extra["schema_name"]
     if schema_name == "qcschema_basis":
         raise PrepareDumpError(f"{schema_name} not yet implemented in IOData.", filename)
+    return data
 
 
 @document_dump_one(

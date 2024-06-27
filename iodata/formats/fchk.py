@@ -542,15 +542,28 @@ def _dump_real_arrays(name: str, val: NDArray[float], f: TextIO):
                 k = 0
 
 
-def prepare_dump(filename: str, data: IOData):
+def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
     """Check the compatibility of the IOData object with the FCHK format.
 
     Parameters
     ----------
-    filename
-        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
+    allow_changes
+        Whether conversion is allowed or not.
+        (not relevant for FCHK, present for API consistency)
+    filename
+        The file to be written to, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given ``IOData`` object.
+
+    Raises
+    ------
+    PrepareDumpError
+        If the given ``IOData`` instance is not compatible with the WFN format.
     """
     if data.mo is not None:
         if data.mo.kind == "generalized":
@@ -569,6 +582,7 @@ def prepare_dump(filename: str, data: IOData):
                 "followed by fully virtual ones.",
                 filename,
             )
+    return data
 
 
 @document_dump_one(

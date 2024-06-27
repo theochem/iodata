@@ -32,6 +32,7 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
+from ..prepare import prepare_unrestricted_aminusb
 from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError
 from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
@@ -329,15 +330,29 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
-def prepare_dump(filename: str, data: IOData):
+def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
     """Check the compatibility of the IOData object with the WFX format.
 
     Parameters
     ----------
-    filename
-        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
+    allow_changes
+        Whether conversion is allowed or not.
+    filename
+        The file to be written to, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given ``IOData`` object or a shallow copy with some new attributes.
+
+    Raises
+    ------
+    PrepareDumpError
+        If the given ``IOData`` instance is not compatible with the WFN format.
+    PrepareDumpWarning
+        If the a converted ``IOData`` instance is returned.
     """
     if data.mo is None:
         raise PrepareDumpError("The WFX format requires molecular orbitals.", filename)
@@ -345,13 +360,12 @@ def prepare_dump(filename: str, data: IOData):
         raise PrepareDumpError("The WFX format requires an orbital basis set.", filename)
     if data.mo.kind == "generalized":
         raise PrepareDumpError("Cannot write WFX file with generalized orbitals.", filename)
-    if data.mo.occs_aminusb is not None:
-        raise PrepareDumpError("Cannot write WFX file when mo.occs_aminusb is set.", filename)
     for shell in data.obasis.shells:
         if any(kind != "c" for kind in shell.kinds):
             raise PrepareDumpError(
                 "The WFX format only supports Cartesian MolecularBasis.", filename
             )
+    return prepare_unrestricted_aminusb(data, allow_changes, filename, "WFX")
 
 
 @document_dump_one(

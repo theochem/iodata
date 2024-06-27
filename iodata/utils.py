@@ -38,6 +38,7 @@ __all__ = (
     "WriteInputError",
     "LoadWarning",
     "DumpWarning",
+    "PrepareDumpWarning",
     "Cube",
     "set_four_index_element",
     "volume",
@@ -227,6 +228,10 @@ class LoadWarning(BaseFileWarning):
 
 class DumpWarning(BaseFileWarning):
     """Raised when an IOData object is made compatible with a format when dumping to a file."""
+
+
+class PrepareDumpWarning(BaseFileWarning):
+    """Raised when an IOData object is made compatible with a format before dumping to a file."""
 
 
 @attrs.define

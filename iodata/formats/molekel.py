@@ -24,6 +24,7 @@ This format is used by two programs:
 """
 
 from typing import TextIO
+from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
@@ -32,7 +33,8 @@ from ..basis import MolecularBasis, Shell, angmom_its, angmom_sti, convert_conve
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import DumpError, LineIterator, LoadError, PrepareDumpError, angstrom
+from ..prepare import prepare_unrestricted_aminusb
+from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, angstrom
 from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 
 __all__ = []
@@ -235,7 +237,16 @@ def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
             )
         nalpha = int(np.round(occsa.sum()))
         nbeta = int(np.round(occsb.sum()))
-        assert abs(spinpol - abs(nalpha - nbeta)) < 1e-7
+        if abs(spinpol - abs(nalpha - nbeta)) > 1e-7:
+            warn(
+                LoadWarning(
+                    f"The spin polarization ({spinpol}) is inconsistent with the"
+                    f"difference between alpha and beta occupation numbers ({nalpha} - {nbeta}). "
+                    "The spin polarization will be rederived from the occupation numbers.",
+                    lit,
+                ),
+                stacklevel=2,
+            )
         assert nelec == nalpha + nbeta
         assert coeffsa.shape == coeffsb.shape
         assert energiesa.shape == energiesb.shape
@@ -261,24 +272,37 @@ def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
     return result
 
 
-def prepare_dump(filename: str, data: IOData):
+def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
     """Check the compatibility of the IOData object with the Molekel format.
 
     Parameters
     ----------
-    filename
-        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
+    allow_changes
+        Whether conversion is allowed or not.
+    filename
+        The file to be written to, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given ``IOData`` object or a shallow copy with some new attributes.
+
+    Raises
+    ------
+    PrepareDumpError
+        If the given ``IOData`` instance is not compatible with the WFN format.
+    PrepareDumpWarning
+        If the a converted ``IOData`` instance is returned.
     """
     if data.mo is None:
         raise PrepareDumpError("The Molekel format requires molecular orbitals.", filename)
     if data.obasis is None:
         raise PrepareDumpError("The Molekel format requires an orbital basis set.", filename)
-    if data.mo.occs_aminusb is not None:
-        raise PrepareDumpError("Cannot write Molekel file when mo.occs_aminusb is set.", filename)
     if data.mo.kind == "generalized":
         raise PrepareDumpError("Cannot write Molekel file with generalized orbitals.", filename)
+    return prepare_unrestricted_aminusb(data, allow_changes, filename, "Molekel")
 
 
 @document_dump_one("Molekel", ["atcoords", "atnums", "mo", "obasis"], ["atcharges"])

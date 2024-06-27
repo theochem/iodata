@@ -247,7 +247,14 @@ def _check_required(filename: str, iodata: IOData, dump_func: Callable):
 
 
 @_reissue_warnings
-def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs):
+def dump_one(
+    iodata: IOData,
+    filename: str,
+    *,
+    fmt: Optional[str] = None,
+    allow_changes: bool = False,
+    **kwargs,
+):
     """Write data to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -263,8 +270,15 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
     fmt
         The name of the file format module to use. When not given, it is guessed
         from the filename.
+    allow_changes
+        Whether conversion is allowed or not.
     **kwargs
         Keyword arguments are passed on to the format-specific dump_one function.
+
+    Returns
+    -------
+    data
+        The given ``IOData`` object or a shallow copy with some new attributes if converted.
 
     Raises
     ------
@@ -272,16 +286,19 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
         When an error is encountered while dumping to a file.
         If the output file already existed, it is (partially) overwritten.
     PrepareDumpError
-        When the iodata object is not compatible with the file format,
-        e.g. due to missing attributes, and not conversion is available or allowed
+        When the ``IOData`` object is not compatible with the file format,
+        e.g. due to missing attributes, and no conversion is available or allowed
         to make it compatible.
         If the output file already existed, it is not overwritten.
+    PrepareDumpWarning
+        When the ``IOData`` object is not compatible with the file format,
+        but it was converted to fix the compatibility issue.
     """
     format_module = _select_format_module(filename, "dump_one", fmt)
     try:
         _check_required(filename, iodata, format_module.dump_one)
         if hasattr(format_module, "prepare_dump"):
-            format_module.prepare_dump(filename, iodata)
+            iodata = format_module.prepare_dump(iodata, allow_changes, filename)
     except PrepareDumpError:
         raise
     except Exception as exc:
@@ -295,10 +312,18 @@ def dump_one(iodata: IOData, filename: str, fmt: Optional[str] = None, **kwargs)
             raise
         except Exception as exc:
             raise DumpError("Uncaught exception while dumping to a file", filename) from exc
+    return iodata
 
 
 @_reissue_warnings
-def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = None, **kwargs):
+def dump_many(
+    iodatas: Iterable[IOData],
+    filename: str,
+    *,
+    fmt: Optional[str] = None,
+    allow_changes: bool = False,
+    **kwargs,
+):
     """Write multiple IOData instances to a file.
 
     This routine uses the extension or prefix of the filename to determine
@@ -313,6 +338,8 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
         The file to write the data to.
     fmt
         The name of the file format module to use.
+    allow_changes
+        Whether conversion is allowed or not.
     **kwargs
         Keyword arguments are passed on to the format-specific dump_many function.
 
@@ -322,12 +349,15 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
         When an error is encountered while dumping to a file.
         If the output file already existed, it (partially) overwritten.
     PrepareDumpError
-        When the iodata object is not compatible with the file format,
-        e.g. due to missing attributes, and not conversion is available or allowed
+        When an ``IOData`` object is not compatible with the file format,
+        e.g. due to missing attributes, and no conversion is available or allowed
         to make it compatible.
         If the output file already existed, it is not overwritten when this error
-        is raised while processing the first IOData instance in the ``iodatas`` argument.
+        is raised while processing the first ``IOData`` instance in the ``iodatas`` argument.
         When the exception is raised in later iterations, any existing file is overwritten.
+    PrepareDumpWarning
+        When an ``IOData`` object is not compatible with the file format,
+        but it was converted to fix the compatibility issue.
     """
     format_module = _select_format_module(filename, "dump_many", fmt)
 
@@ -342,7 +372,7 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
     try:
         _check_required(filename, first, format_module.dump_many)
         if hasattr(format_module, "prepare_dump"):
-            format_module.prepare_dump(filename, first)
+            first = format_module.prepare_dump(first, allow_changes, filename)
     except PrepareDumpError:
         raise
     except Exception as exc:
@@ -356,9 +386,11 @@ def dump_many(iodatas: Iterable[IOData], filename: str, fmt: Optional[str] = Non
         yield first
         for other in iter_iodatas:
             _check_required(filename, other, format_module.dump_many)
-            if hasattr(format_module, "prepare_dump"):
-                format_module.prepare_dump(filename, other)
-            yield other
+            yield (
+                format_module.prepare_dump(other, allow_changes, filename)
+                if hasattr(format_module, "prepare_dump")
+                else other
+            )
 
     with open(filename, "w") as f:
         try:
