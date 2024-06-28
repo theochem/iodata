@@ -156,10 +156,7 @@ def test_load_mkl_h2():
 
 
 def test_load_mkl_h2_huge_threshold():
-    with (
-        as_file(files("iodata.test.data").joinpath("h2_sto3g.mkl")) as fn_molekel,
-        warnings.catch_warnings(),
-    ):
+    with as_file(files("iodata.test.data").joinpath("h2_sto3g.mkl")) as fn_molekel:
         warnings.simplefilter("error")
         # The threshold is set very high, which skip a correction for ORCA.
         load_one(str(fn_molekel), norm_threshold=1e4)

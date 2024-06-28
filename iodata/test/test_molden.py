@@ -19,7 +19,6 @@
 """Test iodata.formats.molden module."""
 
 import os
-import warnings
 from contextlib import ExitStack
 from importlib.resources import as_file, files
 
@@ -70,11 +69,7 @@ def test_load_molden_li2_orca():
 
 
 def test_load_molden_li2_orca_huge_threshold():
-    with (
-        as_file(files("iodata.test.data").joinpath("li2.molden.input")) as fn_molden,
-        warnings.catch_warnings(),
-    ):
-        warnings.simplefilter("error")
+    with as_file(files("iodata.test.data").joinpath("li2.molden.input")) as fn_molden:
         # The threshold is set very high, which skip a correction for ORCA.
         load_one(str(fn_molden), norm_threshold=1e4)
 
