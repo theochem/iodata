@@ -20,13 +20,13 @@
 
 from typing import Callable, Optional
 
-__all__ = [
+__all__ = (
     "document_load_one",
     "document_load_many",
     "document_dump_one",
     "document_dump_many",
     "document_write_input",
-]
+)
 
 
 def _document_load(

@@ -26,7 +26,7 @@ from ..periodic import num2sym
 from ..utils import angstrom
 from .common import write_input_base
 
-__all__ = []
+__all__ = ()
 
 
 default_template = """\

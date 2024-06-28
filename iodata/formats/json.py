@@ -573,7 +573,7 @@ from ..iodata import IOData
 from ..periodic import num2sym, sym2num
 from ..utils import DumpError, DumpWarning, LineIterator, LoadError, LoadWarning, PrepareDumpError
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.json"]

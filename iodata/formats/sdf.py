@@ -44,7 +44,7 @@ from ..iodata import IOData
 from ..periodic import num2sym, sym2num
 from ..utils import LineIterator, LoadError, angstrom
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.sdf"]

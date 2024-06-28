@@ -49,7 +49,7 @@ from ..periodic import num2sym, sym2num
 from ..prepare import prepare_unrestricted_aminusb
 from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, angstrom
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.molden.input", "*.molden"]

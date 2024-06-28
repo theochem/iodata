@@ -35,14 +35,14 @@ from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap
 from ..utils import LoadWarning
 
-__all__ = [
+__all__ = (
     "compute_mulliken_charges",
     "compute_1rdm",
     "compare_mols",
     "check_orthonormal",
     "load_one_warning",
     "create_generalized",
-]
+)
 
 
 def compute_1rdm(iodata):

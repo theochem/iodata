@@ -24,7 +24,7 @@ from numpy.typing import NDArray
 from ..docstrings import document_load_one
 from ..utils import LineIterator, LoadError, angstrom
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.dat"]

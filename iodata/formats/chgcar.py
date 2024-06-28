@@ -32,7 +32,7 @@ from ..docstrings import document_load_one
 from ..periodic import sym2num
 from ..utils import Cube, LineIterator, angstrom, volume
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["CHGCAR*", "AECCAR*"]

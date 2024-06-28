@@ -22,7 +22,7 @@ from typing import Callable
 
 import numpy as np
 
-__all__ = ["convert_array_to", "validate_shape"]
+__all__ = ("convert_array_to", "validate_shape")
 
 
 def convert_array_to(dtype):

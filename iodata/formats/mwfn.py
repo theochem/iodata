@@ -26,7 +26,7 @@ from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, LoadError, angstrom
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.mwfn"]

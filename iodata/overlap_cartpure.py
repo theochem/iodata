@@ -28,7 +28,7 @@ were generated with:
 
 import numpy as np
 
-__all__ = ["tfs"]
+__all__ = ("tfs",)
 
 # fmt: off
 tf0 = np.array([

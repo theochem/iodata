@@ -26,7 +26,7 @@ from numpy.typing import NDArray
 from ..docstrings import document_load_one
 from ..utils import LineIterator
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.out"]

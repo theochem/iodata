@@ -32,7 +32,7 @@ import numpy as np
 from ..docstrings import document_load_many, document_load_one
 from ..utils import LineIterator, nanometer, picosecond
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.gro"]

@@ -39,7 +39,7 @@ from ..iodata import IOData
 from ..periodic import bond2num, num2bond, num2sym, sym2num
 from ..utils import LineIterator, LoadError, LoadWarning, angstrom
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.mol2"]

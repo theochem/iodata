@@ -36,7 +36,7 @@ from ..prepare import prepare_unrestricted_aminusb
 from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError
 from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
-__all__ = []
+__all__ = ()
 
 PATTERNS = ["*.wfx"]
 

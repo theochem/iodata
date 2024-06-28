@@ -36,7 +36,7 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..utils import LineIterator, LoadError, set_four_index_element
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*FCIDUMP*"]

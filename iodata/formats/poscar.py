@@ -32,7 +32,7 @@ from ..periodic import num2sym
 from ..utils import LineIterator, angstrom
 from .chgcar import _load_vasp_header
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["POSCAR*"]

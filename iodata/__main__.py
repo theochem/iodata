@@ -31,7 +31,7 @@ except ImportError:
     __version__ = "0.0.0.post0"
 
 
-__all__ = []
+__all__ = ()
 
 
 DESCRIPTION = """\
