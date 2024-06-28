@@ -171,7 +171,7 @@ def check_orthonormal(mo_coeffs: NDArray[float], ao_overlap: NDArray[float], ato
 
 
 def load_one_warning(
-    filename: str, fmt: Optional[str] = None, match: Optional[str] = None, **kwargs
+    filename: str, *, fmt: Optional[str] = None, match: Optional[str] = None, **kwargs
 ) -> IOData:
     """Call load_one, catching expected LoadWarning.
 
@@ -195,9 +195,9 @@ def load_one_warning(
     """
     with as_file(files("iodata.test.data").joinpath(filename)) as fn:
         if match is None:
-            return load_one(str(fn), fmt, **kwargs)
+            return load_one(str(fn), fmt=fmt, **kwargs)
         with pytest.warns(LoadWarning, match=match):
-            return load_one(str(fn), fmt, **kwargs)
+            return load_one(str(fn), fmt=fmt, **kwargs)
 
 
 def create_generalized() -> IOData:

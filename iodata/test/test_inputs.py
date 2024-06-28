@@ -135,10 +135,10 @@ Counterpoise calculation on {extra[name]}
         return f"{symbol}(Fragment={fid}) {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
 
     with as_file(files("iodata.test.data").joinpath("s66_4114_02WaterMeOH.xyz")) as fn:
-        mol = load_one(fn, "extxyz")
+        mol = load_one(fn, fmt="extxyz")
 
     fn_com = os.path.join(tmpdir, "input_bsse.com")
-    write_input(mol, fn_com, "gaussian", template, atom_line)
+    write_input(mol, fn_com, fmt="gaussian", template=template, atom_line=atom_line)
     with as_file(files("iodata.test.data").joinpath("input_gaussian_bsse.com")) as fn_expected:
         check_load_input_and_compare(fn_com, fn_expected)
 
@@ -175,7 +175,9 @@ end
         return f"        {symbol:3s} {atcoord[0]:10.6f} {atcoord[1]:10.6f} {atcoord[2]:10.6f}"
 
     grid_stuff = "Grid4 TightSCF NOFINALGRID"
-    write_input(mol, fname, "orca", template, atom_line, grid_stuff=grid_stuff)
+    write_input(
+        mol, fname, fmt="orca", template=template, atom_line=atom_line, grid_stuff=grid_stuff
+    )
     # compare saved input to expected input
     source = files("iodata.test.data").joinpath("input_orca_h2o_sp_b3lyp.txt")
     with as_file(source) as fname_expected:

@@ -151,7 +151,7 @@ def _reissue_warnings(func):
 
 
 @_reissue_warnings
-def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
+def load_one(filename: str, *, fmt: Optional[str] = None, **kwargs) -> IOData:
     """Load data from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -186,7 +186,7 @@ def load_one(filename: str, fmt: Optional[str] = None, **kwargs) -> IOData:
 
 
 @_reissue_warnings
-def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IOData]:
+def load_many(filename: str, *, fmt: Optional[str] = None, **kwargs) -> Iterator[IOData]:
     """Load multiple IOData instances from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -406,6 +406,7 @@ def write_input(
     iodata: IOData,
     filename: str,
     fmt: str,
+    *,
     template: Optional[str] = None,
     atom_line: Optional[Callable] = None,
     **kwargs,
