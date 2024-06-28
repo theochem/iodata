@@ -46,6 +46,7 @@ from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
 from ..periodic import num2sym, sym2num
+from ..prepare import prepare_unrestricted_aminusb
 from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, angstrom
 
 __all__ = []
@@ -768,24 +769,37 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
     )
 
 
-def prepare_dump(filename: str, data: IOData):
+def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
     """Check the compatibility of the IOData object with the Molden format.
 
     Parameters
     ----------
-    filename
-        The file to be written to, only used for error messages.
     data
         The IOData instance to be checked.
+    allow_changes
+        Whether conversion of the IOData object to a compatible form is allowed or not.
+    filename
+        The file to be written to, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given ``IOData`` object or a shallow copy with some new attributes.
+
+    Raises
+    ------
+    PrepareDumpError
+        If the given ``IOData`` instance is not compatible with the WFN format.
+    PrepareDumpWarning
+        If the a converted ``IOData`` instance is returned.
     """
     if data.mo is None:
         raise PrepareDumpError("The Molden format requires molecular orbitals.", filename)
     if data.obasis is None:
         raise PrepareDumpError("The Molden format requires an orbital basis set.", filename)
-    if data.mo.occs_aminusb is not None:
-        raise PrepareDumpError("Cannot write Molden file when mo.occs_aminusb is set.", filename)
     if data.mo.kind == "generalized":
         raise PrepareDumpError("Cannot write Molden file with generalized orbitals.", filename)
+    return prepare_unrestricted_aminusb(data, allow_changes, filename, "Molden")
 
 
 @document_dump_one("Molden", ["atcoords", "atnums", "mo", "obasis"], ["atcorenums", "title"])

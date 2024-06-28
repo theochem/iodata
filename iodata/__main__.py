@@ -113,9 +113,9 @@ def convert(infn, outfn, many, infmt, outfmt):
 
     """
     if many:
-        dump_many((data for data in load_many(infn, infmt)), outfn, outfmt)
+        dump_many(load_many(infn, fmt=infmt), outfn, fmt=outfmt)
     else:
-        dump_one(load_one(infn, infmt), outfn, outfmt)
+        dump_one(load_one(infn, fmt=infmt), outfn, fmt=outfmt)
 
 
 def main():

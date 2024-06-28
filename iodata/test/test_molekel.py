@@ -29,7 +29,7 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..basis import convert_conventions
 from ..overlap import compute_overlap
-from ..utils import PrepareDumpError, angstrom
+from ..utils import LoadWarning, PrepareDumpError, angstrom
 from .common import (
     check_orthonormal,
     compare_mols,
@@ -170,3 +170,12 @@ def test_generalized():
     data = create_generalized()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generalized.mkl")
+
+
+def test_load_wrong_spin_mult():
+    with (
+        as_file(files("iodata.test.data").joinpath("water_wrong_spinmult.mkl")) as fn_molekel,
+        pytest.warns(LoadWarning),
+    ):
+        data = load_one(fn_molekel)
+    assert_allclose(data.spinpol, 3)
