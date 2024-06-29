@@ -222,14 +222,14 @@ def load_many(filename: str, fmt: Optional[str] = None, **kwargs) -> Iterator[IO
             raise LoadError("Uncaught exception while loading file.", lit) from exc
 
 
-def _check_required(filename: str, iodata: IOData, dump_func: Callable):
+def _check_required(filename: str, data: IOData, dump_func: Callable):
     """Check that required attributes are not None before dumping to a file.
 
     Parameters
     ----------
     filename
         The file to be dumped to, only used for error messages.
-    iodata
+    data
         The data to be written.
     dump_func
         The dump_one or dump_many function that will write the file.
@@ -240,7 +240,7 @@ def _check_required(filename: str, iodata: IOData, dump_func: Callable):
         When a required attribute is ``None``.
     """
     for attr_name in dump_func.required:
-        if getattr(iodata, attr_name) is None:
+        if getattr(data, attr_name) is None:
             raise PrepareDumpError(
                 f"Required attribute {attr_name}, for format {dump_func.fmt}, is None.", filename
             )
@@ -248,7 +248,7 @@ def _check_required(filename: str, iodata: IOData, dump_func: Callable):
 
 @_reissue_warnings
 def dump_one(
-    iodata: IOData,
+    data: IOData,
     filename: str,
     *,
     fmt: Optional[str] = None,
@@ -263,7 +263,7 @@ def dump_one(
 
     Parameters
     ----------
-    iodata
+    data
         The object containing the data to be written.
     filename
         The file to write the data to.
@@ -296,9 +296,9 @@ def dump_one(
     """
     format_module = _select_format_module(filename, "dump_one", fmt)
     try:
-        _check_required(filename, iodata, format_module.dump_one)
+        _check_required(filename, data, format_module.dump_one)
         if hasattr(format_module, "prepare_dump"):
-            iodata = format_module.prepare_dump(iodata, allow_changes, filename)
+            data = format_module.prepare_dump(data, allow_changes, filename)
     except PrepareDumpError:
         raise
     except Exception as exc:
@@ -307,17 +307,17 @@ def dump_one(
         ) from exc
     with open(filename, "w") as f:
         try:
-            format_module.dump_one(f, iodata, **kwargs)
+            format_module.dump_one(f, data, **kwargs)
         except DumpError:
             raise
         except Exception as exc:
             raise DumpError("Uncaught exception while dumping to a file", filename) from exc
-    return iodata
+    return data
 
 
 @_reissue_warnings
 def dump_many(
-    iodatas: Iterable[IOData],
+    iter_data: Iterable[IOData],
     filename: str,
     *,
     fmt: Optional[str] = None,
@@ -332,7 +332,7 @@ def dump_many(
 
     Parameters
     ----------
-    iodatas
+    iter_data
         An iterator over IOData instances.
     filename
         The file to write the data to.
@@ -353,7 +353,7 @@ def dump_many(
         e.g. due to missing attributes, and no conversion is available or allowed
         to make it compatible.
         If the output file already existed, it is not overwritten when this error
-        is raised while processing the first ``IOData`` instance in the ``iodatas`` argument.
+        is raised while processing the first ``IOData`` instance in the ``datas`` argument.
         When the exception is raised in later iterations, any existing file is overwritten.
     PrepareDumpWarning
         When an ``IOData`` object is not compatible with the file format,
@@ -361,14 +361,16 @@ def dump_many(
     """
     format_module = _select_format_module(filename, "dump_many", fmt)
 
+    # Make sure we have an iterator. For example, this turns a list into an iterator.
+    iter_data = iter(iter_data)
+
     # Check the first item before creating the file.
     # If the file already exists, this may prevent data loss:
     # The file is not overwritten when it is clear that writing will fail.
-    iter_iodatas = iter(iodatas)
     try:
-        first = next(iter_iodatas)
+        first = next(iter_data)
     except StopIteration as exc:
-        raise DumpError("dump_many needs at least one iodata object.", filename) from exc
+        raise DumpError("dump_many needs at least one IOData object.", filename) from exc
     try:
         _check_required(filename, first, format_module.dump_many)
         if hasattr(format_module, "prepare_dump"):
@@ -381,10 +383,10 @@ def dump_many(
         ) from exc
 
     def checking_iterator():
-        """Iterate over all iodata items, not checking the first."""
+        """Iterate over all data items, not checking the first."""
         # The first one was already checked.
         yield first
-        for other in iter_iodatas:
+        for other in iter_data:
             _check_required(filename, other, format_module.dump_many)
             yield (
                 format_module.prepare_dump(other, allow_changes, filename)
@@ -403,7 +405,7 @@ def dump_many(
 
 @_reissue_warnings
 def write_input(
-    iodata: IOData,
+    data: IOData,
     filename: str,
     fmt: str,
     template: Optional[str] = None,
@@ -414,7 +416,7 @@ def write_input(
 
     Parameters
     ----------
-    iodata
+    data
         An IOData instance containing the information needed to write input.
     filename
         The input file name.
@@ -435,7 +437,7 @@ def write_input(
     input_module = _select_input_module(filename, fmt)
     with open(filename, "w") as fh:
         try:
-            input_module.write_input(fh, iodata, template, atom_line, **kwargs)
+            input_module.write_input(fh, data, template, atom_line, **kwargs)
         except Exception as exc:
             raise WriteInputError(
                 "Uncaught exception while writing an input file.", filename
