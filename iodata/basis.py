@@ -34,7 +34,7 @@ from numpy.typing import NDArray
 
 from .attrutils import validate_shape
 
-__all__ = [
+__all__ = (
     "angmom_sti",
     "angmom_its",
     "Shell",
@@ -44,7 +44,7 @@ __all__ = [
     "iter_cart_alphabet",
     "HORTON2_CONVENTIONS",
     "CCA_CONVENTIONS",
-]
+)
 
 ANGMOM_CHARS = "spdfghiklmnoqrtuvwxyzabce"
 

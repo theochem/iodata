@@ -18,7 +18,7 @@
 # --
 """Periodic table module."""
 
-__all__ = ["num2sym", "sym2num"]
+__all__ = ("num2sym", "sym2num")
 
 
 num2sym: dict[int, str] = {

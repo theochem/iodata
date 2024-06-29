@@ -37,7 +37,7 @@ from ..prepare import prepare_unrestricted_aminusb
 from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, angstrom
 from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.mkl"]

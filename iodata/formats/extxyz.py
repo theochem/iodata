@@ -37,7 +37,7 @@ from ..periodic import num2sym, sym2num
 from ..utils import LineIterator, amu, angstrom, strtobool
 from .xyz import load_one as load_one_xyz
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.extxyz"]

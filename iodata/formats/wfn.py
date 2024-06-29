@@ -41,7 +41,7 @@ from ..periodic import num2sym, sym2num
 from ..prepare import prepare_unrestricted_aminusb
 from ..utils import LineIterator, LoadError, PrepareDumpError
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.wfn"]

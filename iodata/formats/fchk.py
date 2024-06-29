@@ -31,7 +31,7 @@ from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..utils import DumpError, LineIterator, LoadError, PrepareDumpError, amu
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.fchk", "*.fch"]

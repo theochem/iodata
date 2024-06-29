@@ -29,7 +29,7 @@ from ..orbitals import MolecularOrbitals
 from ..overlap import factorial2
 from ..utils import LineIterator, LoadError
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.cp2k.out"]

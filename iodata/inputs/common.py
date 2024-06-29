@@ -25,7 +25,7 @@ import numpy as np
 
 from ..iodata import IOData
 
-__all__ = ["write_input_base"]
+__all__ = ("write_input_base",)
 
 
 def write_input_base(

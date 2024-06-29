@@ -35,7 +35,7 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..utils import Cube, LineIterator
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.cube", "*.cub"]

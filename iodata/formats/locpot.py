@@ -29,7 +29,7 @@ from ..docstrings import document_load_one
 from ..utils import LineIterator, electronvolt
 from .chgcar import _load_vasp_grid
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["LOCPOT*"]

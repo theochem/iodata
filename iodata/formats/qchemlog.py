@@ -29,7 +29,7 @@ from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
 from ..utils import LineIterator, angstrom, calmol, kcalmol, kjmol, strtobool
 
-__all__ = []
+__all__ = ()
 
 PATTERNS = ["*.qchemlog"]
 

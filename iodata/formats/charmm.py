@@ -34,7 +34,7 @@ import numpy as np
 from ..docstrings import document_load_one
 from ..utils import LineIterator, LoadError, amu, angstrom
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.crd"]

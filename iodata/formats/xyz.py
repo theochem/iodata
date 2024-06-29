@@ -68,7 +68,7 @@ from ..iodata import IOData
 from ..periodic import num2sym, sym2num
 from ..utils import LineIterator, angstrom
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.xyz"]

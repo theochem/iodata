@@ -33,7 +33,7 @@ from numpy.typing import NDArray
 from ..docstrings import document_load_one
 from ..utils import LineIterator, set_four_index_element
 
-__all__ = []
+__all__ = ()
 
 
 PATTERNS = ["*.log"]
