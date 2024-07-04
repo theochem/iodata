@@ -94,11 +94,11 @@ def test_shell_info_propertes():
     assert shells[2].nbasis == 4
     assert shells[3].nbasis == 5
     assert shells[4].nbasis == 6 + 7 + 9
-    assert shells[0].nprim == 6
-    assert shells[1].nprim == 3
-    assert shells[2].nprim == 1
-    assert shells[3].nprim == 2
-    assert shells[4].nprim == 1
+    assert shells[0].nexp == 6
+    assert shells[1].nexp == 3
+    assert shells[2].nexp == 1
+    assert shells[3].nexp == 2
+    assert shells[4].nexp == 1
     assert shells[0].ncon == 1
     assert shells[1].ncon == 2
     assert shells[2].ncon == 2

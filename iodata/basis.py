@@ -118,12 +118,12 @@ class Shell:
     """
 
     exponents: NDArray[float] = attrs.field(validator=validate_shape(("coeffs", 0)))
-    """The array containing the exponents of the primitives, with shape (nprim,)."""
+    """The array containing the exponents of the primitives, with shape (nexp,)."""
 
     coeffs: NDArray[float] = attrs.field(validator=validate_shape(("exponents", 0), ("kinds", 0)))
     """
     The array containing the coefficients of the normalized primitives in each contraction;
-    shape = (nprim, ncon).
+    shape = (nexp, ncon).
     These coefficients assume that the primitives are L2 (orbitals) or L1
     (densities) normalized, but contractions are not necessarily normalized.
     (This depends on the code which generated the contractions.)
@@ -143,8 +143,8 @@ class Shell:
         return result
 
     @property
-    def nprim(self) -> int:
-        """Number of primitives, also known as the contraction length."""
+    def nexp(self) -> int:
+        """Number of exponents in the contracted shell, also known as the contraction length."""
         return len(self.exponents)
 
     @property

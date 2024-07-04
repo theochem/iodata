@@ -409,7 +409,7 @@ def dump_one(f: TextIO, data: IOData):
         for angmom, kind in zip(shell.angmoms, shell.kinds):
             n = len(data.obasis.conventions[angmom, kind])
             c = raw_coeffs[index_mo_old : index_mo_old + n]
-            for _j in range(shell.nprim):
+            for _j in range(shell.nexp):
                 mo_coeffs[index_mo_new : index_mo_new + n] = c
                 index_mo_new += n
             index_mo_old += n

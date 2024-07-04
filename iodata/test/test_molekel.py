@@ -122,7 +122,7 @@ def test_load_mkl_ethanol():
     # assert_allclose(mol.obasis.shells[-1].coeffs[-1, -1], 0.181380684)
     assert_equal([shell.icenter for shell in mol.obasis.shells[:5]], [0, 0, 1, 1, 1])
     assert_equal([shell.angmoms[0] for shell in mol.obasis.shells[:5]], [0, 0, 0, 0, 1])
-    assert_equal([shell.nprim for shell in mol.obasis.shells[:5]], [3, 1, 6, 3, 3])
+    assert_equal([shell.nexp for shell in mol.obasis.shells[:5]], [3, 1, 6, 3, 3])
     assert_equal(mol.mo.coeffs.shape, (39, 39))
     assert_equal(mol.mo.energies.shape, (39,))
     assert_equal(mol.mo.occs.shape, (39,))

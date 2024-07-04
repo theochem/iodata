@@ -69,7 +69,7 @@ def test_load_fchk_hf_sto3g_num():
     assert shell0.kinds == ["c"]
     assert_allclose(shell0.exponents, np.array([1.66679134e02, 3.03608123e01, 8.21682067e00]))
     assert_allclose(shell0.coeffs, np.array([[1.54328967e-01], [5.35328142e-01], [4.44634542e-01]]))
-    assert shell0.nprim == 3
+    assert shell0.nexp == 3
     assert shell0.ncon == 1
     assert shell0.nbasis == 1
     shell1 = mol.obasis.shells[1]
@@ -87,11 +87,11 @@ def test_load_fchk_hf_sto3g_num():
             ]
         ),
     )
-    assert shell1.nprim == 3
+    assert shell1.nexp == 3
     assert shell1.ncon == 2
     assert shell1.nbasis == 4
     shell2 = mol.obasis.shells[2]
-    assert shell2.nprim == 3
+    assert shell2.nexp == 3
     assert shell2.ncon == 1
     assert shell2.nbasis == 1
     assert mol.obasis.primitive_normalization == "L2"
@@ -123,7 +123,7 @@ def test_load_fchk_h_sto3g_num():
     assert mol.title == "h_sto3g"
     assert len(mol.obasis.shells) == 1
     assert mol.obasis.nbasis == 1
-    assert mol.obasis.shells[0].nprim == 3
+    assert mol.obasis.shells[0].nexp == 3
     assert len(mol.atcoords) == len(mol.atnums)
     assert mol.atcoords.shape[1] == 3
     assert len(mol.atnums) == 1

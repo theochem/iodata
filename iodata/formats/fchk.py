@@ -157,7 +157,7 @@ def load_one(lit: LineIterator) -> dict:
     # B) Load the orbital basis set
     shell_types = fchk["Shell types"]
     shell_map = fchk["Shell to atom map"] - 1
-    nprims = fchk["Number of primitives per shell"]
+    nexps = fchk["Number of primitives per shell"]
     exponents = fchk["Primitive exponents"]
     ccoeffs_level1 = fchk["Contraction coefficients"]
     ccoeffs_level2 = fchk.get("P(S=P) Contraction coefficients")
@@ -165,7 +165,7 @@ def load_one(lit: LineIterator) -> dict:
     shells = []
     counter = 0
     # First loop over all shells
-    for i, n in enumerate(nprims):
+    for i, n in enumerate(nexps):
         if shell_types[i] == -1:
             # Special treatment for SP shell type
             shells.append(
@@ -196,7 +196,7 @@ def load_one(lit: LineIterator) -> dict:
         counter += n
     del shell_map
     del shell_types
-    del nprims
+    del nexps
     del exponents
 
     result["obasis"] = MolecularBasis(shells, CONVENTIONS, "L2")
@@ -645,9 +645,9 @@ def dump_one(f: TextIO, data: IOData):
     # write molecular orbital basis set
     if data.obasis is not None:
         # number of primitives per shell
-        nprims = np.array([shell.nprim for shell in data.obasis.shells])
+        nexps = np.array([shell.nexp for shell in data.obasis.shells])
         exponents = np.array([item for shell in data.obasis.shells for item in shell.exponents])
-        coeffs = np.array([s.coeffs[i][0] for s in data.obasis.shells for i in range(s.nprim)])
+        coeffs = np.array([s.coeffs[i][0] for s in data.obasis.shells for i in range(s.nexp)])
         coordinates = np.array([data.atcoords[shell.icenter] for shell in data.obasis.shells])
         shell_to_atom = np.array([shell.icenter + 1 for shell in data.obasis.shells])
 
@@ -669,14 +669,14 @@ def dump_one(f: TextIO, data: IOData):
         _dump_integer_scalars("Number of basis functions", data.obasis.nbasis, f)
         _dump_integer_scalars("Number of independent functions", data.obasis.nbasis, f)
         _dump_integer_scalars("Number of contracted shells", len(data.obasis.shells), f)
-        _dump_integer_scalars("Number of primitive shells", nprims.sum(), f)
+        _dump_integer_scalars("Number of primitive shells", nexps.sum(), f)
         _dump_integer_scalars("Pure/Cartesian d shells", num_pure_d_shells, f)
         _dump_integer_scalars("Pure/Cartesian f shells", num_pure_f_shells, f)
         _dump_integer_scalars("Highest angular momentum", np.amax(np.abs(shell_types)), f)
-        _dump_integer_scalars("Largest degree of contraction", np.amax(nprims), f)
+        _dump_integer_scalars("Largest degree of contraction", np.amax(nexps), f)
 
         _dump_integer_arrays("Shell types", np.array(shell_types), f)
-        _dump_integer_arrays("Number of primitives per shell", nprims, f)
+        _dump_integer_arrays("Number of primitives per shell", nexps, f)
         _dump_integer_arrays("Shell to atom map", shell_to_atom, f)
 
         _dump_real_arrays("Primitive exponents", exponents, f)
@@ -686,9 +686,9 @@ def dump_one(f: TextIO, data: IOData):
             sp_coeffs = []
             for shell, shell_type in zip(data.obasis.shells, shell_types):
                 if shell_type == -1:
-                    sp_coeffs.extend([shell.coeffs[i][1] for i in range(shell.nprim)])
+                    sp_coeffs.extend([shell.coeffs[i][1] for i in range(shell.nexp)])
                 else:
-                    sp_coeffs.extend([0.0] * shell.nprim)
+                    sp_coeffs.extend([0.0] * shell.nexp)
             _dump_real_arrays("P(S=P) Contraction coefficients", np.array(sp_coeffs), f)
         _dump_real_arrays("Coordinates of each shell", coordinates.flatten(), f)
 
