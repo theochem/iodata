@@ -8,7 +8,7 @@ authors = [
   { name="HORTON-ChemTools Dev Team", email="horton.chemtools@gmail.com" },
 ]
 description = "Python Input and Output Library for Quantum Chemistry"
-readme = "README.rst"
+readme = "README.md"
 license = {file = "LICENSE.txt"}
 requires-python = ">=3.9"
 classifiers = [
