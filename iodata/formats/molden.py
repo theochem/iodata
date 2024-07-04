@@ -276,10 +276,10 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
                 break
             # Read a new shell
             angmom = angmom_sti(words[0])
-            nprim = int(words[1])
-            exponents = np.zeros(nprim)
-            coeffs = np.zeros((nprim, 1))
-            for iprim in range(nprim):
+            nexp = int(words[1])
+            exponents = np.zeros(nexp)
+            coeffs = np.zeros((nexp, 1))
+            for iprim in range(nexp):
                 words = next(lit).split()
                 exponents[iprim] = float(words[0].replace("D", "E"))
                 coeffs[iprim, 0] = float(words[1].replace("D", "E"))
@@ -528,7 +528,7 @@ def _fix_obasis_turbomole(obasis: MolecularBasis) -> Union[MolecularBasis, None]
         fixed_shells.append(fixed_shell)
         angmom = shell.angmoms[0]
         kind = shell.kinds[0]
-        for iprim in range(shell.nprim):
+        for iprim in range(shell.nexp):
             # Default 1.0: do not to correct anything, unless we know how to correct.
             correction = 1.0
             if angmom == 2 and kind == "c":
@@ -872,7 +872,7 @@ def dump_one(f: TextIO, data: IOData):
         # Write out as a segmented basis. Molden format does not support
         # generalized contractions.
         for iangmom, angmom in enumerate(shell.angmoms):
-            f.write(f" {angmom_its(angmom):1s}  {shell.nprim:3d} 1.00\n")
+            f.write(f" {angmom_its(angmom):1s}  {shell.nexp:3d} 1.00\n")
             for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
                 f.write(f"{exponent:20.10f} {coeff:20.10f}\n")
     f.write("\n")

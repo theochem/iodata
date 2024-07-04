@@ -181,11 +181,11 @@ def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
 
 
 def _load_helper_section(
-    lit: LineIterator, nprim: int, start: str, skip: int, dtype: np.dtype
+    lit: LineIterator, size: int, start: str, skip: int, dtype: np.dtype
 ) -> NDArray:
     """Read single or multiple line(s) section."""
     section = []
-    while len(section) < nprim:
+    while len(section) < size:
         line = next(lit)
         if not line.startswith(start):
             raise LoadError(f"Expected line to start with {start}. Got line={line}.", lit)

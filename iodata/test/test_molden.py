@@ -154,19 +154,19 @@ def test_load_molden_low_nh3_molden_cart():
         assert shell.icenter == 3
 
     shell0 = obasis.shells[0]
-    assert shell0.nprim == 8
+    assert shell0.nexp == 8
     assert shell0.exponents.shape == (8,)
     assert_allclose(shell0.exponents[4], 0.2856000000e02)
     assert shell0.coeffs.shape == (8, 1)
     assert_allclose(shell0.coeffs[4, 0], 0.2785706633e00)
     shell7 = obasis.shells[7]
-    assert shell7.nprim == 1
+    assert shell7.nexp == 1
     assert shell7.exponents.shape == (1,)
     assert_allclose(shell7.exponents, [0.8170000000e00])
     assert_allclose(shell7.coeffs, [[1.0]])
     assert shell7.coeffs.shape == (1, 1)
     shell19 = obasis.shells[19]
-    assert shell19.nprim == 3
+    assert shell19.nexp == 3
     assert shell19.exponents.shape == (3,)
     assert_allclose(shell19.exponents, [0.1301000000e02, 0.1962000000e01, 0.4446000000e00])
     assert_allclose(shell19.coeffs, [[0.3349872639e-01], [0.2348008012e00], [0.8136829579e00]])
