@@ -101,13 +101,37 @@ def angmom_its(angmom: Union[int, list[int]]) -> Union[str, list[str]]:
 
 @attrs.define
 class Shell:
-    """A shell in a molecular basis representing (generalized) contractions."""
+    """A shell of (generalized) contracted Gaussian basis functions with common primitive exponents.
+
+    The basis functions in a ``Shell`` instance are centered on a single atomic nucleus.
+    However, an atom can be associated with multiple ``Shell`` instances.
+
+    Notes
+    -----
+    Basis set conventions and terminology are documented in :ref:`basis_conventions`.
+    """
 
     icenter: int = attrs.field()
     """An integer index specifying the row in the atcoords array of IOData object."""
 
     angmoms: list[int] = attrs.field(validator=validate_shape(("coeffs", 1)))
-    """An integer array of angular momentum quantum numbers, non-negative, with shape (ncon,)."""
+    """An integer array of angular momentum quantum numbers, non-negative, with shape (ncon,).
+
+    In the case of ordinary (not generalized) contractions, this list contains one element.
+
+    For generalized contractions, this list contains multiple elements.
+    The same angular momentum may or may not appear multiple times.
+
+    The most common form of generalized contraction is the SP shell,
+    e.g. as found in the Pople basis sets (6-31G and others),
+    in which case this list is ``[0, 1]``.
+
+    Other forms of generalized contractions exist,
+    but only some quantum chemistry codes have efficient implementations for them.
+    For example, the ANO-RCC basis for carbon has 8 S-type basis functions,
+    all different linear combinations of the same 14 Gaussian primitives.
+    In this case, this list is ``[1, 1, 1, 1, 1, 1, 1, 1]``.
+    """
 
     kinds: list[str] = attrs.field(validator=validate_shape(("coeffs", 1)))
     """
@@ -124,9 +148,10 @@ class Shell:
     """
     The array containing the coefficients of the normalized primitives in each contraction;
     shape = (nexp, ncon).
+    Each column represents one linear combination of basis functions.
     These coefficients assume that the primitives are L2 (orbitals) or L1
     (densities) normalized, but contractions are not necessarily normalized.
-    (This depends on the code which generated the contractions.)
+    (This depends on the code that generated the contractions.)
     """
 
     @property
@@ -149,13 +174,19 @@ class Shell:
 
     @property
     def ncon(self) -> int:
-        """Number of contractions. This is usually 1; e.g., it would be 2 for an SP shell."""
+        """Number of generalized contractions.
+
+        This is the number of different linear combinations of Gaussian basis functions with
+        the same set of exponents.
+
+        This is usually 1; e.g., it would be 2 for an SP shell.
+        """
         return len(self.angmoms)
 
 
 @attrs.define
 class MolecularBasis:
-    """A complete molecular orbital or density basis set."""
+    """A complete molecular orbital or density basis set, a collection of contracted shells."""
 
     shells: list[Shell] = attrs.field()
     """A list of objects of type Shell which can support generalized contractions."""
