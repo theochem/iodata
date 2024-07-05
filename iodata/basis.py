@@ -130,7 +130,7 @@ class Shell:
     but only some quantum chemistry codes have efficient implementations for them.
     For example, the ANO-RCC basis for carbon has 8 S-type basis functions,
     all different linear combinations of the same 14 Gaussian primitives.
-    In this case, this list is ``[1, 1, 1, 1, 1, 1, 1, 1]``.
+    In this case, this list is ``[0, 0, 0, 0, 0, 0, 0, 0]``.
     """
 
     kinds: list[str] = attrs.field(validator=validate_shape(("coeffs", 1)))
