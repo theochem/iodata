@@ -66,6 +66,10 @@ html_theme_options = {
     ],
 }
 
+# -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/latex.html#module-latex
+latex_engine = "xelatex"
+
 # -- Configuration for autodoc extensions ---------------------------------
 
 autodoc_default_options = {
