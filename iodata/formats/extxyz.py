@@ -139,7 +139,11 @@ def _parse_properties(properties: str, lit: LineIterator) -> list[tuple]:
     )
     splitted_properties = properties.split(":")
     if len(splitted_properties) % 3 != 0:
-        raise LoadError(f"Cannot parse property from the title line: {properties}", lit)
+        raise LoadError(
+            f"Cannot parse property from the title line: '{properties}'. "
+            f"The expected format is name:dtype:shape.",
+            lit,
+        )
     # Each property has 3 values: its name, dtype and shape
     names = splitted_properties[::3]
     dtypes = splitted_properties[1::3]
