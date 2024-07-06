@@ -73,7 +73,7 @@ def compute_overlap(
     r"""Compute overlap matrix for the given molecular basis set(s).
 
     .. math::
-        \braket{\psi_{i}}{\psi_{j}}
+        \left\langle \psi_i \mid \psi_j \right\rangle
 
     When only one basis set is given, the overlap matrix of that basis (with
     itself) is computed. If a second basis set (with its atomic coordinates) is
