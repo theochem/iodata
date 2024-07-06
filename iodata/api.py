@@ -83,9 +83,13 @@ def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = Non
                 format_module, attrname
             ):
                 return format_module
-    else:
-        return FORMAT_MODULES[fmt]
-    raise FileFormatError(f"Cannot find file format with feature {attrname}", filename)
+        raise FileFormatError(f"Cannot find file format with feature {attrname}", filename)
+    if fmt in FORMAT_MODULES:
+        format_module = FORMAT_MODULES[fmt]
+        if not hasattr(format_module, attrname):
+            raise FileFormatError(f"Format {fmt} does not support feature {attrname}", filename)
+        return format_module
+    raise FileFormatError(f"Unknown file format {fmt}", filename)
 
 
 def _find_input_modules():

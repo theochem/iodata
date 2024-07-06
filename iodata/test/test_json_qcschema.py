@@ -63,10 +63,10 @@ def test_qcschema_molecule(filename, atnums, charge, spinpol, geometry, nwarn):
     """Test qcschema_molecule parsing using manually generated files."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
         if nwarn == 0:
-            mol = load_one(str(qcschema_molecule))
+            mol = load_one(str(qcschema_molecule), fmt="json_qcschema")
         else:
             with pytest.warns(LoadWarning) as record:
-                mol = load_one(str(qcschema_molecule))
+                mol = load_one(str(qcschema_molecule), fmt="json_qcschema")
             assert len(record) == nwarn
 
     np.testing.assert_equal(mol.atnums, atnums)
@@ -109,7 +109,7 @@ def test_molssi_qcschema_molecule(filename, atnums, charge, spinpol, nwarn):
         as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule,
         pytest.warns(LoadWarning) as record,
     ):
-        mol = load_one(str(qcschema_molecule))
+        mol = load_one(str(qcschema_molecule), fmt="json_qcschema")
 
     np.testing.assert_equal(mol.atnums, atnums)
     assert mol.charge == charge
@@ -139,7 +139,7 @@ def test_passthrough_qcschema_molecule(filename, unparsed_dict):
         as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule,
         pytest.warns(LoadWarning) as record,
     ):
-        mol = load_one(str(qcschema_molecule))
+        mol = load_one(str(qcschema_molecule), fmt="json_qcschema")
 
     assert mol.extra["molecule"]["unparsed"] == unparsed_dict
     assert len(record) == 1
@@ -172,15 +172,15 @@ def test_inout_qcschema_molecule(tmpdir, filename, nwarn):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
         if nwarn == 0:
-            mol = load_one(str(qcschema_molecule))
+            mol = load_one(str(qcschema_molecule), fmt="json_qcschema")
         else:
             with pytest.warns(LoadWarning) as record:
-                mol = load_one(str(qcschema_molecule))
+                mol = load_one(str(qcschema_molecule), fmt="json_qcschema")
             assert len(record) == nwarn
         mol1 = json.loads(qcschema_molecule.read_bytes())
 
     fn_tmp = os.path.join(tmpdir, "test_qcschema_mol.json")
-    dump_one(mol, fn_tmp)
+    dump_one(mol, fn_tmp, fmt="json_qcschema")
 
     with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
@@ -205,12 +205,12 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     """Test that loading and dumping qcschema_molecule files retains all relevant data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_molecule:
         with pytest.warns(LoadWarning) as record:
-            mol = load_one(str(qcschema_molecule))
+            mol = load_one(str(qcschema_molecule), fmt="json_qcschema")
         mol1_preproc = json.loads(qcschema_molecule.read_bytes())
     assert len(record) == 1
 
     fn_tmp = os.path.join(tmpdir, "test_qcschema_mol.json")
-    dump_one(mol, fn_tmp)
+    dump_one(mol, fn_tmp, fmt="json_qcschema")
 
     with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
@@ -241,10 +241,10 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
 def test_ghost(tmpdir):
     source = files("iodata.test.data").joinpath("water_cluster_ghost.json")
     with as_file(source) as qcschema_molecule:
-        mol = load_one(str(qcschema_molecule))
+        mol = load_one(str(qcschema_molecule), fmt="json_qcschema")
     np.testing.assert_allclose(mol.atcorenums, [8, 1, 1, 0, 0, 0, 0, 0, 0])
     fn_tmp = os.path.join(tmpdir, "test_ghost.json")
-    dump_one(mol, fn_tmp)
+    dump_one(mol, fn_tmp, fmt="json_qcschema")
     with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
     assert mol2["real"] == [True] * 3 + [False] * 6
@@ -267,7 +267,7 @@ def test_qcschema_input(filename, explicit_basis, lot, obasis_name, run_type, ge
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         try:
             with pytest.warns(LoadWarning):
-                mol = load_one(str(qcschema_input))
+                mol = load_one(str(qcschema_input), fmt="json_qcschema")
             assert mol.lot == lot
             if obasis_name:
                 assert mol.obasis_name == obasis_name
@@ -295,7 +295,7 @@ def test_passthrough_qcschema_input(filename, unparsed_dict, location):
         as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input,
         pytest.warns(LoadWarning),
     ):
-        mol = load_one(str(qcschema_input))
+        mol = load_one(str(qcschema_input), fmt="json_qcschema")
 
     assert mol.extra[location]["unparsed"] == unparsed_dict
 
@@ -316,15 +316,15 @@ def test_inout_qcschema_input(tmpdir, filename, nwarn):
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         if nwarn == 0:
             with pytest.warns(LoadWarning):
-                mol = load_one(str(qcschema_input))
+                mol = load_one(str(qcschema_input), fmt="json_qcschema")
         else:
             with pytest.warns(LoadWarning) as record:
-                mol = load_one(str(qcschema_input))
+                mol = load_one(str(qcschema_input), fmt="json_qcschema")
             assert len(record) == nwarn
         mol1 = json.loads(qcschema_input.read_bytes())
 
     fn_tmp = os.path.join(tmpdir, "test_input_mol.json")
-    dump_one(mol, fn_tmp)
+    dump_one(mol, fn_tmp, fmt="json_qcschema")
 
     with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)
@@ -355,10 +355,10 @@ def test_qcschema_output(filename, lot, obasis_name, run_type, nwarn):
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_output:
         if nwarn == 0:
             with pytest.warns(LoadWarning):
-                mol = load_one(str(qcschema_output))
+                mol = load_one(str(qcschema_output), fmt="json_qcschema")
         else:
             with pytest.warns(LoadWarning) as record:
-                mol = load_one(str(qcschema_output))
+                mol = load_one(str(qcschema_output), fmt="json_qcschema")
             assert len(record) == nwarn
 
         assert mol.lot == lot
@@ -382,7 +382,7 @@ def test_bad_qcschema_files(filename, error):
         as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input,
         pytest.raises(error),
     ):
-        load_one(str(qcschema_input))
+        load_one(str(qcschema_input), fmt="json_qcschema")
 
 
 INOUT_OUTPUT_FILES = [
@@ -396,11 +396,11 @@ def test_inout_qcschema_output(tmpdir, filename):
     """Test that loading and dumping qcschema_molecule files retains all data."""
     with as_file(files("iodata.test.data").joinpath(filename)) as qcschema_input:
         with pytest.warns(LoadWarning):
-            mol = load_one(str(qcschema_input))
+            mol = load_one(str(qcschema_input), fmt="json_qcschema")
         mol1 = json.loads(qcschema_input.read_bytes())
 
     fn_tmp = os.path.join(tmpdir, "test_input_mol.json")
-    dump_one(mol, fn_tmp)
+    dump_one(mol, fn_tmp, fmt="json_qcschema")
 
     with open(fn_tmp) as mol2_in:
         mol2 = json.load(mol2_in)

@@ -27,9 +27,37 @@ import os
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 
-from ..api import dump_many, dump_one, load_many
+from ..api import dump_many, dump_one, load_many, write_input
 from ..iodata import IOData
-from ..utils import DumpError, PrepareDumpError
+from ..utils import DumpError, FileFormatError, PrepareDumpError
+
+
+def test_json_no_pattern(tmpdir):
+    path_json = os.path.join(tmpdir, "name.json")
+    with pytest.raises(FileFormatError):
+        dump_one(IOData(atnums=[1, 2, 3]), path_json)
+    assert not os.path.isfile(path_json)
+
+
+def test_nonexisting_format(tmpdir):
+    path = os.path.join(tmpdir, "foobar")
+    with pytest.raises(FileFormatError):
+        dump_one(IOData(atnums=[1, 2, 3]), path, fmt="file-format-does-not-exist-at-all")
+    assert not os.path.isfile(path)
+
+
+def test_nodump(tmpdir):
+    path = os.path.join(tmpdir, "foobar")
+    with pytest.raises(FileFormatError):
+        dump_one(IOData(atnums=[1, 2, 3]), path, fmt="cp2klog")
+    assert not os.path.isfile(path)
+
+
+def test_noinput(tmpdir):
+    path = os.path.join(tmpdir, "foobar")
+    with pytest.raises(FileFormatError):
+        write_input(IOData(atnums=[1, 2, 3]), path, fmt="this-input-format-does-not-exist")
+    assert not os.path.isfile(path)
 
 
 def test_empty_dump_many_no_file(tmpdir):
