@@ -252,7 +252,7 @@ class IOData:
     When relevant, these names must have a suffix ``_ao`` or ``_mo`` to clarify in which
     basis the integrals are computed.
     See ``one_ints`` for more details.
-    Array indexes are in physicist's notation.
+    Array indexes are in physicists' notation.
     """
 
     two_rdms: dict = attrs.field(factory=dict)
@@ -262,7 +262,7 @@ class IOData:
     When relevant, these names must have a suffix ``_ao`` or ``_mo`` to clarify in which
     basis the RDMs are computed.
     See ``one_rdms`` for more details.
-    Array indexes are in physicist's notation.
+    Array indexes are in physicists' notation.
     """
 
     def __attrs_post_init__(self):

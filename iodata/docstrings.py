@@ -39,6 +39,7 @@ def _document_load(
 ) -> Callable:
     if kwdocs is None:
         kwdocs = {}
+    notes = "" if notes is None else f"\nNotes\n-----\n\n{notes.strip()}\n"
     ifpresent = ifpresent or []
 
     def decorator(func):
@@ -82,11 +83,7 @@ Returns
 result: dict
     A dictionary with IOData attributes. The following attributes are guaranteed to be
     loaded: {guaranteed}.{ifpresent}
-
-Notes
------
 {notes}
-
 """
 
 
@@ -138,11 +135,7 @@ Yields
 result: dict
     A dictionary with IOData attributes. The following attribtues are guaranteed to be
     loaded: {guaranteed}.{ifpresent}
-
-Notes
------
 {notes}
-
 """
 
 

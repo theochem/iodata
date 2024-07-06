@@ -22,7 +22,7 @@ Notes
 -----
 1. This function works only for restricted wave-functions.
 2. One- and two-electron integrals are stored in chemists' notation in an FCIDUMP file,
-   while IOData internally uses Physicist's notation.
+   while IOData internally uses physicists' notation.
 3. Keep in mind that the FCIDUMP format changed in MOLPRO 2012, so files generated with
    older versions are not supported.
 
@@ -42,8 +42,16 @@ __all__ = ()
 PATTERNS = ["*FCIDUMP*"]
 
 
+LOAD_ONE_NOTES = """
+IOData stores four-index objects in physicists' notation internally and
+assumes they are stored in an FCIDUMP file in chemists' notation.
+"""
+
+
 @document_load_one(
-    "Molpro 2012 FCIDUMP", ["core_energy", "one_ints", "nelec", "spinpol", "two_ints"]
+    "Molpro 2012 FCIDUMP",
+    ["core_energy", "one_ints", "nelec", "spinpol", "two_ints"],
+    notes=LOAD_ONE_NOTES,
 )
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
@@ -107,9 +115,11 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
-LOAD_ONE_NOTES = """
-The dictionary ``one_ints`` must contain a field ``core_mo``. Similarly, ``two_ints`` must
-contain ``two_mo``.
+DUMP_ONE_NOTES = """
+The dictionary ``one_ints`` must contain a field ``core_mo``.
+Similarly, ``two_ints`` must contain ``two_mo``.
+IOData stores four-index objects in physicists' notation internally and
+dumps them to an FCIDUMP file in chemists' notation.
 """
 
 
@@ -117,8 +127,7 @@ contain ``two_mo``.
     "Molpro 2012 FCIDUMP",
     ["one_ints", "two_ints"],
     ["core_energy", "nelec", "spinpol"],
-    {},
-    LOAD_ONE_NOTES,
+    notes=DUMP_ONE_NOTES,
 )
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""

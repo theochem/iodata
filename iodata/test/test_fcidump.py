@@ -42,7 +42,7 @@ def test_load_fcidump_psi4_h2():
     two_mo = mol.two_ints["two_mo"]
     assert_allclose(two_mo.shape, (10, 10, 10, 10))
     assert_allclose(two_mo[0, 0, 0, 0], 0.6589928924251115e00)
-    # Check physicist's notation and symmetry
+    # Check physicists' notation and symmetry
     assert_allclose(two_mo[6, 1, 5, 0], 0.5335846565304321e-01)
     assert_allclose(two_mo[5, 1, 6, 0], 0.5335846565304321e-01)
     assert_allclose(two_mo[6, 0, 5, 1], 0.5335846565304321e-01)
@@ -69,7 +69,7 @@ def test_load_fcidump_molpro_h2():
     two_mo = mol.two_ints["two_mo"]
     assert_allclose(two_mo.shape, (4, 4, 4, 4))
     assert_allclose(two_mo[0, 0, 0, 0], 0.6527679278914691e00)
-    # Check physicist's notation and symmetry
+    # Check physicists' notation and symmetry
     assert_allclose(two_mo[3, 0, 2, 1], 0.7756042287284058e-01)
     assert_allclose(two_mo[2, 0, 3, 1], 0.7756042287284058e-01)
     assert_allclose(two_mo[3, 1, 2, 0], 0.7756042287284058e-01)
