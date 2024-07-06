@@ -51,9 +51,7 @@ assumes they are stored in an FCIDUMP file in chemists' notation.
 @document_load_one(
     "Molpro 2012 FCIDUMP",
     ["core_energy", "one_ints", "nelec", "spinpol", "two_ints"],
-    [],
-    {},
-    LOAD_ONE_NOTES,
+    notes=LOAD_ONE_NOTES,
 )
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
@@ -129,8 +127,7 @@ dumps them to an FCIDUMP file in chemists' notation.
     "Molpro 2012 FCIDUMP",
     ["one_ints", "two_ints"],
     ["core_energy", "nelec", "spinpol"],
-    {},
-    DUMP_ONE_NOTES,
+    notes=DUMP_ONE_NOTES,
 )
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""

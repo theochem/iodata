@@ -45,7 +45,7 @@ They will be reordered into physicists' notation when loading them with IOData.
 """
 
 
-@document_load_one("Gaussian Log", [], ["one_ints", "two_ints"], {}, LOAD_ONE_NOTES)
+@document_load_one("Gaussian Log", [], ["one_ints", "two_ints"], notes=LOAD_ONE_NOTES)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # First get the line with the number of orbital basis functions

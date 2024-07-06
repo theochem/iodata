@@ -39,6 +39,7 @@ def _document_load(
 ) -> Callable:
     if kwdocs is None:
         kwdocs = {}
+    notes = "" if notes is None else f"\nNotes\n-----\n\n{notes.strip()}\n"
     ifpresent = ifpresent or []
 
     def decorator(func):
@@ -117,8 +118,6 @@ def document_load_one(
     """
     if kwdocs is None:
         kwdocs = {}
-    if notes is not None:
-        notes = f"\nNotes\n-----\n\n{notes.strip()}\n"
     return _document_load(LOAD_ONE_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 
@@ -171,8 +170,6 @@ def document_load_many(
     """
     if kwdocs is None:
         kwdocs = {}
-    if notes is not None:
-        notes = f"\nNotes\n-----\n\n{notes.strip()}\n"
     return _document_load(LOAD_MANY_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 
