@@ -82,11 +82,7 @@ Returns
 result: dict
     A dictionary with IOData attributes. The following attributes are guaranteed to be
     loaded: {guaranteed}.{ifpresent}
-
-Notes
------
 {notes}
-
 """
 
 
@@ -121,6 +117,8 @@ def document_load_one(
     """
     if kwdocs is None:
         kwdocs = {}
+    if notes is not None:
+        notes = f"\nNotes\n-----\n\n{notes.strip()}\n"
     return _document_load(LOAD_ONE_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 
@@ -138,11 +136,7 @@ Yields
 result: dict
     A dictionary with IOData attributes. The following attribtues are guaranteed to be
     loaded: {guaranteed}.{ifpresent}
-
-Notes
------
 {notes}
-
 """
 
 
@@ -177,6 +171,8 @@ def document_load_many(
     """
     if kwdocs is None:
         kwdocs = {}
+    if notes is not None:
+        notes = f"\nNotes\n-----\n\n{notes.strip()}\n"
     return _document_load(LOAD_MANY_DOC_TEMPLATE, fmt, guaranteed, ifpresent, kwdocs, notes)
 
 

@@ -39,7 +39,13 @@ __all__ = ()
 PATTERNS = ["*.log"]
 
 
-@document_load_one("Gaussian Log", [], ["one_ints", "two_ints"])
+LOAD_ONE_NOTES = """\
+Note that Gaussian writes four-center integrals in chemists' notation.
+They will be reordered into physicists' notation when loading them with IOData.
+"""
+
+
+@document_load_one("Gaussian Log", [], ["one_ints", "two_ints"], {}, LOAD_ONE_NOTES)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     # First get the line with the number of orbital basis functions
@@ -136,7 +142,7 @@ def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> NDArray[float]:
         i2 = int(line[15:19]) - 1
         i3 = int(line[21:25]) - 1
         value = float(line[29:].replace("D", "E"))
-        # Gaussian uses the chemists notation for the 4-center indexes. IOdata
-        # uses the physicists notation.
+        # Gaussian uses the chemists' notation for the 4-center indexes. IOdata
+        # uses the physicists' notation.
         set_four_index_element(result, i0, i2, i1, i3, value)
     return result
