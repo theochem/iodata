@@ -4,6 +4,7 @@
 [![release](https://github.com/theochem/iodata/actions/workflows/release.yaml/badge.svg)](https://github.com/theochem/iodata/actions/workflows/release.yaml)
 [![sphinx](https://github.com/theochem/iodata/actions/workflows/sphinx.yaml/badge.svg)](https://github.com/theochem/iodata/actions/workflows/sphinx.yaml)
 [![CodeFactor](https://www.codefactor.io/repository/github/theochem/iodata/badge)](https://www.codefactor.io/repository/github/theochem/iodata)
+[![codecov](https://codecov.io/gh/theochem/iodata/graph/badge.svg?token=QPUfAWj7vf)](https://codecov.io/gh/theochem/iodata)
 [![DeepSource](https://app.deepsource.com/gh/theochem/iodata.svg/?label=code+coverage&show_trend=true&token=oojwgNPm16rkx3ce1xficg46)](https://app.deepsource.com/gh/theochem/iodata/)
 [![DeepSource](https://app.deepsource.com/gh/theochem/iodata.svg/?label=active+issues&show_trend=true&token=oojwgNPm16rkx3ce1xficg46)](https://app.deepsource.com/gh/theochem/iodata/)
 [![PyPI](https://img.shields.io/pypi/v/qc-iodata.svg)](https://pypi.python.org/pypi/qc-iodata/)
