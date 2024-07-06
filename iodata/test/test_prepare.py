@@ -89,7 +89,7 @@ def test_dump_occs_aminusb(tmpdir, fmt):
         data1 = load_one(fn_fchk)
     assert data1.mo.kind == "restricted"
     data1.mo.occs = [2, 2, 2, 1, 1, 1, 0]
-    data1.mo.occs_aminusb = [0, 0, 0, 1, 0.3, 0.2, 0]
+    data1.mo.occs_aminusb = [0, 0, 0, 1, 0.7, 0.3, 0]
     assert_allclose(data1.spinpol, data1.mo.spinpol)
 
     # Dump and load again

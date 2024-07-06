@@ -208,7 +208,8 @@ def _load_helper_mo(lit: LineIterator, n_basis: int, n_mo: int) -> dict:
         line = next(lit)
         while "Index" not in line:
             line = next(lit)
-        assert line.startswith("Index")
+        if not line.startswith("Index"):
+            raise LoadError(f"Expecting line starting with 'Index', got '{line}'", lit)
         data["mo_numbers"][index] = line.split()[1]
         data["mo_type"][index] = next(lit).split()[1]
         data["mo_energies"][index] = next(lit).split()[1]
@@ -324,7 +325,8 @@ def load_one(lit: LineIterator) -> dict:
         # 2: beta
         norba = (inp["mo_type"] == 1).sum()
         norbb = (inp["mo_type"] == 2).sum()
-        assert (inp["mo_type"] == 0).sum() == 0
+        if (inp["mo_type"] == 0).sum() != 0:
+            raise LoadError("Restricted orbtials found in unrestricted wavefunction.", lit)
     # Build MolecularOrbitals instance
     mo = MolecularOrbitals(
         inp["mo_kind"], norba, norbb, inp["mo_occs"], inp["mo_coeffs"], inp["mo_energies"], None

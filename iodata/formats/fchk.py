@@ -21,6 +21,7 @@
 from collections.abc import Iterator
 from fnmatch import fnmatch
 from typing import Optional, TextIO
+from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
@@ -29,7 +30,7 @@ from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventi
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import DumpError, LineIterator, LoadError, PrepareDumpError, amu
+from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, amu
 
 __all__ = ()
 
@@ -336,7 +337,15 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
                 fchk[f"{prefix} {ipoint + 1:7d} Gradient at each geome"].reshape(-1, natom, 3),
             )
         )
-        assert len(trajectory) == nstep
+        if len(trajectory) != nstep:
+            warn(
+                LoadWarning(
+                    "The size of the optimization trajectory is inconsistent with the values in the"
+                    "field 'Optimization Number of geometries'. The latter is ignored.",
+                    lit,
+                ),
+                stacklevel=2,
+            )
         for istep, (energy, recor, atcoords, gradients) in enumerate(trajectory):
             data = {
                 "title": fchk["title"],
@@ -349,7 +358,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
                     "ipoint": ipoint,
                     "npoint": len(nsteps),
                     "istep": istep,
-                    "nstep": nstep,
+                    "nstep": len(trajectory),
                 },
             }
             if prefix == "IRC point":

@@ -34,7 +34,7 @@ import numpy as np
 
 from ..docstrings import document_load_many, document_load_one
 from ..periodic import num2sym, sym2num
-from ..utils import LineIterator, amu, angstrom, strtobool
+from ..utils import LineIterator, LoadError, amu, angstrom, strtobool
 from .xyz import load_one as load_one_xyz
 
 __all__ = ()
@@ -76,8 +76,22 @@ def _convert_title_value(value: str):
     return converted_value
 
 
-def _parse_properties(properties: str):
-    """Parse the properties into atom_columns."""
+def _parse_properties(properties: str, lit: LineIterator) -> list[tuple]:
+    """Parse the properties listed in the title into atom_columns.
+
+    Parameters
+    ----------
+    properties
+        The part of the title of an XYZ file containing column definitions.
+    lit
+        The LineIterator reading the file, only used for error messages.
+
+    Returns
+    -------
+    atom_columns
+        A list of tuples specifying the columns in the extended XYZ file.
+        For more details, see ``ATOM_COLUMNS_DOC`` in ``iodata.formats.xyz``.
+    """
     atom_columns = []
     # Maps the dtype to the atom_columns dtype, load_word and dump_word
     dtype_map = {
@@ -124,7 +138,8 @@ def _parse_properties(properties: str):
         (lambda atnum: f"{num2sym[atnum]:2s}"),
     )
     splitted_properties = properties.split(":")
-    assert len(splitted_properties) % 3 == 0
+    if len(splitted_properties) % 3 != 0:
+        raise LoadError(f"Cannot parse property from the title line: {properties}", lit)
     # Each property has 3 values: its name, dtype and shape
     names = splitted_properties[::3]
     dtypes = splitted_properties[1::3]
@@ -145,8 +160,25 @@ def _parse_properties(properties: str):
     return atom_columns
 
 
-def _parse_title(title: str):
-    """Parse the title in an extended xyz file."""
+def _parse_title(title: str, lit: LineIterator) -> tuple[list[tuple], dict[str]]:
+    """Parse the title in an extended xyz file.
+
+    Parameters
+    ----------
+    title
+        The full title line.
+    lit
+        The LineIterator reading the file, only used for error messages.
+
+    Returns
+    -------
+    atom_columns
+        A list of tuples specifying the columns in the extended XYZ file.
+        For more details, see ``ATOM_COLUMNS_DOC`` in ``iodata.formats.xyz``.
+    data
+        Attributes to be included in the ``IOData`` instance,
+        taken from the title line.
+    """
     key_value_pairs = shlex.split(title)
     # A dict of predefined iodata atrributes with their names and dtype convertion functions
 
@@ -163,7 +195,7 @@ def _parse_title(title: str):
         if "=" in key_value_pair:
             key, value = key_value_pair.split("=", 1)
             if key == "Properties":
-                atom_columns = _parse_properties(value)
+                atom_columns = _parse_properties(value, lit)
             elif key in iodata_attrs:
                 data[iodata_attrs[key][0]] = iodata_attrs[key][1](value)
             else:
@@ -184,7 +216,7 @@ def load_one(lit: LineIterator) -> dict:
     atom_line = next(lit)
     title_line = next(lit)
     # parse title
-    atom_columns, title_data = _parse_title(title_line)
+    atom_columns, title_data = _parse_title(title_line, lit)
     lit.back(title_line)
     lit.back(atom_line)
     xyz_data = load_one_xyz(lit, atom_columns)

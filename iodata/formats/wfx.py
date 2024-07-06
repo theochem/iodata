@@ -128,13 +128,16 @@ def load_data_wfx(lit: LineIterator) -> dict:
     result = {}
     for key, value in data.items():
         if key in lbs_str:
-            assert len(value) == 1
+            if len(value) != 1:
+                raise LoadError(f"Expecting one value, got {len(value)}", lit)
             result[lbs_str[key]] = value[0]
         elif key in lbs_int:
-            assert len(value) == 1
+            if len(value) != 1:
+                raise LoadError(f"Expecting one value, got {len(value)}", lit)
             result[lbs_int[key]] = int(value[0])
         elif key in lbs_float:
-            assert len(value) == 1
+            if len(value) != 1:
+                raise LoadError(f"Expecting one value, got {len(value)}", lit)
             result[lbs_float[key]] = float(value[0])
         elif key in lbs_afloat:
             result[lbs_afloat[key]] = np.fromstring(" ".join(value), dtype=float, sep=" ")
