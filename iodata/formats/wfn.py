@@ -354,7 +354,11 @@ def build_obasis(
         # Move on to the next contraction
         ibasis += ncart * ncon
     obasis = MolecularBasis(shells, CONVENTIONS, "L2")
-    assert obasis.nbasis == nbasis
+    if obasis.nbasis != nbasis:
+        raise LoadError(
+            "The basis set size derived from icenters is inconsistent with "
+            "the number of primitives."
+        )
     return obasis, permutation
 
 

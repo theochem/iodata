@@ -252,7 +252,8 @@ def _read_cp2k_orbital_coeffs(
     next(lit)
     while len(allcoeffs) < len(oe):
         line = next(lit)
-        assert line.startswith("    ORBITAL      L =")
+        if not line.startswith("    ORBITAL      L ="):
+            raise LoadError("Did not find the expected start of a new ORBITAL section.", lit)
         words = line.split()
         angmom = int(words[3])
         state = int(words[6])
@@ -407,7 +408,8 @@ def load_one(lit: LineIterator) -> dict:
     for line in lit:
         if line.startswith("          Core Charge"):
             atcorenum = float(line[70:])
-            assert atcorenum == int(atcorenum)
+            if atcorenum != int(atcorenum):
+                raise LoadError("Inconsistent effective core charge", lit)
             break
         if line.startswith(" Electronic structure"):
             atcorenum = float(atnum)
@@ -447,7 +449,8 @@ def load_one(lit: LineIterator) -> dict:
     # Turn orbital data into a MolecularOrbitals object.
     if restricted:
         norb, nel = _get_norb_nel(oe_alpha)
-        assert nel % 2 == 0
+        if nel % 2 != 0:
+            raise LoadError("Odd number of electrons for a restricted wavefunction.", lit)
         orb_alpha_coeffs = np.zeros([obasis.nbasis, norb])
         orb_alpha_energies = np.zeros(norb)
         orb_alpha_occs = np.zeros(norb)
@@ -466,7 +469,8 @@ def load_one(lit: LineIterator) -> dict:
     else:
         norb_alpha = _get_norb_nel(oe_alpha)[0]
         norb_beta = _get_norb_nel(oe_beta)[0]
-        assert norb_alpha == norb_beta
+        if norb_alpha != norb_beta:
+            raise LoadError("Inconsistent number of alpha and beta orbitals.", lit)
         orb_alpha_coeffs = np.zeros([obasis.nbasis, norb_alpha])
         orb_alpha_energies = np.zeros(norb_alpha)
         orb_alpha_occs = np.zeros(norb_alpha)

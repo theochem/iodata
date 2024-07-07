@@ -3,7 +3,7 @@ $MKL
 # A cooked-up MKL file to trigger a warning about spin
 #
 $CHAR_MULT
-  2 4
+  2 5
 $END
 
 $COORD

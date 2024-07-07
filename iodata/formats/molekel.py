@@ -125,21 +125,26 @@ def _load_helper_coeffs(
             # read a1g line
             words = line.split()
             ncol = len(words)
-            assert ncol > 0
+            if ncol == 0:
+                raise LoadError("Expect irrep, got empty line", line)
             irreps.extend(words)
             cols = [np.zeros((nbasis, 1), float) for _ in range(ncol)]
             in_orb = 1
         elif in_orb == 1:
             # read energies
             words = line.split()
-            assert len(words) == ncol
+            if len(words) != ncol:
+                raise LoadError(f"Wrong number of energies: expected {ncol}, got {len(words)}", lit)
             energies.extend(float(word) for word in words)
             in_orb = 2
             ibasis = 0
         elif in_orb == 2:
             # read expansion coefficients
             words = line.split()
-            assert len(words) == ncol
+            if len(words) != ncol:
+                raise LoadError(
+                    f"Wrong number of coefficients: expected {ncol}, got {len(words)}", lit
+                )
             for icol in range(ncol):
                 cols[icol][ibasis] = float(words[icol])
             ibasis += 1
@@ -224,8 +229,10 @@ def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
     nelec = atnums.sum() - charge
     if coeffsb is None:
         # restricted closed-shell
-        assert nelec % 2 == 0
-        assert abs(occsa.sum() - nelec) < 1e-7
+        if nelec % 2 != 0:
+            raise LoadError("Odd number of electrons found in restricted case.", lit)
+        if abs(occsa.sum() - nelec) > 1e-7:
+            raise LoadError("Occupation numbers are inconsistent with number of electrons", lit)
         mo = MolecularOrbitals(
             "restricted", coeffsa.shape[1], coeffsa.shape[1], occsa, coeffsa, energiesa, irrepsa
         )
@@ -235,22 +242,20 @@ def load_one(lit: LineIterator, norm_threshold: float = 1e-4) -> dict:
                 "Beta occupation numbers not found in mkl file while beta orbitals were present.",
                 lit,
             )
-        nalpha = int(np.round(occsa.sum()))
-        nbeta = int(np.round(occsb.sum()))
+        nalpha = occsa.sum()
+        nbeta = occsb.sum()
         if abs(spinpol - abs(nalpha - nbeta)) > 1e-7:
             warn(
                 LoadWarning(
-                    f"The spin polarization ({spinpol}) is inconsistent with the"
+                    f"The spin polarization ({spinpol}) is inconsistent with the "
                     f"difference between alpha and beta occupation numbers ({nalpha} - {nbeta}). "
                     "The spin polarization will be rederived from the occupation numbers.",
                     lit,
                 ),
                 stacklevel=2,
             )
-        assert nelec == nalpha + nbeta
-        assert coeffsa.shape == coeffsb.shape
-        assert energiesa.shape == energiesb.shape
-        assert occsa.shape == occsb.shape
+        if abs(nelec - (nalpha + nbeta)) > 1e-7:
+            raise LoadError("Occupation numbers are inconsistent with number of electrons", lit)
         mo = MolecularOrbitals(
             "unrestricted",
             coeffsa.shape[1],

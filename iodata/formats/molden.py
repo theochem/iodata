@@ -579,8 +579,6 @@ def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     correction = []
     corrected = False
     for shell in obasis.shells:
-        # We can safely assume segmented shells.
-        assert shell.ncon == 1
         angmom = shell.angmoms[0]
         kind = shell.kinds[0]
         factors = None
@@ -594,7 +592,8 @@ def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
         if factors is None:
             factors = np.ones(shell.nbasis)
         else:
-            assert len(factors) == shell.nbasis
+            if len(factors) != shell.nbasis:
+                raise AssertionError("Internal error when correcting for Psi4 errors.")
             corrected = True
         correction.append(factors)
     if corrected:
@@ -612,8 +611,6 @@ def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     correction = []
     corrected = False
     for shell in obasis.shells:
-        # We can safely assume segmented shells.
-        assert shell.ncon == 1
         angmom = shell.angmoms[0]
         kind = shell.kinds[0]
         factors = None
@@ -632,7 +629,8 @@ def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
         if factors is None:
             factors = np.ones(shell.nbasis)
         else:
-            assert len(factors) == shell.nbasis
+            if len(factors) != shell.nbasis:
+                raise AssertionError("Internal error when correcting for CFOUR errors.")
             corrected = True
         correction.append(factors)
     if corrected:
@@ -670,6 +668,8 @@ def _fix_molden_from_buggy_codes(result: dict, lit: LineIterator, norm_threshold
         coeffsb = result["mo"].coeffsb
     else:
         raise LoadError(f"Molecular orbital kind={result['mo'].kind} not recognized.", lit)
+    if any(shell.ncon != 1 for shell in obasis.shells):
+        raise LoadError("Generalized contractions are not supported", lit)
 
     if _is_normalized_properly(obasis, atcoords, coeffsa, coeffsb, norm_threshold):
         # The file is good. No need to change obasis.

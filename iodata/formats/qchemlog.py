@@ -27,7 +27,7 @@ from numpy.typing import NDArray
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..periodic import sym2num
-from ..utils import LineIterator, angstrom, calmol, kcalmol, kjmol, strtobool
+from ..utils import LineIterator, LoadError, angstrom, calmol, kcalmol, kjmol, strtobool
 
 __all__ = ()
 
@@ -109,8 +109,12 @@ def load_one(lit: LineIterator) -> dict:
         # Convert to alphabetical ordering: xx, xy, xz, yy, yz, zz
         moments[(2, "c")] = data["quadrupole"][[0, 1, 3, 2, 4, 5]]
     # check total dipole parsed
-    if "dipole_tol" in data and "dipole" in data:
-        assert abs(np.linalg.norm(data["dipole"]) - data["dipole_tol"]) < 1.0e-4
+    if (
+        "dipole_tol" in data
+        and "dipole" in data
+        and abs(np.linalg.norm(data["dipole"]) - data["dipole_tol"]) > 1.0e-4
+    ):
+        raise LoadError("Inconsistent dipole and dipole_tol", lit.filename)
     if moments:
         result["moments"] = moments
 

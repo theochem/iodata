@@ -29,12 +29,13 @@ Notes
 """
 
 from typing import TextIO
+from warnings import warn
 
 import numpy as np
 
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
-from ..utils import LineIterator, LoadError, set_four_index_element
+from ..utils import LineIterator, LoadError, LoadWarning, set_four_index_element
 
 __all__ = ()
 
@@ -94,9 +95,11 @@ def load_one(lit: LineIterator) -> dict:
             ij = int(words[2]) - 1
             ik = int(words[3]) - 1
             il = int(words[4]) - 1
-            # Uncomment the following line if you want to assert that the
-            # FCIDUMP file does not contain duplicate 4-index entries.
-            # assert two_mo.get_element(ii,ik,ij,il) == 0.0
+            if two_mo[ii, ik, ij, il] != 0.0:
+                warn(
+                    LoadWarning("Duplicate entries in the FCIDUMP file are ignored", lit),
+                    stacklevel=2,
+                )
             set_four_index_element(two_mo, ii, ik, ij, il, value)
         elif words[1] != "0":
             ii = int(words[1]) - 1
