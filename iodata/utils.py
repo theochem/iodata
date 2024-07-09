@@ -18,6 +18,7 @@
 # --
 """Utility functions module."""
 
+from io import TextIOBase
 from pathlib import Path
 from typing import Optional, TextIO, Union
 
@@ -140,7 +141,7 @@ def _interpret_file_lineno(
         if lineno is None:
             lineno = file.lineno
         return file.filename, lineno
-    if isinstance(file, TextIO):
+    if isinstance(file, TextIOBase):
         return file.name, lineno
     if file is None:
         if lineno is not None:
