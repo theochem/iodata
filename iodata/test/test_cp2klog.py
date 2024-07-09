@@ -41,11 +41,11 @@ def test_atom_si_uks():
     assert_allclose(mol.mo.energiesb, [-0.334567, -0.092237, -0.092237, -0.092237], atol=1.0e-4)
     assert_allclose(mol.energy, -3.761587698067, atol=1.0e-10)
     assert len(mol.obasis.shells) == 3
-    assert mol.obasis.shells[0].kinds == ["c", "c"]
+    assert_equal(mol.obasis.shells[0].kinds, ["c", "c"])
     assert_equal(mol.obasis.shells[1].angmoms, [1, 1])
-    assert mol.obasis.shells[1].kinds == ["c", "c"]
+    assert_equal(mol.obasis.shells[1].kinds, ["c", "c"])
     assert_equal(mol.obasis.shells[2].angmoms, [2])
-    assert mol.obasis.shells[2].kinds == ["p"]
+    assert_equal(mol.obasis.shells[2].kinds, ["p"])
     # check mo normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffsa, olp)
@@ -63,11 +63,11 @@ def test_atom_o_rks():
     assert_allclose(mol.energy, -15.464982778766, atol=1.0e-10)
     assert_equal(mol.obasis.shells[0].angmoms, [0, 0])
     assert len(mol.obasis.shells) == 3
-    assert mol.obasis.shells[0].kinds == ["c", "c"]
+    assert_equal(mol.obasis.shells[0].kinds, ["c", "c"])
     assert_equal(mol.obasis.shells[1].angmoms, [1, 1])
-    assert mol.obasis.shells[1].kinds == ["c", "c"]
+    assert_equal(mol.obasis.shells[1].kinds, ["c", "c"])
     assert_equal(mol.obasis.shells[2].angmoms, [2])
-    assert mol.obasis.shells[2].kinds == ["p"]
+    assert_equal(mol.obasis.shells[2].kinds, ["p"])
     # check mo normalization
     olp = compute_overlap(mol.obasis, mol.atcoords)
     check_orthonormal(mol.mo.coeffs, olp)

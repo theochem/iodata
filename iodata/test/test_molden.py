@@ -612,8 +612,8 @@ def test_mixed_pure_cartesian(tmpdir):
         atcoords=[[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
         obasis=MolecularBasis(
             [
-                Shell(0, [2], ["c"], np.array([1.0]), np.array([[1.0]])),
-                Shell(0, [2], ["p"], np.array([1.0]), np.array([[1.0]])),
+                Shell(0, [2], ["c"], [1.0], [[1.0]]),
+                Shell(0, [2], ["p"], [1.0], [[1.0]]),
             ],
             HORTON2_CONVENTIONS,
             "L2",

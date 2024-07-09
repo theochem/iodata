@@ -32,7 +32,7 @@ import attrs
 import numpy as np
 from numpy.typing import NDArray
 
-from .attrutils import validate_shape
+from .attrutils import convert_array_to, validate_shape
 
 __all__ = (
     "angmom_sti",
@@ -114,37 +114,49 @@ class Shell:
     icenter: int = attrs.field()
     """An integer index specifying the row in the atcoords array of IOData object."""
 
-    angmoms: list[int] = attrs.field(validator=validate_shape(("coeffs", 1)))
+    angmoms: NDArray[int] = attrs.field(
+        converter=convert_array_to(int),
+        validator=validate_shape(("coeffs", 1)),
+    )
     """An integer array of angular momentum quantum numbers, non-negative, with shape (ncon,).
 
-    In the case of ordinary (not generalized) contractions, this list contains one element.
+    In the case of ordinary (not generalized) contractions, this array contains one element.
 
-    For generalized contractions, this list contains multiple elements.
+    For generalized contractions, this array contains multiple elements.
     The same angular momentum may or may not appear multiple times.
 
     The most common form of generalized contraction is the SP shell,
     e.g. as found in the Pople basis sets (6-31G and others),
-    in which case this list is ``[0, 1]``.
+    in which case this array is ``[0, 1]``.
 
     Other forms of generalized contractions exist,
     but only some quantum chemistry codes have efficient implementations for them.
     For example, the ANO-RCC basis for carbon has 8 S-type basis functions,
     all different linear combinations of the same 14 Gaussian primitives.
-    In this case, this list is ``[0, 0, 0, 0, 0, 0, 0, 0]``.
+    In this case, this array is ``[0, 0, 0, 0, 0, 0, 0, 0]``.
     """
 
-    kinds: list[str] = attrs.field(validator=validate_shape(("coeffs", 1)))
+    kinds: NDArray[str] = attrs.field(
+        converter=convert_array_to(str),
+        validator=validate_shape(("coeffs", 1)),
+    )
     """
-    List of strings describing the kind of contractions:
+    Array of strings describing the kind of contractions:
     ``'c'`` for Cartesian and ``'p'`` for pure.
     Pure functions are only allowed for ``angmom > 1``.
     The length equals the number of contractions (``ncon = len(kinds)``).
     """
 
-    exponents: NDArray[float] = attrs.field(validator=validate_shape(("coeffs", 0)))
+    exponents: NDArray[float] = attrs.field(
+        converter=convert_array_to(float),
+        validator=validate_shape(("coeffs", 0)),
+    )
     """The array containing the exponents of the primitives, with shape (nexp,)."""
 
-    coeffs: NDArray[float] = attrs.field(validator=validate_shape(("exponents", 0), ("kinds", 0)))
+    coeffs: NDArray[float] = attrs.field(
+        converter=convert_array_to(float),
+        validator=validate_shape(("exponents", 0), ("kinds", 0)),
+    )
     """
     The array containing the coefficients of the normalized primitives in each contraction;
     shape = (nexp, ncon).
