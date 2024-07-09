@@ -40,7 +40,7 @@ from ..utils import LineIterator, LoadError, LoadWarning, set_four_index_element
 __all__ = ()
 
 
-PATTERNS = ["*FCIDUMP*"]
+PATTERNS = ["*FCIDUMP*", "*.fcidump"]
 
 
 LOAD_ONE_NOTES = """

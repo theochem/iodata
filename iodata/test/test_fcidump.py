@@ -93,7 +93,7 @@ def test_dump_load_fcidimp_consistency_ao(tmpdir):
         mol0.two_ints = {"two_mo": np.load(str(fn))}
 
     # Dump to a file and load it again
-    fn_tmp = os.path.join(tmpdir, "FCIDUMP")
+    fn_tmp = os.path.join(tmpdir, "tmp.fcidump")
     dump_one(mol0, fn_tmp)
     mol1 = load_one(fn_tmp)
 
