@@ -28,10 +28,13 @@ import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
-from ..basis import convert_conventions
+from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventions
 from ..formats.molden import _load_low
+from ..formats.molden import dump_one as molden_dump_one
+from ..iodata import IOData
+from ..orbitals import MolecularOrbitals
 from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
-from ..utils import LineIterator, LoadWarning, PrepareDumpError, angstrom
+from ..utils import DumpError, LineIterator, LoadWarning, PrepareDumpError, angstrom
 from .common import check_orthonormal, compare_mols, compute_mulliken_charges, create_generalized
 
 
@@ -600,3 +603,30 @@ def test_generalized():
     data = create_generalized()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generalized.molden")
+
+
+def test_mixed_pure_cartesian(tmpdir):
+    rng = np.random.default_rng(42)
+    data = IOData(
+        atnums=[1, 1],
+        atcoords=[[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+        obasis=MolecularBasis(
+            [
+                Shell(0, [2], ["c"], np.array([1.0]), np.array([[1.0]])),
+                Shell(0, [2], ["p"], np.array([1.0]), np.array([[1.0]])),
+            ],
+            HORTON2_CONVENTIONS,
+            "L2",
+        ),
+        mo=MolecularOrbitals(
+            "restricted",
+            norba=2,
+            norbb=2,
+            occs=[1.0, 0.0],
+            energies=[-1.0, -0.5],
+            coeffs=rng.uniform(0, 1, (11, 2)),
+        ),
+    )
+    assert data.obasis.nbasis == data.mo.nbasis
+    with open(os.path.join(tmpdir, "foo.molden"), "w") as fh, pytest.raises(DumpError):
+        molden_dump_one(fh, data)
