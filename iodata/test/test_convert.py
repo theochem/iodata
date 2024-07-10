@@ -37,6 +37,7 @@ from ..orbitals import MolecularOrbitals
 def test_convert_convention_shell():
     assert _convert_convention_shell("abc", "cba") == ([2, 1, 0], [1, 1, 1])
     assert _convert_convention_shell(["a", "b", "c"], ["c", "b", "a"]) == ([2, 1, 0], [1, 1, 1])
+    assert _convert_convention_shell([], []) == ([], [])
 
     permutation, signs = _convert_convention_shell(["-a", "b", "c"], ["c", "b", "a"])
     assert permutation == [2, 1, 0]
@@ -73,8 +74,9 @@ def test_convert_convention_shell():
     assert_equal(vec2[permutation] * signs, vec1)
 
 
-def test_convert_convention_obasis():
-    obasis = MolecularBasis(
+@pytest.fixture()
+def obasis() -> MolecularBasis:
+    return MolecularBasis(
         [
             Shell(0, [0], ["c"], np.zeros(3), np.zeros((3, 1))),
             Shell(0, [0, 1], ["c", "c"], np.zeros(3), np.zeros((3, 2))),
@@ -88,6 +90,9 @@ def test_convert_convention_obasis():
         },
         "L2",
     )
+
+
+def test_convert_convention_obasis(obasis: MolecularBasis):
     new_convention = {
         (0, "c"): ["-s"],
         (1, "c"): ["x", "y", "z"],
@@ -104,17 +109,44 @@ def test_convert_convention_obasis():
     assert_equal(vec1, vec3)
 
 
+def test_convert_convention_obasis_empty(obasis: MolecularBasis):
+    with pytest.raises(KeyError):
+        convert_conventions(obasis, {})
+
+
+def test_convert_convention_obasis_invalid(obasis: MolecularBasis):
+    new_convention = {
+        (0, "c"): ["-s"],
+        (1, "c"): ["a", "b", "c"],
+        (2, "p"): ["dc2", "dc1", "dc0", "ds1", "ds2"],
+    }
+    with pytest.raises(ValueError):
+        convert_conventions(obasis, new_convention)
+
+
+def test_convert_convention_obasis_duplicate(obasis: MolecularBasis):
+    new_convention = {
+        (0, "c"): ["-s"],
+        (1, "c"): ["x", "y", "y"],
+        (2, "p"): ["dc2", "dc1", "dc0", "ds1", "ds2"],
+    }
+    with pytest.raises(ValueError):
+        convert_conventions(obasis, new_convention)
+
+
 def test_convert_exceptions():
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         _convert_convention_shell("abc", "cb")
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         _convert_convention_shell("abc", "cbb")
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         _convert_convention_shell("aba", "cba")
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         _convert_convention_shell(["a", "b", "c"], ["a", "b", "d"])
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         _convert_convention_shell(["a", "b", "c"], ["a", "b", "-d"])
+    with pytest.raises(ValueError):
+        _convert_convention_shell([1, 2, 3], "cb")
 
 
 def test_iter_cart_alphabet():
@@ -128,6 +160,9 @@ def test_iter_cart_alphabet():
         [0, 1, 1],
         [0, 0, 2],
     ]
+    for angmom in -1, -2, -3:
+        with pytest.raises(ValueError):
+            list(iter_cart_alphabet(angmom))
 
 
 def test_conventions():

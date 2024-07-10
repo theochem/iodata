@@ -74,7 +74,7 @@ def _convert_convention_shell(
 
     """
     if len(conv1) != len(conv2):
-        raise TypeError("conv1 and conv2 must contain the same number of elements.")
+        raise ValueError("conv1 and conv2 must contain the same number of elements.")
     # Get signs from both
     signs1 = [1 - 2 * el1.startswith("-") for el1 in conv1]
     signs2 = [1 - 2 * el2.startswith("-") for el2 in conv2]
@@ -82,11 +82,11 @@ def _convert_convention_shell(
     conv1 = [el1.lstrip("-") for el1 in conv1]
     conv2 = [el2.lstrip("-") for el2 in conv2]
     if len(conv1) != len(set(conv1)):
-        raise TypeError("Argument conv1 contains duplicates.")
+        raise ValueError("Argument conv1 contains duplicates.")
     if len(conv2) != len(set(conv2)):
-        raise TypeError("Argument conv2 contains duplicates.")
+        raise ValueError("Argument conv2 contains duplicates.")
     if set(conv1) != set(conv2):
-        raise TypeError(
+        raise ValueError(
             "Without the minus signs, conv1 and conv2 must contain "
             f"the same elements. Got {conv1} and {conv2}."
         )
@@ -164,6 +164,8 @@ def iter_cart_alphabet(n: int) -> NDArray[int]:
         The angular momentum, i.e. sum of Cartesian powers in this case.
 
     """
+    if n < 0:
+        raise ValueError(f"The angular momentum cannot be negative. Got {n}")
     for nx in range(n, -1, -1):
         for ny in range(n - nx, -1, -1):
             nz = n - nx - ny
