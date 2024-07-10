@@ -27,7 +27,7 @@ import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
-from ..basis import convert_conventions
+from ..convert import convert_conventions
 from ..overlap import compute_overlap
 from ..utils import LoadWarning, PrepareDumpError, angstrom
 from .common import (

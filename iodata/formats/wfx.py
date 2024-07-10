@@ -27,7 +27,8 @@ from warnings import warn
 
 import numpy as np
 
-from ..basis import MolecularBasis, Shell, convert_conventions
+from ..basis import MolecularBasis, Shell
+from ..convert import convert_conventions
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals

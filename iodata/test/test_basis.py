@@ -24,15 +24,10 @@ import pytest
 from numpy.testing import assert_equal
 
 from ..basis import (
-    CCA_CONVENTIONS,
-    HORTON2_CONVENTIONS,
     MolecularBasis,
     Shell,
     angmom_its,
     angmom_sti,
-    convert_convention_shell,
-    convert_conventions,
-    iter_cart_alphabet,
 )
 from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 
@@ -212,115 +207,3 @@ def test_get_segmented():
     assert shell3.kinds == ["p"]
     assert_equal(shell3.exponents, obasis0.shells[1].exponents)
     assert_equal(shell3.coeffs, obasis0.shells[1].coeffs[:, 1:])
-
-
-def test_convert_convention_shell():
-    assert convert_convention_shell("abc", "cba") == ([2, 1, 0], [1, 1, 1])
-    assert convert_convention_shell(["a", "b", "c"], ["c", "b", "a"]) == ([2, 1, 0], [1, 1, 1])
-
-    permutation, signs = convert_convention_shell(["-a", "b", "c"], ["c", "b", "a"])
-    assert permutation == [2, 1, 0]
-    assert signs == [1, 1, -1]
-    vec1 = np.array([1, 2, 3])
-    vec2 = np.array([3, 2, -1])
-    assert_equal(vec1[permutation] * signs, vec2)
-    permutation, signs = convert_convention_shell(["-a", "b", "c"], ["c", "b", "a"], True)
-    assert_equal(vec2[permutation] * signs, vec1)
-
-    permutation, signs = convert_convention_shell(["a", "b", "c"], ["-c", "b", "a"])
-    assert permutation == [2, 1, 0]
-    assert signs == [-1, 1, 1]
-    vec1 = np.array([1, 2, 3])
-    vec2 = np.array([-3, 2, 1])
-    assert_equal(vec1[permutation] * signs, vec2)
-
-    permutation, signs = convert_convention_shell(["a", "-b", "-c"], ["-c", "b", "a"])
-    assert permutation == [2, 1, 0]
-    assert signs == [1, -1, 1]
-    vec1 = np.array([1, 2, 3])
-    vec2 = np.array([3, -2, 1])
-    assert_equal(vec1[permutation] * signs, vec2)
-    permutation, signs = convert_convention_shell(["a", "-b", "-c"], ["-c", "b", "a"], True)
-    assert_equal(vec2[permutation] * signs, vec1)
-
-    permutation, signs = convert_convention_shell(["fo", "ba", "sp"], ["fo", "-sp", "ba"])
-    assert permutation == [0, 2, 1]
-    assert signs == [1, -1, 1]
-    vec1 = np.array([1, 2, 3])
-    vec2 = np.array([1, -3, 2])
-    assert_equal(vec1[permutation] * signs, vec2)
-    permutation, signs = convert_convention_shell(["fo", "ba", "sp"], ["fo", "-sp", "ba"], True)
-    assert_equal(vec2[permutation] * signs, vec1)
-
-
-def test_convert_convention_obasis():
-    obasis = MolecularBasis(
-        [
-            Shell(0, [0], ["c"], np.zeros(3), np.zeros((3, 1))),
-            Shell(0, [0, 1], ["c", "c"], np.zeros(3), np.zeros((3, 2))),
-            Shell(0, [0, 1], ["c", "c"], np.zeros(3), np.zeros((3, 2))),
-            Shell(0, [2], ["p"], np.zeros(3), np.zeros((3, 1))),
-        ],
-        {
-            (0, "c"): ["s"],
-            (1, "c"): ["x", "z", "-y"],
-            (2, "p"): ["dc0", "dc1", "-ds1", "dc2", "-ds2"],
-        },
-        "L2",
-    )
-    new_convention = {
-        (0, "c"): ["-s"],
-        (1, "c"): ["x", "y", "z"],
-        (2, "p"): ["dc2", "dc1", "dc0", "ds1", "ds2"],
-    }
-    permutation, signs = convert_conventions(obasis, new_convention)
-    assert_equal(permutation, [0, 1, 2, 4, 3, 5, 6, 8, 7, 12, 10, 9, 11, 13])
-    assert_equal(signs, [-1, -1, 1, -1, 1, -1, 1, -1, 1, 1, 1, 1, -1, -1])
-    rng = np.random.default_rng(1)
-    vec1 = rng.uniform(-1, 1, obasis.nbasis)
-    vec2 = vec1[permutation] * signs
-    permutation, signs = convert_conventions(obasis, new_convention, reverse=True)
-    vec3 = vec2[permutation] * signs
-    assert_equal(vec1, vec3)
-
-
-def test_convert_exceptions():
-    with pytest.raises(TypeError):
-        convert_convention_shell("abc", "cb")
-    with pytest.raises(TypeError):
-        convert_convention_shell("abc", "cbb")
-    with pytest.raises(TypeError):
-        convert_convention_shell("aba", "cba")
-    with pytest.raises(TypeError):
-        convert_convention_shell(["a", "b", "c"], ["a", "b", "d"])
-    with pytest.raises(TypeError):
-        convert_convention_shell(["a", "b", "c"], ["a", "b", "-d"])
-
-
-def test_iter_cart_alphabet():
-    assert np.array(list(iter_cart_alphabet(0))).tolist() == [[0, 0, 0]]
-    assert np.array(list(iter_cart_alphabet(1))).tolist() == [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-    assert np.array(list(iter_cart_alphabet(2))).tolist() == [
-        [2, 0, 0],
-        [1, 1, 0],
-        [1, 0, 1],
-        [0, 2, 0],
-        [0, 1, 1],
-        [0, 0, 2],
-    ]
-
-
-def test_conventions():
-    for angmom in range(25):
-        assert HORTON2_CONVENTIONS[(angmom, "c")] == CCA_CONVENTIONS[(angmom, "c")]
-    assert HORTON2_CONVENTIONS[(0, "c")] == ["1"]
-    assert HORTON2_CONVENTIONS[(1, "c")] == ["x", "y", "z"]
-    assert HORTON2_CONVENTIONS[(2, "c")] == ["xx", "xy", "xz", "yy", "yz", "zz"]
-    assert (0, "p") not in HORTON2_CONVENTIONS
-    assert (0, "p") not in CCA_CONVENTIONS
-    assert (1, "p") not in HORTON2_CONVENTIONS
-    assert (1, "p") not in CCA_CONVENTIONS
-    assert HORTON2_CONVENTIONS[(2, "p")] == ["c0", "c1", "s1", "c2", "s2"]
-    assert CCA_CONVENTIONS[(2, "p")] == ["s2", "s1", "c0", "c1", "c2"]
-    assert HORTON2_CONVENTIONS[(3, "p")] == ["c0", "c1", "s1", "c2", "s2", "c3", "s3"]
-    assert CCA_CONVENTIONS[(3, "p")] == ["s3", "s2", "s1", "c0", "c1", "c2", "c3"]

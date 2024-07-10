@@ -26,7 +26,8 @@ from warnings import warn
 import numpy as np
 from numpy.typing import NDArray
 
-from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventions
+from ..basis import MolecularBasis, Shell
+from ..convert import HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals

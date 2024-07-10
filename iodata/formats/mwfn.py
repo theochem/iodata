@@ -21,7 +21,8 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell
+from ..basis import MolecularBasis, Shell
+from ..convert import HORTON2_CONVENTIONS
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
 from ..utils import LineIterator, LoadError, angstrom

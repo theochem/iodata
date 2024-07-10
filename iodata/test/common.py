@@ -29,7 +29,8 @@ from numpy.testing import assert_allclose, assert_equal
 from numpy.typing import NDArray
 
 from ..api import load_one
-from ..basis import MolecularBasis, Shell, convert_conventions
+from ..basis import MolecularBasis, Shell
+from ..convert import convert_conventions
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap
