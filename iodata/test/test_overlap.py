@@ -57,9 +57,9 @@ def test_factorial2_float_array_argument():
 
 def test_normalization_basics_segmented():
     for angmom in range(7):
-        shells = [Shell(0, [angmom], ["c"], np.array([0.23]), np.array([[1.0]]))]
+        shells = [Shell(0, [angmom], ["c"], [0.23], [[1.0]])]
         if angmom >= 2:
-            shells.append(Shell(0, [angmom], ["p"], np.array([0.23]), np.array([[1.0]])))
+            shells.append(Shell(0, [angmom], ["p"], [0.23], [[1.0]]))
         obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, "L2")
         atcoords = np.zeros((1, 3))
         overlap = compute_overlap(obasis, atcoords)
@@ -68,7 +68,7 @@ def test_normalization_basics_segmented():
 
 def test_normalization_basics_generalized():
     for angmom in range(2, 7):
-        shells = [Shell(0, [angmom] * 2, ["c", "p"], np.array([0.23]), np.array([[1.0, 1.0]]))]
+        shells = [Shell(0, [angmom] * 2, ["c", "p"], [0.23], [[1.0, 1.0]])]
         obasis = MolecularBasis(shells, OVERLAP_CONVENTIONS, "L2")
         atcoords = np.zeros((1, 3))
         overlap = compute_overlap(obasis, atcoords)

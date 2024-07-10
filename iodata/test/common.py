@@ -112,7 +112,7 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
         for shell1, shell2 in zip(mol1.obasis.shells, mol2.obasis.shells):
             assert shell1.icenter == shell2.icenter
             assert_equal(shell1.angmoms, shell2.angmoms)
-            assert shell1.kinds == shell2.kinds
+            assert_equal(shell1.kinds, shell2.kinds)
             assert_allclose(shell1.exponents, shell2.exponents, atol=atol, rtol=rtol)
             assert_allclose(shell1.coeffs, shell2.coeffs, atol=atol, rtol=rtol)
         assert mol1.obasis.primitive_normalization == mol2.obasis.primitive_normalization

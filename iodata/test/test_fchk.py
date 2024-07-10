@@ -65,8 +65,8 @@ def test_load_fchk_hf_sto3g_num():
     assert len(mol.obasis.shells) == 3
     shell0 = mol.obasis.shells[0]
     assert shell0.icenter == 0
-    assert shell0.angmoms == [0]
-    assert shell0.kinds == ["c"]
+    assert_equal(shell0.angmoms, [0])
+    assert_equal(shell0.kinds, ["c"])
     assert_allclose(shell0.exponents, np.array([1.66679134e02, 3.03608123e01, 8.21682067e00]))
     assert_allclose(shell0.coeffs, np.array([[1.54328967e-01], [5.35328142e-01], [4.44634542e-01]]))
     assert shell0.nexp == 3
@@ -74,8 +74,8 @@ def test_load_fchk_hf_sto3g_num():
     assert shell0.nbasis == 1
     shell1 = mol.obasis.shells[1]
     assert shell1.icenter == 0
-    assert shell1.angmoms == [0, 1]
-    assert shell1.kinds == ["c", "c"]
+    assert_equal(shell1.angmoms, [0, 1])
+    assert_equal(shell1.kinds, ["c", "c"])
     assert_allclose(shell1.exponents, np.array([6.46480325e00, 1.50228124e00, 4.88588486e-01]))
     assert_allclose(
         shell1.coeffs,

@@ -667,7 +667,7 @@ def dump_one(f: TextIO, data: IOData):
                 shell_types.append(shell.angmoms[0])
             elif shell.ncon == 1 and shell.kinds == ["p"]:
                 shell_types.append(-1 * shell.angmoms[0])
-            elif shell.ncon == 2 and shell.angmoms == [0, 1]:
+            elif shell.ncon == 2 and (shell.angmoms == [0, 1]).all():
                 shell_types.append(-1)
             else:
                 raise DumpError("Cannot identify type of shell!", f)
