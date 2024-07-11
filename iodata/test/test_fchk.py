@@ -28,12 +28,13 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_many, load_one
 from ..overlap import compute_overlap
-from ..utils import PrepareDumpError, check_dm
+from ..utils import PrepareDumpError, PrepareDumpWarning, check_dm
 from .common import (
     check_orthonormal,
     compare_mols,
     compute_1rdm,
-    create_generalized,
+    create_generalized_contraction,
+    create_generalized_orbitals,
     load_one_warning,
 )
 from .test_molekel import compare_mols_diff_formats
@@ -698,8 +699,20 @@ def test_dump_fchk_from_molekel(tmpdir, path, match):
     check_load_dump_consistency(tmpdir, path, match)
 
 
-def test_generalized():
+def test_generalized_orbitals():
     # The FCHK format does not support generalized MOs
-    data = create_generalized()
+    data = create_generalized_orbitals()
     with pytest.raises(PrepareDumpError):
-        dump_one(data, "generalized.fchk")
+        dump_one(data, "generalized_orbitals.fchk")
+
+
+def test_fchk_generalized_contraction(tmpdir):
+    data0 = create_generalized_contraction()
+    path_fchk = os.path.join(tmpdir, "generalized_contraction.fchk")
+    with pytest.raises(PrepareDumpError):
+        dump_one(data0, path_fchk)
+    assert not os.path.isfile(path_fchk)
+    with pytest.warns(PrepareDumpWarning):
+        dump_one(data0, path_fchk, allow_changes=True)
+    data1 = load_one(path_fchk)
+    assert all(shell.ncon == 1 for shell in data1.obasis.shells)

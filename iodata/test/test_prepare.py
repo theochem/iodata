@@ -21,13 +21,16 @@
 from importlib.resources import as_file, files
 from pathlib import Path
 
+import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
+from ..basis import MolecularBasis, Shell
+from ..convert import HORTON2_CONVENTIONS
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..prepare import prepare_unrestricted_aminusb
+from ..prepare import prepare_segmented, prepare_unrestricted_aminusb
 from ..utils import PrepareDumpError, PrepareDumpWarning
 
 
@@ -104,3 +107,61 @@ def test_dump_occs_aminusb(tmpdir, fmt):
     assert data2.mo.kind == "unrestricted"
     assert_allclose(data2.mo.occsa, data1.mo.occsa)
     assert_allclose(data2.mo.occsb, data1.mo.occsb)
+
+
+def test_segmented_no_basis():
+    data = IOData()
+    with pytest.raises(ValueError):
+        prepare_segmented(data, False, False, "foo.wfn", "wfn")
+
+
+def test_segmented_not_generalized():
+    data = IOData(
+        obasis=MolecularBasis(
+            [
+                Shell(0, [0], ["c"], [0.5, 0.01], [[0.1], [0.2]]),
+                Shell(1, [2], ["p"], [1.1], [[0.3]]),
+            ],
+            HORTON2_CONVENTIONS,
+            "L2",
+        )
+    )
+    assert data is prepare_segmented(data, False, False, "foo.wfn", "wfn")
+
+
+def test_segmented_generalized():
+    rng = np.random.default_rng(1)
+    data0 = IOData(
+        obasis=MolecularBasis(
+            [
+                Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 3), rng.uniform(-1, 1, (3, 2))),
+                Shell(1, [2, 3], ["p", "p"], rng.uniform(0, 1, 4), rng.uniform(-1, 1, (4, 2))),
+            ],
+            HORTON2_CONVENTIONS,
+            "L2",
+        )
+    )
+    with pytest.raises(PrepareDumpError):
+        prepare_segmented(data0, False, False, "foo.wfn", "wfn")
+    with pytest.warns(PrepareDumpWarning):
+        data1 = prepare_segmented(data0, False, True, "foo.wfn", "wfn")
+    assert len(data1.obasis.shells) == 4
+
+
+def test_segmented_sp():
+    rng = np.random.default_rng(1)
+    data0 = IOData(
+        obasis=MolecularBasis(
+            [
+                Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 3), rng.uniform(-1, 1, (3, 2))),
+                Shell(1, [2, 3], ["p", "p"], rng.uniform(0, 1, 4), rng.uniform(-1, 1, (4, 2))),
+            ],
+            HORTON2_CONVENTIONS,
+            "L2",
+        )
+    )
+    with pytest.raises(PrepareDumpError):
+        prepare_segmented(data0, True, False, "foo.wfn", "wfn")
+    with pytest.warns(PrepareDumpWarning):
+        data1 = prepare_segmented(data0, True, True, "foo.wfn", "wfn")
+    assert len(data1.obasis.shells) == 3

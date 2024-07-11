@@ -28,9 +28,11 @@ from ..convert import (
     HORTON2_CONVENTIONS,
     _convert_convention_shell,
     convert_conventions,
+    convert_to_segmented,
     convert_to_unrestricted,
     iter_cart_alphabet,
 )
+from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 from ..orbitals import MolecularOrbitals
 
 
@@ -273,3 +275,91 @@ def test_convert_to_unrestricted_full():
     assert_allclose(mo2.energiesb, mo1.energiesb)
     assert_equal(mo2.irrepsa, mo1.irrepsa)
     assert_equal(mo2.irrepsb, mo1.irrepsb)
+
+
+def test_convert_to_segmented():
+    rng = np.random.default_rng(1)
+    obasis0 = MolecularBasis(
+        [
+            Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 5), rng.uniform(-1, 1, (5, 2))),
+            Shell(1, [2, 3], ["p", "p"], rng.uniform(0, 1, 7), rng.uniform(-1, 1, (7, 2))),
+        ],
+        CP2K_CONVENTIONS,
+        "L2",
+    )
+    assert obasis0.nbasis == 16
+    obasis1 = convert_to_segmented(obasis0)
+    assert len(obasis1.shells) == 4
+    assert obasis1.nbasis == 16
+    # shell 0
+    shell0 = obasis1.shells[0]
+    assert shell0.icenter == 0
+    assert_equal(shell0.angmoms, [0])
+    assert_equal(shell0.kinds, ["c"])
+    assert_equal(shell0.exponents, obasis0.shells[0].exponents)
+    assert_equal(shell0.coeffs, obasis0.shells[0].coeffs[:, :1])
+    # shell 1
+    shell1 = obasis1.shells[1]
+    assert shell1.icenter == 0
+    assert_equal(shell1.angmoms, [1])
+    assert_equal(shell1.kinds, ["c"])
+    assert_equal(shell1.exponents, obasis0.shells[0].exponents)
+    assert_equal(shell1.coeffs, obasis0.shells[0].coeffs[:, 1:])
+    # shell 2
+    shell2 = obasis1.shells[2]
+    assert shell2.icenter == 1
+    assert_equal(shell2.angmoms, [2])
+    assert_equal(shell2.kinds, ["p"])
+    assert_equal(shell2.exponents, obasis0.shells[1].exponents)
+    assert_equal(shell2.coeffs, obasis0.shells[1].coeffs[:, :1])
+    # shell 0
+    shell3 = obasis1.shells[3]
+    assert shell3.icenter == 1
+    assert_equal(shell3.angmoms, [3])
+    assert_equal(shell3.kinds, ["p"])
+    assert_equal(shell3.exponents, obasis0.shells[1].exponents)
+    assert_equal(shell3.coeffs, obasis0.shells[1].coeffs[:, 1:])
+
+
+def test_convert_to_segmented_sp():
+    rng = np.random.default_rng(1)
+    obasis0 = MolecularBasis(
+        [
+            Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 5), rng.uniform(-1, 1, (5, 2))),
+            Shell(1, [2, 3], ["p", "p"], rng.uniform(0, 1, 7), rng.uniform(-1, 1, (7, 2))),
+        ],
+        HORTON2_CONVENTIONS,
+        "L2",
+    )
+    obasis1 = convert_to_segmented(obasis0, keep_sp=True)
+    assert len(obasis1.shells) == 3
+    assert obasis1.nbasis == 16
+    # shell 0
+    shell0 = obasis1.shells[0]
+    assert shell0.icenter == 0
+    assert_equal(shell0.angmoms, [0, 1])
+    assert_equal(shell0.kinds, ["c", "c"])
+    assert_equal(shell0.exponents, obasis0.shells[0].exponents)
+    assert_equal(shell0.coeffs, obasis0.shells[0].coeffs)
+    # shell 1
+    shell2 = obasis1.shells[1]
+    assert shell2.icenter == 1
+    assert_equal(shell2.angmoms, [2])
+    assert_equal(shell2.kinds, ["p"])
+    assert_equal(shell2.exponents, obasis0.shells[1].exponents)
+    assert_equal(shell2.coeffs, obasis0.shells[1].coeffs[:, :1])
+    # shell 3
+    shell3 = obasis1.shells[2]
+    assert shell3.icenter == 1
+    assert_equal(shell3.angmoms, [3])
+    assert_equal(shell3.kinds, ["p"])
+    assert_equal(shell3.exponents, obasis0.shells[1].exponents)
+    assert_equal(shell3.coeffs, obasis0.shells[1].coeffs[:, 1:])
+
+
+def test_convert_to_segmented_empty():
+    obasis0 = MolecularBasis([], HORTON2_CONVENTIONS, "L2")
+    obasis1 = convert_to_segmented(obasis0, keep_sp=False)
+    assert len(obasis1.shells) == 0
+    obasis2 = convert_to_segmented(obasis0, keep_sp=True)
+    assert len(obasis2.shells) == 0

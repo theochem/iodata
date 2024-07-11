@@ -29,12 +29,12 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..convert import convert_conventions
 from ..overlap import compute_overlap
-from ..utils import LoadWarning, PrepareDumpError, angstrom
+from ..utils import LoadWarning, PrepareDumpError, PrepareDumpWarning, angstrom
 from .common import (
     check_orthonormal,
     compare_mols,
     compute_mulliken_charges,
-    create_generalized,
+    create_generalized_orbitals,
     load_one_warning,
 )
 
@@ -59,7 +59,9 @@ def compare_mols_diff_formats(mol1, mol2):
     assert_allclose(charges1, charges2, rtol=0.0, atol=1.0e-6)
 
 
-def check_load_dump_consistency(fn: str, tmpdir: str, match: Optional[str] = None):
+def check_load_dump_consistency(
+    fn: str, tmpdir: str, match: Optional[str] = None, allow_changes: bool = False
+):
     """Check if data is preserved after dumping and loading a Molekel file.
 
     Parameters
@@ -71,11 +73,18 @@ def check_load_dump_consistency(fn: str, tmpdir: str, match: Optional[str] = Non
     match
         When given, loading the file is expected to raise a warning whose
         message string contains match.
+    allow_changes
+        Whether to allow changes to the data when writing the file.
+        When True, warnings related to the changes are tested.
 
     """
     mol1 = load_one_warning(fn, match=match)
     fn_tmp = os.path.join(tmpdir, "foo.bar")
-    dump_one(mol1, fn_tmp, fmt="molekel")
+    if allow_changes:
+        with pytest.warns(PrepareDumpWarning):
+            dump_one(mol1, fn_tmp, fmt="molekel", allow_changes=True)
+    else:
+        dump_one(mol1, fn_tmp, fmt="molekel")
     mol2 = load_one(fn_tmp, fmt="molekel")
     form = fn.split(".")
     if "molden" in form or "fchk" in form:
@@ -85,17 +94,17 @@ def check_load_dump_consistency(fn: str, tmpdir: str, match: Optional[str] = Non
 
 
 @pytest.mark.parametrize(
-    ("path", "match"),
+    ("path", "match", "allow_changes"),
     [
-        ("h2_sto3g.mkl", "ORCA"),
-        pytest.param("ethanol.mkl", "ORCA", marks=pytest.mark.slow),
-        pytest.param("li2.mkl", "ORCA", marks=pytest.mark.slow),
-        pytest.param("li2.molden.input", "ORCA", marks=pytest.mark.slow),
-        ("li2_g09_nbasis_indep.fchk", None),
+        ("h2_sto3g.mkl", "ORCA", False),
+        pytest.param("ethanol.mkl", "ORCA", False, marks=pytest.mark.slow),
+        pytest.param("li2.mkl", "ORCA", False, marks=pytest.mark.slow),
+        pytest.param("li2.molden.input", "ORCA", False, marks=pytest.mark.slow),
+        ("li2_g09_nbasis_indep.fchk", None, True),
     ],
 )
-def test_load_dump_consistency(tmpdir, path, match):
-    check_load_dump_consistency(path, tmpdir, match)
+def test_load_dump_consistency(tmpdir, path, match, allow_changes):
+    check_load_dump_consistency(path, tmpdir, match, allow_changes)
 
 
 def test_load_mkl_ethanol():
@@ -162,9 +171,9 @@ def test_load_mkl_h2_huge_threshold():
         load_one(str(fn_molekel), norm_threshold=1e4)
 
 
-def test_generalized():
+def test_generalized_orbitals():
     # The Molden format does not support generalized MOs
-    data = create_generalized()
+    data = create_generalized_orbitals()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generalized.mkl")
 

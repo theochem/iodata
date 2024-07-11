@@ -42,7 +42,8 @@ __all__ = (
     "compare_mols",
     "check_orthonormal",
     "load_one_warning",
-    "create_generalized",
+    "create_generalized_orbitals",
+    "create_generalized_contraction",
 )
 
 
@@ -201,7 +202,7 @@ def load_one_warning(
             return load_one(str(fn), fmt=fmt, **kwargs)
 
 
-def create_generalized() -> IOData:
+def create_generalized_orbitals() -> IOData:
     """Create a dummy IOData object with generalized molecular orbitals."""
     rng = np.random.default_rng()
     return IOData(
@@ -213,9 +214,40 @@ def create_generalized() -> IOData:
         obasis=MolecularBasis(
             [
                 Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 2), rng.uniform(0, 1, (2, 2))),
-                Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 2), rng.uniform(0, 1, (2, 2))),
+                Shell(1, [0, 1], ["c", "c"], rng.uniform(0, 1, 2), rng.uniform(0, 1, (2, 2))),
             ],
             {(0, "c"): ["1"], (1, "c"): ["x", "y", "z"]},
+            "L2",
+        ),
+    )
+
+
+def create_generalized_contraction() -> IOData:
+    """Create a dummy IOData object with generalized contractions in the basis."""
+    rng = np.random.default_rng()
+    return IOData(
+        atnums=[1, 1],
+        atcoords=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]],
+        mo=MolecularOrbitals(
+            "restricted",
+            3,
+            3,
+            occs=[1.0, 1.0, 0.0],
+            energies=[0.2, 0.3, 0.4],
+            coeffs=rng.uniform(0, 1, (6, 3)),
+        ),
+        obasis=MolecularBasis(
+            [
+                Shell(
+                    0, [0, 0, 0], ["c", "c", "c"], rng.uniform(0, 1, 4), rng.uniform(0, 1, (4, 3))
+                ),
+                Shell(
+                    1, [0, 0, 0], ["c", "c", "c"], rng.uniform(0, 1, 4), rng.uniform(0, 1, (4, 3))
+                ),
+            ],
+            {
+                (0, "c"): ["1"],
+            },
             "L2",
         ),
     )

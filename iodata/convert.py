@@ -23,18 +23,20 @@ The functions in this module can be used without writing data to files.
 Most of them are used by the prepare module.
 """
 
+import attrs
 import numpy as np
 from numpy.typing import NDArray
 
-from .basis import MolecularBasis
+from .basis import MolecularBasis, Shell
 from .orbitals import MolecularOrbitals
 
 __all__ = (
-    "convert_to_unrestricted",
     "convert_conventions",
     "iter_cart_alphabet",
     "HORTON2_CONVENTIONS",
     "CCA_CONVENTIONS",
+    "convert_to_unrestricted",
+    "convert_to_segmented",
 )
 
 
@@ -253,3 +255,31 @@ def convert_to_unrestricted(mo: MolecularOrbitals) -> MolecularOrbitals:
         None if mo.energies is None else np.concatenate([mo.energies, mo.energies]),
         None if mo.irreps is None else np.concatenate([mo.irreps, mo.irreps]),
     )
+
+
+def convert_to_segmented(obasis: MolecularBasis, keep_sp: bool = False) -> MolecularBasis:
+    """Convert basis with generalized contractions to one with only single contractions.
+
+    Parameters
+    ----------
+    obasis
+        The basis set to convert.
+    keep_sp
+        If True, SP shells are not split up.
+        This can be useful for file formats only support
+        SP-generalized contractions and no other ones.
+
+    Returns
+    -------
+    A new ``MolecularBasis`` instance with separate single contractions.
+    """
+    shells = []
+    for shell in obasis.shells:
+        if (shell.ncon == 1) or (keep_sp and shell.ncon == 2 and (shell.angmoms == [0, 1]).all()):
+            shells.append(shell)
+        else:
+            for angmom, kind, coeffs in zip(shell.angmoms, shell.kinds, shell.coeffs.T):
+                shells.append(
+                    Shell(shell.icenter, [angmom], [kind], shell.exponents, coeffs.reshape(-1, 1))
+                )
+    return attrs.evolve(obasis, shells=shells)

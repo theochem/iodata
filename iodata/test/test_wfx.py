@@ -29,12 +29,12 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
-from ..utils import LineIterator, LoadError, PrepareDumpError
+from ..utils import LineIterator, LoadError, PrepareDumpError, PrepareDumpWarning
 from .common import (
     check_orthonormal,
     compare_mols,
     compute_mulliken_charges,
-    create_generalized,
+    create_generalized_orbitals,
     load_one_warning,
     truncated_file,
 )
@@ -89,7 +89,12 @@ def test_load_dump_consistency_lih_cation_rohf(tmpdir):
 
 
 def compare_mulliken_charges(
-    fname: str, tmpdir: str, rtol: float = 1.0e-7, atol: float = 0.0, match: Optional[str] = None
+    fname: str,
+    tmpdir: str,
+    rtol: float = 1.0e-7,
+    atol: float = 0.0,
+    match: Optional[str] = None,
+    allow_changes: bool = False,
 ):
     """Check if charges are computed correctly after dumping and loading WFX file format.
 
@@ -111,7 +116,11 @@ def compare_mulliken_charges(
     mol1 = load_one_warning(fname, match=match)
     # dump WFX and check that file exists
     fn_tmp = os.path.join(tmpdir, f"{fname}.wfx")
-    dump_one(mol1, fn_tmp)
+    if allow_changes:
+        with pytest.warns(PrepareDumpWarning):
+            dump_one(mol1, fn_tmp, allow_changes=True)
+    else:
+        dump_one(mol1, fn_tmp)
     assert os.path.isfile(fn_tmp)
     # load dumped file and compare Mulliken charges
     mol2 = load_one(fn_tmp)
@@ -156,7 +165,7 @@ def compare_mulliken_charges(
     ],
 )
 def test_dump_one(path, tmpdir):
-    compare_mulliken_charges(path, tmpdir)
+    compare_mulliken_charges(path, tmpdir, allow_changes=path.endswith("fchk"))
 
 
 @pytest.mark.parametrize(
@@ -812,8 +821,8 @@ def test_load_one_lih_cation_rohf():
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
 
 
-def test_generalized():
+def test_generalized_orbitals():
     # The Molden format does not support generalized MOs
-    data = create_generalized()
+    data = create_generalized_orbitals()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generalized.wfx")

@@ -31,7 +31,8 @@ from ..convert import HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, amu
+from ..prepare import prepare_segmented
+from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError, amu
 
 __all__ = ()
 
@@ -592,7 +593,7 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
                 "followed by fully virtual ones.",
                 filename,
             )
-    return data
+    return prepare_segmented(data, True, allow_changes, filename, "FCHK")
 
 
 @document_dump_one(
@@ -671,7 +672,10 @@ def dump_one(f: TextIO, data: IOData):
             elif shell.ncon == 2 and (shell.angmoms == [0, 1]).all():
                 shell_types.append(-1)
             else:
-                raise DumpError("Cannot identify type of shell!", f)
+                raise RuntimeError(
+                    "Generalized contractions other than SP are not supported. "
+                    "Call prepare_dump first."
+                )
 
         num_pure_d_shells = sum([1 for st in shell_types if st == 2])
         num_pure_f_shells = sum([1 for st in shell_types if st == 3])
