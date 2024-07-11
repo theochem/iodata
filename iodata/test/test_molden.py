@@ -590,12 +590,11 @@ def test_load_molden_f():
     ],
 )
 def test_load_dump_consistency(tmpdir, fn, match, allow_changes):
-    with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
-        if match is None:
-            mol1 = load_one(str(file_name))
-        else:
-            with pytest.warns(LoadWarning, match=match):
-                mol1 = load_one(str(file_name))
+    with ExitStack() as stack:
+        file_name = stack.enter_context(as_file(files("iodata.test.data").joinpath(fn)))
+        if match is not None:
+            stack.enter_context(pytest.warns(LoadWarning, match=match))
+        mol1 = load_one(file_name)
     fn_tmp = os.path.join(tmpdir, "foo.bar")
     if allow_changes:
         with pytest.warns(PrepareDumpWarning):

@@ -55,7 +55,7 @@ def prepare_unrestricted_aminusb(data: IOData, allow_changes: bool, filename: st
     -------
     data
         The given data object if no conversion took place,
-        or a shallow copy with some new attriubtes.
+        or a shallow copy with some new attributes.
 
     Raises
     ------
@@ -113,7 +113,7 @@ def prepare_segmented(data: IOData, keep_sp: bool, allow_changes: bool, filename
     -------
     data
         The given data object if no conversion took place,
-        or a shallow copy with some new attriubtes.
+        or a shallow copy with some new attributes.
 
     Raises
     ------

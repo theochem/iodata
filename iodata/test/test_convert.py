@@ -355,3 +355,11 @@ def test_convert_to_segmented_sp():
     assert_equal(shell3.kinds, ["p"])
     assert_equal(shell3.exponents, obasis0.shells[1].exponents)
     assert_equal(shell3.coeffs, obasis0.shells[1].coeffs[:, 1:])
+
+
+def test_convert_to_segmented_empty():
+    obasis0 = MolecularBasis([], HORTON2_CONVENTIONS, "L2")
+    obasis1 = convert_to_segmented(obasis0, keep_sp=False)
+    assert len(obasis1.shells) == 0
+    obasis2 = convert_to_segmented(obasis0, keep_sp=True)
+    assert len(obasis2.shells) == 0
