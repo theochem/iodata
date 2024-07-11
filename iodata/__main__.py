@@ -84,6 +84,14 @@ def parse_args():
         "-o", "--outfmt", help="Select the output format, overrides automatic detection."
     )
     parser.add_argument(
+        "-c",
+        "--allow-changes",
+        default=False,
+        action="store_true",
+        help="Allow reorganizing the input data to make it comatible with the output format. "
+        "Warnings will be emitted for all changes made.",
+    )
+    parser.add_argument(
         "-m",
         "--many",
         default=False,
@@ -95,7 +103,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def convert(infn, outfn, many, infmt, outfmt):
+def convert(infn: str, outfn: str, many: bool, infmt: str, outfmt: str, allow_changes: bool):
     """Convert file from one format to another.
 
     Parameters
@@ -110,12 +118,15 @@ def convert(infn, outfn, many, infmt, outfmt):
         The input format.
     outfmt
         The output format.
+    allow_changes
+        Allow prepare_dump functions to modify the data
+        to make it compatible with the output format.
 
     """
     if many:
-        dump_many(load_many(infn, fmt=infmt), outfn, fmt=outfmt)
+        dump_many(load_many(infn, fmt=infmt), outfn, allow_changes=allow_changes, fmt=outfmt)
     else:
-        dump_one(load_one(infn, fmt=infmt), outfn, fmt=outfmt)
+        dump_one(load_one(infn, fmt=infmt), outfn, allow_changes=allow_changes, fmt=outfmt)
 
 
 def main():
@@ -124,7 +135,7 @@ def main():
     np.seterr(divide="raise", over="raise", invalid="raise")
 
     args = parse_args()
-    convert(args.input, args.output, args.many, args.infmt, args.outfmt)
+    convert(args.input, args.output, args.many, args.infmt, args.outfmt, args.allow_changes)
 
 
 if __name__ == "__main__":
