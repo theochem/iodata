@@ -21,7 +21,6 @@
 import attrs
 import numpy as np
 import pytest
-from numpy.testing import assert_equal
 
 from ..basis import (
     MolecularBasis,
@@ -163,47 +162,3 @@ def test_nbasis1():
         "L2",
     )
     assert obasis.nbasis == 9
-
-
-def test_get_segmented():
-    rng = np.random.default_rng(1)
-    obasis0 = MolecularBasis(
-        [
-            Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 5), rng.uniform(-1, 1, (5, 2))),
-            Shell(1, [2, 3], ["p", "p"], rng.uniform(0, 1, 7), rng.uniform(-1, 1, (7, 2))),
-        ],
-        CP2K_CONVENTIONS,
-        "L2",
-    )
-    assert obasis0.nbasis == 16
-    obasis1 = obasis0.get_segmented()
-    assert len(obasis1.shells) == 4
-    assert obasis1.nbasis == 16
-    # shell 0
-    shell0 = obasis1.shells[0]
-    assert shell0.icenter == 0
-    assert_equal(shell0.angmoms, [0])
-    assert shell0.kinds == ["c"]
-    assert_equal(shell0.exponents, obasis0.shells[0].exponents)
-    assert_equal(shell0.coeffs, obasis0.shells[0].coeffs[:, :1])
-    # shell 1
-    shell1 = obasis1.shells[1]
-    assert shell1.icenter == 0
-    assert_equal(shell1.angmoms, [1])
-    assert shell1.kinds == ["c"]
-    assert_equal(shell1.exponents, obasis0.shells[0].exponents)
-    assert_equal(shell1.coeffs, obasis0.shells[0].coeffs[:, 1:])
-    # shell 2
-    shell2 = obasis1.shells[2]
-    assert shell2.icenter == 1
-    assert_equal(shell2.angmoms, [2])
-    assert shell2.kinds == ["p"]
-    assert_equal(shell2.exponents, obasis0.shells[1].exponents)
-    assert_equal(shell2.coeffs, obasis0.shells[1].coeffs[:, :1])
-    # shell 0
-    shell3 = obasis1.shells[3]
-    assert shell3.icenter == 1
-    assert_equal(shell3.angmoms, [3])
-    assert shell3.kinds == ["p"]
-    assert_equal(shell3.exponents, obasis0.shells[1].exponents)
-    assert_equal(shell3.coeffs, obasis0.shells[1].coeffs[:, 1:])

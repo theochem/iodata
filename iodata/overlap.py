@@ -27,7 +27,7 @@ from numpy.typing import NDArray
 
 from .basis import MolecularBasis, Shell
 from .convert import HORTON2_CONVENTIONS as OVERLAP_CONVENTIONS
-from .convert import convert_conventions, iter_cart_alphabet
+from .convert import convert_conventions, convert_to_segmented, iter_cart_alphabet
 from .overlap_cartpure import tfs
 
 __all__ = ("OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization")
@@ -105,7 +105,7 @@ def compute_overlap(
         raise ValueError("The overlap integrals are only implemented for L2 normalization.")
 
     # Get a segmented basis, for simplicity
-    obasis0 = obasis0.get_segmented()
+    obasis0 = convert_to_segmented(obasis0)
 
     # Handle optional arguments
     if obasis1 is None:
@@ -126,7 +126,7 @@ def compute_overlap(
                 "array of atomic coordinates is expected."
             )
         # Get a segmented basis, for simplicity
-        obasis1 = obasis1.get_segmented()
+        obasis1 = convert_to_segmented(obasis1)
         identical = False
 
     # Initialize result

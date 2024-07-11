@@ -28,8 +28,13 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
-from ..utils import LineIterator, PrepareDumpError
-from .common import check_orthonormal, compare_mols, compute_mulliken_charges, create_generalized
+from ..utils import LineIterator, PrepareDumpError, PrepareDumpWarning
+from .common import (
+    check_orthonormal,
+    compare_mols,
+    compute_mulliken_charges,
+    create_generalized_orbitals,
+)
 
 # TODO: removed density, kin, nucnuc checks
 
@@ -300,7 +305,7 @@ def test_load_one_cah110_hf_sto3g_g09():
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
 
 
-def check_load_dump_consistency(fn: str, tmpdir: str, atol: float = 1.0e-6):
+def check_load_dump_consistency(fn: str, tmpdir: str, atol: float = 1.0e-6, allow_changes=False):
     """Check if data is preserved after dumping and loading a WFN file.
 
     Parameters
@@ -316,7 +321,7 @@ def check_load_dump_consistency(fn: str, tmpdir: str, atol: float = 1.0e-6):
     with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
         mol1 = load_one(str(file_name))
     fn_tmp = os.path.join(tmpdir, "foo.wfn")
-    dump_one(mol1, fn_tmp)
+    dump_one(mol1, fn_tmp, allow_changes=allow_changes)
     mol2 = load_one(fn_tmp)
     # compare Mulliken charges
     charges1 = compute_mulliken_charges(mol1)
@@ -357,7 +362,8 @@ def test_load_dump_consistency(path, tmpdir):
 
 
 def test_load_dump_consistency_from_fchk_h2o(tmpdir):
-    check_load_dump_consistency("h2o_sto3g.fchk", tmpdir)
+    with pytest.warns(PrepareDumpWarning):
+        check_load_dump_consistency("h2o_sto3g.fchk", tmpdir, allow_changes=True)
 
 
 def test_load_dump_consistency_from_molden_nh3(tmpdir):
@@ -369,8 +375,8 @@ def test_dump_one_pure_functions(tmpdir):
         check_load_dump_consistency("water_ccpvdz_pure_hf_g03.fchk", tmpdir)
 
 
-def test_generalized():
+def test_generalized_orbitals():
     # The WFN format does not support generalized MOs
-    data = create_generalized()
+    data = create_generalized_orbitals()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generalized.wfn")

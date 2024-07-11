@@ -29,14 +29,26 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
 from ..basis import MolecularBasis, Shell
-from ..convert import HORTON2_CONVENTIONS, convert_conventions
+from ..convert import HORTON2_CONVENTIONS, convert_conventions, convert_to_segmented
 from ..formats.molden import _load_low
 from ..formats.molden import dump_one as molden_dump_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
-from ..utils import DumpError, LineIterator, LoadWarning, PrepareDumpError, angstrom
-from .common import check_orthonormal, compare_mols, compute_mulliken_charges, create_generalized
+from ..utils import (
+    DumpError,
+    LineIterator,
+    LoadWarning,
+    PrepareDumpError,
+    PrepareDumpWarning,
+    angstrom,
+)
+from .common import (
+    check_orthonormal,
+    compare_mols,
+    compute_mulliken_charges,
+    create_generalized_orbitals,
+)
 
 
 @pytest.mark.slow()
@@ -563,21 +575,21 @@ def test_load_molden_f():
 
 
 @pytest.mark.parametrize(
-    ("fn", "match"),
+    ("fn", "match", "allow_changes"),
     [
-        ("h2o.molden.input", "ORCA"),
-        pytest.param("li2.molden.input", "ORCA", marks=pytest.mark.slow),
-        ("F.molden", "PSI4"),
-        ("nh3_molden_pure.molden", None),
-        ("nh3_molden_cart.molden", None),
-        ("he2_ghost_psi4_1.0.molden", None),
-        pytest.param("psi4_cuh_cc_pvqz_pure.molden", "unnormalized", marks=pytest.mark.slow),
-        ("hf_sto3g.fchk", None),
-        ("h_sto3g.fchk", None),
-        ("ch3_rohf_sto3g_g03.fchk", None),
+        ("h2o.molden.input", "ORCA", False),
+        pytest.param("li2.molden.input", "ORCA", False, marks=pytest.mark.slow),
+        ("F.molden", "PSI4", False),
+        ("nh3_molden_pure.molden", None, False),
+        ("nh3_molden_cart.molden", None, False),
+        ("he2_ghost_psi4_1.0.molden", None, False),
+        pytest.param("psi4_cuh_cc_pvqz_pure.molden", "unnormalized", False, marks=pytest.mark.slow),
+        ("hf_sto3g.fchk", None, True),
+        ("h_sto3g.fchk", None, False),
+        ("ch3_rohf_sto3g_g03.fchk", None, True),
     ],
 )
-def test_load_dump_consistency(tmpdir, fn, match):
+def test_load_dump_consistency(tmpdir, fn, match, allow_changes):
     with as_file(files("iodata.test.data").joinpath(fn)) as file_name:
         if match is None:
             mol1 = load_one(str(file_name))
@@ -585,12 +597,16 @@ def test_load_dump_consistency(tmpdir, fn, match):
             with pytest.warns(LoadWarning, match=match):
                 mol1 = load_one(str(file_name))
     fn_tmp = os.path.join(tmpdir, "foo.bar")
-    dump_one(mol1, fn_tmp, fmt="molden")
+    if allow_changes:
+        with pytest.warns(PrepareDumpWarning):
+            dump_one(mol1, fn_tmp, fmt="molden", allow_changes=True)
+    else:
+        dump_one(mol1, fn_tmp, fmt="molden")
     mol2 = load_one(fn_tmp, fmt="molden")
     # Remove and or fix some things in mol1 to make it compatible with what
     # can be read from a Molden file:
     # - Change basis of mol1 to segmented.
-    mol1.obasis = mol1.obasis.get_segmented()
+    mol1.obasis = convert_to_segmented(mol1.obasis)
     # - Set default irreps in mol1, if not present.
     if mol1.mo.irreps is None:
         mol1.mo = attrs.evolve(mol1.mo, irreps=["1a"] * mol1.mo.norb)
@@ -599,9 +615,9 @@ def test_load_dump_consistency(tmpdir, fn, match):
     compare_mols(mol1, mol2)
 
 
-def test_generalized():
+def test_generalized_orbitals():
     # The Molden format does not support generalized MOs
-    data = create_generalized()
+    data = create_generalized_orbitals()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generalized.molden")
 

@@ -33,7 +33,7 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
-from ..prepare import prepare_unrestricted_aminusb
+from ..prepare import prepare_segmented, prepare_unrestricted_aminusb
 from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError
 from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
@@ -369,7 +369,8 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
             raise PrepareDumpError(
                 "The WFX format only supports Cartesian MolecularBasis.", filename
             )
-    return prepare_unrestricted_aminusb(data, allow_changes, filename, "WFX")
+    data = prepare_unrestricted_aminusb(data, allow_changes, filename, "WFX")
+    return prepare_segmented(data, False, allow_changes, filename, "WFX")
 
 
 @document_dump_one(
@@ -390,13 +391,13 @@ def dump_one(f: TextIO, data: IOData):
     # get shells for the de-contracted basis
     shells = []
     for shell in data.obasis.shells:
-        for i, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
-            for exponent, coeff in zip(shell.exponents, shell.coeffs.T[i]):
-                shells.append(
-                    Shell(
-                        shell.icenter, [angmom], [kind], np.array([exponent]), coeff.reshape(-1, 1)
-                    )
-                )
+        if shell.ncon != 1:
+            raise RuntimeError("Generalized contractions not supported. Call prepare_dump first.")
+        # Decontract the shell
+        angmom = shell.angmoms[0]
+        kind = shell.kinds[0]
+        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0]):
+            shells.append(Shell(shell.icenter, [angmom], [kind], [exponent], [[coeff]]))
     # make a new instance of MolecularBasis with de-contracted basis shells; ideally for WFX we
     # want the primitive basis set, but IOData only supports shells.
     obasis = MolecularBasis(shells, data.obasis.conventions, data.obasis.primitive_normalization)

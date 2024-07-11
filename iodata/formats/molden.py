@@ -40,7 +40,7 @@ from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
 from ..periodic import num2sym, sym2num
-from ..prepare import prepare_unrestricted_aminusb
+from ..prepare import prepare_segmented, prepare_unrestricted_aminusb
 from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, angstrom
 
 __all__ = ()
@@ -793,7 +793,8 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
         raise PrepareDumpError("The Molden format requires an orbital basis set.", filename)
     if data.mo.kind == "generalized":
         raise PrepareDumpError("Cannot write Molden file with generalized orbitals.", filename)
-    return prepare_unrestricted_aminusb(data, allow_changes, filename, "Molden")
+    data = prepare_unrestricted_aminusb(data, allow_changes, filename, "Molden")
+    return prepare_segmented(data, False, allow_changes, filename, "Molden")
 
 
 @document_dump_one("Molden", ["atcoords", "atnums", "mo", "obasis"], ["atcorenums", "title"])
@@ -826,16 +827,19 @@ def dump_one(f: TextIO, data: IOData):
     # to be relevant. If it happens, an error is raised.
     angmom_kinds = {}
     for shell in obasis.shells:
-        for angmom, kind in zip(shell.angmoms, shell.kinds):
-            if angmom in angmom_kinds:
-                if kind != angmom_kinds[angmom]:
-                    raise DumpError(
-                        "Molden format does not support mixed pure+Cartesian functions for one "
-                        "angular momentum.",
-                        f,
-                    )
-            else:
-                angmom_kinds[angmom] = kind
+        if shell.ncon != 1:
+            raise RuntimeError("Generalized contractions not supported. Call prepare_dump first.")
+        kind = shell.kinds[0]
+        angmom = shell.angmoms[0]
+        if angmom in angmom_kinds:
+            if kind != angmom_kinds[angmom]:
+                raise DumpError(
+                    "Molden format does not support mixed pure+Cartesian functions for one "
+                    "angular momentum.",
+                    f,
+                )
+        else:
+            angmom_kinds[angmom] = kind
 
     # Fill in some defaults (Cartesian) for angmom kinds if needed.
     angmom_kinds.setdefault(2, "c")
@@ -863,12 +867,12 @@ def dump_one(f: TextIO, data: IOData):
                 f.write("\n")
             last_icenter = shell.icenter
             f.write("%3i 0\n" % (shell.icenter + 1))
-        # Write out as a segmented basis. Molden format does not support
-        # generalized contractions.
-        for iangmom, angmom in enumerate(shell.angmoms):
-            f.write(f" {angmom_its(angmom):1s}  {shell.nexp:3d} 1.00\n")
-            for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
-                f.write(f"{exponent:20.10f} {coeff:20.10f}\n")
+        # Write out the basis.
+        # It is guaranteed to be segmented when reaching this part of the code.
+        angmom = shell.angmoms[0]
+        f.write(f" {angmom_its(angmom):1s}  {shell.nexp:3d} 1.00\n")
+        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0]):
+            f.write(f"{exponent:20.10f} {coeff:20.10f}\n")
     f.write("\n")
 
     # Get the permutation to convert the orbital coefficients to Molden conventions.
@@ -913,7 +917,7 @@ def dump_one(f: TextIO, data: IOData):
             irreps,
         )
     else:
-        raise RuntimeError("This should not happen because of prepare_dump")
+        raise RuntimeError("Generalized orbitals are not support. Call prepare_dump first.")
 
 
 def _dump_helper_orb(f, spin, occs, coeffs, energies, irreps):

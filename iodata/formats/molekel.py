@@ -34,7 +34,7 @@ from ..convert import convert_conventions
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..prepare import prepare_unrestricted_aminusb
+from ..prepare import prepare_segmented, prepare_unrestricted_aminusb
 from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, angstrom
 from .molden import CONVENTIONS, _fix_molden_from_buggy_codes
 
@@ -308,7 +308,8 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
         raise PrepareDumpError("The Molekel format requires an orbital basis set.", filename)
     if data.mo.kind == "generalized":
         raise PrepareDumpError("Cannot write Molekel file with generalized orbitals.", filename)
-    return prepare_unrestricted_aminusb(data, allow_changes, filename, "Molekel")
+    data = prepare_unrestricted_aminusb(data, allow_changes, filename, "Molekel")
+    return prepare_segmented(data, False, allow_changes, filename, "Molekel")
 
 
 @document_dump_one("Molekel", ["atcoords", "atnums", "mo", "obasis"], ["atcharges"])
@@ -346,15 +347,18 @@ def dump_one(f: TextIO, data: IOData):
     f.write("$BASIS\n")
     iatom_last = 0
     for shell in data.obasis.shells:
+        if shell.ncon != 1:
+            raise RuntimeError("Generalized contractions not supported. Call prepare_dump first.")
         iatom_new = shell.icenter
         if iatom_new != iatom_last:
             f.write("$$\n")
-        for iangmom, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds)):
-            iatom_last = shell.icenter
-            nbasis = len(CONVENTIONS[(angmom, kind)])
-            f.write(f" {nbasis} {angmom_its(angmom).capitalize():1s} 1.00\n")
-            for exponent, coeff in zip(shell.exponents, shell.coeffs[:, iangmom]):
-                f.write(f"{exponent:20.10f} {coeff:17.10f}\n")
+        angmom = shell.angmoms[0]
+        kind = shell.kinds[0]
+        iatom_last = shell.icenter
+        nbasis = len(CONVENTIONS[(angmom, kind)])
+        f.write(f" {nbasis} {angmom_its(angmom).capitalize():1s} 1.00\n")
+        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0]):
+            f.write(f"{exponent:20.10f} {coeff:17.10f}\n")
     f.write("\n")
     f.write("$END\n")
     f.write("\n")
@@ -388,7 +392,7 @@ def dump_one(f: TextIO, data: IOData):
         _dump_helper_occ(f, data, spin="b")
 
     else:
-        raise RuntimeError("This should not happen because of prepare_dump")
+        raise RuntimeError("Generalized orbitals are not support. Call prepare_dump first.")
 
 
 # Defining help dumping functions

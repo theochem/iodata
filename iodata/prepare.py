@@ -30,11 +30,11 @@ from warnings import warn
 
 import attrs
 
-from .convert import convert_to_unrestricted
+from .convert import convert_to_segmented, convert_to_unrestricted
 from .iodata import IOData
 from .utils import PrepareDumpError, PrepareDumpWarning
 
-__all__ = ("prepare_unrestricted_aminusb",)
+__all__ = ("prepare_unrestricted_aminusb", "prepare_segmented")
 
 
 def prepare_unrestricted_aminusb(data: IOData, allow_changes: bool, filename: str, fmt: str):
@@ -50,7 +50,6 @@ def prepare_unrestricted_aminusb(data: IOData, allow_changes: bool, filename: st
         The file to be written to, only used for error messages.
     fmt
         The file format whose dump function is calling this function, only used for error messages.
-
 
     Returns
     -------
@@ -83,7 +82,7 @@ def prepare_unrestricted_aminusb(data: IOData, allow_changes: bool, filename: st
     message = f"The {fmt} format does not support restricted orbitals with mo.occs_aminusb. "
     if not allow_changes:
         raise PrepareDumpError(
-            message + "Set allow_change=True to enable conversion to unrestricted.", filename
+            message + "Set allow_changes to enable conversion to unrestricted.", filename
         )
     warn(
         PrepareDumpWarning(message + "The orbitals are converted to unrestricted", filename),
@@ -92,3 +91,63 @@ def prepare_unrestricted_aminusb(data: IOData, allow_changes: bool, filename: st
 
     # Convert
     return attrs.evolve(data, mo=convert_to_unrestricted(data.mo))
+
+
+def prepare_segmented(data: IOData, keep_sp: bool, allow_changes: bool, filename: str, fmt: str):
+    """If needed, convert generalized contractions to segmented ones.
+
+    Parameters
+    ----------
+    data
+        The IOData instance with the orbital basis set.
+    keep_sp
+        Set to True if SP-shells should not be segmented.
+    allow_changes
+        Whether conversion of the IOData object to a compatible form is allowed or not.
+    filename
+        The file to be written to, only used for error messages.
+    fmt
+        The file format whose dump function is calling this function, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given data object if no conversion took place,
+        or a shallow copy with some new attriubtes.
+
+    Raises
+    ------
+    ValueError
+        If the given data object has no orbital basis set.
+    PrepareDumpError
+        If ``allow_changes == False`` and a conversion is required.
+    PrepareDumpWarning
+        If ``allow_changes == True`` and a conversion is required.
+    """
+    # Check: possible, needed?
+    if data.obasis is None:
+        raise ValueError("The given IOData instance has no orbital basis set.")
+    if all(
+        shell.ncon == 1 or (keep_sp and shell.ncon == 2 and (shell.angmoms == [0, 1]).all())
+        for shell in data.obasis.shells
+    ):
+        return data
+
+    # Raise error or warning
+    message = f"The {fmt} format does not support generalized contractions"
+    if keep_sp:
+        message += " other than SP shells"
+    message += ". "
+    if not allow_changes:
+        raise PrepareDumpError(
+            message + "Set allow_changes to enable conversion to segmented shells.", filename
+        )
+    warn(
+        PrepareDumpWarning(
+            message + "The orbital basis is converted to segmented shells", filename
+        ),
+        stacklevel=2,
+    )
+
+    # Convert
+    return attrs.evolve(data, obasis=convert_to_segmented(data.obasis, keep_sp))

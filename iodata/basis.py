@@ -239,13 +239,3 @@ class MolecularBasis:
     def nbasis(self) -> int:
         """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
-
-    def get_segmented(self):
-        """Unroll generalized contractions."""
-        shells = []
-        for shell in self.shells:
-            for angmom, kind, coeffs in zip(shell.angmoms, shell.kinds, shell.coeffs.T):
-                shells.append(
-                    Shell(shell.icenter, [angmom], [kind], shell.exponents, coeffs.reshape(-1, 1))
-                )
-        return attrs.evolve(self, shells=shells)
