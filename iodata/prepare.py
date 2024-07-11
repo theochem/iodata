@@ -30,8 +30,8 @@ from warnings import warn
 
 import attrs
 
+from .convert import convert_to_unrestricted
 from .iodata import IOData
-from .orbitals import convert_to_unrestricted
 from .utils import PrepareDumpError, PrepareDumpWarning
 
 __all__ = ("prepare_unrestricted_aminusb",)

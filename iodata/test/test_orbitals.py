@@ -22,7 +22,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 
-from ..orbitals import MolecularOrbitals, convert_to_unrestricted
+from ..orbitals import MolecularOrbitals
 
 
 def test_wrong_kind():
@@ -518,97 +518,3 @@ def test_generalized_irreps():
         _ = mo.irrepsa
     with pytest.raises(NotImplementedError):
         _ = mo.irrepsb
-
-
-def test_convert_to_unrestricted_generalized():
-    with pytest.raises(ValueError):
-        convert_to_unrestricted(MolecularOrbitals("generalized", None, None))
-
-
-def test_convert_to_unrestricted_pass_through():
-    mo1 = MolecularOrbitals("unrestricted", 5, 3, occs=[1, 1, 0, 0, 0, 1, 0, 0])
-    mo2 = convert_to_unrestricted(mo1)
-    assert mo1 is mo2
-
-
-def test_convert_to_unrestricted_minimal():
-    mo1 = MolecularOrbitals("restricted", 5, 5)
-    mo2 = convert_to_unrestricted(mo1)
-    assert mo1 is not mo2
-    assert mo2.kind == "unrestricted"
-    assert mo2.norba == 5
-    assert mo2.norbb == 5
-    assert mo2.coeffs is None
-    assert mo2.occs is None
-    assert mo2.coeffs is None
-    assert mo2.energies is None
-    assert mo2.irreps is None
-
-
-def test_convert_to_unrestricted_aminusb():
-    mo1 = MolecularOrbitals(
-        "restricted",
-        5,
-        5,
-        occs=np.array([2.0, 0.8, 0.2, 0.0, 0.0]),
-        occs_aminusb=np.array([0.0, 0.2, 0.2, 0.0, 0.0]),
-    )
-    assert_allclose(mo1.spinpol, 0.4)
-    mo2 = convert_to_unrestricted(mo1)
-    assert mo1 is not mo2
-    assert mo2.kind == "unrestricted"
-    assert_allclose(mo2.occsa, [1.0, 0.5, 0.2, 0.0, 0.0])
-    assert_allclose(mo2.occsb, [1.0, 0.3, 0.0, 0.0, 0.0])
-    assert_allclose(mo2.spinpol, 0.4)
-
-
-def test_convert_to_unrestricted_occ_integer():
-    mo1 = MolecularOrbitals(
-        "restricted",
-        5,
-        5,
-        occs=np.array([2.0, 1.0, 1.0, 0.0, 0.0]),
-    )
-    mo2 = convert_to_unrestricted(mo1)
-    assert mo1 is not mo2
-    assert mo2.kind == "unrestricted"
-    assert_allclose(mo2.occsa, [1.0, 1.0, 1.0, 0.0, 0.0])
-    assert_allclose(mo2.occsb, [1.0, 0.0, 0.0, 0.0, 0.0])
-
-
-def test_convert_to_unrestricted_occ_float():
-    mo1 = MolecularOrbitals(
-        "restricted",
-        5,
-        5,
-        occs=np.array([2.0, 1.6, 1.0, 0.0, 0.0]),
-    )
-    mo2 = convert_to_unrestricted(mo1)
-    assert mo1 is not mo2
-    assert mo2.kind == "unrestricted"
-    assert_allclose(mo2.occsa, [1.0, 0.8, 0.5, 0.0, 0.0])
-    assert_allclose(mo2.occsb, mo2.occsa)
-
-
-def test_convert_to_unrestricted_full():
-    rng = np.random.default_rng(42)
-    mo1 = MolecularOrbitals(
-        "restricted",
-        5,
-        5,
-        occs=rng.uniform(0, 1, 5),
-        coeffs=rng.uniform(0, 1, (8, 5)),
-        energies=rng.uniform(-1, 0, 5),
-        irreps=["A"] * 5,
-    )
-    mo2 = convert_to_unrestricted(mo1)
-    assert mo1 is not mo2
-    assert mo2.kind == "unrestricted"
-    assert_allclose(mo2.occsa, mo1.occsa)
-    assert_allclose(mo2.occsb, mo1.occsb)
-    assert_allclose(mo2.coeffsa, mo1.coeffsa)
-    assert_allclose(mo2.coeffsb, mo1.coeffsb)
-    assert_allclose(mo2.energiesa, mo1.energiesa)
-    assert_allclose(mo2.energiesb, mo1.energiesb)
-    assert_equal(mo2.irrepsa, mo1.irrepsa)
-    assert_equal(mo2.irrepsb, mo1.irrepsb)

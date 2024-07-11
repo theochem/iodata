@@ -28,7 +28,8 @@ import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
-from ..basis import HORTON2_CONVENTIONS, MolecularBasis, Shell, convert_conventions
+from ..basis import MolecularBasis, Shell
+from ..convert import HORTON2_CONVENTIONS, convert_conventions
 from ..formats.molden import _load_low
 from ..formats.molden import dump_one as molden_dump_one
 from ..iodata import IOData

@@ -27,7 +27,8 @@ import pytest
 from numpy.testing import assert_allclose
 
 from ..api import load_one
-from ..basis import MolecularBasis, Shell, convert_conventions
+from ..basis import MolecularBasis, Shell
+from ..convert import convert_conventions
 from ..overlap import OVERLAP_CONVENTIONS, compute_overlap, factorial2
 
 
