@@ -20,6 +20,7 @@
 """CLI for file conversion."""
 
 import argparse
+from typing import Optional
 
 import numpy as np
 
@@ -31,7 +32,7 @@ except ImportError:
     __version__ = "0.0.0.post0"
 
 
-__all__ = ()
+__all__ = ("convert",)
 
 
 DESCRIPTION = """\
@@ -88,7 +89,7 @@ def parse_args():
         "--allow-changes",
         default=False,
         action="store_true",
-        help="Allow (not trivially reversible) conversion the input data to make it compatible "
+        help="Allow (not trivially reversible) conversion of the input data to make it compatible "
         "with the output format. Warnings will be emitted for all changes made.",
     )
     parser.add_argument(
@@ -103,7 +104,14 @@ def parse_args():
     return parser.parse_args()
 
 
-def convert(infn: str, outfn: str, many: bool, infmt: str, outfmt: str, allow_changes: bool):
+def convert(
+    infn: str,
+    outfn: str,
+    many: bool = False,
+    infmt: Optional[str] = None,
+    outfmt: Optional[str] = None,
+    allow_changes: bool = False,
+):
     """Convert file from one format to another.
 
     Parameters
