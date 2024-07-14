@@ -88,8 +88,8 @@ def parse_args():
         "--allow-changes",
         default=False,
         action="store_true",
-        help="Allow reorganizing the input data to make it comatible with the output format. "
-        "Warnings will be emitted for all changes made.",
+        help="Allow (not trivially reversible) conversion the input data to make it compatible "
+        "with the output format. Warnings will be emitted for all changes made.",
     )
     parser.add_argument(
         "-m",

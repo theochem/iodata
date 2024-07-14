@@ -30,10 +30,11 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..__main__ import convert as convfn
 from ..api import load_many, load_one
-from ..utils import PrepareDumpError, PrepareDumpWarning
+from ..utils import FileFormatError, PrepareDumpError, PrepareDumpWarning
 
 
 def _convscript(infn: str, outfn: str, many: bool, infmt: str, outfmt: str, allow_changes: bool):
+    """Simulate the convert function by calling iodata-convert in a subprocess."""
     args = [sys.executable, "-m", "iodata.__main__", infn, outfn]
     if many:
         args.append("-m")
@@ -43,12 +44,16 @@ def _convscript(infn: str, outfn: str, many: bool, infmt: str, outfmt: str, allo
         args.append(f"--outfmt={outfmt}")
     if allow_changes:
         args.append("-c")
-    try:
-        subprocess.run(args, check=True)
-    except subprocess.CalledProcessError as exc:
-        raise PrepareDumpError("Translated error") from exc
-    if allow_changes:
-        warn(PrepareDumpWarning("Some message"), stacklevel=2)
+    cp = subprocess.run(args, capture_output=True, check=False, encoding="utf8")
+    if cp.returncode == 0:
+        if allow_changes and "PrepareDumpWarning" in cp.stderr:
+            warn(PrepareDumpWarning(cp.stderr), stacklevel=2)
+    else:
+        if "PrepareDumpError" in cp.stderr:
+            raise PrepareDumpError(cp.stderr)
+        if "FileFormatError" in cp.stderr:
+            raise FileFormatError(cp.stderr)
+        raise RuntimeError(f"Failure not processed.\n{cp.stderr}")
 
 
 def _check_convert_one(myconvert, tmpdir):
@@ -91,6 +96,20 @@ def test_convert_one_autofmt_changes(tmpdir, convert):
 def test_convert_one_manfmt(tmpdir, convert):
     myconvert = partial(convert, many=False, infmt="fchk", outfmt="xyz")
     _check_convert_one(myconvert, tmpdir)
+
+
+@pytest.mark.parametrize("convert", [convfn, _convscript])
+def test_convert_one_nonexisting_infmt(tmpdir, convert):
+    myconvert = partial(convert, many=False, infmt="blablabla", outfmt="xyz")
+    with pytest.raises(FileFormatError):
+        _check_convert_one(myconvert, tmpdir)
+
+
+@pytest.mark.parametrize("convert", [convfn, _convscript])
+def test_convert_one_nonexisting_outfmt(tmpdir, convert):
+    myconvert = partial(convert, many=False, infmt="fchk", outfmt="blablabla")
+    with pytest.raises(FileFormatError):
+        _check_convert_one(myconvert, tmpdir)
 
 
 @pytest.mark.parametrize("convert", [convfn, _convscript])
