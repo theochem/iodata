@@ -576,7 +576,9 @@ from ..utils import DumpError, DumpWarning, LineIterator, LoadError, LoadWarning
 __all__ = ()
 
 
-PATTERNS = []
+PATTERNS = [
+    "*.json",
+]
 
 
 @document_load_one(
