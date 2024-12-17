@@ -577,7 +577,7 @@ __all__ = ()
 
 
 PATTERNS = [
-    "*.json",
+    # "*.json",
 ]
 
 
