@@ -47,7 +47,9 @@ def _find_format_modules():
         if not module_info.ispkg:
             format_module = import_module("iodata.formats." + module_info.name)
             if hasattr(format_module, "PATTERNS"):
-                result[module_info.name] = format_module
+                for pattern in format_module.PATTERNS:
+                    result[pattern.replate("*.", "")] = format_module
+
     return result
 
 
