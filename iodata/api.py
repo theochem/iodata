@@ -46,9 +46,15 @@ def _find_format_modules():
     for module_info in iter_modules(import_module("iodata.formats").__path__):
         if not module_info.ispkg:
             format_module = import_module("iodata.formats." + module_info.name)
+            # TODO: there should be more robust way to find out the module name
             if hasattr(format_module, "PATTERNS"):
-                for pattern in format_module.PATTERNS:
-                    result[pattern.replace("*.", "")] = format_module
+                if module_info.name == "gaussianinput":
+                    result["com"] = format_module
+                    result["gjf"] = format_module
+                elif module_info.name == "gaussianlog":
+                    result["log"] = format_module
+                else:
+                    result[module_info.name] = format_module
 
     return result
 
