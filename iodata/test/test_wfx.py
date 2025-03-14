@@ -181,7 +181,7 @@ def test_dump_one_match(tmpdir, path, match):
     compare_mulliken_charges(path, tmpdir, match=match)
 
 
-@pytest.mark.slow()
+@pytest.mark.slow
 def test_dump_one_from_molden_neon(tmpdir):
     compare_mulliken_charges(
         "neon_turbomole_def2-qzvp.molden", tmpdir, atol=1.0e-10, match="Turbomole"

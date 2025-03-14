@@ -28,4 +28,4 @@ except ImportError:
 from .api import dump_many, dump_one, load_many, load_one, write_input
 from .iodata import IOData
 
-__all__ = ("IOData", "load_one", "load_many", "dump_one", "dump_many", "write_input")
+__all__ = ("IOData", "dump_many", "dump_one", "load_many", "load_one", "write_input")

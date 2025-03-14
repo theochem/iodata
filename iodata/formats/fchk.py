@@ -348,12 +348,13 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
                 ),
                 stacklevel=2,
             )
+        reference_energy = fchk.get("Optimization Reference Energy", 0.0)
         for istep, (energy, recor, atcoords, gradients) in enumerate(trajectory):
             data = {
                 "title": fchk["title"],
                 "atnums": fchk["Atomic numbers"],
                 "atcorenums": fchk["Nuclear charges"],
-                "energy": energy,
+                "energy": energy + reference_energy,
                 "atcoords": atcoords,
                 "atgradient": gradients,
                 "extra": {

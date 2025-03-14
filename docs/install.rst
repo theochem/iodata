@@ -34,7 +34,7 @@ In addition, IOData has the following dependencies:
     Ensure changes to these dependencies are reflected
     in pyproject.toml and .github/workflows/pytest.yaml
 
-- numpy >= 1.22: https://numpy.org/
+- numpy >= 1.26.4: https://numpy.org/
 - scipy >= 1.11.1: https://scipy.org/
 - attrs >= 21.3.0: https://www.attrs.org/en/stable/index.html
 

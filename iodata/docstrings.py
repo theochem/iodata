@@ -21,10 +21,10 @@
 from typing import Callable, Optional
 
 __all__ = (
-    "document_load_one",
-    "document_load_many",
-    "document_dump_one",
     "document_dump_many",
+    "document_dump_one",
+    "document_load_many",
+    "document_load_one",
     "document_write_input",
 )
 
@@ -188,8 +188,7 @@ def _document_dump(
     def decorator(func):
         if optional:
             optional_sentence = (
-                " If the following attributes are present, they are also dumped "
-                "into the file: {}."
+                " If the following attributes are present, they are also dumped into the file: {}."
             ).format(", ".join(f"``{word}``" for word in optional))
         else:
             optional_sentence = ""

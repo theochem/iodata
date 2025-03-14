@@ -866,7 +866,7 @@ def dump_one(f: TextIO, data: IOData):
             if last_icenter != -1:
                 f.write("\n")
             last_icenter = shell.icenter
-            f.write("%3i 0\n" % (shell.icenter + 1))
+            f.write(f"{shell.icenter + 1:3d} 0\n")
         # Write out the basis.
         # It is guaranteed to be segmented when reaching this part of the code.
         angmom = shell.angmoms[0]

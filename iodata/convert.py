@@ -31,12 +31,12 @@ from .basis import MolecularBasis, Shell
 from .orbitals import MolecularOrbitals
 
 __all__ = (
-    "convert_conventions",
-    "iter_cart_alphabet",
-    "HORTON2_CONVENTIONS",
     "CCA_CONVENTIONS",
-    "convert_to_unrestricted",
+    "HORTON2_CONVENTIONS",
+    "convert_conventions",
     "convert_to_segmented",
+    "convert_to_unrestricted",
+    "iter_cart_alphabet",
 )
 
 

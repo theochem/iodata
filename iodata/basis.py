@@ -33,7 +33,7 @@ from numpy.typing import NDArray
 
 from .attrutils import convert_array_to, validate_shape
 
-__all__ = ("angmom_sti", "angmom_its", "Shell", "MolecularBasis")
+__all__ = ("MolecularBasis", "Shell", "angmom_its", "angmom_sti")
 
 ANGMOM_CHARS = "spdfghiklmnoqrtuvwxyzabce"
 

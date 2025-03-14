@@ -716,3 +716,30 @@ def test_fchk_generalized_contraction(tmpdir):
         dump_one(data0, path_fchk, allow_changes=True)
     data1 = load_one(path_fchk)
     assert all(shell.ncon == 1 for shell in data1.obasis.shells)
+
+
+def test_methanol_g16_opt():
+    with as_file(files("iodata.test.data").joinpath("methanol_g16_opt.fchk")) as fn:
+        energies = np.array([data.energy for data in load_many(fn)])
+        assert energies == pytest.approx(
+            [-115.44471983, -115.44700873, -115.44713732, -115.44714153]
+        )
+
+
+def test_methanol_g16_scan():
+    with as_file(files("iodata.test.data").joinpath("methanol_g16_scan.fchk")) as fn:
+        energies = np.array([data.energy for data in load_many(fn)])
+        assert energies == pytest.approx(
+            [
+                -115.44471983,
+                -115.44699056,
+                -115.44711453,
+                -115.44711873,
+                -115.4454111,
+                -115.44542917,
+                -115.44157078,
+                -115.44159187,
+                -115.43619204,
+                -115.43621498,
+            ]
+        )

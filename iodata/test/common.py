@@ -37,13 +37,13 @@ from ..overlap import compute_overlap
 from ..utils import LoadWarning
 
 __all__ = (
-    "compute_mulliken_charges",
-    "compute_1rdm",
-    "compare_mols",
     "check_orthonormal",
-    "load_one_warning",
-    "create_generalized_orbitals",
+    "compare_mols",
+    "compute_1rdm",
+    "compute_mulliken_charges",
     "create_generalized_contraction",
+    "create_generalized_orbitals",
+    "load_one_warning",
 )
 
 
@@ -85,7 +85,7 @@ def truncated_file(fn_orig: str, nline: int, nadd: int, tmpdir: str):
         A temporary directory where the truncated file is stored.
 
     """
-    fn_truncated = "%s/truncated_%i_%s" % (tmpdir, nline, os.path.basename(fn_orig))
+    fn_truncated = os.path.join(tmpdir, f"truncated_{nline}_{os.path.basename(fn_orig)}")
     with open(fn_orig) as f_orig, open(fn_truncated, "w") as f_truncated:
         for counter, line in enumerate(f_orig):
             if counter >= nline:

@@ -616,9 +616,9 @@ def _parse_json(json_in: dict, lit: LineIterator) -> dict:
     # QCEngine seems to add null entries and empty dicts even for optional and empty keys
     fix_keys = {k: v for k, v in json_in.items() if v is not None}
     fix_subkeys = {}
-    for key in fix_keys:
-        if isinstance(fix_keys[key], dict):
-            fix_subkeys[key] = {k: v for k, v in fix_keys[key].items() if v is not None}
+    for key, value in fix_keys.items():
+        if isinstance(value, dict):
+            fix_subkeys[key] = {k: v for k, v in value.items() if v is not None}
     result = {**fix_keys, **fix_subkeys}
     # Remove empty dicts
     keys = list(result.keys())
