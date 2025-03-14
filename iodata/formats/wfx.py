@@ -470,8 +470,8 @@ def dump_one(f: TextIO, data: IOData):
     _write_xml_single(tag=lbs["num_electrons"], info=int(data.nelec), file=f)
     # wfx expects integer values for number of alpha/beta electrons but int rounds down the float
     # so round is used before turning it to integer to get the correct number.
-    _write_xml_single(tag=lbs["num_alpha_electron"], info=int(round(sum(data.mo.occsa))), file=f)
-    _write_xml_single(tag=lbs["num_beta_electron"], info=int(round(sum(data.mo.occsb))), file=f)
+    _write_xml_single(tag=lbs["num_alpha_electron"], info=round(sum(data.mo.occsa)), file=f)
+    _write_xml_single(tag=lbs["num_beta_electron"], info=round(sum(data.mo.occsb)), file=f)
 
     # write electronic spin multiplicity and model (both optional)
     if data.spinpol is not None:
