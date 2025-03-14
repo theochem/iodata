@@ -21,7 +21,7 @@
 
 from iodata.api import FORMAT_MODULES
 
-__all__ = ("format_words", "print_section", "main")
+__all__ = ("format_words", "main", "print_section")
 
 
 HEADER = """

@@ -297,7 +297,7 @@ def dump_one(f: TextIO, data: IOData):
         attype = str(n + str(i + 1)) if attypes is None else attypes[i]
         restype = "XXX" if restypes is None else restypes[i]
         chain = " " if chainids is None else chainids[i]
-        out1 = f"{i+1:>5d} {attype:<4s} {restype:3s} {chain:1s}{resnum:>4d}    "
+        out1 = f"{i + 1:>5d} {attype:<4s} {restype:3s} {chain:1s}{resnum:>4d}    "
         out2 = f"{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}"
         print("ATOM  " + out1 + out2, file=f)
     if data.bonds is not None:

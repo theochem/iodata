@@ -284,7 +284,7 @@ def test_load_one_lih_cation_rohf():
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
 
 
-@pytest.mark.slow()
+@pytest.mark.slow
 def test_load_one_cah110_hf_sto3g_g09():
     with as_file(files("iodata.test.data").joinpath("cah110_hf_sto3g_g09.wfn")) as file_wfn:
         mol = load_one(str(file_wfn))

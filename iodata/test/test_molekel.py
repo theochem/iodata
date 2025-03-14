@@ -144,7 +144,7 @@ def test_load_mkl_ethanol():
     assert_allclose(mol.mo.coeffs[-1, -1], -0.1424743)
 
 
-@pytest.mark.slow()
+@pytest.mark.slow
 def test_load_mkl_li2():
     mol = load_one_warning("li2.mkl", match="ORCA")
     assert_equal(mol.atcharges["mulliken"].shape, (2,))

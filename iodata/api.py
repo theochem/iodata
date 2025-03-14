@@ -37,7 +37,7 @@ from .utils import (
     WriteInputError,
 )
 
-__all__ = ("load_one", "load_many", "dump_one", "dump_many", "write_input")
+__all__ = ("dump_many", "dump_one", "load_many", "load_one", "write_input")
 
 
 def _find_format_modules():

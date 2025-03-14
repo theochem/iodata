@@ -220,9 +220,9 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
     # QCEngine seems to add null entries and empty dicts even for optional and empty keys
     fix_keys = {k: v for k, v in mol1_preproc.items() if v is not None}
     fix_subkeys = {}
-    for key in fix_keys:
-        if isinstance(fix_keys[key], dict):
-            fix_subkeys[key] = {k: v for k, v in fix_keys[key].items() if v is not None}
+    for key, value in fix_keys.items():
+        if isinstance(value, dict):
+            fix_subkeys[key] = {k: v for k, v in value.items() if v is not None}
     mol1 = {**fix_keys, **fix_subkeys}
     # Remove empty dicts
     keys = list(mol1.keys())
@@ -231,8 +231,7 @@ def test_inout_molssi_qcschema_molecule(tmpdir, filename):
             del mol1[key]
     # Check that prior provenance info is kept
     assert _check_provenance(mol1, mol2)
-    if "provenance" in mol1:
-        del mol1["provenance"]
+    mol1.pop("provenance", None)
     if "provenance" in mol2:
         del mol2["provenance"]
     assert mol1 == mol2

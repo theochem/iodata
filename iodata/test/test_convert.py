@@ -76,7 +76,7 @@ def test_convert_convention_shell():
     assert_equal(vec2[permutation] * signs, vec1)
 
 
-@pytest.fixture()
+@pytest.fixture
 def obasis() -> MolecularBasis:
     return MolecularBasis(
         [

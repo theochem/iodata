@@ -1,7 +1,7 @@
 exclude: 'iodata/test/data/.*'
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.6.0
+  rev: v5.0.0
   hooks:
     - id: check-added-large-files
       args: ["--maxkb=100"]
@@ -29,11 +29,11 @@ repos:
     - id: remove-crlf
       exclude_types: [binary]
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.28.5
+  rev: 0.31.3
   hooks:
     - id: check-github-workflows
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.4.9
+  rev: v0.10.0
   hooks:
     - id: ruff-format
     - id: ruff

@@ -172,7 +172,7 @@ def dump_one(f: TextIO, data: IOData):
     for i in range(data.natom):
         n = num2sym[data.atnums[i]]
         x, y, z = data.atcoords[i] / angstrom
-        out1 = f"{i+1:7d} {n:2s} {x:15.4f} {y:9.4f} {z:9.4f} "
+        out1 = f"{i + 1:7d} {n:2s} {x:15.4f} {y:9.4f} {z:9.4f} "
         atcharge = 0.0 if atcharges is None else atcharges[i]
         attype = n if attypes is None else attypes[i]
         out2 = f"{attype:6s} {1:4d} XXX {atcharge:14.4f}"
@@ -181,7 +181,7 @@ def dump_one(f: TextIO, data: IOData):
         print("@<TRIPOS>BOND", file=f)
         for i, bond in enumerate(data.bonds):
             bondtype = num2bond.get(bond[2], "un")
-            print(f"{i+1:6d} {bond[0]+1:4d} {bond[1]+1:4d} {bondtype:2s}", file=f)
+            print(f"{i + 1:6d} {bond[0] + 1:4d} {bond[1] + 1:4d} {bondtype:2s}", file=f)
 
 
 @document_dump_many("MOL2", ["atcoords", "atnums", "atcharges"], ["title"])

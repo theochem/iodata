@@ -34,7 +34,7 @@ from .convert import convert_to_segmented, convert_to_unrestricted
 from .iodata import IOData
 from .utils import PrepareDumpError, PrepareDumpWarning
 
-__all__ = ("prepare_unrestricted_aminusb", "prepare_segmented")
+__all__ = ("prepare_segmented", "prepare_unrestricted_aminusb")
 
 
 def prepare_unrestricted_aminusb(data: IOData, allow_changes: bool, filename: str, fmt: str):
