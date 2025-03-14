@@ -33,7 +33,7 @@ classifiers = [
 dependencies = [
     # Ensure changes to these dependencies are reflected
     # in .github/workflows/pytest.yaml and docs/install.rst
-    "numpy>=2.0",
+    "numpy>=1.26.4",
     "scipy>=1.13.1",
     "attrs>=21.3.0",
 ]
