@@ -19,9 +19,9 @@ jobs:
         exclude:
           # only test Python 3.9 and 3.13 for MacOS and Windows
           - os: macos-latest
-            python-version: ['3.10', '3.11', '3.12']
+            python-version: ['3.9', '3.10', '3.11', '3.12']
           - os: windows-latest
-            python-version: ['3.10', '3.11', '3.12']
+            python-version: ['3.9', '3.10', '3.11', '3.12']
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
