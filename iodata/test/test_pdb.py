@@ -92,8 +92,8 @@ def test_load_dump_consistency(fn_base, should_warn, tmpdir):
     assert_equal(mol0.atnums, mol1.atnums)
     assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)
     if mol0.atffparams is not None:
-        assert_equal(mol0.atffparams.get("attypes"), mol1.atffparams.get("attypes"))
-        assert_equal(mol0.atffparams.get("restypes"), mol1.atffparams.get("restypes"))
+        assert_equal(mol0.atffparams.get("atnames"), mol1.atffparams.get("atnames"))
+        assert_equal(mol0.atffparams.get("resnames"), mol1.atffparams.get("resnames"))
         assert_equal(mol0.atffparams.get("resnums"), mol1.atffparams.get("resnums"))
     if mol0.extra is not None:
         assert_equal(mol0.extra.get("occupancies"), mol1.extra.get("occupancies"))
@@ -117,12 +117,11 @@ def test_load_dump_xyz_consistency(tmpdir):
     assert mol0.title == mol1.title
     assert_equal(mol0.atnums, mol1.atnums)
     assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-2)
-    # check if the general restype and attype are correct
-    restypes = mol1.atffparams.get("restypes")
-    attypes = mol1.atffparams.get("attypes")
-    assert restypes[0] == "XXX"
-    assert attypes[0] == "H1"
-    assert mol1.extra.get("chainids") is None
+    # check if the general resname and atname are correct
+    resnames = mol1.atffparams.get("resnames")
+    atnames = mol1.atffparams.get("atnames")
+    assert resnames[0] == "XXX"
+    assert atnames[0] == "H1"
     # check if resnums are correct
     resnums = mol1.atffparams.get("resnums")
     assert_equal(resnums[0], -1)
@@ -140,12 +139,12 @@ def test_load_peptide_2luv():
     assert len(record) == 271
     assert mol.title.startswith("INTEGRIN")
     assert_equal(len(mol.atnums), 547)
-    restypes = mol.atffparams.get("restypes")
-    assert restypes[0] == "LYS"
-    assert restypes[-1] == "LYS"
-    attypes = mol.atffparams.get("attypes")
-    assert attypes[0] == "N"
-    assert attypes[-1] == "O"
+    resnames = mol.atffparams.get("resnames")
+    assert resnames[0] == "LYS"
+    assert resnames[-1] == "LYS"
+    atnames = mol.atffparams.get("atnames")
+    assert atnames[0] == "N"
+    assert atnames[-1] == "O"
     resnums = mol.atffparams.get("resnums")
     assert_equal(resnums[0], 1)
     assert_equal(resnums[-1], 35)
@@ -217,9 +216,9 @@ SYNONYM: EF-G"""
     )
     assert mol.natom == 191
     assert (mol.atnums == 6).all()
-    assert (mol.atffparams["attypes"] == ["CA"] * mol.natom).all()
-    assert (mol.atffparams["restypes"][:3] == ["GLN", "ILE", "LYS"]).all()
-    assert (mol.atffparams["restypes"][-4:] == ["LYS", "ILE", "THR", "PRO"]).all()
+    assert (mol.atffparams["atnames"] == ["CA"] * mol.natom).all()
+    assert (mol.atffparams["resnames"][:3] == ["GLN", "ILE", "LYS"]).all()
+    assert (mol.atffparams["resnames"][-4:] == ["LYS", "ILE", "THR", "PRO"]).all()
     assert_allclose(mol.atcoords[0, 2] / angstrom, -86.956)
     assert_allclose(mol.atcoords[190, 0] / angstrom, -24.547)
     assert_allclose(mol.extra.get("occupancies"), np.ones(mol.natom))

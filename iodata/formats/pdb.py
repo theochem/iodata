@@ -157,8 +157,8 @@ def load_one(lit: LineIterator) -> dict:
     title_lines = []
     compnd_lines = []
     atnums = []
-    attypes = []
-    restypes = []
+    atnames = []
+    resnames = []
     chainids = []
     resnums = []
     atcoords = []
@@ -178,12 +178,12 @@ def load_one(lit: LineIterator) -> dict:
         if line.startswith("COMPND"):
             compnd_lines.append(line[10:].strip())
         if line.startswith(("ATOM", "HETATM")):
-            (atnum, attype, restype, chainid, resnum, atcoord, occupancy, bfactor) = (
+            (atnum, atname, resname, chainid, resnum, atcoord, occupancy, bfactor) = (
                 _parse_pdb_atom_line(line, lit)
             )
             atnums.append(atnum)
-            attypes.append(attype)
-            restypes.append(restype)
+            atnames.append(atname)
+            resnames.append(resname)
             chainids.append(chainid)
             resnums.append(resnum)
             atcoords.append(atcoord)
@@ -205,8 +205,8 @@ def load_one(lit: LineIterator) -> dict:
 
     # Data related to force fields
     atffparams = {
-        "attypes": np.array(attypes),
-        "restypes": np.array(restypes),
+        "atnames": np.array(atnames),
+        "resnames": np.array(resnames),
         "resnums": np.array(resnums),
     }
     # Extra data
@@ -281,8 +281,8 @@ def dump_one(f: TextIO, data: IOData):
     if "compound" in data.extra:
         _dump_multiline_str(f, "COMPND", data.extra["compound"])
     # Prepare for ATOM lines.
-    attypes = data.atffparams.get("attypes", None)
-    restypes = data.atffparams.get("restypes", None)
+    atnames = data.atffparams.get("atnames", None)
+    resnames = data.atffparams.get("resnames", None)
     resnums = data.atffparams.get("resnums", None)
     occupancies = data.extra.get("occupancies", None)
     bfactors = data.extra.get("bfactors", None)
@@ -294,10 +294,10 @@ def dump_one(f: TextIO, data: IOData):
         x, y, z = data.atcoords[i] / angstrom
         occ = 1.00 if occupancies is None else occupancies[i]
         b = 0.00 if bfactors is None else bfactors[i]
-        attype = str(n + str(i + 1)) if attypes is None else attypes[i]
-        restype = "XXX" if restypes is None else restypes[i]
+        atname = str(n + str(i + 1)) if atnames is None else atnames[i]
+        resname = "XXX" if resnames is None else resnames[i]
         chain = " " if chainids is None else chainids[i]
-        out1 = f"{i + 1:>5d} {attype:<4s} {restype:3s} {chain:1s}{resnum:>4d}    "
+        out1 = f"{i + 1:>5d} {atname:<4s} {resname:3s} {chain:1s}{resnum:>4d}    "
         out2 = f"{x:8.3f}{y:8.3f}{z:8.3f}{occ:6.2f}{b:6.2f}{n:>12s}"
         print("ATOM  " + out1 + out2, file=f)
     if data.bonds is not None:
