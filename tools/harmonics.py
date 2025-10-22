@@ -86,7 +86,7 @@ def get_bare_transforms(ellmax: int):
             poly = sp.Poly(rrsh.pop(0), x, y, z)
             lookup = {
                 (int(nx), int(ny), int(nz)): coeff
-                for (nx, ny, nz), coeff in zip(poly.monoms(), poly.coeffs(), strict=False)
+                for (nx, ny, nz), coeff in zip(poly.monoms(), poly.coeffs(), strict=True)
             }
             for nx, ny, nz in iter_mononomials(ell):
                 row.append(sp.sympify(lookup.get((nx, ny, nz), 0)))
