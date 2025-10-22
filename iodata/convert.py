@@ -95,10 +95,10 @@ def _convert_convention_shell(
     # Get the permutation
     if reverse:
         permutation = [conv2.index(el1) for el1 in conv1]
-        signs = [signs2[i] * sign1 for i, sign1 in zip(permutation, signs1)]
+        signs = [signs2[i] * sign1 for i, sign1 in zip(permutation, signs1, strict=True)]
     else:
         permutation = [conv1.index(el2) for el2 in conv2]
-        signs = [signs1[i] * sign2 for i, sign2 in zip(permutation, signs2)]
+        signs = [signs1[i] * sign2 for i, sign2 in zip(permutation, signs2, strict=True)]
     return permutation, signs
 
 
@@ -143,7 +143,7 @@ def convert_conventions(
     permutation = []
     signs = []
     for shell in molbasis.shells:
-        for angmom, kind in zip(shell.angmoms, shell.kinds):
+        for angmom, kind in zip(shell.angmoms, shell.kinds, strict=True):
             key = (angmom, kind)
             conv1 = molbasis.conventions[key]
             conv2 = new_conventions[key]
@@ -278,7 +278,9 @@ def convert_to_segmented(obasis: MolecularBasis, keep_sp: bool = False) -> Molec
         if (shell.ncon == 1) or (keep_sp and shell.ncon == 2 and (shell.angmoms == [0, 1]).all()):
             shells.append(shell)
         else:
-            for angmom, kind, coeffs in zip(shell.angmoms, shell.kinds, shell.coeffs.T):
+            for angmom, kind, coeffs in zip(
+                shell.angmoms, shell.kinds, shell.coeffs.T, strict=True
+            ):
                 shells.append(
                     Shell(shell.icenter, [angmom], [kind], shell.exponents, coeffs.reshape(-1, 1))
                 )

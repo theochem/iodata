@@ -20,7 +20,7 @@
 
 from io import TextIOBase
 from pathlib import Path
-from typing import Optional, TextIO, Union
+from typing import TextIO
 
 import attrs
 import numpy as np
@@ -115,8 +115,8 @@ class LineIterator:
 
 
 def _interpret_file_lineno(
-    file: Optional[Union[str, Path, LineIterator, TextIO]] = None, lineno: Optional[int] = None
-) -> tuple[Optional[str], Optional[int]]:
+    file: str | Path | LineIterator | TextIO | None = None, lineno: int | None = None
+) -> tuple[str | None, int | None]:
     """Interpret the file and lineno arguments given to Error and Warning constructors.
 
     Parameters
@@ -150,7 +150,7 @@ def _interpret_file_lineno(
     raise TypeError(f"Types of file and lineno are not supported: {file}, {lineno}")
 
 
-def _format_file_message(message: str, filename: Optional[str], lineno: Optional[int]) -> str:
+def _format_file_message(message: str, filename: str | None, lineno: int | None) -> str:
     """Format the message of an exception.
 
     Parameters
@@ -180,8 +180,8 @@ class BaseFileError(Exception):
     def __init__(
         self,
         message,
-        file: Optional[Union[str, Path, LineIterator, TextIO]] = None,
-        lineno: Optional[int] = None,
+        file: str | Path | LineIterator | TextIO | None = None,
+        lineno: int | None = None,
     ):
         super().__init__(message)
         self.filename, self.lineno = _interpret_file_lineno(file, lineno)
@@ -216,8 +216,8 @@ class BaseFileWarning(Warning):
     def __init__(
         self,
         message,
-        file: Optional[Union[str, Path, LineIterator, TextIO]] = None,
-        lineno: Optional[int] = None,
+        file: str | Path | LineIterator | TextIO | None = None,
+        lineno: int | None = None,
     ):
         filename, lineno = _interpret_file_lineno(file, lineno)
         super().__init__(_format_file_message(message, filename, lineno))

@@ -18,8 +18,6 @@
 # --
 """Module for computing overlap of atomic orbital basis functions."""
 
-from typing import Optional, Union
-
 import attrs
 import numpy as np
 import scipy.special
@@ -33,7 +31,7 @@ from .overlap_cartpure import tfs
 __all__ = ("OVERLAP_CONVENTIONS", "compute_overlap", "gob_cart_normalization")
 
 
-def factorial2(n: Union[int, NDArray[int]]) -> Union[int, NDArray[int]]:
+def factorial2(n: int | NDArray[int]) -> int | NDArray[int]:
     """Modifcied scipy.special.factorial2 that returns 1 when the input is -1.
 
     The future implementation of factorial2 in SciPy will not return
@@ -68,8 +66,8 @@ def factorial2(n: Union[int, NDArray[int]]) -> Union[int, NDArray[int]]:
 def compute_overlap(
     obasis0: MolecularBasis,
     atcoords0: NDArray[float],
-    obasis1: Optional[MolecularBasis] = None,
-    atcoords1: Optional[NDArray[float]] = None,
+    obasis1: MolecularBasis | None = None,
+    atcoords1: NDArray[float] | None = None,
 ) -> NDArray[float]:
     r"""Compute overlap matrix for the given molecular basis set(s).
 
@@ -181,11 +179,11 @@ def compute_overlap(
                 shell_overlap = np.zeros((n0.shape[0], n1.shape[0]))
 
                 # Loop over primitives in shell0 (Cartesian)
-                for shell_scales0, a0 in zip(scales0[i0], shell0.exponents):
+                for shell_scales0, a0 in zip(scales0[i0], shell0.exponents, strict=True):
                     a0_r0 = a0 * r0
 
                     # Loop over primitives in shell1 (Cartesian)
-                    for shell_scales1, a1 in zip(scales1[i1], shell1.exponents):
+                    for shell_scales1, a1 in zip(scales1[i1], shell1.exponents, strict=True):
                         at = a0 + a1
                         prefactor = np.exp(-a0 * a1 / at * rij_norm_sq)
                         if prefactor < 1e-15:

@@ -21,7 +21,6 @@
 import os
 from contextlib import contextmanager
 from importlib.resources import as_file, files
-from typing import Optional
 
 import numpy as np
 import pytest
@@ -111,7 +110,7 @@ def compare_mols(mol1, mol2, atol=1.0e-8, rtol=0.0):
     if mol1.obasis is not None:
         # compare dictionaries
         assert len(mol1.obasis.shells) == len(mol2.obasis.shells)
-        for shell1, shell2 in zip(mol1.obasis.shells, mol2.obasis.shells):
+        for shell1, shell2 in zip(mol1.obasis.shells, mol2.obasis.shells, strict=True):
             assert shell1.icenter == shell2.icenter
             assert_equal(shell1.angmoms, shell2.angmoms)
             assert_equal(shell1.kinds, shell2.kinds)
@@ -173,7 +172,7 @@ def check_orthonormal(mo_coeffs: NDArray[float], ao_overlap: NDArray[float], ato
 
 
 def load_one_warning(
-    filename: str, *, fmt: Optional[str] = None, match: Optional[str] = None, **kwargs
+    filename: str, *, fmt: str | None = None, match: str | None = None, **kwargs
 ) -> IOData:
     """Call load_one, catching expected LoadWarning.
 

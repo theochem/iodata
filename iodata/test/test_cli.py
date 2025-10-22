@@ -23,7 +23,6 @@ import subprocess
 import sys
 from functools import partial
 from importlib.resources import as_file, files
-from typing import Optional
 from warnings import warn
 
 import pytest
@@ -38,8 +37,8 @@ def _convscript(
     infn: str,
     outfn: str,
     many: bool = False,
-    infmt: Optional[str] = None,
-    outfmt: Optional[str] = None,
+    infmt: str | None = None,
+    outfmt: str | None = None,
     allow_changes: bool = False,
 ):
     """Simulate the convert function by calling iodata-convert in a subprocess."""

@@ -20,12 +20,11 @@
 
 import os
 import warnings
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from fnmatch import fnmatch
 from importlib import import_module
 from pkgutil import iter_modules
 from types import ModuleType
-from typing import Callable, Optional
 
 from .iodata import IOData
 from .utils import (
@@ -54,7 +53,7 @@ def _find_format_modules():
 FORMAT_MODULES = _find_format_modules()
 
 
-def _select_format_module(filename: str, attrname: str, fmt: Optional[str] = None) -> ModuleType:
+def _select_format_module(filename: str, attrname: str, fmt: str | None = None) -> ModuleType:
     """Find a file format module with the requested attribute name.
 
     Parameters
@@ -155,7 +154,7 @@ def _reissue_warnings(func):
 
 
 @_reissue_warnings
-def load_one(filename: str, *, fmt: Optional[str] = None, **kwargs) -> IOData:
+def load_one(filename: str, *, fmt: str | None = None, **kwargs) -> IOData:
     """Load data from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -190,7 +189,7 @@ def load_one(filename: str, *, fmt: Optional[str] = None, **kwargs) -> IOData:
 
 
 @_reissue_warnings
-def load_many(filename: str, *, fmt: Optional[str] = None, **kwargs) -> Iterator[IOData]:
+def load_many(filename: str, *, fmt: str | None = None, **kwargs) -> Iterator[IOData]:
     """Load multiple IOData instances from a file.
 
     This function uses the extension or prefix of the filename to determine the
@@ -255,7 +254,7 @@ def dump_one(
     data: IOData,
     filename: str,
     *,
-    fmt: Optional[str] = None,
+    fmt: str | None = None,
     allow_changes: bool = False,
     **kwargs,
 ):
@@ -324,7 +323,7 @@ def dump_many(
     iter_data: Iterable[IOData],
     filename: str,
     *,
-    fmt: Optional[str] = None,
+    fmt: str | None = None,
     allow_changes: bool = False,
     **kwargs,
 ):
@@ -413,8 +412,8 @@ def write_input(
     filename: str,
     fmt: str,
     *,
-    template: Optional[str] = None,
-    atom_line: Optional[Callable] = None,
+    template: str | None = None,
+    atom_line: Callable | None = None,
     **kwargs,
 ):
     """Write input file using an instance of IOData for the specified software format.

@@ -20,7 +20,6 @@
 """CLI for file conversion."""
 
 import argparse
-from typing import Optional
 
 import numpy as np
 
@@ -108,8 +107,8 @@ def convert(
     infn: str,
     outfn: str,
     many: bool = False,
-    infmt: Optional[str] = None,
-    outfmt: Optional[str] = None,
+    infmt: str | None = None,
+    outfmt: str | None = None,
     allow_changes: bool = False,
 ):
     """Convert file from one format to another.

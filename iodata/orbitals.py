@@ -18,8 +18,6 @@
 # --
 """Data structure for molecular orbitals."""
 
-from typing import Optional
-
 import attrs
 import numpy as np
 from numpy.typing import NDArray
@@ -110,7 +108,7 @@ class MolecularOrbitals:
     This is expected to be equal to `norba` for the `restricted` kind.
     """
 
-    occs: Optional[NDArray[float]] = attrs.field(
+    occs: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("norb")),
@@ -120,7 +118,7 @@ class MolecularOrbitals:
     The length equals the number of columns of coeffs. (optional)
     """
 
-    coeffs: Optional[NDArray[float]] = attrs.field(
+    coeffs: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, "norb")),
@@ -133,19 +131,19 @@ class MolecularOrbitals:
     total number of orbitals. (optional)
     """
 
-    energies: Optional[NDArray[float]] = attrs.field(
+    energies: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("norb")),
     )
     """Molecular orbital energies. The length equals the number of columns of coeffs. (optional)"""
 
-    irreps: Optional[NDArray] = attrs.field(
+    irreps: NDArray | None = attrs.field(
         default=None, validator=attrs.validators.optional(validate_shape("norb"))
     )
     """Irreducible representation. The length equals the number of columns of coeffs. (optional)"""
 
-    occs_aminusb: Optional[NDArray[float]] = attrs.field(
+    occs_aminusb: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.and_(
@@ -200,7 +198,7 @@ class MolecularOrbitals:
         return None
 
     @property
-    def spinpol(self) -> Optional[float]:
+    def spinpol(self) -> float | None:
         """Return the spin polarization of the Slater determinant."""
         if self.kind == "generalized":
             raise NotImplementedError

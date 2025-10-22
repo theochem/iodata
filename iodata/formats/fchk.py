@@ -20,7 +20,7 @@
 
 from collections.abc import Iterator
 from fnmatch import fnmatch
-from typing import Optional, TextIO
+from typing import TextIO
 from warnings import warn
 
 import numpy as np
@@ -337,6 +337,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
                 results_geoms[1::2],
                 fchk[f"{prefix} {ipoint + 1:7d} Geometries"].reshape(-1, natom, 3),
                 fchk[f"{prefix} {ipoint + 1:7d} Gradient at each geome"].reshape(-1, natom, 3),
+                strict=True,
             )
         )
         if len(trajectory) != nstep:
@@ -369,7 +370,7 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             yield data
 
 
-def _load_fchk_low(lit: LineIterator, label_patterns: Optional[list[str]] = None) -> dict:
+def _load_fchk_low(lit: LineIterator, label_patterns: list[str] | None = None) -> dict:
     """Read selected fields from a formatted checkpoint file.
 
     Parameters
@@ -699,7 +700,7 @@ def dump_one(f: TextIO, data: IOData):
 
         if -1 in shell_types:
             sp_coeffs = []
-            for shell, shell_type in zip(data.obasis.shells, shell_types):
+            for shell, shell_type in zip(data.obasis.shells, shell_types, strict=True):
                 if shell_type == -1:
                     sp_coeffs.extend([shell.coeffs[i][1] for i in range(shell.nexp)])
                 else:

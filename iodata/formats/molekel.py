@@ -330,7 +330,7 @@ def dump_one(f: TextIO, data: IOData):
     # COORD
     atcoords = data.atcoords / angstrom
     f.write("$COORD\n")
-    for n, coord in zip(data.atnums, atcoords):
+    for n, coord in zip(data.atnums, atcoords, strict=True):
         f.write(f"   {n:d}   {coord[0]: ,.6f}  {coord[1]: ,.6f}  {coord[2]: ,.6f}\n")
     f.write("$END\n")
     f.write("\n")
@@ -357,7 +357,7 @@ def dump_one(f: TextIO, data: IOData):
         iatom_last = shell.icenter
         nbasis = len(CONVENTIONS[(angmom, kind)])
         f.write(f" {nbasis} {angmom_its(angmom).capitalize():1s} 1.00\n")
-        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0]):
+        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0], strict=True):
             f.write(f"{exponent:20.10f} {coeff:17.10f}\n")
     f.write("\n")
     f.write("$END\n")

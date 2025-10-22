@@ -9,6 +9,8 @@ import sys
 
 from intersphinx_registry import get_intersphinx_mapping
 from packaging.version import Version
+from setuptools_scm import Configuration
+from setuptools_scm._get_version_impl import _get_version
 from sphinx.ext.apidoc import main as main_api_doc
 
 sys.path.append(os.path.dirname(__file__))
@@ -118,9 +120,6 @@ mathjax3_config = {
 
 def _get_version_info():
     """Get the version as defined in pyproject.toml"""
-    from setuptools_scm import Configuration
-    from setuptools_scm._get_version_impl import _get_version
-
     config = Configuration.from_file("../pyproject.toml", "./")
     verinfo = Version(_get_version(config, force_write_version_files=False))
     return f"{verinfo.major}.{verinfo.minor}", str(verinfo)
