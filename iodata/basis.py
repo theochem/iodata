@@ -26,7 +26,6 @@ Basis set conventions and terminology are documented in :ref:`basis_conventions`
 
 from functools import wraps
 from numbers import Integral
-from typing import Union
 
 import attrs
 from numpy.typing import NDArray
@@ -51,7 +50,7 @@ def _alsolist(f):
 
 
 @_alsolist
-def angmom_sti(char: Union[str, list[str]]) -> Union[int, list[int]]:
+def angmom_sti(char: str | list[str]) -> int | list[int]:
     """Convert an angular momentum from string to integer format.
 
     Parameters
@@ -69,7 +68,7 @@ def angmom_sti(char: Union[str, list[str]]) -> Union[int, list[int]]:
 
 
 @_alsolist
-def angmom_its(angmom: Union[int, list[int]]) -> Union[str, list[str]]:
+def angmom_its(angmom: int | list[int]) -> str | list[str]:
     """Convert an angular momentum from integer to string representation.
 
     Parameters
@@ -159,7 +158,7 @@ class Shell:
     def nbasis(self) -> int:
         """Number of basis functions (e.g. 3 for a P shell and 4 for an SP shell)."""
         result = 0
-        for angmom, kind in zip(self.angmoms, self.kinds):
+        for angmom, kind in zip(self.angmoms, self.kinds, strict=True):
             if kind == "c":  # Cartesian
                 result += ((angmom + 1) * (angmom + 2)) // 2
             elif kind == "p" and angmom >= 2:

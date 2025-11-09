@@ -21,7 +21,6 @@
 
 import inspect
 from collections import defaultdict
-from typing import Optional, Union
 
 import iodata
 
@@ -144,7 +143,7 @@ def write_rst_table(table: list[list[str]], nhead: int = 1):
 
     """
 
-    def format_cell(cell: Optional[str]) -> str:
+    def format_cell(cell: str | None) -> str:
         """Format a single cell."""
         if cell is None or len(cell.strip()) == 0:
             return "\\ "
@@ -156,7 +155,7 @@ def write_rst_table(table: list[list[str]], nhead: int = 1):
         for icell, cell in enumerate(row):
             widths[icell] = max(widths.get(icell, 2), len(format_cell(cell)))
 
-    def format_row(cells: list[Union[str, None]], margin: str) -> str:
+    def format_row(cells: list[str | None], margin: str) -> str:
         """Format a row of cells."""
         return " ".join(
             margin + format_cell(cell).rjust(widths[icell]) + margin

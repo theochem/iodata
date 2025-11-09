@@ -71,7 +71,7 @@ def _load_vasp_header(
     vasp_atnums = [sym2num[w] for w in next(lit).split()]
     vasp_counts = [int(w) for w in next(lit).split()]
     atnums = []
-    for n, c in zip(vasp_atnums, vasp_counts):
+    for n, c in zip(vasp_atnums, vasp_counts, strict=True):
         atnums.extend([n] * c)
     atnums = np.array(atnums)
 

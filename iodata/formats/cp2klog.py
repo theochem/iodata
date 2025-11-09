@@ -18,8 +18,6 @@
 # --
 """CP2K ATOM output file format."""
 
-from typing import Union
-
 import numpy as np
 from numpy.typing import NDArray
 
@@ -44,9 +42,7 @@ CONVENTIONS = {
 }
 
 
-def _get_cp2k_norm_corrections(
-    ell: int, alphas: Union[float, NDArray[float]]
-) -> Union[float, NDArray[float]]:
+def _get_cp2k_norm_corrections(ell: int, alphas: float | NDArray[float]) -> float | NDArray[float]:
     """Compute the corrections for the normalization of the basis functions.
 
     This correction is needed because the CP2K atom code works with a different
@@ -155,7 +151,7 @@ def _read_cp2k_uncontracted_obasis(lit: LineIterator) -> MolecularBasis:
             line = next(lit)
         # Build the shell
         kind = "c" if angmom < 2 else "p"
-        for exponent, coeff in zip(exponents, coeffs):
+        for exponent, coeff in zip(exponents, coeffs, strict=True):
             shells.append(
                 Shell(0, np.array([angmom]), [kind], np.array([exponent]), np.array([[coeff]]))
             )

@@ -18,7 +18,8 @@
 # --
 """Utilities for writing input files."""
 
-from typing import Callable, TextIO
+from collections.abc import Callable
+from typing import TextIO
 
 import attrs
 import numpy as np

@@ -18,7 +18,7 @@
 # --
 """Utilities for building attr classes."""
 
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 
@@ -106,7 +106,7 @@ def validate_shape(*shape_requirements: tuple) -> Callable:
         if len(expected_shape) != len(observed_shape):
             match = False
         if match:
-            for es, os in zip(expected_shape, observed_shape):
+            for es, os in zip(expected_shape, observed_shape, strict=True):
                 if es is None:
                     continue
                 if es != os:

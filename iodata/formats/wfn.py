@@ -556,7 +556,7 @@ def dump_one(f: TextIO, data: IOData) -> None:
         # Decontract the shell
         angmom = shell.angmoms[0]
         kind = shell.kinds[0]
-        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0]):
+        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0], strict=True):
             shells.append(Shell(shell.icenter, [angmom], [kind], [exponent], [[coeff]]))
     # make a new instance of MolecularBasis with de-contracted basis shells; ideally for WFN we
     # want the primitive basis set, but IOData only supports shells.
@@ -568,7 +568,7 @@ def dump_one(f: TextIO, data: IOData) -> None:
     index_mo_old, index_mo_new = 0, 0
     # loop over the shells of the old basis
     for shell in data.obasis.shells:
-        for angmom, kind in zip(shell.angmoms, shell.kinds):
+        for angmom, kind in zip(shell.angmoms, shell.kinds, strict=True):
             n = len(data.obasis.conventions[angmom, kind])
             c = raw_coeffs[index_mo_old : index_mo_old + n]
             for _ in range(shell.nexp):
@@ -608,7 +608,7 @@ def dump_one(f: TextIO, data: IOData) -> None:
     print(FMT_NUM.format(data.mo.norb, obasis.nbasis, data.natom), file=f)
 
     # Write atoms (symbol, atom #, centre #, x pos., y pos., z pos., charge)
-    for iatom, (n, (x, y, z)) in enumerate(zip(data.atnums, data.atcoords)):
+    for iatom, (n, (x, y, z)) in enumerate(zip(data.atnums, data.atcoords, strict=True)):
         print(FMT_ATM.format(num2sym[n], iatom + 1, iatom + 1, x, y, z, n), file=f)
 
     # Write centre assignments, type assignments, exponents sections
@@ -617,7 +617,7 @@ def dump_one(f: TextIO, data: IOData) -> None:
     _dump_helper_section(f, expns, FMT_EXPN, 10, STEP_EXPN, 5)
 
     # Write MOs (mo #, occ #, energy)
-    mo_iter = enumerate(zip(data.mo.occs, data.mo.energies, mo_coeffs.transpose()))
+    mo_iter = enumerate(zip(data.mo.occs, data.mo.energies, mo_coeffs.transpose(), strict=True))
     for iorb, (occ, energy, coeffs) in mo_iter:
         print(FMT_MOS.format(iorb + 1, 0, occ, energy), file=f)
         # Write ``iorb``th coefficients section

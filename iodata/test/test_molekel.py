@@ -21,7 +21,6 @@
 import os
 import warnings
 from importlib.resources import as_file, files
-from typing import Optional
 
 import pytest
 from numpy.testing import assert_allclose, assert_equal
@@ -60,7 +59,7 @@ def compare_mols_diff_formats(mol1, mol2):
 
 
 def check_load_dump_consistency(
-    fn: str, tmpdir: str, match: Optional[str] = None, allow_changes: bool = False
+    fn: str, tmpdir: str, match: str | None = None, allow_changes: bool = False
 ):
     """Check if data is preserved after dumping and loading a Molekel file.
 

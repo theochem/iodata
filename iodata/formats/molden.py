@@ -26,7 +26,7 @@ errors are corrected when loading them with IOData.
 """
 
 import copy
-from typing import TextIO, Union
+from typing import TextIO
 from warnings import warn
 
 import attrs
@@ -475,7 +475,7 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
     return MolecularBasis(fixed_shells, orca_conventions, obasis.primitive_normalization)
 
 
-def _fix_obasis_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
+def _fix_obasis_psi4(obasis: MolecularBasis) -> MolecularBasis | None:
     """Return a new MolecularBasis correcting for errors from PSI4 <= 1.0.
 
     Old PSI4 version used a different normalization of the primitives.
@@ -509,7 +509,7 @@ def _fix_obasis_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     return None
 
 
-def _fix_obasis_turbomole(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
+def _fix_obasis_turbomole(obasis: MolecularBasis) -> MolecularBasis | None:
     """Return a new MolecularBasis correcting for errors from turbomole.
 
     Turbomole uses a different normalization of the primitives.
@@ -563,7 +563,7 @@ def _fix_obasis_normalize_contractions(obasis: MolecularBasis) -> MolecularBasis
     return MolecularBasis(fixed_shells, obasis.conventions, obasis.primitive_normalization)
 
 
-def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
+def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> MolecularBasis | None:
     """Return correction values for the MO coefficients.
 
     PSI4 <= 1.3.2 uses a different normalizationion conventions for Cartesian
@@ -595,7 +595,7 @@ def _fix_mo_coeffs_psi4(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
     return None
 
 
-def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> Union[MolecularBasis, None]:
+def _fix_mo_coeffs_cfour(obasis: MolecularBasis) -> MolecularBasis | None:
     """Return correction values for the MO coefficients.
 
     CFOUR (up to current 2.1) uses different normalization conventions for Cartesian
@@ -871,7 +871,7 @@ def dump_one(f: TextIO, data: IOData):
         # It is guaranteed to be segmented when reaching this part of the code.
         angmom = shell.angmoms[0]
         f.write(f" {angmom_its(angmom):1s}  {shell.nexp:3d} 1.00\n")
-        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0]):
+        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0], strict=True):
             f.write(f"{exponent:20.10f} {coeff:20.10f}\n")
     f.write("\n")
 

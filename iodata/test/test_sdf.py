@@ -117,7 +117,7 @@ def test_load_dump_many_consistency(tmpdir):
     dump_many(mols0, fn_tmp, fmt="sdf")
     mols1 = list(load_many(fn_tmp, fmt="sdf"))
     assert len(mols0) == len(mols1)
-    for mol0, mol1 in zip(mols0, mols1):
+    for mol0, mol1 in zip(mols0, mols1, strict=True):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
         assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)

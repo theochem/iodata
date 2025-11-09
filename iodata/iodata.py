@@ -18,8 +18,6 @@
 # --
 """Module for handling input/output from different file formats."""
 
-from typing import Optional
-
 import attrs
 import numpy as np
 from numpy.typing import NDArray
@@ -42,14 +40,14 @@ class IOData:
     values are arrays with atomic charges (size N).
     """
 
-    atcoords: Optional[NDArray[float]] = attrs.field(
+    atcoords: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom", 3)),
     )
     """A (N, 3) float array with Cartesian coordinates of the atoms."""
 
-    _atcorenums: Optional[NDArray[float]] = attrs.field(
+    _atcorenums: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom")),
@@ -68,14 +66,14 @@ class IOData:
     etc. Not all of them have to be present, depending on the use case.
     """
 
-    atfrozen: Optional[NDArray[bool]] = attrs.field(
+    atfrozen: NDArray[bool] | None = attrs.field(
         default=None,
         converter=convert_array_to(bool),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
     """A (N,) bool array with frozen atoms. (All atoms are free if thisattribute is not set.)"""
 
-    atgradient: Optional[NDArray[float]] = attrs.field(
+    atgradient: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom", 3)),
@@ -85,28 +83,28 @@ class IOData:
     Cartesian atomic displacements.
     """
 
-    athessian: Optional[NDArray[float]] = attrs.field(
+    athessian: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, None)),
     )
     """A (3*N, 3*N) array containing the energy Hessian w.r.t Cartesian atomic displacements."""
 
-    atmasses: Optional[NDArray[float]] = attrs.field(
+    atmasses: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
     """A (N,) float array with atomic masses."""
 
-    atnums: Optional[NDArray[int]] = attrs.field(
+    atnums: NDArray[int] | None = attrs.field(
         default=None,
         converter=convert_array_to(int),
         validator=attrs.validators.optional(validate_shape("natom")),
     )
     """A (N,) int vector with the atomic numbers."""
 
-    basisdef: Optional[str] = attrs.field(default=None)
+    basisdef: str | None = attrs.field(default=None)
     """
     A basis set definition, i.e. a dictionary whose keys are symbols (of
     chemical elements), atomic numbers (similar to previous, str to make
@@ -115,7 +113,7 @@ class IOData:
     when implementing a load function for basis set definitions.
     """
 
-    bonds: Optional[NDArray[int]] = attrs.field(
+    bonds: NDArray[int] | None = attrs.field(
         default=None,
         converter=convert_array_to(int),
         validator=attrs.validators.optional(validate_shape(None, 3)),
@@ -127,7 +125,7 @@ class IOData:
     of bond types are defined in ``iodata.periodic``.
     """
 
-    cellvecs: Optional[NDArray[float]] = attrs.field(
+    cellvecs: NDArray[float] | None = attrs.field(
         default=None,
         converter=convert_array_to(float),
         validator=attrs.validators.optional(validate_shape(None, 3)),
@@ -139,16 +137,16 @@ class IOData:
     Three vectors describe a 3D cell, e.g. a crystalline solid.
     """
 
-    _charge: Optional[float] = attrs.field(default=None)
+    _charge: float | None = attrs.field(default=None)
     """The net charge of the system. When possible, this is derived from atcorenums and nelec."""
 
-    core_energy: Optional[float] = attrs.field(default=None)
+    core_energy: float | None = attrs.field(default=None)
     """The Hartree-Fock energy due to the core orbitals."""
 
-    cube: Optional[Cube] = attrs.field(default=None)
+    cube: Cube | None = attrs.field(default=None)
     """An instance of Cube, describing the volumetric data from a cube (or similar) file."""
 
-    energy: Optional[float] = attrs.field(default=None)
+    energy: float | None = attrs.field(default=None)
     """The total energy (electronic + nn)."""
 
     extcharges: NDArray[float] = attrs.field(
@@ -169,13 +167,13 @@ class IOData:
     to IOData attributes, with a more final name.
     """
 
-    g_rot: Optional[float] = attrs.field(default=None)
+    g_rot: float | None = attrs.field(default=None)
     """The rotational symmetry number of the molecule."""
 
-    lot: Optional[str] = attrs.field(default=None)
+    lot: str | None = attrs.field(default=None)
     """The level of theory used to compute the orbitals (and other properties)."""
 
-    mo: Optional[MolecularOrbitals] = attrs.field(default=None)
+    mo: MolecularOrbitals | None = attrs.field(default=None)
     """The molecular orbitals."""
 
     moments: dict = attrs.field(factory=dict)
@@ -188,13 +186,13 @@ class IOData:
     defined in :py:mod:`iodata.basis`.
     """
 
-    _nelec: Optional[float] = attrs.field(default=None)
+    _nelec: float | None = attrs.field(default=None)
     """The number of electrons."""
 
-    obasis: Optional[MolecularBasis] = attrs.field(default=None)
+    obasis: MolecularBasis | None = attrs.field(default=None)
     """An OrderedDict containing parameters to instantiate a GOBasis class."""
 
-    obasis_name: Optional[str] = attrs.field(default=None)
+    obasis_name: str | None = attrs.field(default=None)
     """
     A name or DOI describing the basis set used for the orbitals in the mo attribute (if defined).
     The name should be consistent with those defined the
@@ -227,13 +225,13 @@ class IOData:
     because it is only useful to compute them in the atomic-orbital basis.
     """
 
-    run_type: Optional[str] = attrs.field(default=None)
+    run_type: str | None = attrs.field(default=None)
     """
     The type of calculation that lead to the results stored in IOData,
     which must be one of the following: 'energy', 'energy_force', 'opt', 'scan', 'freq' or None.
     """
 
-    _spinpol: Optional[float] = attrs.field(default=None)
+    _spinpol: float | None = attrs.field(default=None)
     """
     The spin polarization.
     When molecular orbitals are present,
@@ -241,7 +239,7 @@ class IOData:
     When no molecular orbitals are present, this attribute can be set.
     """
 
-    title: Optional[str] = attrs.field(default=None)
+    title: str | None = attrs.field(default=None)
     """A suitable name for the data."""
 
     two_ints: dict = attrs.field(factory=dict)

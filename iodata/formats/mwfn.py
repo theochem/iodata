@@ -172,7 +172,7 @@ def _load_helper_shells(lit: LineIterator, nshell: int) -> dict:
         line = next(lit)
 
     data = {}
-    for section, name in zip(sections, var_name):
+    for section, name in zip(sections, var_name, strict=True):
         if not line.startswith(section):
             raise LoadError(f"Expected line to start with {section}, but got line={line}.", lit)
         data[name] = _load_helper_section(lit, nshell, " ", 0, int)
@@ -295,7 +295,9 @@ def load_one(lit: LineIterator) -> dict:
     # Unlike WFN, MWFN does include orbital expansion coefficients.
     shells = []
     counter = 0
-    for center, stype, ncon in zip(inp["shell_centers"], inp["shell_types"], inp["shell_ncons"]):
+    for center, stype, ncon in zip(
+        inp["shell_centers"], inp["shell_types"], inp["shell_ncons"], strict=True
+    ):
         shells.append(
             Shell(
                 center,

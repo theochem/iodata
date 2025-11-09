@@ -18,7 +18,8 @@
 # --
 """Orca Input Module."""
 
-from typing import Callable, Optional, TextIO
+from collections.abc import Callable
+from typing import TextIO
 
 from ..docstrings import document_write_input
 from ..iodata import IOData
@@ -52,8 +53,8 @@ def default_atom_line(data: IOData, iatom: int):
 def write_input(
     fh: TextIO,
     data: IOData,
-    template: Optional[str] = None,
-    atom_line: Optional[Callable] = None,
+    template: str | None = None,
+    atom_line: Callable | None = None,
     **kwargs,
 ):
     """Do not edit this docstring. It will be overwritten."""

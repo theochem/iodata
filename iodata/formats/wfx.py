@@ -22,7 +22,7 @@ See http://aim.tkgristmill.com/wfxformat.html
 """
 
 from collections.abc import Iterator
-from typing import Optional, TextIO
+from typing import TextIO
 from warnings import warn
 
 import numpy as np
@@ -172,7 +172,7 @@ def load_data_wfx(lit: LineIterator) -> dict:
     return result
 
 
-def parse_wfx(lit: LineIterator, required_tags: Optional[list] = None) -> dict:
+def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
     """Load data in all sections existing in the given WFX file LineIterator."""
     data = {}
     mo_start = "<Molecular Orbital Primitive Coefficients>"
@@ -396,7 +396,7 @@ def dump_one(f: TextIO, data: IOData):
         # Decontract the shell
         angmom = shell.angmoms[0]
         kind = shell.kinds[0]
-        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0]):
+        for exponent, coeff in zip(shell.exponents, shell.coeffs[:, 0], strict=True):
             shells.append(Shell(shell.icenter, [angmom], [kind], [exponent], [[coeff]]))
     # make a new instance of MolecularBasis with de-contracted basis shells; ideally for WFX we
     # want the primitive basis set, but IOData only supports shells.
@@ -411,7 +411,7 @@ def dump_one(f: TextIO, data: IOData):
     index_mo_old, index_mo_new = 0, 0
     # loop over the shells of the old basis
     for shell in data.obasis.shells:
-        for angmom, kind in zip(shell.angmoms, shell.kinds):
+        for angmom, kind in zip(shell.angmoms, shell.kinds, strict=True):
             n = len(data.obasis.conventions[angmom, kind])
             c = raw_coeffs[index_mo_old : index_mo_old + n]
             for _j in range(shell.nexp):
@@ -534,7 +534,7 @@ def dump_one(f: TextIO, data: IOData):
 
     # write nuclear Cartesian energy gradients (optional)
     if data.atgradient is not None:
-        nuc_cart_energy_grad = list(zip(nuclear_names, data.atgradient))
+        nuc_cart_energy_grad = list(zip(nuclear_names, data.atgradient, strict=True))
         print("<Nuclear Cartesian Energy Gradients>", file=f)
         for atom in nuc_cart_energy_grad:
             print(

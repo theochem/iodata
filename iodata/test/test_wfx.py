@@ -20,7 +20,6 @@
 
 import os
 from importlib.resources import as_file, files
-from typing import Optional
 
 import numpy as np
 import pytest
@@ -93,7 +92,7 @@ def compare_mulliken_charges(
     tmpdir: str,
     rtol: float = 1.0e-7,
     atol: float = 0.0,
-    match: Optional[str] = None,
+    match: str | None = None,
     allow_changes: bool = False,
 ):
     """Check if charges are computed correctly after dumping and loading WFX file format.

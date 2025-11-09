@@ -154,7 +154,7 @@ def _parse_properties(properties: str, lit: LineIterator) -> list[tuple]:
     elif "species" in names:
         # If 'Z' is not present, use 'species'
         atom_column_map["species"] = atnum_column
-    for name, dtype, shape in zip(names, dtypes, shapes):
+    for name, dtype, shape in zip(names, dtypes, shapes, strict=True):
         if name in atom_column_map:
             atom_columns.append(atom_column_map[name])
         else:

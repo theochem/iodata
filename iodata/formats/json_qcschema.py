@@ -562,7 +562,7 @@ occupations_b                            Keyword for the primary return beta-spi
 """
 
 import json
-from typing import TextIO, Union
+from typing import TextIO
 from warnings import warn
 
 import numpy as np
@@ -1404,8 +1404,8 @@ def _parse_output_keys(result: dict, lit: LineIterator) -> dict:
 
 
 def _parse_provenance(
-    provenance: Union[list[dict], dict], lit: LineIterator, source: str, append=True
-) -> Union[list[dict], dict]:
+    provenance: list[dict] | dict, lit: LineIterator, source: str, append=True
+) -> list[dict] | dict:
     """Load :ref:`provenance <json_schema_provenance>` properties from QCSchema.
 
     Parameters
@@ -1601,7 +1601,7 @@ def _dump_qcschema_molecule(f: TextIO, data: IOData) -> dict:
     return molecule_dict
 
 
-def _dump_provenance(f: TextIO, data: IOData, source: str) -> Union[list[dict], dict]:
+def _dump_provenance(f: TextIO, data: IOData, source: str) -> list[dict] | dict:
     """Generate the :ref:`provenance <json_schema_provenance>` information.
 
     This is used when dumping an IOData instance to QCSchema.
