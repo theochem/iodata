@@ -69,8 +69,8 @@ iodata-convert = "iodata.__main__:main"
 addopts = "-n auto -W error --strict-markers"
 markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 
-[tool.setuptools]
-packages = ["iodata"]
+[tool.setuptools.packages.find]
+include = ["iodata*"]
 
 [tool.setuptools_scm]
 write_to = "iodata/_version.py"
