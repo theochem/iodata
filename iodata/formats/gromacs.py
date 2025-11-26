@@ -46,11 +46,11 @@ def load_one(lit: LineIterator) -> dict:
     time = data[1]
     resnums = np.array(data[2])
     resnames = np.array(data[3])
-    atnames = np.array(data[4])
+    attypes = np.array(data[4])
     atcoords = data[5]
     velocities = data[6]
     cellvecs = data[7]
-    atffparams = {"atnames": atnames, "resnames": resnames, "resnums": resnums}
+    atffparams = {"attypes": attypes, "resnames": resnames, "resnums": resnums}
     extra = {"time": time, "velocities": velocities}
     return {
         "atcoords": atcoords,
@@ -87,14 +87,14 @@ def _helper_read_frame(lit: LineIterator) -> tuple:
     # Read the atom lines
     resnums = []
     resnames = []
-    atnames = []
+    attypes = []
     pos = np.zeros((natoms, 3), np.float32)
     vel = None
     for i in range(natoms):
         line = next(lit)
         resnums.append(int(line[:5]))
         resnames.append(line[5:10].split()[-1])
-        atnames.append(line[10:15].split()[-1])
+        attypes.append(line[10:15].split()[-1])
         words = line[22:].split()
         pos[i, 0] = float(words[0])
         pos[i, 1] = float(words[1])
@@ -124,4 +124,4 @@ def _helper_read_frame(lit: LineIterator) -> tuple:
         cell[0, 2] = float(words[7])
         cell[1, 2] = float(words[8])
     cell *= nanometer
-    return title, time, resnums, resnames, atnames, pos, vel, cell
+    return title, time, resnums, resnames, attypes, pos, vel, cell
