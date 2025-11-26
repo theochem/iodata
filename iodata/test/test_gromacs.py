@@ -72,3 +72,4 @@ def test_load_without_velocities():
     # velocities should be present in extra but None
     assert "velocities" in mol.extra
     assert mol.extra["velocities"] is None
+

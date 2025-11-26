@@ -89,7 +89,7 @@ def _helper_read_frame(lit: LineIterator) -> tuple:
     resnames = []
     attypes = []
     pos = np.zeros((natoms, 3), np.float32)
-    vel = None
+    vel = np.zeros((natoms, 3), np.float32)
     for i in range(natoms):
         line = next(lit)
         resnums.append(int(line[:5]))
@@ -101,8 +101,6 @@ def _helper_read_frame(lit: LineIterator) -> tuple:
         pos[i, 2] = float(words[2])
         # velocities are optional in gro files; only parse if present
         if len(words) >= 6:
-            if vel is None:
-                vel = np.zeros((natoms, 3), np.float32)
             vel[i, 0] = float(words[3])
             vel[i, 1] = float(words[4])
             vel[i, 2] = float(words[5])
