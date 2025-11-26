@@ -27,7 +27,7 @@ from ..utils import nanometer, picosecond
 
 
 def test_load_water():
-    """ Test gro file of one water."""
+    """Test gro file of one water."""
     with as_file(files("iodata.test.data").joinpath("water.gro")) as fn_gro:
         mol = load_one(str(fn_gro))
     check_water(mol)
@@ -48,7 +48,7 @@ def check_water(mol):
 
 
 def test_load_many():
-    """ Test water gro file with two frames."""
+    """Test water gro file with two frames."""
     with as_file(files("iodata.test.data").joinpath("water2.gro")) as fn_gro:
         mols = list(load_many(str(fn_gro)))
     assert len(mols) == 2
