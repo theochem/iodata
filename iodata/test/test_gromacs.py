@@ -27,7 +27,7 @@ from ..utils import nanometer, picosecond
 
 
 def test_load_water():
-    # test gro file of one water
+    """Test gro file of one water."""
     with as_file(files("iodata.test.data").joinpath("water.gro")) as fn_gro:
         mol = load_one(str(fn_gro))
     check_water(mol)
@@ -48,6 +48,7 @@ def check_water(mol):
 
 
 def test_load_many():
+    """Test water gro file with two frames."""
     with as_file(files("iodata.test.data").joinpath("water2.gro")) as fn_gro:
         mols = list(load_many(str(fn_gro)))
     assert len(mols) == 2
@@ -55,3 +56,20 @@ def test_load_many():
     assert mols[1].extra["time"] == 1.0 * picosecond
     for mol in mols:
         check_water(mol)
+
+
+def test_load_without_velocities():
+    """A GRO file without velocity columns should set velocities to None."""
+    with as_file(files("iodata.test.data").joinpath("water_no_vel.gro")) as fn_gro:
+        mol = load_one(str(fn_gro))
+
+    # basic checks
+    assert mol.title == "MD of 2 waters"
+    assert mol.atcoords.shape == (6, 3)
+
+    # coordinates should match the ones in the file (compare in nm)
+    assert_allclose(mol.atcoords[-1] / nanometer, [1.326, 0.120, 0.568])
+
+    # velocities should be present in extra but None
+    assert "velocities" in mol.extra
+    assert mol.extra["velocities"] is None

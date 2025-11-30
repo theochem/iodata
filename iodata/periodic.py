@@ -144,7 +144,6 @@ num2sym: dict[int, str] = {
 
 sym2num: dict[str, int] = {value: key for key, value in num2sym.items()}
 
-
 # Labels used for bond types.
 
 num2bond = {

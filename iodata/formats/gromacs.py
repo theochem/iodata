@@ -90,6 +90,7 @@ def _helper_read_frame(lit: LineIterator) -> tuple:
     attypes = []
     pos = np.zeros((natoms, 3), np.float32)
     vel = np.zeros((natoms, 3), np.float32)
+    has_velocities = True
     for i in range(natoms):
         line = next(lit)
         resnums.append(int(line[:5]))
@@ -99,11 +100,18 @@ def _helper_read_frame(lit: LineIterator) -> tuple:
         pos[i, 0] = float(words[0])
         pos[i, 1] = float(words[1])
         pos[i, 2] = float(words[2])
-        vel[i, 0] = float(words[3])
-        vel[i, 1] = float(words[4])
-        vel[i, 2] = float(words[5])
+        # velocities are optional in gro files; only parse if present
+        if len(words) >= 6:
+            vel[i, 0] = float(words[3])
+            vel[i, 1] = float(words[4])
+            vel[i, 2] = float(words[5])
+        else:
+            has_velocities = False
     pos *= nanometer  # atom coordinates are in nanometers
-    vel *= nanometer / picosecond
+    if has_velocities:
+        vel *= nanometer / picosecond
+    else:
+        vel = None
     # Read the cell line
     cell = np.zeros((3, 3), np.float32)
     words = next(lit).split()
