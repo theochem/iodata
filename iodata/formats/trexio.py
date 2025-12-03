@@ -28,6 +28,11 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..utils import LineIterator, LoadError
 
+try:
+    import trexio  # type: ignore[import]
+except ImportError:
+    trexio = None
+
 __all__ = ()
 
 PATTERNS = ["*.trexio", "*.h5", "*.hdf5"]
@@ -42,13 +47,11 @@ def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     filename = lit.filename
 
-    try:
-        import trexio  # type: ignore[import]
-    except ImportError as exc:
+    if trexio is None:
         raise LoadError(
             "Reading TREXIO files requires the 'trexio' Python package.",
             filename,
-        ) from exc
+        )
 
     try:
         with trexio.File(filename, "r", back_end=trexio.TREXIO_AUTO) as tfile:
@@ -102,10 +105,10 @@ def load_one(lit: LineIterator) -> dict:
 )
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    try:
-        import trexio  # type: ignore[import]
-    except ImportError as exc:
-        raise RuntimeError("Writing TREXIO files requires the 'trexio' Python package.") from exc
+    if trexio is None:
+        raise RuntimeError(
+            "Writing TREXIO files requires the 'trexio' Python package."
+        )
 
     if data.atcoords is None or data.atnums is None:
         raise RuntimeError("TREXIO writer needs atcoords and atnums.")
