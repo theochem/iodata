@@ -53,7 +53,6 @@ def load_one(lit: LineIterator) -> dict:
             filename,
         )
 
-
     try:
         with trexio.File(filename, "r", back_end=trexio.TREXIO_AUTO) as tfile:
             n_nuc = trexio.read_nucleus_num(tfile)
