@@ -53,17 +53,12 @@ def load_one(lit: LineIterator) -> dict:
             filename,
         )
 
+
     try:
         with trexio.File(filename, "r", back_end=trexio.TREXIO_AUTO) as tfile:
             n_nuc = trexio.read_nucleus_num(tfile)
             charges = np.asarray(trexio.read_nucleus_charge(tfile), dtype=float)
             coords = np.asarray(trexio.read_nucleus_coord(tfile), dtype=float)
-
-            if charges.shape[0] != n_nuc or coords.shape[0] != n_nuc:
-                raise LoadError(
-                    "Inconsistent nucleus.* fields in TREXIO file.",
-                    filename,
-                )
 
             try:
                 nelec = int(trexio.read_electron_num(tfile))
@@ -81,6 +76,13 @@ def load_one(lit: LineIterator) -> dict:
         raise
     except Exception as exc:
         raise LoadError(f"Failed to read TREXIO file: {exc}", filename) from exc
+
+    # Validate data consistency after reading
+    if charges.shape[0] != n_nuc or coords.shape[0] != n_nuc:
+        raise LoadError(
+            "Inconsistent nucleus.* fields in TREXIO file.",
+            filename,
+        )
 
     atnums = np.rint(charges).astype(int)
 
