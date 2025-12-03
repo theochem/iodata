@@ -35,7 +35,7 @@ except ImportError:
 
 __all__ = ()
 
-PATTERNS = ["*.trexio", "*.h5", "*.hdf5"]
+PATTERNS = ["*.trexio"]
 
 
 @document_load_one(
