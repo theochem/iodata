@@ -106,9 +106,7 @@ def load_one(lit: LineIterator) -> dict:
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     if trexio is None:
-        raise RuntimeError(
-            "Writing TREXIO files requires the 'trexio' Python package."
-        )
+        raise RuntimeError("Writing TREXIO files requires the 'trexio' Python package.")
 
     if data.atcoords is None or data.atnums is None:
         raise RuntimeError("TREXIO writer needs atcoords and atnums.")
