@@ -32,6 +32,7 @@ __all__ = ()
 
 PATTERNS = ["*.trexio", "*.h5", "*.hdf5"]
 
+
 @document_load_one(
     "TREXIO",
     ["atcoords", "atnums"],
@@ -93,6 +94,7 @@ def load_one(lit: LineIterator) -> dict:
 
     return result
 
+
 @document_dump_one(
     "TREXIO",
     ["atcoords", "atnums"],
@@ -103,9 +105,7 @@ def dump_one(f: TextIO, data: IOData):
     try:
         import trexio  # type: ignore[import]
     except ImportError as exc:
-        raise RuntimeError(
-            "Writing TREXIO files requires the 'trexio' Python package."
-        ) from exc
+        raise RuntimeError("Writing TREXIO files requires the 'trexio' Python package.") from exc
 
     if data.atcoords is None or data.atnums is None:
         raise RuntimeError("TREXIO writer needs atcoords and atnums.")

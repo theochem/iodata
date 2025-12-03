@@ -1,4 +1,3 @@
-
 # IODATA is an input and output module for quantum chemistry.
 # Copyright (C) 2011-2019 The IODATA Development Team
 #
@@ -20,11 +19,12 @@
 """Test iodata.formats.trexio module."""
 
 import os
-import pytest
+
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose, assert_equal
 
-from ..api import load_one, dump_one
+from ..api import dump_one, load_one
 from ..iodata import IOData
 
 # Skip tests if trexio is not installed
@@ -43,7 +43,7 @@ def test_load_dump_consistency(tmpdir):
     # Write trexio file in a temporary folder
     fn_tmp = os.path.join(tmpdir, "test.trexio")
     dump_one(data, fn_tmp)
-    
+
     # Load it back
     loaded_data = load_one(fn_tmp)
 
