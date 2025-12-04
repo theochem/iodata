@@ -55,6 +55,7 @@ dev = [
     "sphinx_autodoc_typehints",
     "sphinx-copybutton",
     "sympy",
+    "trexio",
 ]
 
 [project.urls]
