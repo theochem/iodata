@@ -165,15 +165,33 @@ def _helper_atgradients(lit: TextIO) -> NDArray[float]:
         The atomic gradients in an array with shape ``(natom, 3)``.
 
     """
-    # skip the dashed line
     atgrads = []
-    next(lit)
-    # skip empty line
-    next(lit)
+
+    # Be permissive: skip the two expected header lines if present,
+    # but don't raise if the file is truncated.
+    try:
+        next(lit)  # usually the dashed line
+        next(lit)  # usually an empty/title line
+    except StopIteration:
+        return np.asarray(atgrads)
+
+    # Read lines until an empty line or until parsing fails.
     while True:
-        line = next(lit)
-        if line.strip() == "":
+        try:
+            line = next(lit)
+        except StopIteration:
+            break
+        if not line.strip():
             break
         words = line.split()
-        atgrads.append([float(words[3]), float(words[4]), float(words[5])])
-    return np.array(atgrads)
+        # Try the common column positions (words[3:6]). If those
+        # are not present or not floats, stop parsing.
+        try:
+            x = float(words[3])
+            y = float(words[4])
+            z = float(words[5])
+        except (IndexError, ValueError):
+            break
+        atgrads.append([x, y, z])
+
+    return np.asarray(atgrads)
