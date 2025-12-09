@@ -28,6 +28,7 @@ from ..utils import angstrom
 
 
 def test_load_water_number():
+    """Test loading ORCA output for water molecule."""
     with as_file(files("iodata.test.data").joinpath("water_orca.out")) as fn:
         mol = load_one(fn)
     # Test atomic numbers and number of atoms
