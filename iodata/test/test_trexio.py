@@ -61,9 +61,23 @@ iodata_new = load_one(filename, fmt="trexio")
 print("Verifying data...")
 np.testing.assert_allclose(iodata_new.atcoords, atcoords, err_msg="atcoords mismatch")
 np.testing.assert_equal(iodata_new.atnums, atnums, err_msg="atnums mismatch")
-np.testing.assert_allclose(float(iodata_new.nelec), nelec, rtol=1.0e-8, atol=1.0e-12, err_msg=f"nelec mismatch: {iodata_new.nelec} != {nelec}")
-np.testing.assert_allclose(float(iodata_new.charge), 0.0, rtol=1.0e-8, atol=1.0e-12, err_msg=f"charge mismatch: {iodata_new.charge} != 0.0")
-assert int(iodata_new.spinpol) == spinpol, f"spinpol mismatch: {iodata_new.spinpol} != {spinpol}"
+np.testing.assert_allclose(
+    float(iodata_new.nelec),
+    nelec,
+    rtol=1.0e-8,
+    atol=1.0e-12,
+    err_msg=f"nelec mismatch: {iodata_new.nelec} != {nelec}",
+)
+np.testing.assert_allclose(
+    float(iodata_new.charge),
+    0.0,
+    rtol=1.0e-8,
+    atol=1.0e-12,
+    err_msg=f"charge mismatch: {iodata_new.charge} != 0.0",
+)
+assert int(iodata_new.spinpol) == spinpol, (
+    f"spinpol mismatch: {iodata_new.spinpol} != {spinpol}"
+)
 
 print("Verification passed")
 """

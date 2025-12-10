@@ -37,11 +37,11 @@ PATTERNS = ["*.trexio"]
 def _import_trexio():
     """Lazily import the trexio module."""
     try:
-        import trexio
-
-        return trexio
+        import trexio  # noqa: PLC0415
     except ImportError:
         return None
+    else:
+        return trexio
 
 
 @document_load_one(
