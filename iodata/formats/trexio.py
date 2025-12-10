@@ -21,8 +21,6 @@
 from __future__ import annotations
 
 import os
-import importlib
-
 from typing import TextIO
 
 import numpy as np
@@ -39,6 +37,7 @@ PATTERNS = ["*.trexio"]
 def _import_trexio():
     try:
         import trexio
+
         return trexio
     except ImportError:
         return None

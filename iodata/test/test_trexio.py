@@ -16,20 +16,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <http://www.gnu.org/licenses/>
 # --
-import os
-import sys
-import subprocess
-import pytest
 import importlib.util
+import os
+import subprocess
+import sys
+
+import pytest
 
 # Skip tests if trexio is not installed, but do NOT import it here to avoid segfaults
 if importlib.util.find_spec("trexio") is None:
     pytest.skip("trexio not installed", allow_module_level=True)
 
+
 def test_load_dump_consistency(tmp_path):
     """Check if dumping and loading a TREXIO file results in the same data.
-    
-    Runs in a subprocess to avoid segmentation faults caused by conflict 
+
+    Runs in a subprocess to avoid segmentation faults caused by conflict
     between pytest execution model and trexio C-extension.
     """
     script = """
