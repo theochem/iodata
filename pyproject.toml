@@ -53,7 +53,7 @@ dev = [
     "sphinx_autodoc_typehints",
     "sphinx-copybutton",
     "sympy",
-    "trexio",
+    "trexio; sys_platform != 'win32'",
 ]
 
 [project.urls]
