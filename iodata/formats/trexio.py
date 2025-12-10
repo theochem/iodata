@@ -150,6 +150,12 @@ def dump_one(f: TextIO, data: IOData):
         if nelec is not None:
             trexio.write_electron_num(tfile, nelec)
             if spinpol is not None:
+                # Check for consistency between nelec and spinpol
+                if abs((nelec + spinpol) % 2) > 1.0e-8:
+                    raise ValueError(
+                        f"Inconsistent nelec ({nelec}) and spinpol ({spinpol}). "
+                        "Sum and difference must be even numbers."
+                    )
                 n_up = (nelec + spinpol) // 2
                 n_dn = (nelec - spinpol) // 2
                 trexio.write_electron_up_num(tfile, n_up)
