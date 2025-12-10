@@ -23,13 +23,14 @@ import sys
 
 import pytest
 
-# Skip tests if trexio is not installed, but do NOT import it here to avoid segfaults
-if importlib.util.find_spec("trexio") is None:
-    pytest.skip("trexio not installed", allow_module_level=True)
+
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="TrexIO issues on Windows")
 def test_load_dump_consistency(tmp_path):
+    # Skip tests if trexio is not installed, but do NOT import it here to avoid segfaults
+    if importlib.util.find_spec("trexio") is None:
+        pytest.skip("trexio not installed")
     """Check if dumping and loading a TREXIO file results in the same data.
 
     Runs in a subprocess to avoid segmentation faults caused by conflict
