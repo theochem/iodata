@@ -35,6 +35,7 @@ PATTERNS = ["*.trexio"]
 
 
 def _import_trexio():
+    """Lazily import the trexio module."""
     try:
         import trexio
 
