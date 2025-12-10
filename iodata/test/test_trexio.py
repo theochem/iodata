@@ -28,6 +28,7 @@ if importlib.util.find_spec("trexio") is None:
     pytest.skip("trexio not installed", allow_module_level=True)
 
 
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="TrexIO issues on Windows")
 def test_load_dump_consistency(tmp_path):
     """Check if dumping and loading a TREXIO file results in the same data.
 
