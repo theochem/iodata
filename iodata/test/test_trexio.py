@@ -24,8 +24,6 @@ import sys
 import pytest
 
 
-
-
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="TrexIO issues on Windows")
 def test_load_dump_consistency(tmp_path):
     # Skip tests if trexio is not installed, but do NOT import it here to avoid segfaults
