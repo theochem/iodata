@@ -40,8 +40,7 @@ def _import_trexio():
         import trexio  # noqa: PLC0415
     except ImportError:
         return None
-    else:
-        return trexio
+    return trexio
 
 
 @document_load_one(
