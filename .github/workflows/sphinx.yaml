@@ -1,4 +1,4 @@
-# Base on examples in https://github.com/actions/starter-workflows/blob/main/pages/
+# Based on examples in https://github.com/actions/starter-workflows/blob/main/pages/
 # For this workflow, you need to enable GitHub pages in the repository settings,
 # using the "GitHub Actions" option.
 
@@ -6,13 +6,29 @@ name: sphinx
 on:
   push:
     branches:
-    # Run tests for change on the main branch ...
+    # Run tests for changes on the main branch ...
     - main
     tags-ignore:
-    # ... but not for tags (avoids duplicate work).
+    # ... but not for tags (avoids duplicate work) ...
     - '**'
+    paths:
+    # ... and only if files relevant to documentation have changed.
+    - '.github/workflows/sphinx.yaml'
+    - 'CONTRIBUTING.rst'
+    - 'docs/**'
+    - 'iodata/**'
+    - 'MANIFEST.in'
+    - 'pyproject.toml'
   pull_request:
-  # Run tests on pull requests
+  # Build documentation on pull requests ...
+    paths:
+    # ... if files relevant to documentation have changed.
+    - '.github/workflows/sphinx.yaml'
+    - 'CONTRIBUTING.rst'
+    - 'docs/**'
+    - 'iodata/**'
+    - 'MANIFEST.in'
+    - 'pyproject.toml'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
