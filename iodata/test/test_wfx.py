@@ -741,6 +741,72 @@ def test_load_one_h2():
     check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
 
 
+def test_load_one_h2_with_comments():
+    """Test load_one with h2 ub3lyp_ccpvtz WFX input with comments."""
+    with as_file(
+        files("iodata.test.data").joinpath("h2_ub3lyp_ccpvtz_with_comments.wfx")
+    ) as file_wfx:
+        mol = load_one(str(file_wfx))
+    assert_allclose(
+        mol.atcoords,
+        np.array([[0.0, 0.0, 0.7019452462164], [0.0, 0.0, -0.7019452462164]]),
+        rtol=0,
+        atol=1.0e-6,
+    )
+    assert_allclose(
+        mol.atgradient,
+        np.array(
+            [
+                [9.74438416e-17, -2.08884441e-16, -7.18565768e-09],
+                [-9.74438416e-17, 2.08884441e-16, 7.18565768e-09],
+            ]
+        ),
+        rtol=0,
+        atol=1.0e-6,
+    )
+    assert_equal(mol.atnums, np.array([1, 1]))
+    assert_allclose(mol.energy, -1.179998789924, rtol=0, atol=1.0e-6)
+    assert mol.extra["keywords"] == "GTO"
+    assert mol.extra["num_perturbations"] == 0
+    assert mol.mo.coeffs.shape == (34, 56)
+    assert_allclose(
+        mol.mo.energies[:7],
+        np.array(
+            [
+                -0.43408309,
+                0.0581059,
+                0.19574763,
+                0.4705944,
+                0.51160035,
+                0.51160035,
+                0.91096805,
+            ]
+        ),
+        rtol=0,
+        atol=1.0e-6,
+    )
+    assert mol.mo.occs.sum() == 2.0
+    assert mol.mo.occsa.sum() == 1.0
+    assert mol.mo.spinpol == 0.0
+    assert mol.mo.nbasis == 34
+    assert mol.mo.kind == "unrestricted"
+    assert mol.obasis.nbasis == 34
+    assert mol.obasis.primitive_normalization == "L2"
+    assert [shell.icenter for shell in mol.obasis.shells] == [0] * 8 + [1] * 8
+    assert [shell.kinds for shell in mol.obasis.shells] == [["c"]] * 16
+    assert_allclose(
+        [shell.exponents for shell in mol.obasis.shells],
+        2 * [[33.87], [5.095], [1.159], [0.3258], [0.1027], [1.407], [0.388], [1.057]],
+    )
+    assert_allclose([shell.coeffs for shell in mol.obasis.shells], [[[1]]] * 16)
+    assert mol.obasis_name is None
+    assert mol.title == "h2 ub3lyp/cc-pvtz opt-stable-freq"
+    # check orthonormal mo
+    olp = compute_overlap(mol.obasis, mol.atcoords)
+    check_orthonormal(mol.mo.coeffsa, olp, 1e-5)
+    check_orthonormal(mol.mo.coeffsb, olp, 1e-5)
+
+
 def test_load_one_lih_cation_cisd():
     with as_file(files("iodata.test.data").joinpath("lih_cation_cisd.wfx")) as file_wfx:
         mol = load_one(str(file_wfx))
