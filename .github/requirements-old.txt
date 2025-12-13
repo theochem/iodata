@@ -1,4 +1,5 @@
-# Keep this file in sync with the minimal versions specified in pyproject.toml
+# Keep this file in sync with the minimal versions specified in
+# pyproject.toml and docs/install.rst
 numpy==1.26.4
 scipy==1.13.1
 attrs==21.3.0
