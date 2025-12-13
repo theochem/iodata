@@ -32,7 +32,9 @@ __all__ = ()
 PATTERNS = ["*.out"]
 
 
-@document_load_one("Orca output", ["atcoords", "atnums", "energy", "moments", "extra"])
+@document_load_one(
+    "Orca output", ["atcoords", "atnums", "energy", "moments", "extra"], ["atgradient"]
+)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     result = {}
@@ -62,6 +64,10 @@ def load_one(lit: LineIterator) -> dict:
             words = line.split()
             dipole = np.array([float(words[4]), float(words[5]), float(words[6])])
             result["moments"] = {(1, "c"): dipole}
+        # Read also the atomic gradients
+        if line.startswith("CARTESIAN GRADIENT"):
+            atgrads = _helper_atgradients(lit)
+            result["atgradient"] = atgrads
     return result
 
 
@@ -143,3 +149,49 @@ def _helper_scf_energies(lit: TextIO) -> NDArray[float]:
             energies.append(float(words[1]))
         line = next(lit)
     return np.asarray(energies)
+
+
+def _helper_atgradients(lit: TextIO) -> NDArray[float]:
+    """Read atomic gradients from ORCA output file format.
+
+    Parameters
+    ----------
+    lit
+        The line iterator to read the data from.
+
+    Returns
+    -------
+    atgrads
+        The atomic gradients in an array with shape ``(natom, 3)``.
+
+    """
+    atgrads = []
+
+    # Be permissive: skip the two expected header lines if present,
+    # but don't raise if the file is truncated.
+    try:
+        next(lit)  # usually the dashed line
+        next(lit)  # usually an empty/title line
+    except StopIteration:
+        return np.asarray(atgrads)
+
+    # Read lines until an empty line or until parsing fails.
+    while True:
+        try:
+            line = next(lit)
+        except StopIteration:
+            break
+        if not line.strip():
+            break
+        words = line.split()
+        # Try the common column positions (words[3:6]). If those
+        # are not present or not floats, stop parsing.
+        try:
+            x = float(words[3])
+            y = float(words[4])
+            z = float(words[5])
+        except (IndexError, ValueError):
+            break
+        atgrads.append([x, y, z])
+
+    return np.asarray(atgrads)
