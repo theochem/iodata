@@ -184,6 +184,9 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
             line = next(lit).strip()
         except StopIteration:
             break
+        # skip comment lines starting with "#"
+        if line.startswith("#"):
+            continue
         # check whether line is the start of a section
         if section_start is None and line.startswith("<"):
             # set start & end of the section and add it to data dictionary
