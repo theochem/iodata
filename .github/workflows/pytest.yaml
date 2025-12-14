@@ -5,10 +5,22 @@ on:
     # Run tests for change on the main branch ...
     - main
     tags-ignore:
-    # ... but not for tags (avoids duplicate work).
+    # ... but not for tags (avoids duplicate work) ...
     - '**'
+    paths:
+    # ... and only if files relevant to the code have changed.
+    - '.github/requirements-old.txt'
+    - '.github/workflows/pytest.yaml'
+    - 'iodata/**'
+    - 'pyproject.toml'
   pull_request:
-  # Run tests on pull requests
+  # Run tests on pull requests ...
+    paths:
+    # ... only if files relevant to the code have changed.
+    - '.github/requirements-old.txt'
+    - '.github/workflows/pytest.yaml'
+    - 'iodata/**'
+    - 'pyproject.toml'
 
 jobs:
   tests:
@@ -40,15 +52,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install oldest versions of supported dependencies
-        if: ${{ matrix.python-version == '3.10'}}
-        # Ensure changes to these dependencies are reflected
-        # in pyproject.toml and docs/install.rst
-        run: pip install numpy==1.26.4 scipy==1.13.1 attrs==21.3.0
+        if: ${{ matrix.python-version == '3.10' }}
+        run: pip install -r .github/requirements-old.txt
       - name: Install development version
         run: pip install -e .[dev]
       # If some tests are slow against expectations, pytest will abort due to timeout.
       - name: Run pytest WITH coverage for fast tests
-        if: ${{ matrix.os == 'ubuntu-latest'}}
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: >
           pytest
           -vv
@@ -57,14 +67,6 @@ jobs:
           --cov=iodata
           --cov-report=xml
           --cov-report=term-missing
-      - name: Upload coverage report to Deepsource
-        if: ${{ matrix.os == 'ubuntu-latest' && env.DEEPSOURCE_DSN != '' }}
-        # See https://docs.deepsource.com/docs/analyzers-test-coverage#python
-        env:
-          DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
-        run: |
-          curl https://deepsource.io/cli | sh
-          ./bin/deepsource report --analyzer test-coverage --key python --value-file ./coverage.xml
       - name: Upload coverage reports to Codecov
         if: ${{ matrix.os == 'ubuntu-latest' && env.CODECOV_TOKEN != '' }}
         env:
@@ -77,7 +79,7 @@ jobs:
             -n 'fast'-${{ github.run_id }} \
             -F fast -f coverage.xml
       - name: Run pytest WITHOUT coverage for fast tests
-        if: ${{ matrix.os != 'ubuntu-latest'}}
+        if: ${{ matrix.os != 'ubuntu-latest' }}
         run: pytest -vv -m "not slow" --timeout=60
       - name: Run pytest WITHOUT coverage for slow tests
         run: pytest -vv -m slow

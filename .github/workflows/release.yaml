@@ -1,11 +1,27 @@
 # This workflow is adapted from:
 # https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
-# Changed made:
+# Changes made:
 # - Remove emoticons
 # - Update some actions to more recent versions
 
 name: release
-on: push
+on:
+  push:
+    branches:
+    # Run release workflow for changes on the main branch ...
+    - main
+    tags:
+    # ... or if a tag is pushed ...
+    - 'v*'
+    paths:
+    # ... but only if files relevant to the release have changed.
+    # (This list must be consistent with MANIFEST.in.)
+    - '.github/workflows/release.yaml'
+    - 'iodata/**'
+    - 'LICENSE.txt'
+    - 'MANIFEST.in'
+    - 'pyproject.toml'
+    - 'README.md'
 
 env:
   # This is not critical
@@ -103,7 +119,7 @@ jobs:
 
   publish-to-testpypi:
     name: Publish Python distribution to TestPyPI
-    if: ${{ github.ref == 'refs/heads/main' &&  github.repository_owner == 'theochem'}}
+    if: ${{ github.ref == 'refs/heads/main' && github.repository_owner == 'theochem' }}
     needs:
     - build
     runs-on: ubuntu-latest
