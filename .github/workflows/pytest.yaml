@@ -55,7 +55,7 @@ jobs:
         if: ${{ matrix.python-version == '3.10' }}
         run: pip install -r .github/requirements-old.txt
       - name: Install development version
-        run: pip install -e .[dev]
+        run: pip install -e .[dev,trexio]
       # If some tests are slow against expectations, pytest will abort due to timeout.
       - name: Run pytest WITH coverage for fast tests
         if: ${{ matrix.os == 'ubuntu-latest' }}
