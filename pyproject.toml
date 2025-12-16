@@ -55,7 +55,6 @@ dev = [
     "sympy",
 
 ]
-trexio = ["trexio>=2.0.0"]
 
 [project.urls]
 Documentation = "https://iodata.readthedocs.io/en/latest/"
