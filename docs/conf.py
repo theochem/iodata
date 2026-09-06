@@ -3,6 +3,7 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import inspect
 import os
 import runpy
 import sys
@@ -95,7 +96,9 @@ def autodoc_skip_member(_app, what, name, obj, skip, _options):
     if name == "__init__":
         return False
     # Skip anything that is imported from outside the iodata package.
-    if what == "module" and not getattr(obj, "__module__", "iodata").startswith("iodata"):
+    # Modules have no __module__ attribute, so use their own name instead.
+    module_name = obj.__name__ if inspect.ismodule(obj) else getattr(obj, "__module__", "iodata")
+    if what == "module" and not module_name.startswith("iodata"):
         return True
     return skip
 
