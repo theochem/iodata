@@ -49,12 +49,16 @@ def test_typecheck():
 
 def test_typecheck_raises():
     # check attribute type
-    pytest.raises(TypeError, IOData, atcoords=np.array([[1, 2], [2, 3]]))
-    pytest.raises(TypeError, IOData, atnums=np.array([[1, 2], [2, 3]]))
+    with pytest.raises(TypeError):
+        IOData(atcoords=np.array([[1, 2], [2, 3]]))
+    with pytest.raises(TypeError):
+        IOData(atnums=np.array([[1, 2], [2, 3]]))
     # check inconsistency between various attributes
     atnums, atcorenums, atcoords = np.array([2, 3]), np.array([1]), np.array([[1, 2, 3]])
-    pytest.raises(TypeError, IOData, atnums=atnums, atcorenums=atcorenums)
-    pytest.raises(TypeError, IOData, atnums=atnums, atcoords=atcoords)
+    with pytest.raises(TypeError):
+        IOData(atnums=atnums, atcorenums=atcorenums)
+    with pytest.raises(TypeError):
+        IOData(atnums=atnums, atcoords=atcoords)
 
 
 def test_unknown_format():
