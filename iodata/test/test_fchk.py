@@ -19,6 +19,7 @@
 """Test iodata.formats.fchk module."""
 
 import os
+import re
 from importlib.resources import as_file, files
 
 import numpy as np
@@ -207,6 +208,21 @@ def test_load_fchk_water_sto3g_hf_qchem():
     # check 1-RDM
     assert_allclose(mol.one_rdms["scf"], mol.one_rdms["scf"].T)
     assert_allclose(mol.one_rdms["scf"], compute_1rdm(mol))
+
+
+def test_load_fchk_fortran_exponent(tmp_path):
+    # Some programs write floating point numbers with a Fortran-style D exponent,
+    # which is accepted by the FCHK reader and must give the same result as E.
+    with as_file(files("iodata.test.data").joinpath("h_sto3g.fchk")) as fn:
+        text = fn.read_text()
+    # Only exponents are rewritten, i.e. not the letters in the labels.
+    text_d = re.sub(r"(?<=\d)E(?=[-+]\d)", "D", text)
+    assert text_d != text
+    path_d = tmp_path / "h_sto3g_d.fchk"
+    path_d.write_text(text_d)
+    mol_d = load_one(path_d)
+    assert_allclose(mol_d.energy, -4.665818503844346e-01)
+    compare_mols(load_fchk_helper("h_sto3g.fchk"), mol_d)
 
 
 def test_load_fchk_psi4_hcch():
