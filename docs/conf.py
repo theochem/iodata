@@ -3,14 +3,14 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import inspect
 import os
 import runpy
 import sys
+from importlib.metadata import version as get_distribution_version
 
 from intersphinx_registry import get_intersphinx_mapping
 from packaging.version import Version
-from setuptools_scm import Configuration
-from setuptools_scm._get_version_impl import _get_version
 from sphinx.ext.apidoc import main as main_api_doc
 
 sys.path.append(os.path.dirname(__file__))
@@ -91,10 +91,15 @@ napoleon_use_rtype = False
 add_module_names = False
 
 
-def autodoc_skip_member(_app, _what, name, _obj, skip, _options):
+def autodoc_skip_member(_app, what, name, obj, skip, _options):
     """Decide which parts to skip when building the API doc."""
     if name == "__init__":
         return False
+    # Skip anything that is imported from outside the iodata package.
+    # Modules have no __module__ attribute, so use their own name instead.
+    module_name = obj.__name__ if inspect.ismodule(obj) else getattr(obj, "__module__", "iodata")
+    if what == "module" and not module_name.startswith("iodata"):
+        return True
     return skip
 
 
@@ -125,9 +130,8 @@ mathjax3_config = {
 
 
 def _get_version_info():
-    """Get the version as defined in pyproject.toml"""
-    config = Configuration.from_file("../pyproject.toml", "./")
-    verinfo = Version(_get_version(config, force_write_version_files=False))
+    """Get the version of the installed iodata package."""
+    verinfo = Version(get_distribution_version("qc-iodata"))
     return f"{verinfo.major}.{verinfo.minor}", str(verinfo)
 
 

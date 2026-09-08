@@ -2,7 +2,6 @@
 furo
 intersphinx-registry
 packaging
-setuptools_scm
 sphinx_autodoc_typehints
 sphinx-copybutton
 -e .
