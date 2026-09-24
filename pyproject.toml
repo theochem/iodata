@@ -54,6 +54,7 @@ dev = [
     "sphinx_autodoc_typehints",
     "sphinx-copybutton",
     "sympy",
+
 ]
 
 [project.urls]
