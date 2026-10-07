@@ -188,7 +188,7 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
         if line.startswith("#"):
             continue
         # check whether line is the start of a section
-        if section_start is None and line.startswith("<"):
+        if section_start is None and line.startswith("<") and not line.startswith("</"):
             # set start & end of the section and add it to data dictionary
             section_start = line
             if section_start in data:
@@ -199,7 +199,9 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
             if section_start == mo_start:
                 data["<MO Numbers>"] = []
         # check whether line is the (correct) end of the section
-        elif section_start is not None and line.startswith("</"):
+        elif line.startswith("</"):
+            if section_start is None:
+                raise LoadError(f"Unexpected closing tag {line} outside of any section.", lit)
             # In some cases, closing tags have a different number of spaces. 8-[
             if line.replace(" ", "") != section_end.replace(" ", ""):
                 raise LoadError(f"Expecting line {section_end} but got {line}.", lit)
@@ -212,8 +214,10 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
             # skip '</MO Number>' line
             next(lit)
         # add section content to the corresponding list in data dictionary
-        else:
+        elif section_start is not None:
             data[section_start].append(line)
+        elif line:
+            raise LoadError(f"Encountered content outside of any section: {line}", lit)
 
     # check if last section was closed
     if section_start is not None:

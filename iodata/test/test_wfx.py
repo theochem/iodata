@@ -606,6 +606,17 @@ def test_load_data_wfx_h2o_error():
     assert "Expecting line </Number of Nuclei> but got </Number of Primitives>." in str(error)
 
 
+def test_parse_wfx_stray_closing_tag():
+    """Check that a closing tag outside any section raises LoadError, not KeyError."""
+    with (
+        as_file(files("iodata.test.data").joinpath("h2o_stray_closing_tag.wfx")) as fn_wfx,
+        LineIterator(str(fn_wfx)) as lit,
+        pytest.raises(LoadError) as error,
+    ):
+        parse_wfx(lit)
+    assert "Unexpected closing tag </Stray Closing Tag> outside of any section." in str(error)
+
+
 def test_load_truncated_h2o(tmpdir):
     """Check that a truncated file raises an exception."""
     with (
