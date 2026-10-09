@@ -24,15 +24,17 @@ Basis set conventions and terminology are documented in :ref:`basis_conventions`
 
 """
 
+from collections.abc import Iterator
 from functools import wraps
 from numbers import Integral
+from typing import NamedTuple
 
 import attrs
 from numpy.typing import NDArray
 
 from .attrutils import convert_array_to, validate_shape
 
-__all__ = ("MolecularBasis", "Shell", "angmom_its", "angmom_sti")
+__all__ = ("BasisFunction", "MolecularBasis", "Shell", "angmom_its", "angmom_sti")
 
 ANGMOM_CHARS = "spdfghiklmnoqrtuvwxyzabce"
 
@@ -184,6 +186,31 @@ class Shell:
         return len(self.angmoms)
 
 
+class BasisFunction(NamedTuple):
+    """The identity of a single basis function within a ``MolecularBasis``."""
+
+    index: int
+    """The index of the basis function in the full basis set."""
+
+    ishell: int
+    """The index of the shell in ``MolecularBasis.shells`` holding this function."""
+
+    icon: int
+    """The index of the generalized contraction within that shell."""
+
+    icenter: int
+    """The row in the ``atcoords`` array of the atom this function is centered on."""
+
+    angmom: int
+    """The angular momentum quantum number."""
+
+    kind: str
+    """``'c'`` for Cartesian or ``'p'`` for pure."""
+
+    label: str
+    """The basis function label, taken from ``MolecularBasis.conventions``."""
+
+
 @attrs.define
 class MolecularBasis:
     """A complete molecular orbital or density basis set, a collection of contracted shells."""
@@ -238,3 +265,73 @@ class MolecularBasis:
     def nbasis(self) -> int:
         """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
+
+    def iter_basis_functions(self) -> Iterator[BasisFunction]:
+        """Iterate over all basis functions, in the order used by this basis set.
+
+        Yields
+        ------
+        BasisFunction
+            One item per basis function, with increasing ``index``.
+        """
+        index = 0
+        for ishell, shell in enumerate(self.shells):
+            for icon, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds, strict=True)):
+                for label in self.conventions[angmom, kind]:
+                    yield BasisFunction(index, ishell, icon, shell.icenter, angmom, kind, label)
+                    index += 1
+
+    def get_basis_function(self, index: int) -> BasisFunction:
+        """Describe the basis function at the given index.
+
+        Parameters
+        ----------
+        index
+            The index of the basis function, negative values counting from the end.
+
+        Returns
+        -------
+        BasisFunction
+            The center, angular momentum, kind and label of that function.
+        """
+        if index < 0:
+            index += self.nbasis
+        if not 0 <= index < self.nbasis:
+            raise IndexError(f"Basis function index out of range: {index}")
+        for info in self.iter_basis_functions():
+            if info.index == index:
+                return info
+        raise AssertionError("Unreachable: nbasis disagrees with the conventions.")
+
+    def find_basis_index(self, label: str, icenter: int | None = None, occurrence: int = 0) -> int:
+        """Look up the index of a basis function by its label.
+
+        Parameters
+        ----------
+        label
+            A label as it appears in ``conventions``, e.g. ``'zz'`` or ``'c0'``.
+            Labels are matched exactly, so a sign-flipped convention such as
+            ``'-c3'`` must be given with its minus sign.
+        icenter
+            Restrict the search to one atom. By default all atoms are searched.
+        occurrence
+            Which match to return when a label occurs more than once, counting
+            from zero.
+
+        Returns
+        -------
+        int
+            The index of the matching basis function.
+        """
+        count = 0
+        for info in self.iter_basis_functions():
+            if info.label != label:
+                continue
+            if icenter is not None and info.icenter != icenter:
+                continue
+            if count == occurrence:
+                return info.index
+            count += 1
+        raise ValueError(
+            f"No basis function with label {label!r}, icenter {icenter}, occurrence {occurrence}."
+        )
