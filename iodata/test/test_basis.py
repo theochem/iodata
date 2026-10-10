@@ -77,9 +77,27 @@ def test_iter_basis_functions_order():
     assert [info.ishell for info in infos[4:8]] == [2, 2, 2, 2]
 
 
+def test_sign_convention_is_tracked():
+    # ORCA's pure f convention, from the MolecularBasis docstring, flips two signs
+    obasis = MolecularBasis(
+        [Shell(0, [3], ["p"], np.zeros(3), np.zeros((3, 1)))],
+        {(3, "p"): ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3"]},
+        "L2",
+    )
+    infos = list(obasis.iter_basis_functions())
+    # the minus is stripped from the label and reported through sign instead
+    assert [info.label for info in infos] == ["c0", "c1", "s1", "c2", "s2", "c3", "s3"]
+    assert [info.sign for info in infos] == [1, 1, 1, 1, 1, -1, -1]
+    # so a sign-flipped function is found by its plain label
+    assert obasis.find_basis_index("c3") == 5
+    assert obasis.get_basis_function(5).sign == -1
+    with pytest.raises(ValueError):
+        obasis.find_basis_index("-c3")
+
+
 def test_get_basis_function():
     obasis = _two_center_basis()
-    assert obasis.get_basis_function(0) == BasisFunction(0, 0, 0, 0, 0, "c", "1")
+    assert obasis.get_basis_function(0) == BasisFunction(0, 0, 0, 0, 0, "c", "1", 1)
     assert obasis.get_basis_function(8).label == "c0"
     assert obasis.get_basis_function(8).kind == "p"
     # negative indices count from the end
