@@ -21,10 +21,12 @@
 import os
 from importlib.resources import as_file, files
 
+import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_many, dump_one, load_many, load_one
+from ..iodata import IOData
 from ..utils import LoadError, angstrom
 from .common import truncated_file
 
@@ -96,6 +98,49 @@ def test_load_dump_consistency(tmpdir):
     # The benzene mol2 file has aromatic bonds, which are less common in SDF files.
     with as_file(files("iodata.test.data").joinpath("benzene.mol2")) as fn_sdf:
         check_load_dump_consistency(tmpdir, fn_sdf)
+
+
+def test_fixed_width_fields_touching(tmpdir):
+    # In the V2000 format, fields have a fixed width and may touch each other:
+    # the numbers of atoms and bonds in the counts line, atom indices in the bond lines
+    # and coordinates below -1000.
+    natom = 120
+    rng = np.random.default_rng(1)
+    atcoords = rng.uniform(-2000, 2000, (natom, 3)).round(4) * angstrom
+    bonds = np.array([[i, i + 1, 1] for i in range(natom - 1)])
+    mol0 = IOData(atnums=np.full(natom, 6), atcoords=atcoords, bonds=bonds, title="chain")
+    fn_sdf = os.path.join(tmpdir, "chain.sdf")
+    dump_one(mol0, fn_sdf)
+    with open(fn_sdf) as f:
+        lines = f.read().splitlines()
+    assert lines[3].startswith("120119")
+    assert any(line.startswith("100101") for line in lines)
+    mol1 = load_one(fn_sdf)
+    assert_allclose(mol1.atcoords, atcoords, atol=1e-8)
+    assert_equal(mol1.atnums, mol0.atnums)
+    assert_equal(mol1.bonds, bonds)
+
+
+def test_whitespace_separated_fields(tmpdir):
+    # Not all files follow the column layout, so lines that do not parse by column
+    # are split at whitespace instead.
+    fn_sdf = os.path.join(tmpdir, "loose.sdf")
+    sdf_text = """loose
+
+
+2 1 0 0 0 0 0 0 0 0999 V2000
+0.0 0.0 0.0 C
+1.5 -2.5 3.25 O
+1 2 2
+M  END
+$$$$
+"""
+    with open(fn_sdf, "w") as f:
+        f.write(sdf_text)
+    mol = load_one(fn_sdf)
+    assert_equal(mol.atnums, [6, 8])
+    assert_allclose(mol.atcoords, np.array([[0.0, 0.0, 0.0], [1.5, -2.5, 3.25]]) * angstrom)
+    assert_equal(mol.bonds, [[0, 1, 2]])
 
 
 def test_load_many():
