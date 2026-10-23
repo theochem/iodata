@@ -50,6 +50,38 @@ __all__ = ()
 PATTERNS = ["*.sdf"]
 
 
+def _parse_counts(line: str, lit: LineIterator) -> tuple[int, int]:
+    """Parse the counts line, by column if possible."""
+    if line.rsplit(maxsplit=1)[-1].upper() != "V2000":
+        raise LoadError("Only V2000 SDF files are supported.", lit)
+    try:
+        return int(line[0:3]), int(line[3:6])
+    except ValueError:
+        words = line.split()
+        return int(words[0]), int(words[1])
+
+
+def _parse_atom(line: str) -> tuple[float, float, float, str]:
+    """Parse an atom line, by column if possible."""
+    symbol = line[31:34].strip()
+    if symbol.title() in sym2num:
+        try:
+            return float(line[0:10]), float(line[10:20]), float(line[20:30]), symbol
+        except ValueError:
+            pass
+    words = line.split()
+    return float(words[0]), float(words[1]), float(words[2]), words[3]
+
+
+def _parse_bond(line: str) -> tuple[int, int, int]:
+    """Parse a bond line, by column if possible."""
+    try:
+        return int(line[0:3]), int(line[3:6]), int(line[6:9])
+    except ValueError:
+        words = line.split()
+        return int(words[0]), int(words[1]), int(words[2])
+
+
 @document_load_one("SDF", ["atcoords", "atnums", "bonds", "title"])
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
@@ -57,30 +89,25 @@ def load_one(lit: LineIterator) -> dict:
     # The next two lines are general comments
     next(lit)
     next(lit)
-    # The V2000 format has fixed-width fields, which may touch each other,
-    # e.g. for molecules with 100 or more atoms. Splitting at whitespace is not safe.
-    line = next(lit)
-    natom = int(line[0:3])
-    nbond = int(line[3:6])
-    if line.split()[-1].upper() != "V2000":
-        raise LoadError("Only V2000 SDF files are supported.", lit)
+    # The V2000 format has fixed-width fields, which may touch each other, e.g. for
+    # molecules with 100 or more atoms. Each line is read by column first. Files that
+    # do not follow the column layout are read by splitting at whitespace instead.
+    natom, nbond = _parse_counts(next(lit), lit)
     atcoords = np.empty((natom, 3), float)
     atnums = np.empty(natom, int)
     for iatom in range(natom):
-        line = next(lit)
-        atcoords[iatom, 0] = float(line[0:10]) * angstrom
-        atcoords[iatom, 1] = float(line[10:20]) * angstrom
-        atcoords[iatom, 2] = float(line[20:30]) * angstrom
-        atnums[iatom] = sym2num.get(line[31:34].strip().title())
+        x, y, z, symbol = _parse_atom(next(lit))
+        atcoords[iatom] = np.array([x, y, z]) * angstrom
+        atnums[iatom] = sym2num.get(symbol.title())
     bonds = np.empty((nbond, 3), int)
     for ibond in range(nbond):
-        line = next(lit)
-        bonds[ibond, 0] = int(line[0:3]) - 1
-        bonds[ibond, 1] = int(line[3:6]) - 1
+        iatom0, iatom1, bondtype = _parse_bond(next(lit))
+        bonds[ibond, 0] = iatom0 - 1
+        bonds[ibond, 1] = iatom1 - 1
         # Bond types 1 to 8 (inclusive) are defined in the SDF format.
         # Anything outside that range is not modified, just not to lose any
         # information, but could be potentially meaningless.
-        bonds[ibond, 2] = int(line[6:9])
+        bonds[ibond, 2] = bondtype
     while True:
         try:
             words = next(lit)

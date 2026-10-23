@@ -121,6 +121,28 @@ def test_fixed_width_fields_touching(tmpdir):
     assert_equal(mol1.bonds, bonds)
 
 
+def test_whitespace_separated_fields(tmpdir):
+    # Not all files follow the column layout, so lines that do not parse by column
+    # are split at whitespace instead.
+    fn_sdf = os.path.join(tmpdir, "loose.sdf")
+    sdf_text = """loose
+
+
+2 1 0 0 0 0 0 0 0 0999 V2000
+0.0 0.0 0.0 C
+1.5 -2.5 3.25 O
+1 2 2
+M  END
+$$$$
+"""
+    with open(fn_sdf, "w") as f:
+        f.write(sdf_text)
+    mol = load_one(fn_sdf)
+    assert_equal(mol.atnums, [6, 8])
+    assert_allclose(mol.atcoords, np.array([[0.0, 0.0, 0.0], [1.5, -2.5, 3.25]]) * angstrom)
+    assert_equal(mol.bonds, [[0, 1, 2]])
+
+
 def test_load_many():
     with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_sdf:
         mols = list(load_many(str(fn_sdf)))
