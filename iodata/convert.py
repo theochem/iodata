@@ -320,6 +320,11 @@ def convert_to_cartesian(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse
         in the new basis. The same function, expressed in the new basis,
         has identical values everywhere in space.
         An overlap matrix transforms as ``transform.T @ overlap_cart @ transform``.
+
+    Raises
+    ------
+    ValueError
+        If the basis has pure shells and the primitives are not L2 normalized.
     """
     conventions = dict(obasis.conventions)
     shells = []
@@ -330,6 +335,8 @@ def convert_to_cartesian(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse
             if kind == "c":
                 blocks.append(np.identity(len(cart_names)))
                 continue
+            if obasis.primitive_normalization != "L2":
+                raise ValueError("Pure shells can only be converted for L2 normalization.")
             # Pure (old order) -> pure (HORTON2 order) -> Cartesian (HORTON2 order)
             # -> Cartesian (new order).
             horton2_pure = HORTON2_CONVENTIONS[angmom, "p"]
@@ -340,5 +347,8 @@ def convert_to_cartesian(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse
             cart = _permutation_matrix(*_convert_convention_shell(horton2_cart, cart_names))
             blocks.append(cart @ tfs[angmom].T @ pure)
         shells.append(attrs.evolve(shell, kinds=["c"] * shell.ncon))
-    transform = sparse.block_diag([sparse.coo_array(block) for block in blocks], format="csr")
+    if blocks:
+        transform = sparse.block_diag([sparse.coo_array(block) for block in blocks], format="csr")
+    else:
+        transform = sparse.csr_array((0, 0))
     return attrs.evolve(obasis, shells=shells, conventions=conventions), transform

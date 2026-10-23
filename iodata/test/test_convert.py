@@ -423,3 +423,25 @@ def test_convert_to_cartesian_nothing_to_do():
     obasis_cart, transform = convert_to_cartesian(obasis)
     assert obasis_cart.shells[0].kinds.tolist() == ["c", "c"]
     assert_equal(transform.toarray(), np.identity(4))
+
+
+def test_convert_to_cartesian_empty():
+    obasis = MolecularBasis([], HORTON2_CONVENTIONS, "L2")
+    obasis_cart, transform = convert_to_cartesian(obasis)
+    assert len(obasis_cart.shells) == 0
+    assert transform.shape == (0, 0)
+
+
+def test_convert_to_cartesian_l1():
+    rng = np.random.default_rng(4)
+    exponents = rng.uniform(0.2, 1, 3)
+    coeffs = rng.uniform(-1, 1, (3, 1))
+    # Pure shells are only supported for L2 normalization.
+    obasis = MolecularBasis([Shell(0, [2], ["p"], exponents, coeffs)], HORTON2_CONVENTIONS, "L1")
+    with pytest.raises(ValueError):
+        convert_to_cartesian(obasis)
+    # Cartesian shells need no transformation, so they are fine.
+    obasis = MolecularBasis([Shell(0, [2], ["c"], exponents, coeffs)], HORTON2_CONVENTIONS, "L1")
+    obasis_cart, transform = convert_to_cartesian(obasis)
+    assert obasis_cart.primitive_normalization == "L1"
+    assert_equal(transform.toarray(), np.identity(6))
