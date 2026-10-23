@@ -57,28 +57,30 @@ def load_one(lit: LineIterator) -> dict:
     # The next two lines are general comments
     next(lit)
     next(lit)
-    words = next(lit).split()
-    natom = int(words[0])
-    nbond = int(words[1])
-    if words[-1].upper() != "V2000":
+    # The V2000 format has fixed-width fields, which may touch each other,
+    # e.g. for molecules with 100 or more atoms. Splitting at whitespace is not safe.
+    line = next(lit)
+    natom = int(line[0:3])
+    nbond = int(line[3:6])
+    if line.split()[-1].upper() != "V2000":
         raise LoadError("Only V2000 SDF files are supported.", lit)
     atcoords = np.empty((natom, 3), float)
     atnums = np.empty(natom, int)
     for iatom in range(natom):
-        words = next(lit).split()
-        atcoords[iatom, 0] = float(words[0]) * angstrom
-        atcoords[iatom, 1] = float(words[1]) * angstrom
-        atcoords[iatom, 2] = float(words[2]) * angstrom
-        atnums[iatom] = sym2num.get(words[3].title())
+        line = next(lit)
+        atcoords[iatom, 0] = float(line[0:10]) * angstrom
+        atcoords[iatom, 1] = float(line[10:20]) * angstrom
+        atcoords[iatom, 2] = float(line[20:30]) * angstrom
+        atnums[iatom] = sym2num.get(line[31:34].strip().title())
     bonds = np.empty((nbond, 3), int)
     for ibond in range(nbond):
-        words = next(lit).split()
-        bonds[ibond, 0] = int(words[0]) - 1
-        bonds[ibond, 1] = int(words[1]) - 1
+        line = next(lit)
+        bonds[ibond, 0] = int(line[0:3]) - 1
+        bonds[ibond, 1] = int(line[3:6]) - 1
         # Bond types 1 to 8 (inclusive) are defined in the SDF format.
         # Anything outside that range is not modified, just not to lose any
         # information, but could be potentially meaningless.
-        bonds[ibond, 2] = int(words[2])
+        bonds[ibond, 2] = int(line[6:9])
     while True:
         try:
             words = next(lit)
