@@ -26,14 +26,17 @@ Most of them are used by the prepare module.
 import attrs
 import numpy as np
 from numpy.typing import NDArray
+from scipy import sparse
 
 from .basis import MolecularBasis, Shell
 from .orbitals import MolecularOrbitals
+from .overlap_cartpure import tfs
 
 __all__ = (
     "CCA_CONVENTIONS",
     "HORTON2_CONVENTIONS",
     "convert_conventions",
+    "convert_to_cartesian",
     "convert_to_segmented",
     "convert_to_unrestricted",
     "iter_cart_alphabet",
@@ -285,3 +288,67 @@ def convert_to_segmented(obasis: MolecularBasis, keep_sp: bool = False) -> Molec
                     Shell(shell.icenter, [angmom], [kind], shell.exponents, coeffs.reshape(-1, 1))
                 )
     return attrs.evolve(obasis, shells=shells)
+
+
+def _permutation_matrix(permutation: list[int], signs: list[int]) -> NDArray[float]:
+    """Return the matrix ``P`` such that ``P @ vector1 == vector1[permutation] * signs``."""
+    result = np.zeros((len(permutation), len(permutation)))
+    result[np.arange(len(permutation)), permutation] = signs
+    return result
+
+
+def convert_to_cartesian(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse.csr_array]:
+    """Convert a basis set with pure functions to one with only Cartesian functions.
+
+    This is needed for file formats that do not support pure functions, such as WFN and WFX.
+    The new basis spans the same space as the old one, so no information is lost.
+
+    Parameters
+    ----------
+    obasis
+        The basis set to convert.
+
+    Returns
+    -------
+    obasis_cart
+        A new ``MolecularBasis`` instance in which all shells are Cartesian.
+        If the old conventions do not define the ordering of some Cartesian functions,
+        the alphabetical ordering of ``HORTON2_CONVENTIONS`` is added to the new conventions.
+    transform
+        A sparse matrix with shape ``(obasis_cart.nbasis, obasis.nbasis)``.
+        The coefficients of a function in the old basis, ``coeffs``, become ``transform @ coeffs``
+        in the new basis. The same function, expressed in the new basis,
+        has identical values everywhere in space.
+        An overlap matrix transforms as ``transform.T @ overlap_cart @ transform``.
+
+    Raises
+    ------
+    ValueError
+        If the basis has pure shells and the primitives are not L2 normalized.
+    """
+    conventions = dict(obasis.conventions)
+    shells = []
+    blocks = []
+    for shell in obasis.shells:
+        for angmom, kind in zip(shell.angmoms, shell.kinds, strict=True):
+            cart_names = conventions.setdefault((angmom, "c"), HORTON2_CONVENTIONS[angmom, "c"])
+            if kind == "c":
+                blocks.append(np.identity(len(cart_names)))
+                continue
+            if obasis.primitive_normalization != "L2":
+                raise ValueError("Pure shells can only be converted for L2 normalization.")
+            # Pure (old order) -> pure (HORTON2 order) -> Cartesian (HORTON2 order)
+            # -> Cartesian (new order).
+            horton2_pure = HORTON2_CONVENTIONS[angmom, "p"]
+            horton2_cart = HORTON2_CONVENTIONS[angmom, "c"]
+            pure = _permutation_matrix(
+                *_convert_convention_shell(obasis.conventions[angmom, kind], horton2_pure)
+            )
+            cart = _permutation_matrix(*_convert_convention_shell(horton2_cart, cart_names))
+            blocks.append(cart @ tfs[angmom].T @ pure)
+        shells.append(attrs.evolve(shell, kinds=["c"] * shell.ncon))
+    if blocks:
+        transform = sparse.block_diag([sparse.coo_array(block) for block in blocks], format="csr")
+    else:
+        transform = sparse.csr_array((0, 0))
+    return attrs.evolve(obasis, shells=shells, conventions=conventions), transform
