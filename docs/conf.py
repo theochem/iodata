@@ -46,6 +46,8 @@ intersphinx_mapping = get_intersphinx_mapping(packages={"python", "numpy", "scip
 nitpick_ignore_regex = [
     (r"py:class", r"numpy\._typing\..*"),
     (r"py:class", r"numpy\.dtype\[.*\]"),
+    # NumPy now documents NDArray as a data alias, so it cannot be found as a class.
+    (r"py:class", r"numpy\.typing\.NDArray"),
     (r"py:obj", r"numpy\._typing\..*"),
 ]
 
