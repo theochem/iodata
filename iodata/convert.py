@@ -337,7 +337,5 @@ def decontract(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse.csr_array
                 cols.extend(range(col, col + nfn))
                 values.extend([coeff] * nfn)
             col += nfn
-    transform = sparse.coo_array(
-        (values, (rows, cols)), shape=(nbasis_prim, obasis.nbasis)
-    ).tocsr()
+    transform = sparse.coo_array((values, (rows, cols)), shape=(nbasis_prim, obasis.nbasis)).tocsr()
     return attrs.evolve(obasis, shells=shells), transform
