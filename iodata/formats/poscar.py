@@ -54,7 +54,8 @@ def load_one(lit: LineIterator) -> dict:
 @document_dump_one("VASP 5 POSCAR", ["atcoords", "atnums", "cellvecs"], ["title"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    print(data.title or "Created with IOData", file=f)
+    # The title may have multiple lines, e.g. when loaded from a PDB file.
+    print(" ".join((data.title or "Created with IOData").splitlines()), file=f)
     print("   1.00000000000000", file=f)
 
     # Write cell vectors, each row is one vector in angstrom:

@@ -24,10 +24,11 @@ and focus on the functionality of the API rather than the formats.
 
 import os
 
+import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_array_equal
 
-from ..api import dump_many, dump_one, load_many, write_input
+from ..api import dump_many, dump_one, load_many, load_one, write_input
 from ..iodata import IOData
 from ..utils import DumpError, FileFormatError, PrepareDumpError
 
@@ -116,3 +117,22 @@ def test_dump_many_generator(tmpdir):
     assert_array_equal(iodatas[1].atnums, iodata1.atnums)
     assert_allclose(iodatas[0].atcoords, iodata0.atcoords)
     assert_allclose(iodatas[1].atcoords, iodata1.atcoords)
+
+
+@pytest.mark.parametrize("fmt", ["xyz", "mol2", "sdf", "poscar"])
+def test_dump_one_multiline_title(fmt, tmpdir):
+    # A PDB file can result in a title with multiple lines,
+    # which must not break the structure of single-line-title formats.
+    data = IOData(
+        atnums=[1, 3],
+        atcoords=np.array([[0.0, 0.0, 0.0], [1.0, 2.0, 3.0]]),
+        cellvecs=np.identity(3) * 10.0,
+        title="first line\nsecond line",
+    )
+    path = os.path.join(tmpdir, f"foo.{fmt}")
+    dump_one(data, path, fmt=fmt)
+    data2 = load_one(path, fmt=fmt)
+    assert data2.title == "first line second line"
+    assert data2.natom == 2
+    # Some formats group the atoms by element.
+    assert_array_equal(np.sort(data2.atnums), [1, 3])

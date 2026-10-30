@@ -160,7 +160,8 @@ def dump_one(f: TextIO, data: IOData):
     print("# Mol2 file created with Iodata", file=f)
     print("\n\n\n\n\n", file=f)
     print("@<TRIPOS>MOLECULE", file=f)
-    print(data.title or "Created with IOData", file=f)
+    # The title may have multiple lines, e.g. when loaded from a PDB file.
+    print(" ".join((data.title or "Created with IOData").splitlines()), file=f)
     if data.bonds is not None:
         bonds = len(data.bonds)
         print(f"{data.natom:5d} {bonds:6d} {0:6d} {0:6d}", file=f)

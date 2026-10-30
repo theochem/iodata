@@ -109,7 +109,8 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
 @document_dump_one("SDF", ["atcoords", "atnums"], ["title", "bonds"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    print(data.title or "Created with IOData", file=f)
+    # The title may have multiple lines, e.g. when loaded from a PDB file.
+    print(" ".join((data.title or "Created with IOData").splitlines()), file=f)
     print("", file=f)
     print("", file=f)
     nbond = 0 if data.bonds is None else len(data.bonds)

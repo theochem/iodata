@@ -166,7 +166,8 @@ def dump_one(f: TextIO, data: IOData, atom_columns=None):
         atom_columns = DEFAULT_ATOM_COLUMNS
     # Write the header
     print(data.natom, file=f)
-    print(data.title or "Created with IOData", file=f)
+    # The title may have multiple lines, e.g. when loaded from a PDB file.
+    print(" ".join((data.title or "Created with IOData").splitlines()), file=f)
     # Write the atom lines
     for iatom in range(data.natom):
         words = []
