@@ -544,7 +544,7 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
 @document_dump_one(
     "WFN",
     ["atcoords", "atnums", "mo", "obasis"],
-    ["energy", "title", "extra"],
+    ["atcorenums", "energy", "title", "extra"],
 )
 def dump_one(f: TextIO, data: IOData) -> None:
     """Do not edit this docstring. It will be overwritten."""
@@ -608,8 +608,10 @@ def dump_one(f: TextIO, data: IOData) -> None:
     print(FMT_NUM.format(data.mo.norb, obasis.nbasis, data.natom), file=f)
 
     # Write atoms (symbol, atom #, centre #, x pos., y pos., z pos., charge)
-    for iatom, (n, (x, y, z)) in enumerate(zip(data.atnums, data.atcoords, strict=True)):
-        print(FMT_ATM.format(num2sym[n], iatom + 1, iatom + 1, x, y, z, n), file=f)
+    for iatom, (n, charge, (x, y, z)) in enumerate(
+        zip(data.atnums, data.atcorenums, data.atcoords, strict=True)
+    ):
+        print(FMT_ATM.format(num2sym[n], iatom + 1, iatom + 1, x, y, z, charge), file=f)
 
     # Write centre assignments, type assignments, exponents sections
     _dump_helper_section(f, cntrs, FMT_CNTR, 20, STEP_CNTR, 20)

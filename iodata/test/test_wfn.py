@@ -375,6 +375,20 @@ def test_dump_one_pure_functions(tmpdir):
         check_load_dump_consistency("water_ccpvdz_pure_hf_g03.fchk", tmpdir)
 
 
+def test_dump_one_atcorenums(tmpdir):
+    # Ghost atoms and atoms with an ECP must have their effective core charge in the file.
+    with as_file(files("iodata.test.data").joinpath("h2o_sto3g.wfn")) as fn:
+        data = load_one(str(fn))
+    data.atcorenums = np.array([6.0, 1.0, 0.0])
+    fn_tmp = os.path.join(tmpdir, "foo.wfn")
+    dump_one(data, fn_tmp)
+    with open(fn_tmp) as f:
+        charges = [float(line.split("CHARGE =")[1]) for line in f if "CHARGE =" in line]
+    assert_equal(charges, [6.0, 1.0, 0.0])
+    # The atomic numbers are still taken from the element symbols.
+    assert_equal(load_one(fn_tmp).atnums, [8, 1, 1])
+
+
 def test_generalized_orbitals():
     # The WFN format does not support generalized MOs
     data = create_generalized_orbitals()
