@@ -18,10 +18,14 @@
 # --
 """Unit tests for iodata.convert."""
 
+from importlib.resources import as_file, files
+
+import attrs
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 
+from ..api import load_one
 from ..basis import MolecularBasis, Shell
 from ..convert import (
     CCA_CONVENTIONS,
@@ -30,10 +34,12 @@ from ..convert import (
     convert_conventions,
     convert_to_segmented,
     convert_to_unrestricted,
+    decontract,
     iter_cart_alphabet,
 )
 from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 from ..orbitals import MolecularOrbitals
+from ..overlap import OVERLAP_CONVENTIONS, compute_overlap
 
 
 def test_convert_convention_shell():
@@ -363,3 +369,111 @@ def test_convert_to_segmented_empty():
     assert len(obasis1.shells) == 0
     obasis2 = convert_to_segmented(obasis0, keep_sp=True)
     assert len(obasis2.shells) == 0
+
+
+def _eval_cartesian(obasis, atcoords, points):
+    """Evaluate Cartesian basis functions, ignoring the normalization of the primitives."""
+    result = []
+    for shell in obasis.shells:
+        delta = points - atcoords[shell.icenter]
+        gauss = np.exp(-np.outer((delta**2).sum(axis=1), shell.exponents))
+        for angmom, coeffs in zip(shell.angmoms, shell.coeffs.T, strict=True):
+            radial = gauss @ coeffs
+            for powers in iter_cart_alphabet(angmom):
+                result.append(radial * np.prod(delta**powers, axis=1))
+    return np.array(result).T
+
+
+def test_decontract():
+    rng = np.random.default_rng(1)
+    obasis0 = MolecularBasis(
+        [
+            Shell(0, [0], ["c"], [5.0, 1.0, 0.2], rng.uniform(-1, 1, (3, 1))),
+            Shell(0, [0], ["c"], [0.2], [[1.0]]),
+            Shell(0, [0, 1], ["c", "c"], [1.0, 0.5], rng.uniform(-1, 1, (2, 2))),
+            Shell(1, [0, 0], ["c", "c"], [3.0, 0.7], rng.uniform(-1, 1, (2, 2))),
+            Shell(1, [2], ["p"], [0.9, 0.3], rng.uniform(-1, 1, (2, 1))),
+        ],
+        HORTON2_CONVENTIONS,
+        "L2",
+    )
+    assert obasis0.nbasis == 13
+    obasis1, transform = decontract(obasis0)
+    # The exponents 0.2 and 1.0 of the first atom are only included once for S functions.
+    # Atom 0: s: 5.0, 1.0, 0.2, 0.5 and p: 1.0, 0.5. Atom 1: s: 3.0, 0.7 and d: 0.9, 0.3
+    assert len(obasis1.shells) == 10
+    for shell in obasis1.shells:
+        assert shell.nexp == 1
+        assert shell.ncon == 1
+        assert_equal(shell.coeffs, [[1.0]])
+    assert [shell.icenter for shell in obasis1.shells] == [0, 0, 0, 0, 0, 0, 1, 1, 1, 1]
+    assert [shell.angmoms[0] for shell in obasis1.shells] == [0, 0, 0, 0, 1, 1, 0, 0, 2, 2]
+    assert_equal([shell.exponents[0] for shell in obasis1.shells[:4]], [5.0, 1.0, 0.2, 0.5])
+    assert obasis1.nbasis == 4 + 6 + 2 + 10
+    assert obasis1.conventions == obasis0.conventions
+    assert obasis1.primitive_normalization == obasis0.primitive_normalization
+    assert transform.shape == (obasis1.nbasis, obasis0.nbasis)
+    dense = transform.toarray()
+    # First contracted S function on atom 0
+    assert_allclose(dense[:3, 0], obasis0.shells[0].coeffs[:, 0])
+    assert_equal(dense[3:, 0], 0.0)
+    # The uncontracted S function with exponent 0.2 is the same primitive.
+    assert dense[2, 1] == 1.0
+    assert dense[:, 1].sum() == 1.0
+    # The P function of the SP shell with exponent 1.0, three components.
+    assert_allclose(dense[4:7, 3:6], np.identity(3) * obasis0.shells[2].coeffs[0, 1])
+
+
+def test_decontract_values():
+    rng = np.random.default_rng(2)
+    atcoords = rng.uniform(-1, 1, (2, 3))
+    obasis0 = MolecularBasis(
+        [
+            Shell(0, [0], ["c"], [5.0, 1.0, 0.2], rng.uniform(-1, 1, (3, 1))),
+            Shell(0, [0], ["c"], [0.2], [[1.0]]),
+            Shell(0, [0, 1], ["c", "c"], [1.0, 0.5], rng.uniform(-1, 1, (2, 2))),
+            Shell(1, [0, 0], ["c", "c"], [3.0, 0.7], rng.uniform(-1, 1, (2, 2))),
+            Shell(1, [2], ["c"], [0.9, 0.3], rng.uniform(-1, 1, (2, 1))),
+        ],
+        HORTON2_CONVENTIONS,
+        "L2",
+    )
+    obasis1, transform = decontract(obasis0)
+    points = rng.uniform(-2, 2, (20, 3))
+    coeffs0 = rng.normal(size=(obasis0.nbasis, 3))
+    values0 = _eval_cartesian(obasis0, atcoords, points) @ coeffs0
+    values1 = _eval_cartesian(obasis1, atcoords, points) @ (transform @ coeffs0)
+    assert_allclose(values1, values0, atol=1e-12)
+
+
+@pytest.mark.parametrize(
+    "fn_fchk",
+    ["o2_cc_pvtz_pure.fchk", "o2_cc_pvtz_cart.fchk", "water_ccpvdz_pure_hf_g03.fchk"],
+)
+def test_decontract_overlap(fn_fchk):
+    with as_file(files("iodata.test.data").joinpath(fn_fchk)) as path:
+        data = load_one(path)
+    obasis0 = data.obasis
+    if "cart" in fn_fchk:
+        obasis0 = attrs.evolve(obasis0, conventions=OVERLAP_CONVENTIONS)
+    obasis1, transform = decontract(obasis0)
+    assert obasis1.nbasis > obasis0.nbasis
+    keys = {(s.icenter, s.angmoms[0], s.kinds[0], s.exponents[0]) for s in obasis1.shells}
+    assert len(keys) == len(obasis1.shells)
+    overlap0 = compute_overlap(obasis0, data.atcoords)
+    overlap1 = compute_overlap(obasis1, data.atcoords)
+    assert_allclose(transform.T @ overlap1 @ transform, overlap0, rtol=1e-6, atol=1e-8)
+    # The orbitals remain orthonormal.
+    coeffs1 = transform @ data.mo.coeffs
+    assert_allclose(
+        coeffs1.T @ overlap1 @ coeffs1,
+        data.mo.coeffs.T @ overlap0 @ data.mo.coeffs,
+        atol=1e-8,
+    )
+
+
+def test_decontract_empty():
+    obasis0 = MolecularBasis([], HORTON2_CONVENTIONS, "L2")
+    obasis1, transform = decontract(obasis0)
+    assert len(obasis1.shells) == 0
+    assert transform.shape == (0, 0)
