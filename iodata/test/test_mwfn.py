@@ -283,3 +283,45 @@ def test_load_mwfn_he_spdfgh_g03():
     olp_fchk = compute_overlap(mol2.obasis, mol2.atcoords)
     assert_allclose(mol.atcoords, mol2.atcoords, atol=1e-7, rtol=1e-7)
     assert_allclose(olp, olp_fchk, atol=1e-7, rtol=1e-7)
+
+
+def test_load_mwfn_matrices_ch3_hf():
+    mol = load_helper("ch3_hf_sto3g_fchk_multiwfn3.7.mwfn")
+    olp = mol.one_ints["olp"]
+    assert olp.shape == (8, 8)
+    assert_allclose(olp, olp.T, atol=1e-12)
+    # The overlap in the file agrees with the one from the basis set.
+    assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
+    # The density matrices hold the right number of electrons (5 alpha and 4 beta).
+    dm_alpha = 0.5 * (mol.one_rdms["scf"] + mol.one_rdms["scf_spin"])
+    dm_beta = 0.5 * (mol.one_rdms["scf"] - mol.one_rdms["scf_spin"])
+    assert_allclose(np.einsum("ij,ij", dm_alpha, olp), 5.0, atol=1e-6)
+    assert_allclose(np.einsum("ij,ij", dm_beta, olp), 4.0, atol=1e-6)
+    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf"], olp), mol.nelec, atol=1e-6)
+    # The first elements of the lower triangle in the file.
+    assert_allclose(dm_alpha[0, 0], 1.03984043, atol=1e-8)
+    assert_allclose(dm_alpha[1, 0], -1.35459706e-01, atol=1e-8)
+    assert_allclose(dm_alpha[1, 1], 5.35184883e-01, atol=1e-8)
+    assert_allclose(dm_alpha, dm_alpha.T, atol=1e-12)
+    # They also follow from the orbitals.
+    coeffs = mol.mo.coeffsa[:, mol.mo.occsa > 0]
+    assert_allclose(coeffs @ coeffs.T, dm_alpha, atol=1e-5)
+
+
+def test_load_mwfn_matrices_ch3_rohf():
+    mol = load_helper("ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn")
+    olp = mol.one_ints["olp"]
+    assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
+    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf"], olp), mol.nelec, atol=1e-6)
+    spin = np.einsum("ij,ij", mol.one_rdms["scf_spin"], olp)
+    assert_allclose(spin, mol.spinpol, atol=1e-6)
+
+
+def test_load_mwfn_matrices_he_spdfgh_total_density():
+    mol = load_helper("he_spdfgh_virtual_fchk_multiwfn3.7.mwfn")
+    olp = mol.one_ints["olp"]
+    assert olp.shape == (56, 56)
+    assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
+    # Only a total density matrix is in the file.
+    assert "scf_spin" not in mol.one_rdms
+    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf"], olp), 2.0, atol=1e-6)

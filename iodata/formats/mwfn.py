@@ -18,6 +18,8 @@
 # --
 """Multiwfn MWFN file format."""
 
+import re
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -223,6 +225,34 @@ def _load_helper_mo(lit: LineIterator, n_basis: int, n_mo: int) -> dict:
     return data
 
 
+def _load_helper_matrices(lit: LineIterator) -> dict:
+    """Read the sections after the orbitals, labelled '# Various matrices'.
+
+    Each section starts with a line such as ``$Overlap matrix, dim=  8  8  lower= 1``.
+    With ``lower= 1`` only the lower triangle is stored, one row after the other.
+    The sections do not have to be in a fixed order, and unknown ones are skipped.
+    """
+    matrices = {}
+    for line in lit:
+        match = re.match(r"\$(.+?),\s*dim=\s*(\d+)\s+(\d+)\s+lower=\s*(\d+)", line)
+        if match is None:
+            continue
+        name = match.group(1).strip()
+        nrow, ncol, lower = int(match.group(2)), int(match.group(3)), int(match.group(4))
+        if lower:
+            if nrow != ncol:
+                raise LoadError(f"Section '{name}' stores a triangle of a non-square matrix.", lit)
+            values = _load_helper_section(lit, nrow * (nrow + 1) // 2, "", 0, float)
+            matrix = np.zeros((nrow, nrow))
+            matrix[np.tril_indices(nrow)] = values
+            matrix = matrix + matrix.T - np.diag(np.diag(matrix))
+        else:
+            values = _load_helper_section(lit, nrow * ncol, "", 0, float)
+            matrix = values.reshape(nrow, ncol)
+        matrices[name] = matrix
+    return matrices
+
+
 def _load_mwfn_low(lit: LineIterator) -> dict:
     """Load data from a MWFN file into arrays.
 
@@ -273,11 +303,16 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     # load MO information
     data.update(_load_helper_mo(lit, num_basis, num_mo))
 
+    # load the optional matrices, which are in the sections that remain
+    data["matrices"] = _load_helper_matrices(lit)
+
     return data
 
 
 @document_load_one(
-    "MWFN", ["atcoords", "atnums", "atcorenums", "energy", "mo", "obasis", "extra", "title"]
+    "MWFN",
+    ["atcoords", "atnums", "atcorenums", "energy", "mo", "obasis", "extra", "title"],
+    ["one_ints", "one_rdms"],
 )
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
@@ -354,6 +389,20 @@ def load_one(lit: LineIterator) -> dict:
             lit.filename,
         )
 
+    # Matrices in the same basis functions and order as the orbital coefficients
+    matrices = inp["matrices"]
+    one_ints = {}
+    if "Overlap matrix" in matrices:
+        one_ints["olp"] = matrices["Overlap matrix"]
+    one_rdms = {}
+    if "Alpha density matrix" in matrices and "Beta density matrix" in matrices:
+        alpha = matrices["Alpha density matrix"]
+        beta = matrices["Beta density matrix"]
+        one_rdms["scf"] = alpha + beta
+        one_rdms["scf_spin"] = alpha - beta
+    elif "Total density matrix" in matrices:
+        one_rdms["scf"] = matrices["Total density matrix"]
+
     return {
         "title": inp["title"],
         "atcoords": inp["atcoords"],
@@ -362,5 +411,7 @@ def load_one(lit: LineIterator) -> dict:
         "obasis": obasis,
         "mo": mo,
         "energy": inp["E_tot"],
+        "one_ints": one_ints,
+        "one_rdms": one_rdms,
         "extra": extra,
     }
