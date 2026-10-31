@@ -75,7 +75,7 @@ def load_one(lit: LineIterator) -> dict:
     # skip rest of header
     for line in lit:
         words = line.split()
-        if words[0] == "&END" or words[0] == "/END" or words[0] == "/":
+        if words and words[0] in ("&END", "/END", "/"):
             break
 
     # read the integrals
@@ -85,6 +85,9 @@ def load_one(lit: LineIterator) -> dict:
 
     for line in lit:
         words = line.split()
+        if not words:
+            # empty lines, for example at the end of the file
+            continue
         if len(words) != 5:
             raise LoadError(
                 f"Expecting 5 fields on each data line in FCIDUMP, got {len(words)}.", lit

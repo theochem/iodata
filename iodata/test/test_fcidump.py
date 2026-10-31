@@ -22,9 +22,28 @@ import os
 from importlib.resources import as_file, files
 
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
+
+
+@pytest.mark.parametrize("fn", ["FCIDUMP.psi4.h2", "FCIDUMP.molpro.h2"])
+def test_load_fcidump_empty_lines(fn, tmpdir):
+    with as_file(files("iodata.test.data").joinpath(fn)) as path:
+        mol = load_one(str(path))
+        with open(path) as f:
+            lines = f.read().splitlines()
+    # Empty lines in the header, between the integrals and at the end of the file.
+    lines.insert(1, "")
+    lines.insert(len(lines) - 3, "")
+    path_new = os.path.join(tmpdir, "FCIDUMP.test")
+    with open(path_new, "w") as f:
+        f.write("\n".join(lines) + "\n\n\n  \n")
+    mol_new = load_one(path_new, fmt="fcidump")
+    assert_equal(mol_new.core_energy, mol.core_energy)
+    assert_equal(mol_new.one_ints["core_mo"], mol.one_ints["core_mo"])
+    assert_equal(mol_new.two_ints["two_mo"], mol.two_ints["two_mo"])
 
 
 def test_load_fcidump_psi4_h2():
