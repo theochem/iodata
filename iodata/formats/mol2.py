@@ -54,8 +54,9 @@ def load_one(lit: LineIterator) -> dict:
             line = next(lit)
         except StopIteration:
             break
-        if len(line) > 1:
-            words = line.split()
+        words = line.split()
+        # Lines with only spaces are skipped, like empty lines
+        if words:
             if words[0] == "@<TRIPOS>MOLECULE":
                 # Found another molecule; go one line back and break
                 if molecule_found:

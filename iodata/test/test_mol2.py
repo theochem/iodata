@@ -148,3 +148,21 @@ def test_load_water_bonds_warning():
     ):
         mol = load_one(fn_mol)
     assert_equal(mol.bonds, [[0, 1, bond2num["un"]], [0, 2, bond2num["un"]]])
+
+
+@pytest.mark.parametrize("fn", ["benzene.mol2", "caffeine.mol2", "silioh3.mol2"])
+def test_mol2_load_one_trailing_spaces(fn, tmpdir):
+    with as_file(files("iodata.test.data").joinpath(fn)) as fn_mol:
+        mol = load_one(fn_mol)
+        with open(fn_mol) as f:
+            lines = f.read().splitlines()
+    # Spaces at the end of every line, so empty lines contain only spaces.
+    fn_new = os.path.join(tmpdir, "trailing_spaces.mol2")
+    with open(fn_new, "w") as f:
+        f.write("".join(line + "  \n" for line in lines))
+    mol_new = load_one(fn_new)
+    assert mol_new.title == mol.title
+    assert_equal(mol_new.atnums, mol.atnums)
+    assert_equal(mol_new.bonds, mol.bonds)
+    assert_allclose(mol_new.atcoords, mol.atcoords)
+    assert_allclose(mol_new.atcharges["mol2charges"], mol.atcharges["mol2charges"])
