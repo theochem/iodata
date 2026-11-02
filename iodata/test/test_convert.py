@@ -379,8 +379,9 @@ def _eval_cartesian(obasis, atcoords, points):
         gauss = np.exp(-np.outer((delta**2).sum(axis=1), shell.exponents))
         for angmom, coeffs in zip(shell.angmoms, shell.coeffs.T, strict=True):
             radial = gauss @ coeffs
-            for powers in iter_cart_alphabet(angmom):
-                result.append(radial * np.prod(delta**powers, axis=1))
+            result.extend(
+                radial * np.prod(delta**powers, axis=1) for powers in iter_cart_alphabet(angmom)
+            )
     return np.array(result).T
 
 
