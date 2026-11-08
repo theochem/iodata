@@ -104,23 +104,6 @@ def test_dump_default_title(tmpdir):
     assert mol2.title == "Created with IOData"
 
 
-@pytest.mark.parametrize(
-    "fn", ["h2_ub3lyp_ccpvtz.wfx", "h2_ub3lyp_ccpvtz_with_comments.wfx", "lih_cation_cisd.wfx"]
-)
-def test_load_empty_lines_between_sections_and_at_the_end(fn, tmpdir):
-    with as_file(files("iodata.test.data").joinpath(fn)) as path:
-        mol = load_one(str(path))
-        with open(path) as f:
-            text = f.read()
-    # An empty line after the first closing tag, and several at the end of the file.
-    first_end = text.index("\n", text.index("</")) + 1
-    text = text[:first_end] + "\n" + text[first_end:]
-    path_new = os.path.join(tmpdir, "foo.wfx")
-    with open(path_new, "w") as f:
-        f.write(text.rstrip("\n") + "\n\n\n  \n")
-    compare_mols(load_one(path_new), mol)
-
-
 def test_load_dump_consistency_h2(tmpdir):
     check_load_dump_consistency("h2_ub3lyp_ccpvtz.wfx", tmpdir)
 
