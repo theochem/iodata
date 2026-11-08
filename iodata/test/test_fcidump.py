@@ -26,6 +26,7 @@ import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
+from ..utils import LoadError
 
 
 @pytest.mark.parametrize("fn", ["FCIDUMP.psi4.h2", "FCIDUMP.molpro.h2"])
@@ -34,9 +35,11 @@ def test_load_fcidump_empty_lines(fn, tmpdir):
         mol = load_one(str(path))
         with open(path) as f:
             lines = f.read().splitlines()
-    # Empty lines in the header, between the integrals and at the end of the file.
+    # Empty lines in the header, between the integrals, before the header
+    # and at the end of the file.
     lines.insert(1, "")
     lines.insert(len(lines) - 3, "")
+    lines.insert(0, "")
     path_new = os.path.join(tmpdir, "FCIDUMP.test")
     with open(path_new, "w") as f:
         f.write("\n".join(lines) + "\n\n\n  \n")
@@ -44,6 +47,72 @@ def test_load_fcidump_empty_lines(fn, tmpdir):
     assert_equal(mol_new.core_energy, mol.core_energy)
     assert_equal(mol_new.one_ints["core_mo"], mol.one_ints["core_mo"])
     assert_equal(mol_new.two_ints["two_mo"], mol.two_ints["two_mo"])
+
+
+@pytest.mark.parametrize(
+    "header",
+    [
+        # Everything on one line, with the end marker at the end of the line.
+        " &FCI NORB=4,NELEC=2,MS2=0,ORBSYM=1,1,5,5,ISYM=1, &END\n",
+        # End marker at the end of the last header line.
+        " &FCI NORB=4,NELEC=2,MS2=0,\n  ORBSYM=1,1,5,5,\n  ISYM=1,/\n",
+        # Lower case.
+        " &fci norb=4,nelec=2,ms2=0,\n  orbsym=1,1,5,5,\n  isym=1,\n &end\n",
+        # NELEC and MS2 on the second line.
+        " &FCI NORB=4,\n  NELEC=2,MS2=0,\n  ORBSYM=1,1,5,5,\n  ISYM=1,\n /\n",
+        # No leading space, values separated by spaces, spaces around the equal signs.
+        "&FCI NORB = 4 NELEC = 2 MS2 = 0\n  ORBSYM = 1 1 5 5 ISYM = 1\n/\n",
+    ],
+)
+def test_load_fcidump_header_variants(header, tmpdir):
+    with as_file(files("iodata.test.data").joinpath("FCIDUMP.molpro.h2")) as path:
+        mol = load_one(str(path))
+        with open(path) as f:
+            lines = f.read().splitlines(keepends=True)
+    # Replace the original header, i.e. the first four lines.
+    path_new = os.path.join(tmpdir, "FCIDUMP.test")
+    with open(path_new, "w") as f:
+        f.write(header)
+        f.writelines(lines[4:])
+    mol_new = load_one(path_new)
+    assert mol_new.nelec == 2
+    assert mol_new.spinpol == 0
+    assert_equal(mol_new.core_energy, mol.core_energy)
+    assert_equal(mol_new.one_ints["core_mo"], mol.one_ints["core_mo"])
+    assert_equal(mol_new.two_ints["two_mo"], mol.two_ints["two_mo"])
+
+
+DATA_LINES = """\
+  0.6527679278914691E+00   1   1   1   1
+  0.7151043364864863E+00   0   0   0   0
+"""
+
+
+@pytest.mark.parametrize(
+    ("content", "match"),
+    [
+        ("", "No FCIDUMP header found"),
+        ("\n  \n", "No FCIDUMP header found"),
+        (" &XYZ NORB=4,NELEC=2,MS2=0,\n /\n" + DATA_LINES, "Incorrect file header"),
+        # Missing end marker
+        (" &FCI NORB=4,NELEC=2,MS2=0,\n  ISYM=1,\n" + DATA_LINES, "not terminated"),
+        # Missing field and invalid values
+        (" &FCI NORB=4,MS2=0,\n /\n" + DATA_LINES, "NELEC"),
+        (" &FCI NORB=four,NELEC=2,MS2=0,\n /\n" + DATA_LINES, "NORB"),
+        (" &FCI NORB=4,NELEC=2,MS2=0.5,\n /\n" + DATA_LINES, "MS2"),
+        # Files without integrals, e.g. truncated after the header
+        (" &FCI NORB=4,NELEC=2,MS2=0,\n /\n", "No integrals"),
+        (" &FCI NORB=4,NELEC=2,MS2=0,\n /\n\n\n  \n", "No integrals"),
+        # Wrong number of fields on a data line
+        (" &FCI NORB=4,NELEC=2,MS2=0,\n /\n  0.65   1   1   1\n", "Expecting 5 fields"),
+    ],
+)
+def test_load_fcidump_invalid(content, match, tmpdir):
+    path = os.path.join(tmpdir, "FCIDUMP.test")
+    with open(path, "w") as f:
+        f.write(content)
+    with pytest.raises(LoadError, match=match):
+        load_one(path)
 
 
 def test_load_fcidump_psi4_h2():
