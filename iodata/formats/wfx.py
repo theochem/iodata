@@ -189,7 +189,7 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
         if section_start is None and line.startswith("#"):
             continue
         # check whether line is the start of a section
-        if section_start is None and line.startswith("<"):
+        if section_start is None and line.startswith("<") and not line.startswith("</"):
             # set start & end of the section and add it to data dictionary
             section_start = line
             if section_start in data:
@@ -200,7 +200,9 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
             if section_start == mo_start:
                 data["<MO Numbers>"] = []
         # check whether line is the (correct) end of the section
-        elif section_start is not None and line.startswith("</"):
+        elif line.startswith("</"):
+            if section_start is None:
+                raise LoadError(f"Unexpected closing tag {line} outside of any section.", lit)
             # In some cases, closing tags have a different number of spaces. 8-[
             if line.replace(" ", "") != section_end.replace(" ", ""):
                 raise LoadError(f"Expecting line {section_end} but got {line}.", lit)
@@ -212,9 +214,16 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
             data["<MO Numbers>"].append(next(lit).strip())
             # skip '</MO Number>' line
             next(lit)
+        # Opening tags cannot be nested (except <MO Number>, handled above).
+        # The title is free text and may start with "<", e.g. "<Created with IOData>",
+        # which older IOData versions wrote when no title was set.
+        elif line.startswith("<") and section_start != "<Title>":
+            raise LoadError(f"Expecting line {section_end} but got {line}.", lit)
         # add section content to the corresponding list in data dictionary
-        else:
+        elif section_start is not None:
             data[section_start].append(line)
+        elif line:
+            raise LoadError(f"Encountered content outside of any section: {line}", lit)
 
     # check if last section was closed
     if section_start is not None:
@@ -439,7 +448,7 @@ def dump_one(f: TextIO, data: IOData):
         mo_coeffs[:, index] *= contractions * scales
 
     # write title & keywords
-    _write_xml_single(tag=lbs["title"], info=data.title or "<Created with IOData>", file=f)
+    _write_xml_single(tag=lbs["title"], info=data.title or "Created with IOData", file=f)
     _write_xml_single(tag=lbs["keywords"], info=data.extra.get("keywords", "GTO"), file=f)
 
     # write number of nuclei & number of primitives
