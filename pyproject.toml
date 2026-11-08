@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=65.0", "setuptools_scm[toml]>=7.1.0"]
+requires = ["setuptools>=77.0", "setuptools_scm>=8.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -25,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: File Formats",
     "Topic :: Scientific/Engineering :: Physics",
     "Topic :: Scientific/Engineering :: Chemistry",
@@ -64,7 +65,7 @@ Source = "https://github.com/theochem/iodata/"
 iodata-convert = "iodata.__main__:main"
 
 [tool.pytest.ini_options]
-addopts = "-n auto -W error --strict-markers"
+addopts = "-n auto --dist worksteal -W error --strict-markers"
 markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
 
 [tool.setuptools]

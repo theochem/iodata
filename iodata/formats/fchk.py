@@ -18,6 +18,7 @@
 # --
 """Gaussian FCHK file format."""
 
+import re
 from collections.abc import Iterator
 from fnmatch import fnmatch
 from typing import TextIO
@@ -38,6 +39,13 @@ __all__ = ()
 
 
 PATTERNS = ["*.fchk", "*.fch"]
+
+
+# Regular expression for a single floating point number in an FCHK file.
+# This is used instead of a simple split on whitespace, because some programs
+# write floating point numbers without any whitespace in between,
+# e.g. when the exponent has three digits: "1.13086932e+00-3.46281773e-118".
+FLOAT_PATTERN = re.compile(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[EeDd][-+]?\d+)?")
 
 
 CONVENTIONS = {
@@ -508,11 +516,8 @@ def _load_fchk_field(lit: LineIterator, label_patterns: list[str]) -> tuple[str,
         ):
             continue
         if len(words) == 2:
-            try:
-                return label, datatype(words[1])
-            except ValueError as exc:
-                raise LoadError(f"Could not interpret as {datatype}: {words[1]}", lit) from exc
-        elif len(words) == 3:
+            return label, _convert_word(words[1], datatype, lit)
+        if len(words) == 3:
             if words[1] != "N=":
                 raise LoadError("Expected N= not found.", lit)
             length = int(words[2])
@@ -521,14 +526,40 @@ def _load_fchk_field(lit: LineIterator, label_patterns: list[str]) -> tuple[str,
             words = []
             while counter < length:
                 if not words:
-                    words = next(lit).split()
-                word = words.pop(0)
-                try:
-                    value[counter] = datatype(word)
-                except (ValueError, OverflowError) as exc:
-                    raise LoadError(f"Could not interpret as {datatype}: {word}", lit) from exc
+                    line = next(lit)
+                    if datatype is float:
+                        # Floating point numbers are not always separated by whitespace,
+                        # e.g. when the exponent has three digits, so they cannot be
+                        # extracted with a simple split.
+                        words = FLOAT_PATTERN.findall(line)
+                        if not words and line.strip():
+                            raise LoadError(f"Expected floating point numbers: {line.strip()}", lit)
+                    else:
+                        words = line.split()
+                value[counter] = _convert_word(words.pop(0), datatype, lit)
                 counter += 1
             return label, value
+
+
+def _convert_word(word: str, datatype: type, lit: LineIterator) -> int | float:
+    """Convert a word from an FCHK file into an integer or a floating point number.
+
+    Parameters
+    ----------
+    word
+        The word to convert.
+    datatype
+        The type to convert to: int or float.
+    lit
+        The line iterator, only used for error reporting.
+
+    """
+    # Some programs write Fortran-style exponents, which float() does not accept.
+    clean = word.replace("D", "E").replace("d", "e") if datatype is float else word
+    try:
+        return datatype(clean)
+    except (ValueError, OverflowError) as exc:
+        raise LoadError(f"Could not interpret as {datatype}: {word}", lit) from exc
 
 
 def _load_connectivity(fchk: dict, natoms: int, lit: LineIterator) -> NDArray[int] | None:
