@@ -603,11 +603,11 @@ def test_load_data_wfx_h2o_error():
         pytest.raises(LoadError) as error,
     ):
         load_one(str(fn_wfx))
-    assert "Expecting line </Number of Nuclei> but got </Number of Primitives>." in str(error)
+    assert "Expecting line </Number of Nuclei> but got <Number of Primitives>." in str(error)
 
 
 def test_parse_wfx_stray_closing_tag():
-    """Check that a closing tag outside any section raises LoadError, not KeyError."""
+    """Check that blank lines between sections are skipped and stray closing tags are rejected."""
     with (
         as_file(files("iodata.test.data").joinpath("h2o_stray_closing_tag.wfx")) as fn_wfx,
         LineIterator(str(fn_wfx)) as lit,
@@ -615,6 +615,17 @@ def test_parse_wfx_stray_closing_tag():
     ):
         parse_wfx(lit)
     assert "Unexpected closing tag </Stray Closing Tag> outside of any section." in str(error)
+
+
+def test_parse_wfx_content_outside_section():
+    """Check that text outside any section raises an exception."""
+    with (
+        as_file(files("iodata.test.data").joinpath("h2o_content_outside_section.wfx")) as fn_wfx,
+        LineIterator(str(fn_wfx)) as lit,
+        pytest.raises(LoadError) as error,
+    ):
+        parse_wfx(lit)
+    assert "Encountered content outside of any section: Warning: this subroutine" in str(error)
 
 
 def test_load_truncated_h2o(tmpdir):
