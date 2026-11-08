@@ -156,6 +156,7 @@ def compare_mulliken_charges(
     assert os.path.isfile(fn_tmp)
     # load dumped file and compare Mulliken charges
     mol2 = load_one(fn_tmp)
+    assert mol2.title == (mol1.title or "Created with IOData")
     charges1 = compute_mulliken_charges(mol1)
     charges2 = compute_mulliken_charges(mol2)
     assert_allclose(charges1, charges2, rtol=rtol, atol=atol)
