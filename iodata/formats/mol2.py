@@ -105,7 +105,8 @@ def _load_helper_atoms(
         atnums[i] = atnum
         attypes.append(words[5])
         atcoords[i] = [float(words[2]), float(words[3]), float(words[4])]
-        if len(words) == 9:
+        # The charge is the ninth field, optionally followed by a status bit.
+        if len(words) >= 9:
             atchgs[i] = float(words[8])
         else:
             atchgs[i] = 0.0000

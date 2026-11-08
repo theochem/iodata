@@ -148,3 +148,11 @@ def test_load_water_bonds_warning():
     ):
         mol = load_one(fn_mol)
     assert_equal(mol.bonds, [[0, 1, bond2num["un"]], [0, 2, bond2num["un"]]])
+
+
+def test_load_charges_with_status_bits():
+    # The optional status bit after the charge must not discard the charge.
+    with as_file(files("iodata.test.data").joinpath("water_status_bits.mol2")) as fn_mol:
+        mol = load_one(fn_mol)
+    assert_equal(mol.atnums, [8, 1, 1])
+    assert_allclose(mol.atcharges["mol2charges"], [-0.834, 0.417, 0.417])
