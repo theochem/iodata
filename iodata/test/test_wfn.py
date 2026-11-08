@@ -28,7 +28,7 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
-from ..utils import LineIterator, PrepareDumpError, PrepareDumpWarning
+from ..utils import DumpWarning, LineIterator, PrepareDumpError, PrepareDumpWarning
 from .common import (
     check_orthonormal,
     compare_mols,
@@ -48,11 +48,12 @@ def helper_load_wfn_low(fn_wfn):
 def test_load_wfn_low_he_s():
     data = helper_load_wfn_low("he_s_orbital.wfn")
     # unpack data
-    title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[5:]
+    title, atnums, atcorenums, atcoords, centers, type_assignments = data[:6]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[6:]
     assert title == "He atom - decontracted 6-31G basis set"
     assert_equal(atnums.shape, (1,))
     assert_equal(atnums, [2])
+    assert_equal(atcorenums, [2.0])
     assert_equal(atcoords.shape, (1, 3))
     assert_equal(centers.shape, (4,))
     assert_equal(type_assignments.shape, (4,))
@@ -77,8 +78,8 @@ def test_load_wfn_low_he_s():
 def test_load_wfn_low_h2o():
     data = helper_load_wfn_low("h2o_sto3g.wfn")
     # unpack data
-    title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[5:]
+    title, atnums, atcorenums, atcoords, centers, type_assignments = data[:6]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[6:]
     assert title == "H2O Optimization"
     assert_equal(atnums.shape, (3,))
     assert_equal(atcoords.shape, (3, 3))
@@ -90,6 +91,7 @@ def test_load_wfn_low_h2o():
     assert_equal(mo_energy.shape, (5,))
     assert_equal(coefficients.shape, (21, 5))
     assert_equal(atnums, np.array([8, 1, 1]))
+    assert_equal(atcorenums, [8.0, 1.0, 1.0])
     assert_equal(centers[:15], np.zeros(15, int))
     assert_equal(centers[15:], np.array([1, 1, 1, 2, 2, 2]))
     assert_equal(type_assignments[:6], np.zeros(6))
@@ -323,6 +325,10 @@ def check_load_dump_consistency(fn: str, tmpdir: str, atol: float = 1.0e-6, allo
     fn_tmp = os.path.join(tmpdir, "foo.wfn")
     dump_one(mol1, fn_tmp, allow_changes=allow_changes)
     mol2 = load_one(fn_tmp)
+    # compare atoms and the total charge
+    assert_equal(mol1.atnums, mol2.atnums)
+    assert_allclose(mol1.atcorenums, mol2.atcorenums, atol=atol)
+    assert_allclose(mol1.charge, mol2.charge, atol=atol)
     # compare Mulliken charges
     charges1 = compute_mulliken_charges(mol1)
     charges2 = compute_mulliken_charges(mol2)
@@ -366,8 +372,9 @@ def test_load_dump_consistency_from_fchk_h2o(tmpdir):
         check_load_dump_consistency("h2o_sto3g.fchk", tmpdir, allow_changes=True)
 
 
-def test_load_dump_consistency_from_molden_nh3(tmpdir):
-    check_load_dump_consistency("nh3_molden_cart.molden", tmpdir)
+@pytest.mark.parametrize("path", ["nh3_molden_cart.molden", "he2_ghost_psi4_1.0.molden"])
+def test_load_dump_consistency_from_molden(path, tmpdir):
+    check_load_dump_consistency(path, tmpdir)
 
 
 def test_dump_one_pure_functions(tmpdir):
@@ -375,18 +382,15 @@ def test_dump_one_pure_functions(tmpdir):
         check_load_dump_consistency("water_ccpvdz_pure_hf_g03.fchk", tmpdir)
 
 
-def test_dump_one_atcorenums(tmpdir):
-    # Ghost atoms and atoms with an ECP must have their effective core charge in the file.
+def test_dump_one_atcorenums_rounded(tmpdir):
+    # The WFN format stores core charges with only one decimal.
     with as_file(files("iodata.test.data").joinpath("h2o_sto3g.wfn")) as fn:
         data = load_one(str(fn))
-    data.atcorenums = np.array([6.0, 1.0, 0.0])
+    data.atcorenums = np.array([8.0, 1.24, 0.76])
     fn_tmp = os.path.join(tmpdir, "foo.wfn")
-    dump_one(data, fn_tmp)
-    with open(fn_tmp) as f:
-        charges = [float(line.split("CHARGE =")[1]) for line in f if "CHARGE =" in line]
-    assert_equal(charges, [6.0, 1.0, 0.0])
-    # The atomic numbers are still taken from the element symbols.
-    assert_equal(load_one(fn_tmp).atnums, [8, 1, 1])
+    with pytest.warns(DumpWarning, match="one decimal"):
+        dump_one(data, fn_tmp)
+    assert_allclose(load_one(fn_tmp).atcorenums, [8.0, 1.2, 0.8])
 
 
 def test_generalized_orbitals():

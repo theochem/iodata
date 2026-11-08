@@ -28,6 +28,7 @@ Gaussian functions.
 import functools
 import operator
 from typing import TextIO
+from warnings import warn
 
 import numpy as np
 from numpy.typing import NDArray
@@ -40,7 +41,7 @@ from ..orbitals import MolecularOrbitals
 from ..overlap import gob_cart_normalization
 from ..periodic import num2sym, sym2num
 from ..prepare import prepare_segmented, prepare_unrestricted_aminusb
-from ..utils import LineIterator, LoadError, PrepareDumpError
+from ..utils import DumpWarning, LineIterator, LoadError, PrepareDumpError
 
 __all__ = ()
 
@@ -140,23 +141,27 @@ def _load_helper_num(lit: LineIterator) -> list[int]:
     return num_mo, nprim, num_atoms
 
 
-def _load_helper_atoms(lit: LineIterator, num_atoms: int) -> tuple[NDArray[int], NDArray[float]]:
-    """Read the coordinates of the atoms."""
+def _load_helper_atoms(
+    lit: LineIterator, num_atoms: int
+) -> tuple[NDArray[int], NDArray[float], NDArray[float]]:
+    """Read the atomic numbers, effective core charges and coordinates of the atoms."""
     atnums = np.empty(num_atoms, int)
+    atcorenums = np.empty(num_atoms, float)
     atcoords = np.empty((num_atoms, 3), float)
     for atom in range(num_atoms):
         line = next(lit)
-        # FORMAT (A8,16X,3F12.8)
+        # FORMAT (A8,16X,3F12.8,10X,F5.1)
         symbol = line[:8].strip().title()[:2]
         atcoords[atom, 0] = float(line[24:36])
         atcoords[atom, 1] = float(line[36:48])
         atcoords[atom, 2] = float(line[48:60])
+        atcorenums[atom] = float(line[70:75])
         atnum = sym2num.get(symbol)
         # WFN files created with AIMAll have the symbol and index combined in one word.
         if atnum is None:
             atnum = sym2num[symbol[0]]
         atnums[atom] = atnum
-    return atnums, atcoords
+    return atnums, atcorenums, atcoords
 
 
 def _load_helper_section(
@@ -225,7 +230,7 @@ def load_wfn_low(lit: LineIterator) -> tuple:
     # read sections of wfn file
     title = next(lit).strip()
     num_mo, nprim, num_atoms = _load_helper_num(lit)
-    atnums, atcoords = _load_helper_atoms(lit, num_atoms)
+    atnums, atcorenums, atcoords = _load_helper_atoms(lit, num_atoms)
     # centers are indexed from zero in HORTON
     icenters = _load_helper_section(lit, nprim, "CENTRE ASSIGNMENTS", 20, 3, int) - 1
     # The type assignments are integer indices for individual basis functions,
@@ -246,6 +251,7 @@ def load_wfn_low(lit: LineIterator) -> tuple:
     return (
         title,
         atnums,
+        atcorenums,
         atcoords,
         icenters,
         type_assignments,
@@ -390,12 +396,15 @@ def get_mocoeff_scales(obasis: MolecularBasis) -> NDArray[float]:
     return np.array(scales)
 
 
-@document_load_one("WFN", ["atcoords", "atnums", "energy", "mo", "obasis", "title", "extra"])
+@document_load_one(
+    "WFN", ["atcoords", "atcorenums", "atnums", "energy", "mo", "obasis", "title", "extra"]
+)
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
     (
         title,
         atnums,
+        atcorenums,
         atcoords,
         icenters,
         type_assignments,
@@ -458,6 +467,7 @@ def load_one(lit: LineIterator) -> dict:
     return {
         "title": title,
         "atcoords": atcoords,
+        "atcorenums": atcorenums,
         "atnums": atnums,
         "obasis": obasis,
         "mo": mo,
@@ -608,6 +618,16 @@ def dump_one(f: TextIO, data: IOData) -> None:
     print(FMT_NUM.format(data.mo.norb, obasis.nbasis, data.natom), file=f)
 
     # Write atoms (symbol, atom #, centre #, x pos., y pos., z pos., charge)
+    # The charge field has only one decimal, so other core charges are rounded.
+    if not np.allclose(data.atcorenums, np.round(data.atcorenums, 1), rtol=0.0, atol=1e-8):
+        warn(
+            DumpWarning(
+                "The WFN format stores core charges with only one decimal, "
+                "so some core charges are rounded.",
+                f,
+            ),
+            stacklevel=2,
+        )
     for iatom, (n, charge, (x, y, z)) in enumerate(
         zip(data.atnums, data.atcorenums, data.atcoords, strict=True)
     ):
