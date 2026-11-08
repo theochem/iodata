@@ -214,8 +214,9 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
             data["<MO Numbers>"].append(next(lit).strip())
             # skip '</MO Number>' line
             next(lit)
-        # opening tags cannot be nested (except <MO Number>, handled above)
-        # The title is free text: dump_one writes "<Created with IOData>" if there is none.
+        # Opening tags cannot be nested (except <MO Number>, handled above).
+        # The title is free text and may start with "<", e.g. "<Created with IOData>",
+        # which older IOData versions wrote when no title was set.
         elif line.startswith("<") and section_start != "<Title>":
             raise LoadError(f"Expecting line {section_end} but got {line}.", lit)
         # add section content to the corresponding list in data dictionary
@@ -447,7 +448,7 @@ def dump_one(f: TextIO, data: IOData):
         mo_coeffs[:, index] *= contractions * scales
 
     # write title & keywords
-    _write_xml_single(tag=lbs["title"], info=data.title or "<Created with IOData>", file=f)
+    _write_xml_single(tag=lbs["title"], info=data.title or "Created with IOData", file=f)
     _write_xml_single(tag=lbs["keywords"], info=data.extra.get("keywords", "GTO"), file=f)
 
     # write number of nuclei & number of primitives
