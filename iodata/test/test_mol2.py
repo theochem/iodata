@@ -167,7 +167,7 @@ def test_mol2_load_one_trailing_spaces(fn, tmpdir):
     assert_allclose(mol_new.atcoords, mol.atcoords)
     assert_allclose(mol_new.atcharges["mol2charges"], mol.atcharges["mol2charges"])
 
-    
+
 def test_load_charges_with_status_bits():
     # The optional status bit after the charge must not discard the charge.
     with as_file(files("iodata.test.data").joinpath("water_status_bits.mol2")) as fn_mol:
