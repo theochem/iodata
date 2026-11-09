@@ -30,8 +30,46 @@ from ..basis import MolecularBasis, Shell
 from ..convert import HORTON2_CONVENTIONS
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..prepare import prepare_segmented, prepare_unrestricted_aminusb
+from ..prepare import (
+    prepare_segmented,
+    prepare_single_line_title,
+    prepare_unrestricted_aminusb,
+)
 from ..utils import PrepareDumpError, PrepareDumpWarning
+
+
+@pytest.mark.parametrize("title", [None, "", "one line", "  padded  "])
+def test_single_line_title_pass_through(title):
+    data = IOData(atnums=[1, 1], title=title)
+    assert prepare_single_line_title(data, False, "foo.xyz", "XYZ") is data
+    assert prepare_single_line_title(data, True, "foo.xyz", "XYZ") is data
+
+
+@pytest.mark.parametrize("title", ["first\nsecond", "first\r\nsecond", "first\n", "\nfirst"])
+def test_single_line_title_pass_error(title):
+    data = IOData(atnums=[1, 1], title=title)
+    with pytest.raises(PrepareDumpError, match="single line"):
+        prepare_single_line_title(data, False, "foo.xyz", "XYZ")
+
+
+@pytest.mark.parametrize(
+    ("title", "expected"),
+    [
+        ("first\nsecond", "first second"),
+        ("first\r\nsecond", "first second"),
+        ("first\n  second  \n\nthird\n", "first second third"),
+        ("first\n", "first"),
+        ("\n\n", ""),
+    ],
+)
+def test_single_line_title_pass_warning(title, expected):
+    data1 = IOData(atnums=[1, 1], title=title)
+    with pytest.warns(PrepareDumpWarning, match="joined"):
+        data2 = prepare_single_line_title(data1, True, "foo.xyz", "XYZ")
+    assert data1 is not data2
+    assert data2.title == expected
+    assert data1.title == title
+    assert data1.atnums is data2.atnums
 
 
 def test_unrestricted_aminusb_no_mo():

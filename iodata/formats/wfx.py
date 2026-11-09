@@ -33,7 +33,11 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
-from ..prepare import prepare_segmented, prepare_unrestricted_aminusb
+from ..prepare import (
+    prepare_segmented,
+    prepare_single_line_title,
+    prepare_unrestricted_aminusb,
+)
 from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError
 from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
@@ -382,6 +386,7 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
             raise PrepareDumpError(
                 "The WFX format only supports Cartesian MolecularBasis.", filename
             )
+    data = prepare_single_line_title(data, allow_changes, filename, "WFX")
     data = prepare_unrestricted_aminusb(data, allow_changes, filename, "WFX")
     return prepare_segmented(data, False, allow_changes, filename, "WFX")
 
