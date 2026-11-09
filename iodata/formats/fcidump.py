@@ -28,6 +28,7 @@ Notes
 
 """
 
+import re
 from typing import TextIO
 from warnings import warn
 
@@ -56,35 +57,23 @@ assumes they are stored in an FCIDUMP file in chemists' notation.
 )
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
-    # check header
-    line = next(lit)
-    if not line.startswith(" &FCI NORB="):
-        raise LoadError(f"Incorrect file header: {line.strip()}", lit)
-
-    # read info from header
-    words = line[5:].split(",")
-    header_info = {}
-    for word in words:
-        if word.count("=") == 1:
-            key, value = word.split("=")
-            header_info[key.strip()] = value.strip()
-    nbasis = int(header_info["NORB"])
-    nelec = int(header_info["NELEC"])
-    spinpol = int(header_info["MS2"])
-
-    # skip rest of header
-    for line in lit:
-        words = line.split()
-        if words[0] == "&END" or words[0] == "/END" or words[0] == "/":
-            break
+    header = _load_header(lit)
+    nbasis = _parse_header_int(header, "NORB", lit)
+    nelec = _parse_header_int(header, "NELEC", lit)
+    spinpol = _parse_header_int(header, "MS2", lit)
 
     # read the integrals
     one_mo = np.zeros((nbasis, nbasis))
     two_mo = np.zeros((nbasis, nbasis, nbasis, nbasis))
     core_energy = 0.0
 
+    found_data = False
     for line in lit:
         words = line.split()
+        if not words:
+            # empty lines, for example at the end of the file
+            continue
+        found_data = True
         if len(words) != 5:
             raise LoadError(
                 f"Expecting 5 fields on each data line in FCIDUMP, got {len(words)}.", lit
@@ -108,6 +97,8 @@ def load_one(lit: LineIterator) -> dict:
             one_mo[ij, ii] = value
         else:
             core_energy = value
+    if not found_data:
+        raise LoadError("No integrals found after the FCIDUMP header.", lit)
 
     return {
         "nelec": nelec,
@@ -116,6 +107,49 @@ def load_one(lit: LineIterator) -> dict:
         "two_ints": {"two_mo": two_mo},
         "core_energy": core_energy,
     }
+
+
+# The header is a Fortran namelist, which starts with &FCI and ends with / or &END.
+RE_HEADER_START = re.compile(r"\s*&FCI\b", re.IGNORECASE)
+RE_HEADER_END = re.compile(r"/|&END\b", re.IGNORECASE)
+
+
+def _load_header(lit: LineIterator) -> str:
+    """Load the header and return its contents without the start and end markers."""
+    for line in lit:
+        if line.strip():
+            break
+    else:
+        raise LoadError("No FCIDUMP header found.", lit)
+    match = RE_HEADER_START.match(line)
+    if match is None:
+        raise LoadError(f"Incorrect file header: {line.strip()}", lit)
+    line = line[match.end() :]
+    parts = []
+    while True:
+        match = RE_HEADER_END.search(line)
+        if match is not None:
+            parts.append(line[: match.start()])
+            return " ".join(parts)
+        parts.append(line)
+        try:
+            line = next(lit)
+        except StopIteration:
+            raise LoadError("The FCIDUMP header is not terminated by / or &END.", lit) from None
+
+
+def _parse_header_int(header: str, key: str, lit: LineIterator) -> int:
+    """Get an integer value from the header, which may contain any number of lines."""
+    match = re.search(rf"\b{key}\s*=\s*([^,\s]*)", header, re.IGNORECASE)
+    if match is None:
+        raise LoadError(f"Field {key} not found in the FCIDUMP header.", lit)
+    try:
+        return int(match.group(1))
+    except ValueError:
+        raise LoadError(
+            f"Expecting an integer value for {key} in the FCIDUMP header, got {match.group(1)}.",
+            lit,
+        ) from None
 
 
 DUMP_ONE_NOTES = """
