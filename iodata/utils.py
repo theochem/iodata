@@ -18,6 +18,7 @@
 # --
 """Utility functions module."""
 
+from collections.abc import Sequence
 from io import TextIOBase
 from pathlib import Path
 from typing import TextIO
@@ -43,6 +44,8 @@ __all__ = (
     "WriteInputError",
     "check_dm",
     "derive_naturals",
+    "parse_fortran_float",
+    "parse_fortran_floats",
     "set_four_index_element",
     "strtobool",
     "volume",
@@ -395,6 +398,61 @@ STRTOBOOL = {
     "off": False,
     "0": False,
 }
+
+
+def _fix_fortran_float(word: str) -> str:
+    """Convert a floating point number written by Fortran code to a string Python can parse.
+
+    Fortran code may write ``D`` instead of ``E`` for the exponent,
+    or no letter at all when the exponent has three digits, e.g. ``1.234567-123``.
+    """
+    word = word.strip().replace("D", "E").replace("d", "e")
+    if "E" not in word and "e" not in word:
+        index = max(word.rfind("-"), word.rfind("+"))
+        # A sign at the start of the word is the sign of the number, not of an exponent.
+        if index > 0:
+            word = f"{word[:index]}E{word[index:]}"
+    return word
+
+
+def parse_fortran_float(word: str) -> float:
+    """Convert a word with a floating point number written by Fortran code to a float.
+
+    Parameters
+    ----------
+    word
+        A number such as ``1.5``, ``1.5D+03`` or ``1.234567-123``.
+
+    Raises
+    ------
+    ValueError
+        If the word is not a floating point number.
+
+    """
+    try:
+        return float(word)
+    except ValueError:
+        return float(_fix_fortran_float(word))
+
+
+def parse_fortran_floats(words: Sequence[str]) -> NDArray[float]:
+    """Convert words with floating point numbers written by Fortran code to an array.
+
+    Parameters
+    ----------
+    words
+        Numbers such as ``1.5``, ``1.5D+03`` or ``1.234567-123``.
+
+    Raises
+    ------
+    ValueError
+        If one of the words is not a floating point number.
+
+    """
+    try:
+        return np.array(words, float)
+    except ValueError:
+        return np.array([_fix_fortran_float(word) for word in words], float)
 
 
 def strtobool(value: str) -> bool:

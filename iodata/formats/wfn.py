@@ -45,7 +45,7 @@ from ..prepare import (
     prepare_single_line_title,
     prepare_unrestricted_aminusb,
 )
-from ..utils import DumpWarning, LineIterator, LoadError, PrepareDumpError
+from ..utils import DumpWarning, LineIterator, LoadError, PrepareDumpError, parse_fortran_float
 
 __all__ = ()
 
@@ -179,7 +179,8 @@ def _load_helper_section(
             raise LoadError(f"Expecting line to start with '{start}'.", lit)
         line = line[skip:]
         while len(line) >= step:
-            section.append(dtype(line[:step].replace("D", "E")))
+            word = line[:step]
+            section.append(parse_fortran_float(word) if dtype is float else dtype(word))
             line = line[step:]
     if len(section) != n:
         raise LoadError("Number of elements in section do not match 'n'.", lit)
