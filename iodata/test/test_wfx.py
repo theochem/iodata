@@ -30,6 +30,7 @@ from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
 from ..utils import LineIterator, LoadError, PrepareDumpError, PrepareDumpWarning
 from .common import (
+    check_dump_multiline_title,
     check_orthonormal,
     compare_mols,
     compute_mulliken_charges,
@@ -947,3 +948,9 @@ def test_generalized_orbitals():
     data = create_generalized_orbitals()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generalized.wfx")
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "wfx")

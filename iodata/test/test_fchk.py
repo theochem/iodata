@@ -30,6 +30,7 @@ from ..api import dump_one, load_many, load_one
 from ..overlap import compute_overlap
 from ..utils import PrepareDumpError, PrepareDumpWarning, check_dm
 from .common import (
+    check_dump_multiline_title,
     check_orthonormal,
     compare_mols,
     compute_1rdm,
@@ -906,3 +907,9 @@ def test_load_fchk_single_atom_optimization():
 
     # Check gradient (fallback should be zero if missing) (Copilot suggestion)
     assert_allclose(mol.atgradient, [[0.0, 0.0, 0.0]])
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("h2o_sto3g.fchk")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "fchk")

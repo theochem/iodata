@@ -24,6 +24,7 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
+from .common import check_dump_multiline_title
 
 
 def test_load_aelta():
@@ -125,3 +126,9 @@ def test_load_dump_nh3_7points(tmpdir):
         content1 = f.read().split("\n", 2)[-1]
     content2 = fn_cube2.read().split("\n", 2)[-1]
     assert content1 == content2
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("cubegen_h2o_5points.cube")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "cube")

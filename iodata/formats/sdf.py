@@ -42,6 +42,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
+from ..prepare import prepare_single_line_title
 from ..utils import LineIterator, LoadError, angstrom
 
 __all__ = ()
@@ -107,11 +108,35 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
         return
 
 
+def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
+    """Check the compatibility of the IOData object with the SDF format.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to be checked.
+    allow_changes
+        Whether conversion of the IOData object to a compatible form is allowed or not.
+    filename
+        The file to be written to, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given ``IOData`` object, or a copy with a title on a single line.
+
+    Raises
+    ------
+    PrepareDumpError
+        If the title has more than one line and ``allow_changes`` is False.
+    """
+    return prepare_single_line_title(data, allow_changes, filename, "SDF")
+
+
 @document_dump_one("SDF", ["atcoords", "atnums"], ["title", "bonds"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    # The title may have multiple lines, e.g. when loaded from a PDB file.
-    print(" ".join((data.title or "Created with IOData").splitlines()), file=f)
+    print(data.title or "Created with IOData", file=f)
     print("", file=f)
     print("", file=f)
     nbond = 0 if data.bonds is None else len(data.bonds)

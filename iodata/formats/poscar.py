@@ -29,6 +29,7 @@ import numpy as np
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..periodic import num2sym
+from ..prepare import prepare_single_line_title
 from ..utils import LineIterator, angstrom
 from .chgcar import _load_vasp_header
 
@@ -51,11 +52,35 @@ def load_one(lit: LineIterator) -> dict:
     }
 
 
+def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
+    """Check the compatibility of the IOData object with the VASP 5 POSCAR format.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to be checked.
+    allow_changes
+        Whether conversion of the IOData object to a compatible form is allowed or not.
+    filename
+        The file to be written to, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given ``IOData`` object, or a copy with a title on a single line.
+
+    Raises
+    ------
+    PrepareDumpError
+        If the title has more than one line and ``allow_changes`` is False.
+    """
+    return prepare_single_line_title(data, allow_changes, filename, "VASP 5 POSCAR")
+
+
 @document_dump_one("VASP 5 POSCAR", ["atcoords", "atnums", "cellvecs"], ["title"])
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
-    # The title may have multiple lines, e.g. when loaded from a PDB file.
-    print(" ".join((data.title or "Created with IOData").splitlines()), file=f)
+    print(data.title or "Created with IOData", file=f)
     print("   1.00000000000000", file=f)
 
     # Write cell vectors, each row is one vector in angstrom:
