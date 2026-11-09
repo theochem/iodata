@@ -27,7 +27,7 @@ from ..basis import MolecularBasis, Shell
 from ..convert import HORTON2_CONVENTIONS
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
-from ..utils import LineIterator, LoadError, angstrom
+from ..utils import LineIterator, LoadError, angstrom, triangle_to_dense
 
 __all__ = ()
 
@@ -225,31 +225,67 @@ def _load_helper_mo(lit: LineIterator, n_basis: int, n_mo: int) -> dict:
     return data
 
 
-def _load_helper_matrices(lit: LineIterator) -> dict:
-    """Read the sections after the orbitals, labelled '# Various matrices'.
+MATRIX_HEADER_PATTERN = re.compile(
+    r"^\$(?P<name>[^,]+), dim=(?P<nrow>[ \d]{5})(?P<ncol>[ \d]{5})\s+lower=\s*(?P<lower>\S+)\s*$"
+)
+"""Header of a matrix in the section '# Various matrices'.
 
-    Each section starts with a line such as ``$Overlap matrix, dim=  8  8  lower= 1``.
-    With ``lower= 1`` only the lower triangle is stored, one row after the other.
-    The sections do not have to be in a fixed order, and unknown ones are skipped.
+For example: ``$Overlap matrix, dim=    8    8  lower= 1``.
+The dimensions are two fixed-width fields of five characters,
+so they can touch each other, e.g. ``dim=1000010000`` for a matrix of 10000 by 10000.
+"""
+
+# The matrices that are loaded, the others are skipped.
+MATRIX_NAMES = {
+    "Overlap matrix": "olp",
+    "Alpha density matrix": "alpha",
+    "Beta density matrix": "beta",
+    "Total density matrix": "total",
+}
+
+
+def _load_helper_matrices(lit: LineIterator, nbasis: int) -> dict:
+    """Read the matrices after the orbitals, in the section '# Various matrices'.
+
+    Each matrix starts with a line such as ``$Overlap matrix, dim=    8    8  lower= 1``.
+    With ``lower= 1`` only the lower triangle is stored, one row after the other,
+    and with ``lower= 0`` the full matrix is stored.
+    The matrices do not have to be in a fixed order.
+    The ones that are not in ``MATRIX_NAMES`` are skipped.
+
+    Returns
+    -------
+    A dictionary with the values of ``MATRIX_NAMES`` as keys.
     """
     matrices = {}
     for line in lit:
-        match = re.match(r"\$(.+?),\s*dim=\s*(\d+)\s+(\d+)\s+lower=\s*(\d+)", line)
-        if match is None:
+        if not line.startswith("$") or ", dim=" not in line:
             continue
-        name = match.group(1).strip()
-        nrow, ncol, lower = int(match.group(2)), int(match.group(3)), int(match.group(4))
-        if lower:
-            if nrow != ncol:
-                raise LoadError(f"Section '{name}' stores a triangle of a non-square matrix.", lit)
+        key = MATRIX_NAMES.get(line[1:].split(", dim=")[0].strip())
+        if key is None:
+            continue
+        match = MATRIX_HEADER_PATTERN.match(line)
+        if match is None:
+            raise LoadError(f"Could not read the header of a matrix: '{line.strip()}'.", lit)
+        nrow, ncol = int(match["nrow"]), int(match["ncol"])
+        if (nrow, ncol) != (nbasis, nbasis):
+            raise LoadError(
+                f"The matrix '{match['name']}' has dimensions {nrow} by {ncol}, "
+                f"but there are {nbasis} basis functions.",
+                lit,
+            )
+        if match["lower"] == "1":
             values = _load_helper_section(lit, nrow * (nrow + 1) // 2, "", 0, float)
-            matrix = np.zeros((nrow, nrow))
-            matrix[np.tril_indices(nrow)] = values
-            matrix = matrix + matrix.T - np.diag(np.diag(matrix))
-        else:
+            matrices[key] = triangle_to_dense(values)
+        elif match["lower"] == "0":
             values = _load_helper_section(lit, nrow * ncol, "", 0, float)
-            matrix = values.reshape(nrow, ncol)
-        matrices[name] = matrix
+            matrices[key] = values.reshape(nrow, ncol)
+        else:
+            raise LoadError(
+                f"Expected 'lower= 0' or 'lower= 1' for the matrix '{match['name']}', "
+                f"got 'lower= {match['lower']}'.",
+                lit,
+            )
     return matrices
 
 
@@ -304,7 +340,7 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
     data.update(_load_helper_mo(lit, num_basis, num_mo))
 
     # load the optional matrices, which are in the sections that remain
-    data["matrices"] = _load_helper_matrices(lit)
+    data["matrices"] = _load_helper_matrices(lit, data["Nbasis"])
 
     return data
 
@@ -392,16 +428,28 @@ def load_one(lit: LineIterator) -> dict:
     # Matrices in the same basis functions and order as the orbital coefficients
     matrices = inp["matrices"]
     one_ints = {}
-    if "Overlap matrix" in matrices:
-        one_ints["olp"] = matrices["Overlap matrix"]
+    if "olp" in matrices:
+        one_ints["olp"] = matrices["olp"]
+    # The density matrix is an SCF density for the single-determinant wavefunctions
+    # (Wfntype 0, 1 and 2), and not for the multiconfiguration wavefunctions (3 and 4).
+    rdm_name = "scf" if inp["Wfntype"] in [0, 1, 2] else "post_scf"
     one_rdms = {}
-    if "Alpha density matrix" in matrices and "Beta density matrix" in matrices:
-        alpha = matrices["Alpha density matrix"]
-        beta = matrices["Beta density matrix"]
-        one_rdms["scf"] = alpha + beta
-        one_rdms["scf_spin"] = alpha - beta
-    elif "Total density matrix" in matrices:
-        one_rdms["scf"] = matrices["Total density matrix"]
+    if "alpha" in matrices or "beta" in matrices:
+        # One of the spin density matrices may be absent, e.g. when there are no
+        # electrons with that spin, as in the triplet state of helium.
+        for spin, nelec in [("alpha", inp["Naelec"]), ("beta", inp["Nbelec"])]:
+            if spin not in matrices:
+                if nelec != 0:
+                    raise LoadError(
+                        f"The {spin} density matrix is missing, but there are {nelec} "
+                        f"{spin} electrons.",
+                        lit.filename,
+                    )
+                matrices[spin] = np.zeros((obasis.nbasis, obasis.nbasis))
+        one_rdms[rdm_name] = matrices["alpha"] + matrices["beta"]
+        one_rdms[f"{rdm_name}_spin"] = matrices["alpha"] - matrices["beta"]
+    elif "total" in matrices:
+        one_rdms[rdm_name] = matrices["total"]
 
     return {
         "title": inp["title"],

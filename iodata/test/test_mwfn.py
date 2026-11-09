@@ -18,13 +18,18 @@
 # --
 """Test iodata.formats.mwfn module."""
 
+import os
+import re
 from importlib.resources import as_file, files
 
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_one
+from ..formats.mwfn import MATRIX_HEADER_PATTERN
 from ..overlap import compute_overlap
+from ..utils import LoadError
 
 
 def load_helper(fn):
@@ -325,3 +330,117 @@ def test_load_mwfn_matrices_he_spdfgh_total_density():
     # Only a total density matrix is in the file.
     assert "scf_spin" not in mol.one_rdms
     assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf"], olp), 2.0, atol=1e-6)
+
+
+def test_load_mwfn_matrices_full_storage():
+    # The same matrices as in the file with the lower triangles (lower= 1),
+    # but with the full matrices (lower= 0).
+    mol_triangle = load_helper("ch3_hf_sto3g_fchk_multiwfn3.7.mwfn")
+    mol_full = load_helper("ch3_hf_sto3g_full_matrices.mwfn")
+    assert_allclose(mol_full.one_ints["olp"], mol_triangle.one_ints["olp"], atol=1e-12)
+    for name in "scf", "scf_spin":
+        assert_allclose(mol_full.one_rdms[name], mol_triangle.one_rdms[name], atol=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("header", "name", "nrow", "ncol", "lower"),
+    [
+        ("$Overlap matrix, dim=    8    8  lower= 1", "Overlap matrix", 8, 8, "1"),
+        ("$Total density matrix, dim=   56   56  lower= 0", "Total density matrix", 56, 56, "0"),
+        ("$Overlap matrix, dim=    8    8  lower= 1\r\n", "Overlap matrix", 8, 8, "1"),
+        # The fields of five characters can touch each other.
+        ("$Overlap matrix, dim=1000010000  lower= 1", "Overlap matrix", 10000, 10000, "1"),
+        ("$Alpha density matrix, dim=99999    1  lower= 0", "Alpha density matrix", 99999, 1, "0"),
+        ("$Beta density matrix, dim=   10   10  lower= 2", "Beta density matrix", 10, 10, "2"),
+    ],
+)
+def test_matrix_header_pattern(header, name, nrow, ncol, lower):
+    match = MATRIX_HEADER_PATTERN.match(header)
+    assert match is not None
+    assert match["name"] == name
+    assert (int(match["nrow"]), int(match["ncol"])) == (nrow, ncol)
+    assert match["lower"] == lower
+
+
+@pytest.mark.parametrize(
+    "header",
+    [
+        "$Overlap matrix, dim=8 8 lower= 1",
+        "$Overlap matrix, dim=    8  lower= 1",
+        "$Overlap matrix, dim=    a    8  lower= 1",
+        "$Overlap matrix, dim=    8    8  lower=",
+        "$Overlap matrix, dim=    8    8",
+        "Overlap matrix, dim=    8    8  lower= 1",
+        "$Overlap matrix dim=    8    8  lower= 1",
+    ],
+)
+def test_matrix_header_pattern_no_match(header):
+    assert MATRIX_HEADER_PATTERN.match(header) is None
+
+
+def load_modified(tmpdir, fn, modify):
+    """Load a test file after a modification of its text."""
+    text = files("iodata.test.data").joinpath(fn).read_text(encoding="utf-8")
+    new_text = modify(text)
+    assert new_text != text
+    fn_tmp = os.path.join(tmpdir, "modified.mwfn")
+    with open(fn_tmp, "w", encoding="utf-8") as f:
+        f.write(new_text)
+    return load_one(fn_tmp)
+
+
+CH3 = "ch3_hf_sto3g_fchk_multiwfn3.7.mwfn"
+OVERLAP_HEADER = "$Overlap matrix, dim=    8    8  lower= 1"
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "match"),
+    [
+        (OVERLAP_HEADER, "$Overlap matrix, dim=    8    8  lower= 2", "lower= 2"),
+        (OVERLAP_HEADER, "$Overlap matrix, dim=    8    8  lower= x", "lower= x"),
+        (OVERLAP_HEADER, "$Overlap matrix, dim=    7    7  lower= 1", "basis functions"),
+        (OVERLAP_HEADER, "$Overlap matrix, dim=    8    9  lower= 1", "basis functions"),
+        (OVERLAP_HEADER, "$Overlap matrix, dim=8 8 lower= 1", "header"),
+    ],
+)
+def test_load_mwfn_matrices_errors(tmpdir, old, new, match):
+    with pytest.raises(LoadError, match=match):
+        load_modified(tmpdir, CH3, lambda text: text.replace(old, new))
+
+
+def test_load_mwfn_matrices_other_matrix_skipped(tmpdir):
+    # Matrices that are not loaded are skipped.
+    mol = load_helper(CH3)
+    mol_other = load_modified(
+        tmpdir,
+        CH3,
+        lambda text: text.replace(
+            OVERLAP_HEADER,
+            "$Hamiltonian matrix, dim=    8    8  lower= 1\nnot a number\n\n" + OVERLAP_HEADER,
+        ),
+    )
+    assert_allclose(mol_other.one_ints["olp"], mol.one_ints["olp"], atol=1e-12)
+    assert_allclose(mol_other.one_rdms["scf"], mol.one_rdms["scf"], atol=1e-12)
+
+
+def test_load_mwfn_matrices_no_beta(tmpdir):
+    # There are beta electrons, so the beta density matrix cannot be missing.
+    with pytest.raises(LoadError, match="beta density matrix is missing"):
+        load_modified(
+            tmpdir, CH3, lambda text: re.sub(r"\$Beta density matrix.*?\n\n", "", text, flags=re.S)
+        )
+
+
+def test_load_mwfn_matrices_multiconfiguration(tmpdir):
+    # Wfntype 0, 1 and 2 are single-determinant wavefunctions with an SCF density matrix.
+    mol = load_helper("he_spdfgh_virtual_fchk_multiwfn3.7.mwfn")
+    assert "scf" in mol.one_rdms
+    assert "post_scf" not in mol.one_rdms
+    # For Wfntype 3, the total density matrix is not an SCF density matrix.
+    mol_post = load_modified(
+        tmpdir,
+        "he_spdfgh_virtual_fchk_multiwfn3.7.mwfn",
+        lambda text: text.replace("Wfntype=   0", "Wfntype=   3"),
+    )
+    assert "scf" not in mol_post.one_rdms
+    assert_allclose(mol_post.one_rdms["post_scf"], mol.one_rdms["scf"], atol=1e-12)
