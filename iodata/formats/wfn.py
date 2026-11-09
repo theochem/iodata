@@ -659,6 +659,12 @@ def dump_one(f: TextIO, data: IOData) -> None:
     print(FMT_ENERGY.format(energy, data.extra.get("virial_ratio", np.nan)), file=f)
 
     # Write MOSPIN extension section (optional)
-    if data.extra.get("mo_spin") is not None:
+    # For unrestricted orbitals, it is always written, so the loader does not have to guess
+    # where the beta orbitals start. That guess relies on the orbital energies,
+    # which fails when they are not ordered as usual, e.g. when they are all zero.
+    mo_spin = data.extra.get("mo_spin")
+    if mo_spin is None and data.mo.kind == "unrestricted":
+        mo_spin = [1] * data.mo.norba + [2] * data.mo.norbb
+    if mo_spin is not None:
         print(" $MOSPIN $END\n\n", file=f)
-        _dump_helper_section(f, data.extra["mo_spin"], FMT_SPIN, 0, STEP_SPIN, 40)
+        _dump_helper_section(f, mo_spin, FMT_SPIN, 0, STEP_SPIN, 40)
