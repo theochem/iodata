@@ -28,7 +28,7 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_many, dump_one, load_many, load_one
 from ..iodata import IOData
 from ..utils import LoadError, PrepareDumpError, angstrom
-from .common import truncated_file
+from .common import check_dump_multiline_title, truncated_file
 
 
 def test_sdf_load_one_example():
@@ -162,6 +162,24 @@ def test_dump_too_large(natom, nbond, tmpdir):
         dump_one(mol, os.path.join(tmpdir, "large.sdf"))
 
 
+@pytest.mark.parametrize("coord", [10000.0, -10000.0, 123456.0])
+def test_dump_coordinate_too_large(coord, tmpdir):
+    # The coordinates have fields of ten characters with four decimals.
+    atcoords = np.array([[0.0, 0.0, 0.0], [0.0, coord * angstrom, 0.0]])
+    mol = IOData(atnums=np.array([6, 6]), atcoords=atcoords)
+    with pytest.raises(PrepareDumpError, match="coordinates"):
+        dump_one(mol, os.path.join(tmpdir, "far.sdf"))
+
+
+def test_dump_coordinate_largest(tmpdir):
+    atcoords = np.array([[0.0, 0.0, 0.0], [-9999.9999 * angstrom, 9999.9999 * angstrom, 0.0]])
+    mol0 = IOData(atnums=np.array([6, 6]), atcoords=atcoords)
+    fn_sdf = os.path.join(tmpdir, "largest.sdf")
+    dump_one(mol0, fn_sdf)
+    mol1 = load_one(fn_sdf)
+    assert_allclose(mol1.atcoords, atcoords, atol=1e-6)
+
+
 def test_load_many():
     with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_sdf:
         mols = list(load_many(str(fn_sdf)))
@@ -218,3 +236,9 @@ def test_sdf_load_one_whitespace(fn, tmpdir):
     assert_equal(mol_new.atnums, mol.atnums)
     assert_equal(mol_new.bonds, mol.bonds)
     assert_allclose(mol_new.atcoords, mol.atcoords)
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "sdf")

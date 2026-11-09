@@ -40,7 +40,11 @@ from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap, gob_cart_normalization
 from ..periodic import num2sym, sym2num
-from ..prepare import prepare_segmented, prepare_unrestricted_aminusb
+from ..prepare import (
+    prepare_segmented,
+    prepare_single_line_title,
+    prepare_unrestricted_aminusb,
+)
 from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, angstrom
 
 __all__ = ()
@@ -793,6 +797,7 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
         raise PrepareDumpError("The Molden format requires an orbital basis set.", filename)
     if data.mo.kind == "generalized":
         raise PrepareDumpError("Cannot write Molden file with generalized orbitals.", filename)
+    data = prepare_single_line_title(data, allow_changes, filename, "Molden")
     data = prepare_unrestricted_aminusb(data, allow_changes, filename, "Molden")
     return prepare_segmented(data, False, allow_changes, filename, "Molden")
 

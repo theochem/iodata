@@ -42,6 +42,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
+from ..prepare import prepare_single_line_title
 from ..utils import LineIterator, LoadError, PrepareDumpError, angstrom
 
 __all__ = ()
@@ -60,15 +61,19 @@ def _parse_counts(line: str, lit: LineIterator) -> tuple[int, int]:
         raise LoadError("Could not read the numbers of atoms and bonds.", lit) from exc
 
 
-def _parse_atom(line: str, lit: LineIterator) -> tuple[float, float, float, str]:
+def _parse_atom(line: str, lit: LineIterator) -> tuple[float, float, float, int]:
     """Parse an atom line, which has fixed-width fields."""
-    symbol = line[31:34].strip()
-    if symbol.title() not in sym2num:
-        raise LoadError(f"Unknown element symbol: '{symbol}'.", lit)
     try:
-        return float(line[0:10]), float(line[10:20]), float(line[20:30]), symbol
+        x = float(line[0:10])
+        y = float(line[10:20])
+        z = float(line[20:30])
     except ValueError as exc:
         raise LoadError("Could not read the coordinates of an atom.", lit) from exc
+    symbol = line[31:34].strip()
+    atnum = sym2num.get(symbol.title())
+    if atnum is None:
+        raise LoadError(f"Unknown element symbol: '{symbol}'.", lit)
+    return x, y, z, atnum
 
 
 def _parse_bond(line: str, lit: LineIterator) -> tuple[int, int, int]:
@@ -93,9 +98,9 @@ def load_one(lit: LineIterator) -> dict:
     atcoords = np.empty((natom, 3), float)
     atnums = np.empty(natom, int)
     for iatom in range(natom):
-        x, y, z, symbol = _parse_atom(next(lit), lit)
+        x, y, z, atnum = _parse_atom(next(lit), lit)
         atcoords[iatom] = np.array([x, y, z]) * angstrom
-        atnums[iatom] = sym2num[symbol.title()]
+        atnums[iatom] = atnum
     bonds = np.empty((nbond, 3), int)
     for ibond in range(nbond):
         iatom0, iatom1, bondtype = _parse_bond(next(lit), lit)
@@ -142,26 +147,32 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
         The IOData instance to be checked.
     allow_changes
         Whether conversion of the IOData object to a compatible form is allowed or not.
-        (not relevant for SDF, present for API consistency)
     filename
         The file to be written to, only used for error messages.
 
     Returns
     -------
     data
-        The given ``IOData`` object.
+        The given ``IOData`` object, or a copy with a title on a single line.
 
     Raises
     ------
     PrepareDumpError
-        If the molecule has more atoms or bonds than the three-digit fields of the
-        SDF V2000 format can hold.
+        If the title has more than one line and ``allow_changes`` is False,
+        if the molecule has more atoms or bonds than the three-digit fields of the
+        SDF V2000 format can hold, or if a coordinate does not fit in the fields
+        of ten characters (at most 9999.9999 Å in absolute value).
     """
     if data.natom > 999:
         raise PrepareDumpError("The SDF format supports at most 999 atoms.", filename)
     if data.bonds is not None and len(data.bonds) > 999:
         raise PrepareDumpError("The SDF format supports at most 999 bonds.", filename)
-    return data
+    if data.natom > 0 and abs(np.round(data.atcoords / angstrom, 4)).max() >= 1e4:
+        raise PrepareDumpError(
+            "The SDF format only supports coordinates below 9999.9999 Å in absolute value.",
+            filename,
+        )
+    return prepare_single_line_title(data, allow_changes, filename, "SDF")
 
 
 @document_dump_one("SDF", ["atcoords", "atnums"], ["title", "bonds"])

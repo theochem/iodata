@@ -26,6 +26,7 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
 from ..utils import angstrom, volume
+from .common import check_dump_multiline_title
 
 
 def test_load_poscar_water():
@@ -78,3 +79,9 @@ def test_load_dump_consistency(tmpdir):
     assert_allclose(mol0.atcoords[0], mol1.atcoords[1], atol=1.0e-10)
     assert_allclose(mol0.atcoords[2], mol1.atcoords[2], atol=1.0e-10)
     assert_allclose(mol0.cellvecs, mol1.cellvecs, atol=1.0e-10)
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("POSCAR.water")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "poscar")

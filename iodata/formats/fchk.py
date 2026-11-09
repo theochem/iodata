@@ -32,7 +32,7 @@ from ..convert import HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..prepare import prepare_segmented
+from ..prepare import prepare_segmented, prepare_single_line_title
 from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError, amu
 
 __all__ = ()
@@ -837,6 +837,7 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
                 "followed by fully virtual ones.",
                 filename,
             )
+    data = prepare_single_line_title(data, allow_changes, filename, "FCHK")
     return prepare_segmented(data, True, allow_changes, filename, "FCHK")
 
 
