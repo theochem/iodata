@@ -27,7 +27,7 @@ from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_many, dump_one, load_many, load_one
 from ..iodata import IOData
-from ..utils import LoadError, angstrom
+from ..utils import LoadError, PrepareDumpError, angstrom
 from .common import truncated_file
 
 
@@ -121,26 +121,45 @@ def test_fixed_width_fields_touching(tmpdir):
     assert_equal(mol1.bonds, bonds)
 
 
-def test_whitespace_separated_fields(tmpdir):
-    # Not all files follow the column layout, so lines that do not parse by column
-    # are split at whitespace instead.
+@pytest.mark.parametrize(
+    "sdf_text",
+    [
+        # The numbers in the counts line do not follow the column layout.
+        "loose\n\n\n2 1 0 0 0 0 0 0 0 0999 V2000\n",
+        # The coordinates of an atom are separated by single spaces only.
+        "loose\n\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n0.0 0.0 0.0 C\nM  END\n$$$$\n",
+        # Unknown element symbol.
+        (
+            "loose\n\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n"
+            "    0.0000    0.0000    0.0000 Xx  0  0  0  0  0  0  0  0  0  0  0  0\n"
+            "M  END\n$$$$\n"
+        ),
+        # The bond line does not follow the column layout.
+        (
+            "loose\n\n\n  2  1  0  0  0  0  0  0  0  0999 V2000\n"
+            "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n"
+            "    1.5000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n"
+            "1 2 2\nM  END\n$$$$\n"
+        ),
+    ],
+)
+def test_not_fixed_width(sdf_text, tmpdir):
+    # Fields are read by column, a file that does not follow the layout is rejected.
     fn_sdf = os.path.join(tmpdir, "loose.sdf")
-    sdf_text = """loose
-
-
-2 1 0 0 0 0 0 0 0 0999 V2000
-0.0 0.0 0.0 C
-1.5 -2.5 3.25 O
-1 2 2
-M  END
-$$$$
-"""
     with open(fn_sdf, "w") as f:
         f.write(sdf_text)
-    mol = load_one(fn_sdf)
-    assert_equal(mol.atnums, [6, 8])
-    assert_allclose(mol.atcoords, np.array([[0.0, 0.0, 0.0], [1.5, -2.5, 3.25]]) * angstrom)
-    assert_equal(mol.bonds, [[0, 1, 2]])
+    with pytest.raises(LoadError):
+        load_one(fn_sdf)
+
+
+@pytest.mark.parametrize(("natom", "nbond"), [(1000, 0), (3, 1000)])
+def test_dump_too_large(natom, nbond, tmpdir):
+    # The counts have three digits in the V2000 format.
+    atcoords = np.zeros((natom, 3))
+    bonds = np.array([[0, 1, 1]] * nbond) if nbond else None
+    mol = IOData(atnums=np.full(natom, 6), atcoords=atcoords, bonds=bonds)
+    with pytest.raises(PrepareDumpError):
+        dump_one(mol, os.path.join(tmpdir, "large.sdf"))
 
 
 def test_load_many():

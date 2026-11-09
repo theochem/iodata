@@ -42,7 +42,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
-from ..utils import LineIterator, LoadError, angstrom
+from ..utils import LineIterator, LoadError, PrepareDumpError, angstrom
 
 __all__ = ()
 
@@ -51,35 +51,32 @@ PATTERNS = ["*.sdf"]
 
 
 def _parse_counts(line: str, lit: LineIterator) -> tuple[int, int]:
-    """Parse the counts line, by column if possible."""
+    """Parse the counts line, which has fixed-width fields."""
     if line.rsplit(maxsplit=1)[-1].upper() != "V2000":
         raise LoadError("Only V2000 SDF files are supported.", lit)
     try:
         return int(line[0:3]), int(line[3:6])
-    except ValueError:
-        words = line.split()
-        return int(words[0]), int(words[1])
+    except ValueError as exc:
+        raise LoadError("Could not read the numbers of atoms and bonds.", lit) from exc
 
 
-def _parse_atom(line: str) -> tuple[float, float, float, str]:
-    """Parse an atom line, by column if possible."""
+def _parse_atom(line: str, lit: LineIterator) -> tuple[float, float, float, str]:
+    """Parse an atom line, which has fixed-width fields."""
     symbol = line[31:34].strip()
-    if symbol.title() in sym2num:
-        try:
-            return float(line[0:10]), float(line[10:20]), float(line[20:30]), symbol
-        except ValueError:
-            pass
-    words = line.split()
-    return float(words[0]), float(words[1]), float(words[2]), words[3]
+    if symbol.title() not in sym2num:
+        raise LoadError(f"Unknown element symbol: '{symbol}'.", lit)
+    try:
+        return float(line[0:10]), float(line[10:20]), float(line[20:30]), symbol
+    except ValueError as exc:
+        raise LoadError("Could not read the coordinates of an atom.", lit) from exc
 
 
-def _parse_bond(line: str) -> tuple[int, int, int]:
-    """Parse a bond line, by column if possible."""
+def _parse_bond(line: str, lit: LineIterator) -> tuple[int, int, int]:
+    """Parse a bond line, which has fixed-width fields."""
     try:
         return int(line[0:3]), int(line[3:6]), int(line[6:9])
-    except ValueError:
-        words = line.split()
-        return int(words[0]), int(words[1]), int(words[2])
+    except ValueError as exc:
+        raise LoadError("Could not read a bond.", lit) from exc
 
 
 @document_load_one("SDF", ["atcoords", "atnums", "bonds", "title"])
@@ -90,18 +87,18 @@ def load_one(lit: LineIterator) -> dict:
     next(lit)
     next(lit)
     # The V2000 format has fixed-width fields, which may touch each other, e.g. for
-    # molecules with 100 or more atoms. Each line is read by column first. Files that
-    # do not follow the column layout are read by splitting at whitespace instead.
+    # molecules with 100 or more atoms. They are read by column, not by splitting
+    # at whitespace.
     natom, nbond = _parse_counts(next(lit), lit)
     atcoords = np.empty((natom, 3), float)
     atnums = np.empty(natom, int)
     for iatom in range(natom):
-        x, y, z, symbol = _parse_atom(next(lit))
+        x, y, z, symbol = _parse_atom(next(lit), lit)
         atcoords[iatom] = np.array([x, y, z]) * angstrom
-        atnums[iatom] = sym2num.get(symbol.title())
+        atnums[iatom] = sym2num[symbol.title()]
     bonds = np.empty((nbond, 3), int)
     for ibond in range(nbond):
-        iatom0, iatom1, bondtype = _parse_bond(next(lit))
+        iatom0, iatom1, bondtype = _parse_bond(next(lit), lit)
         bonds[ibond, 0] = iatom0 - 1
         bonds[ibond, 1] = iatom1 - 1
         # Bond types 1 to 8 (inclusive) are defined in the SDF format.
@@ -134,6 +131,37 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             yield load_one(lit)
     except StopIteration:
         return
+
+
+def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
+    """Check the compatibility of the IOData object with the SDF format.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to be checked.
+    allow_changes
+        Whether conversion of the IOData object to a compatible form is allowed or not.
+        (not relevant for SDF, present for API consistency)
+    filename
+        The file to be written to, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given ``IOData`` object.
+
+    Raises
+    ------
+    PrepareDumpError
+        If the molecule has more atoms or bonds than the three-digit fields of the
+        SDF V2000 format can hold.
+    """
+    if data.natom > 999:
+        raise PrepareDumpError("The SDF format supports at most 999 atoms.", filename)
+    if data.bonds is not None and len(data.bonds) > 999:
+        raise PrepareDumpError("The SDF format supports at most 999 bonds.", filename)
+    return data
 
 
 @document_dump_one("SDF", ["atcoords", "atnums"], ["title", "bonds"])
