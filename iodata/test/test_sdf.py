@@ -175,3 +175,27 @@ def test_v2000_check():
         pytest.raises(LoadError),
     ):
         load_one(fn_sdf)
+
+
+@pytest.mark.parametrize("fn", ["example.sdf", "formamide.sdf"])
+def test_sdf_load_one_whitespace(fn, tmpdir):
+    with as_file(files("iodata.test.data").joinpath(fn)) as fn_sdf:
+        mol = load_one(fn_sdf)
+        with open(fn_sdf) as f:
+            lines = f.read().splitlines()
+    # No line break after the last line.
+    fn_new = os.path.join(tmpdir, "no_final_line_break.sdf")
+    with open(fn_new, "w") as f:
+        f.write("\n".join(lines))
+    mol_new = load_one(fn_new)
+    assert_equal(mol_new.atnums, mol.atnums)
+    assert_equal(mol_new.bonds, mol.bonds)
+    assert_allclose(mol_new.atcoords, mol.atcoords)
+    # Spaces at the end of every line.
+    fn_new = os.path.join(tmpdir, "trailing_spaces.sdf")
+    with open(fn_new, "w") as f:
+        f.write("".join(line + "  \n" for line in lines))
+    mol_new = load_one(fn_new)
+    assert_equal(mol_new.atnums, mol.atnums)
+    assert_equal(mol_new.bonds, mol.bonds)
+    assert_allclose(mol_new.atcoords, mol.atcoords)
