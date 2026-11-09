@@ -161,17 +161,20 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
         If the title has more than one line and ``allow_changes`` is False,
         if the molecule has more atoms or bonds than the three-digit fields of the
         SDF V2000 format can hold, or if a coordinate does not fit in the fields
-        of ten characters (at most 9999.9999 Å in absolute value).
+        of ten characters (from -9999.9999 Å to 99999.9999 Å).
     """
     if data.natom > 999:
         raise PrepareDumpError("The SDF format supports at most 999 atoms.", filename)
     if data.bonds is not None and len(data.bonds) > 999:
         raise PrepareDumpError("The SDF format supports at most 999 bonds.", filename)
-    if data.natom > 0 and abs(np.round(data.atcoords / angstrom, 4)).max() >= 1e4:
-        raise PrepareDumpError(
-            "The SDF format only supports coordinates below 9999.9999 Å in absolute value.",
-            filename,
-        )
+    if data.natom > 0:
+        # Round as in the dumper, so values just outside the range are also caught.
+        atcoords = np.round(data.atcoords / angstrom, 4)
+        if atcoords.min() <= -1e4 or atcoords.max() >= 1e5:
+            raise PrepareDumpError(
+                "The SDF format only supports coordinates from -9999.9999 Å to 99999.9999 Å.",
+                filename,
+            )
     return prepare_single_line_title(data, allow_changes, filename, "SDF")
 
 

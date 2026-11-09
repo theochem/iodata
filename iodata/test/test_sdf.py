@@ -162,7 +162,9 @@ def test_dump_too_large(natom, nbond, tmpdir):
         dump_one(mol, os.path.join(tmpdir, "large.sdf"))
 
 
-@pytest.mark.parametrize("coord", [10000.0, -10000.0, 123456.0])
+@pytest.mark.parametrize(
+    "coord", [100000.0, 99999.99996, 123456.0, -10000.0, -9999.99996, -123456.0]
+)
 def test_dump_coordinate_too_large(coord, tmpdir):
     # The coordinates have fields of ten characters with four decimals.
     atcoords = np.array([[0.0, 0.0, 0.0], [0.0, coord * angstrom, 0.0]])
@@ -172,7 +174,7 @@ def test_dump_coordinate_too_large(coord, tmpdir):
 
 
 def test_dump_coordinate_largest(tmpdir):
-    atcoords = np.array([[0.0, 0.0, 0.0], [-9999.9999 * angstrom, 9999.9999 * angstrom, 0.0]])
+    atcoords = np.array([[0.0, 0.0, 0.0], [-9999.9999 * angstrom, 99999.9999 * angstrom, 0.0]])
     mol0 = IOData(atnums=np.array([6, 6]), atcoords=atcoords)
     fn_sdf = os.path.join(tmpdir, "largest.sdf")
     dump_one(mol0, fn_sdf)
