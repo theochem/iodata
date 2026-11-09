@@ -183,8 +183,6 @@ def compute_overlap(
                 a1 = shell1.exponents[None, :]
                 at = a0 + a1
                 prefactor = np.exp(-a0 * a1 / at * rij_norm_sq)
-                # Pairs of primitives with a negligible overlap are skipped
-                prefactor = np.where(prefactor < 1e-15, 0.0, prefactor)
                 prefactor *= (np.pi / at) ** (3 / 2)
                 rn = (a0[:, :, None] * r0 + a1[:, :, None] * r1) / at[:, :, None]
                 rn_0 = rn - r0
@@ -253,8 +251,8 @@ class GaussianOverlap:
         All arguments can be arrays with shapes that broadcast to each other.
         The angular momenta ``n1`` and ``n2`` must be integers.
         """
-        n1 = np.asarray(n1)
-        n2 = np.asarray(n2)
+        n1 = np.asarray(n1, dtype=np.int64)
+        n2 = np.asarray(n2, dtype=np.int64)
         value = 0.0
         for i in range(int(n1.max()) + 1):
             # The binomial coefficient is zero when i > n1, which drops that term.

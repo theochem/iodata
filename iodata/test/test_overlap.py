@@ -170,13 +170,14 @@ def test_overlap_two_basis_different(fn0, fn1):
     assert_allclose(olp_a, olp_b, rtol=0, atol=1e-14)
 
 
-def test_gaussian_overlap_1d_broadcast():
+@pytest.mark.parametrize("same_centers", [True, False])
+def test_gaussian_overlap_1d_broadcast(same_centers):
     """The one-dimensional integrals for many angular momenta at once match a plain loop."""
     rng = np.random.default_rng(1)
     n_max = 5
     go = GaussianOverlap(n_max)
     x1 = rng.uniform(-2, 2, (3, 1, 1))
-    x2 = rng.uniform(-2, 2, (3, 1, 1))
+    x2 = x1.copy() if same_centers else rng.uniform(-2, 2, (3, 1, 1))
     two_at = rng.uniform(0.5, 4, (3, 1, 1))
     n1 = rng.integers(0, n_max + 1, (1, 4, 1))
     n2 = rng.integers(0, n_max + 1, (1, 1, 5))
