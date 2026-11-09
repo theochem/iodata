@@ -241,7 +241,8 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
 
 
 @document_load_one(
-    "WFX", ["atcoords", "atgradient", "atnums", "energy", "extra", "mo", "obasis", "title"]
+    "WFX",
+    ["atcoords", "atcorenums", "atgradient", "atnums", "energy", "extra", "mo", "obasis", "title"],
 )
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
@@ -470,9 +471,11 @@ def dump_one(f: TextIO, data: IOData):
     _write_xml_single(lbs["num_perturbations"], data.extra.get("num_perturbations", 0), file=f)
 
     # write nuclear names, atomic numbers, and nuclear charges
-    # add ghost atom, represented by Bq and atomic number 0
-    num2sym.update({0: "Bq"})
-    nuclear_names = [f" {num2sym[num]}{index + 1}" for index, num in enumerate(data.atcorenums)]
+    # The names are based on the atomic numbers, because the nuclear charges can differ
+    # from them, e.g. with ECPs or fractional core charges.
+    # A ghost atom is represented by Bq and atomic number 0.
+    symbols = {**num2sym, 0: "Bq"}
+    nuclear_names = [f" {symbols[num]}{index + 1}" for index, num in enumerate(data.atnums)]
     _write_xml_iterator(tag=lbs["nuclear_names"], info=nuclear_names, file=f)
     _write_xml_iterator(tag=lbs["atnums"], info=data.atnums, file=f)
     _write_xml_iterator_scientific(tag=lbs["nuclear_charge"], info=data.atcorenums, file=f)
@@ -547,7 +550,9 @@ def dump_one(f: TextIO, data: IOData):
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
     # write energy and virial ratio; use ' NAN' when None (not available)
-    _write_xml_single_scientific(tag=lbs["energy"], info=data.energy or np.nan, file=f)
+    # An energy of 0.0 is a valid value, only None means that it is not available.
+    energy = np.nan if data.energy is None else data.energy
+    _write_xml_single_scientific(tag=lbs["energy"], info=energy, file=f)
     _write_xml_single_scientific(lbs["virial_ratio"], data.extra.get("virial_ratio", np.nan), f)
 
     # write nuclear Cartesian energy gradients (optional)
