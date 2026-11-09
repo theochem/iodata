@@ -85,6 +85,22 @@ gaussian.wfn
         check_load_input_and_compare(fname, fname_expected)
 
 
+@pytest.mark.parametrize("fmt", ["gaussian", "orca"])
+def test_input_multiline_title(fmt, tmpdir):
+    # The title ends up on a single line in the input file
+    mol = IOData(
+        atcoords=np.array([[0.0, 0.0, 0.0], [angstrom, 0.0, 0.0]]),
+        atnums=np.array([1, 17]),
+        title="first line\nsecond line\n\nthird line",
+    )
+    fname = os.path.join(tmpdir, "input_multiline_title.inp")
+    write_input(mol, fname, fmt=fmt)
+    with open(fname) as f:
+        lines = f.read().splitlines()
+    assert sum("first line second line third line" in line for line in lines) == 1
+    assert not any(line.strip() in ("second line", "third line") for line in lines)
+
+
 def test_input_gaussian_from_iodata(tmpdir):
     # make an instance of IOData for HCl anion
     data = {

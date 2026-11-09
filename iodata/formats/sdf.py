@@ -42,6 +42,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
+from ..prepare import prepare_single_line_title
 from ..utils import LineIterator, LoadError, PrepareDumpError, angstrom
 
 __all__ = ()
@@ -142,26 +143,26 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
         The IOData instance to be checked.
     allow_changes
         Whether conversion of the IOData object to a compatible form is allowed or not.
-        (not relevant for SDF, present for API consistency)
     filename
         The file to be written to, only used for error messages.
 
     Returns
     -------
     data
-        The given ``IOData`` object.
+        The given ``IOData`` object, or a copy with a title on a single line.
 
     Raises
     ------
     PrepareDumpError
         If the molecule has more atoms or bonds than the three-digit fields of the
-        SDF V2000 format can hold.
+        SDF V2000 format can hold,
+        or if the title has more than one line and ``allow_changes`` is False.
     """
     if data.natom > 999:
         raise PrepareDumpError("The SDF format supports at most 999 atoms.", filename)
     if data.bonds is not None and len(data.bonds) > 999:
         raise PrepareDumpError("The SDF format supports at most 999 bonds.", filename)
-    return data
+    return prepare_single_line_title(data, allow_changes, filename, "SDF")
 
 
 @document_dump_one("SDF", ["atcoords", "atnums"], ["title", "bonds"])

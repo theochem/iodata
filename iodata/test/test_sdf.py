@@ -28,7 +28,7 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_many, dump_one, load_many, load_one
 from ..iodata import IOData
 from ..utils import LoadError, PrepareDumpError, angstrom
-from .common import truncated_file
+from .common import check_dump_multiline_title, truncated_file
 
 
 def test_sdf_load_one_example():
@@ -218,3 +218,9 @@ def test_sdf_load_one_whitespace(fn, tmpdir):
     assert_equal(mol_new.atnums, mol.atnums)
     assert_equal(mol_new.bonds, mol.bonds)
     assert_allclose(mol_new.atcoords, mol.atcoords)
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "sdf")

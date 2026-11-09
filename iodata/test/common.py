@@ -22,20 +22,22 @@ import os
 from contextlib import contextmanager
 from importlib.resources import as_file, files
 
+import attrs
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 from numpy.typing import NDArray
 
-from ..api import load_one
+from ..api import dump_one, load_one
 from ..basis import MolecularBasis, Shell
 from ..convert import convert_conventions
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap
-from ..utils import LoadWarning
+from ..utils import LoadWarning, PrepareDumpError, PrepareDumpWarning
 
 __all__ = (
+    "check_dump_multiline_title",
     "check_orthonormal",
     "compare_mols",
     "compute_1rdm",
@@ -44,6 +46,30 @@ __all__ = (
     "create_generalized_orbitals",
     "load_one_warning",
 )
+
+
+def check_dump_multiline_title(mol: IOData, tmpdir: str, fmt: str):
+    """Check that a title with several lines is refused or put on a single line.
+
+    Parameters
+    ----------
+    mol
+        An IOData instance that can be dumped in the given format.
+    tmpdir
+        The temporary directory to dump and load the file.
+    fmt
+        The name of the file format.
+
+    """
+    mol = attrs.evolve(mol, title="first line\nsecond line")
+    fn_tmp = os.path.join(tmpdir, f"multiline_title.{fmt}")
+    with pytest.raises(PrepareDumpError, match="title"):
+        dump_one(mol, fn_tmp, fmt=fmt)
+    with pytest.warns(PrepareDumpWarning, match="title"):
+        dump_one(mol, fn_tmp, fmt=fmt, allow_changes=True)
+    mol_loaded = load_one(fn_tmp, fmt=fmt)
+    assert mol_loaded.title.strip() == "first line second line"
+    assert mol_loaded.natom == mol.natom
 
 
 def compute_1rdm(iodata):

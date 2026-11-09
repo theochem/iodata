@@ -30,6 +30,7 @@ from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
 from ..utils import DumpWarning, LineIterator, PrepareDumpError, PrepareDumpWarning
 from .common import (
+    check_dump_multiline_title,
     check_orthonormal,
     compare_mols,
     compute_mulliken_charges,
@@ -398,3 +399,9 @@ def test_generalized_orbitals():
     data = create_generalized_orbitals()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generalized.wfn")
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("h2o_sto3g.wfn")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "wfn")
