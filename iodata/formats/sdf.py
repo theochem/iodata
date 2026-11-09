@@ -84,7 +84,8 @@ def load_one(lit: LineIterator) -> dict:
             words = next(lit)
         except StopIteration as exc:
             raise LoadError("Molecule specification did not end properly with $$$$.", lit) from exc
-        if words == "$$$$\n":
+        # The last line of the file may have no line break and lines may have trailing spaces.
+        if words.rstrip() == "$$$$":
             break
     return {
         "title": title,

@@ -54,8 +54,9 @@ def load_one(lit: LineIterator) -> dict:
             line = next(lit)
         except StopIteration:
             break
-        if len(line) > 1:
-            words = line.split()
+        words = line.split()
+        # Lines with only spaces are skipped, like empty lines
+        if words:
             if words[0] == "@<TRIPOS>MOLECULE":
                 # Found another molecule; go one line back and break
                 if molecule_found:
@@ -105,7 +106,8 @@ def _load_helper_atoms(
         atnums[i] = atnum
         attypes.append(words[5])
         atcoords[i] = [float(words[2]), float(words[3]), float(words[4])]
-        if len(words) == 9:
+        # The charge is the ninth field, optionally followed by a status bit.
+        if len(words) >= 9:
             atchgs[i] = float(words[8])
         else:
             atchgs[i] = 0.0000
