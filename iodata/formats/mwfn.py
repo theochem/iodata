@@ -335,19 +335,22 @@ def load_one(lit: LineIterator) -> dict:
         inp["mo_kind"], norba, norbb, inp["mo_occs"], inp["mo_coeffs"], inp["mo_energies"], None
     )
     # check number of electrons
-    if mo.nelec != inp["Naelec"] + inp["Nbelec"]:
+    # The occupation numbers are written with 6 decimals, so their sum may differ
+    # from Naelec and Nbelec by up to 0.5e-6 per orbital.
+    nelec_tol = 0.5e-6 * len(mo.occs)
+    if abs(mo.nelec - (inp["Naelec"] + inp["Nbelec"])) > nelec_tol:
         raise LoadError(
             f"Number of electrons in MolecularOrbitals ({mo.nelec}) is not equal to "
             f"the sum of 'Naelec' and 'Nbelec' ({inp['Naelec']} + {inp['Nbelec']}).",
             lit.filename,
         )
-    if mo.occsa.sum() != inp["Naelec"]:
+    if abs(mo.occsa.sum() - inp["Naelec"]) > nelec_tol:
         raise LoadError(
             f"Number of alpha electrons in MolecularOrbitals ({mo.occsa.sum()}) "
             f"is not equal to the 'Naelec' ({inp['Naelec']}).",
             lit.filename,
         )
-    if mo.occsb.sum() != inp["Nbelec"]:
+    if abs(mo.occsb.sum() - inp["Nbelec"]) > nelec_tol:
         raise LoadError(
             f"Number of beta electrons in MolecularOrbitals ({mo.occsb.sum()})"
             f"is not equal to the 'Nbelec' ({inp['Nbelec']}).",
