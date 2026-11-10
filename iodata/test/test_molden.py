@@ -44,6 +44,7 @@ from ..utils import (
     angstrom,
 )
 from .common import (
+    check_dump_multiline_title,
     check_orthonormal,
     compare_mols,
     compute_mulliken_charges,
@@ -646,3 +647,9 @@ def test_mixed_pure_cartesian(tmpdir):
     assert data.obasis.nbasis == data.mo.nbasis
     with open(os.path.join(tmpdir, "foo.molden"), "w") as fh, pytest.raises(DumpError):
         molden_dump_one(fh, data)
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("he2_ghost_psi4_1.0.molden")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "molden")

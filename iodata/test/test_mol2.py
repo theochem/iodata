@@ -27,7 +27,7 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_many, dump_one, load_many, load_one
 from ..periodic import bond2num
 from ..utils import LoadError, LoadWarning, angstrom
-from .common import truncated_file
+from .common import check_dump_multiline_title, truncated_file
 
 
 def test_mol2_load_one():
@@ -174,3 +174,9 @@ def test_load_charges_with_status_bits():
         mol = load_one(fn_mol)
     assert_equal(mol.atnums, [8, 1, 1])
     assert_allclose(mol.atcharges["mol2charges"], [-0.834, 0.417, 0.417])
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("benzene.mol2")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "mol2")

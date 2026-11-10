@@ -144,9 +144,8 @@ def compute_overlap(
     if not identical:
         n_max = max(n_max, *(np.max(shell.angmoms) for shell in obasis1.shells))
     go = GaussianOverlap(n_max)
-
-    # define a python ufunc (numpy function) for broadcasted calling over angular momentums
-    compute_overlap_1d = np.frompyfunc(go.compute_overlap_gaussian_1d, 5, 1)
+    # Powers of x, y and z of the Cartesian functions in a shell, for each angular momentum
+    cart_powers = [np.array(list(iter_cart_alphabet(n))) for n in range(n_max + 1)]
 
     # Loop over shell0
     begin0 = 0
@@ -174,37 +173,31 @@ def compute_overlap(
                 # START of Cartesian coordinates. Shell types are positive
 
                 # arrays of angular momentums [[2, 0, 0], [0, 2, 0], ..., [0, 1, 1]]
-                n0 = np.array(list(iter_cart_alphabet(shell0.angmoms[0])))
-                n1 = np.array(list(iter_cart_alphabet(shell1.angmoms[0])))
-                shell_overlap = np.zeros((n0.shape[0], n1.shape[0]))
+                n0 = cart_powers[shell0.angmoms[0]]
+                n1 = cart_powers[shell1.angmoms[0]]
 
-                # Loop over primitives in shell0 (Cartesian)
-                for shell_scales0, a0 in zip(scales0[i0], shell0.exponents, strict=True):
-                    a0_r0 = a0 * r0
-
-                    # Loop over primitives in shell1 (Cartesian)
-                    for shell_scales1, a1 in zip(scales1[i1], shell1.exponents, strict=True):
-                        at = a0 + a1
-                        prefactor = np.exp(-a0 * a1 / at * rij_norm_sq)
-                        if prefactor < 1e-15:
-                            continue
-                        # prepare some pre-factors to save FLOPS in inner loop
-                        two_at = 2 * at
-                        prefactor *= (np.pi / at) ** (3 / 2)
-                        rn = (a0_r0 + a1 * r1) / at
-                        rn_0 = rn - r0
-                        rn_1 = rn - r1
-
-                        # Note that frompyfunc-ed functions return arrays with
-                        # dtype=object. This is converted back to floats as
-                        # early as possible to improve performance of subsequent
-                        # array operations.
-                        vs = compute_overlap_1d(rn_0, rn_1, n0[:, None, :], n1[None, :, :], two_at)
-                        v = np.prod(vs.astype(float), axis=2)
-                        v *= prefactor
-                        v *= shell_scales0[:, None]
-                        v *= shell_scales1[None, :]
-                        shell_overlap += v
+                # All pairs of primitives (Cartesian) at once, with axes
+                # (primitive in shell0, primitive in shell1, Cartesian function
+                # in shell0, Cartesian function in shell1, x/y/z)
+                a0 = shell0.exponents[:, None]
+                a1 = shell1.exponents[None, :]
+                at = a0 + a1
+                prefactor = np.exp(-a0 * a1 / at * rij_norm_sq)
+                prefactor *= (np.pi / at) ** (3 / 2)
+                rn = (a0[:, :, None] * r0 + a1[:, :, None] * r1) / at[:, :, None]
+                rn_0 = rn - r0
+                rn_1 = rn - r1
+                vs = go.compute_overlap_gaussian_1d(
+                    rn_0[:, :, None, None, :],
+                    rn_1[:, :, None, None, :],
+                    n0[None, None, :, None, :],
+                    n1[None, None, None, :, :],
+                    2 * at[:, :, None, None, None],
+                )
+                v = np.prod(vs, axis=4) * prefactor[:, :, None, None]
+                v *= scales0[i0][:, None, :, None]
+                v *= scales1[i1][None, :, None, :]
+                shell_overlap = v.sum(axis=(0, 1))
 
                 # END of Cartesian coordinate system (if going to pure coordinates)
 
@@ -244,23 +237,32 @@ class GaussianOverlap:
             Maximum angular momentum.
 
         """
-        self.binomials = [
-            [scipy.special.binom(n, i) for i in range(n + 1)] for n in range(n_max + 1)
-        ]
+        # binomials[n, i] is zero when i > n
+        self.binomials = np.array(
+            [[scipy.special.binom(n, i) for i in range(n_max + 1)] for n in range(n_max + 1)]
+        )
         facts = [factorial2(m) for m in range(2 * n_max)]
         facts.insert(0, 1)
         self.facts = np.array(facts)
 
     def compute_overlap_gaussian_1d(self, x1, x2, n1, n2, two_at):
-        """Compute overlap integral of two Gaussian functions in one-dimensions."""
-        # compute overlap
-        value = 0
-        for i in range(n1 + 1):
-            pf_i = self.binomials[n1][i] * x1 ** (n1 - i)
-            for j in range(i % 2, n2 + 1, 2):
+        """Compute overlap integral of two Gaussian functions in one-dimensions.
+
+        All arguments can be arrays with shapes that broadcast to each other.
+        The angular momenta ``n1`` and ``n2`` must be integers.
+        """
+        n1 = np.asarray(n1, dtype=np.int64)
+        n2 = np.asarray(n2, dtype=np.int64)
+        value = 0.0
+        for i in range(int(n1.max()) + 1):
+            # The binomial coefficient is zero when i > n1, which drops that term.
+            # The power is limited to non-negative exponents to avoid dividing by zero.
+            pf_i = self.binomials[n1, i] * x1 ** np.maximum(n1 - i, 0)
+            for j in range(i % 2, int(n2.max()) + 1, 2):
                 m = i + j
-                integ = self.facts[m] / two_at ** (m / 2)  # TODO // 2
-                value += pf_i * self.binomials[n2][j] * x2 ** (n2 - j) * integ
+                integ = self.facts[m] / two_at ** (m / 2)
+                pf_j = self.binomials[n2, j] * x2 ** np.maximum(n2 - j, 0)
+                value = value + pf_i * pf_j * integ
         return value
 
 

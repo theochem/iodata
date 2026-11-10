@@ -32,13 +32,14 @@ from ..convert import HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..prepare import prepare_segmented
+from ..prepare import prepare_segmented, prepare_single_line_title
 from ..utils import (
     LineIterator,
     LoadError,
     LoadWarning,
     PrepareDumpError,
     amu,
+    parse_fortran_float,
     triangle_to_dense,
 )
 
@@ -561,10 +562,9 @@ def _convert_word(word: str, datatype: type, lit: LineIterator) -> int | float:
         The line iterator, only used for error reporting.
 
     """
-    # Some programs write Fortran-style exponents, which float() does not accept.
-    clean = word.replace("D", "E").replace("d", "e") if datatype is float else word
     try:
-        return datatype(clean)
+        # Some programs write Fortran-style exponents, which float() does not accept.
+        return parse_fortran_float(word) if datatype is float else datatype(word)
     except (ValueError, OverflowError) as exc:
         raise LoadError(f"Could not interpret as {datatype}: {word}", lit) from exc
 
@@ -818,6 +818,7 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
                 "followed by fully virtual ones.",
                 filename,
             )
+    data = prepare_single_line_title(data, allow_changes, filename, "FCHK")
     return prepare_segmented(data, True, allow_changes, filename, "FCHK")
 
 

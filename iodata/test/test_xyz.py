@@ -27,6 +27,7 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_many, dump_one, load_many, load_one
 from ..formats.xyz import DEFAULT_ATOM_COLUMNS
 from ..utils import angstrom
+from .common import check_dump_multiline_title
 
 
 def test_load_water_number():
@@ -182,3 +183,9 @@ def test_load_dump_many_consistency(tmpdir):
         assert mol0.title == mol1.title
         assert_equal(mol0.atnums, mol1.atnums)
         assert_allclose(mol0.atcoords, mol1.atcoords, atol=1.0e-5)
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("water_element.xyz")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "xyz")

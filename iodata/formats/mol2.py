@@ -37,6 +37,7 @@ from ..docstrings import (
 )
 from ..iodata import IOData
 from ..periodic import bond2num, num2bond, num2sym, sym2num
+from ..prepare import prepare_single_line_title
 from ..utils import LineIterator, LoadError, LoadWarning, angstrom
 
 __all__ = ()
@@ -153,6 +154,31 @@ def load_many(lit: LineIterator) -> Iterator[dict]:
             yield load_one(lit)
     except (StopIteration, LoadError):
         return
+
+
+def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
+    """Check the compatibility of the IOData object with the MOL2 format.
+
+    Parameters
+    ----------
+    data
+        The IOData instance to be checked.
+    allow_changes
+        Whether conversion of the IOData object to a compatible form is allowed or not.
+    filename
+        The file to be written to, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given ``IOData`` object, or a copy with a title on a single line.
+
+    Raises
+    ------
+    PrepareDumpError
+        If the title has more than one line and ``allow_changes`` is False.
+    """
+    return prepare_single_line_title(data, allow_changes, filename, "MOL2")
 
 
 @document_dump_one("MOL2", ["atcoords", "atnums"], ["atcharges", "atffparams", "title"])
