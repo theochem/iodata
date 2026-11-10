@@ -45,7 +45,15 @@ from ..prepare import (
     prepare_single_line_title,
     prepare_unrestricted_aminusb,
 )
-from ..utils import DumpError, LineIterator, LoadError, LoadWarning, PrepareDumpError, angstrom
+from ..utils import (
+    DumpError,
+    LineIterator,
+    LoadError,
+    LoadWarning,
+    PrepareDumpError,
+    angstrom,
+    parse_fortran_float,
+)
 
 __all__ = ()
 
@@ -279,8 +287,8 @@ def _load_helper_obasis(lit: LineIterator) -> MolecularBasis:
             coeffs = np.zeros((nexp, 1))
             for iprim in range(nexp):
                 words = next(lit).split()
-                exponents[iprim] = float(words[0].replace("D", "E"))
-                coeffs[iprim, 0] = float(words[1].replace("D", "E"))
+                exponents[iprim] = parse_fortran_float(words[0])
+                coeffs[iprim, 0] = parse_fortran_float(words[1])
             # Unless changed later, all shells are assumed to be Cartesian.
             shells.append(Shell(icenter, [angmom], ["c"], exponents, coeffs))
     return MolecularBasis(shells, CONVENTIONS, "L2")

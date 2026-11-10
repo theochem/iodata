@@ -33,7 +33,14 @@ from ..docstrings import document_dump_one, document_load_many, document_load_on
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..prepare import prepare_segmented, prepare_single_line_title
-from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError, amu
+from ..utils import (
+    LineIterator,
+    LoadError,
+    LoadWarning,
+    PrepareDumpError,
+    amu,
+    parse_fortran_float,
+)
 
 __all__ = ()
 
@@ -554,10 +561,9 @@ def _convert_word(word: str, datatype: type, lit: LineIterator) -> int | float:
         The line iterator, only used for error reporting.
 
     """
-    # Some programs write Fortran-style exponents, which float() does not accept.
-    clean = word.replace("D", "E").replace("d", "e") if datatype is float else word
     try:
-        return datatype(clean)
+        # Some programs write Fortran-style exponents, which float() does not accept.
+        return parse_fortran_float(word) if datatype is float else datatype(word)
     except (ValueError, OverflowError) as exc:
         raise LoadError(f"Could not interpret as {datatype}: {word}", lit) from exc
 
