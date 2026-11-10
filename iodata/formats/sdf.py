@@ -43,12 +43,45 @@ from ..docstrings import (
 from ..iodata import IOData
 from ..periodic import num2sym, sym2num
 from ..prepare import prepare_single_line_title
-from ..utils import LineIterator, LoadError, angstrom
+from ..utils import LineIterator, LoadError, PrepareDumpError, angstrom
 
 __all__ = ()
 
 
 PATTERNS = ["*.sdf"]
+
+
+def _parse_counts(line: str, lit: LineIterator) -> tuple[int, int]:
+    """Parse the counts line, which has fixed-width fields."""
+    if line.rsplit(maxsplit=1)[-1].upper() != "V2000":
+        raise LoadError("Only V2000 SDF files are supported.", lit)
+    try:
+        return int(line[0:3]), int(line[3:6])
+    except ValueError as exc:
+        raise LoadError("Could not read the numbers of atoms and bonds.", lit) from exc
+
+
+def _parse_atom(line: str, lit: LineIterator) -> tuple[float, float, float, int]:
+    """Parse an atom line, which has fixed-width fields."""
+    try:
+        x = float(line[0:10])
+        y = float(line[10:20])
+        z = float(line[20:30])
+    except ValueError as exc:
+        raise LoadError("Could not read the coordinates of an atom.", lit) from exc
+    symbol = line[31:34].strip()
+    atnum = sym2num.get(symbol.title())
+    if atnum is None:
+        raise LoadError(f"Unknown element symbol: '{symbol}'.", lit)
+    return x, y, z, atnum
+
+
+def _parse_bond(line: str, lit: LineIterator) -> tuple[int, int, int]:
+    """Parse a bond line, which has fixed-width fields."""
+    try:
+        return int(line[0:3]), int(line[3:6]), int(line[6:9])
+    except ValueError as exc:
+        raise LoadError("Could not read a bond.", lit) from exc
 
 
 @document_load_one("SDF", ["atcoords", "atnums", "bonds", "title"])
@@ -58,28 +91,25 @@ def load_one(lit: LineIterator) -> dict:
     # The next two lines are general comments
     next(lit)
     next(lit)
-    words = next(lit).split()
-    natom = int(words[0])
-    nbond = int(words[1])
-    if words[-1].upper() != "V2000":
-        raise LoadError("Only V2000 SDF files are supported.", lit)
+    # The V2000 format has fixed-width fields, which may touch each other, e.g. for
+    # molecules with 100 or more atoms. They are read by column, not by splitting
+    # at whitespace.
+    natom, nbond = _parse_counts(next(lit), lit)
     atcoords = np.empty((natom, 3), float)
     atnums = np.empty(natom, int)
     for iatom in range(natom):
-        words = next(lit).split()
-        atcoords[iatom, 0] = float(words[0]) * angstrom
-        atcoords[iatom, 1] = float(words[1]) * angstrom
-        atcoords[iatom, 2] = float(words[2]) * angstrom
-        atnums[iatom] = sym2num.get(words[3].title())
+        x, y, z, atnum = _parse_atom(next(lit), lit)
+        atcoords[iatom] = np.array([x, y, z]) * angstrom
+        atnums[iatom] = atnum
     bonds = np.empty((nbond, 3), int)
     for ibond in range(nbond):
-        words = next(lit).split()
-        bonds[ibond, 0] = int(words[0]) - 1
-        bonds[ibond, 1] = int(words[1]) - 1
+        iatom0, iatom1, bondtype = _parse_bond(next(lit), lit)
+        bonds[ibond, 0] = iatom0 - 1
+        bonds[ibond, 1] = iatom1 - 1
         # Bond types 1 to 8 (inclusive) are defined in the SDF format.
         # Anything outside that range is not modified, just not to lose any
         # information, but could be potentially meaningless.
-        bonds[ibond, 2] = int(words[2])
+        bonds[ibond, 2] = bondtype
     while True:
         try:
             words = next(lit)
@@ -128,8 +158,23 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
     Raises
     ------
     PrepareDumpError
-        If the title has more than one line and ``allow_changes`` is False.
+        If the title has more than one line and ``allow_changes`` is False,
+        if the molecule has more atoms or bonds than the three-digit fields of the
+        SDF V2000 format can hold, or if a coordinate does not fit in the fields
+        of ten characters (from -9999.9999 Å to 99999.9999 Å).
     """
+    if data.natom > 999:
+        raise PrepareDumpError("The SDF format supports at most 999 atoms.", filename)
+    if data.bonds is not None and len(data.bonds) > 999:
+        raise PrepareDumpError("The SDF format supports at most 999 bonds.", filename)
+    if data.natom > 0:
+        # Round as in the dumper, so values just outside the range are also caught.
+        atcoords = np.round(data.atcoords / angstrom, 4)
+        if atcoords.min() <= -1e4 or atcoords.max() >= 1e5:
+            raise PrepareDumpError(
+                "The SDF format only supports coordinates from -9999.9999 Å to 99999.9999 Å.",
+                filename,
+            )
     return prepare_single_line_title(data, allow_changes, filename, "SDF")
 
 

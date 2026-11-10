@@ -28,6 +28,7 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..formats.wfx import load_data_wfx, parse_wfx
 from ..overlap import compute_overlap
+from ..periodic import num2sym
 from ..utils import LineIterator, LoadError, PrepareDumpError, PrepareDumpWarning
 from .common import (
     check_dump_multiline_title,
@@ -103,6 +104,59 @@ def test_dump_default_title(tmpdir):
         assert f.readline() == "Created with IOData\n"
     mol2 = load_one(fn_tmp)
     assert mol2.title == "Created with IOData"
+
+
+def load_water():
+    with as_file(files("iodata.test.data").joinpath("water_sto3g_hf.wfx")) as file_name:
+        return load_one(str(file_name))
+
+
+def read_nuclear_names(fn_wfx):
+    with open(fn_wfx) as f:
+        lines = f.read().splitlines()
+    begin = lines.index("<Nuclear Names>")
+    end = lines.index("</Nuclear Names>")
+    return [line.strip() for line in lines[begin + 1 : end]]
+
+
+def test_dump_zero_energy(tmpdir):
+    # An energy of 0.0 is a valid value and must not be written as NaN.
+    mol = load_water()
+    mol.energy = 0.0
+    fn_tmp = os.path.join(tmpdir, "zero_energy.wfx")
+    dump_one(mol, fn_tmp)
+    assert load_one(fn_tmp).energy == 0.0
+
+
+def test_dump_keeps_num2sym(tmpdir):
+    # The dump function only reads the dictionary of the periodic module.
+    before = dict(num2sym)
+    dump_one(load_water(), os.path.join(tmpdir, "foo.wfx"))
+    assert dict(num2sym) == before
+    assert 0 not in num2sym
+
+
+@pytest.mark.parametrize("core_charge", [6.0, 6.5])
+def test_dump_nuclear_names_from_atnums(core_charge, tmpdir):
+    # The nuclear names follow the atomic numbers and not the nuclear charges,
+    # which are different with ECPs and can have fractions.
+    mol = load_water()
+    mol.atcorenums = np.array([core_charge, 1.0, 1.0])
+    fn_tmp = os.path.join(tmpdir, "core_charges.wfx")
+    dump_one(mol, fn_tmp)
+    assert read_nuclear_names(fn_tmp) == ["O1", "H2", "H3"]
+    mol_loaded = load_one(fn_tmp)
+    assert_equal(mol_loaded.atnums, [8, 1, 1])
+    assert_allclose(mol_loaded.atcorenums, [core_charge, 1.0, 1.0])
+
+
+def test_dump_nuclear_names_ghost_atom(tmpdir):
+    mol = load_water()
+    mol.atnums = np.array([8, 1, 0])
+    mol.atcorenums = np.array([8.0, 1.0, 0.0])
+    fn_tmp = os.path.join(tmpdir, "ghost.wfx")
+    dump_one(mol, fn_tmp)
+    assert read_nuclear_names(fn_tmp) == ["O1", "H2", "Bq3"]
 
 
 def test_load_dump_consistency_h2(tmpdir):
