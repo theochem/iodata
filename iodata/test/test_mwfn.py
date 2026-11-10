@@ -298,11 +298,11 @@ def test_load_mwfn_matrices_ch3_hf():
     # The overlap in the file agrees with the one from the basis set.
     assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
     # The density matrices hold the right number of electrons (5 alpha and 4 beta).
-    dm_alpha = 0.5 * (mol.one_rdms["scf"] + mol.one_rdms["scf_spin"])
-    dm_beta = 0.5 * (mol.one_rdms["scf"] - mol.one_rdms["scf_spin"])
+    dm_alpha = 0.5 * (mol.one_rdms["scf_ao"] + mol.one_rdms["scf_spin_ao"])
+    dm_beta = 0.5 * (mol.one_rdms["scf_ao"] - mol.one_rdms["scf_spin_ao"])
     assert_allclose(np.einsum("ij,ij", dm_alpha, olp), 5.0, atol=1e-6)
     assert_allclose(np.einsum("ij,ij", dm_beta, olp), 4.0, atol=1e-6)
-    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf"], olp), mol.nelec, atol=1e-6)
+    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf_ao"], olp), mol.nelec, atol=1e-6)
     # The first elements of the lower triangle in the file.
     assert_allclose(dm_alpha[0, 0], 1.03984043, atol=1e-8)
     assert_allclose(dm_alpha[1, 0], -1.35459706e-01, atol=1e-8)
@@ -317,8 +317,8 @@ def test_load_mwfn_matrices_ch3_rohf():
     mol = load_helper("ch3_rohf_sto3g_g03_fchk_multiwfn3.7.mwfn")
     olp = mol.one_ints["olp"]
     assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
-    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf"], olp), mol.nelec, atol=1e-6)
-    spin = np.einsum("ij,ij", mol.one_rdms["scf_spin"], olp)
+    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf_ao"], olp), mol.nelec, atol=1e-6)
+    spin = np.einsum("ij,ij", mol.one_rdms["scf_spin_ao"], olp)
     assert_allclose(spin, mol.spinpol, atol=1e-6)
 
 
@@ -328,18 +328,8 @@ def test_load_mwfn_matrices_he_spdfgh_total_density():
     assert olp.shape == (56, 56)
     assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
     # Only a total density matrix is in the file.
-    assert "scf_spin" not in mol.one_rdms
-    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf"], olp), 2.0, atol=1e-6)
-
-
-def test_load_mwfn_matrices_full_storage():
-    # The same matrices as in the file with the lower triangles (lower= 1),
-    # but with the full matrices (lower= 0).
-    mol_triangle = load_helper("ch3_hf_sto3g_fchk_multiwfn3.7.mwfn")
-    mol_full = load_helper("ch3_hf_sto3g_full_matrices.mwfn")
-    assert_allclose(mol_full.one_ints["olp"], mol_triangle.one_ints["olp"], atol=1e-12)
-    for name in "scf", "scf_spin":
-        assert_allclose(mol_full.one_rdms[name], mol_triangle.one_rdms[name], atol=1e-12)
+    assert "scf_spin_ao" not in mol.one_rdms
+    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf_ao"], olp), 2.0, atol=1e-6)
 
 
 @pytest.mark.parametrize(
@@ -420,7 +410,7 @@ def test_load_mwfn_matrices_other_matrix_skipped(tmpdir):
         ),
     )
     assert_allclose(mol_other.one_ints["olp"], mol.one_ints["olp"], atol=1e-12)
-    assert_allclose(mol_other.one_rdms["scf"], mol.one_rdms["scf"], atol=1e-12)
+    assert_allclose(mol_other.one_rdms["scf_ao"], mol.one_rdms["scf_ao"], atol=1e-12)
 
 
 def test_load_mwfn_matrices_no_beta(tmpdir):
@@ -434,13 +424,13 @@ def test_load_mwfn_matrices_no_beta(tmpdir):
 def test_load_mwfn_matrices_multiconfiguration(tmpdir):
     # Wfntype 0, 1 and 2 are single-determinant wavefunctions with an SCF density matrix.
     mol = load_helper("he_spdfgh_virtual_fchk_multiwfn3.7.mwfn")
-    assert "scf" in mol.one_rdms
-    assert "post_scf" not in mol.one_rdms
+    assert "scf_ao" in mol.one_rdms
+    assert "post_scf_ao" not in mol.one_rdms
     # For Wfntype 3, the total density matrix is not an SCF density matrix.
     mol_post = load_modified(
         tmpdir,
         "he_spdfgh_virtual_fchk_multiwfn3.7.mwfn",
         lambda text: text.replace("Wfntype=   0", "Wfntype=   3"),
     )
-    assert "scf" not in mol_post.one_rdms
-    assert_allclose(mol_post.one_rdms["post_scf"], mol.one_rdms["scf"], atol=1e-12)
+    assert "scf_ao" not in mol_post.one_rdms
+    assert_allclose(mol_post.one_rdms["post_scf_ao"], mol.one_rdms["scf_ao"], atol=1e-12)

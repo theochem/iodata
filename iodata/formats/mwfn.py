@@ -432,7 +432,10 @@ def load_one(lit: LineIterator) -> dict:
         one_ints["olp"] = matrices["olp"]
     # The density matrix is an SCF density for the single-determinant wavefunctions
     # (Wfntype 0, 1 and 2), and not for the multiconfiguration wavefunctions (3 and 4).
-    rdm_name = "scf" if inp["Wfntype"] in [0, 1, 2] else "post_scf"
+    # The names have the suffix _ao, because the matrices are in the atomic-orbital basis.
+    scf_kind = "scf" if inp["Wfntype"] in [0, 1, 2] else "post_scf"
+    rdm_name = f"{scf_kind}_ao"
+    rdm_spin_name = f"{scf_kind}_spin_ao"
     one_rdms = {}
     if "alpha" in matrices or "beta" in matrices:
         # One of the spin density matrices may be absent, e.g. when there are no
@@ -447,7 +450,7 @@ def load_one(lit: LineIterator) -> dict:
                     )
                 matrices[spin] = np.zeros((obasis.nbasis, obasis.nbasis))
         one_rdms[rdm_name] = matrices["alpha"] + matrices["beta"]
-        one_rdms[f"{rdm_name}_spin"] = matrices["alpha"] - matrices["beta"]
+        one_rdms[rdm_spin_name] = matrices["alpha"] - matrices["beta"]
     elif "total" in matrices:
         one_rdms[rdm_name] = matrices["total"]
 
