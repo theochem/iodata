@@ -18,11 +18,9 @@
 # --
 """Unit tests for iodata.utils."""
 
-import numpy as np
 import pytest
-from numpy.testing import assert_equal
 
-from ..utils import amu, parse_fortran_float, parse_fortran_floats, strtobool
+from ..utils import amu, parse_fortran_float, strtobool
 
 
 @pytest.mark.parametrize(
@@ -58,23 +56,6 @@ def test_parse_fortran_float(word, expected):
 def test_parse_fortran_float_error(word):
     with pytest.raises(ValueError):
         parse_fortran_float(word)
-
-
-def test_parse_fortran_floats():
-    # No Fortran numbers
-    assert_equal(parse_fortran_floats(["1.5", "-2", "3e-4"]), [1.5, -2.0, 3e-4])
-    # Some Fortran numbers
-    assert_equal(
-        parse_fortran_floats(["1.5D+03", "-2", "3.0-123", " -4.5 "]),
-        [1500.0, -2.0, 3.0e-123, -4.5],
-    )
-    assert parse_fortran_floats([]).shape == (0,)
-    assert parse_fortran_floats(["1.0D0"]).dtype == np.float64
-
-
-def test_parse_fortran_floats_error():
-    with pytest.raises(ValueError):
-        parse_fortran_floats(["1.5", "nope"])
 
 
 def test_amu():

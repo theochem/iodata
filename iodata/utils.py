@@ -18,7 +18,6 @@
 # --
 """Utility functions module."""
 
-from collections.abc import Sequence
 from io import TextIOBase
 from pathlib import Path
 from typing import TextIO
@@ -45,7 +44,6 @@ __all__ = (
     "check_dm",
     "derive_naturals",
     "parse_fortran_float",
-    "parse_fortran_floats",
     "set_four_index_element",
     "strtobool",
     "volume",
@@ -433,26 +431,6 @@ def parse_fortran_float(word: str) -> float:
         return float(word)
     except ValueError:
         return float(_fix_fortran_float(word))
-
-
-def parse_fortran_floats(words: Sequence[str]) -> NDArray[float]:
-    """Convert words with floating point numbers written by Fortran code to an array.
-
-    Parameters
-    ----------
-    words
-        Numbers such as ``1.5``, ``1.5D+03`` or ``1.234567-123``.
-
-    Raises
-    ------
-    ValueError
-        If one of the words is not a floating point number.
-
-    """
-    try:
-        return np.array(words, float)
-    except ValueError:
-        return np.array([_fix_fortran_float(word) for word in words], float)
 
 
 def strtobool(value: str) -> bool:
