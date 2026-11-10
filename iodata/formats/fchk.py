@@ -40,6 +40,7 @@ from ..utils import (
     PrepareDumpError,
     amu,
     parse_fortran_float,
+    triangle_to_dense,
 )
 
 __all__ = ()
@@ -177,7 +178,7 @@ def load_one(lit: LineIterator) -> dict:
         result["atgradient"] = atgradient.reshape(-1, 3)
     athessian = fchk.get("Cartesian Force Constants")
     if athessian is not None:
-        result["athessian"] = _triangle_to_dense(athessian)
+        result["athessian"] = triangle_to_dense(athessian)
     atfrozen = fchk.get("MicOpt")
     if atfrozen is not None:
         result["atfrozen"] = atfrozen == -2
@@ -282,7 +283,7 @@ def load_one(lit: LineIterator) -> dict:
 
     # E) Load properties
     if "Polarizability" in fchk:
-        result["extra"] = {"polarizability_tensor": _triangle_to_dense(fchk["Polarizability"])}
+        result["extra"] = {"polarizability_tensor": triangle_to_dense(fchk["Polarizability"])}
     moments = {}
     if "Dipole Moment" in fchk:
         moments[(1, "c")] = fchk["Dipole Moment"]
@@ -732,33 +733,7 @@ def _load_dm(label: str, fchk: dict, result: dict, key: str):
 
     """
     if label in fchk:
-        result[key] = _triangle_to_dense(fchk[label])
-
-
-def _triangle_to_dense(triangle: NDArray[float]) -> NDArray[float]:
-    """Convert a symmetric matrix in triangular storage to a dense square matrix.
-
-    Parameters
-    ----------
-    triangle
-        A row vector containing all the unique matrix elements of symmetric
-        matrix. (Either the lower-triangular part in row major-order or the
-        upper-triangular part in column-major order.)
-
-    Returns
-    -------
-    A square symmetric matrix.
-
-    """
-    nrow = int(np.round((np.sqrt(1 + 8 * len(triangle)) - 1) / 2))
-    result = np.zeros((nrow, nrow))
-    begin = 0
-    for irow in range(nrow):
-        end = begin + irow + 1
-        result[irow, : irow + 1] = triangle[begin:end]
-        result[: irow + 1, irow] = triangle[begin:end]
-        begin = end
-    return result
+        result[key] = triangle_to_dense(fchk[label])
 
 
 # The fchk file has a very rigid format, to dump the information are
