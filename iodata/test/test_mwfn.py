@@ -413,6 +413,20 @@ def test_load_mwfn_matrices_other_matrix_skipped(tmpdir):
     assert_allclose(mol_other.one_rdms["scf_ao"], mol.one_rdms["scf_ao"], atol=1e-12)
 
 
+def test_load_mwfn_electron_count_rounding(tmpdir):
+    # The occupation numbers have six decimals, so their sum is not exactly the number
+    # of electrons in the file, e.g. for natural orbitals.
+    mol = load_modified(
+        tmpdir, CH3, lambda text: text.replace("Occ=  1.000000", "Occ=  1.000001", 1)
+    )
+    assert_allclose(mol.mo.occs[0], 1.000001, atol=1e-12)
+
+
+def test_load_mwfn_electron_count_error(tmpdir):
+    with pytest.raises(LoadError, match="electrons"):
+        load_modified(tmpdir, CH3, lambda text: text.replace("Occ=  1.000000", "Occ=  1.001000", 1))
+
+
 def test_load_mwfn_matrices_no_beta(tmpdir):
     # There are beta electrons, so the beta density matrix cannot be missing.
     with pytest.raises(LoadError, match="beta density matrix is missing"):

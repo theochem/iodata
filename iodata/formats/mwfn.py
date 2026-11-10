@@ -289,6 +289,16 @@ def _load_helper_matrices(lit: LineIterator, nbasis: int) -> dict:
     return matrices
 
 
+def _is_electron_count_close(nelec_orbitals: float, nelec_file: float, norb: int) -> bool:
+    """Compare a number of electrons from the occupation numbers with the one in the file.
+
+    The occupation numbers and the numbers of electrons are written with six decimals,
+    so every number has a rounding error of at most 5e-7 and the error of a sum grows
+    with the number of orbitals. The sum can therefore not be compared exactly.
+    """
+    return abs(nelec_orbitals - nelec_file) <= 1e-6 * (norb + 1)
+
+
 def _load_mwfn_low(lit: LineIterator) -> dict:
     """Load data from a MWFN file into arrays.
 
@@ -406,21 +416,21 @@ def load_one(lit: LineIterator) -> dict:
         inp["mo_kind"], norba, norbb, inp["mo_occs"], inp["mo_coeffs"], inp["mo_energies"], None
     )
     # check number of electrons
-    if mo.nelec != inp["Naelec"] + inp["Nbelec"]:
+    if not _is_electron_count_close(mo.nelec, inp["Naelec"] + inp["Nbelec"], norba + norbb):
         raise LoadError(
             f"Number of electrons in MolecularOrbitals ({mo.nelec}) is not equal to "
             f"the sum of 'Naelec' and 'Nbelec' ({inp['Naelec']} + {inp['Nbelec']}).",
             lit.filename,
         )
-    if mo.occsa.sum() != inp["Naelec"]:
+    if not _is_electron_count_close(mo.occsa.sum(), inp["Naelec"], norba):
         raise LoadError(
             f"Number of alpha electrons in MolecularOrbitals ({mo.occsa.sum()}) "
             f"is not equal to the 'Naelec' ({inp['Naelec']}).",
             lit.filename,
         )
-    if mo.occsb.sum() != inp["Nbelec"]:
+    if not _is_electron_count_close(mo.occsb.sum(), inp["Nbelec"], norbb):
         raise LoadError(
-            f"Number of beta electrons in MolecularOrbitals ({mo.occsb.sum()})"
+            f"Number of beta electrons in MolecularOrbitals ({mo.occsb.sum()}) "
             f"is not equal to the 'Nbelec' ({inp['Nbelec']}).",
             lit.filename,
         )
