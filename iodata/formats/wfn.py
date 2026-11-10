@@ -645,7 +645,9 @@ def dump_one(f: TextIO, data: IOData) -> None:
     _dump_helper_section(f, expns, FMT_EXPN, 10, STEP_EXPN, 5)
 
     # Write MOs (mo #, occ #, energy)
-    mo_iter = enumerate(zip(data.mo.occs, data.mo.energies, mo_coeffs.transpose(), strict=True))
+    # The WFN format always has an orbital energy, so zeros are written when they are not known.
+    mo_energies = np.zeros(data.mo.norb) if data.mo.energies is None else data.mo.energies
+    mo_iter = enumerate(zip(data.mo.occs, mo_energies, mo_coeffs.transpose(), strict=True))
     for iorb, (occ, energy, coeffs) in mo_iter:
         print(FMT_MOS.format(iorb + 1, 0, occ, energy), file=f)
         # Write ``iorb``th coefficients section
@@ -653,9 +655,17 @@ def dump_one(f: TextIO, data: IOData) -> None:
 
     # Write energy and virial coefficient
     print("END DATA", file=f)
-    print(FMT_ENERGY.format(data.energy or np.nan, data.extra.get("virial_ratio", np.nan)), file=f)
+    # An energy of 0.0 is a valid value, only None means that it is not known.
+    energy = np.nan if data.energy is None else data.energy
+    print(FMT_ENERGY.format(energy, data.extra.get("virial_ratio", np.nan)), file=f)
 
     # Write MOSPIN extension section (optional)
-    if data.extra.get("mo_spin") is not None:
+    # For unrestricted orbitals, it is always written, so the loader does not have to guess
+    # where the beta orbitals start. That guess relies on the orbital energies,
+    # which fails when they are not ordered as usual, e.g. when they are all zero.
+    mo_spin = data.extra.get("mo_spin")
+    if mo_spin is None and data.mo.kind == "unrestricted":
+        mo_spin = [1] * data.mo.norba + [2] * data.mo.norbb
+    if mo_spin is not None:
         print(" $MOSPIN $END\n\n", file=f)
-        _dump_helper_section(f, data.extra["mo_spin"], FMT_SPIN, 0, STEP_SPIN, 40)
+        _dump_helper_section(f, mo_spin, FMT_SPIN, 0, STEP_SPIN, 40)

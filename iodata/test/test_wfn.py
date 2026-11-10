@@ -21,6 +21,7 @@
 import os
 from importlib.resources import as_file, files
 
+import attrs
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
@@ -366,6 +367,41 @@ def check_load_dump_consistency(fn: str, tmpdir: str, atol: float = 1.0e-6, allo
 )
 def test_load_dump_consistency(path, tmpdir):
     check_load_dump_consistency(path, tmpdir)
+
+
+def test_dump_zero_energy(tmpdir):
+    # An energy of 0.0 is a valid value and must not be written as NaN.
+    with as_file(files("iodata.test.data").joinpath("h2o_sto3g.wfn")) as fn_wfn:
+        mol = load_one(fn_wfn)
+    fn_tmp = os.path.join(tmpdir, "zero_energy.wfn")
+    dump_one(attrs.evolve(mol, energy=0.0), fn_tmp)
+    assert load_one(fn_tmp).energy == 0.0
+
+
+@pytest.mark.parametrize("path", ["h2o_sto3g.wfn", "lih_cation_uhf.wfn", "o2_uhf.wfn"])
+def test_dump_no_orbital_energies(path, tmpdir):
+    # The WFN format has an orbital energy for every orbital, zeros are written when
+    # they are not known, e.g. for natural orbitals.
+    # For unrestricted orbitals, the MOSPIN section tells the loader where the beta
+    # orbitals start, which cannot be guessed from orbital energies that are all zero.
+    with as_file(files("iodata.test.data").joinpath(path)) as fn_wfn:
+        mol = load_one(fn_wfn)
+    assert mol.mo.energies is not None
+    assert "mo_spin" not in mol.extra
+    mol_no_energies = attrs.evolve(mol, mo=attrs.evolve(mol.mo, energies=None))
+    fn_tmp = os.path.join(tmpdir, "no_orbital_energies.wfn")
+    dump_one(mol_no_energies, fn_tmp)
+    mol_loaded = load_one(fn_tmp)
+    assert mol_loaded.mo.kind == mol.mo.kind
+    assert mol_loaded.mo.norba == mol.mo.norba
+    assert mol_loaded.mo.norbb == mol.mo.norbb
+    assert_equal(mol_loaded.mo.energies, np.zeros(mol.mo.norb))
+    assert_allclose(mol_loaded.mo.occs, mol.mo.occs, atol=1e-6)
+    assert_allclose(mol_loaded.mo.coeffs, mol.mo.coeffs, atol=1e-6)
+    if mol.mo.kind == "unrestricted":
+        assert_equal(mol_loaded.extra["mo_spin"], [1] * mol.mo.norba + [2] * mol.mo.norbb)
+    else:
+        assert "mo_spin" not in mol_loaded.extra
 
 
 def test_load_dump_consistency_from_fchk_h2o(tmpdir):
