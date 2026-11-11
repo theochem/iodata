@@ -297,23 +297,30 @@ def _permutation_matrix(permutation: list[int], signs: list[int]) -> NDArray[flo
     return result
 
 
-def convert_to_cartesian(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse.csr_array]:
+def convert_to_cartesian(
+    obasis: MolecularBasis, new_conventions: dict[tuple[int, str], list[str]]
+) -> tuple[MolecularBasis, sparse.csr_array]:
     """Convert a basis set with pure functions to one with only Cartesian functions.
 
     This is needed for file formats that do not support pure functions, such as WFN and WFX.
     The new basis spans the same space as the old one, so no information is lost.
+    The Cartesian functions are ordered following the conventions of the destination format,
+    so the Cartesian functions that were already in the basis may be reordered too.
 
     Parameters
     ----------
     obasis
         The basis set to convert.
+    new_conventions
+        The conventions of the destination format.
+        It must have a Cartesian convention for every angular momentum in the basis set.
+        There are no defaults for missing conventions.
 
     Returns
     -------
     obasis_cart
-        A new ``MolecularBasis`` instance in which all shells are Cartesian.
-        If the old conventions do not define the ordering of some Cartesian functions,
-        the alphabetical ordering of ``HORTON2_CONVENTIONS`` is added to the new conventions.
+        A new ``MolecularBasis`` instance in which all shells are Cartesian,
+        with ``new_conventions`` as its conventions.
     transform
         A sparse matrix with shape ``(obasis_cart.nbasis, obasis.nbasis)``.
         The coefficients of a function in the old basis, ``coeffs``, become ``transform @ coeffs``
@@ -324,16 +331,27 @@ def convert_to_cartesian(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse
     Raises
     ------
     ValueError
-        If the basis has pure shells and the primitives are not L2 normalized.
+        If ``new_conventions`` has no Cartesian convention for an angular momentum
+        of the basis set,
+        or if the basis has pure shells and the primitives are not L2 normalized.
     """
-    conventions = dict(obasis.conventions)
     shells = []
     blocks = []
     for shell in obasis.shells:
         for angmom, kind in zip(shell.angmoms, shell.kinds, strict=True):
-            cart_names = conventions.setdefault((angmom, "c"), HORTON2_CONVENTIONS[angmom, "c"])
+            if (angmom, "c") not in new_conventions:
+                raise ValueError(
+                    "The new conventions have no Cartesian convention for "
+                    f"angular momentum {angmom}."
+                )
+            cart_names = new_conventions[angmom, "c"]
             if kind == "c":
-                blocks.append(np.identity(len(cart_names)))
+                # Only the order of the Cartesian functions can change.
+                blocks.append(
+                    _permutation_matrix(
+                        *_convert_convention_shell(obasis.conventions[angmom, "c"], cart_names)
+                    )
+                )
                 continue
             if obasis.primitive_normalization != "L2":
                 raise ValueError("Pure shells can only be converted for L2 normalization.")
@@ -351,4 +369,4 @@ def convert_to_cartesian(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse
         transform = sparse.block_diag([sparse.coo_array(block) for block in blocks], format="csr")
     else:
         transform = sparse.csr_array((0, 0))
-    return attrs.evolve(obasis, shells=shells, conventions=conventions), transform
+    return attrs.evolve(obasis, shells=shells, conventions=dict(new_conventions)), transform
