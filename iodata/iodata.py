@@ -341,6 +341,22 @@ class IOData:
         return natom
 
     @property
+    def center_of_mass(self) -> NDArray[float]:
+        """Return the center of mass in Cartesian coordinates.
+
+        The center of mass is computed from ``atcoords`` and ``atmasses``.
+        Both attributes must be set.
+        """
+        if self.atcoords is None:
+            raise ValueError("Cannot compute center of mass without atomic coordinates.")
+        if self.atmasses is None:
+            raise ValueError("Cannot compute center of mass without atomic masses.")
+        total_mass = self.atmasses.sum()
+        if total_mass == 0.0:
+            raise ValueError("Cannot compute center of mass when the total atomic mass is zero.")
+        return np.einsum("i,ij->j", self.atmasses, self.atcoords) / total_mass
+
+    @property
     def nelec(self) -> float:
         """Return the number of electrons."""
         # When the molecular orbitals are present, they determine the number

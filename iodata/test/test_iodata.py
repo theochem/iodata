@@ -341,3 +341,17 @@ def test_natom():
     assert IOData(atfrozen=[False, True, False, True]).natom == 4
     assert IOData(atmasses=[0, 0, 0, 0]).natom == 4
     assert IOData(atnums=[1, 1, 1, 1]).natom == 4
+
+
+def test_center_of_mass():
+    mol = IOData(atcoords=[[0.0, 0.0, 0.0], [4.0, 0.0, 0.0]], atmasses=[1.0, 3.0])
+    assert_allclose(mol.center_of_mass, [3.0, 0.0, 0.0])
+    with pytest.raises(ValueError, match="without atomic masses"):
+        assert_allclose(IOData(atcoords=[[0.0, 0.0, 0.0]]).center_of_mass, [0.0, 0.0, 0.0])
+    with pytest.raises(ValueError, match="without atomic coordinates"):
+        assert_allclose(IOData(atmasses=[1.0]).center_of_mass, [0.0, 0.0, 0.0])
+    with pytest.raises(ValueError, match="total atomic mass is zero"):
+        assert_allclose(
+            IOData(atcoords=[[0.0, 0.0, 0.0]], atmasses=[0.0]).center_of_mass,
+            [0.0, 0.0, 0.0],
+        )
