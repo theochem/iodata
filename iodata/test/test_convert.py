@@ -18,6 +18,8 @@
 # --
 """Unit tests for iodata.convert."""
 
+import itertools
+
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
@@ -28,12 +30,14 @@ from ..convert import (
     HORTON2_CONVENTIONS,
     _convert_convention_shell,
     convert_conventions,
+    convert_to_cartesian,
     convert_to_segmented,
     convert_to_unrestricted,
     decontract,
     iter_cart_alphabet,
 )
 from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
+from ..formats.fchk import CONVENTIONS as FCHK_CONVENTIONS
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap
 from .common import load_one_warning
@@ -366,6 +370,144 @@ def test_convert_to_segmented_empty():
     assert len(obasis1.shells) == 0
     obasis2 = convert_to_segmented(obasis0, keep_sp=True)
     assert len(obasis2.shells) == 0
+
+
+def _get_test_conventions(name: str) -> dict:
+    if name == "horton2":
+        return dict(HORTON2_CONVENTIONS)
+    if name == "cca":
+        return dict(CCA_CONVENTIONS)
+    if name == "fchk":
+        return dict(FCHK_CONVENTIONS)
+    if name == "signs_and_cartesian_order":
+        # Sign flips in pure f functions (as in ORCA) and a reversed order of Cartesian d functions.
+        conventions = dict(HORTON2_CONVENTIONS)
+        conventions[3, "p"] = ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3"]
+        conventions[2, "c"] = conventions[2, "c"][::-1]
+        return conventions
+    # A typo in the name of the conventions must not silently give other conventions.
+    raise ValueError(f"Unknown test conventions: {name}")
+
+
+CONVENTION_NAMES = ["horton2", "cca", "fchk", "signs_and_cartesian_order"]
+
+
+@pytest.mark.parametrize(
+    ("name", "new_name"), list(itertools.product(CONVENTION_NAMES, CONVENTION_NAMES))
+)
+def test_convert_to_cartesian(name, new_name):
+    rng = np.random.default_rng(2)
+    obasis = MolecularBasis(
+        [
+            Shell(0, [0, 1], ["c", "c"], rng.uniform(0.2, 1, 4), rng.uniform(-1, 1, (4, 2))),
+            Shell(0, [2, 3], ["p", "p"], rng.uniform(0.2, 1, 3), rng.uniform(-1, 1, (3, 2))),
+            Shell(1, [3], ["c"], rng.uniform(0.2, 1, 2), rng.uniform(-1, 1, (2, 1))),
+            Shell(1, [4], ["p"], rng.uniform(0.2, 1, 3), rng.uniform(-1, 1, (3, 1))),
+            Shell(1, [2], ["p"], rng.uniform(0.2, 1, 3), rng.uniform(-1, 1, (3, 1))),
+        ],
+        _get_test_conventions(name),
+        "L2",
+    )
+    atcoords = rng.uniform(-1, 1, (2, 3))
+    new_conventions = _get_test_conventions(new_name)
+    obasis_cart, transform = convert_to_cartesian(obasis, new_conventions)
+    assert all(kind == "c" for shell in obasis_cart.shells for kind in shell.kinds)
+    assert obasis_cart.conventions == new_conventions
+    assert obasis_cart.nbasis == (1 + 3) + (6 + 10) + 10 + 15 + 6
+    assert transform.shape == (obasis_cart.nbasis, obasis.nbasis)
+    # Exponents, coefficients and centers are untouched.
+    for shell, shell_cart in zip(obasis.shells, obasis_cart.shells, strict=True):
+        assert shell_cart.icenter == shell.icenter
+        assert_equal(shell_cart.angmoms, shell.angmoms)
+        assert_equal(shell_cart.exponents, shell.exponents)
+        assert_equal(shell_cart.coeffs, shell.coeffs)
+    # Each old function is a linear combination of the new ones, with the coefficients
+    # in the columns of transform. This holds if the overlap of old with new functions,
+    # and of old with old functions are both reproduced.
+    overlap = compute_overlap(obasis, atcoords)
+    overlap_cart = compute_overlap(obasis_cart, atcoords)
+    overlap_mixed = compute_overlap(obasis, atcoords, obasis_cart, atcoords)
+    assert_allclose(transform.T @ overlap_cart, overlap_mixed, atol=1e-12)
+    assert_allclose(transform.T @ overlap_cart @ transform, overlap, atol=1e-12)
+
+
+def test_convert_to_cartesian_nothing_to_do():
+    rng = np.random.default_rng(3)
+    obasis = MolecularBasis(
+        [Shell(0, [0, 1], ["c", "c"], rng.uniform(0.2, 1, 4), rng.uniform(-1, 1, (4, 2)))],
+        CP2K_CONVENTIONS,
+        "L2",
+    )
+    obasis_cart, transform = convert_to_cartesian(obasis, CP2K_CONVENTIONS)
+    assert obasis_cart.shells[0].kinds.tolist() == ["c", "c"]
+    assert_equal(transform.toarray(), np.identity(4))
+
+
+def test_convert_to_cartesian_reorder():
+    # Cartesian functions are only reordered when the new conventions have another order.
+    rng = np.random.default_rng(5)
+    obasis = MolecularBasis(
+        [Shell(0, [2], ["c"], rng.uniform(0.2, 1, 3), rng.uniform(-1, 1, (3, 1)))],
+        HORTON2_CONVENTIONS,
+        "L2",
+    )
+    new_conventions = dict(HORTON2_CONVENTIONS)
+    new_conventions[2, "c"] = HORTON2_CONVENTIONS[2, "c"][::-1]
+    obasis_cart, transform = convert_to_cartesian(obasis, new_conventions)
+    expected = np.zeros((6, 6))
+    expected[np.arange(6), np.arange(6)[::-1]] = 1.0
+    assert_equal(transform.toarray(), expected)
+    atcoords = rng.uniform(-1, 1, (1, 3))
+    overlap = compute_overlap(obasis, atcoords)
+    overlap_cart = compute_overlap(obasis_cart, atcoords)
+    assert_allclose(transform.T @ overlap_cart @ transform, overlap, atol=1e-12)
+    # The same conventions give the identity.
+    _, transform = convert_to_cartesian(obasis, HORTON2_CONVENTIONS)
+    assert_equal(transform.toarray(), np.identity(6))
+
+
+@pytest.mark.parametrize("kind", ["c", "p"])
+def test_convert_to_cartesian_missing_convention(kind):
+    # There is no default for conventions that are missing, which would be a bug of the caller.
+    rng = np.random.default_rng(6)
+    obasis = MolecularBasis(
+        [
+            Shell(0, [0], ["c"], rng.uniform(0.2, 1, 3), rng.uniform(-1, 1, (3, 1))),
+            Shell(0, [3], [kind], rng.uniform(0.2, 1, 3), rng.uniform(-1, 1, (3, 1))),
+        ],
+        HORTON2_CONVENTIONS,
+        "L2",
+    )
+    new_conventions = dict(HORTON2_CONVENTIONS)
+    del new_conventions[3, "c"]
+    with pytest.raises(ValueError, match="Cartesian convention for angular momentum 3"):
+        convert_to_cartesian(obasis, new_conventions)
+    # Conventions of other angular momenta or kinds are not needed.
+    new_conventions = {key: value for key, value in HORTON2_CONVENTIONS.items() if key[1] == "c"}
+    obasis_cart, _ = convert_to_cartesian(obasis, new_conventions)
+    assert obasis_cart.conventions == new_conventions
+
+
+def test_convert_to_cartesian_empty():
+    obasis = MolecularBasis([], HORTON2_CONVENTIONS, "L2")
+    obasis_cart, transform = convert_to_cartesian(obasis, HORTON2_CONVENTIONS)
+    assert len(obasis_cart.shells) == 0
+    assert transform.shape == (0, 0)
+
+
+def test_convert_to_cartesian_l1():
+    rng = np.random.default_rng(4)
+    exponents = rng.uniform(0.2, 1, 3)
+    coeffs = rng.uniform(-1, 1, (3, 1))
+    # Pure shells are only supported for L2 normalization.
+    obasis = MolecularBasis([Shell(0, [2], ["p"], exponents, coeffs)], HORTON2_CONVENTIONS, "L1")
+    with pytest.raises(ValueError):
+        convert_to_cartesian(obasis, HORTON2_CONVENTIONS)
+    # Cartesian shells need no transformation, so they are fine.
+    obasis = MolecularBasis([Shell(0, [2], ["c"], exponents, coeffs)], HORTON2_CONVENTIONS, "L1")
+    obasis_cart, transform = convert_to_cartesian(obasis, HORTON2_CONVENTIONS)
+    assert obasis_cart.primitive_normalization == "L1"
+    assert_equal(transform.toarray(), np.identity(6))
 
 
 def _eval_cartesian(obasis, atcoords, points):
