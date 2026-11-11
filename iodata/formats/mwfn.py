@@ -338,21 +338,21 @@ def load_one(lit: LineIterator) -> dict:
     # The occupation numbers are written with 6 decimals, so their sum may differ
     # from Naelec and Nbelec by up to 0.5e-6 per orbital.
     nelec_tol = 0.5e-6 * len(mo.occs)
-    if abs(mo.nelec - (inp["Naelec"] + inp["Nbelec"])) > nelec_tol:
+    if not np.isclose(mo.nelec, inp["Naelec"] + inp["Nbelec"], rtol=0, atol=nelec_tol):
         raise LoadError(
             f"Number of electrons in MolecularOrbitals ({mo.nelec}) is not equal to "
             f"the sum of 'Naelec' and 'Nbelec' ({inp['Naelec']} + {inp['Nbelec']}).",
             lit.filename,
         )
-    if abs(mo.occsa.sum() - inp["Naelec"]) > nelec_tol:
+    if not np.isclose(mo.occsa.sum(), inp["Naelec"], rtol=0, atol=nelec_tol):
         raise LoadError(
             f"Number of alpha electrons in MolecularOrbitals ({mo.occsa.sum()}) "
             f"is not equal to the 'Naelec' ({inp['Naelec']}).",
             lit.filename,
         )
-    if abs(mo.occsb.sum() - inp["Nbelec"]) > nelec_tol:
+    if not np.isclose(mo.occsb.sum(), inp["Nbelec"], rtol=0, atol=nelec_tol):
         raise LoadError(
-            f"Number of beta electrons in MolecularOrbitals ({mo.occsb.sum()})"
+            f"Number of beta electrons in MolecularOrbitals ({mo.occsb.sum()}) "
             f"is not equal to the 'Nbelec' ({inp['Nbelec']}).",
             lit.filename,
         )
