@@ -179,6 +179,26 @@ def test_nelec_charge():
     assert mol3.charge == 0
 
 
+def test_load_mwfn_fractional_occupations(tmp_path):
+    # Occupations are written with 6 decimals, so three alpha electrons of 1/3
+    # add up to 4.999999 instead of Naelec = 5.
+    occs = ["1.000000"] * 4 + ["0.333333"] * 3 + ["0.000000"]
+    lines = files("iodata.test.data").joinpath("ch3_hf_sto3g_fchk_multiwfn3.7.mwfn")
+    lines = lines.read_text().splitlines(keepends=True)
+    ialpha = 0
+    for i, line in enumerate(lines):
+        if line.startswith("Type= 1"):
+            iocc = next(j for j in range(i, len(lines)) if lines[j].startswith("Occ="))
+            lines[iocc] = f"Occ=  {occs[ialpha]}\n"
+            ialpha += 1
+    assert ialpha == len(occs)
+    fn = tmp_path / "fractional.mwfn"
+    fn.write_text("".join(lines))
+    mol = load_one(fn)
+    assert_allclose(mol.mo.occsa, [float(occ) for occ in occs])
+    assert_allclose(mol.nelec, 9, atol=1e-5)
+
+
 def test_load_mwfn_he_spdfgh_g03():
     mol = load_helper("he_spdfgh_virtual_fchk_multiwfn3.7.mwfn")
     assert_equal(mol.mo.occs.shape[0], mol.mo.coeffs.shape[1])
