@@ -120,11 +120,13 @@ def _helper_read_frame(lit: LineIterator) -> tuple:
         cell[1, 1] = float(words[1])
         cell[2, 2] = float(words[2])
     if len(words) == 9:
-        cell[1, 0] = float(words[3])
-        cell[2, 0] = float(words[4])
-        cell[0, 1] = float(words[5])
-        cell[2, 1] = float(words[6])
-        cell[0, 2] = float(words[7])
-        cell[1, 2] = float(words[8])
+        # The remaining values are v1(y) v1(z) v2(x) v2(z) v3(x) v3(y),
+        # and each row of cell is one cell vector.
+        cell[0, 1] = float(words[3])
+        cell[0, 2] = float(words[4])
+        cell[1, 0] = float(words[5])
+        cell[1, 2] = float(words[6])
+        cell[2, 0] = float(words[7])
+        cell[2, 1] = float(words[8])
     cell *= nanometer
     return title, time, resnums, resnames, attypes, pos, vel, cell
