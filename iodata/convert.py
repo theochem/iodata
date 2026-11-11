@@ -292,7 +292,7 @@ def convert_to_segmented(obasis: MolecularBasis, keep_sp: bool = False) -> Molec
 def decontract(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse.csr_array]:
     """Convert a contracted basis set to one with only primitive functions.
 
-    Primitives that appear several times on the same atom with the same angular momentum
+    Primitives that appear several times on the same center with the same angular momentum
     and kind, e.g. in a general contraction or in a shell that shares an exponent
     with another shell, are included only once in the new basis.
     The new basis spans a space that contains the old one, so no information is lost.
