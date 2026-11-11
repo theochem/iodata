@@ -39,6 +39,7 @@ __all__ = (
     "convert_to_cartesian",
     "convert_to_segmented",
     "convert_to_unrestricted",
+    "decontract",
     "iter_cart_alphabet",
 )
 
@@ -370,3 +371,55 @@ def convert_to_cartesian(
     else:
         transform = sparse.csr_array((0, 0))
     return attrs.evolve(obasis, shells=shells, conventions=dict(new_conventions)), transform
+
+
+def decontract(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse.csr_array]:
+    """Convert a contracted basis set to one with only primitive functions.
+
+    Primitives that appear several times on the same center with the same angular momentum
+    and kind, e.g. in a general contraction or in a shell that shares an exponent
+    with another shell, are included only once in the new basis.
+    The new basis spans a space that contains the old one, so no information is lost.
+
+    Parameters
+    ----------
+    obasis
+        The basis set to convert.
+
+    Returns
+    -------
+    obasis_prim
+        A new ``MolecularBasis`` instance in which each shell has a single primitive
+        and a single contraction.
+    transform
+        A sparse matrix with shape ``(obasis_prim.nbasis, obasis.nbasis)``.
+        The coefficients of a function in the old basis, ``coeffs``, become ``transform @ coeffs``
+        in the new basis. The same function, expressed in the new basis,
+        has identical values everywhere in space.
+        An overlap matrix transforms as ``transform.T @ overlap_prim @ transform``
+        and a density matrix as ``transform @ dm @ transform.T``.
+    """
+    # Each primitive is identified by its center, angular momentum, kind and exponent.
+    # The value is the index of the first basis function in the new basis.
+    offsets = {}
+    shells = []
+    nbasis_prim = 0
+    rows = []
+    cols = []
+    values = []
+    col = 0
+    for shell in obasis.shells:
+        for angmom, kind, coeffs in zip(shell.angmoms, shell.kinds, shell.coeffs.T, strict=True):
+            nfn = Shell(shell.icenter, [angmom], [kind], [1.0], [[1.0]]).nbasis
+            for exponent, coeff in zip(shell.exponents, coeffs, strict=True):
+                key = (shell.icenter, int(angmom), str(kind), float(exponent))
+                if key not in offsets:
+                    offsets[key] = nbasis_prim
+                    nbasis_prim += nfn
+                    shells.append(Shell(shell.icenter, [angmom], [kind], [exponent], [[1.0]]))
+                rows.extend(range(offsets[key], offsets[key] + nfn))
+                cols.extend(range(col, col + nfn))
+                values.extend([coeff] * nfn)
+            col += nfn
+    transform = sparse.coo_array((values, (rows, cols)), shape=(nbasis_prim, obasis.nbasis)).tocsr()
+    return attrs.evolve(obasis, shells=shells), transform
