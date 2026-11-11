@@ -43,8 +43,10 @@ __all__ = (
     "WriteInputError",
     "check_dm",
     "derive_naturals",
+    "parse_fortran_float",
     "set_four_index_element",
     "strtobool",
+    "triangle_to_dense",
     "volume",
 )
 
@@ -395,6 +397,72 @@ STRTOBOOL = {
     "off": False,
     "0": False,
 }
+
+
+def triangle_to_dense(triangle: NDArray[float]) -> NDArray[float]:
+    """Convert a symmetric matrix in triangular storage to a dense square matrix.
+
+    Parameters
+    ----------
+    triangle
+        A row vector containing all the unique matrix elements of symmetric
+        matrix. (Either the lower-triangular part in row major-order or the
+        upper-triangular part in column-major order.)
+
+    Returns
+    -------
+    A square symmetric matrix.
+
+    Raises
+    ------
+    ValueError
+        If the length of the given vector is not a triangular number.
+
+    """
+    triangle = np.asarray(triangle)
+    nrow = int(np.round((np.sqrt(1 + 8 * len(triangle)) - 1) / 2))
+    if nrow * (nrow + 1) // 2 != len(triangle):
+        raise ValueError(f"A triangle of a square matrix cannot have {len(triangle)} elements.")
+    result = np.zeros((nrow, nrow), dtype=triangle.dtype)
+    indices = np.tril_indices(nrow)
+    result[indices] = triangle
+    result.T[indices] = triangle
+    return result
+
+
+def _fix_fortran_float(word: str) -> str:
+    """Convert a floating point number written by Fortran code to a string Python can parse.
+
+    Fortran code may write ``D`` instead of ``E`` for the exponent,
+    or no letter at all when the exponent has three digits, e.g. ``1.234567-123``.
+    """
+    word = word.strip().replace("D", "E").replace("d", "e")
+    if "E" not in word and "e" not in word:
+        index = max(word.rfind("-"), word.rfind("+"))
+        # A sign at the start of the word is the sign of the number, not of an exponent.
+        if index > 0:
+            word = f"{word[:index]}E{word[index:]}"
+    return word
+
+
+def parse_fortran_float(word: str) -> float:
+    """Convert a word with a floating point number written by Fortran code to a float.
+
+    Parameters
+    ----------
+    word
+        A number such as ``1.5``, ``1.5D+03`` or ``1.234567-123``.
+
+    Raises
+    ------
+    ValueError
+        If the word is not a floating point number.
+
+    """
+    try:
+        return float(word)
+    except ValueError:
+        return float(_fix_fortran_float(word))
 
 
 def strtobool(value: str) -> bool:
