@@ -18,13 +18,10 @@
 # --
 """Unit tests for iodata.convert."""
 
-from importlib.resources import as_file, files
-
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 
-from ..api import load_one
 from ..basis import MolecularBasis, Shell
 from ..convert import (
     CCA_CONVENTIONS,
@@ -39,6 +36,7 @@ from ..convert import (
 from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 from ..orbitals import MolecularOrbitals
 from ..overlap import compute_overlap
+from .common import load_one_warning
 
 
 def test_convert_convention_shell():
@@ -447,20 +445,19 @@ def test_decontract_values():
 
 
 @pytest.mark.parametrize(
-    "fn",
+    ("fn", "match"),
     [
-        "o2_cc_pvtz_pure.fchk",
-        "o2_cc_pvtz_cart.fchk",
-        "water_ccpvdz_pure_hf_g03.fchk",
+        ("o2_cc_pvtz_pure.fchk", None),
+        ("o2_cc_pvtz_cart.fchk", None),
+        ("water_ccpvdz_pure_hf_g03.fchk", None),
         # Unusual sign conventions
-        "orca_zn_cc_pvqz_pure.molden",
+        ("orca_zn_cc_pvqz_pure.molden", "Corrected for typical ORCA errors"),
         # Generalized contractions and no Cartesian functions, and no orbitals
-        "carbon_gs_ae_contracted.cp2k.out",
+        ("carbon_gs_ae_contracted.cp2k.out", None),
     ],
 )
-def test_decontract_overlap(fn):
-    with as_file(files("iodata.test.data").joinpath(fn)) as path:
-        data = load_one(path)
+def test_decontract_overlap(fn, match):
+    data = load_one_warning(fn, match=match)
     obasis0 = data.obasis
     obasis1, transform = decontract(obasis0)
     assert obasis1.nbasis > obasis0.nbasis
