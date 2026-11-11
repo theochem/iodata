@@ -24,12 +24,13 @@ from importlib.resources import as_file, files
 import attrs
 import numpy as np
 import pytest
+import scipy.special
 from numpy.testing import assert_allclose
 
 from ..api import load_one
 from ..basis import MolecularBasis, Shell
 from ..convert import convert_conventions
-from ..overlap import OVERLAP_CONVENTIONS, compute_overlap, factorial2
+from ..overlap import OVERLAP_CONVENTIONS, GaussianOverlap, compute_overlap, factorial2
 
 
 @pytest.mark.parametrize(
@@ -167,3 +168,33 @@ def test_overlap_two_basis_different(fn0, fn1):
     olp_b = olp_b[:, permutation1] * signs1
     # Finally compare the numbers.
     assert_allclose(olp_a, olp_b, rtol=0, atol=1e-14)
+
+
+@pytest.mark.parametrize("same_centers", [True, False])
+def test_gaussian_overlap_1d_broadcast(same_centers):
+    """The one-dimensional integrals for many angular momenta at once match a plain loop."""
+    rng = np.random.default_rng(1)
+    n_max = 5
+    go = GaussianOverlap(n_max)
+    x1 = rng.uniform(-2, 2, (3, 1, 1))
+    x2 = x1.copy() if same_centers else rng.uniform(-2, 2, (3, 1, 1))
+    two_at = rng.uniform(0.5, 4, (3, 1, 1))
+    n1 = rng.integers(0, n_max + 1, (1, 4, 1))
+    n2 = rng.integers(0, n_max + 1, (1, 1, 5))
+    result = go.compute_overlap_gaussian_1d(x1, x2, n1, n2, two_at)
+    assert result.shape == (3, 4, 5)
+    for index in itertools.product(range(3), range(4), range(5)):
+        a, b = int(n1[0, index[1], 0]), int(n2[0, 0, index[2]])
+        expected = 0.0
+        for i in range(a + 1):
+            for j in range(b + 1):
+                if (i + j) % 2 == 0:
+                    expected += (
+                        scipy.special.binom(a, i)
+                        * x1[index[0], 0, 0] ** (a - i)
+                        * scipy.special.binom(b, j)
+                        * x2[index[0], 0, 0] ** (b - j)
+                        * factorial2(i + j - 1)
+                        / two_at[index[0], 0, 0] ** ((i + j) / 2)
+                    )
+        assert_allclose(result[index], expected, rtol=1e-12, atol=1e-14)

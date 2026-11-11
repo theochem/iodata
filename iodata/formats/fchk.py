@@ -32,8 +32,16 @@ from ..convert import HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
-from ..prepare import prepare_segmented
-from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError, amu
+from ..prepare import prepare_segmented, prepare_single_line_title
+from ..utils import (
+    LineIterator,
+    LoadError,
+    LoadWarning,
+    PrepareDumpError,
+    amu,
+    parse_fortran_float,
+    triangle_to_dense,
+)
 
 __all__ = ()
 
@@ -170,7 +178,7 @@ def load_one(lit: LineIterator) -> dict:
         result["atgradient"] = atgradient.reshape(-1, 3)
     athessian = fchk.get("Cartesian Force Constants")
     if athessian is not None:
-        result["athessian"] = _triangle_to_dense(athessian)
+        result["athessian"] = triangle_to_dense(athessian)
     atfrozen = fchk.get("MicOpt")
     if atfrozen is not None:
         result["atfrozen"] = atfrozen == -2
@@ -275,7 +283,7 @@ def load_one(lit: LineIterator) -> dict:
 
     # E) Load properties
     if "Polarizability" in fchk:
-        result["extra"] = {"polarizability_tensor": _triangle_to_dense(fchk["Polarizability"])}
+        result["extra"] = {"polarizability_tensor": triangle_to_dense(fchk["Polarizability"])}
     moments = {}
     if "Dipole Moment" in fchk:
         moments[(1, "c")] = fchk["Dipole Moment"]
@@ -554,10 +562,9 @@ def _convert_word(word: str, datatype: type, lit: LineIterator) -> int | float:
         The line iterator, only used for error reporting.
 
     """
-    # Some programs write Fortran-style exponents, which float() does not accept.
-    clean = word.replace("D", "E").replace("d", "e") if datatype is float else word
     try:
-        return datatype(clean)
+        # Some programs write Fortran-style exponents, which float() does not accept.
+        return parse_fortran_float(word) if datatype is float else datatype(word)
     except (ValueError, OverflowError) as exc:
         raise LoadError(f"Could not interpret as {datatype}: {word}", lit) from exc
 
@@ -726,33 +733,7 @@ def _load_dm(label: str, fchk: dict, result: dict, key: str):
 
     """
     if label in fchk:
-        result[key] = _triangle_to_dense(fchk[label])
-
-
-def _triangle_to_dense(triangle: NDArray[float]) -> NDArray[float]:
-    """Convert a symmetric matrix in triangular storage to a dense square matrix.
-
-    Parameters
-    ----------
-    triangle
-        A row vector containing all the unique matrix elements of symmetric
-        matrix. (Either the lower-triangular part in row major-order or the
-        upper-triangular part in column-major order.)
-
-    Returns
-    -------
-    A square symmetric matrix.
-
-    """
-    nrow = int(np.round((np.sqrt(1 + 8 * len(triangle)) - 1) / 2))
-    result = np.zeros((nrow, nrow))
-    begin = 0
-    for irow in range(nrow):
-        end = begin + irow + 1
-        result[irow, : irow + 1] = triangle[begin:end]
-        result[: irow + 1, irow] = triangle[begin:end]
-        begin = end
-    return result
+        result[key] = triangle_to_dense(fchk[label])
 
 
 # The fchk file has a very rigid format, to dump the information are
@@ -837,6 +818,7 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
                 "followed by fully virtual ones.",
                 filename,
             )
+    data = prepare_single_line_title(data, allow_changes, filename, "FCHK")
     return prepare_segmented(data, True, allow_changes, filename, "FCHK")
 
 

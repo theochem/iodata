@@ -21,12 +21,14 @@
 import os
 from importlib.resources import as_file, files
 
+import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_many, dump_one, load_many, load_one
-from ..utils import LoadError, angstrom
-from .common import truncated_file
+from ..iodata import IOData
+from ..utils import LoadError, PrepareDumpError, angstrom
+from .common import check_dump_multiline_title, truncated_file
 
 
 def test_sdf_load_one_example():
@@ -98,6 +100,88 @@ def test_load_dump_consistency(tmpdir):
         check_load_dump_consistency(tmpdir, fn_sdf)
 
 
+def test_fixed_width_fields_touching(tmpdir):
+    # In the V2000 format, fields have a fixed width and may touch each other:
+    # the numbers of atoms and bonds in the counts line, atom indices in the bond lines
+    # and coordinates below -1000.
+    natom = 120
+    rng = np.random.default_rng(1)
+    atcoords = rng.uniform(-2000, 2000, (natom, 3)).round(4) * angstrom
+    bonds = np.array([[i, i + 1, 1] for i in range(natom - 1)])
+    mol0 = IOData(atnums=np.full(natom, 6), atcoords=atcoords, bonds=bonds, title="chain")
+    fn_sdf = os.path.join(tmpdir, "chain.sdf")
+    dump_one(mol0, fn_sdf)
+    with open(fn_sdf) as f:
+        lines = f.read().splitlines()
+    assert lines[3].startswith("120119")
+    assert any(line.startswith("100101") for line in lines)
+    mol1 = load_one(fn_sdf)
+    assert_allclose(mol1.atcoords, atcoords, atol=1e-8)
+    assert_equal(mol1.atnums, mol0.atnums)
+    assert_equal(mol1.bonds, bonds)
+
+
+@pytest.mark.parametrize(
+    "sdf_text",
+    [
+        # The numbers in the counts line do not follow the column layout.
+        "loose\n\n\n2 1 0 0 0 0 0 0 0 0999 V2000\n",
+        # The coordinates of an atom are separated by single spaces only.
+        "loose\n\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n0.0 0.0 0.0 C\nM  END\n$$$$\n",
+        # Unknown element symbol.
+        (
+            "loose\n\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n"
+            "    0.0000    0.0000    0.0000 Xx  0  0  0  0  0  0  0  0  0  0  0  0\n"
+            "M  END\n$$$$\n"
+        ),
+        # The bond line does not follow the column layout.
+        (
+            "loose\n\n\n  2  1  0  0  0  0  0  0  0  0999 V2000\n"
+            "    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n"
+            "    1.5000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n"
+            "1 2 2\nM  END\n$$$$\n"
+        ),
+    ],
+)
+def test_not_fixed_width(sdf_text, tmpdir):
+    # Fields are read by column, a file that does not follow the layout is rejected.
+    fn_sdf = os.path.join(tmpdir, "loose.sdf")
+    with open(fn_sdf, "w") as f:
+        f.write(sdf_text)
+    with pytest.raises(LoadError):
+        load_one(fn_sdf)
+
+
+@pytest.mark.parametrize(("natom", "nbond"), [(1000, 0), (3, 1000)])
+def test_dump_too_large(natom, nbond, tmpdir):
+    # The counts have three digits in the V2000 format.
+    atcoords = np.zeros((natom, 3))
+    bonds = np.array([[0, 1, 1]] * nbond) if nbond else None
+    mol = IOData(atnums=np.full(natom, 6), atcoords=atcoords, bonds=bonds)
+    with pytest.raises(PrepareDumpError):
+        dump_one(mol, os.path.join(tmpdir, "large.sdf"))
+
+
+@pytest.mark.parametrize(
+    "coord", [100000.0, 99999.99996, 123456.0, -10000.0, -9999.99996, -123456.0]
+)
+def test_dump_coordinate_too_large(coord, tmpdir):
+    # The coordinates have fields of ten characters with four decimals.
+    atcoords = np.array([[0.0, 0.0, 0.0], [0.0, coord * angstrom, 0.0]])
+    mol = IOData(atnums=np.array([6, 6]), atcoords=atcoords)
+    with pytest.raises(PrepareDumpError, match="coordinates"):
+        dump_one(mol, os.path.join(tmpdir, "far.sdf"))
+
+
+def test_dump_coordinate_largest(tmpdir):
+    atcoords = np.array([[0.0, 0.0, 0.0], [-9999.9999 * angstrom, 99999.9999 * angstrom, 0.0]])
+    mol0 = IOData(atnums=np.array([6, 6]), atcoords=atcoords)
+    fn_sdf = os.path.join(tmpdir, "largest.sdf")
+    dump_one(mol0, fn_sdf)
+    mol1 = load_one(fn_sdf)
+    assert_allclose(mol1.atcoords, atcoords, atol=1e-6)
+
+
 def test_load_many():
     with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn_sdf:
         mols = list(load_many(str(fn_sdf)))
@@ -130,3 +214,33 @@ def test_v2000_check():
         pytest.raises(LoadError),
     ):
         load_one(fn_sdf)
+
+
+@pytest.mark.parametrize("fn", ["example.sdf", "formamide.sdf"])
+def test_sdf_load_one_whitespace(fn, tmpdir):
+    with as_file(files("iodata.test.data").joinpath(fn)) as fn_sdf:
+        mol = load_one(fn_sdf)
+        with open(fn_sdf) as f:
+            lines = f.read().splitlines()
+    # No line break after the last line.
+    fn_new = os.path.join(tmpdir, "no_final_line_break.sdf")
+    with open(fn_new, "w") as f:
+        f.write("\n".join(lines))
+    mol_new = load_one(fn_new)
+    assert_equal(mol_new.atnums, mol.atnums)
+    assert_equal(mol_new.bonds, mol.bonds)
+    assert_allclose(mol_new.atcoords, mol.atcoords)
+    # Spaces at the end of every line.
+    fn_new = os.path.join(tmpdir, "trailing_spaces.sdf")
+    with open(fn_new, "w") as f:
+        f.write("".join(line + "  \n" for line in lines))
+    mol_new = load_one(fn_new)
+    assert_equal(mol_new.atnums, mol.atnums)
+    assert_equal(mol_new.bonds, mol.bonds)
+    assert_allclose(mol_new.atcoords, mol.atcoords)
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "sdf")
