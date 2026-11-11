@@ -24,10 +24,8 @@ Basis set conventions and terminology are documented in :ref:`basis_conventions`
 
 """
 
-from collections.abc import Iterator
 from functools import wraps
 from numbers import Integral
-from typing import NamedTuple
 
 import attrs
 from numpy.typing import NDArray
@@ -186,28 +184,29 @@ class Shell:
         return len(self.angmoms)
 
 
-class BasisFunction(NamedTuple):
+@attrs.define(frozen=True)
+class BasisFunction:
     """The identity of a single basis function within a ``MolecularBasis``."""
 
-    index: int
+    index: int = attrs.field()
     """The index of the basis function in the full basis set."""
 
-    ishell: int
+    ishell: int = attrs.field()
     """The index of the shell in ``MolecularBasis.shells`` holding this function."""
 
-    icon: int
+    icon: int = attrs.field()
     """The index of the generalized contraction within that shell."""
 
-    icenter: int
+    icenter: int = attrs.field()
     """The row in the ``atcoords`` array of the atom this function is centered on."""
 
-    angmom: int
+    angmom: int = attrs.field()
     """The angular momentum quantum number."""
 
-    kind: str
+    kind: str = attrs.field()
     """``'c'`` for Cartesian or ``'p'`` for pure."""
 
-    label: str
+    label: str = attrs.field()
     """The basis function label from ``MolecularBasis.conventions``, without its sign.
 
     A convention may flip the sign of a function by prefixing its label with a
@@ -215,7 +214,7 @@ class BasisFunction(NamedTuple):
     ``sign`` instead, so the label is always the plain name of the function.
     """
 
-    sign: int
+    sign: int = attrs.field()
     """``+1``, or ``-1`` when the convention flips the sign of this function."""
 
 
@@ -274,77 +273,76 @@ class MolecularBasis:
         """Number of basis functions."""
         return sum(shell.nbasis for shell in self.shells)
 
-    def iter_basis_functions(self) -> Iterator[BasisFunction]:
-        """Iterate over all basis functions, in the order used by this basis set.
+    def get_basis_functions(self) -> list[BasisFunction]:
+        """Describe all the basis functions, in the order used by this basis set.
 
-        Yields
-        ------
-        BasisFunction
-            One item per basis function, with increasing ``index``.
+        This takes one pass over the shells. The function at a given index of the basis
+        set is ``get_basis_functions()[index]``, so keep the list when it is needed often.
+
+        Returns
+        -------
+        list[BasisFunction]
+            One item per basis function, with ``index`` equal to the position in the list.
         """
-        index = 0
+        functions = []
         for ishell, shell in enumerate(self.shells):
             for icon, (angmom, kind) in enumerate(zip(shell.angmoms, shell.kinds, strict=True)):
                 for name in self.conventions[angmom, kind]:
                     sign = -1 if name.startswith("-") else 1
                     label = name[1:] if sign == -1 else name
-                    yield BasisFunction(
-                        index, ishell, icon, shell.icenter, angmom, kind, label, sign
+                    functions.append(
+                        BasisFunction(
+                            len(functions),
+                            ishell,
+                            icon,
+                            int(shell.icenter),
+                            int(angmom),
+                            str(kind),
+                            label,
+                            sign,
+                        )
                     )
-                    index += 1
+        return functions
 
-    def get_basis_function(self, index: int) -> BasisFunction:
-        """Describe the basis function at the given index.
+    def index_basis_functions(
+        self, keys: tuple[str, ...] = ("icenter", "angmom", "label")
+    ) -> dict[tuple, list[int]]:
+        """Group the indices of the basis functions by the values of some of their attributes.
 
-        Parameters
-        ----------
-        index
-            The index of the basis function, negative values counting from the end.
-
-        Returns
-        -------
-        BasisFunction
-            The center, angular momentum, kind and label of that function.
-        """
-        if index < 0:
-            index += self.nbasis
-        if not 0 <= index < self.nbasis:
-            raise IndexError(f"Basis function index out of range: {index}")
-        for info in self.iter_basis_functions():
-            if info.index == index:
-                return info
-        raise AssertionError("Unreachable: nbasis disagrees with the conventions.")
-
-    def find_basis_index(self, label: str, icenter: int | None = None, occurrence: int = 0) -> int:
-        """Look up the index of a basis function by its label.
+        This takes one pass over the basis set. After that, finding a basis function
+        is a look-up in the dictionary, instead of a search.
 
         Parameters
         ----------
-        label
-            A label as it appears in ``conventions``, e.g. ``'zz'`` or ``'c0'``,
-            without a sign prefix. A sign-flipped convention such as ``'-c3'``
-            is matched by ``'c3'``; use ``BasisFunction.sign`` to find out
-            whether the match is sign-flipped.
-        icenter
-            Restrict the search to one atom. By default all atoms are searched.
-        occurrence
-            Which match to return when a label occurs more than once, counting
-            from zero.
+        keys
+            The names of the attributes of ``BasisFunction`` that make up the keys of the
+            dictionary. Different use cases group the basis functions differently.
+            The default separates the functions by the atom they belong to, by their
+            angular momentum and by their label. The angular momentum is part of it,
+            because labels such as ``'c0'`` are not unique to one angular momentum.
 
         Returns
         -------
-        int
-            The index of the matching basis function.
+        dict[tuple, list[int]]
+            For each combination of values, a tuple in the order of ``keys``, the indices
+            of the basis functions with these values, in the order of the basis set.
+            For example, with the default keys, ``index[icenter, angmom, label][0]``
+            is the index of the first function with that label on that atom.
+
+        Raises
+        ------
+        ValueError
+            If one of the keys is not the name of an attribute of ``BasisFunction``.
         """
-        count = 0
-        for info in self.iter_basis_functions():
-            if info.label != label:
-                continue
-            if icenter is not None and info.icenter != icenter:
-                continue
-            if count == occurrence:
-                return info.index
-            count += 1
-        raise ValueError(
-            f"No basis function with label {label!r}, icenter {icenter}, occurrence {occurrence}."
-        )
+        names = {field.name for field in attrs.fields(BasisFunction)}
+        invalid = [key for key in keys if key not in names]
+        if invalid:
+            raise ValueError(
+                f"Invalid keys: {invalid}. The keys must be attributes of BasisFunction: "
+                f"{sorted(names)}."
+            )
+        result = {}
+        for function in self.get_basis_functions():
+            key = tuple(getattr(function, name) for name in keys)
+            result.setdefault(key, []).append(function.index)
+        return result

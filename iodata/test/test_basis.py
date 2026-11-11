@@ -29,6 +29,7 @@ from ..basis import (
     angmom_its,
     angmom_sti,
 )
+from ..convert import HORTON2_CONVENTIONS
 from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 
 
@@ -46,17 +47,17 @@ def _two_center_basis():
     )
 
 
-def test_iter_basis_functions_matches_nbasis():
+def test_get_basis_functions_matches_nbasis():
     obasis = _two_center_basis()
-    infos = list(obasis.iter_basis_functions())
+    functions = obasis.get_basis_functions()
     assert obasis.nbasis == 1 + 3 + 4 + 5
-    assert len(infos) == obasis.nbasis
-    assert [info.index for info in infos] == list(range(obasis.nbasis))
+    assert len(functions) == obasis.nbasis
+    assert [function.index for function in functions] == list(range(obasis.nbasis))
 
 
-def test_iter_basis_functions_order():
-    infos = list(_two_center_basis().iter_basis_functions())
-    assert [info.label for info in infos] == [
+def test_get_basis_functions_order():
+    functions = _two_center_basis().get_basis_functions()
+    assert [function.label for function in functions] == [
         "1",
         "x",
         "y",
@@ -71,10 +72,25 @@ def test_iter_basis_functions_order():
         "c2",
         "s2",
     ]
-    assert [info.icenter for info in infos] == [0] * 4 + [1] * 9
+    assert [function.icenter for function in functions] == [0] * 4 + [1] * 9
+    assert [function.angmom for function in functions] == [0] + [1] * 3 + [0] + [1] * 3 + [2] * 5
+    assert [function.kind for function in functions] == ["c"] * 8 + ["p"] * 5
     # the SP shell is one shell holding two generalized contractions
-    assert [info.icon for info in infos[4:8]] == [0, 1, 1, 1]
-    assert [info.ishell for info in infos[4:8]] == [2, 2, 2, 2]
+    assert [function.icon for function in functions[4:8]] == [0, 1, 1, 1]
+    assert [function.ishell for function in functions[4:8]] == [2, 2, 2, 2]
+
+
+def test_basis_function_is_an_immutable_attrs_class():
+    function = _two_center_basis().get_basis_functions()[8]
+    assert function == BasisFunction(8, 3, 0, 1, 2, "p", "c0", 1)
+    assert attrs.has(BasisFunction)
+    with pytest.raises(attrs.exceptions.FrozenInstanceError):
+        function.label = "other"
+    # The values have builtin types, not NumPy types.
+    for name in "index", "ishell", "icon", "icenter", "angmom", "sign":
+        assert type(getattr(function, name)) is int
+    assert type(function.kind) is str
+    assert type(function.label) is str
 
 
 def test_sign_convention_is_tracked():
@@ -84,59 +100,95 @@ def test_sign_convention_is_tracked():
         {(3, "p"): ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3"]},
         "L2",
     )
-    infos = list(obasis.iter_basis_functions())
+    functions = obasis.get_basis_functions()
     # the minus is stripped from the label and reported through sign instead
-    assert [info.label for info in infos] == ["c0", "c1", "s1", "c2", "s2", "c3", "s3"]
-    assert [info.sign for info in infos] == [1, 1, 1, 1, 1, -1, -1]
+    assert [function.label for function in functions] == ["c0", "c1", "s1", "c2", "s2", "c3", "s3"]
+    assert [function.sign for function in functions] == [1, 1, 1, 1, 1, -1, -1]
     # so a sign-flipped function is found by its plain label
-    assert obasis.find_basis_index("c3") == 5
-    assert obasis.get_basis_function(5).sign == -1
-    with pytest.raises(ValueError):
-        obasis.find_basis_index("-c3")
+    index = obasis.index_basis_functions()
+    assert index[0, 3, "c3"] == [5]
+    assert (0, 3, "-c3") not in index
+    assert functions[5].sign == -1
 
 
-def test_get_basis_function():
+def test_index_basis_functions_default_keys():
     obasis = _two_center_basis()
-    assert obasis.get_basis_function(0) == BasisFunction(0, 0, 0, 0, 0, "c", "1", 1)
-    assert obasis.get_basis_function(8).label == "c0"
-    assert obasis.get_basis_function(8).kind == "p"
-    # negative indices count from the end
-    assert obasis.get_basis_function(-1) == obasis.get_basis_function(obasis.nbasis - 1)
-    with pytest.raises(IndexError):
-        obasis.get_basis_function(obasis.nbasis)
-    with pytest.raises(IndexError):
-        obasis.get_basis_function(-obasis.nbasis - 1)
+    index = obasis.index_basis_functions()
+    # The default keys are the center, the angular momentum and the label.
+    assert index[0, 0, "1"] == [0]
+    assert index[0, 1, "x"] == [1]
+    assert index[1, 0, "1"] == [4]
+    assert index[1, 1, "x"] == [5]
+    assert index[1, 2, "s2"] == [12]
+    # Every function is in exactly one group, with the functions in the order of the basis.
+    assert sorted(i for indices in index.values() for i in indices) == list(range(obasis.nbasis))
+    for indices in index.values():
+        assert indices == sorted(indices)
 
 
-def test_find_basis_index_round_trip():
+def test_index_basis_functions_round_trip():
     obasis = _two_center_basis()
+    functions = obasis.get_basis_functions()
+    index = obasis.index_basis_functions()
     seen = {}
-    for info in obasis.iter_basis_functions():
-        key = (info.label, info.icenter)
+    for function in functions:
+        key = (function.icenter, function.angmom, function.label)
         occurrence = seen.get(key, 0)
         seen[key] = occurrence + 1
-        assert obasis.find_basis_index(info.label, info.icenter, occurrence) == info.index
+        assert index[key][occurrence] == function.index
 
 
-def test_find_basis_index_center_and_occurrence():
+def test_index_basis_functions_occurrence():
+    # Two shells with the same angular momentum on one center give a label twice.
+    obasis = MolecularBasis(
+        [
+            Shell(0, [1], ["c"], np.zeros(3), np.zeros((3, 1))),
+            Shell(0, [1], ["c"], np.zeros(2), np.zeros((2, 1))),
+            Shell(1, [1], ["c"], np.zeros(2), np.zeros((2, 1))),
+        ],
+        HORTON2_CONVENTIONS,
+        "L2",
+    )
+    index = obasis.index_basis_functions()
+    assert index[0, 1, "x"] == [0, 3]
+    assert index[0, 1, "z"] == [2, 5]
+    assert index[1, 1, "x"] == [6]
+
+
+@pytest.mark.parametrize(
+    ("keys", "key", "expected"),
+    [
+        # The angular momentum is not part of the key, so the labels of different angular momenta
+        # at the same center would be grouped (there are none here).
+        (("icenter", "label"), (1, "x"), [5]),
+        # All the functions of a center and a kind
+        (("icenter", "kind"), (1, "p"), [8, 9, 10, 11, 12]),
+        # No center, so the functions of the centers are grouped.
+        (("label",), ("x",), [1, 5]),
+        (("angmom", "label"), (1, "y"), [2, 6]),
+        # All the attributes
+        (("ishell", "icon"), (2, 1), [5, 6, 7]),
+        # No keys, one group with all the functions
+        ((), (), list(range(13))),
+    ],
+)
+def test_index_basis_functions_custom_keys(keys, key, expected):
+    index = _two_center_basis().index_basis_functions(keys)
+    assert index[key] == expected
+
+
+def test_index_basis_functions_invalid_keys():
     obasis = _two_center_basis()
-    # 'x' appears on both centers
-    assert obasis.find_basis_index("x", 0) == 1
-    assert obasis.find_basis_index("x", 1) == 5
-    # without a center, occurrence walks across centers in basis order
-    assert obasis.find_basis_index("x") == 1
-    assert obasis.find_basis_index("x", occurrence=1) == 5
-    assert obasis.find_basis_index("s2") == 12
+    with pytest.raises(ValueError, match="icentre"):
+        obasis.index_basis_functions(("icentre", "label"))
+    with pytest.raises(ValueError, match="BasisFunction"):
+        obasis.index_basis_functions(("label", "nonsense"))
 
 
-def test_find_basis_index_errors():
-    obasis = _two_center_basis()
-    with pytest.raises(ValueError):
-        obasis.find_basis_index("zz")
-    with pytest.raises(ValueError):
-        obasis.find_basis_index("x", 0, occurrence=1)
-    with pytest.raises(ValueError):
-        obasis.find_basis_index("c0", 0)
+def test_basis_functions_empty():
+    obasis = MolecularBasis([], HORTON2_CONVENTIONS, "L2")
+    assert obasis.get_basis_functions() == []
+    assert obasis.index_basis_functions() == {}
 
 
 def test_angmom_sti():
