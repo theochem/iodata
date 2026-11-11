@@ -24,6 +24,7 @@ Basis set conventions and terminology are documented in :ref:`basis_conventions`
 
 """
 
+from collections.abc import Iterator, Mapping, Sequence
 from functools import wraps
 from numbers import Integral
 
@@ -32,7 +33,14 @@ from numpy.typing import NDArray
 
 from .attrutils import convert_array_to, validate_shape
 
-__all__ = ("BasisFunction", "MolecularBasis", "Shell", "angmom_its", "angmom_sti")
+__all__ = (
+    "BasisFunction",
+    "FrozenConventions",
+    "MolecularBasis",
+    "Shell",
+    "angmom_its",
+    "angmom_sti",
+)
 
 ANGMOM_CHARS = "spdfghiklmnoqrtuvwxyzabce"
 
@@ -218,6 +226,33 @@ class BasisFunction:
     """``+1``, or ``-1`` when the convention flips the sign of this function."""
 
 
+class FrozenConventions(Mapping):
+    """An immutable mapping with basis set conventions.
+
+    The keys are ``(angmom, kind)`` tuples and the values are tuples of basis function strings,
+    as explained in :py:attr:`MolecularBasis.conventions`.
+
+    The constructor makes a private copy of the given mapping and converts its values to tuples.
+    Later changes to the original mapping or its lists have no effect on this object.
+    Unlike :py:class:`types.MappingProxyType`, instances can be pickled.
+    """
+
+    def __init__(self, conventions: Mapping[tuple[int, str], Sequence[str]]):
+        self._data = {key: tuple(value) for key, value in conventions.items()}
+
+    def __getitem__(self, key: tuple[int, str]) -> tuple[str, ...]:
+        return self._data[key]
+
+    def __iter__(self) -> Iterator[tuple[int, str]]:
+        return iter(self._data)
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __repr__(self) -> str:
+        return f"FrozenConventions({self._data!r})"
+
+
 @attrs.define
 class MolecularBasis:
     """A complete molecular orbital or density basis set, a collection of contracted shells."""
@@ -225,21 +260,22 @@ class MolecularBasis:
     shells: list[Shell] = attrs.field()
     """A list of objects of type Shell which can support generalized contractions."""
 
-    conventions: dict[tuple[int, str], list[str]] = attrs.field()
+    conventions: FrozenConventions = attrs.field(converter=FrozenConventions)
     """
-    A dictionary specifying the ordered basis functions for a given angular momentum and kind.
+    A mapping specifying the ordered basis functions for a given angular momentum and kind.
     The key is a tuple of angular momentum integer and kind character ('c' for Cartesian
-    and 'p' for pure/spherical) and the value is a list of basis function strings.
+    and 'p' for pure/spherical) and the value is a tuple of basis function strings.
+    It is always a :py:class:`FrozenConventions` instance.
     For example,
 
     .. code-block:: python
 
-        {
+        FrozenConventions({
             ### Conventions for Cartesian functions
             # E.g., alphabetically ordered Cartesian functions.
-            (0, 'c'): ['1'],
-            (1, 'c'): ['x', 'y', 'z'],
-            (2, 'c'): ['xx', 'xy', 'xz', 'yy', 'yz', 'zz'],
+            (0, 'c'): ('1',),
+            (1, 'c'): ('x', 'y', 'z'),
+            (2, 'c'): ('xx', 'xy', 'xz', 'yy', 'yz', 'zz'),
             ### Conventions for pure functions.
             # The notation is referring to real solid spherical harmonics.
             # See https://en.wikipedia.org/wiki/Solid_harmonics#Real_form
@@ -249,17 +285,26 @@ class MolecularBasis:
             # azimuthal angle.
             # For example, wikipedia-ordered real spherical harmonics,
             # see https://en.wikipedia.org/wiki/Spherical_harmonics#Real_form
-            (2, 'p'): ['s2', 's1', 'c0', 'c1', 'c2'],
+            (2, 'p'): ('s2', 's1', 'c0', 'c1', 'c2'),
             # Different quantum-chemistry codes may use incompatible
             # orderings and sign conventions. E.g. Molden files written
             # by ORCA use the following convention for pure f functions:
-            (3, 'p'): ['c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'],
+            (3, 'p'): ('c0', 'c1', 's1', 'c2', 's2', '-c3', '-s3'),
             # Note that the minus sign in the last two basis functions
             # denotes that the signs of these harmonics have been changed.
-        }
+        })
 
     The basis function strings in the conventions dictionary are documented
     in :ref:`basis_conventions`.
+
+    The conventions cannot be modified in place, because the same conventions object is
+    often shared, e.g. by all basis sets loaded from files of the same format.
+    Changing the conventions is rarely a good idea, but if needed,
+    assign a new mapping instead:
+
+    .. code-block:: python
+
+        obasis.conventions = {**obasis.conventions, (0, "p"): ("c0",)}
     """
 
     primitive_normalization: str = attrs.field()

@@ -207,13 +207,14 @@ Different file formats supported by IOData have an incompatible ordering of
 basis functions within one *shell*. Also the sign conventions may differ from
 the definitions given above. The ``conventions`` attribute of
 :py:class:`iodata.basis.MolecularBasis` specifies the ordering and sign flips
-relative to the above definitions. It is a dictionary,
+relative to the above definitions. It is an immutable mapping
+(:py:class:`iodata.basis.FrozenConventions`),
 
 * whose keys are tuples denoting a shell type ``(angmom, char)`` where
   ``angmom`` is a positive integer denoting the angular momentum and ``char`` is
   either ``'c'`` or ``'p'`` for Cartesian are pure, respectively
 
-* and whose values are lists of `basis function strings`, where each string
+* and whose values are tuples of `basis function strings`, where each string
   denotes one basis function.
 
 A basis function string has a one-to-one correspondence to the Cartesian or
@@ -230,7 +231,7 @@ pure polynomials defined above.
 
 Each basis function string can be prefixed with a minus sign, to denote a
 sign flip with respect to the definitions on this page. The order of the string
-in the list defines the order of the corresponding basis functions within one
+in the tuple defines the order of the corresponding basis functions within one
 shell.
 
 For example, pure and Cartesian s, p and d functions in Gaussian FCHK files
@@ -238,12 +239,12 @@ adhere to the following convention:
 
 .. code-block:: python
 
-    conventions = {
-        (0, 'c'): ['1'],
-        (1, 'c'): ['x', 'y', 'z'],
-        (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-        (2, 'p'): ['c0', 'c1', 's1', 'c2', 's2'],
-    }
+    conventions = FrozenConventions({
+        (0, 'c'): ('1',),
+        (1, 'c'): ('x', 'y', 'z'),
+        (2, 'c'): ('xx', 'yy', 'zz', 'xy', 'xz', 'yz'),
+        (2, 'p'): ('c0', 'c1', 's1', 'c2', 's2'),
+    })
 
 (Pure s and p functions are never used in a Gaussian FCHK file.)
 

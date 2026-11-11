@@ -241,7 +241,7 @@ def create_generalized_orbitals() -> IOData:
                 Shell(0, [0, 1], ["c", "c"], rng.uniform(0, 1, 2), rng.uniform(0, 1, (2, 2))),
                 Shell(1, [0, 1], ["c", "c"], rng.uniform(0, 1, 2), rng.uniform(0, 1, (2, 2))),
             ],
-            {(0, "c"): ["1"], (1, "c"): ["x", "y", "z"]},
+            {(0, "c"): ("1",), (1, "c"): ("x", "y", "z")},
             "L2",
         ),
     )
@@ -271,7 +271,7 @@ def create_generalized_contraction() -> IOData:
                 ),
             ],
             {
-                (0, "c"): ["1"],
+                (0, "c"): ("1",),
             },
             "L2",
         ),

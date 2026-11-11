@@ -23,7 +23,7 @@ import re
 import numpy as np
 from numpy.typing import NDArray
 
-from ..basis import MolecularBasis, Shell
+from ..basis import FrozenConventions, MolecularBasis, Shell
 from ..convert import HORTON2_CONVENTIONS
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
@@ -53,20 +53,20 @@ PATTERNS = ["*.mwfn"]
 
 
 # fmt: off
-CONVENTIONS = {
+CONVENTIONS = FrozenConventions({
     (4, 'p'): HORTON2_CONVENTIONS[(4, 'p')],
     (3, 'p'): HORTON2_CONVENTIONS[(3, 'p')],
     (2, 'p'): HORTON2_CONVENTIONS[(2, 'p')],
-    (0, 'c'): ['1'],
-    (1, 'c'): ['x', 'y', 'z'],
-    (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-    (3, 'c'): ['xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'],
-    (4, 'c'): ['zzzz', 'yzzz', 'yyzz', 'yyyz', 'yyyy', 'xzzz', 'xyzz', 'xyyz', 'xyyy',
-               'xxzz', 'xxyz', 'xxyy', 'xxxz', 'xxxy', 'xxxx'],
-    (5, 'c'): ['zzzzz', 'yzzzz', 'yyzzz', 'yyyzz', 'yyyyz', 'yyyyy', 'xzzzz', 'xyzzz',
+    (0, 'c'): ('1',),
+    (1, 'c'): ('x', 'y', 'z'),
+    (2, 'c'): ('xx', 'yy', 'zz', 'xy', 'xz', 'yz'),
+    (3, 'c'): ('xxx', 'yyy', 'zzz', 'xyy', 'xxy', 'xxz', 'xzz', 'yzz', 'yyz', 'xyz'),
+    (4, 'c'): ('zzzz', 'yzzz', 'yyzz', 'yyyz', 'yyyy', 'xzzz', 'xyzz', 'xyyz', 'xyyy',
+               'xxzz', 'xxyz', 'xxyy', 'xxxz', 'xxxy', 'xxxx'),
+    (5, 'c'): ('zzzzz', 'yzzzz', 'yyzzz', 'yyyzz', 'yyyyz', 'yyyyy', 'xzzzz', 'xyzzz',
                'xyyzz', 'xyyyz', 'xyyyy', 'xxzzz', 'xxyzz', 'xxyyz', 'xxyyy', 'xxxzz',
-               'xxxyz', 'xxxyy', 'xxxxz', 'xxxxy', 'xxxxx'],
-}
+               'xxxyz', 'xxxyy', 'xxxxz', 'xxxxy', 'xxxxx'),
+})
 # fmt: on
 
 

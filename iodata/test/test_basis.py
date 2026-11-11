@@ -18,18 +18,22 @@
 # --
 """Unit tests for iodata.obasis."""
 
+import pickle
+
 import attrs
 import numpy as np
 import pytest
 
 from ..basis import (
     BasisFunction,
+    FrozenConventions,
     MolecularBasis,
     Shell,
     angmom_its,
     angmom_sti,
 )
 from ..convert import HORTON2_CONVENTIONS
+from ..formats import cp2klog, fchk, molden, mwfn, wfn
 from ..formats.cp2klog import CONVENTIONS as CP2K_CONVENTIONS
 
 
@@ -97,7 +101,7 @@ def test_sign_convention_is_tracked():
     # ORCA's pure f convention, from the MolecularBasis docstring, flips two signs
     obasis = MolecularBasis(
         [Shell(0, [3], ["p"], np.zeros(3), np.zeros((3, 1)))],
-        {(3, "p"): ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3"]},
+        {(3, "p"): ("c0", "c1", "s1", "c2", "s2", "-c3", "-s3")},
         "L2",
     )
     functions = obasis.get_basis_functions()
@@ -261,9 +265,9 @@ def test_shell_info_propertes():
     obasis = MolecularBasis(
         shells,
         {
-            (0, "c"): ["s"],
-            (1, "c"): ["x", "z", "-y"],
-            (2, "p"): ["dc0", "dc1", "-ds1", "dc2", "-ds2"],
+            (0, "c"): ("s",),
+            (1, "c"): ("x", "z", "-y"),
+            (2, "p"): ("dc0", "dc1", "-ds1", "dc2", "-ds2"),
         },
         "L2",
     )
@@ -322,3 +326,74 @@ def test_nbasis1():
         "L2",
     )
     assert obasis.nbasis == 9
+
+
+def test_frozen_conventions_copy():
+    conventions = {(0, "c"): ["1"], (1, "c"): ["x", "y", "z"]}
+    frozen = FrozenConventions(conventions)
+    conventions[(1, "c")].reverse()
+    conventions[(2, "p")] = ["c0", "c1", "s1", "c2", "s2"]
+    assert frozen[(1, "c")] == ("x", "y", "z")
+    assert (2, "p") not in frozen
+
+
+def test_frozen_conventions_immutable():
+    frozen = FrozenConventions({(1, "c"): ("x", "y", "z")})
+    with pytest.raises(TypeError):
+        frozen[(0, "c")] = ("1",)
+    with pytest.raises(TypeError):
+        del frozen[(1, "c")]
+    with pytest.raises(TypeError):
+        frozen[(1, "c")][0] = "z"
+
+
+def test_frozen_conventions_mapping():
+    frozen = FrozenConventions({(0, "c"): ("1",), (1, "c"): ("x", "y", "z")})
+    assert len(frozen) == 2
+    assert list(frozen) == [(0, "c"), (1, "c")]
+    assert (1, "c") in frozen
+    assert (2, "c") not in frozen
+    assert frozen.get((2, "c")) is None
+    with pytest.raises(KeyError):
+        _ = frozen[(2, "c")]
+    assert dict(frozen) == {(0, "c"): ("1",), (1, "c"): ("x", "y", "z")}
+    assert frozen == FrozenConventions({(0, "c"): ("1",), (1, "c"): ("x", "y", "z")})
+    assert frozen != FrozenConventions({(0, "c"): ("1",)})
+    assert repr(frozen) == "FrozenConventions({(0, 'c'): ('1',), (1, 'c'): ('x', 'y', 'z')})"
+
+
+def test_frozen_conventions_pickle():
+    frozen = FrozenConventions(CP2K_CONVENTIONS)
+    assert pickle.loads(pickle.dumps(frozen)) == frozen
+    obasis = MolecularBasis([], CP2K_CONVENTIONS, "L2")
+    assert pickle.loads(pickle.dumps(obasis)).conventions == CP2K_CONVENTIONS
+
+
+@pytest.mark.parametrize("module", [cp2klog, fchk, molden, mwfn, wfn])
+def test_format_conventions_frozen(module):
+    assert isinstance(module.CONVENTIONS, FrozenConventions)
+
+
+def test_molecular_basis_conventions():
+    conventions = {(0, "c"): ["1"], (1, "c"): ["x", "y", "z"]}
+    obasis = MolecularBasis([], conventions, "L2")
+    assert isinstance(obasis.conventions, FrozenConventions)
+    conventions[(1, "c")].reverse()
+    assert obasis.conventions[(1, "c")] == ("x", "y", "z")
+    with pytest.raises(TypeError):
+        obasis.conventions[(0, "p")] = ["c0"]
+
+
+def test_molecular_basis_change_conventions():
+    # Two basis sets that share conventions, like basis sets loaded from the same file format.
+    obasis0 = MolecularBasis([], CP2K_CONVENTIONS, "L2")
+    obasis1 = MolecularBasis([], CP2K_CONVENTIONS, "L2")
+    # The way to change the conventions given in the docstring of MolecularBasis.conventions
+    obasis0.conventions = {**obasis0.conventions, (0, "p"): ("c0",)}
+    assert isinstance(obasis0.conventions, FrozenConventions)
+    assert obasis0.conventions[(0, "p")] == ("c0",)
+    assert (0, "p") not in obasis1.conventions
+    assert (0, "p") not in CP2K_CONVENTIONS
+    obasis2 = attrs.evolve(obasis1, conventions={(1, "c"): ("z", "y", "x")})
+    assert obasis2.conventions == FrozenConventions({(1, "c"): ("z", "y", "x")})
+    assert obasis1.conventions == CP2K_CONVENTIONS
