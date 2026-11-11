@@ -300,7 +300,7 @@ def _permutation_matrix(permutation: list[int], signs: list[int]) -> NDArray[flo
 def convert_to_cartesian(
     obasis: MolecularBasis, new_conventions: dict[tuple[int, str], list[str]]
 ) -> tuple[MolecularBasis, sparse.csr_array]:
-    """Convert a basis set with pure functions to one with only Cartesian functions.
+    """Convert a basis set to Cartesian functions with given conventions.
 
     This is needed for file formats that do not support pure functions, such as WFN and WFX.
     The new basis spans the same space as the old one, so no information is lost.

@@ -371,16 +371,20 @@ def test_convert_to_segmented_empty():
 
 
 def _get_test_conventions(name: str) -> dict:
-    conventions = dict(HORTON2_CONVENTIONS)
+    if name == "horton2":
+        return dict(HORTON2_CONVENTIONS)
     if name == "cca":
-        conventions = dict(CCA_CONVENTIONS)
-    elif name == "fchk":
-        conventions = dict(FCHK_CONVENTIONS)
-    elif name == "signs_and_cartesian_order":
+        return dict(CCA_CONVENTIONS)
+    if name == "fchk":
+        return dict(FCHK_CONVENTIONS)
+    if name == "signs_and_cartesian_order":
         # Sign flips in pure f functions (as in ORCA) and a reversed order of Cartesian d functions.
+        conventions = dict(HORTON2_CONVENTIONS)
         conventions[3, "p"] = ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3"]
         conventions[2, "c"] = conventions[2, "c"][::-1]
-    return conventions
+        return conventions
+    # A typo in the name of the conventions must not silently give other conventions.
+    raise ValueError(f"Unknown test conventions: {name}")
 
 
 CONVENTION_NAMES = ["horton2", "cca", "fchk", "signs_and_cartesian_order"]
