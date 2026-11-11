@@ -31,7 +31,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from ..docstrings import document_load_one
-from ..utils import LineIterator, set_four_index_element
+from ..utils import LineIterator, parse_fortran_float, set_four_index_element
 
 __all__ = ()
 
@@ -105,7 +105,7 @@ def _load_twoindex_g09(lit: LineIterator, nbasis: int) -> NDArray[float]:
         for i in range(nrow):
             words = next(lit).split()[1:]
             for j, word in enumerate(words):
-                value = float(word.replace("D", "E"))
+                value = parse_fortran_float(word)
                 result[i + block_counter, j + block_counter] = value
                 result[j + block_counter, i + block_counter] = value
         block_counter += 5
@@ -141,7 +141,7 @@ def _load_fourindex_g09(lit: LineIterator, nbasis: int) -> NDArray[float]:
         i1 = int(line[9:13]) - 1
         i2 = int(line[15:19]) - 1
         i3 = int(line[21:25]) - 1
-        value = float(line[29:].replace("D", "E"))
+        value = parse_fortran_float(line[29:])
         # Gaussian uses the chemists' notation for the 4-center indexes. IOdata
         # uses the physicists' notation.
         set_four_index_element(result, i0, i2, i1, i3, value)

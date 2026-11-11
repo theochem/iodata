@@ -34,7 +34,51 @@ from .convert import convert_to_segmented, convert_to_unrestricted
 from .iodata import IOData
 from .utils import PrepareDumpError, PrepareDumpWarning
 
-__all__ = ("prepare_segmented", "prepare_unrestricted_aminusb")
+__all__ = ("prepare_segmented", "prepare_single_line_title", "prepare_unrestricted_aminusb")
+
+
+def prepare_single_line_title(data: IOData, allow_changes: bool, filename: str, fmt: str):
+    """Put the title on a single line, for file formats that can only store one line.
+
+    A title can have several lines, e.g. when it is loaded from a PDB file.
+    Writing such a title as it is would break the structure of the file.
+
+    Parameters
+    ----------
+    data
+        The IOData instance with the title.
+    allow_changes
+        Whether conversion of the IOData object to a compatible form is allowed or not.
+    filename
+        The file to be written to, only used for error messages.
+    fmt
+        The file format whose dump function is calling this function, only used for error messages.
+
+    Returns
+    -------
+    data
+        The given data object if the title is empty or already fits on one line,
+        or a shallow copy with the lines of the title joined by single spaces.
+
+    Raises
+    ------
+    PrepareDumpError
+        If ``allow_changes == False`` and the title has more than one line.
+    PrepareDumpWarning
+        If ``allow_changes == True`` and the title has more than one line.
+    """
+    if not data.title or data.title.splitlines() == [data.title]:
+        return data
+
+    message = f"The {fmt} format only supports a title with a single line. "
+    if not allow_changes:
+        raise PrepareDumpError(
+            message + "Set allow_changes to join the lines of the title.", filename
+        )
+    warn(PrepareDumpWarning(message + "The lines of the title are joined.", filename), stacklevel=2)
+
+    words = [line.strip() for line in data.title.splitlines()]
+    return attrs.evolve(data, title=" ".join(word for word in words if word))
 
 
 def prepare_unrestricted_aminusb(data: IOData, allow_changes: bool, filename: str, fmt: str):

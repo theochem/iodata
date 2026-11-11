@@ -21,6 +21,7 @@
 import os
 from importlib.resources import as_file, files
 
+import attrs
 import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
@@ -28,8 +29,9 @@ from numpy.testing import assert_allclose, assert_equal
 from ..api import dump_one, load_one
 from ..formats.wfn import load_wfn_low
 from ..overlap import compute_overlap
-from ..utils import LineIterator, PrepareDumpError, PrepareDumpWarning
+from ..utils import DumpWarning, LineIterator, PrepareDumpError, PrepareDumpWarning
 from .common import (
+    check_dump_multiline_title,
     check_orthonormal,
     compare_mols,
     compute_mulliken_charges,
@@ -48,11 +50,12 @@ def helper_load_wfn_low(fn_wfn):
 def test_load_wfn_low_he_s():
     data = helper_load_wfn_low("he_s_orbital.wfn")
     # unpack data
-    title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[5:]
+    title, atnums, atcorenums, atcoords, centers, type_assignments = data[:6]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[6:]
     assert title == "He atom - decontracted 6-31G basis set"
     assert_equal(atnums.shape, (1,))
     assert_equal(atnums, [2])
+    assert_equal(atcorenums, [2.0])
     assert_equal(atcoords.shape, (1, 3))
     assert_equal(centers.shape, (4,))
     assert_equal(type_assignments.shape, (4,))
@@ -77,8 +80,8 @@ def test_load_wfn_low_he_s():
 def test_load_wfn_low_h2o():
     data = helper_load_wfn_low("h2o_sto3g.wfn")
     # unpack data
-    title, atnums, atcoords, centers, type_assignments = data[:5]
-    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[5:]
+    title, atnums, atcorenums, atcoords, centers, type_assignments = data[:6]
+    exponents, mo_count, occ_num, mo_energy, coefficients, energy, virial, _ = data[6:]
     assert title == "H2O Optimization"
     assert_equal(atnums.shape, (3,))
     assert_equal(atcoords.shape, (3, 3))
@@ -90,6 +93,7 @@ def test_load_wfn_low_h2o():
     assert_equal(mo_energy.shape, (5,))
     assert_equal(coefficients.shape, (21, 5))
     assert_equal(atnums, np.array([8, 1, 1]))
+    assert_equal(atcorenums, [8.0, 1.0, 1.0])
     assert_equal(centers[:15], np.zeros(15, int))
     assert_equal(centers[15:], np.array([1, 1, 1, 2, 2, 2]))
     assert_equal(type_assignments[:6], np.zeros(6))
@@ -323,6 +327,10 @@ def check_load_dump_consistency(fn: str, tmpdir: str, atol: float = 1.0e-6, allo
     fn_tmp = os.path.join(tmpdir, "foo.wfn")
     dump_one(mol1, fn_tmp, allow_changes=allow_changes)
     mol2 = load_one(fn_tmp)
+    # compare atoms and the total charge
+    assert_equal(mol1.atnums, mol2.atnums)
+    assert_allclose(mol1.atcorenums, mol2.atcorenums, atol=atol)
+    assert_allclose(mol1.charge, mol2.charge, atol=atol)
     # compare Mulliken charges
     charges1 = compute_mulliken_charges(mol1)
     charges2 = compute_mulliken_charges(mol2)
@@ -361,13 +369,49 @@ def test_load_dump_consistency(path, tmpdir):
     check_load_dump_consistency(path, tmpdir)
 
 
+def test_dump_zero_energy(tmpdir):
+    # An energy of 0.0 is a valid value and must not be written as NaN.
+    with as_file(files("iodata.test.data").joinpath("h2o_sto3g.wfn")) as fn_wfn:
+        mol = load_one(fn_wfn)
+    fn_tmp = os.path.join(tmpdir, "zero_energy.wfn")
+    dump_one(attrs.evolve(mol, energy=0.0), fn_tmp)
+    assert load_one(fn_tmp).energy == 0.0
+
+
+@pytest.mark.parametrize("path", ["h2o_sto3g.wfn", "lih_cation_uhf.wfn", "o2_uhf.wfn"])
+def test_dump_no_orbital_energies(path, tmpdir):
+    # The WFN format has an orbital energy for every orbital, zeros are written when
+    # they are not known, e.g. for natural orbitals.
+    # For unrestricted orbitals, the MOSPIN section tells the loader where the beta
+    # orbitals start, which cannot be guessed from orbital energies that are all zero.
+    with as_file(files("iodata.test.data").joinpath(path)) as fn_wfn:
+        mol = load_one(fn_wfn)
+    assert mol.mo.energies is not None
+    assert "mo_spin" not in mol.extra
+    mol_no_energies = attrs.evolve(mol, mo=attrs.evolve(mol.mo, energies=None))
+    fn_tmp = os.path.join(tmpdir, "no_orbital_energies.wfn")
+    dump_one(mol_no_energies, fn_tmp)
+    mol_loaded = load_one(fn_tmp)
+    assert mol_loaded.mo.kind == mol.mo.kind
+    assert mol_loaded.mo.norba == mol.mo.norba
+    assert mol_loaded.mo.norbb == mol.mo.norbb
+    assert_equal(mol_loaded.mo.energies, np.zeros(mol.mo.norb))
+    assert_allclose(mol_loaded.mo.occs, mol.mo.occs, atol=1e-6)
+    assert_allclose(mol_loaded.mo.coeffs, mol.mo.coeffs, atol=1e-6)
+    if mol.mo.kind == "unrestricted":
+        assert_equal(mol_loaded.extra["mo_spin"], [1] * mol.mo.norba + [2] * mol.mo.norbb)
+    else:
+        assert "mo_spin" not in mol_loaded.extra
+
+
 def test_load_dump_consistency_from_fchk_h2o(tmpdir):
     with pytest.warns(PrepareDumpWarning):
         check_load_dump_consistency("h2o_sto3g.fchk", tmpdir, allow_changes=True)
 
 
-def test_load_dump_consistency_from_molden_nh3(tmpdir):
-    check_load_dump_consistency("nh3_molden_cart.molden", tmpdir)
+@pytest.mark.parametrize("path", ["nh3_molden_cart.molden", "he2_ghost_psi4_1.0.molden"])
+def test_load_dump_consistency_from_molden(path, tmpdir):
+    check_load_dump_consistency(path, tmpdir)
 
 
 def test_dump_one_pure_functions(tmpdir):
@@ -375,8 +419,25 @@ def test_dump_one_pure_functions(tmpdir):
         check_load_dump_consistency("water_ccpvdz_pure_hf_g03.fchk", tmpdir)
 
 
+def test_dump_one_atcorenums_rounded(tmpdir):
+    # The WFN format stores core charges with only one decimal.
+    with as_file(files("iodata.test.data").joinpath("h2o_sto3g.wfn")) as fn:
+        data = load_one(str(fn))
+    data.atcorenums = np.array([8.0, 1.24, 0.76])
+    fn_tmp = os.path.join(tmpdir, "foo.wfn")
+    with pytest.warns(DumpWarning, match="one decimal"):
+        dump_one(data, fn_tmp)
+    assert_allclose(load_one(fn_tmp).atcorenums, [8.0, 1.2, 0.8])
+
+
 def test_generalized_orbitals():
     # The WFN format does not support generalized MOs
     data = create_generalized_orbitals()
     with pytest.raises(PrepareDumpError):
         dump_one(data, "generalized.wfn")
+
+
+def test_dump_multiline_title(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("h2o_sto3g.wfn")) as fn:
+        mol = load_one(fn)
+    check_dump_multiline_title(mol, tmpdir, "wfn")

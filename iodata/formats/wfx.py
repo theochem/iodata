@@ -33,7 +33,11 @@ from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..orbitals import MolecularOrbitals
 from ..periodic import num2sym
-from ..prepare import prepare_segmented, prepare_unrestricted_aminusb
+from ..prepare import (
+    prepare_segmented,
+    prepare_single_line_title,
+    prepare_unrestricted_aminusb,
+)
 from ..utils import LineIterator, LoadError, LoadWarning, PrepareDumpError
 from .wfn import CONVENTIONS, build_obasis, get_mocoeff_scales
 
@@ -189,7 +193,7 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
         if section_start is None and line.startswith("#"):
             continue
         # check whether line is the start of a section
-        if section_start is None and line.startswith("<"):
+        if section_start is None and line.startswith("<") and not line.startswith("</"):
             # set start & end of the section and add it to data dictionary
             section_start = line
             if section_start in data:
@@ -200,7 +204,9 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
             if section_start == mo_start:
                 data["<MO Numbers>"] = []
         # check whether line is the (correct) end of the section
-        elif section_start is not None and line.startswith("</"):
+        elif line.startswith("</"):
+            if section_start is None:
+                raise LoadError(f"Unexpected closing tag {line} outside of any section.", lit)
             # In some cases, closing tags have a different number of spaces. 8-[
             if line.replace(" ", "") != section_end.replace(" ", ""):
                 raise LoadError(f"Expecting line {section_end} but got {line}.", lit)
@@ -212,9 +218,16 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
             data["<MO Numbers>"].append(next(lit).strip())
             # skip '</MO Number>' line
             next(lit)
+        # Opening tags cannot be nested (except <MO Number>, handled above).
+        # The title is free text and may start with "<", e.g. "<Created with IOData>",
+        # which older IOData versions wrote when no title was set.
+        elif line.startswith("<") and section_start != "<Title>":
+            raise LoadError(f"Expecting line {section_end} but got {line}.", lit)
         # add section content to the corresponding list in data dictionary
-        else:
+        elif section_start is not None:
             data[section_start].append(line)
+        elif line:
+            raise LoadError(f"Encountered content outside of any section: {line}", lit)
 
     # check if last section was closed
     if section_start is not None:
@@ -228,7 +241,8 @@ def parse_wfx(lit: LineIterator, required_tags: list | None = None) -> dict:
 
 
 @document_load_one(
-    "WFX", ["atcoords", "atgradient", "atnums", "energy", "extra", "mo", "obasis", "title"]
+    "WFX",
+    ["atcoords", "atcorenums", "atgradient", "atnums", "energy", "extra", "mo", "obasis", "title"],
 )
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
@@ -373,6 +387,7 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
             raise PrepareDumpError(
                 "The WFX format only supports Cartesian MolecularBasis.", filename
             )
+    data = prepare_single_line_title(data, allow_changes, filename, "WFX")
     data = prepare_unrestricted_aminusb(data, allow_changes, filename, "WFX")
     return prepare_segmented(data, False, allow_changes, filename, "WFX")
 
@@ -439,7 +454,7 @@ def dump_one(f: TextIO, data: IOData):
         mo_coeffs[:, index] *= contractions * scales
 
     # write title & keywords
-    _write_xml_single(tag=lbs["title"], info=data.title or "<Created with IOData>", file=f)
+    _write_xml_single(tag=lbs["title"], info=data.title or "Created with IOData", file=f)
     _write_xml_single(tag=lbs["keywords"], info=data.extra.get("keywords", "GTO"), file=f)
 
     # write number of nuclei & number of primitives
@@ -456,9 +471,11 @@ def dump_one(f: TextIO, data: IOData):
     _write_xml_single(lbs["num_perturbations"], data.extra.get("num_perturbations", 0), file=f)
 
     # write nuclear names, atomic numbers, and nuclear charges
-    # add ghost atom, represented by Bq and atomic number 0
-    num2sym.update({0: "Bq"})
-    nuclear_names = [f" {num2sym[num]}{index + 1}" for index, num in enumerate(data.atcorenums)]
+    # The names are based on the atomic numbers, because the nuclear charges can differ
+    # from them, e.g. with ECPs or fractional core charges.
+    # A ghost atom is represented by Bq and atomic number 0.
+    symbols = {**num2sym, 0: "Bq"}
+    nuclear_names = [f" {symbols[num]}{index + 1}" for index, num in enumerate(data.atnums)]
     _write_xml_iterator(tag=lbs["nuclear_names"], info=nuclear_names, file=f)
     _write_xml_iterator(tag=lbs["atnums"], info=data.atnums, file=f)
     _write_xml_iterator_scientific(tag=lbs["nuclear_charge"], info=data.atcorenums, file=f)
@@ -533,7 +550,9 @@ def dump_one(f: TextIO, data: IOData):
     print("</Molecular Orbital Primitive Coefficients>", file=f)
 
     # write energy and virial ratio; use ' NAN' when None (not available)
-    _write_xml_single_scientific(tag=lbs["energy"], info=data.energy or np.nan, file=f)
+    # An energy of 0.0 is a valid value, only None means that it is not available.
+    energy = np.nan if data.energy is None else data.energy
+    _write_xml_single_scientific(tag=lbs["energy"], info=energy, file=f)
     _write_xml_single_scientific(lbs["virial_ratio"], data.extra.get("virial_ratio", np.nan), f)
 
     # write nuclear Cartesian energy gradients (optional)
