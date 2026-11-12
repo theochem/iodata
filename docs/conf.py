@@ -87,6 +87,7 @@ autodoc_default_options = {
     "inherited-members": True,
     "ignore-module-all": True,
 }
+autodoc_docstring_signature = False
 napoleon_use_rtype = False
 add_module_names = False
 
