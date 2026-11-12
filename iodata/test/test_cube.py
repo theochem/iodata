@@ -21,9 +21,11 @@
 from importlib.resources import as_file, files
 
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import dump_one, load_one
+from ..utils import LoadError
 from .common import check_dump_multiline_title
 
 
@@ -132,3 +134,38 @@ def test_dump_multiline_title(tmpdir):
     with as_file(files("iodata.test.data").joinpath("cubegen_h2o_5points.cube")) as fn:
         mol = load_one(fn)
     check_dump_multiline_title(mol, tmpdir, "cube")
+
+
+def _mo_cube_lines(fn_density, mo_record):
+    """Turn a density cube into an MO cube header: NAtoms < 0 plus an MO record."""
+    with open(fn_density) as f:
+        lines = f.read().splitlines()
+    natom = int(lines[2].split()[0])
+    lines[2] = f"{-natom:5d}" + lines[2][5:]
+    return [*lines[: 6 + natom], mo_record, *lines[6 + natom :]]
+
+
+def test_load_mo_cube_one_orbital(tmpdir):
+    # Gaussian cubegen writes NAtoms < 0 for orbital cubes, followed by an extra
+    # record with the number of MOs and their indices.
+    with as_file(files("iodata.test.data").joinpath("cubegen_h2o_5points.cube")) as fn:
+        mol1 = load_one(str(fn))
+        lines = _mo_cube_lines(fn, "    1    5")
+    fn_mo = tmpdir.join("h2o_mo5.cube")
+    fn_mo.write("\n".join(lines) + "\n")
+    mol2 = load_one(str(fn_mo))
+    assert_equal(mol2.atnums, mol1.atnums)
+    assert_allclose(mol2.atcoords, mol1.atcoords)
+    assert_allclose(mol2.atcorenums, mol1.atcorenums)
+    assert_allclose(mol2.cube.origin, mol1.cube.origin)
+    assert_allclose(mol2.cube.axes, mol1.cube.axes)
+    assert_allclose(mol2.cube.data, mol1.cube.data)
+
+
+def test_load_mo_cube_several_orbitals(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("cubegen_h2o_5points.cube")) as fn:
+        lines = _mo_cube_lines(fn, "    2    4    5")
+    fn_mo = tmpdir.join("h2o_mo45.cube")
+    fn_mo.write("\n".join(lines) + "\n")
+    with pytest.raises(LoadError, match="2 orbitals"):
+        load_one(str(fn_mo))
