@@ -33,7 +33,7 @@ from warnings import warn
 import numpy as np
 from numpy.typing import NDArray
 
-from ..basis import MolecularBasis, Shell
+from ..basis import FrozenConventions, MolecularBasis, Shell
 from ..convert import convert_conventions
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
@@ -113,17 +113,17 @@ PATTERNS = ["*.wfn"]
 
 
 # fmt: off
-CONVENTIONS = {
-    (0, 'c'): ['1'],
-    (1, 'c'): ['x', 'y', 'z'],
-    (2, 'c'): ['xx', 'yy', 'zz', 'xy', 'xz', 'yz'],
-    (3, 'c'): ['xxx', 'yyy', 'zzz', 'xxy', 'xxz', 'yyz', 'xyy', 'xzz', 'yzz', 'xyz'],
-    (4, 'c'): ['xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
-               'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'],
-    (5, 'c'): ['zzzzz', 'yzzzz', 'yyzzz', 'yyyzz', 'yyyyz', 'yyyyy', 'xzzzz',
+CONVENTIONS = FrozenConventions({
+    (0, 'c'): ('1',),
+    (1, 'c'): ('x', 'y', 'z'),
+    (2, 'c'): ('xx', 'yy', 'zz', 'xy', 'xz', 'yz'),
+    (3, 'c'): ('xxx', 'yyy', 'zzz', 'xxy', 'xxz', 'yyz', 'xyy', 'xzz', 'yzz', 'xyz'),
+    (4, 'c'): ('xxxx', 'yyyy', 'zzzz', 'xxxy', 'xxxz', 'xyyy', 'yyyz', 'xzzz',
+               'yzzz', 'xxyy', 'xxzz', 'yyzz', 'xxyz', 'xyyz', 'xyzz'),
+    (5, 'c'): ('zzzzz', 'yzzzz', 'yyzzz', 'yyyzz', 'yyyyz', 'yyyyy', 'xzzzz',
                'xyzzz', 'xyyzz', 'xyyyz', 'xyyyy', 'xxzzz', 'xxyzz', 'xxyyz',
-               'xxyyy', 'xxxzz', 'xxxyz', 'xxxyy', 'xxxxz', 'xxxxy', 'xxxxx'],
-}
+               'xxyyy', 'xxxzz', 'xxxyz', 'xxxyy', 'xxxxz', 'xxxxy', 'xxxxx'),
+})
 # fmt: on
 
 # Definition of primitives in the WFN format. This is the order of the primitive

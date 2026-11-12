@@ -21,7 +21,7 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from ..basis import MolecularBasis, Shell, angmom_sti
+from ..basis import FrozenConventions, MolecularBasis, Shell, angmom_sti
 from ..convert import HORTON2_CONVENTIONS
 from ..docstrings import document_load_one
 from ..orbitals import MolecularOrbitals
@@ -34,12 +34,14 @@ __all__ = ()
 PATTERNS = ["*.cp2k.out"]
 
 
-CONVENTIONS = {
-    (0, "c"): HORTON2_CONVENTIONS[(0, "c")],
-    (1, "c"): HORTON2_CONVENTIONS[(1, "c")],
-    (2, "p"): HORTON2_CONVENTIONS[(2, "p")],
-    (3, "p"): HORTON2_CONVENTIONS[(3, "p")],
-}
+CONVENTIONS = FrozenConventions(
+    {
+        (0, "c"): HORTON2_CONVENTIONS[(0, "c")],
+        (1, "c"): HORTON2_CONVENTIONS[(1, "c")],
+        (2, "p"): HORTON2_CONVENTIONS[(2, "p")],
+        (3, "p"): HORTON2_CONVENTIONS[(3, "p")],
+    }
+)
 
 
 def _get_cp2k_norm_corrections(ell: int, alphas: float | NDArray[float]) -> float | NDArray[float]:

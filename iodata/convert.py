@@ -23,12 +23,14 @@ The functions in this module can be used without writing data to files.
 Most of them are used by the prepare module.
 """
 
+from collections.abc import Mapping, Sequence
+
 import attrs
 import numpy as np
 from numpy.typing import NDArray
 from scipy import sparse
 
-from .basis import MolecularBasis, Shell
+from .basis import FrozenConventions, MolecularBasis, Shell
 from .orbitals import MolecularOrbitals
 from .overlap_cartpure import tfs
 
@@ -107,7 +109,9 @@ def _convert_convention_shell(
 
 
 def convert_conventions(
-    molbasis: MolecularBasis, new_conventions: dict[str, list[str]], reverse=False
+    molbasis: MolecularBasis,
+    new_conventions: Mapping[tuple[int, str], Sequence[str]],
+    reverse=False,
 ) -> tuple[NDArray[int], NDArray[int]]:
     """Return a permutation vector and sign changes to convert from 1 to 2.
 
@@ -178,8 +182,8 @@ def iter_cart_alphabet(n: int) -> NDArray[int]:
             yield np.array((nx, ny, nz), dtype=int)
 
 
-def _get_default_conventions() -> tuple[dict, dict]:
-    """Produce conventions dictionaries compatible with HORTON2 and CCA.
+def _get_default_conventions() -> tuple[FrozenConventions, FrozenConventions]:
+    """Produce immutable conventions compatible with HORTON2 and CCA.
 
     Do not change this! Both conventions are also used by several file formats
     from other QC codes.
@@ -200,29 +204,28 @@ def _get_default_conventions() -> tuple[dict, dict]:
     Returns
     -------
     horton2_conventions
-        A conventions dictionary for HORTON2, of which parts are used by various
+        Conventions for HORTON2, of which parts are used by various
         file formats.
     cca_conventions
-        A conventions dictionary compatible with the Common Component
+        Conventions compatible with the Common Component
         Architecture (CCA).
 
     """
-    horton2 = {(0, "c"): ["1"]}
+    horton2 = {(0, "c"): ("1",)}
     cca = horton2.copy()
     for angmom in range(1, 25):
-        conv_cart = ["x" * nx + "y" * ny + "z" * nz for nx, ny, nz in iter_cart_alphabet(angmom)]
+        conv_cart = tuple(
+            "x" * nx + "y" * ny + "z" * nz for nx, ny, nz in iter_cart_alphabet(angmom)
+        )
         key = (angmom, "c")
         horton2[key] = conv_cart
         cca[key] = conv_cart
         if angmom > 1:
-            conv_pure = ["c0"]
-            for absm in range(1, angmom + 1):
-                conv_pure.append(f"c{absm}")
-                conv_pure.append(f"s{absm}")
+            conv_pure = ("c0", *(f"{cs}{absm}" for absm in range(1, angmom + 1) for cs in "cs"))
             key = (angmom, "p")
             horton2[key] = conv_pure
             cca[key] = conv_pure[:1:-2] + conv_pure[:1] + conv_pure[1::2]
-    return horton2, cca
+    return FrozenConventions(horton2), FrozenConventions(cca)
 
 
 HORTON2_CONVENTIONS, CCA_CONVENTIONS = _get_default_conventions()
@@ -299,7 +302,7 @@ def _permutation_matrix(permutation: list[int], signs: list[int]) -> NDArray[flo
 
 
 def convert_to_cartesian(
-    obasis: MolecularBasis, new_conventions: dict[tuple[int, str], list[str]]
+    obasis: MolecularBasis, new_conventions: Mapping[tuple[int, str], Sequence[str]]
 ) -> tuple[MolecularBasis, sparse.csr_array]:
     """Convert a basis set to Cartesian functions with given conventions.
 
@@ -370,7 +373,7 @@ def convert_to_cartesian(
         transform = sparse.block_diag([sparse.coo_array(block) for block in blocks], format="csr")
     else:
         transform = sparse.csr_array((0, 0))
-    return attrs.evolve(obasis, shells=shells, conventions=dict(new_conventions)), transform
+    return attrs.evolve(obasis, shells=shells, conventions=new_conventions), transform
 
 
 def decontract(obasis: MolecularBasis) -> tuple[MolecularBasis, sparse.csr_array]:

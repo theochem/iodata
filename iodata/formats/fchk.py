@@ -27,7 +27,7 @@ from warnings import warn
 import numpy as np
 from numpy.typing import NDArray
 
-from ..basis import MolecularBasis, Shell
+from ..basis import FrozenConventions, MolecularBasis, Shell
 from ..convert import HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_dump_one, document_load_many, document_load_one
 from ..iodata import IOData
@@ -56,26 +56,28 @@ PATTERNS = ["*.fchk", "*.fch"]
 FLOAT_PATTERN = re.compile(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[EeDd][-+]?\d+)?")
 
 
-CONVENTIONS = {
-    (9, "p"): HORTON2_CONVENTIONS[(9, "p")],
-    (8, "p"): HORTON2_CONVENTIONS[(8, "p")],
-    (7, "p"): HORTON2_CONVENTIONS[(7, "p")],
-    (6, "p"): HORTON2_CONVENTIONS[(6, "p")],
-    (5, "p"): HORTON2_CONVENTIONS[(5, "p")],
-    (4, "p"): HORTON2_CONVENTIONS[(4, "p")],
-    (3, "p"): HORTON2_CONVENTIONS[(3, "p")],
-    (2, "p"): HORTON2_CONVENTIONS[(2, "p")],
-    (0, "c"): ["1"],
-    (1, "c"): ["x", "y", "z"],
-    (2, "c"): ["xx", "yy", "zz", "xy", "xz", "yz"],
-    (3, "c"): ["xxx", "yyy", "zzz", "xyy", "xxy", "xxz", "xzz", "yzz", "yyz", "xyz"],
-    (4, "c"): HORTON2_CONVENTIONS[(4, "c")][::-1],
-    (5, "c"): HORTON2_CONVENTIONS[(5, "c")][::-1],
-    (6, "c"): HORTON2_CONVENTIONS[(6, "c")][::-1],
-    (7, "c"): HORTON2_CONVENTIONS[(7, "c")][::-1],
-    (8, "c"): HORTON2_CONVENTIONS[(8, "c")][::-1],
-    (9, "c"): HORTON2_CONVENTIONS[(9, "c")][::-1],
-}
+CONVENTIONS = FrozenConventions(
+    {
+        (9, "p"): HORTON2_CONVENTIONS[(9, "p")],
+        (8, "p"): HORTON2_CONVENTIONS[(8, "p")],
+        (7, "p"): HORTON2_CONVENTIONS[(7, "p")],
+        (6, "p"): HORTON2_CONVENTIONS[(6, "p")],
+        (5, "p"): HORTON2_CONVENTIONS[(5, "p")],
+        (4, "p"): HORTON2_CONVENTIONS[(4, "p")],
+        (3, "p"): HORTON2_CONVENTIONS[(3, "p")],
+        (2, "p"): HORTON2_CONVENTIONS[(2, "p")],
+        (0, "c"): ("1",),
+        (1, "c"): ("x", "y", "z"),
+        (2, "c"): ("xx", "yy", "zz", "xy", "xz", "yz"),
+        (3, "c"): ("xxx", "yyy", "zzz", "xyy", "xxy", "xxz", "xzz", "yzz", "yyz", "xyz"),
+        (4, "c"): HORTON2_CONVENTIONS[(4, "c")][::-1],
+        (5, "c"): HORTON2_CONVENTIONS[(5, "c")][::-1],
+        (6, "c"): HORTON2_CONVENTIONS[(6, "c")][::-1],
+        (7, "c"): HORTON2_CONVENTIONS[(7, "c")][::-1],
+        (8, "c"): HORTON2_CONVENTIONS[(8, "c")][::-1],
+        (9, "c"): HORTON2_CONVENTIONS[(9, "c")][::-1],
+    }
+)
 
 
 @document_load_one(

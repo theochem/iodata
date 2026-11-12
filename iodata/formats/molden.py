@@ -33,7 +33,7 @@ import attrs
 import numpy as np
 from numpy.typing import NDArray
 
-from ..basis import MolecularBasis, Shell, angmom_its, angmom_sti
+from ..basis import FrozenConventions, MolecularBasis, Shell, angmom_its, angmom_sti
 from ..convert import HORTON2_CONVENTIONS, convert_conventions
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
@@ -71,35 +71,37 @@ PATTERNS = ["*.molden.input", "*.molden"]
 #   15G: xxxx yyyy zzzz xxxy xxxz yyyx yyyz zzzx zzzy,
 #        xxyy xxzz yyzz xxyz yyxz zzxy
 
-CONVENTIONS = {
-    (0, "c"): ["1"],
-    (1, "c"): ["x", "y", "z"],
-    (2, "p"): HORTON2_CONVENTIONS[(2, "p")],
-    (2, "c"): ["xx", "yy", "zz", "xy", "xz", "yz"],
-    (3, "p"): HORTON2_CONVENTIONS[(3, "p")],
-    (3, "c"): ["xxx", "yyy", "zzz", "xyy", "xxy", "xxz", "xzz", "yzz", "yyz", "xyz"],
-    (4, "p"): HORTON2_CONVENTIONS[(4, "p")],
-    (4, "c"): [
-        "xxxx",
-        "yyyy",
-        "zzzz",
-        "xxxy",
-        "xxxz",
-        "xyyy",
-        "yyyz",
-        "xzzz",
-        "yzzz",
-        "xxyy",
-        "xxzz",
-        "yyzz",
-        "xxyz",
-        "xyyz",
-        "xyzz",
-    ],
-    # H fubnctions are not officially supported by the Molden format but PSI4
-    # and ORCA write out such files anyway.
-    (5, "p"): HORTON2_CONVENTIONS[(5, "p")],
-}
+CONVENTIONS = FrozenConventions(
+    {
+        (0, "c"): ("1",),
+        (1, "c"): ("x", "y", "z"),
+        (2, "p"): HORTON2_CONVENTIONS[(2, "p")],
+        (2, "c"): ("xx", "yy", "zz", "xy", "xz", "yz"),
+        (3, "p"): HORTON2_CONVENTIONS[(3, "p")],
+        (3, "c"): ("xxx", "yyy", "zzz", "xyy", "xxy", "xxz", "xzz", "yzz", "yyz", "xyz"),
+        (4, "p"): HORTON2_CONVENTIONS[(4, "p")],
+        (4, "c"): (
+            "xxxx",
+            "yyyy",
+            "zzzz",
+            "xxxy",
+            "xxxz",
+            "xyyy",
+            "yyyz",
+            "xzzz",
+            "yzzz",
+            "xxyy",
+            "xxzz",
+            "yyzz",
+            "xxyz",
+            "xyyz",
+            "xyzz",
+        ),
+        # H fubnctions are not officially supported by the Molden format but PSI4
+        # and ORCA write out such files anyway.
+        (5, "p"): HORTON2_CONVENTIONS[(5, "p")],
+    }
+)
 
 
 @document_load_one(
@@ -432,14 +434,14 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
     different sign conventions for some of the pure functions.
     """
     orca_conventions = {
-        (0, "c"): ["1"],
-        (1, "c"): ["x", "y", "z"],
-        (2, "p"): ["c0", "c1", "s1", "c2", "s2"],
-        (2, "c"): ["xx", "yy", "zz", "xy", "xz", "yz"],
-        (3, "p"): ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3"],
-        (3, "c"): ["xxx", "yyy", "zzz", "xyy", "xxy", "xxz", "xzz", "yzz", "yyz", "xyz"],
-        (4, "p"): ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3", "-c4", "-s4"],
-        (4, "c"): [
+        (0, "c"): ("1",),
+        (1, "c"): ("x", "y", "z"),
+        (2, "p"): ("c0", "c1", "s1", "c2", "s2"),
+        (2, "c"): ("xx", "yy", "zz", "xy", "xz", "yz"),
+        (3, "p"): ("c0", "c1", "s1", "c2", "s2", "-c3", "-s3"),
+        (3, "c"): ("xxx", "yyy", "zzz", "xyy", "xxy", "xxz", "xzz", "yzz", "yyz", "xyz"),
+        (4, "p"): ("c0", "c1", "s1", "c2", "s2", "-c3", "-s3", "-c4", "-s4"),
+        (4, "c"): (
             "xxxx",
             "yyyy",
             "zzzz",
@@ -455,10 +457,10 @@ def _fix_obasis_orca(obasis: MolecularBasis) -> MolecularBasis:
             "xxyz",
             "xyyz",
             "xyzz",
-        ],
+        ),
         # H functions are not officialy supported by Molden, but this is how
         # ORCA writes Molden files anyway:
-        (5, "p"): ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3", "-c4", "-s4", "c5", "s5"],
+        (5, "p"): ("c0", "c1", "s1", "c2", "s2", "-c3", "-s3", "-c4", "-s4", "c5", "s5"),
     }
     fixed_shells = []
     for shell in obasis.shells:

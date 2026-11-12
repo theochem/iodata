@@ -24,7 +24,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_allclose, assert_equal
 
-from ..basis import MolecularBasis, Shell
+from ..basis import FrozenConventions, MolecularBasis, Shell
 from ..convert import (
     CCA_CONVENTIONS,
     HORTON2_CONVENTIONS,
@@ -93,9 +93,9 @@ def obasis() -> MolecularBasis:
             Shell(0, [2], ["p"], np.zeros(3), np.zeros((3, 1))),
         ],
         {
-            (0, "c"): ["s"],
-            (1, "c"): ["x", "z", "-y"],
-            (2, "p"): ["dc0", "dc1", "-ds1", "dc2", "-ds2"],
+            (0, "c"): ("s",),
+            (1, "c"): ("x", "z", "-y"),
+            (2, "p"): ("dc0", "dc1", "-ds1", "dc2", "-ds2"),
         },
         "L2",
     )
@@ -103,9 +103,9 @@ def obasis() -> MolecularBasis:
 
 def test_convert_convention_obasis(obasis: MolecularBasis):
     new_convention = {
-        (0, "c"): ["-s"],
-        (1, "c"): ["x", "y", "z"],
-        (2, "p"): ["dc2", "dc1", "dc0", "ds1", "ds2"],
+        (0, "c"): ("-s",),
+        (1, "c"): ("x", "y", "z"),
+        (2, "p"): ("dc2", "dc1", "dc0", "ds1", "ds2"),
     }
     permutation, signs = convert_conventions(obasis, new_convention)
     assert_equal(permutation, [0, 1, 2, 4, 3, 5, 6, 8, 7, 12, 10, 9, 11, 13])
@@ -125,9 +125,9 @@ def test_convert_convention_obasis_empty(obasis: MolecularBasis):
 
 def test_convert_convention_obasis_invalid(obasis: MolecularBasis):
     new_convention = {
-        (0, "c"): ["-s"],
-        (1, "c"): ["a", "b", "c"],
-        (2, "p"): ["dc2", "dc1", "dc0", "ds1", "ds2"],
+        (0, "c"): ("-s",),
+        (1, "c"): ("a", "b", "c"),
+        (2, "p"): ("dc2", "dc1", "dc0", "ds1", "ds2"),
     }
     with pytest.raises(ValueError):
         convert_conventions(obasis, new_convention)
@@ -135,9 +135,9 @@ def test_convert_convention_obasis_invalid(obasis: MolecularBasis):
 
 def test_convert_convention_obasis_duplicate(obasis: MolecularBasis):
     new_convention = {
-        (0, "c"): ["-s"],
-        (1, "c"): ["x", "y", "y"],
-        (2, "p"): ["dc2", "dc1", "dc0", "ds1", "ds2"],
+        (0, "c"): ("-s",),
+        (1, "c"): ("x", "y", "y"),
+        (2, "p"): ("dc2", "dc1", "dc0", "ds1", "ds2"),
     }
     with pytest.raises(ValueError):
         convert_conventions(obasis, new_convention)
@@ -175,19 +175,21 @@ def test_iter_cart_alphabet():
 
 
 def test_conventions():
+    assert isinstance(HORTON2_CONVENTIONS, FrozenConventions)
+    assert isinstance(CCA_CONVENTIONS, FrozenConventions)
     for angmom in range(25):
         assert HORTON2_CONVENTIONS[(angmom, "c")] == CCA_CONVENTIONS[(angmom, "c")]
-    assert HORTON2_CONVENTIONS[(0, "c")] == ["1"]
-    assert HORTON2_CONVENTIONS[(1, "c")] == ["x", "y", "z"]
-    assert HORTON2_CONVENTIONS[(2, "c")] == ["xx", "xy", "xz", "yy", "yz", "zz"]
+    assert HORTON2_CONVENTIONS[(0, "c")] == ("1",)
+    assert HORTON2_CONVENTIONS[(1, "c")] == ("x", "y", "z")
+    assert HORTON2_CONVENTIONS[(2, "c")] == ("xx", "xy", "xz", "yy", "yz", "zz")
     assert (0, "p") not in HORTON2_CONVENTIONS
     assert (0, "p") not in CCA_CONVENTIONS
     assert (1, "p") not in HORTON2_CONVENTIONS
     assert (1, "p") not in CCA_CONVENTIONS
-    assert HORTON2_CONVENTIONS[(2, "p")] == ["c0", "c1", "s1", "c2", "s2"]
-    assert CCA_CONVENTIONS[(2, "p")] == ["s2", "s1", "c0", "c1", "c2"]
-    assert HORTON2_CONVENTIONS[(3, "p")] == ["c0", "c1", "s1", "c2", "s2", "c3", "s3"]
-    assert CCA_CONVENTIONS[(3, "p")] == ["s3", "s2", "s1", "c0", "c1", "c2", "c3"]
+    assert HORTON2_CONVENTIONS[(2, "p")] == ("c0", "c1", "s1", "c2", "s2")
+    assert CCA_CONVENTIONS[(2, "p")] == ("s2", "s1", "c0", "c1", "c2")
+    assert HORTON2_CONVENTIONS[(3, "p")] == ("c0", "c1", "s1", "c2", "s2", "c3", "s3")
+    assert CCA_CONVENTIONS[(3, "p")] == ("s3", "s2", "s1", "c0", "c1", "c2", "c3")
 
 
 def test_convert_to_unrestricted_generalized():
@@ -372,19 +374,22 @@ def test_convert_to_segmented_empty():
     assert len(obasis2.shells) == 0
 
 
-def _get_test_conventions(name: str) -> dict:
+def _get_test_conventions(name: str) -> FrozenConventions:
     if name == "horton2":
-        return dict(HORTON2_CONVENTIONS)
+        return HORTON2_CONVENTIONS
     if name == "cca":
-        return dict(CCA_CONVENTIONS)
+        return CCA_CONVENTIONS
     if name == "fchk":
-        return dict(FCHK_CONVENTIONS)
+        return FCHK_CONVENTIONS
     if name == "signs_and_cartesian_order":
         # Sign flips in pure f functions (as in ORCA) and a reversed order of Cartesian d functions.
-        conventions = dict(HORTON2_CONVENTIONS)
-        conventions[3, "p"] = ["c0", "c1", "s1", "c2", "s2", "-c3", "-s3"]
-        conventions[2, "c"] = conventions[2, "c"][::-1]
-        return conventions
+        return FrozenConventions(
+            {
+                **HORTON2_CONVENTIONS,
+                (3, "p"): ("c0", "c1", "s1", "c2", "s2", "-c3", "-s3"),
+                (2, "c"): HORTON2_CONVENTIONS[2, "c"][::-1],
+            }
+        )
     # A typo in the name of the conventions must not silently give other conventions.
     raise ValueError(f"Unknown test conventions: {name}")
 
@@ -451,8 +456,9 @@ def test_convert_to_cartesian_reorder():
         HORTON2_CONVENTIONS,
         "L2",
     )
-    new_conventions = dict(HORTON2_CONVENTIONS)
-    new_conventions[2, "c"] = HORTON2_CONVENTIONS[2, "c"][::-1]
+    new_conventions = FrozenConventions(
+        {**HORTON2_CONVENTIONS, (2, "c"): HORTON2_CONVENTIONS[2, "c"][::-1]}
+    )
     obasis_cart, transform = convert_to_cartesian(obasis, new_conventions)
     expected = np.zeros((6, 6))
     expected[np.arange(6), np.arange(6)[::-1]] = 1.0
@@ -478,12 +484,15 @@ def test_convert_to_cartesian_missing_convention(kind):
         HORTON2_CONVENTIONS,
         "L2",
     )
-    new_conventions = dict(HORTON2_CONVENTIONS)
-    del new_conventions[3, "c"]
+    new_conventions = FrozenConventions(
+        {key: value for key, value in HORTON2_CONVENTIONS.items() if key != (3, "c")}
+    )
     with pytest.raises(ValueError, match="Cartesian convention for angular momentum 3"):
         convert_to_cartesian(obasis, new_conventions)
     # Conventions of other angular momenta or kinds are not needed.
-    new_conventions = {key: value for key, value in HORTON2_CONVENTIONS.items() if key[1] == "c"}
+    new_conventions = FrozenConventions(
+        {key: value for key, value in HORTON2_CONVENTIONS.items() if key[1] == "c"}
+    )
     obasis_cart, _ = convert_to_cartesian(obasis, new_conventions)
     assert obasis_cart.conventions == new_conventions
 
