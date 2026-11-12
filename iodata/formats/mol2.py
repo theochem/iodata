@@ -101,6 +101,10 @@ def _load_helper_atoms(
         # to convert to an element number both or only the first
         symbol = words[1][:2].title()
         atnum = sym2num.get(symbol, sym2num.get(symbol[0], None))
+        # A SYBYL atom type with a dot (C.3, N.am, O.co2, ...) starts with the element.
+        # It is more reliable than the atom name, e.g. CA for an alpha carbon.
+        if "." in words[5]:
+            atnum = sym2num.get(words[5].split(".")[0].title(), atnum)
         if atnum is None:
             atnum = 0
             warn(LoadWarning(f"Cannot interpret element symbol {words[1][:2]}", lit), stacklevel=2)
