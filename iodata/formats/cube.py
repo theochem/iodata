@@ -34,7 +34,7 @@ from numpy.typing import NDArray
 from ..docstrings import document_dump_one, document_load_one
 from ..iodata import IOData
 from ..prepare import prepare_single_line_title
-from ..utils import Cube, LineIterator
+from ..utils import Cube, LineIterator, LoadError
 
 __all__ = ()
 
@@ -73,6 +73,9 @@ def _read_cube_header(
 
     # number of atoms and origin of the grid
     natom, origin = read_grid_line(next(lit))
+    # A negative number of atoms means the file contains orbital values.
+    mo_cube = natom < 0
+    natom = abs(natom)
     # numer of grid points in A direction and step vector A, and so on
     shape0, axis0 = read_grid_line(next(lit))
     shape1, axis1 = read_grid_line(next(lit))
@@ -102,6 +105,20 @@ def _read_cube_header(
         # potentials were used.
         if atcorenums[i] == 0.0:
             atcorenums[i] = atnums[i]
+
+    if mo_cube:
+        # Orbital cubes have one more record after the atoms: the number of
+        # orbitals, followed by their indices (Fortran format 10I5).
+        words = next(lit).split()
+        nmo = int(words[0])
+        while len(words) < nmo + 1:
+            words.extend(next(lit).split())
+        if nmo != 1:
+            raise LoadError(
+                f"Cube files with values for {nmo} orbitals are not supported, "
+                "only one orbital per file.",
+                lit,
+            )
 
     return title, atcoords, atnums, cellvecs, cube, atcorenums
 
