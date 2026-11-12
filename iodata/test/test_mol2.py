@@ -180,3 +180,28 @@ def test_dump_multiline_title(tmpdir):
     with as_file(files("iodata.test.data").joinpath("benzene.mol2")) as fn:
         mol = load_one(fn)
     check_dump_multiline_title(mol, tmpdir, "mol2")
+
+
+def test_load_element_from_sybyl_type(tmpdir):
+    # Atom names in protein files are not element symbols: the alpha carbon CA,
+    # the side-chain carbon CD and the nitrogen NE. A SYBYL atom type with a dot
+    # (C.3, N.am, ...) gives the element unambiguously. Types without a dot, such
+    # as the GAFF type "ca" for an aromatic carbon, keep the name-based guess.
+    fn = os.path.join(tmpdir, "protein_names.mol2")
+    with open(fn, "w") as f:
+        f.write(
+            "@<TRIPOS>MOLECULE\n"
+            "fragment\n"
+            "    4      0      0      0\n"
+            "SMALL\n"
+            "NO_CHARGES\n"
+            "\n"
+            "@<TRIPOS>ATOM\n"
+            "      1 CA          0.0000    0.0000    0.0000 C.3       1 ALA1        0.0000\n"
+            "      2 CD          1.5000    0.0000    0.0000 C.2       1 ALA1        0.0000\n"
+            "      3 NE          0.0000    1.5000    0.0000 N.am      1 ALA1        0.0000\n"
+            "      4 C1          0.0000    0.0000    1.5000 ca        1 LIG1        0.0000\n"
+        )
+    mol = load_one(fn)
+    assert_equal(mol.atnums, [6, 6, 7, 6])
+    assert mol.atffparams["attypes"] == ("C.3", "C.2", "N.am", "ca")
