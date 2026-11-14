@@ -76,7 +76,7 @@ def test_load_without_velocities():
     assert mol.extra["velocities"] is None
 
 
-def test_load_triclinic_box(tmp_path):
+def test_load_triclinic_box():
     # The box line lists v1(x) v2(y) v3(z) v1(y) v1(z) v2(x) v2(z) v3(x) v3(y).
     # This is a rhombic dodecahedron box, as written by gmx editconf:
     # gmx editconf -f water.gro -o water_dodecahedron.gro -bt dodecahedron -d 1.0
