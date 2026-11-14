@@ -78,17 +78,14 @@ def test_load_without_velocities():
 
 def test_load_triclinic_box(tmp_path):
     # The box line lists v1(x) v2(y) v3(z) v1(y) v1(z) v2(x) v2(z) v3(x) v3(y).
-    # This is a rhombic dodecahedron box, as written by gmx editconf.
-    lines = files("iodata.test.data").joinpath("water.gro").read_text().splitlines()
-    lines[-1] = (
-        "   5.00000   5.00000   3.53553   0.00000   0.00000   0.00000   0.00000   2.50000   2.50000"
-    )
-    fn = tmp_path / "triclinic.gro"
-    fn.write_text("\n".join(lines) + "\n")
-    mol = load_one(fn)
+    # This is a rhombic dodecahedron box, as written by gmx editconf:
+    # gmx editconf -f water.gro -o water_dodecahedron.gro -bt dodecahedron -d 1.0
+    with as_file(files("iodata.test.data").joinpath("water_dodecahedron.gro")) as fn_gro:
+        mol = load_one(str(fn_gro))
     # Each row of cellvecs is one cell vector.
     assert_allclose(
         mol.cellvecs,
-        np.array([[5.0, 0.0, 0.0], [0.0, 5.0, 0.0], [2.5, 2.5, 3.53553]]) * nanometer,
+        np.array([[4.28175, 0.0, 0.0], [0.0, 4.28175, 0.0], [2.14087, 2.14087, 3.02765]])
+        * nanometer,
         atol=1.0e-5,
     )
