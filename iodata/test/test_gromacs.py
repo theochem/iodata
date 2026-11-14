@@ -20,6 +20,7 @@
 
 from importlib.resources import as_file, files
 
+import numpy as np
 from numpy.testing import assert_allclose, assert_equal
 
 from ..api import load_many, load_one
@@ -73,3 +74,18 @@ def test_load_without_velocities():
     # velocities should be present in extra but None
     assert "velocities" in mol.extra
     assert mol.extra["velocities"] is None
+
+
+def test_load_triclinic_box():
+    # The box line lists v1(x) v2(y) v3(z) v1(y) v1(z) v2(x) v2(z) v3(x) v3(y).
+    # This is a rhombic dodecahedron box, as written by gmx editconf:
+    # gmx editconf -f water.gro -o water_dodecahedron.gro -bt dodecahedron -d 1.0
+    with as_file(files("iodata.test.data").joinpath("water_dodecahedron.gro")) as fn_gro:
+        mol = load_one(str(fn_gro))
+    # Each row of cellvecs is one cell vector.
+    assert_allclose(
+        mol.cellvecs,
+        np.array([[4.28175, 0.0, 0.0], [0.0, 4.28175, 0.0], [2.14087, 2.14087, 3.02765]])
+        * nanometer,
+        atol=1.0e-5,
+    )
