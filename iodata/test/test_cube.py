@@ -169,3 +169,23 @@ def test_load_mo_cube_several_orbitals(tmpdir):
     fn_mo.write("\n".join(lines) + "\n")
     with pytest.raises(LoadError, match="2 orbitals"):
         load_one(str(fn_mo))
+
+
+@pytest.mark.parametrize("mo_record", ["    0", "   -1    5"])
+def test_load_mo_cube_invalid_number_of_orbitals(tmpdir, mo_record):
+    with as_file(files("iodata.test.data").joinpath("cubegen_h2o_5points.cube")) as fn:
+        lines = _mo_cube_lines(fn, mo_record)
+    fn_mo = tmpdir.join("h2o_mo_invalid.cube")
+    fn_mo.write("\n".join(lines) + "\n")
+    with pytest.raises(LoadError, match="Invalid number of orbitals"):
+        load_one(str(fn_mo))
+
+
+def test_load_mo_cube_index_on_next_line(tmpdir):
+    with as_file(files("iodata.test.data").joinpath("cubegen_h2o_5points.cube")) as fn:
+        mol1 = load_one(str(fn))
+        lines = _mo_cube_lines(fn, "    1\n    5")
+    fn_mo = tmpdir.join("h2o_mo5_wrapped.cube")
+    fn_mo.write("\n".join(lines) + "\n")
+    mol2 = load_one(str(fn_mo))
+    assert_allclose(mol2.cube.data, mol1.cube.data)

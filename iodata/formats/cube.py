@@ -111,14 +111,17 @@ def _read_cube_header(
         # orbitals, followed by their indices (Fortran format 10I5).
         words = next(lit).split()
         nmo = int(words[0])
-        while len(words) < nmo + 1:
-            words.extend(next(lit).split())
+        if nmo < 1:
+            raise LoadError(f"Invalid number of orbitals in a cube file: {nmo}.", lit)
         if nmo != 1:
             raise LoadError(
                 f"Cube files with values for {nmo} orbitals are not supported, "
                 "only one orbital per file.",
                 lit,
             )
+        # The orbital index may be on the next line.
+        while len(words) < 2:
+            words.extend(next(lit).split())
 
     return title, atcoords, atnums, cellvecs, cube, atcorenums
 
