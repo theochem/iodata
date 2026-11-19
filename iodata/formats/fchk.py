@@ -78,6 +78,47 @@ CONVENTIONS = {
 }
 
 
+LOAD_ONE_NOTES = """
+**Density matrices.**
+The following keys of the ``one_rdms`` attribute may be loaded, all in the AO basis:
+
+- ``scf``: the total SCF density (``Total SCF Density``).
+  It is omitted for restricted open-shell wavefunctions (ROHF/ROKS),
+  because Gaussian is known to write an incorrect matrix in that case.
+- ``scf_spin``: the SCF spin density (``Spin SCF Density``).
+- ``post_scf_ao``: the total post-SCF density,
+  taken from ``Total MP2 Density``, ``Total MP3 Density``, ``Total CC Density``
+  or ``Total CI Density``, whichever is present.
+- ``post_scf_spin_ao``: the corresponding post-SCF spin density.
+
+Gaussian only computes and stores a post-SCF (generalized, relaxed) density
+when it is requested, e.g. with the ``Density=Current`` keyword
+(or simply ``Density``) in the route section.
+Generalized densities are available for, among others,
+MP2, MP3, MP4(SDQ), QCISD, CCD, CCSD, CID and CISD.
+For example, ``#p CCSD/cc-pVDZ Density=Current`` produces a checkpoint file
+whose formatted version contains the ``Total CC Density`` field.
+
+**Amplitudes and CI coefficients are not loaded.**
+Gaussian can store converged coupled-cluster amplitudes in the binary checkpoint
+file with the ``SaveAmplitudes`` option (e.g. ``CCSD(SaveAmplitudes)``,
+equivalent to ``IOp(9/77=1)``), but this data is not known to be transferred
+to the formatted checkpoint file by ``formchk``.
+(Note that ``IOp(9/11)``, which is sometimes suggested for this purpose,
+controls Green's function calculations and is unrelated to amplitudes.)
+If you have an FCHK file that does contain amplitudes or CI coefficients,
+please open an issue on GitHub and attach it, so support can be added.
+
+**Trajectories.**
+Orbitals and density matrices are only written for the final geometry of a job.
+Use ``load_many`` to read the geometries, energies and gradients along an
+optimization, scan or IRC trajectory.
+Gaussian 16's ``-fchk`` command-line option (re)writes the formatted checkpoint
+file at each new geometry of an optimization, but each version overwrites the
+previous one, so intermediate points must be captured while the job runs.
+"""
+
+
 @document_load_one(
     "Gaussian Formatted Checkpoint",
     [
@@ -103,6 +144,8 @@ CONVENTIONS = {
         "extra",
         "moments",
     ],
+    {},
+    LOAD_ONE_NOTES,
 )
 def load_one(lit: LineIterator) -> dict:
     """Do not edit this docstring. It will be overwritten."""
