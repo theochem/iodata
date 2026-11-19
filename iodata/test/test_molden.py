@@ -653,3 +653,60 @@ def test_dump_multiline_title(tmpdir):
     with as_file(files("iodata.test.data").joinpath("he2_ghost_psi4_1.0.molden")) as fn:
         mol = load_one(fn)
     check_dump_multiline_title(mol, tmpdir, "molden")
+
+
+@pytest.mark.parametrize("kind", ["restricted", "unrestricted"])
+def test_dump_unsorted_shells(tmpdir, kind):
+    # Regression test for theochem/iodata#440: shells not sorted by icenter must
+    # keep [GTO] and [MO] in sync when dumped and reloaded.
+    shells = [
+        Shell(1, [0], ["c"], np.array([1.5]), np.array([[1.0]])),
+        Shell(0, [0], ["c"], np.array([0.8]), np.array([[1.0]])),
+        Shell(1, [2], ["p"], np.array([0.6]), np.array([[1.0]])),
+    ]
+    obasis = MolecularBasis(shells, HORTON2_CONVENTIONS, "L2")
+    atcoords = np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 2.0]])
+    atnums = np.array([1, 2])
+    olp = compute_overlap(obasis, atcoords)
+
+    # Orthonormalize a set of asymmetric MOs in the original unsorted shell order.
+    rng = np.random.default_rng(7)
+    raw = rng.normal(size=(obasis.nbasis, 2))
+    eigvals, eigvecs = np.linalg.eigh(raw.T @ olp @ raw)
+    coeffs_a = raw @ eigvecs @ np.diag(1.0 / np.sqrt(eigvals)) @ eigvecs.T
+
+    if kind == "restricted":
+        mo = MolecularOrbitals(
+            "restricted", 2, 2, np.array([2.0, 0.0]), coeffs_a, np.array([-0.6, 0.2])
+        )
+    else:
+        raw_b = rng.normal(size=(obasis.nbasis, 2))
+        eigvals_b, eigvecs_b = np.linalg.eigh(raw_b.T @ olp @ raw_b)
+        coeffs_b = raw_b @ eigvecs_b @ np.diag(1.0 / np.sqrt(eigvals_b)) @ eigvecs_b.T
+        mo = MolecularOrbitals(
+            "unrestricted",
+            2,
+            2,
+            np.array([1.0, 0.0, 1.0, 0.0]),
+            np.concatenate([coeffs_a, coeffs_b], axis=1),
+            np.array([-0.6, 0.2, -0.5, 0.3]),
+        )
+
+    mol1 = IOData(atcoords=atcoords, atnums=atnums, obasis=obasis, mo=mo)
+    fn = os.path.join(tmpdir, f"unsorted_{kind}.molden")
+    dump_one(mol1, fn)
+    mol2 = load_one(fn)
+
+    # Reloaded MOs must be orthonormal against the reloaded basis and overlap.
+    olp2 = compute_overlap(mol2.obasis, mol2.atcoords)
+    if kind == "restricted":
+        check_orthonormal(mol2.mo.coeffs, olp2)
+        # In the reloaded (center-sorted) basis, atom 0 (1 basis fn) comes before atom 1 (6 fns).
+        perm = [1, 0, 2, 3, 4, 5, 6]
+        assert_allclose(np.abs(mol2.mo.coeffs), np.abs(mol1.mo.coeffs[perm]), atol=1e-12)
+    else:
+        check_orthonormal(mol2.mo.coeffsa, olp2)
+        check_orthonormal(mol2.mo.coeffsb, olp2)
+        perm = [1, 0, 2, 3, 4, 5, 6]
+        assert_allclose(np.abs(mol2.mo.coeffsa), np.abs(mol1.mo.coeffsa[perm]), atol=1e-12)
+        assert_allclose(np.abs(mol2.mo.coeffsb), np.abs(mol1.mo.coeffsb[perm]), atol=1e-12)

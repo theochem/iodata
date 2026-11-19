@@ -871,10 +871,26 @@ def dump_one(f: TextIO, data: IOData):
     if angmom_kinds[4] == "p":
         f.write("[9G]\n")
 
+    # Group shells by center for [GTO] and track the basis-function permutation for [MO].
+    shells = obasis.shells
+    shell_order = sorted(range(len(shells)), key=(lambda idx: shells[idx].icenter))
+    if shell_order != list(range(len(shells))):
+        basis_offsets = []
+        offset = 0
+        for shell in shells:
+            basis_offsets.append((offset, offset + shell.nbasis))
+            offset += shell.nbasis
+        basis_perm = np.array(
+            [i for idx in shell_order for i in range(*basis_offsets[idx])],
+            dtype=int,
+        )
+        obasis = attrs.evolve(obasis, shells=[shells[idx] for idx in shell_order])
+    else:
+        basis_perm = None
+
     f.write("[GTO]\n")
     last_icenter = -1
-    # The shells must be sorted by center.
-    for shell in sorted(obasis.shells, key=(lambda s: s.icenter)):
+    for shell in obasis.shells:
         if shell.icenter != last_icenter:
             if last_icenter != -1:
                 f.write("\n")
@@ -891,6 +907,11 @@ def dump_one(f: TextIO, data: IOData):
     # Get the permutation to convert the orbital coefficients to Molden conventions.
     permutation, signs = convert_conventions(obasis, CONVENTIONS)
 
+    def _order_coeffs(coeffs):
+        if basis_perm is not None:
+            coeffs = coeffs[basis_perm]
+        return coeffs[permutation] * signs.reshape(-1, 1)
+
     # Print the mean-field orbitals
     if data.mo.kind == "unrestricted":
         f.write("[MO]\n")
@@ -901,7 +922,7 @@ def dump_one(f: TextIO, data: IOData):
             f,
             "Alpha",
             data.mo.occsa,
-            data.mo.coeffsa[permutation] * signs.reshape(-1, 1),
+            _order_coeffs(data.mo.coeffsa),
             data.mo.energiesa,
             irrepsa,
         )
@@ -912,7 +933,7 @@ def dump_one(f: TextIO, data: IOData):
             f,
             "Beta",
             data.mo.occsb,
-            data.mo.coeffsb[permutation] * signs.reshape(-1, 1),
+            _order_coeffs(data.mo.coeffsb),
             data.mo.energiesb,
             irrepsb,
         )
@@ -925,7 +946,7 @@ def dump_one(f: TextIO, data: IOData):
             f,
             "Alpha",
             data.mo.occs,
-            data.mo.coeffs[permutation] * signs.reshape(-1, 1),
+            _order_coeffs(data.mo.coeffs),
             data.mo.energies,
             irreps,
         )
