@@ -182,7 +182,8 @@ def prepare_dump(data: IOData, allow_changes: bool, filename: str) -> IOData:
 def dump_one(f: TextIO, data: IOData):
     """Do not edit this docstring. It will be overwritten."""
     print(data.title or "Created with IOData", file=f)
-    print("", file=f)
+    # Characters 21 and 22 of the second line are the dimensionality code, 2D or 3D.
+    print(f"  {'IOData':<8s}{'':10s}3D", file=f)
     print("", file=f)
     nbond = 0 if data.bonds is None else len(data.bonds)
     print(f"{data.natom:3d}{nbond:3d}  0     0  0  0  0  0  0999 V2000", file=f)
