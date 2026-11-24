@@ -244,3 +244,23 @@ def test_dump_multiline_title(tmpdir):
     with as_file(files("iodata.test.data").joinpath("example.sdf")) as fn:
         mol = load_one(fn)
     check_dump_multiline_title(mol, tmpdir, "sdf")
+
+
+def test_dump_dimension_code(tmpdir):
+    """The second line of the header says that the coordinates are 3D."""
+    mol = IOData(
+        title="water",
+        atnums=np.array([8, 1, 1]),
+        atcoords=np.array([[0.0, 0.0, 0.1], [1.8, 0.0, -0.5], [-0.5, 1.7, 0.3]]),
+    )
+    fn_tmp = os.path.join(tmpdir, "water.sdf")
+    dump_one(mol, fn_tmp)
+    with open(fn_tmp) as f:
+        lines = f.read().splitlines()
+    assert lines[0] == "water"
+    assert lines[1][20:22] == "3D"
+    # The rest of the header and the atoms are not affected.
+    assert lines[2] == ""
+    mol_back = load_one(fn_tmp)
+    assert_equal(mol_back.atnums, mol.atnums)
+    assert_allclose(mol_back.atcoords, mol.atcoords, atol=1.0e-4)
