@@ -469,4 +469,3 @@ def test_load_mwfn_pruned_basis(tmpdir):
     assert mol.mo.coeffs.shape == (56, 55)
     assert mol.mo.energies.shape == (55,)
     assert mol.mo.occs.shape == (55,)
-    
