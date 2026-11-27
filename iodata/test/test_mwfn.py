@@ -454,3 +454,19 @@ def test_load_mwfn_matrices_multiconfiguration(tmpdir):
     )
     assert "scf_ao" not in mol_post.one_rdms
     assert_allclose(mol_post.one_rdms["post_scf_ao"], mol.one_rdms["scf_ao"], atol=1e-12)
+
+
+def test_load_mwfn_pruned_basis(tmpdir):
+    # Simulate linearly dependent basis pruning where Nindbasis < Nbasis
+    # (56 basis functions, but only 55 linearly independent MOs).
+    def prune_last_mo(text):
+        text = re.sub(r"(Nindbasis=\s*)56\b", r"\g<1>55", text)
+        return re.sub(r"^Index\s+56\b.*?\$Coeff\n[\d\s.E+-]+", "", text, flags=re.M | re.S)
+
+    mol = load_modified(tmpdir, "he_spdfgh_virtual_fchk_multiwfn3.7.mwfn", prune_last_mo)
+    assert mol.obasis.nbasis == 56
+    assert mol.extra["nindbasis"] == 55
+    assert mol.mo.coeffs.shape == (56, 55)
+    assert mol.mo.energies.shape == (55,)
+    assert mol.mo.occs.shape == (55,)
+    

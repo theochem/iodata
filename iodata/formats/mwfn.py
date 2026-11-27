@@ -332,7 +332,7 @@ def _load_mwfn_low(lit: LineIterator) -> dict:
 
     # get number of basis & molecular orbitals (MO)
     # Note: MWFN includes virtual orbitals, so num_mo equals number independent basis functions
-    num_basis = data["Nindbasis"]
+    num_basis = data["Nbasis"]
     num_mo = data["Nindbasis"]
     if data["mo_kind"] == "unrestricted":
         num_mo *= 2
