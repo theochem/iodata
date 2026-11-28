@@ -454,3 +454,66 @@ def test_load_mwfn_matrices_multiconfiguration(tmpdir):
     )
     assert "scf_ao" not in mol_post.one_rdms
     assert_allclose(mol_post.one_rdms["post_scf_ao"], mol.one_rdms["scf_ao"], atol=1e-12)
+
+
+def test_load_mwfn_h2o_631gs_cart():
+    mol = load_helper("h2o_631gs_cart.mwfn")
+    assert mol.natom == 3
+    assert mol.nelec == 10
+    assert mol.charge == 0.0
+    assert mol.extra["wfntype"] == 0
+    assert mol.obasis.nbasis == 19
+    assert mol.mo.coeffs.shape == (19, 19)
+    assert_equal([shell.angmoms[0] for shell in mol.obasis.shells], [0, 0, 0, 1, 1, 2, 0, 0, 0, 0])
+    assert all(shell.kinds == ["c"] for shell in mol.obasis.shells)
+    olp = mol.one_ints["olp"]
+    assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
+    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf_ao"], olp), 10.0, atol=1e-6)
+    coeffs_occ = mol.mo.coeffs[:, mol.mo.occs > 0]
+    assert_allclose(2.0 * coeffs_occ @ coeffs_occ.T, mol.one_rdms["scf_ao"], atol=1e-5)
+
+
+def test_load_mwfn_he_triplet():
+    mol = load_helper("he_triplet_ccpvdz.mwfn")
+    assert mol.natom == 1
+    assert mol.nelec == 2
+    assert mol.spinpol == 2
+    assert mol.extra["wfntype"] == 1
+    assert_allclose(mol.mo.occsa, [1.0, 1.0, 0.0, 0.0, 0.0])
+    assert_allclose(mol.mo.occsb, [0.0, 0.0, 0.0, 0.0, 0.0])
+    olp = mol.one_ints["olp"]
+    assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
+    dm_alpha = 0.5 * (mol.one_rdms["scf_ao"] + mol.one_rdms["scf_spin_ao"])
+    dm_beta = 0.5 * (mol.one_rdms["scf_ao"] - mol.one_rdms["scf_spin_ao"])
+    assert_allclose(np.einsum("ij,ij", dm_alpha, olp), 2.0, atol=1e-6)
+    assert_allclose(dm_beta, np.zeros((5, 5)), atol=1e-12)
+    assert_allclose(mol.one_rdms["scf_ao"], mol.one_rdms["scf_spin_ao"], atol=1e-12)
+
+
+def test_load_mwfn_h2_mp2_no_mc():
+    mol = load_helper("h2_mp2_no_mc.mwfn")
+    assert mol.natom == 2
+    assert mol.nelec == 2
+    assert mol.extra["wfntype"] == 3
+    assert_allclose(mol.mo.occs, [1.97056, 0.02732, 0.00164, 0.00048])
+    assert "scf_ao" not in mol.one_rdms
+    assert "post_scf_ao" in mol.one_rdms
+    olp = mol.one_ints["olp"]
+    assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
+    dm_from_no = mol.mo.coeffs @ np.diag(mol.mo.occs) @ mol.mo.coeffs.T
+    assert_allclose(dm_from_no, mol.one_rdms["post_scf_ao"], atol=1e-7)
+
+
+def test_load_mwfn_h2_diffuse_lindep():
+    mol = load_helper("h2_diffuse_lindep.mwfn")
+    assert mol.natom == 2
+    assert mol.nelec == 2
+    assert mol.extra["wfntype"] == 0
+    assert mol.obasis.nbasis == 24
+    assert mol.extra["nindbasis"] == 20
+    assert mol.mo.norba == 20
+    assert mol.mo.coeffs.shape[1] == 20
+    olp = mol.one_ints["olp"]
+    assert olp.shape == (24, 24)
+    assert_allclose(olp, compute_overlap(mol.obasis, mol.atcoords), atol=1e-7, rtol=1e-7)
+    assert_allclose(np.einsum("ij,ij", mol.one_rdms["scf_ao"], olp), 2.0, atol=1e-6)
